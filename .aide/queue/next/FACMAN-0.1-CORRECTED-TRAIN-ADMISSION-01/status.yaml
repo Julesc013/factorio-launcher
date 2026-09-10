@@ -1,0 +1,6 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01
+status: closed
+lifecycle_state: closed
+planning_state: milestone
+result: PASS

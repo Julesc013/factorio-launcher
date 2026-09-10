@@ -1,0 +1,38 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01
+title: Preserve foreign native shortcuts and uninstall records
+status: closed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-09-06
+owner: runtime-maintainer
+canonical_plan: release/index/plan.v1.toml
+admission_workunit: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
+objective: "Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration."
+source_bundles:
+  - "F12"
+allowed_paths:
+  - "CMakeLists.txt"
+  - "contracts/policy/test_impact.v1.json"
+  - "tools/clang_tidy_changed.py"
+  - "runtime/**"
+  - "apps/**"
+  - "tests/**"
+  - "docs/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/**"
+forbidden_paths:
+  - ".git/**"
+  - ".aide.local/**"
+  - ".aide/history/**"
+acceptance:
+  - "Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration."
+  - "Retain recoverable native-effect state on partial failure; test pre-existing foreign entries and path/identity substitution using injected effects."
+validation_protocol:
+  - "Inspect existing affected native/Python tests and strict validators before implementation; record exact commands and results."
+  - "Exercise applicable positive, refusal, concurrency, fault/recovery and package effects with independent oracles."
+  - "Retain source, base/head/tree, independent review, exact integration and evidence invalidation; source fixtures alone do not qualify real hosts."
+retained_boundaries:
+  - "No direct protected push, force push, self-approval or required-check bypass."
+  - "No production credentials, signing, billing or public publication."
+  - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
+commit_template: .aide/git/commit-template.md

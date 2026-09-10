@@ -281,6 +281,16 @@ private:
 
 } // namespace
 
+bool parse_component_manifest(
+    const std::string& contents,
+    std::vector<ComponentRecord>& components,
+    std::string& detail)
+{
+    components.clear();
+    ComponentJsonReader reader(contents);
+    return reader.parse(components, detail);
+}
+
 bool load_component_manifest(
     const std::filesystem::path& path,
     std::vector<ComponentRecord>& components,
@@ -293,10 +303,7 @@ bool load_component_manifest(
     }
     std::ostringstream text;
     text << input.rdbuf();
-    components.clear();
-    const std::string contents = text.str();
-    ComponentJsonReader reader(contents);
-    return reader.parse(components, detail);
+    return parse_component_manifest(text.str(), components, detail);
 }
 
 } // namespace facman::package

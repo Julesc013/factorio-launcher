@@ -44,6 +44,11 @@ ALPHA4_FOUNDATION_WORK_UNIT = "FACMAN-0.1-ULTIMATE-REBASE-01"
 BETA_READINESS_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
 ALPHA5_CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
 ALPHA5_TRUTH_REMEDIATION_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+ALPHA5_FINAL_CANDIDATE_WORK_UNIT = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+ACTIVE_RELEASE_VIEW_WORK_UNIT = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+BETA_REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+BETA_RULESET_WORK_UNIT = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+ALPHA6_WORKSPACE_WORK_UNIT = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 REPOSITORY_SLUG_DECISION_WORK_UNIT = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 POST_INTEGRATION_PHASES = {
@@ -70,6 +75,12 @@ POST_INTEGRATION_PHASES = {
     "facman_0_1_0_alpha_5_beta_readiness_convergence",
     "facman_0_1_0_alpha_5_promotion_candidate_closeout",
     "facman_0_1_0_alpha_5_truth_remediation",
+    "facman_0_1_0_alpha_5_final_candidate_closeout",
+    "facman_0_1_active_release_view_consolidation",
+    "facman_0_1_beta_repository_identity_decision",
+    "facman_0_1_beta_repository_identity_frozen",
+    "facman_0_1_beta_ruleset_report_complete",
+    "facman_0_1_alpha6_workspace_migration_recovery",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -341,24 +352,22 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
     return problems
 
 
-def validate_queue() -> list[str]:
-    from tools import aide_queue_records
+def validate_queue(root: Path = ROOT) -> list[str]:
+    from tools import aide_queue_records, project_queue_state
 
     problems: list[str] = []
+    queue_root = root / ".aide" / "queue"
     try:
-        records = aide_queue_records.read_queue_records(QUEUE_ROOT)
-        problems.extend(aide_queue_records.validate_queue_index(QUEUE_ROOT, records))
-    except aide_queue_records.QueueRecordError as exc:
+        records = aide_queue_records.read_queue_records(queue_root)
+        problems.extend(aide_queue_records.validate_queue_index(queue_root, records))
+        current_queue = project_queue_state.queue_state(root)
+        plan = load_toml(root / PLAN.relative_to(ROOT))
+    except (OSError, ValueError) as exc:
         return [f"AIDE queue: {exc}"]
-    active = [
-        item.id
-        for item in records
-        if item.lifecycle_state in {"active", "active_automated", "awaiting_operator"}
-    ]
-    closeout = indexed_closeout = next(
-        (item for item in records if item.id == CLOSEOUT_WORK_UNIT), None
+    post_integration = (
+        load_toml(root / PROJECT_STATUS.relative_to(ROOT)).get("product", {}).get("phase")
+        in POST_INTEGRATION_PHASES
     )
-    post_integration = closeout is not None
     expected_active_sets = (
         {CLOSEOUT_WORK_UNIT},
         {REPOSITORY_IDENTITY_WORK_UNIT},
@@ -375,9 +384,16 @@ def validate_queue() -> list[str]:
         {BETA_READINESS_WORK_UNIT},
         {ALPHA5_CLOSEOUT_WORK_UNIT},
         {ALPHA5_TRUTH_REMEDIATION_WORK_UNIT},
+        {ALPHA5_FINAL_CANDIDATE_WORK_UNIT},
+        {ACTIVE_RELEASE_VIEW_WORK_UNIT},
+        {BETA_REPOSITORY_IDENTITY_WORK_UNIT},
+        {BETA_RULESET_WORK_UNIT},
+        {ALPHA6_WORKSPACE_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
-    if set(active) not in expected_active_sets:
+    # An explicit programme uses the shared exact-membership, primary, and WIP
+    # contract. Historical singleton phases retain their original admission rule.
+    if not plan.get("execution_programme") and set(current_queue["active_workunits"]) not in expected_active_sets:
         problems.append("AIDE queue active set does not match the reconciliation lifecycle")
     indexed = {item.id: item for item in records}
     reconciliation = indexed.get(RECONCILIATION_WORK_UNIT)
@@ -454,6 +470,12 @@ def validate_project_truth(
         "facman_0_1_0_alpha_5_beta_readiness_convergence",
         "facman_0_1_0_alpha_5_promotion_candidate_closeout",
         "facman_0_1_0_alpha_5_truth_remediation",
+        "facman_0_1_0_alpha_5_final_candidate_closeout",
+        "facman_0_1_active_release_view_consolidation",
+        "facman_0_1_beta_repository_identity_decision",
+        "facman_0_1_beta_repository_identity_frozen",
+        "facman_0_1_beta_ruleset_report_complete",
+        "facman_0_1_alpha6_workspace_migration_recovery",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":
@@ -493,6 +515,12 @@ def validate_project_truth(
         "facman_0_1_0_alpha_3_human_acceptance_pending",
         "facman_0_1_0_alpha_5_promotion_candidate_closeout",
         "facman_0_1_0_alpha_5_truth_remediation",
+        "facman_0_1_0_alpha_5_final_candidate_closeout",
+        "facman_0_1_active_release_view_consolidation",
+        "facman_0_1_beta_repository_identity_decision",
+        "facman_0_1_beta_repository_identity_frozen",
+        "facman_0_1_beta_ruleset_report_complete",
+        "facman_0_1_alpha6_workspace_migration_recovery",
     }
     if project_product.get("canonical_main_promotion") is not expected_main_promotion:
         problems.append("project status canonical main promotion truth drifted")
@@ -506,22 +534,36 @@ def validate_project_truth(
     if phase in {
         "facman_0_1_0_alpha_5_promotion_candidate_closeout",
         "facman_0_1_0_alpha_5_truth_remediation",
+        "facman_0_1_0_alpha_5_final_candidate_closeout",
+        "facman_0_1_active_release_view_consolidation",
+        "facman_0_1_beta_repository_identity_decision",
+        "facman_0_1_beta_repository_identity_frozen",
+        "facman_0_1_beta_ruleset_report_complete",
+        "facman_0_1_alpha6_workspace_migration_recovery",
     }:
+        current_dev = {
+            "facman_0_1_beta_ruleset_report_complete": (
+                "b94365074835c092b3c9a60b71d4ec985d0849d0"
+            ),
+            "facman_0_1_alpha6_workspace_migration_recovery": (
+                "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+            ),
+        }.get(phase, "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2")
         expected_roles = {
-            "promotion_source_revision": "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
-            "canonical_main_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-            "dev_synchronization_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
-            "qualification_source_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-            "qualification_integration_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
-            "truth_closeout_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+            "promotion_source_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+            "canonical_main_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+            "dev_synchronization_revision": current_dev,
+            "qualification_source_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+            "qualification_integration_revision": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+            "truth_closeout_revision": current_dev,
         }
         for field, expected in expected_roles.items():
             if project.get(field) != expected:
                 problems.append(f"project status alpha.5 {field} drifted")
         alpha5 = project.get("alpha5_beta_readiness", {})
         expected_boundaries = {
-            "candidate_source_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-            "candidate_source_tree": "1ebcd2b230ed188e021880ffa4c438de2ede655b",
+            "candidate_source_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+            "candidate_source_tree": "c07938618bc0f533fd12756cba123f54b8592048",
             "candidate_source_is_closeout_revision": False,
             "candidate_source_is_dev_sync_revision": False,
             "closeout_revision_candidate_qualified": False,

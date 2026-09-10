@@ -1,0 +1,54 @@
+{
+  "schema": "facman.independent_review_source.v1",
+  "head": "b98fc920a0765f21ae5bd38907a902c8f2572f04",
+  "head_tree": "e1050cd06c05f4cf6aca7b5652dc478a1fc7e755",
+  "branch": "task/facman-resource-identity-01",
+  "source": [
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/ExecPlan.md",
+      "bytes": 16490,
+      "sha256": "f6569d1523d06cee0a8373dd885cac0acfb3ddbaf57b233bdaee9435dce6b7d5",
+      "git_blob": "31981908ec49a0338b1c21567233d5906017f321",
+      "crlf_count": 0
+    },
+    {
+      "path": "contracts/policy/test_impact.v1.json",
+      "bytes": 19933,
+      "sha256": "5ca217509f0725d120eb2af9048ea4193ffe9d9ee3fd5048434c1a4e21a7edd2",
+      "git_blob": "12b927e2c4ec2822970e54a0ad9fe8323a7cad3f",
+      "crlf_count": 0
+    },
+    {
+      "path": "tests/integration/resource_identity_runtime.py",
+      "bytes": 12479,
+      "sha256": "b3e0bdcb59a936e1791c9c579d7470627d335c36a68065d13b324e6123f83070",
+      "git_blob": "0bc864518e01e7ea55e4d535bc8ca6b47341e77a",
+      "crlf_count": 0
+    },
+    {
+      "path": "tests/native/CMakeLists.txt",
+      "bytes": 32528,
+      "sha256": "6d5f348ab504a9f187a68405b98b7bb3290d5f0a5c6e8d0e3dd24d2c56fd7cc6",
+      "git_blob": "337de93e3b4fa8686435851c9066fa51731d5315",
+      "crlf_count": 0
+    },
+    {
+      "path": "tests/native/facman_resource_identity_smoke.cpp",
+      "bytes": 30140,
+      "sha256": "7db972615eef90483b1813c8d5bea65aecca088a27826278e05056bac280cd9f",
+      "git_blob": "7216285ea52a7d49accbd9d5bd4d208778b26fcf",
+      "crlf_count": 0
+    },
+    {
+      "path": "tests/test_resource_identity_runtime.py",
+      "bytes": 3461,
+      "sha256": "48c2382a1f0a290e7859867f852cfb5a52f0884b22a9cda2430fb4d797408f91",
+      "git_blob": "01bb4d8cb41a74f0e3a33cb327423b2f63dd72e5",
+      "crlf_count": 0
+    }
+  ],
+  "aggregate_sha256": "703d9abaa15319ff5b9ce786d3a5de7d48dd52c838e117c1ddcd19cdd422a59e",
+  "index_unchanged": true,
+  "qualification": "bounded_fixture_and_test_process_context",
+  "source_frozen": true
+}

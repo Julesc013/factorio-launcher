@@ -11,10 +11,11 @@ branding assets.
 
 ## Current alpha direction
 
-`0.1.0-alpha.5` is the active beta-readiness convergence candidate. Exact
-workflow run `33576140943`, attempt 1 machine-qualified source revision
-`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b` across Windows, macOS Intel, and
+`0.1.0-alpha.5` remains the exact machine-qualified product candidate while the
+engineering programme has advanced to the unallocated Alpha.6 planning label.
+Final exact workflow run `33603385303`, attempt 1 machine-qualified source revision
+`4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048` across Windows, macOS Intel, and
 Linux x64. Its five jobs and four workflow artifacts culminated in a verified
 14-file internal unsigned, unpublished evidence bundle. That bundle is not the
 final public eight-asset matrix, and no alpha.5 package is published.
@@ -24,9 +25,9 @@ native `FacMan` GUI and the same `facman` terminal host for machine JSON, human
 CLI, and `facman tui`. Windows WinForms on .NET Framework 4.8 is the reference
 lane. GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel are
 machine-qualified packages whose GUI lanes remain semantic previews. The exact non-authorizing receipt is
-[`alpha5_promotion_candidate_closeout.v1.toml`](release/index/alpha5_promotion_candidate_closeout.v1.toml).
-It qualifies only the recorded source revision/tree; closeout and future
-revisions require a fresh candidate run.
+[`alpha5_final_candidate_closeout.v1.toml`](release/index/alpha5_final_candidate_closeout.v1.toml).
+It qualifies only the recorded product source revision/tree. The truth-only
+closeout commit and future product revisions do not inherit that qualification.
 
 The draft manual-test matrix is Windows x64, macOS Intel x64, and Linux x64.
 Windows is the `0.1.0` support direction; macOS and Linux are experimental
@@ -34,6 +35,7 @@ preview claims. Human install, accessibility, packaged performance/security,
 managed-install, real Play/session/Last Run, signing, notarization, tagging,
 publication, and support gates remain open. Machine qualification grants none
 of those authorities. See the [distribution matrix](docs/release/DISTRIBUTION_MATRIX.md),
+the [active release view](docs/release/ACTIVE_RELEASE_VIEW.md),
 the [0.1 foundation contract](docs/product/facman_0_1_foundation_public_beta.md),
 and the [beta grand master plan](docs/product/facman_0_1_beta_grand_master_plan.md).
 
@@ -74,7 +76,9 @@ belong under the product domain they implement; folders like `c11/` and
 `cpp11/` are intentionally blocked. `contracts/` is broader than schemas, and
 `release/profiles/` names concrete target lanes. The current primary profiles
 are `windows_product_x64`, `macos_product_x64`, and `linux_product_x64`;
-toolkit-specific profiles remain internal compatibility evidence.
+toolkit-specific profiles remain internal compatibility evidence. The
+machine-readable selector is `release/index/active_release_view.v1.toml`;
+catalog membership alone is never a current release obligation.
 
 FacMan has one product/application authority and multiple projections. CLI
 JSON is the normative machine contract; bounded human CLI and `facman tui`
@@ -109,14 +113,21 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_5_truth_remediation`. **Active WorkUnit:** `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`. **Next:** `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`.
+**Phase:** `facman_0_1_alpha6_workspace_migration_recovery`. **Primary active WorkUnit:** `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`. **Next:** `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
+Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`, `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`.
+
+Current release obligations come only from
+`release/index/active_release_view.v1.toml`.
+Selected profiles: `windows_product_x64, macos_product_x64, linux_product_x64`; canonical shape: 8 assets.
+Windows is the reference; macOS and Linux are selected previews.
+Catalog-only CLI, TUI, toolkit, and earlier distribution records are not current downloads.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 127 commands, 400 schemas, and 247 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 131 commands, 417 schemas, and 250 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
@@ -125,7 +136,7 @@ FacMan's exact consumed providers are:
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
 Repository identity is sourced from `release/index/repository_identity.v1.toml`.
 Its FacMan row binds stable role `facman` and numeric ID `1293124404`.
-The canonical slug is `Julesc013/factorio-launcher`; the deferred future slug is `Julesc013/facman`.
+The canonical slug is `Julesc013/factorio-launcher`; the non-current future slug candidate is `Julesc013/facman`.
 The GitHub rename remains deferred and current source closure uses factorio-launcher.
 The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin reconciliation, and sole ULK Last Run authority.
 The immutable route v2 remains historical, strictly non-authorizing, and invalidated for current use by the provider-pin change.
@@ -133,10 +144,10 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted`.
+`alpha6_workspace_migration_recovery_active_exact_play_route_unaccepted`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+workflow: `complete_alpha6_workspace_migration_recovery_then_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
 user validation: `exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

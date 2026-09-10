@@ -1,0 +1,8 @@
+fix(workspace): preserve recovery refusal and package failures
+
+Classify damaged staging after validating all journal bindings.
+Stop Windows qualification when any native command fails.
+
+Work-Item: FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence/local-validation.json
+Changelog: Fixed: Preserve workspace recovery refusals and reject failed candidate proof

@@ -8,6 +8,17 @@ Date: 2026-09-02 (Australia/Sydney)
 
 Canonical machine companion: `release/index/foundation_beta_readiness.v1.toml`
 
+Prospective scope amendment, 2026-09-05: `release/index/plan.v1.toml`'s
+`delivery_train` now records the in-progress corrected train admission.
+0.1 requires complete local-first application/CLI/JSON/RPC/full-screen and
+linear TUI on declared Windows/Linux/macOS targets, followed by WinForms and
+GTK3 reference completion. AppKit stays a tested preview until 0.4 graduation.
+Acquisition/credentials/Mod Portal are functional 0.2 scope; local hosting is
+0.3. The Alpha.5 qualification, preview statuses, source identities and
+three-profile/eight-asset selector below remain historical/current evidence,
+not qualification of these stronger prospective requirements. The admission
+WorkUnit is in progress pending protected integration; no authority is granted.
+
 ## Executive judgment
 
 FacMan should continue toward a 1.0-shaped, breadth-bounded 0.1 beta. It should
@@ -26,8 +37,9 @@ completeness.
 The target is therefore:
 
 > Architecture-complete, breadth-bounded, local-first FacMan with twelve safe
-> user journeys, Windows as the reference platform, macOS Intel and Linux x64 as
-> explicitly experimental previews, and exactly two downloads per platform.
+> user journeys, complete terminal workflows on declared Windows/Linux/macOS
+> targets and WinForms/GTK3 reference desktops before plain 0.1.0. AppKit remains
+> preview-scoped; current qualification and asset selection are unchanged.
 
 ## What was reviewed
 
@@ -71,8 +83,8 @@ roots on 2026-09-02:
   `d2a2aae7e61c47035c92334b0522143b4fea3880`.
 
 The exact hosted alpha.5 product candidate also passed from canonical source
-revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b`. Workflow run `33576140943`,
+revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048`. Workflow run `33603385303`,
 attempt 1 completed five successful jobs and four workflow artifacts. The final
 download-back-verified internal bundle contains 14 files: six products, three
 platform evidence records, three payload-equivalence records, one internal
@@ -149,10 +161,11 @@ Wayland-native delivery are not implied.
 
 ### Fix the current GUIs before adding three more
 
-The frontend order is WinForms, GTK3, AppKit, Qt6, WinUI, SwiftUI. The beta
-critical path ends after AppKit. Qt6, WinUI, and SwiftUI receive stable
-presentation contracts and conformance fixtures now, but implementation and
-support require separate post-beta admissions.
+Complete backend and all terminal interfaces first, with small GUI contract
+canaries throughout, then WinForms and GTK3. Both reference desktops block
+plain 0.1.0; full AppKit completion belongs to 0.4. Maintain AppKit preview
+builds and contract checks during 0.1. Qt6, WinUI and SwiftUI require separate
+admission; speculative stable APIs and placeholders are not required now.
 
 ## Twelve beta journeys
 
@@ -239,7 +252,7 @@ payload comparison, relocation tests, and lifecycle proof.
 Current alpha.5 result: the package TCK now has platform normalization adapters,
 safe archive inventory, no-clobber evidence receipts, and a hosted workflow path
 that compares Windows setup, expanded macOS pkg, and installed Linux `.run`
-payloads with their canonical stages. Exact run `33576140943` passed all three
+payloads with their canonical stages. Exact run `33603385303` passed all three
 payload-equivalence checks for the recorded source revision/tree. This is
 machine proof of the six candidate products, not human lifecycle evidence or
 release authority.
@@ -253,7 +266,7 @@ produce checksums/evidence, and never create a tag or release.
 
 Current alpha.5 result: `product-candidate.yml` and its bounded evidence helper
 implement that non-authorizing route. They keep tag, signing, notarization,
-publication, support, and release authority false. Run `33576140943`, attempt 1
+publication, support, and release authority false. Run `33603385303`, attempt 1
 qualified the exact integrated alpha.5 source/tree on all three hosted
 platforms. It assembled the six product files plus workflow-internal checksums
 and evidence into a verified 14-file bundle; it is not the final eight-asset
@@ -404,7 +417,7 @@ for the recorded source revision/tree.
 
 Current exit evidence: the complete local alpha.5 promotion obligation profile
 passes from external outputs, the candidate source was protected-branch
-promoted/synchronized, and exact hosted platform run `33576140943` passed for
+promoted/synchronized, and exact hosted platform run `33603385303` passed for
 the recorded source revision/tree. Human packaged-byte receipts and every
 unavailable authority gate remain explicit and pending.
 
@@ -438,7 +451,9 @@ exact-candidate human managed-install receipt.
 - qualify a fresh exact Windows Play route without importing old authority;
 - make long execution durable and asynchronous so inspect/stop are not blocked by
   a global request lock;
-- migrate GTK3, then AppKit, to the typed presentation snapshot/action seam;
+- close all declared terminal targets, then WinForms and GTK3 ordinary
+  workflows through the typed presentation snapshot/action seam; keep AppKit
+  preview checked without requiring its 0.4 graduation;
 - add Content, Saves, Activity/Recovery, and Settings/Support journey parity;
 - add streaming transport caps, strict UTF-8/JSON/correlation checks, timeout,
   cancellation, and process-tree termination;
@@ -446,12 +461,16 @@ exact-candidate human managed-install receipt.
   human lifecycle, accessibility, and performance receipts for macOS Intel and
   Ubuntu GTK3/X11.
 
-Exit: J06-J10 pass machine conformance, exact Windows Play has a human verdict,
-and preview claims match their platform evidence.
+Exit: J06-J10 and the remaining local terminal journeys pass machine
+conformance on declared targets, WinForms/GTK3 reference workflows are
+complete, exact Windows Play has its own verdict, and preview claims match
+their bounded evidence.
 
 ### Feature-freeze alpha.N
 
 - refuse entry until all twelve machine journeys are already closed;
+- require complete human CLI, JSON/RPC, full-screen/linear TUI and WinForms/GTK3
+  ordinary parity; the Terminal v1 checkpoint alone is not final 0.1 completion;
 - freeze command, state, package, TCK, and presentation compatibility;
 - complete security, fuzz/adversarial, accessibility preflight, performance, and
   reproducibility gates;

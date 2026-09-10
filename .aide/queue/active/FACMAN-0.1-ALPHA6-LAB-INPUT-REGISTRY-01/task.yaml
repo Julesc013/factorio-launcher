@@ -1,0 +1,44 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
+title: Register scenario hosts and approved input custody
+status: active_automated
+lifecycle_state: active_automated
+planning_state: next
+created_at: 2026-09-06
+owner: runtime-maintainer
+canonical_plan: release/index/plan.v1.toml
+admission_workunit: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
+objective: "Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest."
+source_bundles:
+  - "F02"
+allowed_paths:
+  - "README.md"
+  - ".aide/memory/project-state.md"
+  - ".aide/memory/project-state.v2.json"
+  - "contracts/policy/test_impact.v1.json"
+  - "todo.md"
+  - ".aide/queue/index.yaml"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/**"
+  - "release/index/**"
+  - "tools/**"
+  - "tests/**"
+  - "docs/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/**"
+forbidden_paths:
+  - ".git/**"
+  - ".aide.local/**"
+  - ".aide/history/**"
+acceptance:
+  - "Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest."
+  - "Unavailable cells carry actionable external blockers; source fixtures and available hosts continue."
+  - "Keep real game, user-experience and machine-fixture outcomes distinct."
+validation_protocol:
+  - "Inspect existing affected native/Python tests and strict validators before implementation; record exact commands and results."
+  - "Exercise applicable positive, refusal, concurrency, fault/recovery and package effects with independent oracles."
+  - "Retain source, base/head/tree, independent review, exact integration and evidence invalidation; source fixtures alone do not qualify real hosts."
+retained_boundaries:
+  - "No direct protected push, force push, self-approval or required-check bypass."
+  - "No production credentials, signing, billing or public publication."
+  - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
+commit_template: .aide/git/commit-template.md

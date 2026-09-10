@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Closed the report-only Beta ruleset and tag-protection assessment with an
+  exact live GitHub observation, a durable Phase 0 cleanup receipt, and an
+  operator-facing hardening proposal; no GitHub setting or release authority
+  changed.
+
 ## 0.1.0-alpha.5 - In development (2026-09-01)
 
 - Establishes one machine-readable twelve-journey route from alpha.5 to an exact `0.1.0-beta.1` candidate.
@@ -7,9 +14,9 @@
 - Adds release-profile lifecycle truth, canonical-stage payload-equivalence checks, and a version-current non-publishing six-product candidate workflow.
 - Corrects the macOS case-only GUI/CLI bundle collision and adds maintainability and performance ratchets for current hotspots.
 - Machine-qualifies the exact unsigned, unpublished alpha.5 source
-  `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` / tree
-  `1ebcd2b230ed188e021880ffa4c438de2ede655b` in candidate
-  run `33576140943`, attempt 1: five successful jobs, four workflow artifacts,
+  `4683ecd9a1b9ead5eb84be152760d12583da0f0e` / tree
+  `c07938618bc0f533fd12756cba123f54b8592048` in candidate
+  run `33603385303`, attempt 1: five successful jobs, four workflow artifacts,
   and a download-back-verified 14-file internal evidence bundle.
 - Keeps the 14-file candidate evidence bundle distinct from the final public
   eight-asset law: six product packages, one versioned checksum list, and one
@@ -22,6 +29,9 @@
 - Binds candidate qualification to the recorded source revision/tree only;
   closeout and future revisions require a fresh run and no human verdict or
   release authority is inferred.
+- Closes the exact PR #242/#243 protected-`dev` integration, consolidates the
+  current three-profile/eight-asset release view, and freezes repository ID
+  `1293124404` at `Julesc013/factorio-launcher` through stable 0.1 review.
 
 ## 0.1.0-alpha.4 - Integrated foundation baseline (2026-09-01)
 

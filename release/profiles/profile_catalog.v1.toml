@@ -2,6 +2,8 @@ schema = "facman.release_profile_catalog.v1"
 lifecycle_taxonomy = "release/profiles/profile_lifecycle.v1.toml"
 catalog_role = "reviewed_aggregate"
 catalog_is_generated = false
+active_release_selection = "release/index/active_release_view.v1.toml"
+catalog_grants_current_release_obligation = false
 
 [[profile]]
 id = "windows_product_x64"

@@ -103,15 +103,17 @@ def validate() -> list[str]:
         problems.append("AppKit bundle architecture priority must be x86_64 only")
 
     gtk_main = _text(GTK / "main.c")
+    gtk_view = _text(GTK / "shell_view.c")
     gtk_transport = _text(GTK / "command_client.c")
     gtk_transport_validator = _text(GTK / "transport_validator.c")
     gtk_encoder = _text(GTK / "generated_rpc_request.c")
-    _require(gtk_main, (
+    _require(gtk_main, ("facman_gtk_view_new", "facman_gtk_view_render"), "GTK production view binding", problems)
+    _require(gtk_main + gtk_view, (
         '"instances"', '"installations"', '"activity"', '"settings"', '"advanced"',
         "Launch Deck", "stale_readiness", "Last Run", "operation.fixture-play-002",
         "gtk_menu_bar_new", "GDK_KEY_1", "GDK_KEY_5", "atk_object_set_name",
         "atk_object_set_description", "System Native", "OEM+ Launch Deck",
-        "g_object_ref(shell->rpc_result)", "g_object_unref(buffer)",
+        "g_object_ref(shell->view->rpc_result)", "g_object_unref(buffer)",
         "GLIB_CHECK_VERSION(2, 74, 0)", "G_APPLICATION_DEFAULT_FLAGS",
         "G_APPLICATION_FLAGS_NONE", "FACMAN_APPLICATION_FLAGS",
     ), "GTK shell", problems)

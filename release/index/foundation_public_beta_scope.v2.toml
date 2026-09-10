@@ -9,6 +9,8 @@ target_version = "0.1.0"
 candidate_version = "0.1.0-alpha.5"
 release_shape = "one_point_zero_architecture_with_bounded_zero_point_one_breadth"
 status = "implementation_active_external_acceptance_pending"
+prospective_delivery_contract = "release/index/plan.v1.toml#delivery_train"
+prospective_delivery_role = "requirements_only_not_current_qualification_or_authority"
 contract = "docs/product/facman_0_1_foundation_public_beta.md"
 north_star = "A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state."
 
@@ -38,7 +40,7 @@ required_frontends = [
   "same_binary_tui",
   "winforms",
   "appkit_preview",
-  "gtk_preview",
+  "gtk_reference_pending_qualification",
 ]
 
 deferred_features = [

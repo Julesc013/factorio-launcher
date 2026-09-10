@@ -1,0 +1,1517 @@
+{
+  "schema": "facman.resource-export-windows-custody.v1",
+  "result": "PASS_RECORDED_THREE_WINDOWS_RESOURCE_FIXTURES",
+  "source_head": "c2ce811312aec8229c19f50fbbb07cac0b88a407",
+  "base_tree": "f5049798a04959c00be80791a48097dc8907313d",
+  "candidate_tree": "288eb824f0e0ded9cf1061252cd495fdb6fba161",
+  "dirty_overlay_paths": 27,
+  "candidate_source_files": 4743,
+  "provider_physical_files": 477,
+  "archive": {
+    "path": "evidence.zip",
+    "bytes": 2772123,
+    "sha256": "cac4d177771b9c8f49155c7b06323d749345c5f1ec902fd0e0b58da5a9e3c7fd"
+  },
+  "members": [
+    {
+      "member": "controller-dependencies/provider_canary_process.py",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\worktrees\\task-facman-provider-canary-01\\tools\\provider_canary_process.py",
+      "bytes": 7104,
+      "sha256": "5f7b834f3a26a84ffc40e7a164a615d4855cf01b4fbc50fb909e83cc53c9c1fe"
+    },
+    {
+      "member": "controller-dependencies/provider_canary_process_windows.py",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\worktrees\\task-facman-provider-canary-01\\tools\\provider_canary_process_windows.py",
+      "bytes": 12792,
+      "sha256": "47233123222a02befb87edaa302ad0232b06ae4f266ba97b0d1e4308b55b236c"
+    },
+    {
+      "member": "evidence/posix-namespace-checkpoint-commit-v1/result.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-namespace-checkpoint-commit-v1\\result.json",
+      "bytes": 22605,
+      "sha256": "ef268f5bbc37860b96ab893b24dfe8425df94460b632e9c13b5211fca0d96bef"
+    },
+    {
+      "member": "evidence/resource-export-environment-root-review-v1/review.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-environment-root-review-v1\\review.json",
+      "bytes": 1443,
+      "sha256": "683a1ef4d2c55fd6adf83677149db113d2bfd6062f9d2278b6f663caa996fff9"
+    },
+    {
+      "member": "evidence/resource-export-outcome-candidate-v4/base-source-roster.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-outcome-candidate-v4\\base-source-roster.json",
+      "bytes": 869959,
+      "sha256": "c36540b45323233bad376a0d553b6654a980c5498cfc750835f271ac3750ba5c"
+    },
+    {
+      "member": "evidence/resource-export-outcome-candidate-v4/complete.patch",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-outcome-candidate-v4\\complete.patch",
+      "bytes": 74347,
+      "sha256": "608535c81f1e97fe212e02a3dcce227f9b398aade07638ce21d5a1d57384df51"
+    },
+    {
+      "member": "evidence/resource-export-outcome-candidate-v4/patch-check.stderr",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-outcome-candidate-v4\\patch-check.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "evidence/resource-export-outcome-candidate-v4/patch-check.stdout",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-outcome-candidate-v4\\patch-check.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "evidence/resource-export-outcome-candidate-v4/source-manifest.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-outcome-candidate-v4\\source-manifest.json",
+      "bytes": 21319,
+      "sha256": "04e8d8eadb138f104e1bbf571224c53c5a69d6759c4f86edec9217c54385adec"
+    },
+    {
+      "member": "evidence/resource-export-outcome-candidate-v4/source.zip",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-outcome-candidate-v4\\source.zip",
+      "bytes": 70956,
+      "sha256": "60366fe87ecfc729b6086390e57627fb35aeafb1858134adf40eb2e2ff591c3e"
+    },
+    {
+      "member": "evidence/resource-export-outcome-candidate-v4/validation.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-outcome-candidate-v4\\validation.json",
+      "bytes": 2920,
+      "sha256": "e12eecd7bf33914f7fd88597ae4c0a11dbcbe3002f12edb21e76d1ff4b82777f"
+    },
+    {
+      "member": "evidence/resource-export-rx4-failure-seal/custody.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx4-failure-seal\\custody.json",
+      "bytes": 53298,
+      "sha256": "cc73af1fb734191deafaefde8550619a2573340ae8a728fc1940d8462065ef30"
+    },
+    {
+      "member": "evidence/resource-export-rx4-failure-seal/diagnosis.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx4-failure-seal\\diagnosis.json",
+      "bytes": 3556,
+      "sha256": "1b954906a949df070a054e1fcc4f705c3489a4ac4e20f5519fbfa596fbde3125"
+    },
+    {
+      "member": "evidence/resource-export-rx4-failure-seal/originals.zip",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx4-failure-seal\\originals.zip",
+      "bytes": 631333,
+      "sha256": "bf3a27b01831021d0c5a3d5fa6750b30af80b48a351ae50d5b1e841ea32118e1"
+    },
+    {
+      "member": "evidence/resource-export-rx5-actual-seal/control-originals.zip",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\control-originals.zip",
+      "bytes": 826174,
+      "sha256": "a5fca26ca2eb6c64266720e411fd717d59db9aa8afc5b1efb2ea1773caff2700"
+    },
+    {
+      "member": "evidence/resource-export-rx5-actual-seal/control-originals.zip.members.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\control-originals.zip.members.json",
+      "bytes": 43449,
+      "sha256": "eb8cd65afacd56cbe4b52ff14da85410737e169cb76be7ac58952c9f97f42e97"
+    },
+    {
+      "member": "evidence/resource-export-rx5-actual-seal/intent.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\intent.json",
+      "bytes": 786,
+      "sha256": "52276ce45c44030022ec535070959459eb9952f87fb5f576c2b04f348ccecbe6"
+    },
+    {
+      "member": "evidence/resource-export-rx5-actual-seal/result.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\result.json",
+      "bytes": 1559,
+      "sha256": "623dbfae9ad7eccd86bf8ef261b844b8f0d15a20e392781c1b2d30950aafdeef"
+    },
+    {
+      "member": "evidence/resource-export-rx5-actual-seal/root-inventory.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\root-inventory.json",
+      "bytes": 2982574,
+      "sha256": "7230ae580597cfffed011dec29cfef0f185062eeff0c0018243fd5a499f583b7"
+    },
+    {
+      "member": "evidence/resource-export-rx5-actual-seal/selected-artifacts.zip.members.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip.members.json",
+      "bytes": 252694,
+      "sha256": "2fce9072028b67ffe9abe581dbeee8a3c89ca602d1422f80266288f3855cc36b"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/README.md",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\README.md",
+      "bytes": 2023,
+      "sha256": "a369e3e8079398f22fde00bfb4bcacc0c1d2efe5bc65121d8524743af44ea568"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/audit.py",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\audit.py",
+      "bytes": 18215,
+      "sha256": "331642eddd1792cad8f7662dbb8a11477cbc69ef61001402038a43bb0ee88fe8"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/final-tests.stderr",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\final-tests.stderr",
+      "bytes": 1096,
+      "sha256": "7d7eec1cfa2e7c7aa943620913ee50f75c2ab88c5a6d99bb7d8f13115c0cb092"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/final-tests.stdout",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\final-tests.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/final-validation.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\final-validation.json",
+      "bytes": 480,
+      "sha256": "b9ba334fd6e8aa10b3a2344f62a6af4d501efb154321c06abe621bdf04867320"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/handoff.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\handoff.json",
+      "bytes": 2323,
+      "sha256": "3b10706cf216f7b6842b83e27719d9a9ac2c73f0f9153e2b515b011e6df080c5"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/invocation-once/intent.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\invocation-once\\intent.json",
+      "bytes": 618,
+      "sha256": "c935c6989fb339eb367074bcbdc45d07361b4878312ff7ba64a05c28fd534d81"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/invocation-once/result.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\invocation-once\\result.json",
+      "bytes": 997,
+      "sha256": "80524c726538ed6d9ce681233c839277c26a690725909de18b06eec4213a1691"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/invocation-once/stderr.raw",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\invocation-once\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/invocation-once/stdout.raw",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\invocation-once\\stdout.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/plan.draft.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\plan.draft.json",
+      "bytes": 3123,
+      "sha256": "3b67a56b8ce027ddcbf1a2f733372a138614d3db8ecd8290265231d033731608"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/plan.ready.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\plan.ready.json",
+      "bytes": 3945,
+      "sha256": "b3980b71796e78caa2c117d9e3202ed3a03d0f58e796845251412e728465e09a"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/pre-final-7-test-source.zip",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\pre-final-7-test-source.zip",
+      "bytes": 8137,
+      "sha256": "c4f33521bd1ac3a15f05bbe7f166906d848a0db8f1db5068c562a60c501cb696"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/source-manifest.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\source-manifest.json",
+      "bytes": 2982,
+      "sha256": "e3b39371974760ab7265e1c46c1bd413f9134b319b53dad224d5714ddf623df6"
+    },
+    {
+      "member": "evidence/resource-export-rx5-audit-proposal-v1/test_audit.py",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-audit-proposal-v1\\test_audit.py",
+      "bytes": 5209,
+      "sha256": "c217c8d71d79b0225f8fd1e8f4a7c3ef0715d93d3661365e7301d4809bfaf70b"
+    },
+    {
+      "member": "evidence/resource-export-rx5-root-actual-review-v1/review.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-root-actual-review-v1\\review.json",
+      "bytes": 5087,
+      "sha256": "2d91b16b1c13f7da3f6084ba5743ad3ef2ca2161d95634bd1d9209ed07b085c1"
+    },
+    {
+      "member": "evidence/resource-export-v2-independent-review.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-v2-independent-review.json",
+      "bytes": 11068,
+      "sha256": "1b1d311297e70e0954ef44790333b03d4707dd26169d436d76099e080a7c5406"
+    },
+    {
+      "member": "evidence/resource-export-windows-helper-review-v3/result.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-helper-review-v3\\result.json",
+      "bytes": 12444,
+      "sha256": "8f047e1b43814b5d6fd944ff2cbce3dce49a179f1f522d8cf73cdd30637680cd"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v1/provider-source-rosters.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v1\\provider-source-rosters.json",
+      "bytes": 180275,
+      "sha256": "22c94c93997b39b8ec19920874a8ca49c758770770b5787b4d88dd71b872d7be"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v2/rx2-failure-custody.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v2\\rx2-failure-custody.json",
+      "bytes": 19906,
+      "sha256": "c6f3a51346ede7ee8e42b12556bf463da3fa5a9a9c54c8096399c38fcc392520"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v2/rx2-failure-originals.zip",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v2\\rx2-failure-originals.zip",
+      "bytes": 36377,
+      "sha256": "54619b860140b8368f8b58a1dfe7cdd3abd6a0ee523ae1f5b9048e535c22afff"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v3/rx3-failure-custody.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v3\\rx3-failure-custody.json",
+      "bytes": 32733,
+      "sha256": "c887cf169f4edf2ad9ff707eea234058c16e06bcbe4b3fd1807e20ed1aabb237"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v3/rx3-failure-originals.zip",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v3\\rx3-failure-originals.zip",
+      "bytes": 302352,
+      "sha256": "9eabbcf6b59f4a43c60b65af80cb64e40deeea9c6708ce247ab07f529cdd09f9"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/admission-scope.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\admission-scope.json",
+      "bytes": 2097,
+      "sha256": "43f37fc832927110e23d73e803be5452e79997e4c0489db166ec46e47d3b21df"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/admission.patch",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\admission.patch",
+      "bytes": 4463,
+      "sha256": "33c9a0038cbcaf9717634f4149690a96be44f7607547008cd32f565cf563196e"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/explicit-proof-clone-plan.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\explicit-proof-clone-plan.json",
+      "bytes": 5274,
+      "sha256": "33bc450f517578bf2f32b03552f07449c81f8a0bb167904c464de30a49163d16"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/read-only-observation.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\read-only-observation.json",
+      "bytes": 7757,
+      "sha256": "b163e2876cc2d1354d2b9cee811b56a1217963d13469c8747b80cf3ef6351b21"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/root-source-review.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\root-source-review.json",
+      "bytes": 3304,
+      "sha256": "242058e974cb2887128e22c9dfea0f37950edf452d9c1dab2b9ea3a4eb385b1d"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/run.py",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\run.py",
+      "bytes": 20837,
+      "sha256": "45d826095247fcf9cc7fb7e7f152fde9f9c3dedfe751a7330450bfab9326bcc0"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/source-binding.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\source-binding.json",
+      "bytes": 17448,
+      "sha256": "95c8db097439bf38a6521b1924bea05d1d67fcfb2088c0075ed15d45b505ff26"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/test_run.py",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\test_run.py",
+      "bytes": 12687,
+      "sha256": "6d8719c430d23d74a5ecd8e724dfe24f5816686338e8a084b426a53fd896f176"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/tests.stderr",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\tests.stderr",
+      "bytes": 2812,
+      "sha256": "c8ec459d681cd1bf41f57727f138e7cf12ff32376b6e58d811a17fa08b7aa0e9"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/tests.stdout",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\tests.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "evidence/resource-export-windows-plan-v5/validation.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-plan-v5\\validation.json",
+      "bytes": 2511,
+      "sha256": "cc4016cc38e5d9f7eb1cfc02a6ce0299e409ebd457c5d472094399982969e3e8"
+    },
+    {
+      "member": "evidence/resource-export-windows-ready-v5/invocation.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-ready-v5\\invocation.json",
+      "bytes": 1776,
+      "sha256": "cc5941021ec53f24f161eb9c8bfcd680c83872ed3242edd6efddc3276e257d16"
+    },
+    {
+      "member": "evidence/resource-export-windows-ready-v5/plan.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-ready-v5\\plan.json",
+      "bytes": 27003,
+      "sha256": "323c629b5d7260f1e69f537b55ee50e3828fcd38718e657fd350bcdbd53af14e"
+    },
+    {
+      "member": "evidence/resource-export-windows-ready-v5/root-effect-review.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-ready-v5\\root-effect-review.json",
+      "bytes": 3620,
+      "sha256": "9cb5edf83f5a2aa016072364b9632ec53206f790180ad5a6b414353a1d219720"
+    },
+    {
+      "member": "evidence/resource-export-windows-ready-v5/root-source-supplement.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-windows-ready-v5\\root-source-supplement.json",
+      "bytes": 3036,
+      "sha256": "0241613cbcb4471a2be2f44dc1e589c4260460a92cf5b697fff818a4d19db2eb"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage relocated \u00e9 \u03b2/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\installed-stage relocated \u00e9 \u03b2\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage relocated \u00e9 \u03b2/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage relocated \u00e9 \u03b2/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\installed-stage relocated \u00e9 \u03b2\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage relocated \u00e9 \u03b2/manifest/components.v1.json",
+      "bytes": 743,
+      "sha256": "5c07a752ad1b6da67b4835dd82c87fa62e32c1093124cdb86ad3aaae758d7e73"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage relocated \u00e9 \u03b2/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\installed-stage relocated \u00e9 \u03b2\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage relocated \u00e9 \u03b2/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage relocated \u00e9 \u03b2/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\installed-stage relocated \u00e9 \u03b2\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage relocated \u00e9 \u03b2/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage-export/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\installed-stage-export\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage-export/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage-export/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\installed-stage-export\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/installed-stage-export/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-0/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\missing-runtime-0\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-0/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-0/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\missing-runtime-0\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-0/manifest/components.v1.json",
+      "bytes": 743,
+      "sha256": "5c07a752ad1b6da67b4835dd82c87fa62e32c1093124cdb86ad3aaae758d7e73"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-0/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\missing-runtime-0\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-0/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-0/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\missing-runtime-0\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-0/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-1/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\missing-runtime-1\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-1/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-1/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\missing-runtime-1\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-1/manifest/components.v1.json",
+      "bytes": 743,
+      "sha256": "5c07a752ad1b6da67b4835dd82c87fa62e32c1093124cdb86ad3aaae758d7e73"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-1/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\missing-runtime-1\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-1/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-1/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\missing-runtime-1\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/missing-runtime-1/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable relocated \u00e9 \u03b2/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\portable relocated \u00e9 \u03b2\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable relocated \u00e9 \u03b2/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable relocated \u00e9 \u03b2/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\portable relocated \u00e9 \u03b2\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable relocated \u00e9 \u03b2/manifest/components.v1.json",
+      "bytes": 743,
+      "sha256": "5c07a752ad1b6da67b4835dd82c87fa62e32c1093124cdb86ad3aaae758d7e73"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable relocated \u00e9 \u03b2/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\portable relocated \u00e9 \u03b2\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable relocated \u00e9 \u03b2/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable relocated \u00e9 \u03b2/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\portable relocated \u00e9 \u03b2\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable relocated \u00e9 \u03b2/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable-export/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\portable-export\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable-export/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable-export/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\portable-export\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/portable-export/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/seed/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\seed\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/seed/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/seed/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\seed\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/seed/manifest/components.v1.json",
+      "bytes": 743,
+      "sha256": "5c07a752ad1b6da67b4835dd82c87fa62e32c1093124cdb86ad3aaae758d7e73"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/seed/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\seed\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/seed/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/seed/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\seed\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/seed/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/validation.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\n\\tests\\native\\resource-cli-runs\\49c7a5190c5347ffa9d26fff0f024b6b\\validation.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/n/tests/native/resource-cli-runs/49c7a5190c5347ffa9d26fff0f024b6b/validation.json",
+      "bytes": 76136,
+      "sha256": "7ced0ba1d2a177a7d01d731ae1d772bfa4d0523312efcfd34193d78f617a59b2"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-chunk/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-chunk\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-chunk/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-chunk/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-chunk\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-chunk/manifest/components.v1.json",
+      "bytes": 740,
+      "sha256": "a1166529d7d4a37302cda574959f40eeee8cb6659a183de66fa2e105a5eb0e75"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-chunk/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-chunk\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-chunk/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-chunk/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-chunk\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-chunk/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-cr/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-cr\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-cr/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-cr/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-cr\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-cr/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "9a4058f513960152204d8b8817b4ef3f25c501e90746f248add52445dea5cc7c"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-cr/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-cr\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-cr/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-cr/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-cr\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-cr/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-crlf/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-crlf\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-crlf/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-crlf/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-crlf\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-crlf/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "8a4df332877eacaef2154b6aeeac37bae13ef50c469d5a7a6781c2722ff2830d"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-crlf/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-crlf\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-crlf/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-crlf/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-crlf\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-crlf/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-empty/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-empty\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-empty/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-empty/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-empty\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-empty/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "df7c750d8cb3ed8b5b9ca344486554b328fce2119935705c68a9ac8ad94b8609"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-empty/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-empty\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-empty/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-empty/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-empty\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-empty/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-lf/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-lf\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-lf/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-lf/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-lf\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-lf/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "0226ae8fe5da7c0890bcd24d884b4972fce753e3b76255bc3cc4d6b4a0327bf2"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-lf/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-lf\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-lf/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-lf/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-lf\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-lf/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-missing/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-missing\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-missing/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-missing/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-missing\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-missing/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-missing/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-missing\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-missing/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-missing/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-missing\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-missing/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-mixed/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-mixed\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-mixed/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-mixed/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-mixed\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-mixed/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "fbd2d101c62270abfb05f3ac3fb75af569d6a03a0ebb3762b4c964765ce8dedb"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-mixed/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-mixed\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-mixed/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/contract-mixed/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\contract-mixed\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/contract-mixed/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-ambiguous/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-ambiguous\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-ambiguous/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1163,
+      "sha256": "86fa1082fef8595ae9c98de2f07b8638052cf8bd71a3c3ee64415d7e85e90473"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-ambiguous/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-ambiguous\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-ambiguous/manifest/package.v1.toml",
+      "bytes": 2,
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-consumed-digest/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-consumed-digest\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-consumed-digest/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1165,
+      "sha256": "dbad24743aeb0d07051bdc470ab08dea9035d7a9cc2b0124465483cc576e5e32"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-consumed-export/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-consumed-export\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-consumed-export/content/factorio/test.txt",
+      "bytes": 70004,
+      "sha256": "4b76a16837139afbab867685daed0a0c74f762819c3c092a05c6eb1990618807"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-consumed-export/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-consumed-export\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-consumed-export/manifest/resource-pack.v1.json",
+      "bytes": 330,
+      "sha256": "3f5ae64416d1da9ee6c17f431006f64163bf81c2ac4ea04bcade3a8f6a033408"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-duplicate/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-duplicate\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-duplicate/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1163,
+      "sha256": "86fa1082fef8595ae9c98de2f07b8638052cf8bd71a3c3ee64415d7e85e90473"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-export/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-export\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-export/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1163,
+      "sha256": "86fa1082fef8595ae9c98de2f07b8638052cf8bd71a3c3ee64415d7e85e90473"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-exported/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-exported\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-exported/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-exported/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-exported\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-exported/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-failed-export/foreign.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-failed-export\\foreign.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-failed-export/foreign.txt",
+      "bytes": 16,
+      "sha256": "795bd1b441bc13002af2cea1bf3558c4ef9254c9dafb395585cddc79ca51109c"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-failed-export/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-failed-export\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-failed-export/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-failure/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-failure\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-failure/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1163,
+      "sha256": "86fa1082fef8595ae9c98de2f07b8638052cf8bd71a3c3ee64415d7e85e90473"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-marker_collision/foreign.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-marker_collision\\foreign.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-marker_collision/foreign.txt",
+      "bytes": 16,
+      "sha256": "795bd1b441bc13002af2cea1bf3558c4ef9254c9dafb395585cddc79ca51109c"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-nonexec/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-nonexec\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-nonexec/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1163,
+      "sha256": "07af021a4c7fd97e10e12da0738fa93af27f395d6070220bc171d6905435421d"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-nonstd_exception/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-nonstd_exception\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-nonstd_exception/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-after_chunk/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-after_chunk\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-after_chunk/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-after_entry/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-after_entry\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-after_entry/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-digest/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-digest\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-digest/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-explicit/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-explicit\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-explicit/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-explicit/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-explicit\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-explicit/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-nonstd_exception/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-nonstd_exception\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-nonstd_exception/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-product/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-product\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-product/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-product/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-product\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-product/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-reporting-failure/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-reporting-failure\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-reporting-failure/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-outcome-reporting-failure/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-outcome-reporting-failure\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-outcome-reporting-failure/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-reader/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-reader\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-reader/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1163,
+      "sha256": "86fa1082fef8595ae9c98de2f07b8638052cf8bd71a3c3ee64415d7e85e90473"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-replace/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-replace\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-replace/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1163,
+      "sha256": "86fa1082fef8595ae9c98de2f07b8638052cf8bd71a3c3ee64415d7e85e90473"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-sink_exception/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-sink_exception\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-sink_exception/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-substituted-export/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-substituted-export\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-substituted-export/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos-substituted-export/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos-substituted-export\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos-substituted-export/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/macos/Contents/Resources/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\macos\\Contents\\Resources\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/macos/Contents/Resources/manifest/product-stage.v1.json",
+      "bytes": 1165,
+      "sha256": "ce00b8ea1bba81ae1489a90e7312723417dac0b250f98bff1e69843428d1c618"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-ambiguous/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-ambiguous\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-ambiguous/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-ambiguous/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-ambiguous\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-ambiguous/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-ambiguous/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-ambiguous\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-ambiguous/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-ambiguous/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-ambiguous\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-ambiguous/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-ambiguous/share/facman/manifest/product-stage.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-ambiguous\\share\\facman\\manifest\\product-stage.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-ambiguous/share/facman/manifest/product-stage.v1.json",
+      "bytes": 2,
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-consumed-digest/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-consumed-digest\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-consumed-digest/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-consumed-digest/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-consumed-digest\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-consumed-digest/manifest/components.v1.json",
+      "bytes": 740,
+      "sha256": "5c91da9c24a21c09132224570942b7aa263baa515d3d9cd0c3a6b1082403b498"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-consumed-digest/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-consumed-digest\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-consumed-digest/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-consumed-digest/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-consumed-digest\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-consumed-digest/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-consumed-export/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-consumed-export\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-consumed-export/content/factorio/test.txt",
+      "bytes": 70004,
+      "sha256": "4b76a16837139afbab867685daed0a0c74f762819c3c092a05c6eb1990618807"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-consumed-export/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-consumed-export\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-consumed-export/manifest/resource-pack.v1.json",
+      "bytes": 330,
+      "sha256": "3f5ae64416d1da9ee6c17f431006f64163bf81c2ac4ea04bcade3a8f6a033408"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-duplicate/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-duplicate\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-duplicate/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-duplicate/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-duplicate\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-duplicate/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-duplicate/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-duplicate\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-duplicate/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-duplicate/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-duplicate\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-duplicate/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-excessive/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-excessive\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-excessive/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-excessive/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-excessive\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-excessive/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-excessive/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-excessive\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-excessive/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-export/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-export\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-export/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-export/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-export\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-export/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-export/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-export\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-export/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-export/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-export\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-export/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-exported/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-exported\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-exported/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-exported/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-exported\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-exported/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-failed-export/foreign.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-failed-export\\foreign.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-failed-export/foreign.txt",
+      "bytes": 16,
+      "sha256": "795bd1b441bc13002af2cea1bf3558c4ef9254c9dafb395585cddc79ca51109c"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-failed-export/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-failed-export\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-failed-export/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-failure/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-failure\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-failure/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-failure/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-failure\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-failure/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-failure/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-failure\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-failure/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-failure/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-failure\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-failure/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-marker_collision/foreign.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-marker_collision\\foreign.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-marker_collision/foreign.txt",
+      "bytes": 16,
+      "sha256": "795bd1b441bc13002af2cea1bf3558c4ef9254c9dafb395585cddc79ca51109c"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-nonstd_exception/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-nonstd_exception\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-nonstd_exception/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-after_chunk/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-after_chunk\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-after_chunk/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-after_entry/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-after_entry\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-after_entry/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-digest/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-digest\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-digest/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-explicit/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-explicit\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-explicit/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-explicit/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-explicit\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-explicit/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-nonstd_exception/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-nonstd_exception\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-nonstd_exception/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-product/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-product\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-product/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-product/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-product\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-product/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-reporting-failure/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-reporting-failure\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-reporting-failure/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-outcome-reporting-failure/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-outcome-reporting-failure\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-outcome-reporting-failure/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-reader/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-reader\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-reader/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-reader/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-reader\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-reader/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-reader/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-reader\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-reader/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-reader/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-reader\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-reader/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-replace/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-replace\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-replace/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-replace/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-replace\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-replace/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-replace/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-replace\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-replace/manifest/package.v1.toml",
+      "bytes": 856,
+      "sha256": "fa170a817d828eba5dc7ddf8d42331735cd238b2d2d44d8658444ab5b052a972"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-replace/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-replace\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-replace/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-sink_exception/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-sink_exception\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-sink_exception/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-substituted-export/content/factorio/test.txt",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-substituted-export\\content\\factorio\\test.txt",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-substituted-export/content/factorio/test.txt",
+      "bytes": 25,
+      "sha256": "a3b3d12270428094fdeb197d92fde7f27ee1ca42f56566929cbdd75e9df054d3"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows-substituted-export/manifest/resource-pack.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows-substituted-export\\manifest\\resource-pack.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows-substituted-export/manifest/resource-pack.v1.json",
+      "bytes": 324,
+      "sha256": "19ed5b0cb31ca8388beb9683930f415c91a3e18326ef0fc012826157ab1ba197"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows/manifest/build_info.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows\\manifest\\build_info.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows/manifest/build_info.v1.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows/manifest/components.v1.json",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows\\manifest\\components.v1.json",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows/manifest/components.v1.json",
+      "bytes": 738,
+      "sha256": "4888d3884d6e2b4c05f045b1514c7fdcc553d0570f117958ca2b152de406ff22"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows/manifest/package.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows\\manifest\\package.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows/manifest/package.v1.toml",
+      "bytes": 858,
+      "sha256": "3c1246ab7dd578a72f3d2e3fd9408c8f96171399c4cd5939d857596ef60edc83"
+    },
+    {
+      "member": "selected-fixture-metadata/rx5/t/facman-resources-1748491854990800/windows/release/index/workspace_lock.v1.toml",
+      "original": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\rx5\\t\\facman-resources-1748491854990800\\windows\\release\\index\\workspace_lock.v1.toml",
+      "original_archive": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+      "original_member": "rx5/t/facman-resources-1748491854990800/windows/release/index/workspace_lock.v1.toml",
+      "bytes": 262,
+      "sha256": "41eb830c063e84d1761e2a8c1c51e2d8d1951a312b1a896309eb976ec02837e7"
+    }
+  ],
+  "root_independent_actual_review": {
+    "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-root-actual-review-v1\\review.json",
+    "bytes": 5087,
+    "sha256": "2d91b16b1c13f7da3f6084ba5743ad3ef2ca2161d95634bd1d9209ed07b085c1",
+    "member": "evidence/resource-export-rx5-root-actual-review-v1/review.json"
+  },
+  "external_full_artifacts": {
+    "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\resource-export-rx5-actual-seal\\selected-artifacts.zip",
+    "bytes": 16827238,
+    "sha256": "7a42da598d0f3f8bfa49ca94ee8df80d70ad02e52be928bc633820c902d32e53"
+  },
+  "external_artifact_map_member": "evidence/resource-export-rx5-actual-seal/selected-artifacts.zip.members.json",
+  "nested_original_archives": "Original ZIPs remain byte-identical members. Their adjacent custody/manifests provide exact original member mappings. This packet does not normalize raw JSON/log/source bytes.",
+  "map_rows": 8407,
+  "controller_prefinal_rows": 8406,
+  "row_count_difference": "Controller inventory precedes writing its final result.json; closed audit observes that extra file.",
+  "qualification": "Windows VS18 x64 shared stable-provider clean three-target build and three existing resource/native/CLI fixtures only. Layouts named linux or macos in synthetic Windows fixtures are not native platform qualification. Source overlay was not yet applied when run; no WorkUnit completion, provider-pin adoption, product-process/GTK/WinForms/package/human/game/signing/release qualification.",
+  "retained_failures": [
+    "rx2 checkout long paths",
+    "rx3 VS discovery under minimal environment",
+    "rx4 compiler identification produced two objects, then FileTracker common-data initialization failed"
+  ],
+  "native_or_git_reruns_during_audit": 0,
+  "current_readback": "All 8407 retained root entries match before/after seal; source maps and canonical blobs, five compiled hashes and exact commands match. ROOT independently reread source/providers and both compiler records."
+}

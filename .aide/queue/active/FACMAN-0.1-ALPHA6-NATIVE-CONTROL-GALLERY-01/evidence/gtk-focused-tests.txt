@@ -1,0 +1,8 @@
+facman-presentation-check: ok (5 deterministic C1 states)
+branding-asset-check: ok
+gallery receipt: C:\Users\Jules\AppData\Local\FacMan\Development\repositories\factorio-launcher-5db2844e2f29\tasks\task-facman-0-36077e5ebb\control-gallery\runs\39ef403f564e448e9fa368cd37729bc3\evidence\validation.json
+..................................................
+----------------------------------------------------------------------
+Ran 50 tests in 27.855s
+
+OK

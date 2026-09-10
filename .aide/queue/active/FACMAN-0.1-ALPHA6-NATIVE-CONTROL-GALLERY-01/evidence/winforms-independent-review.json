@@ -1,0 +1,106 @@
+{
+  "schema": "facman.independent_source_review.v1",
+  "reviewer": "pilot_review",
+  "recorded_by": "root",
+  "observed_at": "2026-09-06T15:10:15.839836+00:00",
+  "result": "PASS",
+  "source_manifest_sha256": "c6fa87a50c0a06e1b011a81a90b4b499fb7cdb077f33361354ab2ce292e3e615",
+  "patch_sha256": "996311353558c5cc86fe698977225422729e99680f9170b7dc79e9efad18476a",
+  "open_findings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "independent_checks": [
+    "All 15 source hashes and complete patch independently reproduced",
+    "44 focused tests independently rerun: PASS",
+    "40 runtime input hashes, seven fixtures, 28 PNG hashes and both production assembly copies verified",
+    "Actual overflow and error images visually inspected",
+    "All action handlers preserve recording-only boundary; empty/error projection has no sample residue"
+  ],
+  "runtime_proof": "6473 assertions/28 cells audited from exact source-bound receipt; native run not independently repeated by reviewer",
+  "line_ending_custody": {
+    "apps/gui/windows/winforms/C1GallerySession.cs": {
+      "reviewed_working_sha256": "b91263efa65ad9e9c4e80672b04b79096b9ec95372c490c0b2d5365015d8569f",
+      "canonical_lf_sha256": "b91263efa65ad9e9c4e80672b04b79096b9ec95372c490c0b2d5365015d8569f",
+      "crlf_count": 0
+    },
+    "apps/gui/windows/winforms/C1LivePresentationStore.cs": {
+      "reviewed_working_sha256": "0bfdb45f6516f92dbb939e654d74b2eb3de095378b187c9cec892dc1c21d8ac9",
+      "canonical_lf_sha256": "0bfdb45f6516f92dbb939e654d74b2eb3de095378b187c9cec892dc1c21d8ac9",
+      "crlf_count": 0
+    },
+    "apps/gui/windows/winforms/C1PresentationText.cs": {
+      "reviewed_working_sha256": "905764c9f3c273455544c85a17f8f52de08cfc42817aac5b34bbc4e47f84e2f8",
+      "canonical_lf_sha256": "3f070015e8f7e66af4c7d18c285924c46ffeb1c4f2fdb5e6c65b914090abdd29",
+      "crlf_count": 102
+    },
+    "apps/gui/windows/winforms/C1ShellForm.cs": {
+      "reviewed_working_sha256": "8fe653f5259e9d1e4c3aca4c008de7ae53eeddeb221619d14f3b46de7522c881",
+      "canonical_lf_sha256": "364e44af3cbaadc0ce7a98af629cfe436c6edbe94a2d6069054d2f8be7c0a9e7",
+      "crlf_count": 1307
+    },
+    "apps/gui/windows/winforms/C1SnapshotProjection.cs": {
+      "reviewed_working_sha256": "fa6a58821c8d171d192b005f74f5ae02824f540abf31f4c5e58a531d223732c9",
+      "canonical_lf_sha256": "fa6a58821c8d171d192b005f74f5ae02824f540abf31f4c5e58a531d223732c9",
+      "crlf_count": 0
+    },
+    "apps/gui/windows/winforms/FacMan.WinForms.csproj": {
+      "reviewed_working_sha256": "0b3f8afa3f3b8e55cf2ee4fcf85f322226f0bdc822566f5b3efc7e03afd0d72c",
+      "canonical_lf_sha256": "fe2e7e7375549897f718e0ed26b858fa47f20b1efe2a986ba50cf1c27cf038b0",
+      "crlf_count": 76
+    },
+    "contracts/policy/test_impact.v1.json": {
+      "reviewed_working_sha256": "a2b9a432db88afa8298db8e02c16317336aed2bf3397a27995e2f4975ee43eb8",
+      "canonical_lf_sha256": "a2b9a432db88afa8298db8e02c16317336aed2bf3397a27995e2f4975ee43eb8",
+      "crlf_count": 0
+    },
+    "docs/development/native-control-gallery.md": {
+      "reviewed_working_sha256": "83c14d8d82ebcb3d5dcaa9c78de46c9a62c04d41b59aaf3225352c937d6c2596",
+      "canonical_lf_sha256": "83c14d8d82ebcb3d5dcaa9c78de46c9a62c04d41b59aaf3225352c937d6c2596",
+      "crlf_count": 0
+    },
+    "tests/test_facman_winforms_c1_shell.py": {
+      "reviewed_working_sha256": "12f46b01e0d391c210ee75a8daf83dd31e0940d77f2279d4064f029963ae91db",
+      "canonical_lf_sha256": "12f46b01e0d391c210ee75a8daf83dd31e0940d77f2279d4064f029963ae91db",
+      "crlf_count": 0
+    },
+    "tests/test_native_control_gallery.py": {
+      "reviewed_working_sha256": "9e51ab11e290abff79e67baeda1e150e81fd600dbd2a10ecdec2a895aa7b8f31",
+      "canonical_lf_sha256": "9e51ab11e290abff79e67baeda1e150e81fd600dbd2a10ecdec2a895aa7b8f31",
+      "crlf_count": 0
+    },
+    "tests/winforms_control_gallery/FacMan.ControlGallery.csproj": {
+      "reviewed_working_sha256": "3a7667c621315ab325825ea3c9dad3ce6e0004f92d643758e1d3c6119cb211a7",
+      "canonical_lf_sha256": "3a7667c621315ab325825ea3c9dad3ce6e0004f92d643758e1d3c6119cb211a7",
+      "crlf_count": 0
+    },
+    "tests/winforms_control_gallery/GalleryHarness.cs": {
+      "reviewed_working_sha256": "623afaf56861087cf179d565dc139bcff2abde32ed46e78513eed6ece70caf33",
+      "canonical_lf_sha256": "623afaf56861087cf179d565dc139bcff2abde32ed46e78513eed6ece70caf33",
+      "crlf_count": 0
+    },
+    "tools/control_gallery_fixtures.py": {
+      "reviewed_working_sha256": "4adf655fcd2437f6e0b8448c419aaec94699b22aa37f142955214b09095220c7",
+      "canonical_lf_sha256": "4adf655fcd2437f6e0b8448c419aaec94699b22aa37f142955214b09095220c7",
+      "crlf_count": 0
+    },
+    "tools/facman_live_shell_integration_check.py": {
+      "reviewed_working_sha256": "125b722e0d5762e60881d0e84b5b951681bd244a09eaaf2d3d8948dd7d2e8124",
+      "canonical_lf_sha256": "125b722e0d5762e60881d0e84b5b951681bd244a09eaaf2d3d8948dd7d2e8124",
+      "crlf_count": 0
+    },
+    "tools/native_control_gallery.py": {
+      "reviewed_working_sha256": "cf1cdba390840da02f7ef388786fa34d46ffc90da7d0c9dc1fae121a69f6a699",
+      "canonical_lf_sha256": "cf1cdba390840da02f7ef388786fa34d46ffc90da7d0c9dc1fae121a69f6a699",
+      "crlf_count": 0
+    }
+  },
+  "line_ending_rule": "Tracked Git source uses LF. Root mechanically verifies canonical LF bytes equal reviewed working bytes with CRLF converted to LF only. Historical runtime receipt remains bound to original input bytes; fresh candidate qualification follows.",
+  "remaining": [
+    "GTK production controls",
+    "Packaged candidate and fresh CI",
+    "Actual monitor DPI/high contrast/screen reader/human observations"
+  ],
+  "work_item_complete": false
+}

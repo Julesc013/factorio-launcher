@@ -1,0 +1,109 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.phase0_integration_closeout.v1"
+status = "protected_dev_integrations_verified"
+recorded_on = "2026-09-03"
+archive_checkpoint = "facman-0-1-phase0-integrated-2026-09-03"
+integrated_work_units = [
+  "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+  "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
+]
+prior_canonical_dev = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+canonical_dev = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+canonical_dev_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+merge_head_workflow_group_count = 5
+merge_head_check_count = 12
+merge_head_success_count = 12
+merge_head_failure_count = 0
+
+[[pull_request]]
+number = 242
+base = "dev"
+base_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+head = "03efb41090c11bad27368071f5cb288f7c28e6fd"
+head_tree = "eea831d335959b0df635725fd8e277975bec75dd"
+merge_commit = "f99d96e002f5af519824942a1f8b74bcc26d96f8"
+merge_tree = "eea831d335959b0df635725fd8e277975bec75dd"
+merge_method = "merge_commit"
+merge_actor = "Julesc013"
+merged_at = "2026-09-02T22:45:42Z"
+merge_head_workflows = "5_of_5_success"
+
+[[pull_request]]
+number = 243
+base = "dev"
+base_revision = "f99d96e002f5af519824942a1f8b74bcc26d96f8"
+prior_stacked_head = "8f5d93e0d67a53c48c942217e3ddb25032ea7154"
+restack_merge = "355cf82b0ba24529643dcc4e8716b58c0b88435a"
+head = "a2b93e00c45a9c3c8b9c05a55354104bfd36f29a"
+head_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+merge_commit = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+merge_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+merge_method = "merge_commit"
+merge_actor = "Julesc013"
+merged_at = "2026-09-03T00:15:43Z"
+exact_head_checks = "13_of_13_success"
+merge_head_workflows = "5_of_5_success"
+merge_head_checks = "12_of_12_success"
+
+[[workflow]]
+name = "synthetic-product-tck"
+run_id = 33698758837
+head_sha = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33698758837"
+
+[[workflow]]
+name = "security-policy"
+run_id = 33698758834
+head_sha = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33698758834"
+
+[[workflow]]
+name = "schema-check"
+run_id = 33698758844
+head_sha = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33698758844"
+
+[[workflow]]
+name = "code-security"
+run_id = 33698758828
+head_sha = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33698758828"
+
+[[workflow]]
+name = "ci"
+run_id = 33698758922
+head_sha = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33698758922"
+
+[active_release]
+selector = "release/index/active_release_view.v1.toml"
+profiles = ["windows_product_x64", "macos_product_x64", "linux_product_x64"]
+product_assets = 6
+checksum_assets = 1
+evidence_assets = 1
+authored_asset_count = 8
+
+[qualification_boundary]
+alpha5_candidate_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+alpha5_candidate_tree = "c07938618bc0f533fd12756cba123f54b8592048"
+alpha5_candidate_run = 33603385303
+current_dev_inherits_candidate_qualification = false
+future_product_revision_requires_new_candidate_run = true
+
+[authority]
+factorio_execution = false
+managed_install = false
+human_acceptance = false
+tagging = false
+signing = false
+notarization = false
+publication = false
+support = false
+beta_allocation = false

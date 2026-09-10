@@ -1,12 +1,12 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-09-02"
-active_release = "FACMAN-0.1.0-ALPHA.5"
+last_reviewed = "2026-09-06"
+active_release = "FACMAN-0.1.0-ALPHA.6"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
-next_workunit_limit = 8
+next_workunit_limit = 9
 archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
 operating_model = "docs/roadmap/planning-operating-model.md"
 interface_design_system = "docs/product/interface_design_system.md"
@@ -33,6 +33,1282 @@ source_of_truth = [
   "run-specific generated prompt and run profile",
   "historical reports, archived plans, research notes, and prior prompts",
 ]
+
+[execution_programme]
+id = "FACMAN-0.1-BETA1-COMPLETION-2026-09-06"
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+primary_workunit = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
+status = "implementation_active"
+authority_basis = "Current user request: implement, test, remediate, document, sync, commit and merge; tag and publish qualified alpha milestones through Beta1."
+engineering_and_normal_integration_authorized = true
+public_publication_authorized = true
+publication_scope = "Qualified 0.1 alpha milestones and Beta1; stable public release remains later scope. Authorization does not supply missing qualification evidence."
+human_acceptance_may_be_synthesized = false
+advisory_source = "docs/reviews/2026-09-06-completion-synthesis/BACKLOG.json"
+provider_owned_bundles = ["F03", "F04"]
+provider_queue = "AIDE-EXECUTE-FACMAN-BETA1-PROGRAMME-01"
+later_scope = ["RC/stable 0.1 publication and servicing activation", "acquisition 0.2", "hosting 0.3", "AppKit graduation 0.4"]
+completion_rule = "Every required leaf and existing umbrella closes against actual evidence; repairs invalidate affected candidate receipts."
+
+[delivery_train]
+id = "FACMAN-CORRECTED-DELIVERY-TRAIN-2026-09-05"
+status = "integrated"
+workunit = "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"
+contract = "docs/product/master_plan.md"
+scope_role = "prospective_requirements_not_current_qualification_or_authority"
+terminal_platforms = ["windows_x64", "linux_x64", "macos_intel_x64"]
+terminal_surfaces = ["cli_human", "cli_json", "rpc", "tui_full_screen", "tui_linear"]
+reference_desktops_0_1 = ["winforms", "gtk3"]
+preview_desktops_0_1 = ["appkit"]
+desktop_graduation_0_4 = ["appkit"]
+local_journeys = ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"]
+checkpoint_order = ["integrated_local_application", "terminal_v1_machine_complete", "reference_desktops_machine_complete", "accepted_0_1_release"]
+terminal_checkpoint_is_final_release = false
+future_scaffolds_count_as_implemented = false
+gui_dependency_allowed_in_terminal = false
+ordinary_workflow_requires_advanced = false
+current_qualification_inherited = false
+authority_granted = false
+future_features = "Prepare only consumed reusable mechanisms; functional acquisition belongs to 0.2 and hosting to 0.3, without empty ordinary commands or speculative stable APIs."
+packaging = """Terminal excludes GUI payload; Desktop adds a native GUI overlay to the identical terminal component. \
+Provide portable and installed-use paths for both; activate future profiles only after producers, selectors and exact package qualification agree."""
+current_asset_selector_unchanged = true
+acceptance = [
+  "Every local outcome has implementation, canonical integration, independent real-effect or fixture classification, positive, negative, concurrency, fault/recovery, package, performance, documentation and invalidation evidence.",
+  "All declared terminal targets pass human CLI, JSON/RPC, ordinary full-screen and linear TUI without GUI/display initialization or raw JSON/Advanced fallback.",
+  "WinForms then GTK3 ordinary workflows and field hardening finish before plain 0.1.0; maintain AppKit preview and contract checks while full AppKit graduation waits for 0.4.",
+  "Use named target hosts, actual native source/package effects, ConPTY/PTY and UIA/AT-SPI drivers, selected GTK X11/Wayland tests, bounded observable waits and independent effect oracles; never infer universal DE/WM support.",
+  "Preserve failures and distinguish automated accessibility/visual findings from experiential receipts; signing, publication, support and laboratory effects require their existing separate authority.",
+]
+
+[[delivery_train.release]]
+minor = "0.1"
+outcome = "Complete local-first application, CLI/JSON/RPC/full-screen and linear TUI on Windows, Linux and macOS, then WinForms and GTK3 reference desktops, recovery, maintenance and integrated field hardening."
+capabilities = ["local_first", "terminal_v1", "winforms_reference", "gtk3_reference"]
+excludes = ["connected_acquisition", "credential_storage", "local_hosting", "appkit_graduation"]
+
+[[delivery_train.release]]
+minor = "0.2"
+outcome = "Credential handling, official Factorio acquisition, Mod Portal integration, resumable verified transfers/cache and offline fallback."
+capabilities = ["connected_acquisition", "credential_storage", "mod_portal"]
+excludes = ["local_hosting", "appkit_graduation"]
+
+[[delivery_train.release]]
+minor = "0.3"
+outcome = "Bounded local hosting: exact server setup/configuration, worlds/content, supervision, graceful stop, backup, updates and recovery."
+capabilities = ["local_hosting"]
+excludes = ["remote_administration", "appkit_graduation"]
+
+[[delivery_train.release]]
+minor = "0.4"
+outcome = "Complete AppKit and native macOS desktop integration over all applicable capabilities through 0.3; macOS engine and terminal remain a 0.1 obligation."
+capabilities = ["appkit_graduation"]
+excludes = ["implicit_additional_toolkit_admission"]
+
+[[workunit]]
+id = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+title = "Admit and reconcile the full Beta 1 execution backlog"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "complete"
+horizon = "next"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Preserve dated source provenance and map every F01-F24 requirement to an owned task or explicit later \
+train."""
+source_bundles = ["F01"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Preserve dated source provenance and map every F01-F24 requirement to an owned task or explicit later \
+train.""",
+  """Validate backlog, finite next horizon and distinct start/completion prerequisites without weakening \
+existing limits.""",
+  "Record verified PR248 integration and preserve the unqualified workspace/package obligations.",
+]
+branch = "task/facman-0-1-beta1-execution-admission-01"
+base_revision = "8fee0d0d2cde9d3dd2065d7624b0a45c820db800"
+
+integration_status = "integrated"
+reviewed_pull_request = 250
+dev_integration_revision = "37f7c542d18d27af7daa03c505e1574260fa52cc"
+dev_integration_tree = "de441ade64c352f1313724e59e232d6b47c78ce5"
+integration_evidence = ".aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/integration-closeout.json"
+
+evidence = [".aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/integration-closeout.json"]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
+title = "Register scenario hosts and approved input custody"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "active"
+horizon = "next"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved \
+game/input digest."""
+source_bundles = ["F02"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved \
+game/input digest.""",
+  "Unavailable cells carry actionable external blockers; source fixtures and available hosts continue.",
+  "Keep real game, user-experience and machine-fixture outcomes distinct.",
+]
+
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-machine-fixture-cells.v1.json"]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01"
+title = "Qualify coherent provider packages through disposable consumer canaries"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "active"
+horizon = "next"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Consume actual reviewed provider candidate packages without changing stable pins."
+source_bundles = ["F05"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  "Consume actual reviewed provider candidate packages without changing stable pins.",
+  """Run source/target/archive compatibility, interruption and damaged-package fixtures in each applicable \
+consumption mode.""",
+  "Reject mixed provider identities and preserve standalone importer ownership.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01"
+title = "Adopt promoted provider identities with exact consumer proof"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Require exact USK/ULK source reachable from each provider main and package provenance before changing \
+consumer pins."""
+source_bundles = ["F05"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+]
+close_after = [
+
+]
+acceptance = [
+  """Require exact USK/ULK source reachable from each provider main and package provenance before changing \
+consumer pins.""",
+  "Run required consumer native/package modes against those exact identities; retain old/new lock evidence.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01"
+title = "Complete existing-install readiness and launch isolation"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Select an existing approved install, construct isolated instance state and reach a typed ready/blocked \
+outcome without changing foreign state."""
+source_bundles = ["F06"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Select an existing approved install, construct isolated instance state and reach a typed ready/blocked \
+outcome without changing foreign state.""",
+  """Test stale plans, unsupported source, missing files, concurrent sessions and launch failure through \
+actual runtime seams.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01"
+title = "Make Play session ownership and crash recovery durable"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Persist session identity before effects and reconcile crash/restart without adopting unrelated processes."
+source_bundles = ["F06"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  "Persist session identity before effects and reconcile crash/restart without adopting unrelated processes.",
+  "Test lost observations, PID reuse, concurrent launches, cancellation and stale session state.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01"
+title = "Qualify fresh packaged existing-install Play"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Bind candidate bytes, host, approved Factorio input and independent main-menu/process/effect evidence."
+source_bundles = ["F06"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+  "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+  "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+]
+close_after = [
+
+]
+acceptance = [
+  "Bind candidate bytes, host, approved Factorio input and independent main-menu/process/effect evidence.",
+  """Exercise session recovery from actual packages; source/fake-process tests cannot close real Play \
+acceptance.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01"
+title = "Close CLI JSON RPC and TUI compatibility mechanics"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, \
+Unicode and bounded RPC failures."""
+source_bundles = ["F07"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, \
+Unicode and bounded RPC failures.""",
+  "Full-screen and linear workflows use typed views/actions and do not require raw JSON or Advanced.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01"
+title = "Complete instance configuration and provenance workflows"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Implement create/edit/clone/select instance and config workflows with explicit provenance and readiness."
+source_bundles = ["F08"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  "Implement create/edit/clone/select instance and config workflows with explicit provenance and readiness.",
+  "Reject foreign paths, stale revisions and overlapping writes; preserve recoverable edits.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01"
+title = "Expose ordinary typed instance actions across frontends"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Bind ordinary instance/configuration controls to shared typed commands and projections."
+source_bundles = ["F08"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  "Bind ordinary instance/configuration controls to shared typed commands and projections.",
+  "Test parity, invalidation and refusal presentation without frontend business logic.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01"
+title = "Resolve local content and modpacks reproducibly"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Resolve local mods/modsets with deterministic dependency/version diagnostics, explicit unsupported \
+cases and no implicit network."""
+source_bundles = ["F09"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Resolve local mods/modsets with deterministic dependency/version diagnostics, explicit unsupported \
+cases and no implicit network.""",
+  "Test conflicts, missing dependencies, cycles, malformed archives and concurrent source changes.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01"
+title = "Reconstruct portable modpacks with ownership and recovery"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Export/import/reconstruct modpack state with stable provenance and bounded local source custody."
+source_bundles = ["F09"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01",
+]
+close_after = [
+
+]
+acceptance = [
+  "Export/import/reconstruct modpack state with stable provenance and bounded local source custody.",
+  """Test traversal, duplicate entries, integrity failures, interrupted reconstruction and rollback \
+preserving foreign files.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01"
+title = "Create consistent world backups and inspectable bundles"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Back up selected worlds consistently with exact source identity, stable metadata and owned destination \
+roots."""
+source_bundles = ["F10"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Back up selected worlds consistently with exact source identity, stable metadata and owned destination \
+roots.""",
+  """Detect concurrent writes, partial copies, insufficient space and interrupted bundle creation without \
+replacing valid backups.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+title = "Restore worlds and apply explicit retention safely"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Restore and import selected world bundles using validated plans, atomic visibility and recoverable \
+journals."""
+source_bundles = ["F10"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
+]
+close_after = [
+
+]
+acceptance = [
+  """Restore and import selected world bundles using validated plans, atomic visibility and recoverable \
+journals.""",
+  "Test damaged sources, stale plans, live-session conflicts and retention restricted to proven owned backups.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01"
+title = "Finish bounded managed install update repair and removal"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Implement installation/reconciliation/update/repair/removal over promoted USK mechanisms for the \
+admitted local source formats."""
+source_bundles = ["F11"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
+]
+close_after = [
+
+]
+acceptance = [
+  """Implement installation/reconciliation/update/repair/removal over promoted USK mechanisms for the \
+admitted local source formats.""",
+  """Prove leases, generation identity, foreign-state preservation and crash recovery across each visible \
+transition.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+title = "Converge Make Ready with selected-save Play"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Make one typed readiness plan reconcile install, instance, content and selected world before launch."
+source_bundles = ["F11"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+  "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+  "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+  "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+  "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+]
+acceptance = [
+  "Make one typed readiness plan reconcile install, instance, content and selected world before launch.",
+  """Exercise stale inputs, recoverable partial preparation and selected-save mismatch through ordinary \
+workflows.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01"
+title = "Preserve foreign native shortcuts and uninstall records"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "complete"
+horizon = "next"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing \
+native integration."""
+source_bundles = ["F12"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/evidence/integration-closeout.json"]
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing \
+native integration.""",
+  """Retain recoverable native-effect state on partial failure; test pre-existing foreign entries and \
+path/identity substitution using injected effects.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+title = "Journal native setup effects and recover across setup phases"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Persist and reconcile file/native-integration effects across install/update/repair/remove, including \
+interrupted rollback."""
+source_bundles = ["F12"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
+]
+close_after = [
+
+]
+acceptance = [
+  """Persist and reconcile file/native-integration effects across install/update/repair/remove, including \
+interrupted rollback.""",
+  "Test phase-boundary failure, restart, stale ownership and installed-use versus portable behavior.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01"
+title = "Complete independent FacMan self-maintenance"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Update, repair and remove FacMan independently of Factorio install/content authority."
+source_bundles = ["F12"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+  "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
+]
+acceptance = [
+  "Update, repair and remove FacMan independently of Factorio install/content authority.",
+  """Qualify locked-file and restart handoff, missing payload and interrupted maintenance from actual \
+supported package profiles.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01"
+title = "Reconcile recovery across installs content worlds and sessions"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Present consistent pending/recoverable/unknown effects across domain journals with bounded conflict and \
+lease handling."""
+source_bundles = ["F13"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+  "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+  "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
+]
+acceptance = [
+  """Present consistent pending/recoverable/unknown effects across domain journals with bounded conflict and \
+lease handling.""",
+  "Test crash and concurrency at domain boundaries without claiming cross-repository atomicity.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-DIAGNOSTIC-RECOVERY-BUNDLES-01"
+title = "Make diagnostics and damaged-package recovery inspectable"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Export bounded redacted diagnostics tied to exact source/package and retained failure identities."
+source_bundles = ["F13"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-DIAGNOSTIC-RECOVERY-BUNDLES-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  "Export bounded redacted diagnostics tied to exact source/package and retained failure identities.",
+  """Test secrets/path redaction, oversized input, missing/corrupt resources and retention ownership; \
+document usable recovery actions.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01"
+title = "Bind application resources to exact package identity"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "complete"
+horizon = "next"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+branch = "task/facman-resource-identity-01"
+base_revision = "6f8ece1d343400f314e054183beee106bac46358"
+repos = ["FacMan"]
+outcome = """Discover resources relative to verified package identity with deterministic missing/corrupt resource \
+refusals."""
+source_bundles = ["F14"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Discover resources relative to verified package identity with deterministic missing/corrupt resource \
+refusals.""",
+  "Test relocation, installed/portable roots and terminal startup without display/GUI initialization.",
+]
+
+integration_status = "integrated"
+reviewed_pull_request = 257
+dev_integration_revision = "7a32a8bcdf3a78e20f5651121129de3740a21ce6"
+dev_integration_tree = "6235fd3d3f6c9e11d8a91773fdbf26989fd7f909"
+integration_evidence = ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-product-candidate-closeout.json"
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-product-candidate-closeout.json"]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01"
+title = "Build matching Terminal and Desktop delivery profiles"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Produce Terminal without GUI payload and Desktop as native overlay over identical terminal components."
+source_bundles = ["F14"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+  "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
+]
+acceptance = [
+  "Produce Terminal without GUI payload and Desktop as native overlay over identical terminal components.",
+  "Qualify portable/installed selectors, manifests and exact payloads before changing advertised asset counts.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
+title = "Create galleries from production controls and deterministic states"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "active"
+horizon = "next"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = """Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, \
+contrast and overflow fixtures."""
+source_bundles = ["F15"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, \
+contrast and overflow fixtures.""",
+  "Avoid duplicate gallery-only controls; bind fixture states to real projections.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01"
+title = "Drive real native controls with observable scenario oracles"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = "Implement bounded UIA and AT-SPI scenario drivers with observable waits and independent effect assertions."
+source_bundles = ["F15"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+]
+close_after = [
+
+]
+acceptance = [
+  "Implement bounded UIA and AT-SPI scenario drivers with observable waits and independent effect assertions.",
+  """Name GTK X11/Wayland host cells and preserve failures; fixture accessibility does not manufacture human \
+experience.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01"
+title = "Complete ordinary WinForms setup and instance journeys"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = """Complete ordinary workspace, install, instance/configuration and readiness controls using shared typed \
+actions."""
+source_bundles = ["F16"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Complete ordinary workspace, install, instance/configuration and readiness controls using shared typed \
+actions.""",
+  "Run real UIA keyboard/focus/refusal/recovery scenarios from actual Desktop packages.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-WINFORMS-CONTENT-PLAY-01"
+title = "Complete ordinary WinForms content worlds and Play"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = "Complete modpack/world/backup/selected-save/Play/session/maintenance workflows without requiring Advanced."
+source_bundles = ["F16"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-WINFORMS-CONTENT-PLAY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01",
+]
+acceptance = [
+  "Complete modpack/world/backup/selected-save/Play/session/maintenance workflows without requiring Advanced.",
+  "Test cancellation, disabled states and cross-domain recovery through production controls.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-WINFORMS-QUALIFICATION-01"
+title = "Qualify WinForms J01-J12 reference workflows"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = """Execute every applicable J01-J12 positive/refusal/concurrency/recovery/package/performance cell on a \
+named Windows host."""
+source_bundles = ["F16"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-WINFORMS-QUALIFICATION-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01",
+  "FACMAN-0.1-ALPHA7-WINFORMS-CONTENT-PLAY-01",
+  "FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
+]
+acceptance = [
+  """Execute every applicable J01-J12 positive/refusal/concurrency/recovery/package/performance cell on a \
+named Windows host.""",
+  "Retain exact candidate and driver receipts with unresolved experiential findings separately.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-GTK-SETUP-INSTANCES-01"
+title = "Complete ordinary GTK3 setup and instance journeys"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = """Complete workspace/install/instance/configuration/readiness with native GTK3 controls and shared typed \
+actions."""
+source_bundles = ["F17"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-GTK-SETUP-INSTANCES-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Complete workspace/install/instance/configuration/readiness with native GTK3 controls and shared typed \
+actions.""",
+  "Exercise AT-SPI keyboard/focus/refusal/recovery scenarios on the selected Linux environments.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-GTK-CONTENT-PLAY-01"
+title = "Complete ordinary GTK3 content worlds and Play"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = "Complete local content/world/backup/selected-save/Play/session/maintenance without Advanced fallback."
+source_bundles = ["F17"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-GTK-CONTENT-PLAY-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01",
+]
+acceptance = [
+  "Complete local content/world/backup/selected-save/Play/session/maintenance without Advanced fallback.",
+  "Test cancellation, unavailable actions, scale/layout and cross-domain recovery.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-GTK-QUALIFICATION-01"
+title = "Qualify GTK3 J01-J12 on named Linux hosts"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = "Execute applicable J01-J12 matrix against actual Desktop packages on named X11/Wayland cells."
+source_bundles = ["F17"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-GTK-QUALIFICATION-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA7-GTK-SETUP-INSTANCES-01",
+  "FACMAN-0.1-ALPHA7-GTK-CONTENT-PLAY-01",
+  "FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
+]
+acceptance = [
+  "Execute applicable J01-J12 matrix against actual Desktop packages on named X11/Wayland cells.",
+  "Keep observed desktop/window-manager coverage exact and preserve accessibility/experience limitations.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01"
+title = "Maintain current AppKit preview and contract checks"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "frontend-maintainer"
+repos = ["FacMan"]
+outcome = """Build and exercise the declared AppKit preview against current typed contracts and resource/package \
+identity."""
+source_bundles = ["F18"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+]
+acceptance = [
+  """Build and exercise the declared AppKit preview against current typed contracts and resource/package \
+identity.""",
+  "Record actual macOS preview limits without claiming 0.4 graduation.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-TERMINAL-WINDOWS-01"
+title = "Qualify all terminal surfaces on Windows x64 ConPTY"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Exercise human CLI, JSON, RPC, full-screen and linear TUI through actual packages on the named Windows \
+x64 ConPTY host."""
+source_bundles = ["F19"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-TERMINAL-WINDOWS-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01",
+  "FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01",
+  "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+  "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
+]
+acceptance = [
+  """Exercise human CLI, JSON, RPC, full-screen and linear TUI through actual packages on the named Windows \
+x64 ConPTY host.""",
+  """Prove applicable J01-J12, bounded cancellation/resize/EOF/Unicode, headless operation and independent \
+effects.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01"
+title = "Qualify all terminal surfaces on Linux x64 PTY"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Exercise human CLI, JSON, RPC, full-screen and linear TUI through actual packages on the named Linux \
+x64 PTY host."""
+source_bundles = ["F19"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01",
+  "FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01",
+  "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+  "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
+]
+acceptance = [
+  """Exercise human CLI, JSON, RPC, full-screen and linear TUI through actual packages on the named Linux \
+x64 PTY host.""",
+  """Prove applicable J01-J12, bounded cancellation/resize/EOF/Unicode, headless operation and independent \
+effects.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-TERMINAL-MACOS-01"
+title = "Qualify all terminal surfaces on Intel macOS PTY"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Exercise human CLI, JSON, RPC, full-screen and linear TUI through actual packages on the named Intel \
+macOS PTY host."""
+source_bundles = ["F19"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-TERMINAL-MACOS-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01",
+  "FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01",
+  "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+  "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
+]
+acceptance = [
+  """Exercise human CLI, JSON, RPC, full-screen and linear TUI through actual packages on the named Intel \
+macOS PTY host.""",
+  """Prove applicable J01-J12, bounded cancellation/resize/EOF/Unicode, headless operation and independent \
+effects.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-BETA1-MACHINE-FREEZE-01"
+title = "Close integrated machine qualification and feature freeze"
+epic = "EPIC-0.1-FEATURE-FREEZE"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = "Evaluate every required outcome/profile cell against exact integrated implementation and durable evidence."
+source_bundles = ["F20"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-BETA1-MACHINE-FREEZE-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-ALPHA7-WINFORMS-QUALIFICATION-01",
+  "FACMAN-0.1-ALPHA7-GTK-QUALIFICATION-01",
+  "FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-WINDOWS-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-MACOS-01",
+]
+close_after = [
+
+]
+acceptance = [
+  "Evaluate every required outcome/profile cell against exact integrated implementation and durable evidence.",
+  """Remediate required failures, rerun invalidated evidence and freeze only a complete machine-qualified \
+subset.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01"
+title = "Prepare candidate custody trust and servicing"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "runtime-maintainer"
+repos = ["FacMan"]
+outcome = """Define exact artifact custody, checksum verification, reproducible reconstruction and \
+rollback/servicing duties early."""
+source_bundles = ["F21"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01/task.yaml"
+depends_on = [
+
+]
+close_after = [
+
+]
+acceptance = [
+  """Define exact artifact custody, checksum verification, reproducible reconstruction and \
+rollback/servicing duties early.""",
+  """Distinguish unsigned/private Beta1 readiness from separately authorized signing/publication; test \
+delivery verification failures.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01"
+title = "Produce final Beta1 delivery bytes and manifests"
+epic = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "release-maintainer"
+repos = ["FacMan"]
+outcome = """Allocate and build the exact qualified Beta1 candidate with coherent provider/source/resource/asset \
+identities."""
+source_bundles = ["F22"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-BETA1-MACHINE-FREEZE-01",
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01",
+]
+acceptance = [
+  """Allocate and build the exact qualified Beta1 candidate with coherent provider/source/resource/asset \
+identities.""",
+  "Record reproducible build inputs, artifact hashes and real package/install/repair/remove receipts.",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-BETA1-CANDIDATE-RECONSTRUCTION-01"
+title = "Independently reconstruct and machine-qualify final delivery"
+epic = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "release-maintainer"
+repos = ["FacMan"]
+outcome = "Reconstruct from recorded final inputs and compare required component/artifact identities."
+source_bundles = ["F22"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-BETA1-CANDIDATE-RECONSTRUCTION-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01",
+]
+close_after = [
+
+]
+acceptance = [
+  "Reconstruct from recorded final inputs and compare required component/artifact identities.",
+  """Execute final package matrix, damaged-delivery tests and acceptance packet; repairs produce new \
+candidate identities.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-BETA1-EXPERIENCE-ACCEPTANCE-01"
+title = "Record genuine experience and accessibility acceptance"
+epic = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "release-maintainer"
+repos = ["FacMan"]
+outcome = """Collect actual candidate-bound human workflow, accessibility and native UX observations with retained \
+failures."""
+source_bundles = ["F23"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-BETA1-EXPERIENCE-ACCEPTANCE-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-BETA1-CANDIDATE-RECONSTRUCTION-01",
+]
+close_after = [
+
+]
+acceptance = [
+  """Collect actual candidate-bound human workflow, accessibility and native UX observations with retained \
+failures.""",
+  """Remediate findings and rerun affected machine/experience evidence; automated agents cannot manufacture \
+human verdicts.""",
+]
+
+
+[[workunit]]
+id = "FACMAN-0.1-BETA1-READY-CLOSEOUT-01"
+title = "Reconcile final Beta1 readiness and servicing handoff"
+epic = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
+status = "planned"
+horizon = "backlog"
+priority = "P1"
+size = "M"
+owner = "release-maintainer"
+repos = ["FacMan"]
+outcome = """Close Beta1 only when all required implementation/integration/package/experience evidence matches the \
+final candidate."""
+source_bundles = ["F24"]
+admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+queue_task = ".aide/queue/next/FACMAN-0.1-BETA1-READY-CLOSEOUT-01/task.yaml"
+depends_on = [
+  "FACMAN-0.1-BETA1-EXPERIENCE-ACCEPTANCE-01",
+]
+close_after = [
+  "FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01",
+]
+acceptance = [
+  """Close Beta1 only when all required implementation/integration/package/experience evidence matches the \
+final candidate.""",
+  "Document known limits, recovery and servicing; RC/stable/publication retain separate later admission.",
+]
+
 
 [[release]]
 id = "FACMAN-C1"
@@ -380,7 +1656,7 @@ exit = [
 id = "FACMAN-0.1.0-ALPHA.5"
 version = "0.1.0-alpha.5"
 title = "FacMan 0.1 beta-readiness convergence"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Close the highest-value content, world, migration, package, profile, workflow, and release-truth gaps behind the accepted 1.0-shaped architecture while keeping beta and external support claims evidence-gated."
@@ -429,7 +1705,7 @@ version = "0.1.0-alpha.6"
 version_allocated = false
 planning_label = true
 title = "FacMan 0.1 managed-install and product-lifecycle closure"
-status = "planned"
+status = "active"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Close public workspace migration/recovery, bounded local-source managed installation, and exact portable/setup lifecycle behavior without granting live mutation, Play, or release authority."
@@ -472,9 +1748,10 @@ title = "FacMan 0.1 Play, sessions, and native-frontend convergence"
 status = "planned"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
-objective = "Close content/world user routes and reconstruction, the fresh real-Play and durable-session journeys, and GTK3 then AppKit convergence on the shared typed presentation boundary."
-platform_cut = "Windows x64 remains the exact Play reference; macOS Intel AppKit and Ubuntu 24.04 x64 GTK3/X11 remain evidence-bounded previews."
-frontend_cut = "WinForms remains the reference GUI; GTK3 then AppKit adopt presentation.query/action and the common operation law before ordinary-journey parity is claimed."
+objective = "Close local backend/CLI/JSON/RPC/full-screen and linear TUI journeys on declared Windows/Linux/macOS targets, then complete WinForms and GTK3 reference desktops while retaining AppKit preview checks."
+platform_cut = """Prospective requirements: complete terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets, \
+then WinForms and GTK3 reference desktops. Retain AppKit preview until 0.4; current qualification and support tiers remain evidence-bound and unchanged."""
+frontend_cut = "Complete terminal semantics before concentrated WinForms then GTK3 desktop work; AppKit remains a checked preview and its full graduation belongs to 0.4."
 required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]
 journeys = ["J06 local content and modpacks", "J07 worlds and saves", "J08 Make Ready", "J09 Play and sessions", "J10 recovery"]
@@ -482,11 +1759,12 @@ claim_seed = ["FACMAN-0.1.0-ALPHA.7-PLAY-SESSION-FRONTEND-CONVERGENCE"]
 cut_line = [
   "Qualify one fresh exact Windows Play route without inheriting authority from any historical or superseded route.",
   "Make execution durable and asynchronous so inspect, stop, Last Run, relaunch, interruption, and recovery remain truthful across frontend/process loss.",
-  "Converge GTK3 then AppKit on typed snapshots/actions, bounded streaming transport, strict UTF-8/JSON/correlation, cancellation, timeout, and process-tree cleanup.",
+  "Converge WinForms then GTK3 on typed snapshots/actions, bounded streaming transport, strict UTF-8/JSON/correlation, cancellation, timeout, and process-tree cleanup; preserve AppKit preview regression checks.",
   "Complete ordinary Content, Saves, Activity/Recovery, and Settings/Support parity without frontend-local policy or terminal-outcome authority.",
 ]
 release_sequence = [
-  "finish non-authorizing GTK3 and AppKit semantic and transport convergence",
+  "finish local application and terminal closure on Windows, Linux and macOS, with small GUI contract canaries throughout",
+  "complete WinForms then GTK3 ordinary workflows before the 0.1 feature-complete gate; retain AppKit as a preview",
   "prepare a fresh exact Play successor route and clean proof environment",
   "execute Play evidence and human acceptance only under separately reviewed authority",
   "bind exact platform package, lifecycle, accessibility, performance, and preview receipts",
@@ -500,7 +1778,7 @@ exit = [
   "J06 and J07 pass application-route, export/import, offline-reconstruction, and destructive-recovery conformance without frontend-local mutation policy.",
   "J08 through J10 pass machine conformance with durable asynchronous operation truth and exact recovery behavior.",
   "A fresh exact Windows Play route has its own human verdict without inherited authority.",
-  "GTK3 and AppKit ordinary-journey and package claims match exact semantic, lifecycle, accessibility, performance, and human evidence.",
+  "WinForms and GTK3 ordinary-journey and package claims match exact semantic, lifecycle, accessibility, performance, and human evidence; AppKit preview claims remain bounded until 0.4 graduation.",
 ]
 
 [[release]]
@@ -513,8 +1791,10 @@ status = "planned"
 owner = "quality-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Freeze the supported beta subset only after all twelve journeys and exact-package quality, compatibility, security, and reconstruction gates close."
-platform_cut = "The same Windows x64 reference and macOS Intel/Ubuntu GTK3 preview lanes are frozen; no new platform or toolkit enters at feature freeze."
-frontend_cut = "CLI JSON, human CLI, facman tui, WinForms, AppKit, and GTK freeze one bounded semantic subset with platform-native presentation and evidence."
+platform_cut = """Freeze completed terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets plus WinForms and GTK3 reference desktops; \
+retain AppKit preview until 0.4. No new target or toolkit enters at freeze, and current qualification and support tiers are not inherited."""
+frontend_cut = """Human CLI, CLI JSON/RPC and full-screen/linear TUI freeze the complete local subset on all declared targets; \
+WinForms and GTK3 ordinary parity is complete. AppKit preview is maintained without importing its 0.4 graduation gate."""
 required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]
 journeys = ["J01 through J12 machine closure"]
@@ -552,7 +1832,8 @@ status = "planned"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Build and human-test one exact six-product stabilization candidate, then perform only separately authorized release operations."
-platform_cut = "Windows x64 reference product plus macOS 13+ Intel AppKit and Ubuntu 24.04 x64 GTK3/X11 previews, each as portable and setup downloads."
+platform_cut = """Accept exact terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets plus WinForms and GTK3 reference desktops, \
+retaining an evidence-bounded AppKit preview until 0.4. Current qualification, support tiers and the portable/setup selector remain unchanged until separately qualified admission."""
 frontend_cut = "FacMan and facman expose the frozen CLI JSON, human CLI, same-binary TUI, WinForms, AppKit, and GTK subset; deferred toolkits remain absent."
 required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]
@@ -3185,7 +4466,7 @@ evidence = [
 id = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 release = "FACMAN-0.1.0-ALPHA.5"
 title = "FacMan 0.1 beta-readiness convergence"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
 outcome = "Turn the merged 1.0-shaped alpha.4 foundation into one finite, validated alpha-to-beta programme and close the highest-value safe blockers."
@@ -3228,7 +4509,7 @@ evidence = [
 id = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Close alpha.5 promotion and exact candidate evidence"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "Codex"
@@ -3255,7 +4536,7 @@ evidence = [
 id = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Reconcile post-closeout canonical and generated truth"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "Codex"
@@ -3275,11 +4556,118 @@ evidence = [
   "docs/release/checkpoints/facman-0-1-alpha5-truth-remediation-01.md",
 ]
 
+[[workunit]]
+id = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Close final Alpha.5 candidate truth"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "Codex"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha5-final-candidate-closeout"
+base_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+depends_on = ["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
+decision_blockers = []
+blockers = []
+outcome = "Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history."
+acceptance = [
+  "Current state, project status, version train, plan, README, roadmap, support, package, and AIDE projections bind main 4683ecd9, dev 488994a8, shared tree c0793861, and run 33603385303 attempt 1.",
+  "The final receipt binds five successful jobs, four workflow artifacts, all fourteen durable files, the three stage digests, resource identity, provider locks, and custody hashes.",
+  "Completed predecessor WorkUnits are no longer active, current views cannot select the older candidate, expired producer exceptions cannot become release-active, and the Alpha.3 distribution record is explicitly historical.",
+  "Engineering and protected integration axes are true while human desktop, real Play, managed install, Linux/macOS human, signing, notarization, tagging, publication, and support axes remain false.",
+]
+evidence = [
+  "release/index/alpha5_final_candidate_closeout.v1.toml",
+  "docs/release/checkpoints/facman-0-1-alpha5-final-candidate-closeout-01.md",
+  "release/index/phase0_integration_closeout.v1.toml",
+]
+
+[[workunit]]
+id = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Consolidate active release and support views"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "Codex"
+repos = ["factorio-launcher"]
+branch = "task/facman-active-release-view-consolidation"
+base_revision = "f99d96e002f5af519824942a1f8b74bcc26d96f8"
+depends_on = ["FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"]
+decision_blockers = []
+blockers = []
+outcome = "Make the three product profiles and eight-asset release shape dominate current user-facing truth while preserving legacy profile and distribution evidence as history."
+acceptance = [
+  "Current support and producer views expose only active product profiles and explicitly selected previews as release obligations.",
+  "Legacy CLI, TUI, toolkit, Alpha.3 distribution, and earlier Alpha.5 candidate records remain inspectable but cannot present as current.",
+  "README, roadmap, support matrix, release index, and generated AIDE views agree from one authority.",
+]
+evidence = [
+  "release/index/active_release_view.v1.toml",
+  "docs/release/checkpoints/facman-active-release-view-consolidation-01.md",
+  "release/index/phase0_integration_closeout.v1.toml",
+]
+
+[[workunit]]
+id = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Freeze the Beta repository identity"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-beta-repository-identity-decision-01"
+base_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+depends_on = ["FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"]
+decision_blockers = []
+blockers = []
+outcome = "Record the explicit pre-release/0.1 decision either to rename before the release branch or to retain Julesc013/factorio-launcher through stable 0.1.0, without mutating GitHub implicitly."
+acceptance = [
+  "One repository-slug choice is explicit, dated, and propagated to current source, provenance, support, and release records.",
+  "No rename may occur between beta.1 and stable 0.1.0.",
+  "The decision grants no GitHub mutation, tag, release, publication, or support authority.",
+]
+evidence = [
+  "release/index/phase0_integration_closeout.v1.toml",
+  "release/index/beta_repository_identity_decision.v1.toml",
+  "docs/release/checkpoints/facman-0-1-phase0-integration-closeout-01.md",
+  "docs/release/checkpoints/facman-beta-repository-identity-decision-01.md",
+]
+
+[[workunit]]
+id = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Prepare Beta ruleset and tag protection"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-beta-ruleset-and-tag-protection-01"
+base_revision = "b94365074835c092b3c9a60b71d4ec985d0849d0"
+depends_on = ["FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"]
+decision_blockers = []
+blockers = []
+outcome = "Produce validated, report-only branch and immutable-tag protection changes for beta, RC, and stable namespaces without applying protected GitHub settings."
+acceptance = [
+  "The proposal preserves merge-commit topology, required checks, review rules, resolved conversations, and force-push denial for dev, main, and release/0.1.",
+  "The proposal protects v0.1.0-beta.*, v0.1.0-rc.*, v0.*, and v1.* without moving existing Alpha tags.",
+  "GitHub settings remain unchanged until a separately reviewed operator-authorized action.",
+]
+evidence = [
+  "release/index/beta_ruleset_and_tag_protection.v1.toml",
+  "release/receipts/facman-beta-ruleset-and-tag-protection-observation.v1.json",
+  "release/receipts/facman-phase0-workspace-cleanup.v1.json",
+  "docs/release/checkpoints/facman-beta-ruleset-and-tag-protection-01.md",
+]
+
 [[epic]]
 id = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
 release = "FACMAN-0.1.0-ALPHA.6"
 title = "Managed-install and exact product-lifecycle closure"
-status = "planned"
+status = "active"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
 outcome = "Close public workspace migration/recovery, the bounded owned-target setup lifecycle, and exact portable/setup behavior without opening Play or release authority."
@@ -3293,14 +4681,47 @@ exit = [
 id = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
 title = "Close public workspace migration and recovery"
-status = "planned"
+status = "complete"
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence/package-integration-closeout.json"]
 priority = "P0"
 size = "M"
-owner = "release-maintainer"
+owner = "runtime-maintainer"
+implementation_owner = "runtime-maintainer"
+presentation_contributors = ["frontend-maintainer"]
+package_qualification_owner = "package-maintainer"
+truth_and_integration_closeout_owner = "release-maintainer"
 repos = ["factorio-launcher"]
-depends_on = ["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
+branch = "task/facman-0-1-alpha6-workspace-migration-recovery-01"
+base_revision = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+depends_on = ["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
 decision_blockers = []
 outcome = "Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set."
+affected_package_profiles = [
+  "windows_product_x64",
+  "macos_product_x64",
+  "linux_product_x64",
+]
+affected_delivery_modes = [
+  "windows_portable_zip",
+  "windows_setup_exe",
+  "macos_portable_zip",
+  "macos_setup_pkg",
+  "linux_portable_tar_zst",
+  "linux_setup_run",
+]
+non_goals = [
+  "Arbitrary workspace relocation.",
+  "Content migration.",
+  "World or save migration.",
+  "Managed-install recovery.",
+  "Session recovery.",
+  "Networking.",
+  "Factorio execution.",
+  "Live user-workspace mutation during qualification.",
+  "Provider version changes.",
+  "Alpha.6 version allocation.",
+  "Tagging, signing, publication, or support activation.",
+]
 acceptance = [
   "J01 fresh packaged first run can inspect or create a workspace and explain ownership, schema, pending migration, and recovery state before mutation.",
   "The J10 workspace slice exposes public inspect, plan, confirm, apply, resume, recover, and bounded rollback routes for known migrations through the shared command and presentation contracts.",
@@ -3327,6 +4748,19 @@ acceptance = [
   "A distinct exact Windows human managed-install receipt is required; no Play, beta, tag, signing, publication, or support authority is implied.",
 ]
 
+close_after = [
+  "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
+  "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+  "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+  "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
+  "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+  "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
+  "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+  "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
+  "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
+]
+
 [[epic]]
 id = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
 release = "FACMAN-0.1.0-ALPHA.7"
@@ -3334,7 +4768,7 @@ title = "Fresh Play, durable sessions, and native-frontend convergence"
 status = "planned"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
-outcome = "Close content/world application routes and reconstruction, then a fresh exact Play/session route, while bringing GTK3 then AppKit to the shared typed semantic boundary."
+outcome = "Close local application and terminal routes on all declared targets, then a fresh exact Play/session route and WinForms/GTK3 reference desktop parity; maintain AppKit preview regression checks."
 exit = [
   "J06 and J07 are machine-complete through public application routes and offline reconstruction.",
   "J08, J09, and J10 are machine-complete with durable operation truth.",
@@ -3360,10 +4794,19 @@ acceptance = [
   "CLI JSON, human CLI, TUI, WinForms, GTK3, and AppKit consume the same typed actions and operation outcomes; exact package and recovery tests bind each claimed lane.",
 ]
 
+close_after = [
+  "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+  "FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01",
+  "FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01",
+  "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+  "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
+  "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+]
+
 [[workunit]]
 id = "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"
 epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
-title = "Close fresh Play, sessions, and GTK3/AppKit parity"
+title = "Close terminal, fresh Play, sessions, and WinForms/GTK3 parity"
 status = "planned"
 priority = "P0"
 size = "L"
@@ -3371,13 +4814,35 @@ owner = "release-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01"]
 decision_blockers = []
-outcome = "Make J08 through J10 truthful across a fresh Play route, durable asynchronous sessions, and converged GTK3/AppKit projections without inheriting old authority."
+outcome = "Make J08 through J10 truthful across a fresh Play route and durable asynchronous sessions; finish terminal workflows before WinForms/GTK3 references, retaining AppKit preview checks without inheriting old authority."
 acceptance = [
   "J08, J09, and J10 pass machine conformance through a fresh exact Play route that inherits no historical permit or verdict.",
   "Asynchronous inspect, stop, Last Run, exact-intent relaunch, interruption, and recovery remain truthful across frontend and process loss.",
-  "GTK3 then AppKit consume the typed presentation seam and pass bounded transport, ordinary-journey, accessibility, performance, and package evidence.",
-  "Exact WinForms System Native/OEM+, GTK3 GNOME HIG, and AppKit Apple HIG visual, localization, and text-expansion receipts bind each platform package and require human verdicts.",
-  "Distinct exact Windows Play and macOS/GTK3 preview human receipts are required; no signing, publication, or support authority is implied.",
+  "All local human CLI, JSON/RPC, full-screen and linear TUI journeys pass on declared Windows/Linux/macOS targets before concentrated WinForms and GTK3 ordinary desktop closure; AppKit preview stays tested.",
+  "Exact WinForms System Native/OEM+ and GTK3 GNOME HIG visual, localization, and text-expansion receipts bind required desktop packages and require human verdicts; AppKit Apple HIG findings stay preview-scoped until 0.4.",
+  "Distinct exact Windows Play and WinForms/GTK3 reference human receipts are required; any AppKit preview claim needs its own bounded evidence, without full graduation before 0.4 or implied signing, publication, or support authority.",
+]
+
+close_after = [
+  "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+  "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+  "FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01",
+  "FACMAN-0.1-ALPHA7-DIAGNOSTIC-RECOVERY-BUNDLES-01",
+  "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01",
+  "FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01",
+  "FACMAN-0.1-ALPHA7-WINFORMS-CONTENT-PLAY-01",
+  "FACMAN-0.1-ALPHA7-WINFORMS-QUALIFICATION-01",
+  "FACMAN-0.1-ALPHA7-GTK-SETUP-INSTANCES-01",
+  "FACMAN-0.1-ALPHA7-GTK-CONTENT-PLAY-01",
+  "FACMAN-0.1-ALPHA7-GTK-QUALIFICATION-01",
+  "FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-WINDOWS-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-MACOS-01",
 ]
 
 [[epic]]
@@ -3413,6 +4878,10 @@ acceptance = [
   "Two clean roots reconstruct the candidate and prove byte equality or documented semantic equivalence before the exact beta human packet is generated.",
 ]
 
+close_after = [
+  "FACMAN-0.1-BETA1-MACHINE-FREEZE-01",
+]
+
 [[epic]]
 id = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
 release = "FACMAN-0.1.0-BETA.1"
@@ -3445,6 +4914,43 @@ acceptance = [
   "Beta allocation, immutable tagging, signing, Apple notarization, publication, and support activation occur only under separate explicit authorities.",
   "Final topology and marker-owned cleanup preserve the exact candidate, recovery bundle, immutable tags, and unique history.",
 ]
+
+close_after = [
+  "FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01",
+  "FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01",
+  "FACMAN-0.1-BETA1-CANDIDATE-RECONSTRUCTION-01",
+  "FACMAN-0.1-BETA1-EXPERIENCE-ACCEPTANCE-01",
+  "FACMAN-0.1-BETA1-READY-CLOSEOUT-01",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+title = "Admit the corrected terminal-first 0.1 through 0.4 delivery train"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-corrected-train-admission-01"
+base_revision = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+depends_on = ["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
+decision_blockers = []
+lane = "verification_release"
+integration_status = "integrated"
+outcome = "Encode prospective local-first 0.1 terminal and WinForms/GTK3 completion, 0.2 acquisition, 0.3 local hosting and 0.4 AppKit graduation without changing current qualification or authority."
+acceptance = [
+  "Existing canonical scope, journey census, plan and generated views distinguish future obligations from current Alpha.5 qualification and the active workspace implementation.",
+  "Terminal-before-desktop checkpoints are explicit; plain 0.1.0 still requires WinForms and GTK3, while macOS terminal is required now and AppKit graduation is 0.4.",
+  "Regression tests reject scope drift, scaffold-as-completion, missing cross-platform terminal requirements and implicit authority or package-selector activation.",
+  "No source/package identity, historical evidence, protected merge delegation, provider promotion, laboratory effect, signing, publication or support claim is inherited or activated.",
+]
+
+dev_integration_revision = "8fee0d0d2cde9d3dd2065d7624b0a45c820db800"
+dev_integration_tree = "9bccadbfdb4ced62754370f4d98e3880141d7bae"
+reviewed_pull_request = 248
+integration_evidence = ".aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/corrected-train-integration.json"
+evidence = [".aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/corrected-train-integration.json"]
 
 [[workunit]]
 id = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"

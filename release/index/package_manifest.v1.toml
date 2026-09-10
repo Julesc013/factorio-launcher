@@ -1,5 +1,25 @@
 schema = "facman.package_manifest.v1"
 id = "facman_package_manifest_v1"
+profile_collection_role = "construction_catalog_not_active_release_selection"
+active_release_view = "release/index/active_release_view.v1.toml"
+active_release_profiles = [
+  "release/profiles/windows_product_x64/profile.toml",
+  "release/profiles/macos_product_x64/profile.toml",
+  "release/profiles/linux_product_x64/profile.toml",
+]
+historical_profiles = [
+  "release/profiles/linux_portable_cli_x64/profile.toml",
+  "release/profiles/macos_portable_cli_x64/profile.toml",
+  "release/profiles/windows_portable_cli_x64/profile.toml",
+  "release/profiles/windows_portable_tui_x64/profile.toml",
+  "release/profiles/linux_portable_tui_x64/profile.toml",
+  "release/profiles/macos_portable_tui_x64/profile.toml",
+  "release/profiles/windows_legacy_winforms_x64/profile.toml",
+  "release/profiles/macos_legacy_appkit_x64/profile.toml",
+  "release/profiles/linux_x11_gtk_x64/profile.toml",
+  "release/profiles/portable_cli_x64/profile.toml",
+  "release/profiles/portable_tui_x64/profile.toml",
+]
 release_profiles = [
   "release/profiles/linux_portable_cli_x64/profile.toml",
   "release/profiles/macos_portable_cli_x64/profile.toml",
@@ -53,6 +73,7 @@ required_paths = [
   "release/index/update_report.v1.toml",
   "release/index/offline_bundle.v1.toml",
   "release/index/artifact_matrix.v1.toml",
+  "release/index/active_release_view.v1.toml",
   "release/profiles/profile_catalog.v1.toml",
   "release/profiles/profile_lifecycle.v1.toml",
   "docs/release/RELEASE_MODEL.md",

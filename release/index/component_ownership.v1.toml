@@ -554,6 +554,18 @@ evidence = []
 support_claim_allowed = false
 
 [[component]]
+id = "facman-resource-schemas"
+repository = "facman"
+path = "contracts/schema/resources"
+owner = "product_packaging"
+public_contract = "FacMan resource destination observation and retained-effect recovery"
+implementation_state = "implemented"
+maturity = "experimental"
+public_surface = "private_internal"
+evidence = ["docs/architecture/resource-export-outcomes.v1.md"]
+support_claim_allowed = false
+
+[[component]]
 id = "facman-transport-schemas"
 repository = "facman"
 path = "contracts/schema/transport"

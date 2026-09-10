@@ -1,0 +1,18 @@
+{
+  "schema": "facman.plan.integration-receipt.v1",
+  "workunit": "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01",
+  "repository": "Julesc013/factorio-launcher",
+  "target_branch": "dev",
+  "pull_request": 248,
+  "merge_commit": "8fee0d0d2cde9d3dd2065d7624b0a45c820db800",
+  "merge_tree": "9bccadbfdb4ced62754370f4d98e3880141d7bae",
+  "reviewed_head": "6224b75402683a86dc9a405e4a792109683e4af6",
+  "merged_at": "2026-09-05T23:36:20Z",
+  "observed_on": "2026-09-06",
+  "observation_method": "gh pr view under BLACKGLASS-WIN1\\Jules / Julesc013; local git show of merge commit/tree; origin/dev fetched",
+  "checks": {
+    "success": 13
+  },
+  "result": "PASS",
+  "claim_boundary": "Records corrected requirements admission integration only; no product or package qualification inherited."
+}

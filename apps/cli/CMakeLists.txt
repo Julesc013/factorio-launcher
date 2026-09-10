@@ -1,7 +1,14 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-add_executable(facman_cli main.c command_dispatch.cpp resource_commands.cpp)
+add_executable(facman_cli
+  main.c
+  command_dispatch.cpp
+  resource_commands.cpp
+  resource_export_command.cpp
+  resource_response.cpp
+  workspace_commands.cpp
+)
 if(WIN32)
   target_sources(facman_cli PRIVATE facman.manifest)
 endif()
@@ -19,4 +26,7 @@ else()
 endif()
 set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 add_executable(facman::cli ALIAS facman_cli)
-facman_apply_policies(facman_cli)
+# The coverage suite repeatedly starts this executable. Its instrumented static
+# dependencies retain coverage, while the CLI translation units are covered by
+# focused smoke targets without multiplying process startup costs.
+facman_apply_policies(facman_cli NO_COVERAGE_COMPILE)

@@ -1,0 +1,7 @@
+fix(test): classify content foundation smoke
+
+Keep the configured content-foundation smoke in deterministic fast selection,
+and bind the WorkUnit to canonical dev after its normal forward restack.
+
+Work-Item: FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01
+Evidence-Ref: docs/release/checkpoints/facman-active-release-view-consolidation-01.md

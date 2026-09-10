@@ -1,0 +1,9 @@
+feat(winforms): exercise production controls in an inert gallery
+
+Share production snapshot projection and text formatting with real-control
+fixtures; fix clipped actions and overflowing lists at the minimum size.
+Record gallery activation and the checked PR 250 admission closeout.
+
+Work-Item: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/winforms-independent-review.json
+Changelog: Fixed: Keep planning actions and long lists usable in small windows

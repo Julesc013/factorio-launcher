@@ -1,0 +1,92 @@
+{
+  "schema": "facman.p6-local-windows-checkpoint-custody.v1",
+  "scope": "Audited local Windows documentation/evidence checkpoint; active WorkUnit remains incomplete.",
+  "expected_parent": "f9d27901ede83d1ac21176dd36e35ceadc633881",
+  "qualified_source_tree": "a6b314e2724fba62fc17705d0a81a8006dbd8d93",
+  "source_docs": [
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/ExecPlan.md",
+      "bytes": 23813,
+      "raw_sha256": "963c89047cfa3bd460e327c5635b892dca2934aa40aa22e6ecd870c8161a0d7c",
+      "git_blob": "69778eb026d7c8acc553e3b98f744487ebac836c",
+      "base_raw_sha256": "916858e15aded4346bf79311d4c502534085703db664f92104b599420f4d1a7f"
+    },
+    {
+      "path": "docs/development/native-control-gallery.md",
+      "bytes": 8663,
+      "raw_sha256": "a4f7f6d0ff452aa3a2025206d5841080b3907f5aeefc3dda776d6168526b21e3",
+      "git_blob": "e8b34d1aa7473c99218f36df4b2b194629b0b4f7",
+      "base_raw_sha256": "bd5d36d0d2ab8d9a6e8e4a6f01239b8037a99b31a2ccb26c555fc872876b2e86"
+    },
+    {
+      "path": "docs/development/packaged-startup-identity.md",
+      "bytes": 6102,
+      "raw_sha256": "b89b6243d2c5ef5f050b759a8b8f7259888dbb0960d027e5ad7d9c0ec9e1b1fa",
+      "git_blob": "21df91f3f554f5b7956515374d23ad44e51a8568",
+      "base_raw_sha256": "1d0154e100bdbe2d5ce307df0d9110f3d69e8ad279dff789ff7e8a426e1c91bb"
+    }
+  ],
+  "archive": {
+    "path": "p6-windows-custody.zip",
+    "bytes": 1666861,
+    "sha256": "5e05369e88be3fb77014f2f5300580990349675332280b91b1c9bec33baa00d0",
+    "members": 248,
+    "raw_payload_bytes": 4512045,
+    "member_manifest_sha256": "6ad713727f05a37f677284190a6758b6e6fb9e71e830da99ee397851c010eb2d"
+  },
+  "independent_review": {
+    "member": "independent-review/independent-final-review.json",
+    "sha256": "93680b8c6283a7498d1fb0f8b99da78e9c002fa720d9c631e4da58927e60978f"
+  },
+  "additive_handoff_correction": {
+    "member": "independent-review/handoff-correction.json",
+    "sha256": "1c9a3b452dc6732a15435dbf8614b7ebadc00904b3d8d59527f4bfe6bd110a86"
+  },
+  "original_failed_receipt": {
+    "member": "build/result.json",
+    "sha256": "e3b9b7a830ddffbe8bba4c32e433b4b0c2bac5d1beb8ac037a7abcb0cf7a5f02",
+    "status": "FAIL"
+  },
+  "successful_continuation": {
+    "member": "continuation/result.json",
+    "sha256": "e2dc73f3b0081997edbb3513756d692aaac7688d647a28fd90d4b96b1bf58724",
+    "status": "PASS_LOCAL_COMMITTED_BUILD_AND_FIXTURES"
+  },
+  "original_artifact_roster": {
+    "member": "independent-review/artifact-custody.json",
+    "sha256": "57924e217640584f67335db616532f67019c4b0788b746a0cd281e175f08111d",
+    "retained_files": 2567,
+    "retained_bytes": 286299793
+  },
+  "assets": [
+    {
+      "filename": "FacMan-0.1.0-alpha.5-windows-x64-portable.zip",
+      "bytes": 6479624,
+      "sha256": "bcf300782461d03e46f637848ee903f6c448209304463b3873deeda241374dae"
+    },
+    {
+      "filename": "FacMan-0.1.0-alpha.5-windows-x64-setup.exe",
+      "bytes": 13321684,
+      "sha256": "2af339f3b20e65cc727a129c0d75cc96faab649c2a5a48ca9f2947d6826c69e7"
+    }
+  ],
+  "evidence_availability": {
+    "included": "Explicit raw receipts, selected logs and scripts, all resource-declared artifacts, seven gallery fixtures and all 29 gallery images plus startup image; exact member origin/size/hash map inside archive.",
+    "external_only": "Native/GUI builds, portable/setup archives, original and relocated product trees, exported resources and other private fixtures are not bundled. Exact bytes were present and verified at the P6 review cut; their future availability depends on external marker-owned retention.",
+    "already_cleaned": "Inherited fixture-finally cleanup already removed some original installed/workspace fixture children. Their receipts and retained snapshot inventories survive; no complete post-crash or live installation retention is claimed.",
+    "hash_limit": "A digest identifies bytes; it cannot reconstruct an omitted artifact or establish current hosting, authenticity or atomic custody."
+  },
+  "qualification": {
+    "local_unsigned_windows_two_assets": true,
+    "source_build_tests_recorded_and_audited": true,
+    "independent_product_inspect_executed": true,
+    "whole_resource_workunit_complete": false,
+    "six_asset_candidate_complete": false,
+    "hosted_qualification": false,
+    "remote_source_closure_proven": false,
+    "human_game_physical_dpi": false,
+    "signing_tagging_publication": false,
+    "beta1_eligibility": false
+  },
+  "mutations": "Proposed six-path docs/evidence checkpoint only; canonical queue/status, generated TODO, provider pins and release identities stay unchanged."
+}

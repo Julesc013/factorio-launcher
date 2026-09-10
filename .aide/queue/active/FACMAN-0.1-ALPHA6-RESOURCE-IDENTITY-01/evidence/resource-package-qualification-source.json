@@ -1,0 +1,108 @@
+{
+  "schema": "facman.resource_package_final_source.v1",
+  "head": "ce2c7fd788aa788c020a02cfa5361a3fc859d5f3",
+  "files": {
+    ".aide/memory/project-state.md": {
+      "bytes": 10363,
+      "sha256": "eaab4b6c86d65855bdc87d5870dadc4415db0fa2bc70b3d64e57cb9c63efd622",
+      "git_blob": "14ade7322e94610994f23277dbfd19b3e3982b94"
+    },
+    ".aide/memory/project-state.v2.json": {
+      "bytes": 191326,
+      "sha256": "5b338f86715b0a5ca7fc17d46b0ed02a9348a0cf4fdd861be63fda9e298cc2d5",
+      "git_blob": "6894ece1f7dbf66844b18aa79f09a669def88ddf"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/ExecPlan.md": {
+      "bytes": 12944,
+      "sha256": "82948325b0de026b4e44f1d4a74c0166829aee4989cc9a220bea6b3d6ab7d38e",
+      "git_blob": "3763e87e461b706934463197387012bbeed07192"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml": {
+      "bytes": 2032,
+      "sha256": "ab31fff7830802f238ac2af51916fa6751d2c5df5b114b91befc95d51829db82",
+      "git_blob": "a090215c8717059d9f095172db40a808e4b6029f"
+    },
+    ".github/workflows/product-candidate.yml": {
+      "bytes": 26816,
+      "sha256": "2f207186b7d2b436af59278f1365665265e2b70e34331f1085df8f870ac9905e",
+      "git_blob": "dedd4304b0d86ae838022b807c706e53f17c235b"
+    },
+    "README.md": {
+      "bytes": 17641,
+      "sha256": "f9310d5e9bbde672e9ba91475de73d258c19fa2dc9d520009a419f3d3e921f4e",
+      "git_blob": "ee3a7ca84768da9a4870d55952070dac4cde9152"
+    },
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": {
+      "bytes": 142475,
+      "sha256": "c7b127d6dfb9237076695861c7ee63a85b97047a6d66eb2861f2c4474d9b64c4",
+      "git_blob": "89500949f4caec06a0d12d7e1d0ab2d205fc8357"
+    },
+    "contracts/policy/test_impact.v1.json": {
+      "bytes": 20513,
+      "sha256": "42af9a2aa238b77f1b6619a460f26469f5ddcfbbe18204da7d56e423040fecf5",
+      "git_blob": "f09de08ca6dd37c1f20d2b3d60627d2d7d9ddb29"
+    },
+    "contracts/schema/release/facman_resource_package_proof.v1.schema.json": {
+      "bytes": 8481,
+      "sha256": "1aa731e4e560d29e6b51b6cc11bdf71dc52bf7907bc77a9f5d1f618be96f3576",
+      "git_blob": "fc6ddc8e6a2cabb96ca809e32ab83d1aff425d6c"
+    },
+    "docs/development/resource-package-qualification.md": {
+      "bytes": 3271,
+      "sha256": "f258b908da96206d4aec3f77aaa227ea72936fcc1bd989dcb79daf09e06a0808",
+      "git_blob": "16928760d70455164a11308f3837ab67d977c105"
+    },
+    "runtime/core/generated/version.h": {
+      "bytes": 636,
+      "sha256": "49f859634ae866bb0e6ec6b90554ebe89fce89733a1ea9590c7adfb708f1693b",
+      "git_blob": "f00f042a304241d23b4a234ca7d0f519b235b937"
+    },
+    "tests/integration/facman_self_setup_lifecycle.py": {
+      "bytes": 8631,
+      "sha256": "0b1e4f65cbd83d530397a65ef535e09ab4e7851c63abd54d4aa3371925a3af4c",
+      "git_blob": "e868bcfb0b8a67e1e3cd77ed2e25499e9b829faa"
+    },
+    "tests/test_product_candidate_workflow.py": {
+      "bytes": 17600,
+      "sha256": "e51400766c226297f11c356c4d9c91e870160ea9995541eafed033c1ecdf9faf",
+      "git_blob": "856f32229988d8278c4be62dd23dbdd2d71f5447"
+    },
+    "tests/test_resource_candidate_proof.py": {
+      "bytes": 13152,
+      "sha256": "7ac322e904ae05e2013796bc31b9557002496d2efae03c7f742fab2fecea5c68",
+      "git_blob": "09665c6ee14dd70d5a9dd84c878592632d0ee8f8"
+    },
+    "tests/test_resource_package_proof.py": {
+      "bytes": 12962,
+      "sha256": "ed627ece11f3f6033476702d66a4d366e9044e2ffaf32c09c8d7dfabf1bfc410",
+      "git_blob": "1fa5e6feeeb8a9d2a130837eb1190e003218e5fe"
+    },
+    "tools/package/resource_candidate_evidence.py": {
+      "bytes": 14863,
+      "sha256": "4305778e10496f1c5e5eac4990faedb74d8a9f4319f763936ad178ba44c551f7",
+      "git_blob": "667f5fb776431ea1dd5d9fae7ff887785adff2a2"
+    },
+    "tools/product_package_proofs.py": {
+      "bytes": 1925,
+      "sha256": "7224e14c019176d916ced91e0adf0c6e37a366c9743fa41301a5bc2c8d483677",
+      "git_blob": "81616a804b38b7c544bd6c54603773746bc9c7a2"
+    },
+    "tools/resource_candidate_proof.py": {
+      "bytes": 1590,
+      "sha256": "f5581c040a1fb2d91f6caa7d56fa1d3edc56e53ded091c228e44f2dda297127d",
+      "git_blob": "13a7fbdb1da8b16d45380eae5dfd8e873acb7707"
+    },
+    "tools/resource_package_cases.py": {
+      "bytes": 14472,
+      "sha256": "e010a2a12a70db7ed64f571fe0ded3ec33117e14ff9922c684b91b269bee3c44",
+      "git_blob": "a85206e36a0562c031cdf6b5a0639221baf28198"
+    },
+    "tools/resource_package_proof.py": {
+      "bytes": 13609,
+      "sha256": "f3f12bf7299651d0bd2a89a17f5a50115e9f72ea46c54a213c93be73b16cd67c",
+      "git_blob": "092abf54009cdc9a09fb53191aba1b3e39d42308"
+    }
+  },
+  "source_count": 20,
+  "qualification": "local source + native fixtures; actual candidate run and hosted checks pending"
+}

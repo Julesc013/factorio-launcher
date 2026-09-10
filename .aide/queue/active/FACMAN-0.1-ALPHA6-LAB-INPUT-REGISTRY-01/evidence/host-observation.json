@@ -1,0 +1,28 @@
+{
+  "schema": "facman.lab-host-observation.v1",
+  "observed_at": "2026-09-06T16:59:43.891401+00:00",
+  "windows": {
+    "hostname": "BlackGlass-Win10",
+    "os": "Windows-10-10.0.19045-SP0",
+    "architecture": "AMD64",
+    "scope": "read-only local inventory; prior machine fixtures only"
+  },
+  "linux_wsl": {
+    "identity": {
+      "exit_code": 0,
+      "output": "BlackGlass-Win10"
+    },
+    "kernel": {
+      "exit_code": 0,
+      "output": "6.18.33.2-microsoft-standard-WSL2"
+    },
+    "os": {
+      "exit_code": 0,
+      "output": "PRETTY_NAME=\"Ubuntu 24.04.4 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.4 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo"
+    },
+    "uid": {
+      "exit_code": 0,
+      "output": "0"
+    }
+  }
+}

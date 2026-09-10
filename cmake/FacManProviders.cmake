@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 include(CMakeParseArguments)
+include("${CMAKE_CURRENT_LIST_DIR}/FacManProviderLocalCustody.cmake")
 
 # This module is also exercised directly by cmake -P without a top-level
 # cmake_minimum_required() policy initialization.
@@ -600,26 +601,30 @@ function(_facman_git_identity out_commit out_tree repo_root label expected_commi
       OR expected_ref MATCHES "\\.\\." OR expected_ref MATCHES "//")
     message(FATAL_ERROR "${label} selected lock has an unsafe required ref")
   endif()
-  string(REGEX REPLACE "^refs/heads/" "" required_branch "${expected_ref}")
-  set(required_remote_ref "refs/remotes/origin/${required_branch}")
-  execute_process(
-    COMMAND git -c "safe.directory=${repo_root}" rev-parse --verify
-      "${required_remote_ref}^{commit}"
-    WORKING_DIRECTORY "${repo_root}"
-    OUTPUT_VARIABLE required_ref_commit OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_VARIABLE git_error RESULT_VARIABLE git_result)
-  if(NOT git_result EQUAL 0)
-    message(FATAL_ERROR
-      "${label} selected origin ref '${required_remote_ref}' is unavailable: ${git_error}")
-  endif()
-  execute_process(
-    COMMAND git -c "safe.directory=${repo_root}" merge-base --is-ancestor
-      "${expected_commit}" "${required_ref_commit}"
-    WORKING_DIRECTORY "${repo_root}"
-    ERROR_VARIABLE git_error RESULT_VARIABLE git_result)
-  if(NOT git_result EQUAL 0)
-    message(FATAL_ERROR
-      "${label} selected commit is not reachable from '${required_remote_ref}': ${git_error}")
+  _facman_local_source_checkpoint(local_checkpoint "${repo_root}"
+    "${expected_commit}" "${expected_tree}" "${expected_remote}" "${expected_ref}")
+  if(NOT local_checkpoint)
+    string(REGEX REPLACE "^refs/heads/" "" required_branch "${expected_ref}")
+    set(required_remote_ref "refs/remotes/origin/${required_branch}")
+    execute_process(
+      COMMAND git -c "safe.directory=${repo_root}" rev-parse --verify
+        "${required_remote_ref}^{commit}"
+      WORKING_DIRECTORY "${repo_root}"
+      OUTPUT_VARIABLE required_ref_commit OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_VARIABLE git_error RESULT_VARIABLE git_result)
+    if(NOT git_result EQUAL 0)
+      message(FATAL_ERROR
+        "${label} selected origin ref '${required_remote_ref}' is unavailable: ${git_error}")
+    endif()
+    execute_process(
+      COMMAND git -c "safe.directory=${repo_root}" merge-base --is-ancestor
+        "${expected_commit}" "${required_ref_commit}"
+      WORKING_DIRECTORY "${repo_root}"
+      ERROR_VARIABLE git_error RESULT_VARIABLE git_result)
+    if(NOT git_result EQUAL 0)
+      message(FATAL_ERROR
+        "${label} selected commit is not reachable from '${required_remote_ref}': ${git_error}")
+    endif()
   endif()
   execute_process(
     COMMAND git -c "safe.directory=${repo_root}" status --porcelain=v1
@@ -1506,6 +1511,7 @@ endfunction()
 
 macro(facman_configure_providers)
   _facman_validate_provider_lock(FACMAN_PROVIDER_LOCK_KIND FACMAN_PROVIDER_LOCK_RESOLVED)
+  _facman_validate_local_source_mode()
   _facman_load_lock_component(FACMAN_ULK_LOCK "${FACMAN_PROVIDER_LOCK_RESOLVED}" universal_launcher)
   _facman_load_lock_component(FACMAN_USK_LOCK "${FACMAN_PROVIDER_LOCK_RESOLVED}" universal_setup)
   if(NOT "${FACMAN_ULK_LOCK_SOURCE}" STREQUAL "universal-launcher"

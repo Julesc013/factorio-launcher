@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import copy
+import tempfile
 import unittest
+from pathlib import Path
 
+from tools import aide_queue_records
 from tools import source_closure_admission_check as admission_check
 from tools import successor_play_route_definition_check as route_check
 
@@ -146,19 +149,25 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("factorio_execution" in item for item in problems))
 
-    def test_alpha5_truth_binds_promoted_main_without_opening_source_closure(self) -> None:
+    def test_alpha6_workspace_successor_preserves_alpha5_bindings_without_opening_source_closure(
+        self,
+    ) -> None:
         self.assertEqual(
-            "facman_0_1_0_alpha_5_truth_remediation",
+            "facman_0_1_alpha6_workspace_migration_recovery",
             self.project["product"]["phase"],
         )
         self.assertTrue(self.project["product"]["canonical_main_promotion"])
         self.assertEqual(
             self.project["qualification_source_revision"],
-            "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+            "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
         )
         self.assertEqual(
             self.project["qualification_integration_revision"],
-            "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+            "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+        )
+        self.assertEqual(
+            self.project["dev_synchronization_revision"],
+            "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
         )
         changed = copy.deepcopy(self.project)
         changed["product"]["canonical_main_promotion"] = False
@@ -196,6 +205,94 @@ class SourceClosureAdmissionTests(unittest.TestCase):
 
     def test_proof_engine_and_all_other_inputs_remain_exact(self) -> None:
         self.assertEqual([], admission_check.validate_immutable_inputs())
+
+
+class ProgrammeQueueAdmissionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        (self.root / ".aide" / "history").mkdir(parents=True)
+        index = self.root / "release" / "index"
+        index.mkdir(parents=True)
+        (index / "project_status.v2.toml").write_text(
+            '[product]\nphase = "facman_0_1_alpha6_workspace_migration_recovery"\n',
+            encoding="utf-8",
+        )
+        self.task(admission_check.RECONCILIATION_WORK_UNIT, "closed", "passed")
+        self.task(admission_check.ADMISSION_WORK_UNIT, "superseded")
+        self.task(admission_check.SOURCE_CLOSURE_WORK_UNIT, "superseded")
+        self.task("Z-CONTROL", "active_automated")
+        self.task("A-WORKER", "verified_pending_closeout")
+        self.plan()
+
+    def task(self, identifier: str, lifecycle: str, status: str | None = None) -> None:
+        folder = self.root / ".aide" / "queue" / "active" / identifier
+        folder.mkdir(parents=True, exist_ok=True)
+        common = f"status: {status or lifecycle}\nlifecycle_state: {lifecycle}\n"
+        (folder / "task.yaml").write_text(
+            f"id: {identifier}\ntitle: Test record\n" + common, encoding="utf-8"
+        )
+        (folder / "status.yaml").write_text(
+            f"task_id: {identifier}\n" + common, encoding="utf-8"
+        )
+
+    def plan(self, primary: str | None = "Z-CONTROL", extra: int = 0) -> None:
+        lines = ['wip_limit = 4', 'next_workunit_limit = 9',
+                 '[execution_programme]', 'id = "TEST-PROGRAMME"']
+        if primary is not None:
+            lines.append(f'primary_workunit = "{primary}"')
+        for identifier, status in [("Z-CONTROL", "active"),
+                                   ("A-WORKER", "verified_pending_closeout")]:
+            lines.extend(['[[workunit]]', f'id = "{identifier}"', f'status = "{status}"'])
+        for number in range(extra):
+            lines.extend(['[[gate]]', f'id = "GATE-{number}"', 'status = "active"'])
+        (self.root / "release" / "index" / "plan.v1.toml").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
+
+    def validate(self) -> list[str]:
+        queue = self.root / ".aide" / "queue"
+        records = aide_queue_records.read_queue_records(queue)
+        (queue / "index.yaml").write_text(
+            aide_queue_records.render_queue_index(queue, records), encoding="utf-8"
+        )
+        return admission_check.validate_queue(self.root)
+
+    def test_explicit_programme_accepts_concurrent_and_pending_closeout_workers(self) -> None:
+        self.assertEqual([], self.validate())
+
+    def test_programme_rejects_undeclared_active_queue_record(self) -> None:
+        self.task("UNDECLARED", "active_automated")
+        problems = self.validate()
+        self.assertTrue(any("not active in the canonical plan" in item for item in problems), problems)
+
+    def test_programme_rejects_missing_active_queue_worker(self) -> None:
+        self.task("A-WORKER", "closed", "passed")
+        problems = self.validate()
+        self.assertTrue(any("membership differs" in item for item in problems), problems)
+
+    def test_programme_requires_explicit_active_primary(self) -> None:
+        for primary in (None, "INACTIVE"):
+            with self.subTest(primary=primary):
+                self.plan(primary)
+                problems = self.validate()
+                self.assertTrue(any("primary_workunit" in item for item in problems), problems)
+
+    def test_active_gates_still_consume_four_slot_wip_limit(self) -> None:
+        self.plan(extra=3)
+        problems = self.validate()
+        self.assertTrue(any("WIP limit" in item for item in problems), problems)
+
+    def test_programme_cannot_waive_historical_source_closure_disposition(self) -> None:
+        self.task(admission_check.SOURCE_CLOSURE_WORK_UNIT, "closed", "passed")
+        problems = self.validate()
+        self.assertIn("AIDE source-closure record is not superseded after integration", problems)
+
+    def test_programme_cannot_waive_historical_reconciliation_receipt(self) -> None:
+        self.task(admission_check.RECONCILIATION_WORK_UNIT, "closed", "failed")
+        problems = self.validate()
+        self.assertIn("AIDE reconciliation record is not closed after integration", problems)
 
 
 if __name__ == "__main__":

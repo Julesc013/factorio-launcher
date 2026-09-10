@@ -50,6 +50,11 @@ class RepositoryIdentity:
     product_name: str | None
     preferred_future_slug: str | None
     rename_status: str | None
+    slug_status: str | None
+    freeze_through: str | None
+    rename_authorized: bool | None
+    future_slug_candidate: str | None
+    future_slug_candidate_is_current_plan: bool | None
     workspace_names: tuple[str, ...]
 
     @property
@@ -113,6 +118,15 @@ def load(path: Path = MANIFEST) -> dict[str, RepositoryIdentity]:
         product_name = raw.get("product_name")
         preferred_future_slug = raw.get("preferred_future_slug")
         rename_status = raw.get("rename_status")
+        slug_status = raw.get("slug_status", rename_status)
+        freeze_through = raw.get("freeze_through")
+        rename_authorized = raw.get("rename_authorized")
+        future_slug_candidate = raw.get(
+            "future_slug_candidate", preferred_future_slug
+        )
+        future_slug_candidate_is_current_plan = raw.get(
+            "future_slug_candidate_is_current_plan"
+        )
         workspace = raw.get("workspace_names")
         if not isinstance(role, str) or role in identities:
             raise ValueError("repository roles must be unique strings")
@@ -143,6 +157,37 @@ def load(path: Path = MANIFEST) -> dict[str, RepositoryIdentity]:
             not isinstance(rename_status, str) or not rename_status.strip()
         ):
             raise ValueError(f"{role}: rename status must be a non-empty string")
+        if slug_status is not None and (
+            not isinstance(slug_status, str) or not slug_status.strip()
+        ):
+            raise ValueError(f"{role}: slug status must be a non-empty string")
+        if rename_status is not None and slug_status != rename_status:
+            raise ValueError(f"{role}: compatibility and canonical slug status differ")
+        if future_slug_candidate != preferred_future_slug:
+            raise ValueError(f"{role}: compatibility and canonical future slug differ")
+        if freeze_through is not None and (
+            not isinstance(freeze_through, str) or not freeze_through.strip()
+        ):
+            raise ValueError(f"{role}: freeze boundary must be a non-empty string")
+        for name, value in (
+            ("rename_authorized", rename_authorized),
+            (
+                "future_slug_candidate_is_current_plan",
+                future_slug_candidate_is_current_plan,
+            ),
+        ):
+            if value is not None and not isinstance(value, bool):
+                raise ValueError(f"{role}: {name} must be boolean")
+        if role == "facman":
+            expected_freeze = "0.1.0_publication_and_post_release_review"
+            if slug_status != "frozen_for_0_1_release_train":
+                raise ValueError("facman: canonical slug must be frozen for 0.1")
+            if freeze_through != expected_freeze:
+                raise ValueError(f"facman: freeze boundary must be {expected_freeze}")
+            if rename_authorized is not False:
+                raise ValueError("facman: rename must remain unauthorized")
+            if future_slug_candidate_is_current_plan is not False:
+                raise ValueError("facman: future slug cannot be the current plan")
         if not isinstance(workspace, list) or not workspace or not all(
             isinstance(item, str) and item and "/" not in item and "\\" not in item
             for item in workspace
@@ -159,6 +204,13 @@ def load(path: Path = MANIFEST) -> dict[str, RepositoryIdentity]:
             product_name=product_name,
             preferred_future_slug=preferred_future_slug,
             rename_status=rename_status,
+            slug_status=slug_status,
+            freeze_through=freeze_through,
+            rename_authorized=rename_authorized,
+            future_slug_candidate=future_slug_candidate,
+            future_slug_candidate_is_current_plan=(
+                future_slug_candidate_is_current_plan
+            ),
             workspace_names=tuple(workspace),
         )
         numeric_ids.add(repository_id)

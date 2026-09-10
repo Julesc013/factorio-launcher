@@ -1,0 +1,41 @@
+{
+  "schema": "facman.resource_package_qualification_review.v1",
+  "result": "PASS_SOURCE_QUALIFICATION",
+  "base": "ce2c7fd788aa788c020a02cfa5361a3fc859d5f3",
+  "source_files": 20,
+  "source_manifest_sha256": "f6b11a3f6a1059749e95149e72853c03e300f8c69b9a09b92b3eeb9f2d43a28b",
+  "independent_review_sha256": "767932fcd4ee5531de4e9eee76872e9090d5692696c9aa42fff861f9498ea8ed",
+  "root_helper_review_sha256": "c6f730a1c19106218de8ac99df278834a810600b9844dda1e0933083a257c96f",
+  "validation": {
+    "root_native_fixture_tests": 14,
+    "root_companion_workflow_tests": 27,
+    "final_existing_candidate_workflow_metadata_architecture_tests": 63,
+    "independent_companion_workflow_tests": 27,
+    "independent_novel_boundaries": 8,
+    "strict": "PASS",
+    "plan_state_diff": "PASS",
+    "commit_check": "PASS_WITH_NONBLOCKING_NEW_SCOPE_WARNING"
+  },
+  "archive": {
+    "name": "resource-package-qualification-evidence.zip",
+    "bytes": 436985,
+    "sha256": "8e25a5b8519aceed800f7c23c4c5e0651b0bb1ce4a439c717fa0a444e5e7ffb2",
+    "payload_members": 164
+  },
+  "changes": [
+    "Closed resource package observation helper and schema",
+    "Actual portable and installed-stage workflow wiring",
+    "Companion binds six resource receipts to exact source/assets/TCK inventories and raw artifacts",
+    "Shared lifecycle wrapper and platform upload within516line ratchet",
+    "Generated schema metadata and impact/queue/state documentation"
+  ],
+  "retention_ceiling": "Hosted upload retains default hidden-file exclusions. Every receipt-referenced artifact remains covered; hidden private filesystem effects are not downloadable and are not companion closure members.",
+  "pending": [
+    "Fresh hosted CI",
+    "Fresh exact-six-asset candidate run and resource companion verification",
+    "Candidate-bound human/game/other Beta1 gates"
+  ],
+  "beta1_ready": false,
+  "release_tag_created": false,
+  "published": false
+}

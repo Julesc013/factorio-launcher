@@ -1,0 +1,21 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01
+title: Admit the corrected terminal-first 0.1 through 0.4 delivery train
+status: closed
+lifecycle_state: closed
+planning_state: milestone
+canonical_plan: release/index/plan.v1.toml
+execution_role: milestone_closeout
+objective: "Encode prospective local-first 0.1 terminal and WinForms/GTK3 completion, 0.2 acquisition, 0.3 local hosting and 0.4 AppKit graduation without changing current qualification or authority."
+acceptance:
+  - "Existing canonical scope, journey census, plan and generated views distinguish future obligations from current Alpha.5 qualification and the active workspace implementation."
+  - "Terminal-before-desktop checkpoints are explicit; plain 0.1.0 still requires WinForms and GTK3, while macOS terminal is required now and AppKit graduation is 0.4."
+  - "Regression tests reject scope drift, scaffold-as-completion, missing cross-platform terminal requirements and implicit authority or package-selector activation."
+  - "No source/package identity, historical evidence, protected merge delegation, provider promotion, laboratory effect, signing, publication or support claim is inherited or activated."
+allowed_paths:
+  - release/index/**
+  - docs/**
+  - .aide/queue/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**

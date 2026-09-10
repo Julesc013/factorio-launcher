@@ -8,7 +8,11 @@
     "mode",
     "mutates_install",
     "mutates_workspace",
-    "apply_authority"
+    "apply_authority",
+    "active_release_view",
+    "compatible_lanes_role",
+    "active_release_lanes",
+    "selected_preview_lanes"
   ],
   "properties": {
     "schema": { "const": "facman.update_report.v1" },
@@ -16,6 +20,18 @@
     "mutates_install": { "const": false },
     "mutates_workspace": { "const": false },
     "apply_authority": { "const": "universal_setup" },
+    "active_release_view": { "const": "release/index/active_release_view.v1.toml" },
+    "compatible_lanes_role": { "const": "compatibility_inventory_not_active_release_selection" },
+    "active_release_lanes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "selected_preview_lanes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
     "compatible_lanes": {
       "type": "array",
       "items": { "type": "string" }

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_migration_plan.v2.schema.json",
+  "title": "FacMan Workspace Migration Plan v2",
+  "type": "object",
+  "required": [
+    "schema", "state", "migration_id", "source_format", "target_format",
+    "expected_workspace_revision", "expected_root_identity", "effects",
+    "backup_disposition", "rollback_disposition", "plan_digest", "limitations",
+    "confirmation_required", "mutation_executed"
+  ],
+  "properties": {
+    "schema": { "const": "facman.workspace_migration_plan.v2" },
+    "state": { "enum": ["healthy", "migration_available", "plan_ready", "confirmation_required", "refused_before_effects"] },
+    "migration_id": { "$ref": "#/$defs/identifier" },
+    "source_format": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "target_format": { "const": "facman.factorio.workspace.v1" },
+    "expected_workspace_revision": { "$ref": "#/$defs/digest" },
+    "expected_root_identity": { "$ref": "#/$defs/digest" },
+    "effects": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "required": ["step_id", "kind", "source", "target", "source_sha256", "target_sha256", "backup_disposition", "rollback_disposition"],
+        "properties": {
+          "step_id": { "$ref": "#/$defs/identifier" },
+          "kind": { "enum": ["create_workspace_identity", "replace_literal_local_workspace_identity", "canonicalize_legacy_install_ref", "canonicalize_legacy_instance_manifest"] },
+          "source": { "type": ["string", "null"], "maxLength": 4096 },
+          "target": { "type": "string", "minLength": 1, "maxLength": 4096 },
+          "source_sha256": { "$ref": "#/$defs/optional_digest" },
+          "target_sha256": { "$ref": "#/$defs/digest" },
+          "backup_disposition": { "enum": ["not_applicable", "required_preserve_original"] },
+          "rollback_disposition": { "enum": ["remove_created_target", "restore_bound_original", "unavailable"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "backup_disposition": { "enum": ["not_applicable", "same_volume_marker_owned"] },
+    "rollback_disposition": { "enum": ["available_while_inputs_bound", "not_applicable", "unavailable"] },
+    "plan_digest": { "$ref": "#/$defs/digest" },
+    "limitations": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 1024 } },
+    "confirmation_required": { "const": true },
+    "mutation_executed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "optional_digest": { "oneOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }] }
+  },
+  "additionalProperties": false
+}

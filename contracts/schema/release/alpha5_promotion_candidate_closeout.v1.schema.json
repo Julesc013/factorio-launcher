@@ -7,6 +7,9 @@
   "required": [
     "schema",
     "status",
+    "record_role",
+    "current_candidate",
+    "successor_current_candidate_receipt",
     "work_unit",
     "candidate_producer",
     "candidate_producer_work_unit",
@@ -31,6 +34,11 @@
   "properties": {
     "schema": { "const": "facman.alpha5_promotion_candidate_closeout.v1" },
     "status": { "const": "exact_candidate_passed_source_bound_non_authorizing" },
+    "record_role": { "const": "historical_alpha5_candidate" },
+    "current_candidate": { "const": false },
+    "successor_current_candidate_receipt": {
+      "const": "release/index/alpha5_final_candidate_closeout.v1.toml"
+    },
     "work_unit": {
       "const": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
     },

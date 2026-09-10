@@ -7,6 +7,17 @@ mutates_install = false
 mutates_workspace = false
 downloads_payload = false
 apply_authority = "universal_setup"
+active_release_view = "release/index/active_release_view.v1.toml"
+compatible_lanes_role = "compatibility_inventory_not_active_release_selection"
+active_release_lanes = [
+  "windows_product_x64",
+  "macos_product_x64",
+  "linux_product_x64",
+]
+selected_preview_lanes = [
+  "macos_product_x64",
+  "linux_product_x64",
+]
 compatible_lanes = [
   "linux_portable_cli_x64",
   "macos_portable_cli_x64",

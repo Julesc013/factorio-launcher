@@ -268,12 +268,14 @@ int main()
     use_authoritative_journal(
         cancelled_request, tree.path, "facman.instance:foundation-cancelled");
     cancelled_request.cancellation_requested = [&]() { return cancel.load(); };
-    std::thread canceller([&]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // Request cancellation only after the supervisor has confirmed exec and
+    // published the process identity. A fixed delay can expire while a loaded
+    // runner is still closing inherited descriptors before exec, where the
+    // correct fail-closed result is pending rather than cancelled.
+    cancelled_request.process_started = [&](const facman::platform::ProcessIdentity&) {
         cancel.store(true);
-    });
+    };
     auto cancelled = service.execute(cancelled_request);
-    canceller.join();
     if (!cancelled || cancelled.value().process.termination != facman::platform::ProcessTermination::cancelled ||
         !cancelled.value().complete || !has_state(cancelled.value(), "cancelled"))
         return process_failure(6, "cancelled launch", cancelled);

@@ -8,7 +8,7 @@ independent products or policy authorities.
 
 | Lane | Current evidence | Remaining boundary |
 | --- | --- | --- |
-| WinForms, Windows 10/11 x64, .NET Framework 4.8 | Reference shell; exact-candidate machine-qualified in run `33576140943` attempt 1 | Human install, keyboard/accessibility/DPI, packaged performance, real Play, and support |
+| WinForms, Windows 10/11 x64, .NET Framework 4.8 | Reference shell; exact-candidate machine-qualified in run `33603385303` attempt 1 | Human install, keyboard/accessibility/DPI, packaged performance, real Play, and support |
 | GTK3, Ubuntu 24.04 x64/X11 | Exact-candidate machine-qualified semantic preview | Typed presentation parity, human install/accessibility/performance, wider distributions/Wayland, and support |
 | AppKit, macOS 13+ Intel | Exact-candidate machine-qualified semantic preview | Typed presentation parity, human install/accessibility/performance, Apple Silicon, signing/notarization, and support |
 | Qt6 | Scaffold only | Separate post-beta admission, implementation, and qualification |
@@ -16,9 +16,9 @@ independent products or policy authorities.
 | SwiftUI | Placeholder boundary only | Separate post-beta admission, implementation, and qualification |
 
 The exact candidate source is revision
-`a7a518dbfe2a6d54da7b9c84fbd318300265e31d`, tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b`; the non-authorizing receipt is
-`release/index/alpha5_promotion_candidate_closeout.v1.toml`. No human verdict,
+`4683ecd9a1b9ead5eb84be152760d12583da0f0e`, tree
+`c07938618bc0f533fd12756cba123f54b8592048`; the non-authorizing receipt is
+`release/index/alpha5_final_candidate_closeout.v1.toml`. No human verdict,
 publication, or support claim follows from that machine result, and later
 revisions need a fresh candidate run.
 

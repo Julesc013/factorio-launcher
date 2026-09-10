@@ -1,0 +1,8 @@
+feat(lab): bind scenario inventory and exact input custody
+
+Track available fixtures and unresolved host or game inputs separately.
+Validate input hashes, semantics and ownership from one captured stream,
+and refuse linked roots without granting execution or qualification.
+
+Work-Item: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/validation.json

@@ -1,0 +1,67 @@
+{
+  "schema": "facman.workspace_cleanup_receipt.v1",
+  "recorded_on": "2026-09-03",
+  "repository": "Julesc013/factorio-launcher",
+  "canonical_dev": "b94365074835c092b3c9a60b71d4ec985d0849d0",
+  "canonical_dev_tree": "00c991ac4c6713da838534e66cc861e029d26f6d",
+  "preconditions": {
+    "exact_task_heads_reachable_from_dev": true,
+    "open_pull_requests_using_task_branches": 0,
+    "associated_secondary_worktrees": 0,
+    "durable_integration_evidence_retained": true
+  },
+  "retired_branches": [
+    {
+      "name": "task/facman-0-1-alpha5-final-candidate-closeout",
+      "head": "03efb41090c11bad27368071f5cb288f7c28e6fd",
+      "local_deleted": true,
+      "remote_deleted": true
+    },
+    {
+      "name": "task/facman-active-release-view-consolidation",
+      "head": "a2b93e00c45a9c3c8b9c05a55354104bfd36f29a",
+      "local_deleted": true,
+      "remote_deleted": true
+    },
+    {
+      "name": "task/facman-beta-repository-identity-decision-01",
+      "head": "927ac175cb1cd74ee8cd215e0cdf2f2be241ce35",
+      "local_deleted": true,
+      "remote_deleted": true
+    }
+  ],
+  "removed_marker_owned_roots": [
+    {
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-2dd2d20690",
+      "bytes": 4191123,
+      "files": 558
+    },
+    {
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-a-01c4c09e5a",
+      "bytes": 3159815424,
+      "files": 4485
+    },
+    {
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-b-81b6dd7cec",
+      "bytes": 3175881153,
+      "files": 4485
+    }
+  ],
+  "totals": {
+    "bytes_reclaimed": 6339887700,
+    "files_removed": 9528,
+    "task_roots_remaining": 0,
+    "task_root_bytes_remaining": 0
+  },
+  "post_cleanup": {
+    "workspace_hygiene_doctor_measure": "PASS",
+    "violations": [],
+    "secondary_worktrees": 0,
+    "primary_worktrees": 1,
+    "local_branches": [
+      "dev",
+      "main"
+    ],
+    "working_tree_clean": true
+  }
+}

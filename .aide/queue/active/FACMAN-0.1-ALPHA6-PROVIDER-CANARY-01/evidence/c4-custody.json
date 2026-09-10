@@ -1,0 +1,572 @@
+{
+  "schema": "facman.c4-local-checkpoint-custody.v1",
+  "scope": "Independently reviewed exact Windows source/static C4 run only",
+  "result": "PASS_SOURCE_STATIC_ONLY",
+  "work_item": "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+  "tested_source": {
+    "commit": "6c5b545f50c675e5f57b657037e109ffbc55ea8f",
+    "tree": "8259233dc90b0c8c446df60816061b27ea9c9a90"
+  },
+  "USK": "8d02dfcbf7f7e16308b37815eb7c91d0beb668be",
+  "ULK": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+  "archive": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/c4-custody.zip",
+    "bytes": 10102005,
+    "sha256": "b3d741f54a34958cda92b8f772310f1658cde81ae59faebc7ea23caa4766f843"
+  },
+  "independent_review": {
+    "member": "c4/root-independent-review.json",
+    "sha256": "69a8dbcbdf0666f0b5fd327e12324042ee370e0450b2ad4f467c8cebdcc5276f"
+  },
+  "handoff": {
+    "member": "c4/review-handoff-v2.json",
+    "sha256": "7f9e6f7a54991b0e1e2fa765d27f85b097cbe1373595fec9abb9d66edeb2d943"
+  },
+  "members": [
+    {
+      "member": "admission/commit-message.txt",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\commit-message.txt",
+      "bytes": 327,
+      "sha256": "fe44629f0132009267d9973853c9a33257c6aa6641ceef8893d7327ef0d2c5ad"
+    },
+    {
+      "member": "admission/documentation-overlay.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\documentation-overlay.json",
+      "bytes": 1185,
+      "sha256": "5fb8f94963685e5bd21f43bef03439386b2f52cf1faad3cd010ba371d74c9b98"
+    },
+    {
+      "member": "admission/documentation.patch",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\documentation.patch",
+      "bytes": 10382,
+      "sha256": "95b72db12b84052bc64f399d8f7689c4526a92dee92ef012819c603929ee4b62"
+    },
+    {
+      "member": "admission/helper-receipts.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-receipts.json",
+      "bytes": 3262,
+      "sha256": "97a415790680bc193305fd085514d6fd0847d85d63ed303888927ef0a31ff0e0"
+    },
+    {
+      "member": "admission/helper-report-restoration.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-report-restoration.json",
+      "bytes": 1166,
+      "sha256": "effa573d3dd0ae429905a9f68ed49dff955ba9e0154f68695d80a6997559edfc"
+    },
+    {
+      "member": "admission/helper-reports-before/.aide/git/latest-helper-plan.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-reports-before\\.aide\\git\\latest-helper-plan.json",
+      "bytes": 4100,
+      "sha256": "9c06ca721324c51a2f24c7d1e06754b32350d13b905b1f853d9e0a88dd524f22"
+    },
+    {
+      "member": "admission/helper-reports-before/.aide/git/latest-helper-plan.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-reports-before\\.aide\\git\\latest-helper-plan.md",
+      "bytes": 979,
+      "sha256": "23e7c9447500f81f2b1ff01a2778e3ba046e4d8e18ad89cbd488a2ccdeb546ac"
+    },
+    {
+      "member": "admission/helper-reports-before/.aide/git/workflow-detection.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-reports-before\\.aide\\git\\workflow-detection.json",
+      "bytes": 1722,
+      "sha256": "4c1ea0db31b269aaf396ae3dc158ab8e403373f3812bf331f12b6207cdf5be29"
+    },
+    {
+      "member": "admission/helper-reports-before/.aide/git/workflow-detection.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-reports-before\\.aide\\git\\workflow-detection.md",
+      "bytes": 745,
+      "sha256": "98ea78d49dc850bf8538f77682828a755ffe19f26af1715210a00e9c91cc8486"
+    },
+    {
+      "member": "admission/helper-reports-generated/.aide/git/latest-helper-plan.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-reports-generated\\.aide\\git\\latest-helper-plan.json",
+      "bytes": 3969,
+      "sha256": "9be58e6737097a64e7f64bf632c0dc635baa319e0eddd7c33ad05dc2aaba5af8"
+    },
+    {
+      "member": "admission/helper-reports-generated/.aide/git/latest-helper-plan.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-reports-generated\\.aide\\git\\latest-helper-plan.md",
+      "bytes": 896,
+      "sha256": "7ae3d08ed71796c90a365448f3942da98c626dc34bedcaa28191700c249a4513"
+    },
+    {
+      "member": "admission/helper-reports-generated/.aide/git/workflow-detection.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-reports-generated\\.aide\\git\\workflow-detection.json",
+      "bytes": 1722,
+      "sha256": "9505605c90ecba365fe358395710ccf2aa17d95e4a58382b1cfeac1dc946b29d"
+    },
+    {
+      "member": "admission/helper-reports-generated/.aide/git/workflow-detection.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helper-reports-generated\\.aide\\git\\workflow-detection.md",
+      "bytes": 758,
+      "sha256": "a53a2f7784ac359c4c671d3ffe11988bc1d314bd2c4d0fd19294caec0ea65d23"
+    },
+    {
+      "member": "admission/helpers/01-git/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\01-git\\receipt.json",
+      "bytes": 1274,
+      "sha256": "2ca28611b9aa4043698596732cd1ff0cf5a8c1dcbf0dca8803f198428c2b4c9a"
+    },
+    {
+      "member": "admission/helpers/01-git/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\01-git\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/01-git/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\01-git\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/01-git/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\01-git\\stdout.raw",
+      "bytes": 41,
+      "sha256": "e5e490e6467b27dc547d8afb79b4645ea58f6d1432fd21e6728e961a35b9365c"
+    },
+    {
+      "member": "admission/helpers/02-git/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\02-git\\receipt.json",
+      "bytes": 1281,
+      "sha256": "3e4468fbb6722490f0ac5bcd194bf197ffe5e01b91df8045fe5b2230d25e238b"
+    },
+    {
+      "member": "admission/helpers/02-git/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\02-git\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/02-git/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\02-git\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/02-git/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\02-git\\stdout.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/03-git/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\03-git\\receipt.json",
+      "bytes": 1292,
+      "sha256": "863522b8992605371899a4dc57441578880fcae02cd4927feefa5bce2dd26bc0"
+    },
+    {
+      "member": "admission/helpers/03-git/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\03-git\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/03-git/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\03-git\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/03-git/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\03-git\\stdout.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/04-paths/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\04-paths\\receipt.json",
+      "bytes": 1253,
+      "sha256": "a5d1b0d572af35a78cb5e907d37d65c165f809f737adf93716a9959a3b7388fa"
+    },
+    {
+      "member": "admission/helpers/04-paths/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\04-paths\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/04-paths/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\04-paths\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/04-paths/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\04-paths\\stdout.raw",
+      "bytes": 901,
+      "sha256": "55dcc3976b63ec66823a9e53760a8c2bb312fbcdc8fc2cd7eb84520167fd3a6b"
+    },
+    {
+      "member": "admission/helpers/05-doctor/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\05-doctor\\receipt.json",
+      "bytes": 1307,
+      "sha256": "2ca948f264a7bb1384da7c407234843f600dbfee03a336ea0da7153dc8c0ff0f"
+    },
+    {
+      "member": "admission/helpers/05-doctor/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\05-doctor\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/05-doctor/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\05-doctor\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/05-doctor/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\05-doctor\\stdout.raw",
+      "bytes": 8584,
+      "sha256": "055d0720ee4f8fe9696c19158c6bd0ccc267b2fb6d11333291859adc6de92e7f"
+    },
+    {
+      "member": "admission/helpers/06-task-inspect/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\06-task-inspect\\receipt.json",
+      "bytes": 1328,
+      "sha256": "3e0083876d156a932a39598cba67d10fc6e5329892ac04b8f2d381b512e29b52"
+    },
+    {
+      "member": "admission/helpers/06-task-inspect/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\06-task-inspect\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/06-task-inspect/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\06-task-inspect\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/06-task-inspect/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\06-task-inspect\\stdout.raw",
+      "bytes": 458,
+      "sha256": "6446d07b5986d97f9b49ef3f256b8764509d8efbe73217a15646cc267db98861"
+    },
+    {
+      "member": "admission/helpers/07-task-noop/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\07-task-noop\\receipt.json",
+      "bytes": 1332,
+      "sha256": "7f9614c67e6b0c4f87ccfc40410993a81f4f125a1c43eb30e9b914fcc0ce2987"
+    },
+    {
+      "member": "admission/helpers/07-task-noop/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\07-task-noop\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/07-task-noop/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\07-task-noop\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/07-task-noop/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\07-task-noop\\stdout.raw",
+      "bytes": 184,
+      "sha256": "9b8a37b8e8892a9c6e9cec01ecce976e9ae76e22c29ec9bbb620de6772325d4a"
+    },
+    {
+      "member": "admission/helpers/08-task-recover/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\08-task-recover\\receipt.json",
+      "bytes": 1328,
+      "sha256": "496173ba02ca71fee10cbdf548a5124a50d200c479693a5afe7f499e1dc77d12"
+    },
+    {
+      "member": "admission/helpers/08-task-recover/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\08-task-recover\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/08-task-recover/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\08-task-recover\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/08-task-recover/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\08-task-recover\\stdout.raw",
+      "bytes": 178,
+      "sha256": "183d85abeacff3ba9b86adab3878b7a595533504084d02b215cba3cbcbef7a76"
+    },
+    {
+      "member": "admission/helpers/09-git-policy/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\09-git-policy\\receipt.json",
+      "bytes": 1267,
+      "sha256": "dbe07abf59ef8098c2a2b0fbcd394c37d0c15d5de31a7b21a4927a87b18f4ecb"
+    },
+    {
+      "member": "admission/helpers/09-git-policy/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\09-git-policy\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/09-git-policy/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\09-git-policy\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/09-git-policy/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\09-git-policy\\stdout.raw",
+      "bytes": 4879,
+      "sha256": "f932b739153b4a7f6c5ac35897d015b5c0f07c2df255b0ac13c8431ad183ded8"
+    },
+    {
+      "member": "admission/helpers/10-git-detect/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\10-git-detect\\receipt.json",
+      "bytes": 1266,
+      "sha256": "8decc7c9e1859cb6ecfd4d9bffddee8e49a372eee56695a4c3aaa6e0912df574"
+    },
+    {
+      "member": "admission/helpers/10-git-detect/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\10-git-detect\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/10-git-detect/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\10-git-detect\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/10-git-detect/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\10-git-detect\\stdout.raw",
+      "bytes": 442,
+      "sha256": "ba93d4ab4052ef514b87e393d5d2089a8630e08391eaaa4e457337aabd8fb065"
+    },
+    {
+      "member": "admission/helpers/11-git-plan/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\11-git-plan\\receipt.json",
+      "bytes": 1264,
+      "sha256": "6ba5669e65d954d4b16827f779bfa59d9b8cb85e0128cd6651da6321dd5ae22a"
+    },
+    {
+      "member": "admission/helpers/11-git-plan/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\11-git-plan\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/11-git-plan/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\11-git-plan\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/11-git-plan/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\11-git-plan\\stdout.raw",
+      "bytes": 469,
+      "sha256": "5afcd3cf0fd3f56996cbad62d5ad1526bf0aa8b60a2a22d4812a95093922808b"
+    },
+    {
+      "member": "admission/helpers/12-commit-format/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\12-commit-format\\receipt.json",
+      "bytes": 1628,
+      "sha256": "2a31aee577026d7a5c708dc06d23b1fcb9a2165403513c241fe343775a253e5f"
+    },
+    {
+      "member": "admission/helpers/12-commit-format/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\12-commit-format\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/12-commit-format/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\12-commit-format\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/12-commit-format/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\12-commit-format\\stdout.raw",
+      "bytes": 1584,
+      "sha256": "05f91a4c3b3fcbd6c77f1f5330422c355e444066d9295bdf041596d9eaffa3bf"
+    },
+    {
+      "member": "admission/helpers/13-git/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\13-git\\receipt.json",
+      "bytes": 1281,
+      "sha256": "7c1b6b6971a021dad5c49a151440c6fd4bddeb61fc0e67b6656ec1aae8847a41"
+    },
+    {
+      "member": "admission/helpers/13-git/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\13-git\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/13-git/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\13-git\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/13-git/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\13-git\\stdout.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/14-git/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\14-git\\receipt.json",
+      "bytes": 1291,
+      "sha256": "c0e54026bc407d166812aa4a702c4a9700c8da0dcb6669641c1f13aa86b8efae"
+    },
+    {
+      "member": "admission/helpers/14-git/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\14-git\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/14-git/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\14-git\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/14-git/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\14-git\\stdout.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/15-git/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\15-git\\receipt.json",
+      "bytes": 1288,
+      "sha256": "7fc790cb29e81a001e03a9d087b340893bf1be58eb3edf0cf0f85a0685c93b7c"
+    },
+    {
+      "member": "admission/helpers/15-git/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\15-git\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/15-git/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\15-git\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "admission/helpers/15-git/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\helpers\\15-git\\stdout.raw",
+      "bytes": 530491,
+      "sha256": "57ce632d79d92cd861a2d8fd1754095dda695113893f120f0f5ebe65da9543be"
+    },
+    {
+      "member": "c4/archive-member-map.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\archive-member-map.json",
+      "bytes": 269370,
+      "sha256": "ddf9fd3b8f95f8016711c4386d83d7c0e9d8535faf30dd63527550eb5f97d6bf"
+    },
+    {
+      "member": "c4/artifact-custody.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\artifact-custody.json",
+      "bytes": 1064088,
+      "sha256": "25a3a44a21e08093e6a613c39381dc8dbf1de3f6b3cfd76a07715a298833d94c"
+    },
+    {
+      "member": "c4/c4-raw-custody.zip",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\c4-raw-custody.zip",
+      "bytes": 10104540,
+      "sha256": "697a56d5c049470541ef7d807342b22137547726e6d3e9f35c970e6c839b6d56"
+    },
+    {
+      "member": "c4/correct-filetracker-label-v2.py",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\correct-filetracker-label-v2.py",
+      "bytes": 3784,
+      "sha256": "f8a7458a8e6873a7d98cd539fb5d3e66ec4465cb092650f18a4923051dfff763"
+    },
+    {
+      "member": "c4/correct-filetracker-label.py",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\correct-filetracker-label.py",
+      "bytes": 3173,
+      "sha256": "9fa5bb994f58f4f5ee46064c27adbe583be89c89b784b8cb83ad1935c77ecbcc"
+    },
+    {
+      "member": "c4/execution.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\execution.json",
+      "bytes": 2619,
+      "sha256": "81601e16489b3a08987cea7b5d9ed0f826a260f10afa7e579c4d9c486c7520ea"
+    },
+    {
+      "member": "c4/filetracker-correction-preparation-failure.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\filetracker-correction-preparation-failure.json",
+      "bytes": 729,
+      "sha256": "1effe3d98f0dc99cfb47066dce86e58e40624f6521ac3de532054f81a508a331"
+    },
+    {
+      "member": "c4/filetracker-label-correction.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\filetracker-label-correction.json",
+      "bytes": 3502,
+      "sha256": "9624aae7721ad54b0fa3aeb538219f26c9486aba4799c1ebdf86eec88511c0b0"
+    },
+    {
+      "member": "c4/review-handoff-v2.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\review-handoff-v2.json",
+      "bytes": 12345,
+      "sha256": "7f9e6f7a54991b0e1e2fa765d27f85b097cbe1373595fec9abb9d66edeb2d943"
+    },
+    {
+      "member": "c4/review-handoff.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\review-handoff.json",
+      "bytes": 9512,
+      "sha256": "6778e185ff59745e6fa6e36c53af008f0b1ad7128502ac3ee13568b1b4e13b2d"
+    },
+    {
+      "member": "c4/root-independent-review.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-execution\\root-independent-review.json",
+      "bytes": 1745,
+      "sha256": "69a8dbcbdf0666f0b5fd327e12324042ee370e0450b2ad4f467c8cebdcc5276f"
+    },
+    {
+      "member": "local-chain/deadline-checkpoint.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-execution\\checkpoint-receipt.json",
+      "bytes": 3767,
+      "sha256": "ba25b171f0e467f49ca229b9341c4a6345befc2b509eca8b50f04823a0b7baa0"
+    },
+    {
+      "member": "local-chain/resource8dc-merge.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\resource8dc-sync-execution\\checkpoint-receipt.json",
+      "bytes": 3682,
+      "sha256": "c349dc1f2a564f85d987d9eba082da1a3511f60fa683e10ada14b2e547a24d4d"
+    },
+    {
+      "member": "overlay/.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/ExecPlan.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\payload\\.aide\\queue\\active\\FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01\\ExecPlan.md",
+      "bytes": 4683,
+      "sha256": "1e613e78f41d031f3cad78abe5fb05d3c351fe761239c97be607d510e3a3a738"
+    },
+    {
+      "member": "overlay/docs/development/provider-local-source-canary.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c4-checkpoint-proposal\\payload\\docs\\development\\provider-local-source-canary.md",
+      "bytes": 9975,
+      "sha256": "85b8760d671ec600540d79d684e9adce726020b9e9726a415ecd8785841cffa9"
+    }
+  ],
+  "raw_custody": "Outer and nested ZIP members preserve exact original byte streams. Git JSON/Markdown projections use UTF-8 LF; source report bytes are never silently normalized inside custody.",
+  "retained_originals": "The full map binds 2074 original files. Selected nested ZIP holds 1307 members, including 13 source inputs, command logs, actual executables, product.obj, tracking logs and fixture evidence. Remaining native outputs stay in the owned external c4 tree; this is not an exhaustive copy of that tree.",
+  "prior_failures": "Initial C4 summary and failed label correction remain exact. The corrected product tlog is authoritative. C4 planning's original paths-option failure is inside the nested raw ZIP. Earlier deadline/C1/C3 failures remain under their unchanged prior custody records.",
+  "qualification_exclusions": [
+    "installed/shared/relocated consumption",
+    "consumer interruption/replay",
+    "strong successful publication",
+    "generation/stale-owner recovery and retained cleanup",
+    "provider adoption/stable pins",
+    "GUI/fullruntime/Factorio/human experience",
+    "continuous scheduling",
+    "public/candidate/release qualification",
+    "incremental AppData builds",
+    "atomic build lease or top-supervisor creation/job assignment"
+  ],
+  "workunit_result": "PENDING",
+  "authority_delta": "none"
+}

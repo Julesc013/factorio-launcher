@@ -1,0 +1,109 @@
+{
+  "work_item": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "scope": "GTK shared production view/control gallery and bounded Windows child-failure diagnostics",
+  "result": "INDEPENDENT_REVIEW_PASS_PENDING_FRESH_CI",
+  "source_manifest": "gtk-source-manifest.json",
+  "source_aggregate_sha256": "17ef7b278593b8350cec4538283c9722738d8aece4849519593330db5af5622d",
+  "head": "6418188bba393f7a0d292251e2e9c22d1a0772df",
+  "source_dirty": true,
+  "native_receipts": {
+    "gtk": {
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\gtk-control-gallery\\runs\\8b8686adc0624690915771af7493981e\\validation.json",
+      "sha256": "4efa32cce6424d1502eb065377c9e1ff8de9f80c910d1a408ff188c08e0dd504",
+      "result": "pass",
+      "assertions": 13680,
+      "cells": 56,
+      "binary_sha256": "7ea55128dd6ba4e356244e7cb8342693deae2b3204659711fcc3f0ae9afa96fc",
+      "product_sha256": "63001763154868bb413dc59f8e9998874dde01800e666156822ef626d535a5a1",
+      "source_inputs": 24,
+      "source_inputs_current": true
+    },
+    "legacy": {
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\gtk-legacy-runtime\\33f6fe2253484e46afe616a9fae0e4f0\\validation.json",
+      "sha256": "8e251cb4f804dc0843eddb8a756e377c980d0833cb71ffaa5025a189e8ffc35e",
+      "result": "pass",
+      "assertions": null,
+      "cells": 2,
+      "binary_sha256": "63001763154868bb413dc59f8e9998874dde01800e666156822ef626d535a5a1",
+      "product_sha256": null,
+      "source_inputs": 0,
+      "source_inputs_current": true
+    },
+    "windows": {
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\control-gallery\\runs\\39ef403f564e448e9fa368cd37729bc3\\evidence\\validation.json",
+      "sha256": "7492a01e38af691a6e4650d958603cae66c280985b18fcbc05667befb448a19f",
+      "result": "PASS",
+      "assertions": 6473,
+      "cells": 28,
+      "binary_sha256": null,
+      "product_sha256": "3e1a9e246a891f61446f909297aee6a4a80c5f1ce72f83f95cb33c726920029c",
+      "source_inputs": 40,
+      "source_inputs_current": true
+    }
+  },
+  "checks": [
+    {
+      "label": "gtk-focused-tests",
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\beta1-admissi-68051e628e\\python\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "tests.test_gtk_control_gallery",
+        "tests.test_classic_preview_shells",
+        "tests.test_classic_preview_package_proof",
+        "tests.test_facman_live_shell_integration",
+        "tests.test_ulk_session_provider_adoption",
+        "tests.test_branding_assets",
+        "tests.test_engineering_quality",
+        "tests.test_native_control_gallery"
+      ],
+      "exit_code": 0,
+      "receipt": "gtk-focused-tests.txt",
+      "sha256": "55c5a62a0eaa4bb6ac538523afab4a029b0c2fdc8dd88cf449e36388901ef4d5"
+    },
+    {
+      "label": "gtk-strict-check",
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\beta1-admissi-68051e628e\\python\\Scripts\\python.exe",
+        "tools/strict_check.py"
+      ],
+      "exit_code": 0,
+      "receipt": "gtk-strict-check.txt",
+      "sha256": "3628f21485b1f3fcbf493a4791020e1a1733475dccd30dd5cb4f59df552d616c"
+    }
+  ],
+  "pending": [
+    "Fresh PR251 Windows exception diagnosis/remediation and required CI",
+    "Hosted GTK gallery invocation on reviewed candidate",
+    "Physical monitor DPI/theme transitions",
+    "Full Unicode host font coverage (three missing glyphs in WSL case)",
+    "Human keyboard and screen-reader evaluation",
+    "Packaged release-candidate qualification"
+  ],
+  "ci_failure": {
+    "run": 34041833336,
+    "job": 101509886194,
+    "head": "6418188bba393f7a0d292251e2e9c22d1a0772df",
+    "test": "tests.test_native_control_gallery.NativeControlGalleryTests.test_real_production_controls_record_actions_and_preserve_state",
+    "child_exit": 3762504530,
+    "cause": "Not observable from original CI because full child log was not uploaded; bounded diagnostics now included in raised failure",
+    "log_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\ci-pr251-34041833336-job101509886194.log",
+    "log_sha256": "cfb2bacc813603a0669fd9c8345fa25d802eb0591920a6f9035dce70cd4c31de"
+  },
+  "retained_failures": [
+    "Initial wrong GTK stack-switcher cast under --werror (tool output and Meson log)",
+    "gtk-control-gallery/runs/48d01f8903994c36b7ad909ff91fb474/validation.json (allocation before frame clock)",
+    "gtk-legacy-runtime/a2a86eac51134644ba8e99dd85505796/validation.json (baseline CRLF shell script)",
+    "Initial strict main.c complexity94 against unchanged88 budget; dispatch table remediates",
+    "Initial local49 test sandbox denied external marker write; same tests passed in Jules context"
+  ],
+  "workflow_proposal": "gtk-ci-invocation-proposal.md",
+  "ci_invocation_validation": {
+    "path": "gtk-ci-validation.json",
+    "sha256": "976eb31558886eb7ca6ea600c4f73d0161aba52bfbbb8eb73469c5984476c600",
+    "result": "PASS"
+  },
+  "advisory_generated_report_custody": "gtk-aide-github/custody.json",
+  "independent_review": "gtk-independent-review.json",
+  "line_ending_custody": "gtk-byte-custody.json"
+}

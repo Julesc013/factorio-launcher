@@ -16,9 +16,14 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import (  # noqa: E402
-    aide_queue_records,
+    project_queue_state,
     project_state_alpha5,
+    project_state_release_view,
     repository_identity,
+)
+from tools.project_queue_state import (  # noqa: E402
+    plan_active_workunits,
+    programme_primary,
 )
 
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
@@ -36,7 +41,6 @@ SURFACES = {
     ROOT / "docs" / "platform" / "support_matrix.md": "FACMAN-SUPPORT-STATUS",
     ROOT / "docs" / "release" / "checkpoints" / "README.md": "FACMAN-RELEASE-STATUS",
 }
-
 
 def load_toml(path: Path) -> dict[str, Any]:
     with path.open("rb") as handle:
@@ -73,21 +77,6 @@ def command_law() -> dict[str, Any]:
         "refusal_codes": len(refusals.get("code", [])),
         "catalog_digest": str(catalog.get("source_digest", "")),
     }
-
-
-def support_platforms() -> list[dict[str, str]]:
-    matrix = load_toml(SUPPORT_PATH)
-    keys = (
-        "id",
-        "frontend_family",
-        "compile_status",
-        "runtime_status",
-        "package_status",
-        "publication_status",
-        "support_status",
-        "evidence_revision",
-    )
-    return [{key: str(platform.get(key, "")) for key in keys} for platform in matrix["platform"]]
 
 
 def claim_levels() -> list[dict[str, str]]:
@@ -155,48 +144,7 @@ def scorecard_state(
 
 
 def queue_state(root: Path = ROOT) -> dict[str, Any]:
-    records = [
-        {
-            "id": record.id,
-            "queue": record.queue,
-            "status": record.status,
-            "lifecycle_state": record.lifecycle_state,
-        }
-        for record in aide_queue_records.read_queue_records(
-            root / ".aide" / "queue"
-        )
-    ]
-    counts: dict[str, int] = {}
-    for record in records:
-        state = record["lifecycle_state"] or "unknown"
-        counts[state] = counts.get(state, 0) + 1
-    current = [
-        record["id"]
-        for record in records
-        if record["lifecycle_state"] in {
-            "active",
-            "active_automated",
-            "awaiting_operator",
-        }
-    ]
-    if len(current) > 1:
-        raise aide_queue_records.QueueRecordError(
-            "more than one WorkUnit is active_automated or awaiting_operator: "
-            + ", ".join(current)
-        )
-    archived = sum(
-        1
-        for checkpoint in (root / ".aide" / "history").iterdir()
-        if checkpoint.is_dir()
-        for task in checkpoint.iterdir()
-        if task.is_dir()
-    )
-    return {
-        "records": records,
-        "counts": counts,
-        "current": current[0] if current else None,
-        "archived_task_count": archived,
-    }
+    return project_queue_state.queue_state(root)
 
 
 def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, Any]:
@@ -204,29 +152,22 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
     workunits = [
         item for item in plan.get("workunit", []) if isinstance(item, dict)
     ]
-    plan_active = [
-        str(item["id"])
-        for item in workunits
-        if item.get("status") in {"active", "verified_pending_closeout"}
-    ]
+    plan_active = plan_active_workunits(plan)
     ready = [
         str(item["id"])
         for item in workunits
         if item.get("status") == "ready"
     ]
-    wip_limit = int(plan.get("wip_limit", 1))
-    if len(plan_active) > wip_limit:
-        raise ValueError(
-            "canonical plan exceeds its active WorkUnit WIP limit: "
-            f"{len(plan_active)} > {wip_limit}"
-        )
+    explicit_primary = programme_primary(plan, plan_active)
     declared_primary = str(status.get("active_work_unit", ""))
     running = [
         str(item["id"])
         for item in workunits
         if item.get("status") == "active"
     ]
-    if declared_primary and declared_primary in plan_active:
+    if explicit_primary:
+        primary_active = explicit_primary
+    elif declared_primary and declared_primary in plan_active:
         primary_active = declared_primary
     elif len(running) == 1:
         primary_active = running[0]
@@ -263,6 +204,13 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
             )
         dependency_ready = next_id
     queue_active = queue.get("current") or ""
+    queue_members = queue.get("active_workunits", [queue_active] if queue_active else [])
+    if set(queue_members) - set(plan_active):
+        raise ValueError("active AIDE queue membership disagrees with the canonical plan")
+    if queue_active and queue_active not in queue_members:
+        raise ValueError("AIDE primary WorkUnit is absent from active queue membership")
+    if plan.get("execution_programme") and set(queue_members) != set(plan_active):
+        raise ValueError("programme active queue membership differs from the canonical plan")
     if queue_active and primary_active and queue_active != primary_active:
         raise ValueError(
             "canonical plan and AIDE queue disagree on the active WorkUnit"
@@ -304,9 +252,13 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
             ),
             "source_record": (
                 ".aide/queue/index.yaml"
-                if queue_active
+                if queue_active and not explicit_primary
                 else "release/index/plan.v1.toml"
             ),
+        },
+        "current_active_workunits": {
+            "value": plan_active,
+            **common_plan,
         },
         "next_dependency_ready_workunit": {
             "value": dependency_ready,
@@ -473,6 +425,9 @@ def collect() -> dict[str, Any]:
         "canonical_plan_and_truth_closeout": status[
             "canonical_plan_and_truth_closeout"
         ],
+        "phase0_integration_closeout": status["phase0_integration_closeout"],
+        "beta_repository_identity_decision": status["beta_repository_identity_decision"],
+        "beta_ruleset_and_tag_protection": status["beta_ruleset_and_tag_protection"],
         "alpha5_beta_readiness": status["alpha5_beta_readiness"],
         "command_law": command_law(),
         "capabilities": capabilities,
@@ -482,7 +437,10 @@ def collect() -> dict[str, Any]:
             "status": "implemented",
             "daemon_transport": "unavailable",
         },
-        "platforms": support_platforms(),
+        "active_release_view": project_state_release_view.active_release_state(
+            ROOT, load_toml
+        ),
+        "platforms": project_state_release_view.support_platforms(ROOT, load_toml),
         "quarantined_capabilities": status["quarantined_capabilities"],
         "known_blockers": status["known_blockers"],
         "claim_levels": claim_levels(),
@@ -569,18 +527,24 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"last_closed_work_unit = {toml_string(data['last_closed_work_unit'] or '')}",
         f"next_authority_gate = {toml_string(data['next_authority_gate'])}",
         "",
+        *project_state_release_view.current_state_lines(
+            data["active_release_view"]
+        ),
     ]
+    lines.extend(project_state_alpha5.current_state_release_train_lines(data, toml_string))
     for name in (
         "current_origin_observation",
         "reviewed_product_checkpoint",
         "current_active_workunit",
+        "current_active_workunits",
         "next_dependency_ready_workunit",
     ):
         record = execution[name]
         lines.extend(
             [
                 f"[execution_truth.{name}]",
-                f"value = {toml_string(record['value'])}",
+                "value = " + (toml_array(record["value"]) if isinstance(record["value"], list)
+                              else toml_string(record["value"])),
                 f"as_of_revision = {toml_string(record['as_of_revision'])}",
                 f"as_of_time = {toml_string(record['as_of_time'])}",
                 f"freshness = {toml_string(record['freshness'])}",
@@ -628,6 +592,12 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"facman_product_name = {toml_string(identity['facman_product_name'])}",
         f"facman_preferred_future_slug = {toml_string(identity['facman_preferred_future_slug'])}",
         f"facman_rename_status = {toml_string(identity['facman_rename_status'])}",
+        f"facman_slug_status = {toml_string(identity['facman_slug_status'])}",
+        f"facman_freeze_through = {toml_string(identity['facman_freeze_through'])}",
+        f"facman_rename_authorized = {str(bool(identity['facman_rename_authorized'])).lower()}",
+        f"facman_future_slug_candidate = {toml_string(identity['facman_future_slug_candidate'])}",
+        "facman_future_slug_candidate_is_current_plan = "
+        f"{str(bool(identity['facman_future_slug_candidate_is_current_plan'])).lower()}",
         f"facman_workspace_names = {toml_array(identity['facman_workspace_names'])}",
         f"observed_live_remote_classification = {toml_string(identity['observed_live_remote_classification'])}",
         f"dev_integration = {str(identity['dev_integration']).lower()}",
@@ -789,6 +759,8 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"observed_player_journeys = {int(data['scorecard']['observed_player_journeys'])}",
         "",
         "[queue]",
+        f"primary_workunit = {toml_string(queue['current'] or '')}",
+        *toml_array_lines("active_workunits", queue["active_workunits"]),
         *toml_array_lines("active_automated", active_automated),
         *toml_array_lines("awaiting_operator", awaiting_operator),
         *toml_array_lines("blocked", blocked),
@@ -826,7 +798,14 @@ def historical_markdown(data: dict[str, Any]) -> str:
         f"- product version: `{data['product_version']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
+        "- all active WorkUnits: " + ", ".join(
+            f"`{item}`" for item in data["execution_truth"]["current_active_workunits"]["value"]
+        ) + ";",
         f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
+        f"- active release authority: `{data['active_release_view']['authority']}`; "
+        f"profiles: `{', '.join(data['active_release_view']['active_profiles'])}`; "
+        f"asset shape: `{data['active_release_view']['active_asset_count']}` total / "
+        f"`{data['active_release_view']['primary_product_asset_count']}` product;",
         f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
@@ -856,8 +835,9 @@ def historical_markdown(data: dict[str, Any]) -> str:
         f"- status: `{data['repository_identity_decoupling']['status']}`;",
         f"- stable role / GitHub repository ID: `{data['repository_identity_decoupling']['facman_role']}` / `{data['repository_identity_decoupling']['facman_github_repository_id']}`;",
         f"- canonical slug: `{data['repository_identity_decoupling']['facman_canonical_slug']}`;",
-        f"- deferred future slug: `{data['repository_identity_decoupling']['facman_preferred_future_slug']}` "
-        f"(`{data['repository_identity_decoupling']['facman_rename_status']}`);",
+        f"- non-current future slug candidate: `{data['repository_identity_decoupling']['facman_future_slug_candidate']}` "
+        f"(`{data['repository_identity_decoupling']['facman_slug_status']}` through "
+        f"`{data['repository_identity_decoupling']['facman_freeze_through']}`);",
         f"- supported workspace names: `{', '.join(data['repository_identity_decoupling']['facman_workspace_names'])}`;",
         "- the task candidate grants no rename, canonical source-closure, release, signing, or publication authority.",
         "",
@@ -1025,6 +1005,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"- golden journey: `{data['product']['golden_journey']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
+        "- all active WorkUnits: " + ", ".join(
+            f"`{item}`" for item in data["execution_truth"]["current_active_workunits"]["value"]
+        ) + ";",
         f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- truth scope: `{data['product']['truth_scope']}`; canonical main promotion: "
@@ -1179,8 +1162,18 @@ def readme_status(data: dict[str, Any]) -> str:
     lines = [
         "## Current Status",
         "",
-        f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
+        f"**Phase:** `{data['product']['phase']}`. **Primary active WorkUnit:** `{active}`. "
         f"**Next:** `{next_work_unit}`.",
+        "Active WorkUnits: " + ", ".join(
+            f"`{item}`" for item in data["execution_truth"]["current_active_workunits"]["value"]
+        ) + ".",
+        "",
+        "Current release obligations come only from",
+        f"`{data['active_release_view']['authority']}`.",
+        f"Selected profiles: `{', '.join(data['active_release_view']['active_profiles'])}`; "
+        f"canonical shape: {data['active_release_view']['active_asset_count']} assets.",
+        "Windows is the reference; macOS and Linux are selected previews.",
+        "Catalog-only CLI, TUI, toolkit, and earlier distribution records are not current downloads.",
         "",
         f"> {data['product']['charter']}",
         "",
@@ -1200,9 +1193,10 @@ def readme_status(data: dict[str, Any]) -> str:
         f"Repository identity is sourced from `{data['repository_identity_decoupling']['manifest']}`: "
         f"stable role `{data['repository_identity_decoupling']['facman_role']}`, numeric ID "
         f"`{data['repository_identity_decoupling']['facman_github_repository_id']}`, canonical slug "
-        f"`{data['repository_identity_decoupling']['facman_canonical_slug']}`, and deferred future slug "
-        f"`{data['repository_identity_decoupling']['facman_preferred_future_slug']}`. The GitHub rename "
-        "remains deferred and canonical source closure must use the current repository.",
+        f"`{data['repository_identity_decoupling']['facman_canonical_slug']}`, frozen through "
+        f"`{data['repository_identity_decoupling']['facman_freeze_through']}`. The future slug candidate "
+        f"`{data['repository_identity_decoupling']['facman_future_slug_candidate']}` is not current, and "
+        "canonical source closure must use the existing repository.",
         "The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin "
         "reconciliation, and sole ULK Last Run authority.",
         "The immutable route v2 remains historical, strictly non-authorizing, and invalidated for "
@@ -1245,7 +1239,7 @@ def readme_status(data: dict[str, Any]) -> str:
             f"Its FacMan row binds stable role `{data['repository_identity_decoupling']['facman_role']}` and "
             f"numeric ID `{data['repository_identity_decoupling']['facman_github_repository_id']}`.",
             f"The canonical slug is `{data['repository_identity_decoupling']['facman_canonical_slug']}`; "
-            f"the deferred future slug is `{data['repository_identity_decoupling']['facman_preferred_future_slug']}`.",
+            f"the non-current future slug candidate is `{data['repository_identity_decoupling']['facman_future_slug_candidate']}`.",
             "The GitHub rename remains deferred and current source closure uses factorio-launcher.",
         ])
     return "\n".join(expanded)
@@ -1253,30 +1247,26 @@ def readme_status(data: dict[str, Any]) -> str:
 
 def roadmap_status(data: dict[str, Any]) -> str:
     active = data["execution_truth"]["current_active_workunit"]["value"]
-    next_ready = data["execution_truth"]["next_dependency_ready_workunit"]["value"]
     opening = (
-        f"The active phase is **{data['product']['phase']}** and the active WorkUnit is `{active}`."
+        f"The active phase is **{data['product']['phase']}** and the primary active WorkUnit is `{active}`."
         if active else
         f"The current phase is **{data['product']['phase']}** and no authority-gate WorkUnit is active."
     )
-    first_step = (
-        f"1. Resolve `{active}` through its canonical lifecycle without bypassing its dependency gate."
-        if active else
-        f"1. Start the dependency-ready `{next_ready}` only through the canonical plan."
-    )
+    numbered = project_state_release_view.roadmap_lines(load_toml(PLAN_PATH)["workunit"])
     return "\n".join([
         "## Current Product Sequence",
         "",
         opening,
+        "Active WorkUnits: " + ", ".join(
+            f"`{item}`" for item in data["execution_truth"]["current_active_workunits"]["value"]
+        ) + ".",
         "",
-        first_step,
-        "2. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.",
-        "3. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.",
-        "4. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.",
-        "5. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.",
-        "6. Enter `FACMAN-0.1-FEATURE-FREEZE-01` only after J01-J12 are machine-complete; freeze contracts and produce exact-byte quality and human-review packets.",
-        "7. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.",
-        "8. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.",
+        f"Current release obligations are selected only by "
+        f"`{data['active_release_view']['authority']}`.",
+        "",
+        *numbered,
+        f"{len(numbered) + 1}. Keep beta allocation, tagging, signing, Apple notarization, "
+        "publication, and support activation behind separate explicit authorities.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new",
         "normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.",
@@ -1292,6 +1282,7 @@ def support_status(data: dict[str, Any]) -> str:
         "## Current Proven Status",
         "",
         "Compile, runtime, package, publication, and support are independent claims. "
+        f"Only profiles selected by `{data['active_release_view']['authority']}` appear here. "
         "The evidence revision is blank where no proof is claimed.",
         "",
         "| Platform | Compile | Runtime | Package | Publication | Support | Evidence |",
@@ -1577,21 +1568,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if facman_identity is None:
         problems.append("repository identity manifest must define facman")
     else:
-        expected_identity = {
-            "work_unit": "FACMAN-REPOSITORY-SLUG-DECISION-01",
-            "status": "canonical_slug_retention_accepted",
-            "manifest": "release/index/repository_identity.v1.toml",
-            "facman_role": facman_identity.role,
-            "facman_github_repository_id": facman_identity.github_repository_id,
-            "facman_canonical_slug": facman_identity.canonical_slug,
-            "facman_canonical_https_remote": facman_identity.canonical_https_remote,
-            "facman_legacy_slugs": list(facman_identity.legacy_slugs),
-            "facman_product_name": facman_identity.product_name,
-            "facman_preferred_future_slug": facman_identity.preferred_future_slug,
-            "facman_rename_status": facman_identity.rename_status,
-            "facman_workspace_names": list(facman_identity.workspace_names),
-            "observed_live_remote_classification": "canonical",
-        }
+        expected_identity = project_state_alpha5.expected_repository_identity(facman_identity)
         for field, expected in expected_identity.items():
             if identity_state.get(field) != expected:
                 problems.append(
@@ -2541,7 +2518,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "user_validation": "pending_future_exact_beta_candidate_human_acceptance_after_machine_qualification",
             "current_gate_status": "alpha5_beta_readiness_active_external_play_install_accessibility_and_release_gates_pending",
         },
-        project_state_alpha5.PHASE: project_state_alpha5.PHASE_CONTRACT,
+        **project_state_alpha5.RELEASE_TRAIN_PHASE_CONTRACTS,
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -2556,10 +2533,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     product = status.get("product", {})
     phase = product.get("phase")
-    if phase != project_state_alpha5.PHASE:
-        problems.append(
-            "canonical product phase must remain the alpha.5 truth remediation"
-        )
+    if phase not in project_state_alpha5.RELEASE_TRAIN_PHASE_CONTRACTS:
+        problems.append("canonical product phase must follow the bounded 0.1 release train")
     phase_contract = phase_contracts.get(phase)
     if phase_contract is None:
         problems.append(f"canonical product phase is unsupported: {phase!r}")
@@ -3902,7 +3877,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "facman_0_1_0_alpha_5_beta_readiness_convergence": (
                 "a24934fccf9a20eafb360d65776c4a06a73af246"
             ),
-            project_state_alpha5.PHASE: project_state_alpha5.DEV_SYNC_REVISION,
+            project_state_alpha5.PHASE: project_state_alpha5.CANDIDATE_INTEGRATION_REVISION,
+            project_state_alpha5.ACTIVE_RELEASE_PHASE: (
+                project_state_alpha5.CANDIDATE_INTEGRATION_REVISION
+            ),
+            project_state_alpha5.REPOSITORY_IDENTITY_PHASE: (
+                project_state_alpha5.CURRENT_DEV_REVISION
+            ),
+            project_state_alpha5.REPOSITORY_IDENTITY_FROZEN_PHASE: (
+                project_state_alpha5.CURRENT_DEV_REVISION
+            ),
+            project_state_alpha5.RULESET_REPORT_COMPLETE_PHASE: project_state_alpha5.CURRENT_DEV_REVISION,
+            project_state_alpha5.ALPHA6_WORKSPACE_ACTIVE_PHASE: project_state_alpha5.CURRENT_DEV_REVISION,
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:
             problems.append(
@@ -4541,6 +4527,9 @@ def summary(data: dict[str, Any]) -> str:
         f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
         "active_work_unit: "
         f"{data['execution_truth']['current_active_workunit']['value'] or 'none'}",
+        "active_work_units: " + ", ".join(
+            data["execution_truth"]["current_active_workunits"]["value"]
+        ),
         "next_dependency_ready_workunit: "
         f"{data['execution_truth']['next_dependency_ready_workunit']['value']}",
         f"Gate 4A hermetic Play policy: "

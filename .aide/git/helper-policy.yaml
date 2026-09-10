@@ -11,6 +11,11 @@ operating_mode:
   no_remote_push_without_explicit_push_flag: true
   routine_task_actions_require_no_operator_approval: true
 commands:
+  commit_plan:
+    purpose: Validate an exact classified dirty task snapshot before staging or commit.
+    default_mode: report_only
+    mutates_by_default: false
+    classified_dirty_commit_candidate: allowed_after_exact_mechanical_checks
   sync:
     purpose: Inspect branch/upstream state and recommend safe sync actions.
     default_mode: dry_run
@@ -46,10 +51,15 @@ protected_roles:
   - deploy
 safety_rules:
   - require_clean_or_understood_worktree
+  - classified_dirty_commit_candidate_requires_exact_paths_hashes_ownership_review_and_message
+  - preparing_commit_is_separate_from_preparing_integration
+  - reject_unrelated_staged_paths_stale_classifications_and_unresolved_conflicts
   - require_policy_files
   - require_branch_role_detection
   - require_validation_before_land
   - require_review_before_promote
+  - require_external_verified_protected_pr_merge_evidence_before_dev_to_main
+  - require_full_merge_base_range_commit_check_before_land_apply
   - require_ancestor_containment_before_prune
   - no_force_push
   - no_delete_protected_branches

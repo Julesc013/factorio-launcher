@@ -1,0 +1,15 @@
+command_id = "workspace.migration.resume"
+cli = "facman workspace migration resume <operation-id> --expected-revision <sha256> --confirmation explicit --json"
+effects = ["workspace_read", "workspace_write"]
+request_schema = "contracts/schema/command/workspace.migration.resume.request.v1.schema.json"
+response_schema = "contracts/schema/facman/facman_workspace_migration.v2.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+availability = "implemented"
+dry_run_default = false
+executes_process = false
+mutates_workspace = true
+refusal_codes = ["workspace_migration_apply_unproven", "workspace_migration_confirmation_required", "workspace_migration_conflict", "workspace_migration_recovery_required", "workspace_migration_stale_plan"]
+golden_success = "tests/golden/commands/workspace.migration.resume.success.json"
+golden_refusal = "tests/golden/commands/workspace.migration.resume.refusal.json"

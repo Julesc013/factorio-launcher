@@ -74,6 +74,16 @@ int main()
         contracts::decode_frontend_request_context(
             frontend_json.substr(0U, frontend_json.size() - 1U) +
             ",\"ordinary_unknown\":true}")) return 16;
+    auto canonical_fixture = parse(R"([{"z":2,"a":"\/\u00e9\ud83d\ude80\u007f\n"},true,null,-42])");
+    if (!canonical_fixture) return 17;
+    auto canonical_ascii = facman::core::json::canonical_integer_ascii_json(canonical_fixture.value());
+    if (!canonical_ascii || canonical_ascii.value() != R"([{"a":"/\u00e9\ud83d\ude80\u007f\n","z":2},true,null,-42])") return 18;
+    auto ordinary_canonical = facman::core::json::canonical_integer_json(canonical_fixture.value());
+    if (!ordinary_canonical || ordinary_canonical.value().find("\\u00e9") != std::string::npos) return 19;
+    auto fractional = parse("[0.5]");
+    if (!fractional || facman::core::json::canonical_integer_ascii_json(fractional.value())) return 20;
+    auto unsafe_canonical = parse("[9007199254740992]");
+    if (!unsafe_canonical || facman::core::json::canonical_integer_json(unsafe_canonical.value())) return 21;
     std::cout << "fl-json-core-smoke: ok\n";
     return 0;
 }

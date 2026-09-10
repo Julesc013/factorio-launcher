@@ -1,0 +1,6 @@
+docs(release): close beta ruleset report
+
+Reconcile live enforcement with programme authority without mutating settings.
+
+Work-Item: FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01
+Evidence-Ref: release/index/beta_ruleset_and_tag_protection.v1.toml

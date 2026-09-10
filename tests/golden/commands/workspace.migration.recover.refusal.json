@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"workspace.migration.recover","status":"refused","refusal":{"schema":"common.refusal.v1","code":"workspace_migration_recovery_required","reason":"journal evidence does not prove a safe action","recoverable":true}}

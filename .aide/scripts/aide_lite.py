@@ -10,6 +10,7 @@ external tools.
 from __future__ import annotations
 
 import argparse
+import base64
 import builtins
 import fnmatch
 import gzip
@@ -18,6 +19,7 @@ import importlib
 import json
 import math
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -26,9 +28,10 @@ import tarfile
 import tempfile
 import zipfile
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urlsplit
 
 import aide_lifecycle
 
@@ -78,6 +81,42 @@ SELFTEST_GOLDEN_TASK_IDS = (
 COMMIT_MESSAGE_POLICY_PATH = ".aide/policies/commit-messages.yaml"
 FACMAN_COMMIT_MESSAGE_POLICY_PATH = ".aide/policies/facman-commit-messages.yaml"
 COMMIT_POLICY_BASELINE_PATH = ".aide/commit_policy_baseline.toml"
+VERIFIED_PROTECTED_PR_MERGE_SCHEMA = "verified_protected_pr_merge_v1"
+DEV_TO_MAIN_BOOTSTRAP_SCHEMA = "dev_to_main_bootstrap_v1"
+TASK_TO_DEV_STATUS_SCHEMA = "aide.task_to_dev_promotion_status.v1"
+MERGE_EVIDENCE_MAX_BYTES = 1024 * 1024
+TRUSTED_WORKFLOW_ENVELOPE_SCHEMA = "facman.trusted_workflow_attestation.v1"
+TRUSTED_WORKFLOW_PUBLIC_KEYS = {"facman-workflow-2026-01": """-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkQJi3Bz2zuJqqcD1xnAg
+imsrxt9R7E5m4rR6fCnFSS44T/vWF5UjKMWgj3bpq9ZmAcFfkrj8Ks3rv6KGr9/P
+HvbuUgQuAGJ2I9rkNWLlzHO2VLiyHSNtJCdDIBgiaBuFLbKef/cmMXwUTH8sHx6B
+Qa8/dSIZPYRtUUKSRkA+TW9i+HbYoTqxGhtsZADbAOxATuIMOVTNu8wsQROx44E7
+CgkZIQf1P7/l3ne8ExWV62A3KHe7E2imzNCDXGGj1hvxyNn1itJYXDthDVPw8xPj
+BF4UYsLSjznmd/8Z9O6GjPGHrsdxRWKZzIvkmSa/25ccru7p14Ty53jcQmqLCCSO
+zQIDAQAB
+-----END PUBLIC KEY-----"""}
+DEV_TO_MAIN_BOOTSTRAP_SCHEMA_PATH = ".aide/git/dev-to-main-bootstrap.schema.json"
+PROTECTED_CONTROL_EXACT_PATHS = frozenset(
+    {
+        ".aide/commit_policy_baseline.toml",
+        ".aide/git/dev-to-main-bootstrap.schema.json",
+        ".aide/git/helper-policy.yaml",
+        ".aide/git/verified-protected-pr-merge.schema.json",
+        ".aide/policies/branch-roles.yaml",
+        ".aide/policies/commit-messages.yaml",
+        ".aide/policies/facman-commit-messages.yaml",
+        ".aide/policies/git-workflow.yaml",
+        ".aide/policies/promotion-rules.yaml",
+        ".aide/scripts/aide_lite.py",
+    }
+)
+PROTECTED_CONTROL_PREFIXES = (
+    ".github/workflows/",
+    ".aide/git/",
+    ".aide/policies/",
+    ".aide/scripts/",
+)
+CONTROL_CHANGE_COMMAND = re.compile(r"/authorize-control-change ([0-9a-fA-F]{40})")
 COMMIT_MESSAGE_STANDARD_PATH = ".aide/reports/aide-commit-message-standard.md"
 COMMIT_MESSAGE_HOOK_TEMPLATE_PATH = ".aide/hooks/commit-msg"
 COMMIT_TEMPLATE_PATH = ".aide/git/commit-template.md"
@@ -96,6 +135,7 @@ GIT_SYNC_POLICY_MD_PATH = ".aide/git/sync-policy.md"
 GIT_PRUNE_POLICY_MD_PATH = ".aide/git/prune-policy.md"
 GIT_HELPER_POLICY_PATH = ".aide/git/helper-policy.yaml"
 GIT_HELPER_COMMANDS_MD_PATH = ".aide/git/helper-commands.md"
+VERIFIED_PROTECTED_PR_MERGE_SCHEMA_PATH = ".aide/git/verified-protected-pr-merge.schema.json"
 GIT_HELPER_PLAN_JSON_PATH = ".aide/git/latest-helper-plan.json"
 GIT_HELPER_PLAN_MD_PATH = ".aide/git/latest-helper-plan.md"
 AIDE_BRANCH_POLICY_PATH = ".aide/git/aide-branch-policy.yaml"
@@ -3903,6 +3943,83 @@ def normalize_rel(path: str | Path) -> str:
     return rel
 
 
+def normalize_control_path(path: object) -> str:
+    """Accept one exact, repository-relative GitHub changed-file path."""
+    if not isinstance(path, str) or not path or path != path.strip() or "\\" in path:
+        raise ValueError("changed path is not a normalized repository-relative string")
+    normalized = posixpath.normpath(path)
+    if (
+        normalized != path
+        or normalized in {"", "."}
+        or normalized.startswith("../")
+        or normalized.startswith("/")
+    ):
+        raise ValueError(f"changed path is not normalized: {path!r}")
+    return normalized
+
+
+def protected_control_paths(file_records: Iterable[object]) -> list[str]:
+    """Return protected paths touched before or after a GitHub PR rename."""
+    touched: set[str] = set()
+    for item in file_records:
+        if not isinstance(item, dict):
+            raise ValueError("changed-file metadata record is not an object")
+        if "filename" not in item:
+            raise ValueError("changed-file metadata record has no filename")
+        for key in ("filename", "previous_filename"):
+            value = item.get(key)
+            if value is None:
+                continue
+            path = normalize_control_path(value)
+            if path in PROTECTED_CONTROL_EXACT_PATHS or any(
+                path.startswith(prefix) for prefix in PROTECTED_CONTROL_PREFIXES
+            ):
+                touched.add(path)
+    return sorted(touched)
+
+
+def owner_control_change_authorized(
+    head_oid: object, owner_id: object, comments: Iterable[object]
+) -> bool:
+    """Return true only for an anchored owner command bound to this exact head."""
+    if not isinstance(head_oid, str) or not re.fullmatch(r"[0-9a-f]{40}", head_oid):
+        return False
+    if not isinstance(owner_id, int):
+        return False
+    for item in comments:
+        if not isinstance(item, dict) or item.get("author_association") != "OWNER":
+            continue
+        user = item.get("user")
+        if not isinstance(user, dict) or user.get("id") != owner_id:
+            continue
+        body = item.get("body")
+        if isinstance(body, str):
+            command = CONTROL_CHANGE_COMMAND.fullmatch(body)
+            if command and command.group(1).casefold() == head_oid:
+                return True
+    return False
+
+
+def task_to_dev_workflow_identity_is_exact(
+    event_name: object, repository: object, workflow_ref: object, workflow_sha: object,
+    live_base_sha: object, default_branch: object, default_branch_sha: object,
+    run_workflow_id: object, required_workflow_id: object, run_head_sha: object,
+) -> bool:
+    """Bind the base-only publisher to the protected ref that supplied its code."""
+    if not all(isinstance(value, str) for value in (event_name, repository, workflow_ref, workflow_sha, live_base_sha, default_branch, default_branch_sha, run_head_sha)):
+        return False
+    if not isinstance(run_workflow_id, int) or not isinstance(required_workflow_id, int):
+        return False
+    if run_workflow_id != required_workflow_id or run_head_sha != workflow_sha:
+        return False
+    path = repository + "/.github/workflows/task-to-dev-promotion-check.yml@refs/heads/"
+    if event_name == "pull_request_target":
+        return workflow_ref == path + "dev" and workflow_sha == live_base_sha
+    if event_name == "issue_comment":
+        return default_branch == "main" and workflow_ref == path + default_branch and workflow_sha == default_branch_sha
+    return False
+
+
 def normalize_text(text: str) -> str:
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
     return "\n".join(line.rstrip() for line in normalized.splitlines()).strip() + "\n"
@@ -4891,6 +5008,554 @@ def git_commit_messages_for_range(repo_root: Path, revision_range: str, max_coun
     return commits
 
 
+def git_full_range_validation(repo_root: Path, revision_range: str) -> tuple[list[str], int, int]:
+    """Validate every reachable commit in a range; never use first-parent here."""
+    try:
+        commits = git_commit_messages_for_range(repo_root, revision_range)
+    except ValueError as exc:
+        return [f"commit_range_unavailable: {exc}"], 0, 0
+    _results, any_fail, baseline_count = validate_commit_range_messages(repo_root, commits)
+    blockers: list[str] = []
+    if not commits:
+        blockers.append("commit_range_empty")
+    if any_fail:
+        blockers.append("commit_range_contains_malformed_commit")
+    return blockers, len(commits), baseline_count
+
+
+def git_oid(repo_root: Path, revision: str) -> str:
+    ok, output, error = run_git_capture(repo_root, ["rev-parse", "--verify", f"{revision}^{{commit}}"])
+    if not ok or not re.fullmatch(r"[0-9a-f]{40}", output):
+        raise ValueError(error or f"could not resolve commit: {revision}")
+    return output
+
+
+def external_regular_json(path_value: str, repo_root: Path) -> tuple[dict[str, object] | None, str, str]:
+    """Read one bounded evidence object outside the candidate checkout."""
+    candidate = Path(path_value)
+    if not candidate.is_absolute():
+        return None, "", "evidence_path_not_absolute"
+    try:
+        path = candidate.resolve(strict=True)
+        path.relative_to(repo_root.resolve())
+        return None, "", "evidence_path_inside_candidate_checkout"
+    except ValueError:
+        pass
+    except OSError as exc:
+        return None, "", f"evidence_path_unavailable: {exc}"
+    raw, error = helper_read_bounded_regular_file(path, MERGE_EVIDENCE_MAX_BYTES)
+    if raw is None:
+        return None, "", f"evidence_path_unavailable: {error}"
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return None, "", f"evidence_json_malformed: {exc}"
+    if not isinstance(value, dict):
+        return None, "", "evidence_json_not_object"
+    return value, hashlib.sha256(raw).hexdigest(), ""
+
+
+def merge_evidence_repository(repo_root: Path) -> str:
+    ok, remote, _error = run_git_capture(repo_root, ["remote", "get-url", "origin"])
+    return remote_repo_summary(remote) if ok else ""
+
+
+def trusted_rsa_public_numbers(pem: str) -> tuple[int, int] | None:
+    """Decode a pinned PKCS#8 SubjectPublicKeyInfo RSA key without dependencies."""
+    try:
+        der = base64.b64decode("".join(line for line in pem.splitlines() if not line.startswith("---")), validate=True)
+        def tlv(offset: int) -> tuple[int, bytes, int]:
+            tag = der[offset]; size = der[offset + 1]; offset += 2
+            if size & 0x80:
+                width = size & 0x7f; size = int.from_bytes(der[offset:offset + width], "big"); offset += width
+            return tag, der[offset:offset + size], offset + size
+        _tag, outer, _end = tlv(0)
+        offset = 0
+        def inner(data: bytes, start: int) -> tuple[int, bytes, int]:
+            tag = data[start]; size = data[start + 1]; start += 2
+            if size & 0x80:
+                width = size & 0x7f; size = int.from_bytes(data[start:start + width], "big"); start += width
+            return tag, data[start:start + size], start + size
+        _tag, _algorithm, offset = inner(outer, offset)
+        _tag, bit_string, _end = inner(outer, offset)
+        rsa = bit_string[1:]
+        _tag, sequence, _end = inner(rsa, 0)
+        _tag, modulus, offset = inner(sequence, 0)
+        _tag, exponent, _end = inner(sequence, offset)
+        return int.from_bytes(modulus, "big"), int.from_bytes(exponent, "big")
+    except (ValueError, IndexError, TypeError):
+        return None
+
+
+def verify_trusted_workflow_attestation(payload: dict[str, object], key_id: object, signature: object) -> bool:
+    if not isinstance(key_id, str) or not isinstance(signature, str):
+        return False
+    numbers = trusted_rsa_public_numbers(TRUSTED_WORKFLOW_PUBLIC_KEYS.get(key_id, ""))
+    if numbers is None or numbers[0].bit_length() < 2048 or numbers[1] != 65537:
+        return False
+    try:
+        signature_bytes = base64.b64decode(signature, validate=True)
+    except (ValueError, TypeError):
+        return False
+    modulus, exponent = numbers
+    modulus_bytes = (modulus.bit_length() + 7) // 8
+    signature_integer = int.from_bytes(signature_bytes, "big")
+    if len(signature_bytes) != modulus_bytes or signature_integer >= modulus:
+        return False
+    encoded = pow(signature_integer, exponent, modulus).to_bytes(modulus_bytes, "big")
+    digest_info = bytes.fromhex("3031300d060960864801650304020105000420") + hashlib.sha256(stable_json_text(payload).encode("utf-8")).digest()
+    return encoded == b"\x00\x01" + b"\xff" * (len(encoded) - len(digest_info) - 3) + b"\x00" + digest_info
+
+
+def merge_evidence_raw(
+    raw_claim: object, repo_root: Path, kind: str, blockers: list[str], seen_attestation_ids: set[str] | None = None
+) -> dict[str, object] | None:
+    if not isinstance(raw_claim, dict):
+        blockers.append(f"merge_evidence_raw_{kind}_missing")
+        return None
+    path = raw_claim.get("path")
+    sha256 = raw_claim.get("sha256")
+    if not isinstance(path, str) or not isinstance(sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", sha256):
+        blockers.append(f"merge_evidence_raw_{kind}_claim_invalid")
+        return None
+    data, actual, error = external_regular_json(path, repo_root)
+    if error:
+        blockers.append(f"merge_evidence_raw_{kind}_{error}")
+        return None
+    if actual != sha256:
+        blockers.append(f"merge_evidence_raw_{kind}_sha256_mismatch")
+        return None
+    if data.get("schema_version") != TRUSTED_WORKFLOW_ENVELOPE_SCHEMA:
+        blockers.append(f"merge_evidence_raw_{kind}_trusted_envelope_missing")
+        return None
+    payload = data.get("payload")
+    signature = data.get("signature")
+    key_id = data.get("key_id")
+    if not isinstance(payload, dict) or not isinstance(signature, str):
+        blockers.append(f"merge_evidence_raw_{kind}_trusted_envelope_invalid")
+        return None
+    if not verify_trusted_workflow_attestation(payload, key_id, signature):
+        blockers.append(f"merge_evidence_raw_{kind}_trusted_envelope_signature_invalid")
+        return None
+    provenance = payload.get("provenance")
+    raw_payload = payload.get("raw_payload")
+    if not isinstance(provenance, dict) or not isinstance(raw_payload, dict):
+        blockers.append(f"merge_evidence_raw_{kind}_trusted_envelope_invalid")
+        return None
+    required = ("repository_id", "actor_id", "workflow_id", "workflow_run_id", "run_attempt", "artifact_id", "ruleset_id")
+    expected_repo = merge_evidence_repository(repo_root)
+    required_strings = ("purpose", "repository", "workflow_path", "workflow_ref", "publisher", "ruleset_version", "unique_id", "artifact_sha256", "raw_payload_sha256")
+    if (
+        provenance.get("source") != "github_actions_artifact"
+        or provenance.get("purpose") != "facman.promotion-evidence.v1"
+        or provenance.get("repository") != expected_repo
+        or provenance.get("workflow_path") != ".github/workflows/task-to-dev-promotion-check.yml"
+        or any(not isinstance(provenance.get(key), int) or provenance[key] <= 0 for key in required)
+        or any(not isinstance(provenance.get(key), str) or not provenance[key] for key in required_strings)
+        or not re.fullmatch(r"[0-9a-f]{40}", str(provenance.get("admitted_oid", "")))
+        or provenance.get("admitted_ref") not in {"refs/heads/dev", "refs/heads/main"}
+        or not re.fullmatch(r"https://github\.com/[^/\s]+/[^/\s]+/(?:actions/runs|pull)/\d+", str(provenance.get("url", "")))
+    ):
+        blockers.append(f"merge_evidence_raw_{kind}_github_provenance_invalid")
+        return None
+    try:
+        observed = datetime.fromisoformat(str(provenance.get("observed_at", "")).replace("Z", "+00:00"))
+        issued = datetime.fromisoformat(str(provenance.get("issued_at", "")).replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(str(provenance.get("expires_at", "")).replace("Z", "+00:00"))
+        if (observed.tzinfo is None or issued.tzinfo is None or expires.tzinfo is None
+                or not issued <= observed <= expires
+                or expires - issued > timedelta(days=31)
+                or expires <= datetime.now(timezone.utc)):
+            raise ValueError("invalid timestamp")
+    except ValueError:
+        blockers.append(f"merge_evidence_raw_{kind}_github_provenance_timestamp_invalid")
+        return None
+    raw_digest = hashlib.sha256(stable_json_text(raw_payload).encode("utf-8")).hexdigest()
+    if provenance.get("raw_payload_sha256") != raw_digest or provenance.get("artifact_sha256") != raw_digest:
+        blockers.append(f"merge_evidence_raw_{kind}_github_payload_digest_mismatch")
+        return None
+    admitted = next((raw_payload.get(key) for key in ("head_oid", "commit_id", "merge_oid", "frontier_oid") if isinstance(raw_payload.get(key), str)), None)
+    if admitted is not None and provenance.get("admitted_oid") != admitted:
+        blockers.append(f"merge_evidence_raw_{kind}_admitted_oid_mismatch")
+        return None
+    unique_id = str(provenance.get("unique_id"))
+    if seen_attestation_ids is not None:
+        if unique_id in seen_attestation_ids:
+            blockers.append(f"merge_evidence_raw_{kind}_attestation_replayed")
+            return None
+        seen_attestation_ids.add(unique_id)
+    return raw_payload
+
+
+def validate_external_evidence_schema(
+    repo_root: Path, data: dict[str, object], schema_rel: str, prefix: str, blockers: list[str]
+) -> None:
+    """Apply the portable schema recursively before semantic validation."""
+    try:
+        schema = json.loads(read_text(repo_root / schema_rel))
+    except (OSError, json.JSONDecodeError) as exc:
+        blockers.append(f"{prefix}_schema_unavailable: {exc}")
+        return
+    def validate(value: object, rule: object, location: str) -> list[str]:
+        if not isinstance(rule, dict):
+            return [location + ":invalid_rule"]
+        errors: list[str] = []
+        if "const" in rule and value != rule["const"]:
+            errors.append(location + ":const")
+        if isinstance(rule.get("enum"), list) and value not in rule["enum"]:
+            errors.append(location + ":enum")
+        type_name = rule.get("type")
+        types = type_name if isinstance(type_name, list) else [type_name]
+        checks = {
+            "object": lambda item: isinstance(item, dict),
+            "array": lambda item: isinstance(item, list),
+            "string": lambda item: isinstance(item, str),
+            "integer": lambda item: isinstance(item, int) and not isinstance(item, bool),
+            "boolean": lambda item: isinstance(item, bool),
+        }
+        if type_name and not any(checks.get(str(kind), lambda _item: False)(value) for kind in types):
+            return [location + ":type"]
+        if isinstance(value, str):
+            if isinstance(rule.get("minLength"), int) and len(value) < rule["minLength"]:
+                errors.append(location + ":minLength")
+            if isinstance(rule.get("pattern"), str) and re.fullmatch(rule["pattern"], value) is None:
+                errors.append(location + ":pattern")
+        if isinstance(value, int) and isinstance(rule.get("minimum"), int) and value < rule["minimum"]:
+            errors.append(location + ":minimum")
+        if isinstance(value, list):
+            if isinstance(rule.get("minItems"), int) and len(value) < rule["minItems"]:
+                errors.append(location + ":minItems")
+            if isinstance(rule.get("maxItems"), int) and len(value) > rule["maxItems"]:
+                errors.append(location + ":maxItems")
+            if "items" in rule:
+                for index, item in enumerate(value):
+                    errors.extend(validate(item, rule["items"], f"{location}[{index}]"))
+        if isinstance(value, dict):
+            properties = rule.get("properties", {})
+            required = rule.get("required", [])
+            if not isinstance(properties, dict) or not isinstance(required, list):
+                return [location + ":object_rule"]
+            for key in required:
+                if not isinstance(key, str) or key not in value:
+                    errors.append(location + ":required:" + str(key))
+            if rule.get("additionalProperties") is False:
+                errors.extend(location + ":additional:" + key for key in value if key not in properties)
+            for key, child in properties.items():
+                if key in value:
+                    errors.extend(validate(value[key], child, location + "." + key))
+        return errors
+    errors = validate(data, schema, "$")
+    if errors:
+        blockers.extend(f"{prefix}_schema_invalid: {error}" for error in errors)
+
+
+def merge_subject_matches(subject: str, repository: str, record: dict[str, object]) -> bool:
+    number = record.get("pull_request_number")
+    title = record.get("pull_request_title")
+    head_ref = record.get("head_ref")
+    owner = repository.split("/", 1)[0] if "/" in repository else ""
+    return subject == f"{title} (#{number})" or subject == f"Merge pull request #{number} from {owner}/{head_ref}"
+
+
+def bootstrap_digest(data: dict[str, object]) -> str:
+    """Bind authorisation to every bootstrap claim except its self-reference."""
+    normalized = json.loads(stable_json_text(data))
+    normalized.pop("authorization", None)
+    return hashlib.sha256(stable_json_text(normalized).encode("utf-8")).hexdigest()
+
+
+def git_tree_oid(repo_root: Path, oid: str) -> str:
+    ok, tree, error = run_git_capture(repo_root, ["rev-parse", f"{oid}^{{tree}}"])
+    if not ok or not re.fullmatch(r"[0-9a-f]{40}", tree):
+        raise ValueError(error or f"could not resolve tree: {oid}")
+    return tree
+
+
+def validate_dev_to_main_bootstrap(
+    repo_root: Path, revision_range: str, evidence_path: str, seen_attestation_ids: set[str] | None = None
+) -> tuple[list[str], set[str]]:
+    """Validate one external, short-lived bridge for pre-status dev history."""
+    blockers: list[str] = []
+    if seen_attestation_ids is None:
+        seen_attestation_ids = set()
+    data, _digest, error = external_regular_json(evidence_path, repo_root)
+    if error:
+        return [f"bootstrap_evidence_{error}"], set()
+    assert data is not None
+    validate_external_evidence_schema(
+        repo_root, data, DEV_TO_MAIN_BOOTSTRAP_SCHEMA_PATH, "bootstrap", blockers
+    )
+    expected_repo = merge_evidence_repository(repo_root)
+    if data.get("schema_version") != DEV_TO_MAIN_BOOTSTRAP_SCHEMA:
+        blockers.append("bootstrap_schema_invalid")
+    if data.get("repository") != expected_repo:
+        blockers.append("bootstrap_repository_mismatch")
+    try:
+        expires = datetime.fromisoformat(str(data.get("expires_at", "")).replace("Z", "+00:00"))
+        if expires.tzinfo is None or expires <= datetime.now(timezone.utc):
+            blockers.append("bootstrap_expired")
+    except ValueError:
+        blockers.append("bootstrap_expiry_invalid")
+    promotion = data.get("promotion_pr") if isinstance(data.get("promotion_pr"), dict) else {}
+    base_oid = str(promotion.get("base_oid", ""))
+    head_oid = str(promotion.get("head_oid", ""))
+    expected_range = f"{base_oid}..{head_oid}"
+    try:
+        requested_base, requested_head = revision_range.split("..", 1)
+        range_matches = git_oid(repo_root, requested_base) == base_oid and git_oid(repo_root, requested_head) == head_oid
+    except (ValueError, AttributeError):
+        range_matches = False
+    if not range_matches or promotion.get("base_ref") != "main" or promotion.get("head_ref") != "dev":
+        blockers.append("bootstrap_promotion_range_mismatch")
+    for ref, expected_oid, tree_key in [("main", base_oid, "base_tree"), ("dev", head_oid, "head_tree"), ("origin/main", base_oid, "base_tree"), ("origin/dev", head_oid, "head_tree")]:
+        try:
+            observed_oid = git_oid(repo_root, ref)
+            observed_tree = git_tree_oid(repo_root, observed_oid)
+        except ValueError:
+            blockers.append(f"bootstrap_ref_unavailable: {ref}")
+            continue
+        if observed_oid != expected_oid or observed_tree != promotion.get(tree_key):
+            blockers.append(f"bootstrap_ref_or_tree_mismatch: {ref}")
+    raw = data.get("raw") if isinstance(data.get("raw"), dict) else {}
+    pr = merge_evidence_raw(raw.get("pull_request"), repo_root, "bootstrap_pull_request", blockers, seen_attestation_ids)
+    if isinstance(pr, dict) and (pr.get("repository") != expected_repo or pr.get("state") != "open" or pr.get("draft") is not False or pr.get("merged") is not False or any(pr.get(key) != promotion.get(key) for key in ["number", "base_ref", "base_oid", "head_ref", "head_oid"])):
+        blockers.append("bootstrap_pull_request_summary_mismatch")
+    approval = merge_evidence_raw(raw.get("approval"), repo_root, "bootstrap_approval", blockers, seen_attestation_ids)
+    if isinstance(approval, dict) and (
+        approval.get("repository") != expected_repo
+        or approval.get("pull_request_number") != promotion.get("number")
+        or approval.get("base_oid") != base_oid
+        or approval.get("head_oid") != head_oid
+        or approval.get("commit_id") != head_oid
+        or approval.get("state") != "APPROVED"
+        or not isinstance(approval.get("author_id"), int)
+        or not isinstance(approval.get("reviewer_id"), int)
+        or approval.get("author_id") == approval.get("reviewer_id")
+    ):
+        blockers.append("bootstrap_approval_observation_mismatch")
+    check = merge_evidence_raw(raw.get("check"), repo_root, "bootstrap_check", blockers, seen_attestation_ids)
+    if isinstance(check, dict) and (
+        check.get("repository") != expected_repo
+        or check.get("pull_request_number") != promotion.get("number")
+        or check.get("base_oid") != base_oid
+        or check.get("head_oid") != head_oid
+        or check.get("name") != "dev-to-main-bootstrap-preflight"
+        or check.get("conclusion") != "success"
+    ):
+        blockers.append("bootstrap_check_observation_mismatch")
+    history = data.get("historical") if isinstance(data.get("historical"), dict) else {}
+    if history.get("protection") != "not_observed" or history.get("required_status") != "not_observed":
+        blockers.append("bootstrap_invented_historical_status")
+    ok, topology_text, topology_error = run_git_capture(repo_root, ["rev-list", "--reverse", "--first-parent", revision_range])
+    topology = topology_text.splitlines() if ok else []
+    if not ok:
+        blockers.append(f"bootstrap_topology_unavailable: {topology_error}")
+    merge_topology: list[str] = []
+    for oid in topology:
+        parents = run_git_capture(repo_root, ["show", "-s", "--format=%P", oid])[1].split()
+        if len(parents) == 2:
+            merge_topology.append(oid)
+        elif len(parents) != 1:
+            blockers.append(f"bootstrap_first_parent_commit_invalid: {oid}")
+    claimed_topology = data.get("first_parent_merges")
+    if not isinstance(claimed_topology, list) or [item.get("merge_oid") for item in claimed_topology if isinstance(item, dict)] != merge_topology:
+        blockers.append("bootstrap_topology_mismatch")
+    else:
+        for item in claimed_topology:
+            assert isinstance(item, dict)
+            oid = str(item.get("merge_oid", ""))
+            parents = run_git_capture(repo_root, ["show", "-s", "--format=%P", oid])[1].split()
+            if len(parents) != 2 or item.get("parents") != parents or item.get("tree") != git_tree_oid(repo_root, oid):
+                blockers.append(f"bootstrap_merge_topology_or_tree_mismatch: {oid}")
+            historical_merge = item.get("historical")
+            if not isinstance(historical_merge, dict):
+                blockers.append(f"bootstrap_historical_merge_observation_missing: {oid}")
+            elif historical_merge.get("availability") == "not_observed":
+                if historical_merge.get("reason") != "pre-status-history":
+                    blockers.append(f"bootstrap_historical_merge_absence_unscoped: {oid}")
+            elif historical_merge.get("availability") == "observed":
+                historical_pr = merge_evidence_raw(historical_merge.get("pull_request"), repo_root, "bootstrap_historical_pull_request", blockers, seen_attestation_ids)
+                historical_protection = merge_evidence_raw(historical_merge.get("protection"), repo_root, "bootstrap_historical_protection", blockers, seen_attestation_ids)
+                if isinstance(historical_pr, dict) and (historical_pr.get("merge_oid") != oid or historical_pr.get("repository") != expected_repo):
+                    blockers.append(f"bootstrap_historical_pull_request_mismatch: {oid}")
+                if isinstance(historical_protection, dict) and historical_protection.get("repository") != expected_repo:
+                    blockers.append(f"bootstrap_historical_protection_mismatch: {oid}")
+            else:
+                blockers.append(f"bootstrap_historical_merge_availability_invalid: {oid}")
+    retrospective = history.get("retrospective") if isinstance(history.get("retrospective"), dict) else {}
+    commits = git_commit_messages_for_range(repo_root, revision_range)
+    results, _any_fail, baseline_count = validate_commit_range_messages(repo_root, commits)
+    actual_debt = [
+        {"oid": oid, "diagnostics": [check.message for check in checks if check.severity == "FAIL"]}
+        for oid, _subject, result, checks in results if result == "FAIL"
+    ]
+    if baseline_count:
+        blockers.append("bootstrap_retrospective_baseline_forbidden")
+    if retrospective.get("range") != expected_range or retrospective.get("outcome") != "debt" or retrospective.get("debt") != actual_debt:
+        blockers.append("bootstrap_retrospective_debt_mismatch")
+    activation = data.get("activation") if isinstance(data.get("activation"), dict) else {}
+    activation_raw = merge_evidence_raw(activation.get("observation"), repo_root, "bootstrap_activation", blockers, seen_attestation_ids)
+    if isinstance(activation_raw, dict) and (activation_raw.get("repository") != expected_repo or activation_raw.get("branch") != "dev" or activation_raw.get("required_status") != "task-to-dev-promotion-check" or activation_raw.get("active") is not True or activation_raw.get("frontier_oid") != head_oid):
+        blockers.append("bootstrap_activation_not_exact_or_active")
+    default_activation = merge_evidence_raw(activation.get("default_branch_observation"), repo_root, "bootstrap_default_branch_activation", blockers, seen_attestation_ids)
+    try:
+        main_workflow_blob = run_git_capture(repo_root, ["rev-parse", f"{base_oid}:.github/workflows/task-to-dev-promotion-check.yml"])[1]
+    except (ValueError, TypeError):
+        main_workflow_blob = ""
+    if isinstance(default_activation, dict) and (
+        default_activation.get("repository") != expected_repo
+        or default_activation.get("default_branch") != "main"
+        or default_activation.get("workflow_path") != ".github/workflows/task-to-dev-promotion-check.yml"
+        or default_activation.get("active") is not True
+        or not isinstance(default_activation.get("workflow_blob_oid"), str)
+        or not re.fullmatch(r"[0-9a-f]{40}", default_activation["workflow_blob_oid"])
+        or default_activation.get("workflow_blob_oid") != main_workflow_blob
+    ):
+        blockers.append("bootstrap_default_branch_activation_invalid")
+    # The bootstrap can excuse only an explicitly enumerated historical merge;
+    # direct first-parent commits remain subject to ordinary commit validation.
+    legacy_merges = {
+        str(item.get("merge_oid")) for item in claimed_topology
+        if isinstance(item, dict)
+        and item.get("legacy_status") == "not_observed"
+        and isinstance(item.get("historical"), dict)
+        and item["historical"].get("availability") == "not_observed"
+    } if isinstance(claimed_topology, list) else set()
+    if legacy_merges != set(merge_topology):
+        blockers.append("bootstrap_legacy_merge_scope_mismatch")
+    authorization = data.get("authorization") if isinstance(data.get("authorization"), dict) else {}
+    if authorization.get("bootstrap_digest") != bootstrap_digest(data):
+        blockers.append("bootstrap_authorization_digest_mismatch")
+    authorization_raw = merge_evidence_raw(authorization.get("review"), repo_root, "bootstrap_authorization", blockers, seen_attestation_ids)
+    exception_set = sorted(legacy_merges)
+    exception_digest = hashlib.sha256(stable_json_text(exception_set).encode("utf-8")).hexdigest()
+    if isinstance(authorization_raw, dict) and (authorization_raw.get("repository") != expected_repo or authorization_raw.get("base_oid") != base_oid or authorization_raw.get("head_oid") != head_oid or authorization_raw.get("bootstrap_digest") != bootstrap_digest(data) or authorization_raw.get("exception_set_digest") != exception_digest or authorization_raw.get("commit_id") != head_oid or authorization_raw.get("state") != "APPROVED" or not isinstance(authorization_raw.get("author_id"), int) or not isinstance(authorization_raw.get("reviewer_id"), int) or authorization_raw.get("author_id") == authorization_raw.get("reviewer_id")):
+        blockers.append("bootstrap_authorization_not_independent_or_exact")
+    return sorted(dict.fromkeys(blockers)), legacy_merges
+
+
+def validate_verified_protected_pr_merges(
+    repo_root: Path, revision_range: str, evidence_path: str, bootstrap_evidence: str = ""
+) -> tuple[list[str], int]:
+    """Validate dev->main first-parent merges against external, raw-bound PR evidence."""
+    blockers: list[str] = []
+    seen_attestation_ids: set[str] = set()
+    evidence, _evidence_hash, error = external_regular_json(evidence_path, repo_root)
+    if error:
+        return [f"merge_evidence_{error}"], 0
+    assert evidence is not None
+    validate_external_evidence_schema(
+        repo_root, evidence, VERIFIED_PROTECTED_PR_MERGE_SCHEMA_PATH, "merge_evidence", blockers
+    )
+    expected_repo = merge_evidence_repository(repo_root)
+    if not expected_repo:
+        blockers.append("merge_evidence_origin_repository_unavailable")
+    repository = evidence.get("repository")
+    if not isinstance(repository, str) or repository != expected_repo:
+        blockers.append("merge_evidence_repository_mismatch")
+    if evidence.get("schema_version") != VERIFIED_PROTECTED_PR_MERGE_SCHEMA:
+        blockers.append("merge_evidence_schema_invalid")
+    records = evidence.get("merges")
+    if not isinstance(records, list) or (not records and not bootstrap_evidence):
+        return [*blockers, "merge_evidence_records_missing"], 0
+    by_merge: dict[str, dict[str, object]] = {}
+    for item in records:
+        if not isinstance(item, dict) or not isinstance(item.get("merge_oid"), str):
+            blockers.append("merge_evidence_record_malformed")
+            continue
+        oid = str(item["merge_oid"])
+        if oid in by_merge:
+            if by_merge[oid] != item:
+                blockers.append("merge_evidence_duplicate_conflicting")
+            else:
+                blockers.append("merge_evidence_duplicate")
+        else:
+            by_merge[oid] = item
+    ok, first_parent, range_error = run_git_capture(
+        repo_root, ["rev-list", "--reverse", "--first-parent", revision_range]
+    )
+    if not ok:
+        return [*blockers, f"first_parent_range_unavailable: {range_error}"], 0
+    first_parent_oids = [line for line in first_parent.splitlines() if line]
+    if not first_parent_oids:
+        return [*blockers, "first_parent_range_empty"], 0
+    bootstrap_merges: set[str] = set()
+    if bootstrap_evidence:
+        bootstrap_blockers, bootstrap_merges = validate_dev_to_main_bootstrap(repo_root, revision_range, bootstrap_evidence, seen_attestation_ids)
+        blockers.extend(bootstrap_blockers)
+    merge_count = 0
+    for merge_oid in first_parent_oids:
+        ok, parent_output, parent_error = run_git_capture(repo_root, ["show", "-s", "--format=%P", merge_oid])
+        parents = parent_output.split() if ok else []
+        if not ok:
+            blockers.append(f"first_parent_commit_unavailable: {merge_oid}: {parent_error}")
+            continue
+        if len(parents) == 1:
+            direct = git_commit_messages_for_range(repo_root, f"{merge_oid}^..{merge_oid}")
+            _results, malformed, _baseline = validate_commit_range_messages(repo_root, direct)
+            if malformed:
+                blockers.append(f"first_parent_direct_commit_malformed: {merge_oid}")
+            continue
+        if len(parents) != 2:
+            blockers.append(f"merge_evidence_not_two_parent_merge: {merge_oid}")
+            continue
+        merge_count += 1
+        record = by_merge.get(merge_oid)
+        if record is None:
+            if merge_oid in bootstrap_merges:
+                continue
+            blockers.append(f"merge_evidence_missing_for_merge: {merge_oid}")
+            continue
+        base_oid, head_oid = parents
+        tree_ok, tree_oid, tree_error = run_git_capture(repo_root, ["rev-parse", f"{merge_oid}^{{tree}}"])
+        if not tree_ok:
+            blockers.append(f"merge_evidence_tree_unavailable: {tree_error}")
+            continue
+        for key, actual in {
+            "repository": expected_repo,
+            "merge_oid": merge_oid,
+            "base_oid": base_oid,
+            "head_oid": head_oid,
+            "merge_tree": tree_oid,
+        }.items():
+            if record.get(key) != actual:
+                blockers.append(f"merge_evidence_{key}_mismatch: {merge_oid}")
+        if record.get("parents") != parents:
+            blockers.append(f"merge_evidence_parent_order_mismatch: {merge_oid}")
+        if record.get("base_ref") != "dev":
+            blockers.append(f"merge_evidence_target_branch_mismatch: {merge_oid}")
+        if record.get("merged") is not True or record.get("draft") is not False or record.get("state") != "closed":
+            blockers.append(f"merge_evidence_pr_not_merged_closed: {merge_oid}")
+        if not merge_subject_matches(str(run_git_capture(repo_root, ["show", "-s", "--format=%s", merge_oid])[1]), expected_repo, record):
+            blockers.append(f"merge_evidence_subject_mismatch: {merge_oid}")
+        raw = record.get("raw")
+        raw = raw if isinstance(raw, dict) else {}
+        pr = merge_evidence_raw(raw.get("pull_request"), repo_root, "pull_request", blockers, seen_attestation_ids)
+        protection = merge_evidence_raw(raw.get("protection"), repo_root, "protection", blockers, seen_attestation_ids)
+        status = merge_evidence_raw(raw.get("status"), repo_root, "status", blockers, seen_attestation_ids)
+        if isinstance(pr, dict):
+            expected_pr = {"repository": expected_repo, "number": record.get("pull_request_number"), "title": record.get("pull_request_title"), "state": "closed", "draft": False, "merged": True, "base_ref": record.get("base_ref"), "base_oid": base_oid, "head_ref": record.get("head_ref"), "head_oid": head_oid, "merge_oid": merge_oid}
+            if any(pr.get(key) != value for key, value in expected_pr.items()):
+                blockers.append(f"merge_evidence_pull_request_summary_mismatch: {merge_oid}")
+        if isinstance(protection, dict):
+            if protection.get("repository") != expected_repo or protection.get("branch") != record.get("base_ref") or protection.get("protected") is not True or protection.get("prior_base_oid") != base_oid or protection.get("required_status") != "task-to-dev-promotion-check":
+                blockers.append(f"merge_evidence_protection_summary_mismatch: {merge_oid}")
+        if isinstance(status, dict):
+            ok, reachable, reachable_error = run_git_capture(repo_root, ["rev-list", "--reverse", f"{base_oid}..{head_oid}"])
+            expected_commits = reachable.splitlines() if ok else []
+            if not ok:
+                blockers.append(f"merge_evidence_status_range_unavailable: {reachable_error}")
+            elif status.get("schema_version") != TASK_TO_DEV_STATUS_SCHEMA or status.get("repository") != expected_repo or status.get("pull_request_number") != record.get("pull_request_number") or status.get("base_oid") != base_oid or status.get("head_oid") != head_oid or status.get("range") != f"{base_oid}..{head_oid}" or status.get("full_history_checked") is not True or status.get("conclusion") != "success" or status.get("commit_oids") != expected_commits:
+                blockers.append(f"merge_evidence_status_summary_mismatch: {merge_oid}")
+        outside_code, _out, _err = run_git_status_code(repo_root, ["merge-base", "--is-ancestor", merge_oid, revision_range.split("..", 1)[1]])
+        if outside_code != 0:
+            blockers.append(f"merge_evidence_merge_outside_source: {merge_oid}")
+    for oid in by_merge:
+        if oid not in first_parent_oids:
+            blockers.append(f"merge_evidence_record_outside_first_parent_range: {oid}")
+    return sorted(dict.fromkeys(blockers)), merge_count
+
+
 def effective_commit_template_path(repo_root: Path) -> str:
     profile = load_commit_message_profile(repo_root)
     return profile.template_path if (repo_root / profile.template_path).exists() else COMMIT_TEMPLATE_PATH
@@ -5146,7 +5811,12 @@ def make_changelog_preview(
     entries: list[dict[str, object]] = []
     malformed: list[dict[str, object]] = []
     warnings: list[str] = []
+    baseline_entries = load_commit_policy_baseline(repo_root)
     for commit_hash, subject, message in commits:
+        baseline_entry = commit_policy_baseline_match(commit_hash, subject, baseline_entries)
+        if baseline_entry is not None:
+            warnings.append(f"{commit_hash[:12]} immutable commit-policy baseline excluded")
+            continue
         parsed = parse_commit_for_changelog(commit_hash, subject, message)
         if parsed.get("ignored"):
             warnings.append(f"{commit_hash[:12]} merge commit ignored")
@@ -20892,13 +21562,21 @@ def remote_repo_summary(remote_url: str) -> str:
     if not remote_url:
         return "unknown"
     value = remote_url.strip()
+    if "://" in value:
+        parsed = urlsplit(value)
+        if not parsed.scheme or not parsed.netloc:
+            return "unknown"
+        value = parsed.path
+    else:
+        scp_like = re.fullmatch(r"[^/:\\\s]+@[^/:\\\s]+:(.+)", value)
+        if scp_like is not None:
+            value = scp_like.group(1)
+        else:
+            value = value.split("?", 1)[0].split("#", 1)[0]
+    value = value.strip("/")
     if value.endswith(".git"):
         value = value[:-4]
-    if value.startswith("git@") and ":" in value:
-        value = value.split(":", 1)[1]
-    elif "github.com/" in value:
-        value = value.split("github.com/", 1)[1]
-    return value.strip("/") or "unknown"
+    return value or "unknown"
 
 
 def detect_workflow_model(local_branches: list[str], remote_branches: list[str]) -> tuple[str, str, list[str]]:
@@ -21248,6 +21926,435 @@ def helper_promotion_validation_commands() -> list[str]:
     ]
 
 
+GIT_COMMIT_CLASSIFICATION_SCHEMA = "aide.git-commit-classification.v1"
+GIT_COMMIT_REVIEW_SCHEMA = "aide.git-commit-review.v1"
+GIT_COMMIT_CLASSIFICATION_MAX_BYTES = 1024 * 1024
+GIT_COMMIT_REVIEW_MAX_BYTES = 8 * 1024 * 1024
+GIT_COMMIT_MESSAGE_MAX_BYTES = 128 * 1024
+GIT_UNMERGED_STATUS_CODES = {"DD", "AU", "UD", "UA", "DU", "AA", "UU"}
+
+
+def helper_safe_relative_path(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    rel = value
+    parts = rel.split("/")
+    if (
+        not rel
+        or "\\" in rel
+        or "\0" in rel
+        or any(ord(char) < 32 or ord(char) == 127 for char in rel)
+        or rel.startswith("/")
+        or re.match(r"^[A-Za-z]:", rel)
+        or any(part in {"", ".", ".."} for part in parts)
+    ):
+        return ""
+    return "/".join(parts)
+
+
+def helper_read_bounded_regular_file(path: Path, maximum_bytes: int) -> tuple[bytes | None, str]:
+    try:
+        if path.is_symlink() or not path.is_file():
+            return None, "not_a_regular_non_symlink_file"
+        with path.open("rb") as handle:
+            data = handle.read(maximum_bytes + 1)
+        if len(data) > maximum_bytes:
+            return None, f"file_exceeds_{maximum_bytes}_bytes"
+        return data, ""
+    except OSError as exc:
+        return None, str(exc)
+
+
+def helper_git_status_entries(repo_root: Path) -> tuple[list[dict[str, object]], str]:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
+            cwd=repo_root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    except OSError as exc:
+        return [], str(exc)
+    if result.returncode != 0:
+        return [], result.stderr.decode("utf-8", errors="replace").strip() or "git_status_failed"
+    tokens = result.stdout.split(b"\0")
+    entries: list[dict[str, object]] = []
+    index = 0
+    while index < len(tokens):
+        raw = tokens[index]
+        index += 1
+        if not raw:
+            continue
+        text = raw.decode("utf-8", errors="surrogateescape")
+        if len(text) < 4 or text[2] != " ":
+            return [], "malformed_git_status_entry"
+        code = text[:2]
+        path = text[3:]
+        original_path = ""
+        if code[0] in {"R", "C"} or code[1] in {"R", "C"}:
+            if index >= len(tokens) or not tokens[index]:
+                return [], "malformed_git_rename_entry"
+            original_path = tokens[index].decode("utf-8", errors="surrogateescape")
+            index += 1
+        entries.append({
+            "code": code,
+            "path": path,
+            "original_path": original_path,
+            "staged": code != "??" and code[0] not in {" ", "!"},
+            "unstaged": code == "??" or code[1] not in {" ", "!"},
+            "unmerged": code in GIT_UNMERGED_STATUS_CODES or "U" in code,
+        })
+    return entries, ""
+
+
+def helper_git_blob_oid(repo_root: Path, rel: str, *, index: bool) -> tuple[str, str]:
+    args = ["rev-parse", "--verify", f":{rel}"] if index else ["hash-object", f"--path={rel}", "--", rel]
+    ok, output, error = run_git_capture(repo_root, args)
+    oid = output.lower() if ok else ""
+    if not ok or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", oid):
+        return "", error or "git_blob_oid_unavailable"
+    return oid, ""
+
+
+def helper_sha256_regular_file(path: Path) -> tuple[str, str]:
+    try:
+        if path.is_symlink() or not path.is_file():
+            return "", "not_a_regular_non_symlink_file"
+        return sha256_file(path), ""
+    except OSError as exc:
+        return "", str(exc)
+
+
+def helper_unsafe_path_fingerprint(value: object) -> str:
+    encoded = str(value).encode("utf-8", errors="surrogateescape")
+    return hashlib.sha256(encoded).hexdigest()[:16]
+
+
+def helper_commit_snapshot_sha256(changed_paths: list[dict[str, str]]) -> str:
+    canonical = [
+        {
+            "ownership": item["ownership"],
+            "path": item["path"],
+            "sha256": item["sha256"],
+            "state": item["state"],
+            "git_blob_oid": item["git_blob_oid"],
+        }
+        for item in sorted(changed_paths, key=lambda item: item["path"])
+    ]
+    return sha256_text(stable_json_text(canonical))
+
+
+def helper_pass_verdict(value: object) -> bool:
+    normalized = re.sub(r"[^A-Z0-9]+", "_", str(value).upper()).strip("_")
+    return normalized in {"PASS", "PASSED", "APPROVED", "ACCEPTED"}
+
+
+def make_git_commit_plan(
+    repo_root: Path,
+    classification_path: Path,
+    message_path: Path,
+) -> dict[str, object]:
+    state = collect_git_helper_state(repo_root)
+    blockers: list[str] = []
+    warnings: list[str] = list(state.get("warnings", [])) if isinstance(state.get("warnings"), list) else []
+    planned_commands: list[str] = []
+    planned_argv: list[list[str]] = []
+    classification_summary: dict[str, object] = {
+        "path": str(classification_path),
+        "schema_version": "",
+        "work_item": "",
+        "snapshot_sha256": "",
+        "changed_paths": [],
+        "review_count": 0,
+    }
+    if not state.get("repo_root_detected"):
+        blockers.append("git_repo_root_unknown")
+    if state.get("detached_head"):
+        blockers.append("detached_head_or_branch_unknown")
+    if not state.get("policy_ready"):
+        blockers.append("required_policy_files_missing")
+    if str(state.get("current_role", "unknown")) not in {"task", "subtask"}:
+        blockers.append(f"commit_source_role_not_task: {state.get('current_role', 'unknown')}")
+
+    classification_bytes, classification_error = helper_read_bounded_regular_file(
+        classification_path, GIT_COMMIT_CLASSIFICATION_MAX_BYTES
+    )
+    classification: dict[str, object] = {}
+    if classification_bytes is None:
+        blockers.append(f"classification_unavailable: {classification_error}")
+    else:
+        try:
+            loaded = json.loads(classification_bytes.decode("utf-8"))
+            if isinstance(loaded, dict):
+                classification = loaded
+            else:
+                blockers.append("classification_root_not_object")
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            blockers.append(f"classification_malformed: {exc}")
+
+    raw_changed_paths = classification.get("changed_paths", [])
+    normalized_paths: list[dict[str, str]] = []
+    if classification:
+        schema = str(classification.get("schema_version", ""))
+        branch = str(classification.get("branch", ""))
+        base_commit = str(classification.get("base_commit", ""))
+        work_item = str(classification.get("work_item", "")).strip()
+        snapshot_claim = str(classification.get("snapshot_sha256", "")).lower()
+        message_claim = str(classification.get("message_sha256", "")).lower()
+        classification_summary.update({
+            "schema_version": schema,
+            "work_item": work_item,
+            "snapshot_sha256": snapshot_claim,
+        })
+        if schema != GIT_COMMIT_CLASSIFICATION_SCHEMA:
+            blockers.append("classification_schema_invalid")
+        if branch != str(state.get("current_branch", "")):
+            blockers.append("classification_branch_stale")
+        if base_commit != str(state.get("current_commit", "")):
+            blockers.append("classification_base_commit_stale")
+        if not work_item:
+            blockers.append("classification_work_item_missing")
+        if not isinstance(raw_changed_paths, list) or not raw_changed_paths:
+            blockers.append("classification_changed_paths_missing")
+        else:
+            seen: set[str] = set()
+            for item in raw_changed_paths:
+                if not isinstance(item, dict):
+                    blockers.append("classification_changed_path_not_object")
+                    continue
+                rel = helper_safe_relative_path(item.get("path"))
+                ownership = str(item.get("ownership", ""))
+                item_state = str(item.get("state", ""))
+                digest = str(item.get("sha256", "")).lower()
+                git_blob_oid = str(item.get("git_blob_oid", "")).lower()
+                if not rel:
+                    blockers.append("classification_path_unsafe")
+                    continue
+                if rel in seen:
+                    blockers.append(f"classification_path_duplicate: {rel}")
+                    continue
+                seen.add(rel)
+                if ownership != "task_owned":
+                    blockers.append(f"classification_ownership_invalid: {rel}")
+                if item_state not in {"content", "deleted"}:
+                    blockers.append(f"classification_state_invalid: {rel}")
+                if item_state == "content" and not re.fullmatch(r"[0-9a-f]{64}", digest):
+                    blockers.append(f"classification_sha256_invalid: {rel}")
+                if item_state == "content" and not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", git_blob_oid):
+                    blockers.append(f"classification_git_blob_oid_invalid: {rel}")
+                if item_state == "deleted" and digest:
+                    blockers.append(f"classification_deleted_sha256_not_empty: {rel}")
+                if item_state == "deleted" and git_blob_oid:
+                    blockers.append(f"classification_deleted_git_blob_oid_not_empty: {rel}")
+                normalized_paths.append({
+                    "path": rel,
+                    "ownership": ownership,
+                    "state": item_state,
+                    "sha256": digest,
+                    "git_blob_oid": git_blob_oid,
+                })
+            classification_summary["changed_paths"] = [item["path"] for item in normalized_paths]
+            actual_snapshot = helper_commit_snapshot_sha256(normalized_paths) if normalized_paths else ""
+            if not re.fullmatch(r"[0-9a-f]{64}", snapshot_claim) or snapshot_claim != actual_snapshot:
+                blockers.append("classification_snapshot_sha256_mismatch")
+
+        message_bytes, message_error = helper_read_bounded_regular_file(
+            message_path, GIT_COMMIT_MESSAGE_MAX_BYTES
+        )
+        message_text = ""
+        if message_bytes is None:
+            blockers.append(f"commit_message_unavailable: {message_error}")
+        else:
+            try:
+                message_text = message_bytes.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                blockers.append(f"commit_message_not_utf8: {exc}")
+            actual_message_sha = hashlib.sha256(message_bytes).hexdigest()
+            if not re.fullmatch(r"[0-9a-f]{64}", message_claim) or message_claim != actual_message_sha:
+                blockers.append("classification_message_sha256_mismatch")
+        if message_text:
+            message_format, message_checks = classify_commit_message_text(message_text, repo_root=repo_root)
+            if message_format != "compact_v1" or result_from_checks(message_checks) == "FAIL":
+                blockers.append("commit_message_not_compact_v1")
+            trailers = parse_commit_trailers(strip_commit_message_comments(message_text))
+            if work_item and trailers.get("Work-Item", "") != work_item:
+                blockers.append("commit_message_work_item_mismatch")
+
+        reviews = classification.get("reviews", [])
+        if not isinstance(reviews, list) or not reviews:
+            blockers.append("classification_review_missing")
+        else:
+            classification_summary["review_count"] = len(reviews)
+            for position, review in enumerate(reviews):
+                label = str(position + 1)
+                if not isinstance(review, dict):
+                    blockers.append(f"classification_review_not_object: {label}")
+                    continue
+                review_ref = str(review.get("path", "")).strip()
+                review_sha = str(review.get("sha256", "")).lower()
+                review_verdict = review.get("verdict", "")
+                if not review_ref:
+                    blockers.append(f"classification_review_path_missing: {label}")
+                    continue
+                review_path = Path(review_ref)
+                if not review_path.is_absolute():
+                    review_path = classification_path.parent / review_path
+                review_bytes, review_error = helper_read_bounded_regular_file(
+                    review_path, GIT_COMMIT_REVIEW_MAX_BYTES
+                )
+                if review_bytes is None:
+                    blockers.append(f"classification_review_unavailable: {label}: {review_error}")
+                    continue
+                if not re.fullmatch(r"[0-9a-f]{64}", review_sha) or hashlib.sha256(review_bytes).hexdigest() != review_sha:
+                    blockers.append(f"classification_review_sha256_mismatch: {label}")
+                if not helper_pass_verdict(review_verdict):
+                    blockers.append(f"classification_review_verdict_invalid: {label}")
+                try:
+                    review_data = json.loads(review_bytes.decode("utf-8"))
+                except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    blockers.append(f"classification_review_malformed: {label}: {exc}")
+                    continue
+                if not isinstance(review_data, dict):
+                    blockers.append(f"classification_review_root_not_object: {label}")
+                    continue
+                if review_data.get("schema_version") != GIT_COMMIT_REVIEW_SCHEMA:
+                    blockers.append(f"classification_review_schema_invalid: {label}")
+                if not helper_pass_verdict(review_data.get("verdict", "")):
+                    blockers.append(f"classification_review_receipt_not_pass: {label}")
+                if review_data.get("branch") != branch:
+                    blockers.append(f"classification_review_branch_mismatch: {label}")
+                if review_data.get("base_commit") != base_commit:
+                    blockers.append(f"classification_review_base_commit_mismatch: {label}")
+                if review_data.get("snapshot_sha256") != snapshot_claim:
+                    blockers.append(f"classification_review_snapshot_mismatch: {label}")
+                if review_data.get("message_sha256") != message_claim:
+                    blockers.append(f"classification_review_message_mismatch: {label}")
+
+    status_entries, status_error = helper_git_status_entries(repo_root)
+    if status_error:
+        blockers.append(f"git_status_unavailable: {status_error}")
+    classified_set = {item["path"] for item in normalized_paths}
+    current_set: set[str] = set()
+    staged_set: set[str] = set()
+    unstaged_set: set[str] = set()
+    for entry in status_entries:
+        rel = helper_safe_relative_path(entry.get("path"))
+        original = helper_safe_relative_path(entry.get("original_path")) if entry.get("original_path") else ""
+        if entry.get("path") and not rel:
+            blockers.append(
+                "git_status_path_unsafe: " + helper_unsafe_path_fingerprint(entry.get("path"))
+            )
+        if entry.get("original_path") and not original:
+            blockers.append(
+                "git_status_original_path_unsafe: "
+                + helper_unsafe_path_fingerprint(entry.get("original_path"))
+            )
+        if rel:
+            current_set.add(rel)
+            if entry.get("staged"):
+                staged_set.add(rel)
+            if entry.get("unstaged"):
+                unstaged_set.add(rel)
+        if original:
+            current_set.add(original)
+        if entry.get("unmerged"):
+            blockers.append(f"unresolved_conflict: {rel or entry.get('path', '')}")
+        if original:
+            blockers.append(f"rename_or_copy_requires_separate_classification: {rel}")
+    for rel in sorted(current_set - classified_set):
+        blockers.append(f"unclassified_worktree_path: {rel}")
+    for rel in sorted(classified_set - current_set):
+        blockers.append(f"classified_path_not_changed: {rel}")
+    for rel in sorted(staged_set - classified_set):
+        blockers.append(f"staged_snapshot_differs_from_classification: {rel}")
+
+    normalized_by_path = {item["path"]: item for item in normalized_paths}
+    if current_set == classified_set:
+        for rel in sorted(classified_set):
+            item = normalized_by_path[rel]
+            target = repo_root / Path(rel)
+            if item["state"] == "deleted":
+                if target.exists() or target.is_symlink():
+                    blockers.append(f"classified_deleted_path_present: {rel}")
+            else:
+                digest, error = helper_sha256_regular_file(target)
+                if not digest:
+                    blockers.append(f"classified_content_unavailable: {rel}: {error}")
+                elif digest != item["sha256"]:
+                    blockers.append(f"classified_content_sha256_mismatch: {rel}")
+                worktree_oid, oid_error = helper_git_blob_oid(repo_root, rel, index=False)
+                if not worktree_oid:
+                    blockers.append(f"classified_git_blob_oid_unavailable: {rel}: {oid_error}")
+                elif worktree_oid != item["git_blob_oid"]:
+                    blockers.append(f"classified_git_blob_oid_mismatch: {rel}")
+    if staged_set:
+        if staged_set != classified_set:
+            blockers.append("staged_snapshot_path_set_mismatch")
+        if unstaged_set:
+            blockers.append("unstaged_changes_remain_after_staging")
+        if staged_set == classified_set and not unstaged_set:
+            for rel in sorted(classified_set):
+                item = normalized_by_path[rel]
+                index_oid, oid_error = helper_git_blob_oid(repo_root, rel, index=True)
+                if item["state"] == "deleted":
+                    if index_oid:
+                        blockers.append(f"staged_deleted_path_present: {rel}")
+                elif not index_oid:
+                    blockers.append(f"staged_git_blob_oid_unavailable: {rel}: {oid_error}")
+                elif index_oid != item["git_blob_oid"]:
+                    blockers.append(f"staged_git_blob_oid_mismatch: {rel}")
+
+    if not blockers and not staged_set:
+        status = "ready_to_stage"
+        planned_commands.extend([
+            "git add -- <exact-classified-paths; use structured planned_argv>",
+            "git diff --cached --check",
+            "py -3 .aide/scripts/aide_lite.py git commit-plan --classification <same-file> --message-file <same-file>",
+        ])
+        planned_argv.extend([
+            ["git", "add", "--", *sorted(classified_set)],
+            ["git", "diff", "--cached", "--check"],
+        ])
+    elif not blockers:
+        status = "ready_to_commit"
+        planned_commands.extend([
+            "git diff --cached --check",
+            "git commit -F <validated-message-file>",
+        ])
+        planned_argv.extend([
+            ["git", "diff", "--cached", "--check"],
+            ["git", "commit", "-F", str(message_path)],
+        ])
+    else:
+        status = "blocked"
+    return {
+        "schema_version": "aide.git-helper-plan.v0",
+        "generated_by": GENERATOR_NAME,
+        "operation": "commit-plan",
+        "status": status,
+        "dry_run": True,
+        "apply_requested": False,
+        "push_requested": False,
+        "source": str(state.get("current_branch", "")),
+        "target": "",
+        "state": state,
+        "classification": classification_summary,
+        "planned_commands": planned_commands,
+        "planned_argv": planned_argv,
+        "executed_commands": [],
+        "blockers": sorted(dict.fromkeys(blockers)),
+        "warnings": sorted(dict.fromkeys(warnings)),
+        "recommendations": [
+            "stage only the exact classified paths, inspect the index, then rerun commit-plan",
+            "use integration helpers only after the classified snapshot is committed and current checks pass",
+        ],
+        "remote_mutation": False,
+        "force_push_allowed": False,
+        "non_mutating": True,
+    }
+
+
 def helper_has_validation_evidence(repo_root: Path) -> bool:
     candidates = [
         repo_root / LATEST_VERIFICATION_REPORT_PATH,
@@ -21275,6 +22382,8 @@ def make_git_helper_plan(
     target: str = "",
     validation_ok: bool = False,
     review_ok: bool = False,
+    merge_evidence: str = "",
+    bootstrap_evidence: str = "",
 ) -> dict[str, object]:
     state = collect_git_helper_state(repo_root)
     blockers: list[str] = []
@@ -21300,9 +22409,13 @@ def make_git_helper_plan(
         if state.get("aide_branch_policy_present") and not helper_branch_exists(state, "dev"):
             recommendations.append("AIDE branch policy expects dev; Q30 plans future explicit dev creation without mutating branches")
         if state.get("worktree_dirty"):
-            status = "blocked"
-            blockers.append("dirty_tree_requires_classification")
-            recommendations.append("clean or classify the working tree before branch-sensitive helper actions")
+            if current_role in {"task", "subtask"}:
+                status = "needs_commit_classification"
+                warnings.append("commit_classification_missing")
+                recommendations.append("run git commit-plan with an exact task-owned classification and reviewed compact message")
+            else:
+                blockers.append("dirty_non_task_worktree_requires_investigation")
+                recommendations.append("inspect and classify the dirty non-task worktree before branch-sensitive actions")
         elif current_role in {"task", "subtask"}:
             if helper_branch_exists(state, "dev"):
                 recommendations.append("run git land --dry-run --target dev")
@@ -21339,7 +22452,7 @@ def make_git_helper_plan(
         target_role = classify_branch_role(target_branch)
         planned_commands.extend([
             f"git checkout {target_branch}",
-            f"git merge --no-ff {source_branch} -m \"land: {source_branch} into {target_branch}\"",
+            f"git merge --no-ff {source_branch} -m \"{git_helper_merge_message('land', source_branch, target_branch)}\"",
         ])
         if push_requested:
             planned_commands.append(f"git push origin {target_branch}")
@@ -21367,7 +22480,7 @@ def make_git_helper_plan(
         target_role = classify_branch_role(target_branch)
         planned_commands.extend([
             f"git checkout {target_branch}",
-            f"git merge --no-ff {source_branch} -m \"promote: {source_branch} into {target_branch}\"",
+            f"git merge --no-ff {source_branch} -m \"{git_helper_merge_message('promote', source_branch, target_branch)}\"",
         ])
         if push_requested:
             planned_commands.append(f"git push origin {target_branch}")
@@ -21385,6 +22498,13 @@ def make_git_helper_plan(
             blockers.append("promotion_review_evidence_missing")
         if not validation_ok and not helper_has_validation_evidence(repo_root):
             blockers.append("promotion_validation_evidence_missing")
+        if not merge_evidence:
+            blockers.append("promotion_merge_evidence_missing")
+        else:
+            evidence_blockers, _merge_count = validate_verified_protected_pr_merges(
+                repo_root, f"{target_branch}..{source_branch}", merge_evidence, bootstrap_evidence
+            )
+            blockers.extend(evidence_blockers)
         if not (repo_root / CHANGELOG_PREVIEW_MD_PATH).exists():
             warnings.append("changelog_preview_missing")
         recommendations.extend(helper_promotion_validation_commands())
@@ -21449,6 +22569,8 @@ def make_git_helper_plan(
         "push_requested": push_requested,
         "source": effective_source,
         "target": effective_target,
+        "merge_evidence": merge_evidence,
+        "bootstrap_evidence": bootstrap_evidence,
         "state": state,
         "planned_commands": planned_commands,
         "executed_commands": executed_commands,
@@ -21464,6 +22586,17 @@ def make_git_helper_plan(
     return plan
 
 
+def git_helper_merge_message(operation: str, source: str, target: str) -> str:
+    """Produce a compact_v1 merge message without trusting branch-name text."""
+    digest = hashlib.sha256(f"{operation}\0{source}\0{target}".encode("utf-8")).hexdigest()[:12].upper()
+    summaries = {
+        "land": "chore(aide): land reviewed work into integration",
+        "promote": "chore(aide): promote integration into canonical",
+    }
+    subject = summaries.get(operation, "chore(aide): record reviewed Git integration")
+    return f"{subject}\n\nWork-Item: AIDE-{operation.upper()}-{digest}\n"
+
+
 def execute_git_helper_plan(repo_root: Path, plan: dict[str, object]) -> dict[str, object]:
     if plan.get("status") != "ready_to_apply":
         return plan
@@ -21477,15 +22610,41 @@ def execute_git_helper_plan(repo_root: Path, plan: dict[str, object]) -> dict[st
     executed: list[str] = []
     errors: list[str] = []
     if operation == "land":
+        code, merge_base, error = run_git_status_code(repo_root, ["merge-base", target or "dev", source])
+        if code != 0 or not re.fullmatch(r"[0-9a-f]{40}", merge_base):
+            plan["status"] = "blocked"
+            plan["blockers"] = [*list(plan.get("blockers", [])), f"land_merge_base_unavailable: {error or 'failed'}"]
+            return plan
+        validation_range = f"{merge_base}..{source}"
+        validation_blockers, _count, _baseline_count = git_full_range_validation(repo_root, validation_range)
+        if validation_blockers:
+            plan["status"] = "blocked"
+            plan["blockers"] = [*list(plan.get("blockers", [])), *validation_blockers]
+            plan["executed_commands"] = [f"py -3 .aide/scripts/aide_lite.py commit check --range {validation_range}"]
+            return plan
         commands = [
             ["checkout", target or "dev"],
-            ["merge", "--no-ff", source, "-m", f"land: {source} into {target or 'dev'}"],
+            ["merge", "--no-ff", source, "-m", git_helper_merge_message("land", source, target or "dev")],
         ]
     elif operation == "promote":
-        commands = [
-            ["checkout", target or "main"],
-            ["merge", "--no-ff", source or "dev", "-m", f"promote: {source or 'dev'} into {target or 'main'}"],
-        ]
+        try:
+            exact_target = git_oid(repo_root, target or "main")
+            exact_source = git_oid(repo_root, source or "dev")
+        except ValueError as exc:
+            plan["status"] = "blocked"
+            plan["blockers"] = [*list(plan.get("blockers", [])), f"promotion_ref_resolution_failed: {exc}"]
+            return plan
+        evidence_blockers, _merge_count = validate_verified_protected_pr_merges(
+            repo_root, f"{exact_target}..{exact_source}", str(plan.get("merge_evidence", "")), str(plan.get("bootstrap_evidence", ""))
+        )
+        if evidence_blockers:
+            plan["status"] = "blocked"
+            plan["blockers"] = [*list(plan.get("blockers", [])), *evidence_blockers]
+            return plan
+        # Resolve immutable OIDs before mutation, then verify the checked-out
+        # target and both refs again immediately before merging the source OID.
+        commands = [["checkout", target or "main"]]
+        promote_merge_command = ["merge", "--no-ff", exact_source, "-m", git_helper_merge_message("promote", source or "dev", target or "main")]
     elif operation == "prune":
         commands = [["branch", "-d", str(item.get("branch"))] for item in plan.get("prune_candidates", []) if isinstance(item, dict) and item.get("eligible")]
     elif operation == "sync":
@@ -21502,11 +22661,35 @@ def execute_git_helper_plan(repo_root: Path, plan: dict[str, object]) -> dict[st
         if code != 0:
             errors.append(f"{rendered}: {err or 'failed'}")
             break
+    if operation == "promote" and not errors:
+        try:
+            head_before_merge = git_oid(repo_root, "HEAD")
+            target_before_merge = git_oid(repo_root, target or "main")
+            source_before_merge = git_oid(repo_root, source or "dev")
+        except ValueError as exc:
+            errors.append(f"promotion_final_ref_resolution_failed: {exc}")
+        else:
+            if head_before_merge != exact_target or target_before_merge != exact_target or source_before_merge != exact_source:
+                errors.append("promotion_source_or_target_changed_before_merge")
+            else:
+                code, _out, err = run_git_status_code(repo_root, promote_merge_command)
+                rendered = f"git {' '.join(promote_merge_command)}"
+                executed.append(rendered)
+                if code != 0:
+                    errors.append(f"{rendered}: {err or 'failed'}")
     plan["executed_commands"] = executed
     if errors:
         plan["status"] = "blocked"
         plan["blockers"] = [*list(plan.get("blockers", [])), *errors]
     else:
+        if operation == "promote":
+            merged = git_oid(repo_root, "HEAD")
+            parents = run_git_capture(repo_root, ["show", "-s", "--format=%P", merged])[1].split()
+            tree = git_tree_oid(repo_root, merged)
+            if parents != [exact_target, exact_source] or not re.fullmatch(r"[0-9a-f]{40}", tree):
+                plan["status"] = "blocked"
+                plan["blockers"] = [*list(plan.get("blockers", [])), "promotion_merge_parent_or_tree_mismatch"]
+                return plan
         plan["status"] = "applied"
         plan["non_mutating"] = False
     return plan
@@ -21593,9 +22776,11 @@ def validate_git_helper_policy_files(repo_root: Path) -> list[Check]:
             "no_delete_protected_branches",
             "routine_task_actions_require_no_operator_approval",
             "non_protected_task_branch_push: automatic_after_mechanical_checks",
+            "classified_dirty_commit_candidate",
         ],
         GIT_HELPER_COMMANDS_MD_PATH: [
             "git plan",
+            "git commit-plan",
             "git sync",
             "git land",
             "git promote",
@@ -21603,6 +22788,10 @@ def validate_git_helper_policy_files(repo_root: Path) -> list[Check]:
             "dry-run",
             "ancestor containment",
             "Automatic Task-Branch Actions",
+            "Preparing a commit",
+            "Preparing integration",
+            "verified_protected_pr_merge_v1",
+            "task-to-dev-promotion-check",
         ],
     }
     for rel, markers in required_markers.items():
@@ -21612,6 +22801,15 @@ def validate_git_helper_policy_files(repo_root: Path) -> list[Check]:
             text = read_text(path)
             for marker in markers:
                 check_pass(checks, marker in text, f"{rel} contains anchor: {marker}")
+    schema_path = repo_root / VERIFIED_PROTECTED_PR_MERGE_SCHEMA_PATH
+    check_pass(checks, schema_path.exists(), f"protected PR merge schema exists: {VERIFIED_PROTECTED_PR_MERGE_SCHEMA_PATH}")
+    if schema_path.exists():
+        try:
+            schema = json.loads(read_text(schema_path))
+        except json.JSONDecodeError as exc:
+            check_pass(checks, False, f"protected PR merge schema parses: {exc}")
+        else:
+            check_pass(checks, schema.get("properties", {}).get("schema_version", {}).get("const") == VERIFIED_PROTECTED_PR_MERGE_SCHEMA, "protected PR merge schema has exact version")
     plan_json = repo_root / GIT_HELPER_PLAN_JSON_PATH
     generated_plan_required = (
         (repo_root / ".aide/queue/Q29-merge-land-promote-helper-v0").exists()
@@ -23212,7 +24410,7 @@ def run_golden_git_promote_plan(repo_root: Path) -> GoldenTaskResult:
     promotion_policy = read_text(repo_root / PROMOTION_RULES_POLICY_PATH) if (repo_root / PROMOTION_RULES_POLICY_PATH).exists() else ""
     check_pass(checks, "require_review_before_promote" in helper_policy, "helper policy requires review before promote")
     check_pass(checks, "git promote" in commands_text, "helper commands document git promote")
-    check_pass(checks, "promote: <source> into <target>" in commands_text, "promote plan documents merge message")
+    check_pass(checks, "helper-generated compact_v1 message" in commands_text, "promote plan documents compact merge message")
     check_pass(checks, "dev_to_main:" in promotion_policy and "review packet" in promotion_policy, "promotion policy gates dev to main")
     return golden_task_result(
         "git_promote_plan_golden",
@@ -32771,7 +33969,28 @@ def command_commit_check(args: argparse.Namespace) -> int:
     sources = [bool(args.message_file), bool(args.message), bool(args.latest), bool(args.range)]
     if sum(sources) != 1:
         raise ValueError("use exactly one of --message-file, --message, --latest, or --range")
+    if args.first_parent and not args.range:
+        raise ValueError("--first-parent requires --range")
+    if (args.merge_evidence or args.bootstrap_evidence) and not args.first_parent:
+        raise ValueError("--merge-evidence and --bootstrap-evidence require --range --first-parent")
     if args.range:
+        if args.first_parent:
+            if not args.merge_evidence:
+                raise ValueError("--first-parent requires external --merge-evidence")
+            if args.max_count is not None:
+                raise ValueError("--first-parent refuses --max-count; every merge in range must be bound")
+            blockers, merge_count = validate_verified_protected_pr_merges(
+                args.repo_root, args.range, args.merge_evidence, args.bootstrap_evidence or ""
+            )
+            print("AIDE Lite protected PR first-parent commit check")
+            print(f"result: {'PASS' if not blockers else 'FAIL'}")
+            print(f"range: {args.range}")
+            print(f"merge_count: {merge_count}")
+            print("history_mode: first_parent_with_external_verified_protected_pr_merge")
+            print("candidate_tree_evidence: refused")
+            for blocker in blockers:
+                print(f"- FAIL {blocker}")
+            return 1 if blockers else 0
         commits = git_commit_messages_for_range(args.repo_root, args.range, max_count=args.max_count)
         results, any_fail, baseline_count = validate_commit_range_messages(args.repo_root, commits)
         range_result = "FAIL" if any_fail else ("PASS" if commits else "WARN")
@@ -32816,6 +34035,51 @@ def command_commit_check(args: argparse.Namespace) -> int:
     for check in checks:
         print(f"- {check.severity} {check.message}")
     return 1 if result == "FAIL" else 0
+
+
+def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
+    base_oid = git_oid(args.repo_root, args.base)
+    head_oid = git_oid(args.repo_root, args.head)
+    repository = str(args.repository).strip()
+    if not re.fullmatch(r"[^/\s]+/[^/\s]+", repository):
+        raise ValueError("--repository must be owner/name")
+    output = Path(args.output)
+    if not output.is_absolute():
+        raise ValueError("--output must be an absolute external path")
+    try:
+        output.resolve().relative_to(args.repo_root.resolve())
+        raise ValueError("--output must not be inside the candidate checkout")
+    except ValueError as exc:
+        if str(exc).startswith("--output"):
+            raise
+    range_text = f"{base_oid}..{head_oid}"
+    blockers, count, baseline_count = git_full_range_validation(args.repo_root, range_text)
+    ok, commits_output, error = run_git_capture(args.repo_root, ["rev-list", "--reverse", range_text])
+    if not ok:
+        blockers.append(f"commit_range_unavailable: {error}")
+    data = {
+        "schema_version": TASK_TO_DEV_STATUS_SCHEMA,
+        "repository": repository,
+        "pull_request_number": args.pull_request,
+        "base_oid": base_oid,
+        "head_oid": head_oid,
+        "range": range_text,
+        "full_history_checked": True,
+        "commit_count": count,
+        "commit_oids": commits_output.splitlines() if ok else [],
+        "baseline_count": baseline_count,
+        "conclusion": "success" if not blockers else "failure",
+        "blockers": blockers,
+        "candidate_code_executed": False,
+    }
+    write_text_if_changed(output, stable_json_text(data))
+    print("AIDE Lite task-to-dev promotion status")
+    print(f"result: {'PASS' if not blockers else 'FAIL'}")
+    print(f"range: {range_text}")
+    print(f"commit_count: {count}")
+    print("full_history_checked: true")
+    print("candidate_code_executed: false")
+    return 0 if not blockers else 1
 
 
 def command_commit_template(args: argparse.Namespace) -> int:
@@ -33943,13 +35207,18 @@ def command_execution_host_validate(args: argparse.Namespace) -> int:
     return 0 if report.get("status") in {"PASS", "PASS_WITH_WARNINGS"} else 1
 
 
+def _bounded_boolean_text(data: dict[str, object], key: str, default: bool = False) -> str:
+    """Render a report flag without forwarding arbitrary field content."""
+    return "true" if data.get(key, default) is True else "false"
+
+
 def _print_trust_boundary_lines(data: dict[str, object]) -> None:
     print(f"projection_only: {str(data.get('projection_only', True)).lower()}")
     print(f"live_identity_implemented: {str(data.get('live_identity_implemented', False)).lower()}")
     print(f"live_policy_engine_implemented: {str(data.get('live_policy_engine_implemented', False)).lower()}")
     print(f"live_grants_implemented: {str(data.get('live_grants_implemented', False)).lower()}")
     print(f"credentials_embedded: {str(data.get('credentials_embedded', False)).lower()}")
-    print(f"secrets_embedded: {str(data.get('secrets_embedded', False)).lower()}")
+    print(f"secrets_embedded: {_bounded_boolean_text(data, 'secrets_embedded')}")
     print(f"oidc_iam_implemented: {str(data.get('oidc_iam_implemented', False)).lower()}")
     print(f"runtime_enforcement_implemented: {str(data.get('runtime_enforcement_implemented', False)).lower()}")
     print(f"worker_execution_implemented: {str(data.get('worker_execution_implemented', False)).lower()}")
@@ -34025,7 +35294,7 @@ def command_trust_validate(args: argparse.Namespace) -> int:
     print(f"unknown_optional_fields_tolerated: {str(report.get('unknown_optional_fields_tolerated', False)).lower()}")
     print(f"unknown_required_capability_fails_closed: {str(report.get('unknown_required_capability_fails_closed', False)).lower()}")
     print(f"all_required_refusal_codes_covered: {str(report.get('all_required_refusal_codes_covered', False)).lower()}")
-    print(f"no_secret_values_embedded: {str(report.get('no_secret_values_embedded', False)).lower()}")
+    print(f"no_secret_values_embedded: {_bounded_boolean_text(report, 'no_secret_values_embedded')}")
     print(f"recommended_next_task: {report.get('recommended_next_task')}")
     _print_trust_boundary_lines(report)
     return 0 if report.get("status") in {"PASS", "PASS_WITH_WARNINGS"} else 1
@@ -34157,7 +35426,7 @@ def command_local_service_reset_fixture(args: argparse.Namespace) -> int:
 def _print_local_trust_boundary_lines(data: dict[str, object]) -> None:
     print(f"external_iam_implemented: {str(data.get('external_iam_implemented', False)).lower()}")
     print(f"credentials_embedded: {str(data.get('credentials_embedded', False)).lower()}")
-    print(f"secrets_embedded: {str(data.get('secrets_embedded', False)).lower()}")
+    print(f"secrets_embedded: {_bounded_boolean_text(data, 'secrets_embedded')}")
     print(f"network_calls_performed: {str(data.get('network_calls_performed', False)).lower()}")
     print(f"process_launch_performed: {str(data.get('process_launch_performed', False)).lower()}")
     print(f"worker_execution_performed: {str(data.get('worker_execution_performed', False)).lower()}")
@@ -36520,7 +37789,7 @@ def _print_conformance_profile_boundary_lines(data: dict[str, object]) -> None:
     print(f"execution_implemented: {str(data.get('execution_implemented', False)).lower()}")
     print(f"admission_performed: {str(data.get('admission_performed', False)).lower()}")
     print(f"admitted: {str(data.get('admitted', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("conformance_result_implemented: false")
     print("conformance_runner_implemented: false")
     print("conformance_execution_implemented: false")
@@ -36650,7 +37919,7 @@ def command_conformance_profile_validate(args: argparse.Namespace) -> int:
     print(f"result_not_generated: {str(report.get('result_not_generated', False)).lower()}")
     print(f"execution_not_implemented: {str(report.get('execution_not_implemented', False)).lower()}")
     print(f"admission_not_performed: {str(report.get('admission_not_performed', False)).lower()}")
-    print(f"trusted_not_promoted: {str(report.get('trusted_not_promoted', False)).lower()}")
+    print(f"trusted_not_promoted: {_bounded_boolean_text(report, 'trusted_not_promoted')}")
     print(f"predecessor_compatibility_preserved: {str(report.get('predecessor_compatibility_preserved', False)).lower()}")
     print(f"overclaiming_check_passed: {str(report.get('overclaiming_check_passed', False)).lower()}")
     print(f"forbidden_ops_preserved: {str(report.get('forbidden_ops_preserved', False)).lower()}")
@@ -36669,7 +37938,7 @@ def _print_conformance_result_boundary_lines(data: dict[str, object]) -> None:
     print(f"runner_ref: {data.get('runner_ref')}")
     print(f"admission_performed: {str(data.get('admission_performed', False)).lower()}")
     print(f"subject_admitted: {str(data.get('subject_admitted', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("conformance_runner_implemented: false")
     print("case_execution_implemented: false")
     print("command_execution_implemented: false")
@@ -36798,7 +38067,7 @@ def command_conformance_result_validate(args: argparse.Namespace) -> int:
     print(f"record_valid_independent: {str(report.get('record_valid_independent', False)).lower()}")
     print(f"admission_not_performed: {str(report.get('admission_not_performed', False)).lower()}")
     print(f"subject_not_admitted: {str(report.get('subject_not_admitted', False)).lower()}")
-    print(f"trusted_not_promoted: {str(report.get('trusted_not_promoted', False)).lower()}")
+    print(f"trusted_not_promoted: {_bounded_boolean_text(report, 'trusted_not_promoted')}")
     print(f"predecessor_compatibility_preserved: {str(report.get('predecessor_compatibility_preserved', False)).lower()}")
     print(f"overclaiming_check_passed: {str(report.get('overclaiming_check_passed', False)).lower()}")
     print(f"forbidden_ops_preserved: {str(report.get('forbidden_ops_preserved', False)).lower()}")
@@ -36816,7 +38085,7 @@ def _print_patch_transaction_boundary_lines(data: dict[str, object]) -> None:
     print(f"apply_performed: {str(data.get('apply_performed', False)).lower()}")
     print(f"target_mutated: {str(data.get('target_mutated', False)).lower()}")
     print(f"rollback_performed: {str(data.get('rollback_performed', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("patch_apply_engine_implemented: false")
     print("target_repository_apply_implemented: false")
     print("approval_engine_implemented: false")
@@ -36930,7 +38199,7 @@ def _print_adapter_manifest_boundary_lines(data: dict[str, object]) -> None:
     print("declaration_only: true")
     print(f"admission_performed: {str(data.get('admission_performed', False)).lower()}")
     print(f"admitted: {str(data.get('admitted', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print(f"execution_performed: {str(data.get('execution_performed', False)).lower()}")
     print(f"worker_started: {str(data.get('worker_started', False)).lower()}")
     print(f"network_call_performed: {str(data.get('network_call_performed', False)).lower()}")
@@ -37027,7 +38296,7 @@ def _print_context_pack_v2_boundary_lines(data: dict[str, object]) -> None:
     print(f"command_executed: {str(data.get('command_executed', False)).lower()}")
     print(f"patch_applied: {str(data.get('patch_applied', False)).lower()}")
     print(f"repository_mutated: {str(data.get('repository_mutated', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("adapter_admission: false")
     print("patch_apply_engine_implemented: false")
     print("scheduler_implemented: false")
@@ -37133,7 +38402,7 @@ def _print_mcp_server_contract_boundary_lines(data: dict[str, object]) -> None:
     print(f"repository_target_mutated: {str(data.get('repository_target_mutated', False)).lower()}")
     print(f"branch_or_worktree_created: {str(data.get('branch_or_worktree_created', False)).lower()}")
     print(f"github_mutation_performed: {str(data.get('github_mutation_performed', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("live_mcp_server: false")
     print("mcp_authentication: false")
     print("host_contract_implemented: false")
@@ -37229,7 +38498,7 @@ def command_mcp_server_contract_validate(args: argparse.Namespace) -> int:
     print(f"runtime_facts_preserved: {str(report.get('runtime_facts_preserved', False)).lower()}")
     print(f"deterministic_projection: {str(report.get('deterministic_projection', False)).lower()}")
     print(f"source_artifacts_mutated: {str(report.get('source_artifacts_mutated', False)).lower()}")
-    print(f"secret_like_scan_clear: {str(report.get('secret_like_scan_clear', False)).lower()}")
+    print(f"secret_like_scan_clear: {_bounded_boolean_text(report, 'secret_like_scan_clear')}")
     print(f"explicit_non_capabilities_preserved: {str(report.get('explicit_non_capabilities_preserved', False)).lower()}")
     print(f"recommended_next_task: {report.get('recommended_next_task')}")
     _print_mcp_server_contract_boundary_lines({})
@@ -37248,7 +38517,7 @@ def _print_a2a_agent_card_contract_boundary_lines(data: dict[str, object]) -> No
     print(f"repository_target_mutated: {str(data.get('repository_target_mutated', False)).lower()}")
     print(f"branch_or_worktree_created: {str(data.get('branch_or_worktree_created', False)).lower()}")
     print(f"github_mutation_performed: {str(data.get('github_mutation_performed', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("live_a2a_endpoint: false")
     print("a2a_authentication: false")
     print("a2a_task_delegation: false")
@@ -37334,7 +38603,7 @@ def command_a2a_agent_card_contract_validate(args: argparse.Namespace) -> int:
     print(f"runtime_facts_preserved: {str(report.get('runtime_facts_preserved', False)).lower()}")
     print(f"deterministic_projection: {str(report.get('deterministic_projection', False)).lower()}")
     print(f"source_artifacts_mutated: {str(report.get('source_artifacts_mutated', False)).lower()}")
-    print(f"secret_like_scan_clear: {str(report.get('secret_like_scan_clear', False)).lower()}")
+    print(f"secret_like_scan_clear: {_bounded_boolean_text(report, 'secret_like_scan_clear')}")
     print(f"explicit_non_capabilities_preserved: {str(report.get('explicit_non_capabilities_preserved', False)).lower()}")
     print(f"recommended_next_task: {report.get('recommended_next_task')}")
     _print_a2a_agent_card_contract_boundary_lines({})
@@ -39037,6 +40306,17 @@ def command_git_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_git_commit_plan(args: argparse.Namespace) -> int:
+    plan = make_git_commit_plan(
+        args.repo_root,
+        Path(args.classification).expanduser(),
+        Path(args.message_file).expanduser(),
+    )
+    json_result, md_result = write_git_helper_plan(args.repo_root, plan)
+    print_git_helper_plan_summary("AIDE Lite git commit-plan", plan, json_result, md_result)
+    return 0
+
+
 def command_git_sync(args: argparse.Namespace) -> int:
     dry_run = not args.apply
     plan = make_git_helper_plan(args.repo_root, "sync", dry_run=dry_run, apply_requested=args.apply, push_requested=False)
@@ -39076,6 +40356,8 @@ def command_git_promote(args: argparse.Namespace) -> int:
         target=args.target_branch or "main",
         validation_ok=args.validation_ok,
         review_ok=args.review_ok,
+        merge_evidence=args.merge_evidence or "",
+        bootstrap_evidence=args.bootstrap_evidence or "",
     )
     if args.apply:
         plan = execute_git_helper_plan(args.repo_root, plan)
@@ -41632,6 +42914,9 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     commit_check_parser.add_argument("--latest", action="store_true", help="Validate the latest Git commit message.")
     commit_check_parser.add_argument("--range", help="Validate all commits in a Git revision range, such as BASE..HEAD.")
     commit_check_parser.add_argument("--max-count", type=int, help="Limit range validation to the latest N commits in the range.")
+    commit_check_parser.add_argument("--first-parent", action="store_true", help="Validate dev-to-main first-parent merges only with external protected-PR evidence.")
+    commit_check_parser.add_argument("--merge-evidence", help="Absolute external verified_protected_pr_merge_v1 JSON evidence; requires --range --first-parent.")
+    commit_check_parser.add_argument("--bootstrap-evidence", help="Absolute external dev_to_main_bootstrap_v1 evidence; requires --range --first-parent.")
     commit_check_parser.set_defaults(handler=command_commit_check)
     commit_template_parser = commit_subparsers.add_parser("template")
     commit_template_parser.add_argument("--output", help="Optional repo-relative path to write the template.")
@@ -42527,6 +43812,10 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     git_subparsers.add_parser("roles").set_defaults(handler=command_git_roles)
     git_subparsers.add_parser("policy").set_defaults(handler=command_git_policy)
     git_subparsers.add_parser("plan").set_defaults(handler=command_git_plan)
+    git_commit_plan_parser = git_subparsers.add_parser("commit-plan")
+    git_commit_plan_parser.add_argument("--classification", required=True, help="Exact commit-classification JSON receipt.")
+    git_commit_plan_parser.add_argument("--message-file", required=True, help="Exact compact_v1 commit message file.")
+    git_commit_plan_parser.set_defaults(handler=command_git_commit_plan)
     git_sync_parser = git_subparsers.add_parser("sync")
     git_sync_parser.add_argument("--dry-run", action="store_true", help="Report only; default behavior.")
     git_sync_parser.add_argument("--apply", action="store_true", help="Apply local sync action explicitly.")
@@ -42547,7 +43836,16 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     git_promote_parser.add_argument("--to", dest="target_branch", default="main", help="Canonical target branch.")
     git_promote_parser.add_argument("--validation-ok", action="store_true", help="Acknowledge validation evidence for fixture/operator-controlled use.")
     git_promote_parser.add_argument("--review-ok", action="store_true", help="Acknowledge review evidence for fixture/operator-controlled use.")
+    git_promote_parser.add_argument("--merge-evidence", help="Absolute external verified_protected_pr_merge_v1 JSON evidence for dev-to-main promotion.")
+    git_promote_parser.add_argument("--bootstrap-evidence", help="Absolute external dev_to_main_bootstrap_v1 evidence for the one-time historical bridge.")
     git_promote_parser.set_defaults(handler=command_git_promote)
+    git_task_status_parser = git_subparsers.add_parser("task-to-dev-status")
+    git_task_status_parser.add_argument("--repository", required=True, help="Exact owner/name from the pull request event.")
+    git_task_status_parser.add_argument("--pull-request", type=int, required=True, help="Pull request number.")
+    git_task_status_parser.add_argument("--base", required=True, help="Exact PR base commit OID.")
+    git_task_status_parser.add_argument("--head", required=True, help="Exact fetched PR head commit OID.")
+    git_task_status_parser.add_argument("--output", required=True, help="Absolute external status receipt path.")
+    git_task_status_parser.set_defaults(handler=command_git_task_to_dev_status)
     git_prune_parser = git_subparsers.add_parser("prune")
     git_prune_parser.add_argument("--dry-run", action="store_true", help="Report only; default behavior.")
     git_prune_parser.add_argument("--apply", action="store_true", help="Delete eligible local branches explicitly.")

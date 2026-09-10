@@ -27,6 +27,16 @@ class TestArchitectureTests(unittest.TestCase):
         self.assertIn("fl_archive_core_smoke", first["native_targets"])
         self.assertIn("tests.test_archive_core", first["python_tests"])
 
+    def test_affected_packages_follow_the_active_product_profiles(self) -> None:
+        selection = dev.affected(
+            dev.load_impact(),
+            ["runtime/core/generated/version.h", "apps/cli/command_dispatch.cpp"],
+        )
+        self.assertEqual(selection["package_profiles"], [
+            "linux_product_x64", "macos_product_x64", "windows_product_x64",
+        ])
+        self.assertFalse(any("portable_cli" in item for item in selection["package_profiles"]))
+
     def test_affected_python_runner_exposes_repo_and_test_helpers(self) -> None:
         source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
         self.assertIn('str(ROOT / "tests")', source)
@@ -40,8 +50,16 @@ class TestArchitectureTests(unittest.TestCase):
         self.assertGreater(len(impact["fast_native_required"]), 0)
         self.assertNotIn("*", impact["fast_native_required"])
         self.assertIn("facman_tui_smoke", impact["fast_native_required"])
+        self.assertIn("facman_content_foundation_smoke", impact["fast_native_required"])
         self.assertNotIn("facman_tui_smoke", impact["fast_native_optional"])
         self.assertNotIn("tests.test_schema_tools", impact["fast_python"])
+
+    def test_content_foundation_changes_select_the_native_smoke(self) -> None:
+        selection = dev.affected(
+            dev.load_impact(),
+            ["runtime/factorio/modsets/flb_factorio_content_cache.cpp"],
+        )
+        self.assertIn("facman_content_foundation_smoke", selection["native_targets"])
 
     def test_full_runner_persists_external_obligation_evidence(self) -> None:
         source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")

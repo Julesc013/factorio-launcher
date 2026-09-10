@@ -1,0 +1,7 @@
+test(resources): qualify resources against candidate package payloads
+
+Bind six resource observations and raw artifacts to the existing candidate
+asset inventories. Keep hosted custody and release authority explicit.
+
+Work-Item: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-package-qualification-review.json

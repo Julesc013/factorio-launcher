@@ -6,11 +6,11 @@ The current unified product profiles are `windows_product_x64`,
 `macos_product_x64`, and `linux_product_x64`. Each defines one canonical stage
 containing both `FacMan` and `facman`; portable and setup are adapters over that
 stage. The exact `0.1.0-alpha.5` candidate from revision
-`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b` passed workflow run
-`33576140943`, attempt 1: five jobs, four workflow artifacts, and a verified
+`4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048` passed workflow run
+`33603385303`, attempt 1: five jobs, four workflow artifacts, and a verified
 14-file internal unsigned, unpublished evidence bundle. The binding receipt is
-`release/index/alpha5_promotion_candidate_closeout.v1.toml`.
+`release/index/alpha5_final_candidate_closeout.v1.toml`.
 
 The 14 files are six product packages, three platform evidence records, three
 payload-equivalence records, one internal `SHA256SUMS`, and one candidate

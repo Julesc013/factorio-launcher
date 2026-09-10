@@ -76,6 +76,10 @@ py -3 .aide/scripts/aide_lite.py commit check --range <base>..HEAD
 py -3 .aide/scripts/aide_lite.py changelog preview --range <base>..HEAD
 ```
 
+For a reviewed `dev` to `main` promotion only, use the external protected-PR
+receipt rather than treating the first-parent walk as an ordinary history
+check. Full-history range checking remains the default for every other path.
+
 The checker reports `compact_v1`, `legacy_structured_v0`, or
 `immutable_baseline`. The baseline is matched before either message format and
 remains exact and immutable.

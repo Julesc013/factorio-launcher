@@ -85,6 +85,11 @@ struct Fixture {
 
     ~Fixture()
     {
+        const char* retain = std::getenv("FACMAN_PROVIDER_CANARY_KEEP_FIXTURES");
+        if (retain != nullptr && std::string(retain) == "1") {
+            std::fprintf(stderr, "retained gateway fixture: %s\n", root.string().c_str());
+            return;
+        }
         std::error_code error;
         fs::remove_all(root, error);
     }
@@ -94,7 +99,8 @@ fs::path make_archive(
     const fs::path& root,
     const std::string& name,
     bool include_base,
-    bool include_expansion)
+    bool include_expansion,
+    bool deflate = false)
 {
     std::vector<ZipEntry> entries;
     entries.push_back({
@@ -117,15 +123,23 @@ fs::path make_archive(
         append32(bytes, 0x04034b50u);
         append16(bytes, 20);
         append16(bytes, 0);
-        append16(bytes, 0);
+        append16(bytes, deflate ? 8 : 0);
         append16(bytes, 0);
         append16(bytes, 0);
         append32(bytes, entry.crc32);
-        append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
+        append32(bytes, static_cast<std::uint32_t>(entry.data.size() + (deflate ? 5 : 0)));
         append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
         append16(bytes, static_cast<std::uint16_t>(entry.path.size()));
         append16(bytes, 0);
         append_text(bytes, entry.path);
+        if (deflate) {
+            // Independent RFC1951 final uncompressed block; Python self-setup
+            // fixtures additionally exercise zlib-compressed Deflate blocks.
+            bytes.push_back(1);
+            const auto length = static_cast<std::uint16_t>(entry.data.size());
+            append16(bytes, length);
+            append16(bytes, static_cast<std::uint16_t>(~length));
+        }
         append_text(bytes, entry.data);
     }
     const std::uint32_t central_offset = static_cast<std::uint32_t>(bytes.size());
@@ -134,11 +148,11 @@ fs::path make_archive(
         append16(bytes, static_cast<std::uint16_t>((3u << 8) | 20u));
         append16(bytes, 20);
         append16(bytes, 0);
-        append16(bytes, 0);
+        append16(bytes, deflate ? 8 : 0);
         append16(bytes, 0);
         append16(bytes, 0);
         append32(bytes, entry.crc32);
-        append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
+        append32(bytes, static_cast<std::uint32_t>(entry.data.size() + (deflate ? 5 : 0)));
         append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
         append16(bytes, static_cast<std::uint16_t>(entry.path.size()));
         append16(bytes, 0);
@@ -260,5 +274,28 @@ int main()
     request.version = "latest";
     auto floating = gateway->inspect_install_archive(request);
     if (floating || floating.error().code != "factorio_archive_binding_invalid") return 6;
+    request.version = "2.0.77";
+    request.archive = make_archive(fixture.root, "deflate", true, true, true);
+    auto compressed = gateway->inspect_install_archive(request);
+    if (!compressed || !compressed.value().layout_verified) return 7;
+    const fs::path crc_bad = fixture.root / "crc-bad.zip";
+    fs::copy_file(valid, crc_bad);
+    { // Break local CRC only: the metadata mismatch must refuse before planning effects.
+        std::fstream stream(crc_bad, std::ios::binary | std::ios::in | std::ios::out);
+        stream.seekg(14);
+        const char byte = static_cast<char>(stream.get() ^ 1);
+        stream.seekp(14);
+        stream.put(byte);
+        if (!stream) return 8;
+    }
+    const fs::path truncated = fixture.root / "truncated.zip";
+    fs::copy_file(valid, truncated);
+    fs::resize_file(truncated, fs::file_size(truncated) - 8);
+    for (const fs::path& broken : {crc_bad, truncated}) {
+        request.archive = broken;
+        auto result = gateway->inspect_install_archive(request);
+        if (result || result.error().code != "archive_inspection_refused" ||
+            fs::exists(setup_state) || fs::exists(plan_request.target)) return 9;
+    }
     return 0;
 }

@@ -1,0 +1,7 @@
+{
+  "path": "D:\\Projects\\Factorio\\factorio-launcher\\.overnight-beta-gate-staging",
+  "recursive": false,
+  "plan": "Remove only the verified empty, non-link in-checkout scratch directory; Directory.Delete false refuses nonempty state.",
+  "action": "remove_empty_directory_only",
+  "observed_created_at": "2026-09-05T06:14:13.5745663+10:00"
+}
