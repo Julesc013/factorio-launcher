@@ -32,6 +32,7 @@ HISTORICAL_EXCEPTIONS = {
     "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad": (
         "promote: workspace root authority and provider closeout"
     ),
+    "ee750851a5d834f80971ab50da81e59acc38b745": "promote: dev into main",
 }
 
 COMPLETED_WORKUNITS = {

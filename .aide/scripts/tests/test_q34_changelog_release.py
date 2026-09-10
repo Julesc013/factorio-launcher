@@ -83,6 +83,33 @@ class Q34ChangelogReleaseTests(unittest.TestCase):
         self.assertEqual(parsed["format_classification"], "invalid")
         self.assertTrue(any("Work-Item" in reason for reason in parsed["malformed_reasons"]))
 
+    def test_exact_immutable_baseline_is_excluded_from_changelog_debt(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            init_fixture_repo(root)
+            message = "promote: dev into main\n"
+            commit_fixture(root, "fixture.txt", "fixture\n", message)
+            sha = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=root, text=True, encoding="utf-8"
+            ).strip()
+            aide_lite.write_text(
+                root / ".aide" / "commit_policy_baseline.toml",
+                "\n".join(
+                    [
+                        'schema = "facman.aide_commit_policy_baseline.v1"',
+                        '[[commit]]',
+                        f'sha = "{sha}"',
+                        'subject = "promote: dev into main"',
+                        'reason = "Immutable fixture baseline."',
+                        "",
+                    ]
+                ),
+            )
+            preview = aide_lite.make_changelog_preview(root, revision_range="HEAD")
+            self.assertEqual(preview["malformed_count"], 0)
+            self.assertEqual(preview["malformed_commits"], [])
+            self.assertIn(f"{sha[:12]} immutable commit-policy baseline excluded", preview["warnings"])
+
     def test_detect_legacy_semi_structured_commit_as_warning(self) -> None:
         message = "docs: old format\n\nWhy: historical note\nWhat changed: prose\nValidation: not structured\n"
         parsed = aide_lite.parse_commit_for_changelog("legacy123", "docs: old format", message)
