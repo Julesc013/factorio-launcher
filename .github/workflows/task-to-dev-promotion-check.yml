@@ -125,16 +125,34 @@ jobs:
           publish(head, "success", "Repository-owner command is exactly bound to this open PR head: " + head)
           print("protected_control_paths: " + ", ".join(touched))
           print("protected_control_owner_command: exact-head authorized")
-      - name: Fetch candidate history without checking it out
+      - name: Fetch candidate and trusted main history without checking them out
+        id: history
         if: ${{ steps.live_pr.outputs.eligible == 'true' }}
         env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
-        run: git fetch --no-tags origin "+refs/pull/${PR_NUMBER}/head:refs/remotes/origin/task-to-dev-pr-${PR_NUMBER}"
+        run: |
+          TRUSTED_MAIN_OID="$(gh api "repos/${REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          if ! [[ "$TRUSTED_MAIN_OID" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "trusted main did not resolve to an exact commit OID" >&2
+            exit 1
+          fi
+          git fetch --no-tags origin \
+            "+refs/pull/${PR_NUMBER}/head:refs/remotes/origin/task-to-dev-pr-${PR_NUMBER}" \
+            "+refs/heads/main:refs/remotes/origin/task-to-dev-trusted-main"
+          FETCHED_MAIN_OID="$(git rev-parse 'refs/remotes/origin/task-to-dev-trusted-main^{commit}')"
+          if [ "$FETCHED_MAIN_OID" != "$TRUSTED_MAIN_OID" ]; then
+            echo "trusted main moved between observation and fetch; exact-history validation is refused" >&2
+            exit 1
+          fi
+          echo "trusted_main_oid=$TRUSTED_MAIN_OID" >> "$GITHUB_OUTPUT"
       - name: Validate the exact full candidate range using protected-base code
         if: ${{ steps.live_pr.outputs.eligible == 'true' }}
         env:
           BASE_OID: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.base.sha || '' }}
           HEAD_OID: refs/remotes/origin/task-to-dev-pr-${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
+          TRUSTED_MAIN_OID: ${{ steps.history.outputs.trusted_main_oid }}
           PR_NUMBER: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
           REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
@@ -147,7 +165,8 @@ jobs:
           git merge-base --is-ancestor "$BASE_OID" "$HEAD_OID"
           python .aide/scripts/aide_lite.py git task-to-dev-status \
             --repository "$REPOSITORY" --pull-request "$PR_NUMBER" \
-            --base "$BASE_OID" --head "$HEAD_OID" --output "$RECEIPT"
+            --base "$BASE_OID" --head "$HEAD_OID" \
+            --trusted-main "$TRUSTED_MAIN_OID" --output "$RECEIPT"
       - name: Publish exact-head trusted task-to-dev admission
         if: ${{ steps.live_pr.outputs.eligible == 'true' }}
         env:
@@ -192,6 +211,8 @@ jobs:
           if not isinstance(default_branch, str):
               raise SystemExit("repository has no readable default branch")
           default_branch_sha = json.loads(subprocess.run(["gh", "api", f"repos/{os.environ['REPOSITORY']}/git/ref/heads/{default_branch}"], check=True, text=True, stdout=subprocess.PIPE).stdout).get("object", {}).get("sha")
+          if receipt.get("trusted_main_oid") != default_branch_sha:
+              raise SystemExit("status receipt is not bound to the current protected main commit")
           run = json.loads(subprocess.run(["gh", "api", f"repos/{os.environ['REPOSITORY']}/actions/runs/{os.environ['RUN_ID']}"], check=True, text=True, stdout=subprocess.PIPE).stdout)
           if not aide_lite.task_to_dev_workflow_identity_is_exact(
                   os.environ["EVENT_NAME"], os.environ["REPOSITORY"], os.environ["WORKFLOW_REF"], os.environ["WORKFLOW_SHA"],
@@ -201,7 +222,7 @@ jobs:
                      "status": "completed", "conclusion": "success",
                      "external_id": "ruleset-workflow:" + workflow_id,
                      "output": {"title": "Trusted task-to-dev admission",
-                                "summary": "Exact-head full-history validation by ruleset-bound workflow " + workflow_id}}
+                                "summary": "Exact-head candidate-history validation by ruleset-bound workflow " + workflow_id}}
           subprocess.run(["gh", "api", "--method", "POST", f"repos/{os.environ['REPOSITORY']}/check-runs", "--input", "-"],
                          input=json.dumps(payload), check=True, text=True)
       - name: Retain raw status receipt

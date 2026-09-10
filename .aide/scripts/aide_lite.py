@@ -83,7 +83,8 @@ FACMAN_COMMIT_MESSAGE_POLICY_PATH = ".aide/policies/facman-commit-messages.yaml"
 COMMIT_POLICY_BASELINE_PATH = ".aide/commit_policy_baseline.toml"
 VERIFIED_PROTECTED_PR_MERGE_SCHEMA = "verified_protected_pr_merge_v1"
 DEV_TO_MAIN_BOOTSTRAP_SCHEMA = "dev_to_main_bootstrap_v1"
-TASK_TO_DEV_STATUS_SCHEMA = "aide.task_to_dev_promotion_status.v1"
+TASK_TO_DEV_STATUS_LEGACY_SCHEMA = "aide.task_to_dev_promotion_status.v1"
+TASK_TO_DEV_STATUS_SCHEMA = "aide.task_to_dev_promotion_status.v2"
 MERGE_EVIDENCE_MAX_BYTES = 1024 * 1024
 TRUSTED_WORKFLOW_ENVELOPE_SCHEMA = "facman.trusted_workflow_attestation.v1"
 TRUSTED_WORKFLOW_PUBLIC_KEYS = {"facman-workflow-2026-01": """-----BEGIN PUBLIC KEY-----
@@ -4979,11 +4980,15 @@ def is_git_repo(repo_root: Path) -> bool:
     return result.returncode == 0 and result.stdout.strip().lower() == "true"
 
 
-def git_commit_messages_for_range(repo_root: Path, revision_range: str, max_count: int | None = None) -> list[tuple[str, str, str]]:
+def git_commit_messages_for_revisions(
+    repo_root: Path,
+    revisions: list[str],
+    max_count: int | None = None,
+) -> list[tuple[str, str, str]]:
     command = ["git", "log", "--reverse", "--pretty=%H%x00%s%x00%B%x1e"]
     if max_count is not None:
         command.insert(2, f"--max-count={max_count}")
-    command.append(revision_range)
+    command.extend(revisions)
     result = subprocess.run(
         command,
         cwd=repo_root,
@@ -4994,7 +4999,8 @@ def git_commit_messages_for_range(repo_root: Path, revision_range: str, max_coun
         encoding="utf-8",
     )
     if result.returncode != 0:
-        raise ValueError(result.stderr.strip() or f"git log failed for range {revision_range}")
+        description = " ".join(revisions)
+        raise ValueError(result.stderr.strip() or f"git log failed for revisions {description}")
     commits: list[tuple[str, str, str]] = []
     for record in result.stdout.split("\x1e"):
         stripped = record.strip("\n")
@@ -5006,6 +5012,20 @@ def git_commit_messages_for_range(repo_root: Path, revision_range: str, max_coun
         commit_hash, subject, message = parts
         commits.append((commit_hash.strip(), subject.strip(), message.strip() + "\n"))
     return commits
+
+
+def git_commit_messages_for_range(repo_root: Path, revision_range: str, max_count: int | None = None) -> list[tuple[str, str, str]]:
+    return git_commit_messages_for_revisions(repo_root, [revision_range], max_count=max_count)
+
+
+def git_commit_oids_for_revisions(repo_root: Path, revisions: list[str]) -> list[str]:
+    ok, output, error = run_git_capture(repo_root, ["rev-list", "--reverse", *revisions])
+    if not ok:
+        raise ValueError(error or f"git rev-list failed for revisions {' '.join(revisions)}")
+    oids = output.splitlines() if output else []
+    if any(not re.fullmatch(r"[0-9a-f]{40}", oid) for oid in oids):
+        raise ValueError("git rev-list returned a malformed commit OID")
+    return oids
 
 
 def git_full_range_validation(repo_root: Path, revision_range: str) -> tuple[list[str], int, int]:
@@ -5021,6 +5041,27 @@ def git_full_range_validation(repo_root: Path, revision_range: str) -> tuple[lis
     if any_fail:
         blockers.append("commit_range_contains_malformed_commit")
     return blockers, len(commits), baseline_count
+
+
+def git_candidate_history_validation(
+    repo_root: Path,
+    base_oid: str,
+    head_oid: str,
+    trusted_main_oid: str,
+) -> tuple[list[str], list[str], int]:
+    """Validate H minus the histories already reachable from protected dev and main."""
+    revisions = [head_oid, f"^{base_oid}", f"^{trusted_main_oid}"]
+    try:
+        commits = git_commit_messages_for_revisions(repo_root, revisions)
+    except ValueError as exc:
+        return [f"candidate_history_unavailable: {exc}"], [], 0
+    _results, any_fail, baseline_count = validate_commit_range_messages(repo_root, commits)
+    blockers: list[str] = []
+    if not commits:
+        blockers.append("candidate_history_empty")
+    if any_fail:
+        blockers.append("candidate_history_contains_malformed_commit")
+    return blockers, [commit[0] for commit in commits], baseline_count
 
 
 def git_oid(repo_root: Path, revision: str) -> str:
@@ -5434,6 +5475,56 @@ def validate_dev_to_main_bootstrap(
     return sorted(dict.fromkeys(blockers)), legacy_merges
 
 
+def task_to_dev_status_summary_matches(
+    repo_root: Path,
+    status: dict[str, object],
+    expected_repo: str,
+    pull_request_number: object,
+    base_oid: str,
+    head_oid: str,
+) -> bool:
+    common_matches = (
+        status.get("repository") == expected_repo
+        and status.get("pull_request_number") == pull_request_number
+        and status.get("base_oid") == base_oid
+        and status.get("head_oid") == head_oid
+        and status.get("range") == f"{base_oid}..{head_oid}"
+        and status.get("full_history_checked") is True
+        and status.get("conclusion") == "success"
+    )
+    if not common_matches:
+        return False
+    schema_version = status.get("schema_version")
+    if schema_version == TASK_TO_DEV_STATUS_LEGACY_SCHEMA:
+        try:
+            expected_commits = git_commit_oids_for_revisions(repo_root, [head_oid, f"^{base_oid}"])
+        except ValueError:
+            return False
+        return status.get("commit_oids") == expected_commits
+    if schema_version != TASK_TO_DEV_STATUS_SCHEMA:
+        return False
+    trusted_main_value = status.get("trusted_main_oid")
+    if not isinstance(trusted_main_value, str) or not re.fullmatch(r"[0-9a-f]{40}", trusted_main_value):
+        return False
+    try:
+        trusted_main_oid = git_oid(repo_root, trusted_main_value)
+        expected_full_range = git_commit_oids_for_revisions(repo_root, [head_oid, f"^{base_oid}"])
+        expected_candidates = git_commit_oids_for_revisions(
+            repo_root, [head_oid, f"^{base_oid}", f"^{trusted_main_oid}"]
+        )
+    except ValueError:
+        return False
+    return (
+        trusted_main_oid == trusted_main_value
+        and status.get("candidate_history_checked") is True
+        and status.get("trusted_main_history_excluded") is True
+        and status.get("commit_count") == len(expected_candidates)
+        and status.get("commit_oids") == expected_candidates
+        and status.get("full_range_commit_count") == len(expected_full_range)
+        and status.get("full_range_commit_oids") == expected_full_range
+    )
+
+
 def validate_verified_protected_pr_merges(
     repo_root: Path, revision_range: str, evidence_path: str, bootstrap_evidence: str = ""
 ) -> tuple[list[str], int]:
@@ -5541,11 +5632,14 @@ def validate_verified_protected_pr_merges(
             if protection.get("repository") != expected_repo or protection.get("branch") != record.get("base_ref") or protection.get("protected") is not True or protection.get("prior_base_oid") != base_oid or protection.get("required_status") != "task-to-dev-promotion-check":
                 blockers.append(f"merge_evidence_protection_summary_mismatch: {merge_oid}")
         if isinstance(status, dict):
-            ok, reachable, reachable_error = run_git_capture(repo_root, ["rev-list", "--reverse", f"{base_oid}..{head_oid}"])
-            expected_commits = reachable.splitlines() if ok else []
-            if not ok:
-                blockers.append(f"merge_evidence_status_range_unavailable: {reachable_error}")
-            elif status.get("schema_version") != TASK_TO_DEV_STATUS_SCHEMA or status.get("repository") != expected_repo or status.get("pull_request_number") != record.get("pull_request_number") or status.get("base_oid") != base_oid or status.get("head_oid") != head_oid or status.get("range") != f"{base_oid}..{head_oid}" or status.get("full_history_checked") is not True or status.get("conclusion") != "success" or status.get("commit_oids") != expected_commits:
+            if not task_to_dev_status_summary_matches(
+                repo_root,
+                status,
+                expected_repo,
+                record.get("pull_request_number"),
+                base_oid,
+                head_oid,
+            ):
                 blockers.append(f"merge_evidence_status_summary_mismatch: {merge_oid}")
         outside_code, _out, _err = run_git_status_code(repo_root, ["merge-base", "--is-ancestor", merge_oid, revision_range.split("..", 1)[1]])
         if outside_code != 0:
@@ -34040,6 +34134,7 @@ def command_commit_check(args: argparse.Namespace) -> int:
 def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
     base_oid = git_oid(args.repo_root, args.base)
     head_oid = git_oid(args.repo_root, args.head)
+    trusted_main_oid = git_oid(args.repo_root, args.trusted_main)
     repository = str(args.repository).strip()
     if not re.fullmatch(r"[^/\s]+/[^/\s]+", repository):
         raise ValueError("--repository must be owner/name")
@@ -34053,10 +34148,14 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
         if str(exc).startswith("--output"):
             raise
     range_text = f"{base_oid}..{head_oid}"
-    blockers, count, baseline_count = git_full_range_validation(args.repo_root, range_text)
-    ok, commits_output, error = run_git_capture(args.repo_root, ["rev-list", "--reverse", range_text])
-    if not ok:
-        blockers.append(f"commit_range_unavailable: {error}")
+    blockers, candidate_oids, baseline_count = git_candidate_history_validation(
+        args.repo_root, base_oid, head_oid, trusted_main_oid
+    )
+    try:
+        full_range_oids = git_commit_oids_for_revisions(args.repo_root, [head_oid, f"^{base_oid}"])
+    except ValueError as exc:
+        blockers.append(f"commit_range_unavailable: {exc}")
+        full_range_oids = []
     data = {
         "schema_version": TASK_TO_DEV_STATUS_SCHEMA,
         "repository": repository,
@@ -34064,9 +34163,14 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
         "base_oid": base_oid,
         "head_oid": head_oid,
         "range": range_text,
+        "trusted_main_oid": trusted_main_oid,
         "full_history_checked": True,
-        "commit_count": count,
-        "commit_oids": commits_output.splitlines() if ok else [],
+        "candidate_history_checked": True,
+        "trusted_main_history_excluded": True,
+        "commit_count": len(candidate_oids),
+        "commit_oids": candidate_oids,
+        "full_range_commit_count": len(full_range_oids),
+        "full_range_commit_oids": full_range_oids,
         "baseline_count": baseline_count,
         "conclusion": "success" if not blockers else "failure",
         "blockers": blockers,
@@ -34076,8 +34180,11 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
     print("AIDE Lite task-to-dev promotion status")
     print(f"result: {'PASS' if not blockers else 'FAIL'}")
     print(f"range: {range_text}")
-    print(f"commit_count: {count}")
+    print(f"trusted_main_oid: {trusted_main_oid}")
+    print(f"commit_count: {len(candidate_oids)}")
+    print(f"full_range_commit_count: {len(full_range_oids)}")
     print("full_history_checked: true")
+    print("candidate_history_checked: true")
     print("candidate_code_executed: false")
     return 0 if not blockers else 1
 
@@ -43844,6 +43951,7 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     git_task_status_parser.add_argument("--pull-request", type=int, required=True, help="Pull request number.")
     git_task_status_parser.add_argument("--base", required=True, help="Exact PR base commit OID.")
     git_task_status_parser.add_argument("--head", required=True, help="Exact fetched PR head commit OID.")
+    git_task_status_parser.add_argument("--trusted-main", required=True, help="Exact protected main commit OID fetched by trusted workflow code.")
     git_task_status_parser.add_argument("--output", required=True, help="Absolute external status receipt path.")
     git_task_status_parser.set_defaults(handler=command_git_task_to_dev_status)
     git_prune_parser = git_subparsers.add_parser("prune")
