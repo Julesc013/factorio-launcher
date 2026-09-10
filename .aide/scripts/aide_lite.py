@@ -34180,7 +34180,6 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
     print("AIDE Lite task-to-dev promotion status")
     print(f"result: {'PASS' if not blockers else 'FAIL'}")
     print(f"range: {range_text}")
-    print(f"trusted_main_oid: {trusted_main_oid}")
     print(f"commit_count: {len(candidate_oids)}")
     print(f"full_range_commit_count: {len(full_range_oids)}")
     print("full_history_checked: true")
