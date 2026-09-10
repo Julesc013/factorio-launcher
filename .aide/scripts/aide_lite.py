@@ -85,6 +85,7 @@ VERIFIED_PROTECTED_PR_MERGE_SCHEMA = "verified_protected_pr_merge_v1"
 DEV_TO_MAIN_BOOTSTRAP_SCHEMA = "dev_to_main_bootstrap_v1"
 TASK_TO_DEV_STATUS_LEGACY_SCHEMA = "aide.task_to_dev_promotion_status.v1"
 TASK_TO_DEV_STATUS_SCHEMA = "aide.task_to_dev_promotion_status.v2"
+TASK_TO_DEV_TRUSTED_MAIN_REF = "refs/remotes/origin/task-to-dev-trusted-main"
 MERGE_EVIDENCE_MAX_BYTES = 1024 * 1024
 TRUSTED_WORKFLOW_ENVELOPE_SCHEMA = "facman.trusted_workflow_attestation.v1"
 TRUSTED_WORKFLOW_PUBLIC_KEYS = {"facman-workflow-2026-01": """-----BEGIN PUBLIC KEY-----
@@ -34140,7 +34141,9 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
     resolved_trusted_main_oid = git_oid(args.repo_root, trusted_main_claim)
     if resolved_trusted_main_oid != trusted_main_claim:
         raise ValueError("--trusted-main must resolve to the exact supplied commit OID")
-    trusted_main_oid = trusted_main_claim
+    trusted_main_oid = git_oid(args.repo_root, TASK_TO_DEV_TRUSTED_MAIN_REF)
+    if trusted_main_oid != trusted_main_claim:
+        raise ValueError("--trusted-main must match the exact fetched protected main ref")
     repository = str(args.repository).strip()
     if not re.fullmatch(r"[^/\s]+/[^/\s]+", repository):
         raise ValueError("--repository must be owner/name")

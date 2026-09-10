@@ -62,6 +62,7 @@ def init(root: Path) -> None:
     git(root, "add", ".aide")
     git(root, "commit", "-m", "chore(test): seed commit policy\n\nWork-Item: TEST-PROMOTION-1")
     git(root, "branch", "-M", "main")
+    git(root, "update-ref", aide_lite.TASK_TO_DEV_TRUSTED_MAIN_REF, "main")
     git(root, "checkout", "-b", "dev")
     git(root, "checkout", "-b", "task/example")
 
@@ -344,6 +345,7 @@ class PromotionCheckerTests(unittest.TestCase):
             git(root, "checkout", "main")
             protected_bad = commit(root, "ordinary protected merge subject", "protected.txt", "protected\n")
             trusted_main = git(root, "rev-parse", "main")
+            git(root, "update-ref", aide_lite.TASK_TO_DEV_TRUSTED_MAIN_REF, trusted_main)
             git(root, "checkout", "task/example")
             git(root, "merge", "--no-ff", "main", "-m", "chore(test): synchronize protected main\n\nWork-Item: TEST-PROMOTION-1")
             candidate_merge = git(root, "rev-parse", "HEAD")
@@ -376,6 +378,13 @@ class PromotionCheckerTests(unittest.TestCase):
             self.assertFalse(output.exists())
             with patch.object(aide_lite, "git_oid", side_effect=[base, head, "b" * 40]):
                 with self.assertRaisesRegex(ValueError, "exact supplied commit OID"):
+                    aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                        repo_root=root, repository="example/repo", pull_request=11,
+                        base=base, head=head, trusted_main="a" * 40, output=str(output),
+                    ))
+            self.assertFalse(output.exists())
+            with patch.object(aide_lite, "git_oid", side_effect=[base, head, "a" * 40, "b" * 40]):
+                with self.assertRaisesRegex(ValueError, "exact fetched protected main ref"):
                     aide_lite.command_git_task_to_dev_status(SimpleNamespace(
                         repo_root=root, repository="example/repo", pull_request=11,
                         base=base, head=head, trusted_main="a" * 40, output=str(output),
