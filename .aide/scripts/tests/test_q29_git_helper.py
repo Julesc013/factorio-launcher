@@ -103,7 +103,7 @@ def write_protected_merge_evidence(root: Path, external: Path) -> Path:
         "prior_base_oid": parents[0], "required_status": "task-to-dev-promotion-check",
     }
     status = {
-        "schema_version": aide_lite.TASK_TO_DEV_STATUS_SCHEMA,
+        "schema_version": aide_lite.TASK_TO_DEV_STATUS_LEGACY_SCHEMA,
         "repository": "example/repo", "pull_request_number": 7,
         "base_oid": parents[0], "head_oid": parents[1],
         "range": f"{parents[0]}..{parents[1]}", "full_history_checked": True,

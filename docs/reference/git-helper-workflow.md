@@ -82,9 +82,13 @@ range validation. This prevents malformed nested task history from entering
 
 `task-to-dev-promotion-check` is a hosted `pull_request_target` status for PRs
 whose base is `dev`. It checks out protected base-branch code, fetches the PR
-head as Git objects, and performs the full range check without executing
-candidate code. Repository rulesets must separately require this exact status;
-the workflow file and any local receipt do not enforce a ruleset by themselves.
+head and the exact current protected `main` commit as Git objects, and performs
+the candidate-history check without executing candidate code. The checked set
+is every commit reachable from the head except history already reachable from
+the exact PR base or trusted `main` commit. The workflow binds that `main` OID
+to both the live GitHub API response and fetched protected ref, so a task cannot
+hide its own commits by supplying an arbitrary exclusion. Repository rulesets must separately require this exact status; the workflow file and any local
+receipt do not enforce a ruleset by themselves.
 
 The sole historical bridge is `dev_to_main_bootstrap_v1`: a short-lived,
 external, PR-specific receipt for one exact `main`/`dev` topology. Before the
