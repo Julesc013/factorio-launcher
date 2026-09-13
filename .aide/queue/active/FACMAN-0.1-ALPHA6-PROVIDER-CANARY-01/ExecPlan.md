@@ -179,3 +179,23 @@ fixtures; it performs no SDK install, project compiler configuration or build.
 No existing binaries, provider pins, hosted result or release claim changed.
 The seven-file source/checkpoint proposal requires independent review before
 commit and later fresh product/SDK qualification.
+
+## 2026-09-14 hosted provider-conformance review
+
+Workflow run 34762715681 retained exact Linux, macOS and Windows observations
+for the current FacMan source tree f47600447ae36b67e35d077fa05e94817f506a8d
+and unchanged tracked provider pins. Each platform passed source static/shared,
+installed static/shared, relocated installed static/shared and private-runtime
+consumption. Interrupted recovery passed on all three platforms; negative
+controls refused and tracked locks remained unchanged.
+
+A fresh non-authoring GPT-5.6 Sol review parsed all eight retained observations
+with zero findings. Its repository receipt concludes
+PASS_HOSTED_PROVIDER_CONFORMANCE_NOT_ADOPTION and binds the external custody
+packet by exact receipt digests.
+
+The WorkUnit remains active/PENDING. Provider SDK-consumption run 34762715690
+has passed Linux and Windows, while macOS is still executing the tracked
+reconciled-provider proof. Review its produced observations before running the
+AIDE verify/review/close lifecycle. The conformance result changes no provider
+pin and grants no adoption, release, publication or stable authority.
