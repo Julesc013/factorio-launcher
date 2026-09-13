@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01
+status: active
+lifecycle_state: active
+planning_state: active
+result: PENDING
+created_at: 2026-09-06
+evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/
+source_validated_at: 2026-09-10T07:41:59Z
+implementation_state: integrated_source_current_windows_validation_passed_pending_contract_doc_integration
+source_validation_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-process-contract-source-review.v1.json
+current_validation_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-contract-current-dev-validation.v1.json
+active_at: 2026-09-13T17:07:34Z

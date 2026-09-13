@@ -189,8 +189,9 @@ Mode precedence is deterministic:
 3. `facman tui` requests TUI mode.
 4. If input or output is redirected, TUI mode refuses or uses its plain
    noninteractive renderer; it never writes cursor control.
-5. `TERM=dumb`, `NO_COLOR`, inaccessible terminal capabilities, or
-   `FACMAN_UI=plain` selects the dependency-free linear renderer.
+5. `TERM=dumb`, inaccessible terminal capabilities, or `FACMAN_UI=plain`
+   selects the dependency-free linear renderer. A nonempty `NO_COLOR` disables
+   color without changing an otherwise available full-screen renderer.
 
 The current unpublished `facman-tui` executable is a migration source, not a
 stable public interface. Its useful option semantics move under `facman tui`.
