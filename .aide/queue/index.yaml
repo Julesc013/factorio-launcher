@@ -10,8 +10,8 @@ items:
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence
   - id: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
-    status: active_automated
-    lifecycle_state: active_automated
+    status: passed
+    lifecycle_state: closed
     title: Create galleries from production controls and deterministic states
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence

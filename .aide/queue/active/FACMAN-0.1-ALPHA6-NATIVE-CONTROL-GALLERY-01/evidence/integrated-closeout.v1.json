@@ -1,0 +1,109 @@
+{
+  "schema": "facman.native_control_gallery_closeout.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "result": "pass",
+  "observed_utc": "2026-09-13T10:36:31Z",
+  "source": {
+    "integrated_branch": "dev",
+    "integrated_commit": "4ae50d6e1b72a1ffa967c54642168e2028677a32",
+    "integrated_tree": "950676fec250c9c791a363eca4e16cbcdcdd1a75",
+    "qualifying_pull_request": 266,
+    "qualifying_head": "6f930ca96817df4220649d61736fdf4a258645f0",
+    "qualifying_head_tree": "950676fec250c9c791a363eca4e16cbcdcdd1a75",
+    "tree_equivalent": true,
+    "merge_url": "https://github.com/Julesc013/factorio-launcher/pull/266"
+  },
+  "acceptance": {
+    "production_states_and_controls": {
+      "status": "pass",
+      "windows": {
+        "result": "PASS",
+        "assertions": 6729,
+        "render_cells": 28,
+        "constrained_cells": 1,
+        "live_transport_constructed": false,
+        "receipt_sha256": "ef90bd76a9598196c2876e29d36d842dfd7a53ef121222b1f6248319b7a66a1d"
+      },
+      "gtk": {
+        "result": "pass",
+        "assertions": 19088,
+        "render_cells": 56,
+        "font_label_observations": 5408,
+        "missing_font_cells": 0,
+        "receipt_sha256": "d12a15768251deac0f7880038994f44fc8c136eb5ec015a695310a04b3323676"
+      }
+    },
+    "production_projection_reuse": {
+      "status": "pass",
+      "finding": "Both galleries construct the shared production controls and real presentation projections behind recording-only action boundaries; neither constructs live transport or a duplicate product control tree."
+    },
+    "packaged_windows_candidate": {
+      "status": "pass",
+      "version": "0.1.0-alpha.5",
+      "classification": "unsupported_private_alpha_candidate",
+      "payload_sha256": "3be051d4e3fad55720364fe4ed58d9dc0c0301da00277d2be6632ba03651d312",
+      "managed_sha256": "ab8410ab8701b64c5a620231e68a33e3df277ef8364c5c307b9e981be966bd8e",
+      "native_sha256": "92ddd059b84ee184ca531339676349cdc4da1b99aea4eae99565c8a2ed13b2bc",
+      "assertions": 6729,
+      "render_cells": 28,
+      "live_transport_constructed": false,
+      "result_sha256": "af10066b48fa92b9653d3e4f14538f1cbd4b93ea78e33de2915013ed796ab834",
+      "archive_sha256": "3e70b5fc9b8781d1fbb21659fceb51e3bddfc0471b371a6ba35de427d6cf989a"
+    }
+  },
+  "hosted_qualification": {
+    "run_id": 34750592085,
+    "windows_job_id": 103706334167,
+    "windows_job_conclusion": "success",
+    "required_dev_checks": {
+      "linux-native": "success",
+      "windows-native-package": "success",
+      "linux-coverage": "success",
+      "macos-archive-core": "success",
+      "macos-native-cli": "success",
+      "appkit-compile": "success",
+      "policy-check": "success",
+      "development-only-cross-provider-fixture": "success",
+      "c-cpp": "success",
+      "python": "success",
+      "csharp": "success"
+    },
+    "windows_integration_observation_sha256": "584c104ee1808daf082ee17622a51499d41c98af78653ebe96eb834e64061b0b",
+    "windows_package_composition_sha256": "ec1acd3cf1d71773aa1663dafb85ace0ef820cbf3e8fdf8b93d5caafba70eaf6",
+    "gtk_artifact": "gtk-control-gallery-c3d978e41e118f35f1e3f598e38e083e3fc6a96e",
+    "gtk_synthetic_merge_commit": "c3d978e41e118f35f1e3f598e38e083e3fc6a96e",
+    "gtk_synthetic_merge_tree": "950676fec250c9c791a363eca4e16cbcdcdd1a75",
+    "final_check_rollup_sha256": "b61973fdfe6c21e5fedb1ba1ac72f9690fd4c2bdf2ef2abaca09004e8d336981"
+  },
+  "retained_failure": {
+    "classification": "controller_path_length",
+    "finding": "The first packaged-gallery successor completed all 28 ordinary cells, then GDI+ refused the final constrained screenshot at an overlong evidence path.",
+    "remediation": "The same immutable probe, package and fixtures passed from a shorter marker-owned path; the original failure remains retained."
+  },
+  "independent_review": {
+    "verdict": "PASS",
+    "reviewer_model": "gpt-5.6-sol",
+    "reviewer_role": "non_authoring",
+    "receipt": "evidence/integrated-closeout-review.v1.json",
+    "receipt_sha256": "a698cb39d442216a7fdd1b7d613aef683089460cdc04c147530ad89af1a33987"
+  },
+  "advisory_checks": {
+    "task-to-dev-control-change-authorization": "failure",
+    "task-to-dev-promotion-check": "failure",
+    "qualification_effect": "none; these advisory control-plane checks were not part of the dev ruleset and did not supply gallery evidence"
+  },
+  "remaining_programme_boundaries": [
+    "Human keyboard and screen-reader experience remains a genuine candidate-bound acceptance gate.",
+    "Physical monitor DPI and desktop theme transitions remain unqualified beyond the recorded toolkit simulations.",
+    "The gallery is recording-only and supplies no live Factorio, setup, signing, publication, support, Beta or stable-release authority."
+  ],
+  "authority": {
+    "factorio_execution": false,
+    "human_experience": false,
+    "physical_monitor_qualification": false,
+    "release": false,
+    "signing": false,
+    "publication": false,
+    "support": false
+  }
+}
