@@ -96,3 +96,12 @@ the fail-closed 64-hex requirement and supersedes that malformed context.
 The corrected combined-provider policy context is commit
 `9b20d81e39008f90fee879608cc6eb2e0da9f0b1`; this is the revision used for the
 next atomic twelve-profile import and tracked reconciliation.
+
+Comparing runs `34788538157` and `34789199432` showed that identical provider
+source produced different binary inventory hashes on Windows and one macOS
+static cell while ABI, contracts, public headers and licences remained stable.
+Rebuilding after every policy update therefore cannot produce a fixed point.
+Run `34788538157` is the selected complete twelve-artifact import source: both
+policies bind its exact manifests, and the importer must download that retained
+run explicitly. Later rebuilds remain current qualification evidence and must
+not silently replace the selected import bytes.

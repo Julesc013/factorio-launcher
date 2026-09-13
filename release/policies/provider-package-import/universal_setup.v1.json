@@ -25,10 +25,10 @@
     "artifacts_sha256": {
       "linux/static": "0ea6c3382a1859fd44347f0134ce5adf63066a0405a8f3a0ab1909990935bfa8",
       "linux/shared": "8c98782f1514029d70fce1e1755b95ada1b040ed752c2e5a541b7f75030c878e",
-      "macos/static": "56e4f54fadeedbec113af01f71c78434a33d308c98e5a7242305a773e3b1137e",
+      "macos/static": "28074e1d3deddf6ba4ea0fcc95c8f14c1590fea1d58c985b1d42588209772fb7",
       "macos/shared": "049b136bf5307f212be2b846a8176a4dc2fdde93bd49f7a6cbe00971f0c0413a",
-      "windows/static": "4dc773499bcdfcf314994f6ebd9444d83e7b77875ad67d22de91d377c6cb7af3",
-      "windows/shared": "0ed44ba7e686defce215982614f38acbadddb6dc2ec2f96f692a11365f02142b"
+      "windows/static": "d50816b0711016d0f3603a4c05deedeb7220a6fc127fa837929615ca1ed12110",
+      "windows/shared": "e15e5ab3fb1cd4b6d19c18ae81d7b9d1342e4d3158d320a49bb3b47a9fff0941"
     },
     "contracts_sha256": {
       "linux/static": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
