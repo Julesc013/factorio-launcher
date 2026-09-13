@@ -87,3 +87,8 @@ commit that owns both refreshed provider policies.
 That combined-provider policy context is now commit
 `8f283ed5160bb1d5c0951445b3b2527da00cc345`. The hosted importer and tracked
 reconciliation validator both bind this exact immutable revision.
+
+Run `34788937795` refused the policy before package comparison because the
+copied Windows/static launcher digest was 63 characters. The raw bounded
+manifest line preserves the correct trailing `6`; the corrected policy keeps
+the fail-closed 64-hex requirement and supersedes that malformed context.
