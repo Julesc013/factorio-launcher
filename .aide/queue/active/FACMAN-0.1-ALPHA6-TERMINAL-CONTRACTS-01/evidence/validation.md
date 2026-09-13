@@ -8,4 +8,14 @@
 - PASS: client boundary, architecture fitness, source format, canonical plan views, project state, and the complete portable AIDE Lite suite.
 - ACCEPT: a non-authoring GPT-5.6 Terra review found the transport implementation already integrated and identified the `NO_COLOR` documentation contradiction corrected by this checkpoint. This is model-based technical review, not human acceptance.
 
-The current machine-readable record is `terminal-contract-current-dev-validation.v1.json`; the immutable original source review remains `terminal-process-contract-source-review.v1.json`. The first build and Python invocations used incorrect target/import forms and are retained in the receipt; their corrected commands passed. Protected checks for this documentation/lifecycle checkpoint remain pending.
+The current machine-readable local record is `terminal-contract-current-dev-validation.v1.json`; the immutable original source review remains `terminal-process-contract-source-review.v1.json`. The first build and Python invocations used incorrect target/import forms and are retained in the receipt; their corrected commands passed.
+
+- PASS: PR 279 merged normally as `3267db2e12f8ea4f95dd77a97736dd2afa1efc4f`, tree `391b881a54932b0d9903c5c9525d026db87e251d`.
+- PASS: CI run 34771494575 completed successfully: Windows native/package, Linux native/coverage, macOS native/archive and AppKit compile.
+- PASS: the terminal WorkUnit integration receipt binds the implementation, local validation, independent review and protected merge without granting release or human authority.
+- PASS: 48 focused plan-view and CMake-architecture tests, project-state validation, queue-state validation, strict validation and the complete portable AIDE Lite suite passed after closeout generation.
+
+One combined focused-test invocation named two nonexistent unittest modules,
+`tests.test_project_state` and `tests.test_aide_queue_state`. The real standalone
+`tools/project_state.py --validate` and `tools/aide_queue_state_check.py`
+commands then passed, as did the focused 48-test selection and strict suite.

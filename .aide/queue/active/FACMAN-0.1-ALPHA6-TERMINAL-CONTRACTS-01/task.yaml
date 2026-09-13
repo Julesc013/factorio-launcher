@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01
 title: Close CLI JSON RPC and TUI compatibility mechanics
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -40,3 +40,9 @@ retained_boundaries:
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
 active_at: 2026-09-13T17:07:34Z
+verified_pending_closeout_at: 2026-09-13T17:58:05Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-09-13T18:00:03Z
+closed_at: 2026-09-13T18:00:03Z
+integration_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-contract-integration-closeout.v1.json
