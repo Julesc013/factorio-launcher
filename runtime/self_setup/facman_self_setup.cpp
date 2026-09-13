@@ -1184,6 +1184,32 @@ facman::core::Result<Response> execute(const Request &request) {
   auto acceptance = absolute_path(request.acceptance_root, "acceptance root");
   if (!install || !install_target || !state || !acceptance)
     return facman::core::Result<Response>::failure(!install ? install.error() : !install_target ? install_target.error() : !state ? state.error() : acceptance.error());
+  std::optional<QualificationClaims> qualification;
+  if (request.qualification_claims.has_value()) {
+    qualification = request.qualification_claims;
+    auto claimed_install = absolute_path(qualification->install_root,
+                                         "qualification install root");
+    auto claimed_state = absolute_path(qualification->state_root,
+                                       "qualification state root");
+    auto claimed_acceptance = absolute_path(qualification->acceptance_root,
+                                            "qualification acceptance root");
+    if (!claimed_install || !claimed_state || !claimed_acceptance ||
+        qualification->operation != request.operation ||
+        qualification->product_version != request.product_version ||
+        qualification->installed_mode != (request.native_effects != nullptr) ||
+        facman::platform::path_to_utf8(claimed_install.value()) !=
+            facman::platform::path_to_utf8(install_target.value()) ||
+        facman::platform::path_to_utf8(claimed_state.value()) !=
+            facman::platform::path_to_utf8(state.value()) ||
+        facman::platform::path_to_utf8(claimed_acceptance.value()) !=
+            facman::platform::path_to_utf8(acceptance.value()))
+      return facman::core::Result<Response>::failure(error(
+          "self_setup_qualification_interrupt_invalid",
+          "qualification claims do not bind this exact setup request"));
+    qualification->install_root = claimed_install.take_value();
+    qualification->state_root = claimed_state.take_value();
+    qualification->acceptance_root = claimed_acceptance.take_value();
+  }
   auto coordinator = coordinator_state_root(request);
   if (!coordinator) return facman::core::Result<Response>::failure(coordinator.error());
   const std::string root_text = facman::platform::path_to_utf8(install_target.value());
@@ -1219,6 +1245,29 @@ facman::core::Result<Response> execute(const Request &request) {
         digest_text("facman.setup.root.v1\n" + old_identity.value()) != journal.install_root_identity)
       return facman::core::Result<Response>::failure(error(
           "self_setup_recovery_required", "setup journal provider authority paths are invalid", record_path.string()));
+    if (qualification.has_value()) {
+      const bool claim_mismatch =
+          journal.operation != operation_name(qualification->operation) ||
+          journal.product_version != qualification->product_version ||
+          journal.mode != (qualification->installed_mode ? "installed" : "portable") ||
+          facman::platform::path_to_utf8(old_root.value()) !=
+              facman::platform::path_to_utf8(qualification->install_root) ||
+          facman::platform::path_to_utf8(old_state.value()) !=
+              facman::platform::path_to_utf8(qualification->state_root) ||
+          facman::platform::path_to_utf8(old_acceptance.value()) !=
+              facman::platform::path_to_utf8(qualification->acceptance_root);
+      const bool boundary_crossed =
+          qualification->boundary == DurableBoundary::files_applied
+              ? journal.files == "applied"
+              : journal.shortcut == "applied";
+      if (claim_mismatch || boundary_crossed)
+        return facman::core::Result<Response>::failure(error(
+            "self_setup_qualification_interrupt_invalid",
+            claim_mismatch
+                ? "qualification claims do not bind the unfinished setup journal"
+                : "qualification boundary was already crossed by the unfinished setup journal",
+            facman::platform::path_to_utf8(record_path)));
+    }
     active.install_root = old_root.take_value();
     active.state_root = old_state.take_value();
     active.acceptance_root = old_acceptance.take_value();
@@ -1429,14 +1478,35 @@ facman::core::Result<Response> execute(const Request &request) {
     auto persisted_after_files = persist_journal(record_path, journal);
     if (!persisted_after_files)
       return facman::core::Result<Response>::failure(persisted_after_files.error());
+    if (active.durable_boundary_hook != nullptr &&
+        !active.durable_boundary_hook->reached(DurableBoundary::files_applied))
+      return facman::core::Result<Response>::failure(error(
+          "self_setup_interrupted",
+          "setup operation interrupted after its files-applied durable boundary",
+          facman::platform::path_to_utf8(record_path)));
   }
 
   if (active.native_effects != nullptr) {
     for (const NativeEffect effect : {NativeEffect::shortcut, NativeEffect::registration}) {
       std::string &effect_state = effect == NativeEffect::shortcut ? journal.shortcut : journal.registration;
-      if (effect_state == "applied")
-        continue;
-      const NativeOwnership observed = active.native_effects->inspect(effect, journal.product_version);
+      const NativeOwnership observed = active.native_effects->inspect(
+          active.install_root, effect, journal.product_version);
+      const NativeOwnership desired = active.operation == Operation::uninstall
+          ? NativeOwnership::absent : NativeOwnership::owned;
+      if (effect_state == "applied") {
+        if (observed == desired)
+          continue;
+        journal.state = "recovery_required";
+        journal.recovery_boundary = "native_applied_effect_changed";
+        journal.last_error = "native_applied_effect_changed";
+        auto recorded = persist_journal(record_path, journal);
+        if (!recorded)
+          return facman::core::Result<Response>::failure(recorded.error());
+        return facman::core::Result<Response>::failure(error(
+            "self_setup_recovery_required",
+            "a previously applied Windows integration effect no longer matches durable intent",
+            facman::platform::path_to_utf8(record_path)));
+      }
       if (observed == NativeOwnership::foreign || observed == NativeOwnership::unreadable) {
         journal.state = "recovery_required";
         journal.recovery_boundary = "native_ownership_unproven";
@@ -1467,7 +1537,7 @@ facman::core::Result<Response> execute(const Request &request) {
         auto persisted = persist_journal(record_path, journal);
         if (!persisted)
           return facman::core::Result<Response>::failure(persisted.error());
-        const auto native = active.native_effects->apply(effect, active.operation,
+        const auto native = active.native_effects->apply(active.install_root, effect, active.operation,
                                                           journal.product_version);
         if (!native.ok) {
           journal.last_error = native.detail;
@@ -1494,6 +1564,13 @@ facman::core::Result<Response> execute(const Request &request) {
       auto persisted = persist_journal(record_path, journal);
       if (!persisted)
         return facman::core::Result<Response>::failure(persisted.error());
+      if (effect == NativeEffect::shortcut &&
+          active.durable_boundary_hook != nullptr &&
+          !active.durable_boundary_hook->reached(DurableBoundary::shortcut_applied))
+        return facman::core::Result<Response>::failure(error(
+            "self_setup_interrupted",
+            "setup operation interrupted after its shortcut-applied durable boundary",
+            facman::platform::path_to_utf8(record_path)));
     }
   }
   journal.state = "completed";

@@ -7,6 +7,7 @@
 #include "fl_result.h"
 
 #include <filesystem>
+#include <optional>
 #include <string>
 
 namespace facman::self_setup {
@@ -37,10 +38,36 @@ struct NativeResult {
 class NativeEffects {
 public:
   virtual ~NativeEffects() = default;
-  virtual NativeOwnership inspect(NativeEffect effect,
+  virtual NativeOwnership inspect(const std::filesystem::path &install_root,
+                                 NativeEffect effect,
                                  const std::string &product_version) = 0;
-  virtual NativeResult apply(NativeEffect effect, Operation operation,
+  virtual NativeResult apply(const std::filesystem::path &install_root,
+                             NativeEffect effect, Operation operation,
                              const std::string &product_version) = 0;
+};
+
+// Called only after a named durable journal boundary is successfully
+// persisted. It is intentionally narrow so tests and embedders can model an
+// interruption without modifying a journal behind the coordinator's back.
+enum class DurableBoundary { files_applied, shortcut_applied };
+
+class DurableBoundaryHook {
+public:
+  virtual ~DurableBoundaryHook() = default;
+  virtual bool reached(DurableBoundary boundary) = 0;
+};
+
+// Qualification callers bind a one-use external permit to this immutable
+// operation identity.  Recovery must not silently retarget that permit to a
+// different unfinished journal.
+struct QualificationClaims {
+  Operation operation = Operation::verify;
+  std::filesystem::path install_root;
+  std::filesystem::path state_root;
+  std::filesystem::path acceptance_root;
+  std::string product_version;
+  bool installed_mode = false;
+  DurableBoundary boundary = DurableBoundary::files_applied;
 };
 
 // Narrow test/embedding seam for the provider command boundary.  Production
@@ -69,6 +96,8 @@ struct Request {
   // records native effects as not_applicable in the composite journal.
   NativeEffects *native_effects = nullptr;
   ProviderEffects *provider_effects = nullptr;
+  DurableBoundaryHook *durable_boundary_hook = nullptr;
+  std::optional<QualificationClaims> qualification_claims;
 };
 
 facman::core::Result<Response> execute(const Request &request);

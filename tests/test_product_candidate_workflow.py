@@ -134,7 +134,7 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         self.assertIn('"resource_package_proof.py", "resource-package"', orchestration)
         self.assertIn('f"{platform}-{spelling}-{suffix}.v1.json"', orchestration)
         self.assertIn("--resource-package-evidence", workflow)
-        retention = workflow.split("Preserve resource receipts and visible proof artifacts", 1)[1].split("  bundle:", 1)[0]
+        retention = workflow.split("Preserve failed platform receipts and visible proof artifacts", 1)[1].split("  bundle:", 1)[0]
         self.assertIn("always()", retention)
         self.assertIn("product-candidate-resource-proof-", retention)
         companion = workflow.index("python tools/resource_candidate_proof.py build")
@@ -248,6 +248,54 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         self.assertIn('"installed_stage"', setup_lifecycle)
         self.assertIn("--workspace-lifecycle-evidence", workflow)
 
+    def test_windows_real_current_user_setup_qualification_is_gated_and_retained(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        lifecycle = (ROOT / "tests/integration/facman_self_setup_lifecycle.py").read_text(
+            encoding="utf-8"
+        )
+        for token in (
+            "--real-current-user-integration",
+            "--fixture-root \"$root/evidence/real-current-user-integration\"",
+            "--evidence \"$root/evidence/real-current-user-integration/windows-real-current-user-integration.v1.json\"",
+            "--real-command-timeout 300",
+            "evidence/real-current-user-integration/windows-real-current-user-integration.v1.json",
+            "Preserve failed platform receipts and visible proof artifacts",
+            "${{ env.FACMAN_TASK_ROOT }}/evidence/**/${{ matrix.platform }}-*",
+        ):
+            self.assertIn(token, workflow)
+        for token in (
+            "real current-user integration requires an exact absolute --payload file",
+            "inspect_shortcut_no_follow",
+            "powershell_shortcut_fields",
+            "winreg.KEY_WOW64_64KEY",
+            "qualification_permit",
+            "--shell-integration",
+            "--noninteractive",
+            "self_setup_interrupted",
+            "journal_observation",
+            "ordinary clean uninstall failed",
+            "real current-user integration requires --real-command-timeout",
+            "provider_canary_process as bounded",
+            "setup-child deadline",
+            "foreign_content_review_required",
+            "primary_failure = sys.exc_info()[0] is not None",
+            "evidence persistence failed",
+        ):
+            self.assertIn(token, lifecycle)
+        for forbidden in ("winreg.DeleteKey", "winreg.DeleteTree", "os.unlink(",
+                          "os.remove(", ".unlink()"):
+            self.assertNotIn(forbidden, lifecycle)
+        real = lifecycle.index("run_real_current_user_integration")
+        preflight = lifecycle.index('observe("preflight")', real)
+        version = lifecycle.index("version_result = run_command", real)
+        self.assertLess(preflight, version)
+        programs = lifecycle.index("programs.mkdir()", real)
+        first_permit = lifecycle.index("qualification_permit(root", real)
+        self.assertLess(programs, first_permit)
+        real_commands = lifecycle[lifecycle.index("boundary_a = invoke", real):]
+        self.assertNotIn("--no-shell-integration", real_commands.split("def main", 1)[0])
+        self.assertIn("bounded_process_receipt", lifecycle)
+
     def test_workflow_binds_exact_run_attempt_and_verifies_before_upload(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn(
@@ -305,7 +353,7 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
                 self.assertNotIn("FACMAN-UNREACHABLE-SUCCESS", result.stdout)
 
     def test_workflow_stays_within_its_reviewability_ratchet(self) -> None:
-        self.assertLessEqual(len(WORKFLOW.read_text(encoding="utf-8").splitlines()), 516)
+        self.assertLessEqual(len(WORKFLOW.read_text(encoding="utf-8").splitlines()), 527)
 
     def test_all_external_actions_remain_immutably_pinned(self) -> None:
         problems = ci_proof_check.validate_immutable_action_pins(
