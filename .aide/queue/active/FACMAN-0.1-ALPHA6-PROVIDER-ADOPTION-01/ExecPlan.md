@@ -75,3 +75,11 @@ Windows policy digests. The external result receipt SHA-256 is
 `a8508c774710ba4c04dbcf07a396156c750feda34a3317d87a3130f549221e2e`;
 the controller SHA-256 is
 `a2c20fa4db7df852c94c59e085ff98bc41d5a3bbf76a812ec2dc8614ee4f3b17`.
+
+Hosted run `34788538157` then reached the real atomic-import boundary. All
+twelve package jobs passed, but the importer refused the unchanged Universal
+Launcher source because five current runner/profile artifact inventories had
+drifted from the older policy; ABI, contract, public-header and licence
+identities remained stable. The refreshed launcher inventory values come from
+that exact six-profile run. The next immutable evidence context must be the
+commit that owns both refreshed provider policies.
