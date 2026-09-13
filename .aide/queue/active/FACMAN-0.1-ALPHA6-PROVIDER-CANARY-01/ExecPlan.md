@@ -195,7 +195,9 @@ PASS_HOSTED_PROVIDER_CONFORMANCE_NOT_ADOPTION and binds the external custody
 packet by exact receipt digests.
 
 The WorkUnit remains active/PENDING. Provider SDK-consumption run 34762715690
-has passed Linux and Windows, while macOS is still executing the tracked
-reconciled-provider proof. Review its produced observations before running the
-AIDE verify/review/close lifecycle. The conformance result changes no provider
-pin and grants no adoption, release, publication or stable authority.
+passed on Linux, macOS and Windows; every job completed both the
+production-capable non-adopted SDK proof and tracked reconciled-provider proof.
+Review the retained observation bytes before running the AIDE
+verify/review/close lifecycle. Green job conclusions alone do not close the
+WorkUnit. The conformance result changes no provider pin and grants no adoption,
+release, publication or stable authority.

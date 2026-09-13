@@ -13,6 +13,7 @@ Expected final paths:
 - `.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/hosted-canary-commit-message.txt`
 - `.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/hosted-provider-conformance-independent-review.v1.json`
 - `.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/remaining-risks.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/sdk-hosted-result-commit-message.txt`
 - `.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/validation.md`
 - `.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/status.yaml`
 - `.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/task.yaml`

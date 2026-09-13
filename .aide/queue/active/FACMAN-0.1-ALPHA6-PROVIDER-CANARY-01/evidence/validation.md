@@ -1,7 +1,7 @@
 # Validation
 
-Current result: hosted provider conformance passes; WorkUnit closeout remains
-pending review of the final SDK-consumption observation.
+Current result: hosted provider conformance and all three SDK-consumption jobs
+pass; WorkUnit closeout remains pending review of their retained observations.
 
 ## Bound hosted conformance
 
@@ -23,14 +23,20 @@ pending review of the final SDK-consumption observation.
 - Review receipt SHA-256:
   `4ba6b6e8fe5dc51d72d6bd8142bb082b497841e65703fb13184b68894d2362d2`.
 
-## Pending final closeout check
+## Hosted SDK-consumption result
 
 Provider SDK-consumption run `34762715690` is bound to the same FacMan source
-tree. Linux job `103742041863` and Windows job `103742041928` passed. macOS job
-`103742041792` is still running its tracked reconciled provider proof. Its
-produced observations must be retained and reviewed before AIDE verify, review,
-and close are run.
+tree and completed successfully. Linux job `103742041863` passed in 31m35s,
+Windows job `103742041928` passed in 1h17m47s, and macOS job `103742041792`
+passed in 1h18m45s. Each job completed the production-capable non-adopted SDK
+candidate proof, tracked reconciled provider proof, and non-authorizing
+observation-preservation step.
+
+The produced observation bytes must still be retained and reviewed before AIDE
+verify, review, and close are run. Hosted job conclusions do not substitute for
+that content review.
 
 Repository lifecycle, plan-generation, project-state, focused unit, strict,
 AIDE Lite, commit-message, and diff checks will be recorded after that final
-receipt is available. No current statement treats the pending run as a pass.
+receipt content is available. No current statement treats green job status as
+provider adoption or WorkUnit closeout.

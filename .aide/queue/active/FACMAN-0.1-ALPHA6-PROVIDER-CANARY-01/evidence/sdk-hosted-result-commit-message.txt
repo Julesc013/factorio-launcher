@@ -1,0 +1,7 @@
+docs(provider): record three-host SDK result
+
+Record successful Linux, macOS, and Windows SDK-consumption jobs while
+retaining observation review and WorkUnit closeout as pending.
+
+Work-Item: FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/validation.md

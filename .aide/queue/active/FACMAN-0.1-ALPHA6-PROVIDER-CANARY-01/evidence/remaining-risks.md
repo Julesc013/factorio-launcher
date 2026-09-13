@@ -1,7 +1,7 @@
 # Remaining risks and retained boundaries
 
-- Provider SDK-consumption run `34762715690` is not yet terminal; its macOS
-  reconciled-consumption result and all produced observations remain unreviewed.
+- Provider SDK-consumption run `34762715690` passed on Linux, macOS and
+  Windows, but its produced observation bytes remain unreviewed.
 - The hosted canary uses the tracked FacMan provider pins. It validates
   consumption mechanics and failure handling but does not adopt later provider
   `main` revisions.
