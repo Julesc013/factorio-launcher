@@ -63,3 +63,15 @@ The immutable FacMan policy context for both provider imports is commit
 `01c42719923d57836644f1b6d351b2cfb80e0a00`. Later workflow or generated-file
 commits must keep that evidence identity rather than using a moving PR head or
 inventing a self-referential generated revision.
+
+The corrected local Windows replay `provider-packages-rx3` passed exact static
+and shared manifest verification against the same protected Universal Setup
+commit/tree. It used MSVC `19.51.36252.0`, so its artifact inventories
+(`8ebff126feb316c20eae82927a9b21dd7fdca7ea112ccdb3b146bb4f0b21537d`
+static and
+`ba51bbcbf803b9775c18bb132bbe48bf4113c5849974634a0c4ab2ca02aaacb4`
+shared) remain local-toolchain proof and are not substituted for the hosted
+Windows policy digests. The external result receipt SHA-256 is
+`a8508c774710ba4c04dbcf07a396156c750feda34a3317d87a3130f549221e2e`;
+the controller SHA-256 is
+`a2c20fa4db7df852c94c59e085ff98bc41d5a3bbf76a812ec2dc8614ee4f3b17`.

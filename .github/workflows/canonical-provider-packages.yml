@@ -238,12 +238,14 @@ jobs:
             local source_root="$3"
             local policy="release/policies/provider-package-import/${provider_id}.v1.json"
             local args=()
+            local profile_count=0
             while IFS= read -r root; do
               manifest="$(find "$root" -type f -name provider-package-manifest.v1.json -print -quit)"
               test -n "$manifest"
               args+=(--manifest "$manifest" --package-root "$root")
+              profile_count=$((profile_count + 1))
             done < <(find package-roots -mindepth 1 -maxdepth 1 -type d -name "canonical-provider-package-${artifact_id}-*" -print | sort)
-            test "${#args[@]}" -eq 12
+            test "$profile_count" -eq 6
             python -B tools/provider_package_manifest_import.py \
               --policy "$policy" \
               "${args[@]}" \
