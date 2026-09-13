@@ -2705,8 +2705,8 @@
     "counts": {
       "active_automated": 3,
       "blocked": 2,
-      "closed": 24,
-      "planned": 40,
+      "closed": 25,
+      "planned": 39,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
@@ -2737,6 +2737,12 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
@@ -2941,12 +2947,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

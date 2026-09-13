@@ -99,7 +99,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Admitted backlog
 
-35 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
+34 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
 
 ## Blocking decisions
 
@@ -139,7 +139,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Completed planning evidence
 
-66 canonical WorkUnits are complete. See [the full roadmap](docs/roadmap/current.md) for their outcomes and `release/index/plan.v1.toml` for evidence references.
+67 canonical WorkUnits are complete. See [the full roadmap](docs/roadmap/current.md) for their outcomes and `release/index/plan.v1.toml` for evidence references.
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

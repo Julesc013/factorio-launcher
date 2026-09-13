@@ -14,8 +14,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cctype>
-#include <fstream>
-#include <iterator>
 #include <sstream>
 #include <system_error>
 #include <utility>
@@ -26,6 +24,7 @@ namespace json = facman::core::json;
 namespace {
 
 constexpr std::uint64_t kMaximumJournalBytes = 4U * 1024U * 1024U;
+constexpr std::size_t kMaximumRecoveryJournals = 1024U;
 constexpr ulk_size kMaximumUlkJournalRecords = 64U;
 
 facman::core::Error execution_error(std::string code, std::string message, std::string detail = {})
@@ -306,27 +305,202 @@ std::string text_field(const json::Value& object, const char* name)
     return text ? text.take_value() : std::string();
 }
 
-std::uint64_t process_id_field(const json::Value& object)
+facman::platform::ProcessIdentity process_identity_field(const json::Value& object)
 {
+    facman::platform::ProcessIdentity output;
     const json::Value* process = object.find("process");
-    if (process == nullptr || !process->is_object()) return 0;
+    if (process == nullptr || !process->is_object()) return output;
     const json::Value* identity = process->find("identity");
-    if (identity == nullptr || !identity->is_object()) return 0;
+    if (identity == nullptr || !identity->is_object()) return output;
     const json::Value* value = identity->find("process_id");
-    if (value == nullptr) return 0;
-    auto id = value->unsigned_integer_value();
-    return id ? id.value() : 0;
+    if (value != nullptr) {
+        auto id = value->unsigned_integer_value();
+        if (id) output.process_id = id.value();
+    }
+    output.platform = text_field(*identity, "platform");
+    output.stable_start_identity = text_field(*identity, "stable_start_identity");
+    return output;
 }
 
 facman::core::Result<std::string> read_journal(const fs::path& path)
 {
-    std::ifstream input(path, std::ios::binary);
-    if (!input) return facman::core::Result<std::string>::failure(
-        execution_error("launch_journal_read_failed", "Launch journal could not be opened", path.string()));
-    std::string text((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-    if (text.size() > kMaximumJournalBytes) return facman::core::Result<std::string>::failure(
+    facman::platform::StableInputFile input;
+    const facman::platform::IoStatus opened = input.open_no_follow(path);
+    if (!opened.ok()) return facman::core::Result<std::string>::failure(
+        execution_error("launch_journal_read_failed", "Launch journal could not be opened safely",
+            opened.code + ": " + opened.detail));
+    if (input.size() > kMaximumJournalBytes) return facman::core::Result<std::string>::failure(
         execution_error("launch_journal_too_large", "Launch journal exceeds its size budget", path.string()));
+    std::string text(static_cast<std::size_t>(input.size()), '\0');
+    std::size_t offset = 0;
+    while (offset < text.size()) {
+        const std::size_t count = input.read_at(offset, text.data() + offset, text.size() - offset);
+        if (count == 0U) return facman::core::Result<std::string>::failure(
+            execution_error("launch_journal_read_failed", "Launch journal could not be read completely", path.string()));
+        offset += count;
+    }
+    const facman::platform::IoStatus revalidated = input.revalidate();
+    if (!revalidated.ok()) return facman::core::Result<std::string>::failure(
+        execution_error("launch_journal_identity_changed", "Launch journal changed while it was read",
+            revalidated.code + ": " + revalidated.detail));
     return facman::core::Result<std::string>::success(std::move(text));
+}
+
+bool pre_dispatch_state(const std::string& state)
+{
+    return state == "requested" || state == "preflighted" || state == "authorised";
+}
+
+bool post_dispatch_state(const std::string& state)
+{
+    return state == "starting" || state == "running" || state == "recovery_required";
+}
+
+facman::core::Result<std::string> reconciled_journal_json(
+    const json::Value& document,
+    const std::string& recovered_from_state,
+    const std::string& operation_outcome,
+    facman::core::Clock& clock)
+{
+    json::ObjectBuilder output;
+    for (const std::string& key : document.object_keys()) {
+        if (key == "current_state" || key == "lifecycle" || key == "successful" ||
+            key == "operation_outcome" || key == "recovery_required" || key == "complete" ||
+            key == "recovered_from_state") continue;
+        const json::Value* value = document.find(key);
+        if (value != nullptr) output.add_value(key, *value);
+    }
+
+    json::ArrayBuilder lifecycle;
+    const json::Value* existing_lifecycle = document.find("lifecycle");
+    if (existing_lifecycle != nullptr) {
+        if (!existing_lifecycle->is_array()) {
+            return facman::core::Result<std::string>::failure(execution_error(
+                "launch_journal_lifecycle_invalid", "Launch journal lifecycle is not an array"));
+        }
+        for (std::size_t index = 0; index < existing_lifecycle->size(); ++index) {
+            const json::Value* event = existing_lifecycle->at(index);
+            if (event == nullptr || !event->is_object()) {
+                return facman::core::Result<std::string>::failure(execution_error(
+                    "launch_journal_lifecycle_invalid", "Launch journal lifecycle contains an invalid event"));
+            }
+            lifecycle.add_value(*event);
+        }
+    }
+    json::ObjectBuilder recovery_event;
+    recovery_event.add_string("state", "recovery_required");
+    recovery_event.add_string("occurred_at", clock.now_utc());
+    recovery_event.add_string("detail", pre_dispatch_state(recovered_from_state)
+        ? "interrupted session was reconciled before process dispatch"
+        : "interrupted session no longer matches a live supervised process");
+    lifecycle.add_object(recovery_event);
+    json::ObjectBuilder complete_event;
+    complete_event.add_string("state", "complete");
+    complete_event.add_string("occurred_at", clock.now_utc());
+    complete_event.add_string("detail", "interrupted session reconciled without inferring a successful run");
+    lifecycle.add_object(complete_event);
+
+    output.add_string("current_state", "complete");
+    output.add_array("lifecycle", lifecycle);
+    output.add_bool("successful", false);
+    output.add_string("operation_outcome", operation_outcome);
+    output.add_bool("recovery_required", false);
+    output.add_bool("complete", true);
+    output.add_string("recovered_from_state", recovered_from_state);
+    return facman::core::Result<std::string>::success(output.serialize() + "\n");
+}
+
+facman::core::Result<LaunchRecoveryReport> recover_interrupted_launch_sessions_locked(
+    const fs::path& instance_root,
+    facman::core::Clock& clock,
+    facman::core::IdGenerator& ids,
+    const ProcessIdentityObserver& process_identity_observer)
+{
+    LaunchRecoveryReport report;
+    const fs::path root = instance_root / "state" / "run-sessions";
+    std::error_code error;
+    if (!fs::exists(root, error)) {
+        return facman::core::Result<LaunchRecoveryReport>::success(report);
+    }
+    if (error || !fs::is_directory(root, error)) {
+        return facman::core::Result<LaunchRecoveryReport>::failure(execution_error(
+            "launch_recovery_root_invalid", "Launch recovery root is not a directory", root.string()));
+    }
+    std::string unsafe_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(root, unsafe_detail)) {
+        return facman::core::Result<LaunchRecoveryReport>::failure(execution_error(
+            "launch_recovery_root_unsafe",
+            "Launch recovery root may not cross a link or reparse point",
+            unsafe_detail));
+    }
+    for (fs::directory_iterator iterator(root, fs::directory_options::skip_permission_denied, error), end;
+         iterator != end && !error; iterator.increment(error)) {
+        const std::string filename = iterator->path().filename().string();
+        constexpr const char* suffix = ".launch-session.v1.json";
+        if (filename.size() < std::char_traits<char>::length(suffix) ||
+            filename.compare(filename.size() - std::char_traits<char>::length(suffix),
+                std::char_traits<char>::length(suffix), suffix) != 0) continue;
+        if (++report.examined > kMaximumRecoveryJournals) {
+            return facman::core::Result<LaunchRecoveryReport>::failure(execution_error(
+                "launch_recovery_limit_exceeded", "Launch recovery journal count exceeds its bound",
+                root.string()));
+        }
+        std::error_code status_error;
+        const fs::file_status status = iterator->symlink_status(status_error);
+        if (status_error || !fs::is_regular_file(status)) {
+            ++report.failed;
+            continue;
+        }
+        auto text = read_journal(iterator->path());
+        auto document = text ? json::parse(text.value()) :
+            facman::core::Result<json::Value>::failure(text.error());
+        if (!document || !document.value().is_object() ||
+            text_field(document.value(), "schema") != "factorio.launch_session.v1") {
+            ++report.failed;
+            continue;
+        }
+        const std::string state = text_field(document.value(), "current_state");
+        if (state == "complete") continue;
+
+        std::string outcome = "outcome_unknown";
+        if (pre_dispatch_state(state)) {
+            outcome = "refused_before_effects";
+        } else if (post_dispatch_state(state)) {
+            const facman::platform::ProcessIdentity identity = process_identity_field(document.value());
+            facman::platform::ProcessIdentityObservation observation =
+                facman::platform::ProcessIdentityObservation::inconclusive;
+            if (process_identity_observer && identity.restart_safe()) {
+                try {
+                    observation = process_identity_observer(identity);
+                } catch (...) {
+                    observation = facman::platform::ProcessIdentityObservation::inconclusive;
+                }
+            }
+            if (observation == facman::platform::ProcessIdentityObservation::matching_alive) {
+                ++report.still_running;
+                continue;
+            }
+            if (observation == facman::platform::ProcessIdentityObservation::inconclusive) {
+                ++report.inconclusive;
+                continue;
+            }
+        } else if (state != "exited" && state != "cancelled" && state != "timed_out" &&
+                   state != "crashed" && state != "killed") {
+            ++report.failed;
+            continue;
+        }
+
+        auto reconciled = reconciled_journal_json(document.value(), state, outcome, clock);
+        std::string detail;
+        if (reconciled && write_replace(iterator->path(), reconciled.value(), ids, detail)) {
+            ++report.recovered;
+        } else {
+            ++report.failed;
+        }
+    }
+    if (error) return facman::core::Result<LaunchRecoveryReport>::failure(execution_error(
+        "launch_recovery_scan_failed", "Launch recovery directory could not be scanned", error.message()));
+    return facman::core::Result<LaunchRecoveryReport>::success(report);
 }
 
 } // namespace
@@ -340,8 +514,10 @@ facman::platform::ProcessResult PlatformProcessSupervisor::run(
 LaunchExecutionService::LaunchExecutionService(
     ProcessSupervisor& supervisor,
     facman::core::Clock& clock,
-    facman::core::IdGenerator& ids)
-    : supervisor_(supervisor), clock_(clock), ids_(ids)
+    facman::core::IdGenerator& ids,
+    ProcessIdentityObserver process_identity_observer)
+    : supervisor_(supervisor), clock_(clock), ids_(ids),
+      process_identity_observer_(std::move(process_identity_observer))
 {
 }
 
@@ -502,16 +678,53 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
             "The authoritative ULK session identity or reference contract is invalid",
             unsafe_detail));
     }
+
+    InstanceRunLock lock;
+    const InstanceRunLockResult locked = acquire_instance_run_lock(request.instance_root, 300, lock);
+    if (!locked.acquired) {
+        return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+            locked.code.empty() ? "instance_run_lock_refused" : locked.code,
+            "Exclusive instance run ownership could not be acquired",
+            locked.detail));
+    }
+    auto fail_with_owned_lock = [&](std::string code, std::string message, std::string detail) {
+        std::string release_detail;
+        if (!release_instance_run_lock(lock, release_detail)) {
+            if (!detail.empty()) detail += "; ";
+            detail += "instance run lock release failed: " + release_detail;
+        }
+        return facman::core::Result<LaunchSessionResult>::failure(
+            execution_error(std::move(code), std::move(message), std::move(detail)));
+    };
+
+    auto prior = recover_interrupted_launch_sessions_locked(
+        request.instance_root, clock_, ids_, process_identity_observer_);
+    if (!prior) {
+        return fail_with_owned_lock(
+            "prior_launch_recovery_failed",
+            "Prior launch sessions could not be reconciled safely",
+            prior.error().code + ": " + prior.error().message + ": " + prior.error().path);
+    }
+    if (prior.value().failed != 0U || prior.value().still_running != 0U ||
+        prior.value().inconclusive != 0U) {
+        return fail_with_owned_lock(
+            "prior_launch_recovery_incomplete",
+            "A prior launch session still owns or may own process effects",
+            "failed=" + std::to_string(prior.value().failed) +
+                "; still_running=" + std::to_string(prior.value().still_running) +
+                "; inconclusive=" + std::to_string(prior.value().inconclusive));
+    }
+
     add_event(session, clock_, "requested", "bounded launch request accepted for preflight");
     std::string journal_detail;
     if (!persist(session, true, ids_, journal_detail)) {
-        return facman::core::Result<LaunchSessionResult>::failure(execution_error(
-            "launch_journal_write_failed", "Launch request could not be journaled", journal_detail));
+        return fail_with_owned_lock(
+            "launch_journal_write_failed", "Launch request could not be journaled", journal_detail);
     }
     add_event(session, clock_, "preflighted", "executable and authorised instance paths revalidated");
     if (!persist(session, false, ids_, journal_detail)) {
-        return facman::core::Result<LaunchSessionResult>::failure(execution_error(
-            "launch_journal_write_failed", "Launch preflight could not be journaled", journal_detail));
+        return fail_with_owned_lock(
+            "launch_journal_write_failed", "Launch preflight could not be journaled", journal_detail);
     }
     std::string authority_detail = "foundation_test_process authority admitted";
 #if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
@@ -521,28 +734,14 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
 #endif
     add_event(session, clock_, "authorised", authority_detail);
     if (!persist(session, false, ids_, journal_detail)) {
-        return facman::core::Result<LaunchSessionResult>::failure(execution_error(
-            "launch_journal_write_failed", "Launch authority could not be journaled", journal_detail));
-    }
-
-    InstanceRunLock lock;
-    const InstanceRunLockResult locked = acquire_instance_run_lock(request.instance_root, 300, lock);
-    if (!locked.acquired) {
-        add_event(session, clock_, "recovery_required", locked.code + ": " + locked.detail);
-        session.recovery_required = true;
-        (void)persist(session, false, ids_, journal_detail);
-        return facman::core::Result<LaunchSessionResult>::failure(execution_error(
-            locked.code.empty() ? "instance_run_lock_refused" : locked.code,
-            "Exclusive instance run ownership could not be acquired",
-            locked.detail));
+        return fail_with_owned_lock(
+            "launch_journal_write_failed", "Launch authority could not be journaled", journal_detail);
     }
 
     add_event(session, clock_, "starting", "process creation requested without a shell");
     if (!persist(session, false, ids_, journal_detail)) {
-        std::string release_detail;
-        (void)release_instance_run_lock(lock, release_detail);
-        return facman::core::Result<LaunchSessionResult>::failure(execution_error(
-            "launch_journal_write_failed", "Launch start could not be journaled", journal_detail));
+        return fail_with_owned_lock(
+            "launch_journal_write_failed", "Launch start could not be journaled", journal_detail);
     }
 
     std::atomic<bool> journal_failed {false};
@@ -656,6 +855,9 @@ std::string launch_session_json(const LaunchSessionResult& session)
     json::ObjectBuilder identity;
     (void)identity.add_unsigned_integer("process_id", session.process.identity.process_id);
     identity.add_string("platform", session.process.identity.platform);
+    if (!session.process.identity.stable_start_identity.empty()) {
+        identity.add_string("stable_start_identity", session.process.identity.stable_start_identity);
+    }
     json::ObjectBuilder process;
     process.add_object("identity", identity);
     process.add_string("termination", facman::platform::process_termination_name(session.process.termination));
@@ -711,54 +913,40 @@ facman::core::Result<LaunchRecoveryReport> recover_interrupted_launch_sessions(
     facman::core::Clock& clock,
     facman::core::IdGenerator& ids)
 {
-    LaunchRecoveryReport report;
-    const fs::path root = instance_root / "state" / "run-sessions";
-    std::error_code error;
-    if (!fs::exists(root, error)) {
-        return facman::core::Result<LaunchRecoveryReport>::success(report);
-    }
-    if (error || !fs::is_directory(root, error)) {
+    return recover_interrupted_launch_sessions(
+        instance_root, clock, ids, facman::platform::observe_process_identity);
+}
+
+facman::core::Result<LaunchRecoveryReport> recover_interrupted_launch_sessions(
+    const fs::path& instance_root,
+    facman::core::Clock& clock,
+    facman::core::IdGenerator& ids,
+    const ProcessIdentityObserver& process_identity_observer)
+{
+    InstanceRunLock lock;
+    const InstanceRunLockResult locked = acquire_instance_run_lock(instance_root, 300, lock);
+    if (!locked.acquired) {
         return facman::core::Result<LaunchRecoveryReport>::failure(execution_error(
-            "launch_recovery_root_invalid", "Launch recovery root is not a directory", root.string()));
+            locked.code.empty() ? "instance_run_lock_refused" : locked.code,
+            "Exclusive instance recovery ownership could not be acquired",
+            locked.detail));
     }
-    for (fs::directory_iterator iterator(root, fs::directory_options::skip_permission_denied, error), end;
-         iterator != end && !error; iterator.increment(error)) {
-        if (!iterator->is_regular_file(error) ||
-            iterator->path().filename().string().find(".launch-session.v1.json") == std::string::npos) continue;
-        ++report.examined;
-        auto text = read_journal(iterator->path());
-        auto document = text ? json::parse(text.value()) : facman::core::Result<json::Value>::failure(text.error());
-        if (!document || !document.value().is_object() ||
-            text_field(document.value(), "schema") != "factorio.launch_session.v1") {
-            ++report.failed;
-            continue;
+    auto result = recover_interrupted_launch_sessions_locked(
+        instance_root, clock, ids, process_identity_observer);
+    std::string release_detail;
+    if (!release_instance_run_lock(lock, release_detail)) {
+        if (!result) {
+            return facman::core::Result<LaunchRecoveryReport>::failure(execution_error(
+                result.error().code,
+                result.error().message,
+                result.error().path + "; instance run lock release failed: " + release_detail));
         }
-        const std::string state = text_field(document.value(), "current_state");
-        if (state == "complete") continue;
-        const std::uint64_t process_id = process_id_field(document.value());
-        if (process_id != 0 && facman::platform::process_identity_alive(process_id)) {
-            ++report.still_running;
-            continue;
-        }
-        LaunchSessionResult recovered;
-        recovered.session_id = text_field(document.value(), "session_id");
-        recovered.instance_id = text_field(document.value(), "instance_id");
-        recovered.execution_mode = text_field(document.value(), "execution_mode");
-        recovered.immutable_plan_identity = text_field(document.value(), "immutable_plan_identity");
-        recovered.journal_path = iterator->path();
-        recovered.working_directory = facman::platform::path_from_utf8(text_field(document.value(), "working_directory"));
-        recovered.recovered_from_state = state;
-        add_event(recovered, clock, "recovery_required", "interrupted session had no live supervised process");
-        add_event(recovered, clock, "complete", "interrupted session reconciled without inferring a successful run");
-        recovered.recovery_required = false;
-        recovered.complete = true;
-        std::string detail;
-        if (persist(recovered, false, ids, detail)) ++report.recovered;
-        else ++report.failed;
+        return facman::core::Result<LaunchRecoveryReport>::failure(execution_error(
+            "instance_run_lock_release_failed",
+            "Launch recovery completed but its instance lock could not be released",
+            release_detail));
     }
-    if (error) return facman::core::Result<LaunchRecoveryReport>::failure(execution_error(
-        "launch_recovery_scan_failed", "Launch recovery directory could not be scanned", error.message()));
-    return facman::core::Result<LaunchRecoveryReport>::success(report);
+    return result;
 }
 
 } // namespace facman::factorio::launch
