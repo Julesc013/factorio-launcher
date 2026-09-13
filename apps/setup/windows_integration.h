@@ -72,5 +72,14 @@ Result apply_windows_effect(Effect effect,
                             const std::filesystem::path &install_root,
                             const std::string &product_version,
                             bool remove);
+// Native smoke-test helpers bind a shortcut operation to an isolated fixture
+// path; production entry points always resolve the current-user Start Menu.
+Ownership inspect_windows_shortcut_fixture(const std::filesystem::path &shortcut,
+                                           const std::filesystem::path &install_root,
+                                           const std::string &product_version = {});
+Result apply_windows_shortcut_fixture(const std::filesystem::path &shortcut,
+                                      const std::filesystem::path &install_root,
+                                      const std::string &product_version,
+                                      bool remove);
 } // namespace facman::setup::integration
 #endif
