@@ -25,7 +25,7 @@ from tools.release_compiler.canonical import (  # noqa: E402
 
 SCHEMA = "facman.provider_pin_reconciliation.v1"
 PACKAGE_SET_DOMAIN = "facman.provider_sdk_package_set.v1"
-EVIDENCE_REVISION = "9b20d81e39008f90fee879608cc6eb2e0da9f0b1"
+EVIDENCE_REVISION = "323fe8a196816db7292a06db739886563d5f7bb8"
 ROUTE_V1_SHA256 = "98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632"
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 HEX_64 = re.compile(r"^[0-9a-f]{64}$")

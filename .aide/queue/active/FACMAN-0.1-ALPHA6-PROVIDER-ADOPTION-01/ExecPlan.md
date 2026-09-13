@@ -105,3 +105,28 @@ Run `34788538157` is the selected complete twelve-artifact import source: both
 policies bind its exact manifests, and the importer must download that retained
 run explicitly. Later rebuilds remain current qualification evidence and must
 not silently replace the selected import bytes.
+
+The selected combined policy context is commit
+`323fe8a196816db7292a06db739886563d5f7bb8`. The aggregate job downloads run
+`34788538157` through the pinned official artifact action with read-only Actions
+and contents permissions, then requires all twelve policy-bound package roots
+before either provider import.
+
+The workflow binds the exact immutable artifact objects from that run rather
+than selecting the latest same-name artifacts from a possible rerun. The
+artifact IDs and GitHub archive digests are:
+
+| Artifact | ID | Archive SHA-256 |
+| --- | ---: | --- |
+| USK Linux static | `10327537210` | `8776211248f3302194b09528711a7fec35a7e9e01697ac3781be2c604805a03c` |
+| ULK Linux shared | `10327507523` | `5e782479bf2f1319af714222e75f61cc47ec1d5c07020f27b1afeda7c513981f` |
+| ULK macOS shared | `10327467768` | `bcb5b282bff0e3d04444ba09f4aa32e8e340b16145e93606bf4a7b153ec2eeec` |
+| USK macOS shared | `10327268319` | `f37efaeac4315092d5f1d99788d0e4de43efb1f79ad2545304f25a45da1489c1` |
+| USK Windows static | `10327223436` | `0155fe138e66bf4d46ece12db35c58bdec0a7c76022fafeeecdfb7ccc95cb8c0` |
+| ULK Linux static | `10327153648` | `1757becdc2d0c2f2ad9bff86dde79be525de89f5e881171be952e93669879ead` |
+| USK Windows shared | `10327023930` | `95868dea0013e971c59d4a38be6049706727ddb8c543680d6ebd58c8de7a161f` |
+| USK macOS static | `10326934348` | `0e0001828a031dcb516b5d4928597e08fd50e12309af023f749f29749e3eff82` |
+| USK Linux shared | `10326894549` | `c1b36eb0087ff9c72c563a42cf10d72ee97b94bf0153a0eacad7f1ed23a41a20` |
+| ULK Windows shared | `10326844915` | `e2223d4bf89fffe106e2950df8ae7805b2a6de9200998520e2caa8bc099a2335` |
+| ULK macOS static | `10326783859` | `0e335ece620e32c244e7653143c096b8b119925b8221a899de3e37c30b60a4e3` |
+| ULK Windows static | `10326609232` | `a136b2b5eff1957859c154c3e98f9dd79c29a2113f0e3e0a754655c46907f028` |

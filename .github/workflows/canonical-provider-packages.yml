@@ -17,6 +17,7 @@ on:
       - tools/provider_package_manifest_import.py
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -164,7 +165,7 @@ jobs:
     timeout-minutes: 15
     env:
       FACMAN_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
-      FACMAN_EVIDENCE_REVISION: 9b20d81e39008f90fee879608cc6eb2e0da9f0b1
+      FACMAN_EVIDENCE_REVISION: 323fe8a196816db7292a06db739886563d5f7bb8
     steps:
       - name: Check out exact FacMan source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -206,12 +207,15 @@ jobs:
           test "$(git -C source/universal-launcher symbolic-ref HEAD)" = refs/heads/main
           test "$(git -C source/universal-setup symbolic-ref HEAD)" = refs/heads/main
 
-      - name: Download exact package matrix
+      - name: Download policy-bound package matrix
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
-          pattern: canonical-provider-package-*
+          artifact-ids: 10327537210,10327507523,10327467768,10327268319,10327223436,10327153648,10327023930,10326934348,10326894549,10326844915,10326783859,10326609232
           path: downloaded-packages
           merge-multiple: false
+          github-token: ${{ github.token }}
+          repository: Julesc013/factorio-launcher
+          run-id: 34788538157
 
       - name: Extract package roots
         shell: bash
