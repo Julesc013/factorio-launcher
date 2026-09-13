@@ -458,8 +458,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
-- [ ] **FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01** — Create galleries from production controls and deterministic states
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01** — Create galleries from production controls and deterministic states
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `frontend-maintainer`; dependencies: none
   - Outcome: Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, contrast and overflow fixtures.
 - [x] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery

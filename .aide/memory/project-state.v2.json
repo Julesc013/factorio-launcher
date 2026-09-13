@@ -779,8 +779,7 @@
       "source_record": "release/index/plan.v1.toml",
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
-        "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
-        "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
+        "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01"
       ]
     },
     "current_origin_observation": {
@@ -2698,14 +2697,13 @@
   "queue": {
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
-      "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
       "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active_automated": 3,
+      "active_automated": 2,
       "blocked": 2,
-      "closed": 25,
+      "closed": 26,
       "planned": 39,
       "superseded": 7
     },
@@ -2719,9 +2717,9 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
-        "lifecycle_state": "active_automated",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active_automated"
+        "status": "passed"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
