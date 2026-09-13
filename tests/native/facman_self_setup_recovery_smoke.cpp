@@ -161,7 +161,14 @@ void cases() {
   }
   Provider contending_provider; Native contending_native;
   auto contending_request = request_for(contention, contending_provider, &contending_native);
+#ifdef _WIN32
   contending_request.install_root = contention.root / "INSTALL";
+#else
+  const fs::path contention_alias = contention.root / "root-alias";
+  fs::create_directory_symlink(contention.root, contention_alias, ignored);
+  require(!ignored, "POSIX contention fixture creates a canonical directory alias");
+  contending_request.install_root = contention_alias / "install";
+#endif
   contending_request.state_root = contention.root / "different-provider-state";
   auto contended = setup::execute(contending_request);
   require(!contended && contended.error().code == "self_setup_lock_contended" &&

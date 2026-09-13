@@ -30,3 +30,13 @@ schema/loader parity. Its final review then found that a portable journal could
 inherit a later installed-mode adapter. Durable journal mode now controls native
 reconciliation, the cross-mode restart regression passes, and the independent
 review returned `PASS` on the corrected source.
+
+PR #273 exposed a platform-specific defect in the contention fixture: the test
+used the Windows case alias `INSTALL` for `install`, which names a different path
+on case-sensitive Linux filesystems. The production root-lock implementation was
+unchanged. The POSIX fixture now uses a directory-symlink alias to the same
+existing parent. A local Ubuntu 24.04 GNU 13.3 build against the exact locked
+providers passed `facman_self_setup_recovery_smoke` with 31 checks, and the
+corresponding MSVC Debug CTest passed again on Windows. The failed hosted
+observations remain run `34761848507`, jobs `103735973057` (`linux-native`) and
+`103735973010` (`linux-coverage`); current hosted requalification is pending.
