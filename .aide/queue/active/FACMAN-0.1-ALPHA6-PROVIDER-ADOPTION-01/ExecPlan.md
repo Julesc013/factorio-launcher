@@ -92,3 +92,7 @@ Run `34788937795` refused the policy before package comparison because the
 copied Windows/static launcher digest was 63 characters. The raw bounded
 manifest line preserves the correct trailing `6`; the corrected policy keeps
 the fail-closed 64-hex requirement and supersedes that malformed context.
+
+The corrected combined-provider policy context is commit
+`9b20d81e39008f90fee879608cc6eb2e0da9f0b1`; this is the revision used for the
+next atomic twelve-profile import and tracked reconciliation.

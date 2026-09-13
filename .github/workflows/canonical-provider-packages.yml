@@ -164,7 +164,7 @@ jobs:
     timeout-minutes: 15
     env:
       FACMAN_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
-      FACMAN_EVIDENCE_REVISION: 8f283ed5160bb1d5c0951445b3b2527da00cc345
+      FACMAN_EVIDENCE_REVISION: 9b20d81e39008f90fee879608cc6eb2e0da9f0b1
     steps:
       - name: Check out exact FacMan source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
