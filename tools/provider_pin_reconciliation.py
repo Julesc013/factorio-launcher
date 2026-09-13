@@ -45,6 +45,7 @@ PROVIDERS = {
         "abi_manifest_digest": "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e",
         "contract_set_id": "ulk_contract_set_1_9",
         "contract_digest": "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9",
+        "license": "MIT",
         "maturity": "canonical_main_experimental_session_subset_consumer_qualified",
         "sdk_adoption": "accepted_exact_main_session_provider",
     },
@@ -52,15 +53,16 @@ PROVIDERS = {
         "source": "universal-setup",
         "repository": "Julesc013/universal-setup",
         "remote": "https://github.com/Julesc013/universal-setup.git",
-        "revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
-        "tree": "291d63214cdd0cd3d15c809de5744ee3514fb2b2",
-        "prior_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+        "revision": "bffb60fbf83ca57f71849aafaa36bbaf934f9179",
+        "tree": "7b7134352db149fdfe45862eb794fc06e0b5fc70",
+        "prior_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
         "package_version": "1.0.0",
         "cmake_package_version": "1.0.0",
         "abi_version": "1.0",
         "abi_manifest_digest": "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0",
         "contract_set_id": "usk_product_package_contract_set_1",
         "contract_digest": "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56",
+        "license": "MIT AND Zlib",
         "maturity": "canonical_main_sdk_qualified",
         "sdk_adoption": "accepted_non_authorizing_input",
     },
@@ -249,6 +251,8 @@ def validate(root: Path = ROOT) -> list[str]:
                 problems.append(f"{projection_name} {provider_id} tree differs")
             if projection.get("version") != expected["package_version"]:
                 problems.append(f"{projection_name} {provider_id} version differs")
+            if projection.get("license") != expected["license"]:
+                problems.append(f"{projection_name} {provider_id} license differs")
 
     route_path = index_root / "successor_play_route.v1.toml"
     if _sha256(route_path) != ROUTE_V1_SHA256:

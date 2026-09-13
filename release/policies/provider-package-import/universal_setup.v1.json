@@ -23,20 +23,20 @@
   },
   "inventory": {
     "artifacts_sha256": {
-      "linux/static": "9c62a33ffb6e890d87286d3c7276f85c533908dae60b86caca3d00050e324fa7",
-      "linux/shared": "5d8fc9507b6e6902c2a155417952aadb0e0a379bed20371a2d35f11e196787db",
-      "macos/static": "8a542413854654b6d719ff7d0091402fa1cb97692b7ffcfcb3f3d2d95e8d3d19",
-      "macos/shared": "5f6d168510eccba5680f8f9094df153ab21dc96c431dcd74509bb8be833d7c16",
-      "windows/static": "7a4903fc3397a6cc94a57edc6198a6bb45ba5cbb757d2273d868a8c16923c624",
-      "windows/shared": "5d5d261d2a51fd8a579e94b3aa79bdb5083e72950d004d4d20a1a067ec5ea588"
+      "linux/static": "0ea6c3382a1859fd44347f0134ce5adf63066a0405a8f3a0ab1909990935bfa8",
+      "linux/shared": "8c98782f1514029d70fce1e1755b95ada1b040ed752c2e5a541b7f75030c878e",
+      "macos/static": "56e4f54fadeedbec113af01f71c78434a33d308c98e5a7242305a773e3b1137e",
+      "macos/shared": "049b136bf5307f212be2b846a8176a4dc2fdde93bd49f7a6cbe00971f0c0413a",
+      "windows/static": "4dc773499bcdfcf314994f6ebd9444d83e7b77875ad67d22de91d377c6cb7af3",
+      "windows/shared": "0ed44ba7e686defce215982614f38acbadddb6dc2ec2f96f692a11365f02142b"
     },
     "contracts_sha256": {
-      "linux/static": "cb4fd1d216bbd83903c24d5706132ab1a010f5a8308f21e6fa93b0a7ffe08ff1",
-      "linux/shared": "cb4fd1d216bbd83903c24d5706132ab1a010f5a8308f21e6fa93b0a7ffe08ff1",
-      "macos/static": "cb4fd1d216bbd83903c24d5706132ab1a010f5a8308f21e6fa93b0a7ffe08ff1",
-      "macos/shared": "cb4fd1d216bbd83903c24d5706132ab1a010f5a8308f21e6fa93b0a7ffe08ff1",
-      "windows/static": "839de6c08792edb43c3d978702db1e6ab53f02e77fa5218b28efd93abe5c0152",
-      "windows/shared": "839de6c08792edb43c3d978702db1e6ab53f02e77fa5218b28efd93abe5c0152"
+      "linux/static": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
+      "linux/shared": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
+      "macos/static": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
+      "macos/shared": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
+      "windows/static": "1ea8008a0816dd75c83253b62ca6b40e167d52b1c2a190a3f55c3c47b83f5106",
+      "windows/shared": "1ea8008a0816dd75c83253b62ca6b40e167d52b1c2a190a3f55c3c47b83f5106"
     },
     "contract_set": [
       "share/universal-setup/contracts/schema/package/component_manifest.v1.schema.json",
@@ -56,7 +56,7 @@
   },
   "configuration": "Release",
   "architecture": "x86_64",
-  "licence": "MIT",
+  "licence": "MIT AND Zlib",
   "required_targets": {
     "static": ["UniversalSetup::CoreStatic", "UniversalSetup::Headers"],
     "shared": ["UniversalSetup::CoreShared", "UniversalSetup::Headers"]

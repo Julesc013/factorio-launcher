@@ -34,3 +34,27 @@ The first checkpoint updates only the canonical package workflow to the exact
 provider commit/tree and emits each bounded public package manifest in hosted
 logs. Stable pins and five tracked projections remain unchanged until all six
 new Universal Setup manifests are collected and checked together.
+
+## 2026-09-14 protected package evidence and policy checkpoint
+
+Hosted run `34787080793` completed all twelve canonical package cells for the
+two providers, three declared systems and both linkages. The six Universal
+Setup manifests bind protected `main` commit
+`bffb60fbf83ca57f71849aafaa36bbaf934f9179`, tree
+`7b7134352db149fdfe45862eb794fc06e0b5fc70`, ABI digest
+`07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0`
+and package licence `MIT AND Zlib`. The policy records the exact per-profile
+artifact and contract digests emitted by those successful jobs.
+
+The first local Windows replay was retained as a failed attempt. Its CMake
+cache contained literal `USK_BUILD_STATIC=$static` and
+`USK_BUILD_SHARED=$shared` values, which CMake treated as enabled and therefore
+produced a `combined` package that the importer correctly refused. A successor
+must pass explicit typed `:BOOL=ON/OFF` arguments and must not relabel the
+combined package as static or shared evidence.
+
+This checkpoint also makes the package licence an importer-owned dependency
+lock and SBOM projection. The five release projections remain pending until the
+complete hosted matrices are admitted atomically against a committed FacMan
+policy context. The WorkUnit remains active and consumer qualification is not
+yet claimed.
