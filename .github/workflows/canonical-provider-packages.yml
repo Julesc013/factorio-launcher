@@ -156,3 +156,126 @@ jobs:
           path: ${{ runner.temp }}/canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}.tar.gz
           if-no-files-found: error
           retention-days: 14
+
+  project-release-inputs:
+    name: project exact provider release inputs
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      FACMAN_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out exact FacMan source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.FACMAN_REVISION }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out canonical Universal Launcher
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: Julesc013/universal-launcher
+          ref: 5479939ca5cbc9ee0f901608a92012778b4752ae
+          path: source/universal-launcher
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out canonical Universal Setup
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: Julesc013/universal-setup
+          ref: bffb60fbf83ca57f71849aafaa36bbaf934f9179
+          path: source/universal-setup
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+
+      - name: Install pinned validation dependencies
+        run: python -m pip install -r tools/requirements-dev.lock
+
+      - name: Bind provider checkouts to protected main
+        shell: bash
+        run: |
+          git -C source/universal-launcher checkout -B main 5479939ca5cbc9ee0f901608a92012778b4752ae
+          git -C source/universal-setup checkout -B main bffb60fbf83ca57f71849aafaa36bbaf934f9179
+          test "$(git -C source/universal-launcher symbolic-ref HEAD)" = refs/heads/main
+          test "$(git -C source/universal-setup symbolic-ref HEAD)" = refs/heads/main
+
+      - name: Download exact package matrix
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: canonical-provider-package-*
+          path: downloaded-packages
+
+      - name: Extract package roots
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir package-roots
+          count=0
+          while IFS= read -r archive; do
+            name="$(basename "$archive" .tar.gz)"
+            root="package-roots/$name"
+            mkdir "$root"
+            tar -xzf "$archive" -C "$root"
+            count=$((count + 1))
+          done < <(find downloaded-packages -type f -name '*.tar.gz' -print | sort)
+          test "$count" -eq 12
+
+      - name: Project both providers atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          import_provider() {
+            local artifact_id="$1"
+            local provider_id="$2"
+            local source_root="$3"
+            local policy="release/policies/provider-package-import/${provider_id}.v1.json"
+            local args=()
+            while IFS= read -r root; do
+              manifest="$(find "$root" -type f -name provider-package-manifest.v1.json -print -quit)"
+              test -n "$manifest"
+              args+=(--manifest "$manifest" --package-root "$root")
+            done < <(find package-roots -mindepth 1 -maxdepth 1 -type d -name "canonical-provider-package-${artifact_id}-*" -print | sort)
+            test "${#args[@]}" -eq 12
+            python -B tools/provider_package_manifest_import.py \
+              --policy "$policy" \
+              "${args[@]}" \
+              --provider-source-root "$source_root" \
+              --protected-ref refs/heads/main \
+              --release-index release/index \
+              --facman-revision "$FACMAN_REVISION" \
+              --apply
+          }
+          import_provider ulk universal_launcher source/universal-launcher
+          import_provider usk universal_setup source/universal-setup
+          python -B tools/provider_pin_reconciliation.py
+
+      - name: Report exact generated projections
+        shell: bash
+        run: |
+          python -B - <<'PY'
+          import base64
+          import hashlib
+          from pathlib import Path
+
+          names = (
+              "workspace_lock.v1.toml",
+              "dependency_lock.v1.toml",
+              "providers.lock.v2.toml",
+              "build_manifest.v1.toml",
+              "sbom.components.v1.json",
+          )
+          for name in names:
+              value = (Path("release/index") / name).read_bytes()
+              encoded = base64.b64encode(value).decode("ascii")
+              print(f"FACMAN_PROJECTION_BEGIN={name}")
+              for offset in range(0, len(encoded), 120):
+                  print(encoded[offset : offset + 120])
+              print(f"FACMAN_PROJECTION_SHA256={hashlib.sha256(value).hexdigest()}")
+              print(f"FACMAN_PROJECTION_END={name}")
+          PY
