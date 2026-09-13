@@ -210,21 +210,22 @@ jobs:
         with:
           pattern: canonical-provider-package-*
           path: downloaded-packages
+          merge-multiple: false
 
       - name: Extract package roots
         shell: bash
         run: |
           set -euo pipefail
           mkdir package-roots
-          count=0
-          while IFS= read -r archive; do
-            name="$(basename "$archive" .tar.gz)"
-            root="package-roots/$name"
+          mapfile -d '' archives < <(find downloaded-packages -type f -print0)
+          printf 'downloaded package file: %s\n' "${archives[@]}"
+          test "${#archives[@]}" -eq 12
+          for archive in "${archives[@]}"; do
+            artifact="$(basename "$(dirname "$archive")")"
+            root="package-roots/$artifact"
             mkdir "$root"
             tar -xzf "$archive" -C "$root"
-            count=$((count + 1))
-          done < <(find downloaded-packages -type f -name '*.tar.gz' -print | sort)
-          test "$count" -eq 12
+          done
 
       - name: Project both providers atomically
         shell: bash
