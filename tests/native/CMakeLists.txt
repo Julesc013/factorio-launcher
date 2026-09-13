@@ -59,6 +59,11 @@ else()
   target_include_directories(facman_windows_integration_ownership_smoke PRIVATE
     ${PROJECT_SOURCE_DIR}/apps/setup)
 endif()
+facman_native_test(facman_self_setup_recovery_smoke
+  facman_self_setup_recovery_smoke.cpp "fast-unit;setup;security;recovery")
+target_compile_features(facman_self_setup_recovery_smoke PRIVATE cxx_std_17)
+target_link_libraries(facman_self_setup_recovery_smoke PRIVATE facman_self_setup_static)
+set_tests_properties(facman_self_setup_recovery_smoke PROPERTIES TIMEOUT 30)
 
 facman_native_test(miniz_dependency_smoke miniz_dependency_smoke.c "fast-unit;contract")
 target_link_libraries(miniz_dependency_smoke PRIVATE miniz_static)

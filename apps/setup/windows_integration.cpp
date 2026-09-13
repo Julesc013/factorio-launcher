@@ -9,6 +9,7 @@ const char *name(Ownership value) {
   switch (value) {
   case Ownership::absent: return "absent";
   case Ownership::owned: return "owned";
+  case Ownership::owned_stale: return "owned_stale";
   case Ownership::foreign: return "foreign";
   case Ownership::unreadable: return "unreadable";
   }
@@ -16,7 +17,11 @@ const char *name(Ownership value) {
 }
 
 bool removable(Ownership value) {
-  return value == Ownership::absent || value == Ownership::owned;
+  // Uninstall is root-owned rather than generation-owned: stale versions of
+  // our registration/shortcut remain safe to remove, while foreign objects do
+  // not.
+  return value == Ownership::absent || value == Ownership::owned ||
+      value == Ownership::owned_stale;
 }
 } // namespace
 

@@ -11,8 +11,6 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <shlobj.h>
-#include <shobjidl.h>
 
 #include <algorithm>
 #include <array>
@@ -23,9 +21,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#define FACMAN_SETUP_WIDEN_INNER(value) L##value
-#define FACMAN_SETUP_WIDEN(value) FACMAN_SETUP_WIDEN_INNER(value)
 
 namespace fs = std::filesystem;
 
@@ -43,11 +38,6 @@ struct Options {
   bool help = false;
   bool interactive = false;
   bool shell_integration = true;
-};
-
-struct IntegrationResult {
-  bool ok = false;
-  std::string detail;
 };
 
 struct MaterializedPackage {
@@ -310,182 +300,49 @@ void print_error(const facman::core::Error &value, bool json_mode) {
   std::cout << output.serialize() << '\n';
 }
 
-std::wstring quote(const fs::path &path) {
-  return L"\"" + path.wstring() + L"\"";
-}
+class SetupNativeEffects final : public facman::self_setup::NativeEffects {
+public:
+  SetupNativeEffects(fs::path install_root, std::string product_version)
+      : install_root_(std::move(install_root)) { (void)product_version; }
 
-bool set_registry_string(HKEY key, const wchar_t *name,
-                         const std::wstring &value) {
-  return RegSetValueExW(
-             key, name, 0, REG_SZ,
-             reinterpret_cast<const BYTE *>(value.c_str()),
-             static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t))) ==
-         ERROR_SUCCESS;
-}
-
-bool set_registry_dword(HKEY key, const wchar_t *name, DWORD value) {
-  return RegSetValueExW(key, name, 0, REG_DWORD,
-                        reinterpret_cast<const BYTE *>(&value), sizeof(value)) ==
-         ERROR_SUCCESS;
-}
-
-fs::path start_menu_link() {
-  PWSTR raw = nullptr;
-  if (FAILED(SHGetKnownFolderPath(FOLDERID_Programs, KF_FLAG_CREATE, nullptr,
-                                  &raw)) ||
-      raw == nullptr) {
-    return {};
-  }
-  fs::path result = fs::path(raw) / "FacMan.lnk";
-  CoTaskMemFree(raw);
-  return result;
-}
-
-bool create_shortcut(const fs::path &target, const fs::path &working_directory,
-                     const fs::path &link, std::string &problem) {
-  const HRESULT initialized =
-      CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-  const bool uninitialize = SUCCEEDED(initialized);
-  IShellLinkW *shell_link = nullptr;
-  HRESULT status = CoCreateInstance(CLSID_ShellLink, nullptr,
-                                    CLSCTX_INPROC_SERVER, IID_IShellLinkW,
-                                    reinterpret_cast<void **>(&shell_link));
-  if (FAILED(status) || shell_link == nullptr) {
-    if (uninitialize)
-      CoUninitialize();
-    problem = "Windows could not create the Start Menu shortcut object";
-    return false;
-  }
-  status = shell_link->SetPath(target.c_str());
-  if (SUCCEEDED(status))
-    status = shell_link->SetWorkingDirectory(working_directory.c_str());
-  if (SUCCEEDED(status))
-    status = shell_link->SetDescription(L"FacMan");
-  IPersistFile *persist = nullptr;
-  if (SUCCEEDED(status)) {
-    status = shell_link->QueryInterface(IID_IPersistFile,
-                                        reinterpret_cast<void **>(&persist));
-  }
-  if (SUCCEEDED(status) && persist != nullptr)
-    status = persist->Save(link.c_str(), TRUE);
-  if (persist != nullptr)
-    persist->Release();
-  shell_link->Release();
-  if (uninitialize)
-    CoUninitialize();
-  if (FAILED(status)) {
-    problem = "Windows could not save the FacMan Start Menu shortcut";
-    return false;
-  }
-  return true;
-}
-
-bool write_integration_receipt(const fs::path &state_root,
-                               const std::string &operation,
-                               const fs::path &install_root,
-                               const fs::path &link,
-                               std::string &problem,
-                               const std::string &phase = "complete") {
-  std::error_code status;
-  const fs::path receipt_root = state_root / "integration-receipts";
-  fs::create_directories(receipt_root, status);
-  if (status) {
-    problem = "Windows integration receipt directory could not be created";
-    return false;
-  }
-  facman::core::json::ObjectBuilder receipt;
-  receipt.add_string("schema", "facman.windows_integration_receipt.v1");
-  receipt.add_string("product", "FacMan");
-  receipt.add_string("version", FACMAN_VERSION_SEMVER);
-  receipt.add_string("operation", operation);
-  receipt.add_string("phase", phase);
-  receipt.add_string("scope", "current_user");
-  receipt.add_string("install_root", utf8(install_root.wstring()));
-  receipt.add_string("start_menu_link", utf8(link.wstring()));
-  receipt.add_string(
-      "uninstall_registry_key",
-      "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\FacMan");
-  const auto published = facman::setup::integration::publish_receipt(
-      receipt_root / (operation + ".v1.json"), receipt.serialize() + "\n");
-  if (!published.ok) {
-    problem = published.detail;
-    return false;
-  }
-  return true;
-}
-
-IntegrationResult install_integrations(const fs::path &install_root,
-                                       const fs::path &state_root,
-                                       const std::string &operation) {
-  const fs::path generation =
-      install_root / "generations" / FACMAN_VERSION_SEMVER;
-  const fs::path gui = generation / "FacMan.exe";
-  const fs::path maintenance = install_root / "maintenance" / "FacManSetup.exe";
-  std::error_code status;
-  if (!fs::is_regular_file(gui, status) || status ||
-      !fs::is_regular_file(maintenance, status) || status) {
-    return {false, "installed FacMan or maintenance entrypoint is missing"};
+  facman::self_setup::NativeOwnership inspect(
+      facman::self_setup::NativeEffect effect,
+      const std::string &product_version) override {
+    const auto observed = facman::setup::integration::inspect_windows_effect(
+        effect == facman::self_setup::NativeEffect::shortcut
+            ? facman::setup::integration::Effect::shortcut
+            : facman::setup::integration::Effect::registration,
+        install_root_, product_version);
+    switch (observed) {
+    case facman::setup::integration::Ownership::absent:
+      return facman::self_setup::NativeOwnership::absent;
+    case facman::setup::integration::Ownership::owned:
+      return facman::self_setup::NativeOwnership::owned;
+    case facman::setup::integration::Ownership::owned_stale:
+      return facman::self_setup::NativeOwnership::owned_stale;
+    case facman::setup::integration::Ownership::foreign:
+      return facman::self_setup::NativeOwnership::foreign;
+    case facman::setup::integration::Ownership::unreadable:
+      return facman::self_setup::NativeOwnership::unreadable;
+    }
+    return facman::self_setup::NativeOwnership::unreadable;
   }
 
-  const fs::path link = start_menu_link();
-  if (link.empty())
-    return {false, "Windows could not resolve the current-user Start Menu"};
-  std::string problem;
-  const auto ownership = facman::setup::integration::inspect_existing_windows(install_root);
-  if (!ownership.ok) {
-    write_integration_receipt(state_root, operation, install_root, link,
-                              problem, "blocked");
-    return {false, ownership.detail};
+  facman::self_setup::NativeResult apply(
+      facman::self_setup::NativeEffect effect,
+      facman::self_setup::Operation operation,
+      const std::string &product_version) override {
+    const auto result = facman::setup::integration::apply_windows_effect(
+        effect == facman::self_setup::NativeEffect::shortcut
+            ? facman::setup::integration::Effect::shortcut
+            : facman::setup::integration::Effect::registration,
+        install_root_, product_version, operation == facman::self_setup::Operation::uninstall);
+    return {result.ok, result.detail, result.recovery_required};
   }
-  if (!write_integration_receipt(state_root, operation, install_root, link,
-                                 problem, "pending"))
-    return {false, std::move(problem)};
-  fs::create_directories(link.parent_path(), status);
-  if (status)
-    return {false, "Windows could not create the Start Menu directory"};
-  if (!create_shortcut(gui, generation, link, problem))
-    return {false, std::move(problem)};
 
-  HKEY key = nullptr;
-  const wchar_t *registry_path =
-      L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\FacMan";
-  if (RegCreateKeyExW(HKEY_CURRENT_USER, registry_path, 0, nullptr,
-                      REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &key,
-                      nullptr) != ERROR_SUCCESS) {
-    return {false, "Windows could not create the per-user uninstall registration"};
-  }
-  const std::wstring uninstall = quote(maintenance) + L" uninstall --yes";
-  const std::wstring quiet_uninstall = uninstall + L" --json";
-  const std::wstring repair = quote(maintenance) + L" repair --yes";
-  const bool registered =
-      set_registry_string(key, L"DisplayName", L"FacMan") &&
-      set_registry_string(key, L"DisplayVersion",
-                          FACMAN_SETUP_WIDEN(FACMAN_VERSION_SEMVER)) &&
-      set_registry_string(key, L"Publisher", L"Jules C") &&
-      set_registry_string(key, L"InstallLocation", install_root.wstring()) &&
-      set_registry_string(key, L"DisplayIcon", quote(gui)) &&
-      set_registry_string(key, L"UninstallString", uninstall) &&
-      set_registry_string(key, L"QuietUninstallString", quiet_uninstall) &&
-      set_registry_string(key, L"ModifyPath", repair) &&
-      set_registry_dword(key, L"NoModify", 1) &&
-      set_registry_dword(key, L"NoRepair", 0);
-  RegCloseKey(key);
-  if (!registered) {
-    return {false, "Windows could not complete the per-user uninstall registration"};
-  }
-  if (!write_integration_receipt(state_root, operation, install_root, link,
-                                 problem)) {
-    return {false, std::move(problem)};
-  }
-  return {true, "Start Menu and per-user uninstall registration installed"};
-}
-
-IntegrationResult remove_integrations(const fs::path &install_root,
-                                      const fs::path &state_root) {
-  const auto result =
-      facman::setup::integration::remove_windows(install_root, state_root);
-  return {result.ok, result.detail};
-}
+private:
+  fs::path install_root_;
+};
 
 } // namespace
 
@@ -560,37 +417,17 @@ int wmain(int argc, wchar_t **argv) {
   request.acceptance_root = options.acceptance_root;
   request.product_version = FACMAN_VERSION_SEMVER;
   request.apply = options.apply;
+  SetupNativeEffects native_effects(options.install_root, FACMAN_VERSION_SEMVER);
+  if (options.shell_integration)
+    request.native_effects = &native_effects;
   auto response = facman::self_setup::execute(request);
   if (!response) {
     print_error(response.error(), options.json);
     return 4;
   }
-  IntegrationResult integration{true, "not requested"};
-  if (options.apply && options.shell_integration &&
-      response.value().phase == "receipt") {
-    if (options.operation == facman::self_setup::Operation::install ||
-        options.operation == facman::self_setup::Operation::repair) {
-      integration = install_integrations(
-          options.install_root, options.state_root,
-          options.operation == facman::self_setup::Operation::repair
-              ? "repair"
-              : "install");
-    } else if (options.operation == facman::self_setup::Operation::uninstall) {
-      integration = remove_integrations(options.install_root, options.state_root);
-    }
-    if (!integration.ok) {
-      facman::core::Error integration_error{
-          "self_setup_windows_integration_failed",
-          "FacMan files changed, but Windows integration did not complete", ""};
-      integration_error.detail = integration.detail;
-      print_error(integration_error, options.json);
-      if (options.interactive) {
-        MessageBoxA(nullptr, integration.detail.c_str(), "FacMan Setup",
-                    MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
-      }
-      return 5;
-    }
-  }
+  const std::string integration = options.shell_integration
+      ? "coordinated current-user integration"
+      : "not_applicable (portable mode)";
   if (options.json) {
     facman::core::json::ObjectBuilder output;
     output.add_string("schema", "facman.self_setup_cli.v1");
@@ -602,7 +439,8 @@ int wmain(int argc, wchar_t **argv) {
       output.add_value("provider", provider.value());
     else
       output.add_string("provider_json", response.value().provider_json);
-    output.add_string("windows_integration", integration.detail);
+    output.add_string("windows_integration", integration);
+    output.add_string("setup_operation_id", response.value().setup_operation_id);
     std::cout << output.serialize() << '\n';
   } else {
     std::cout << "FacManSetup " << response.value().operation << ' '

@@ -525,15 +525,20 @@
       "paths": [
         "apps/setup/",
         "runtime/self_setup/",
+        "tests/native/facman_self_setup_recovery_smoke.cpp",
         "tests/native/facman_windows_integration_ownership_smoke.cpp",
-        "tests/integration/facman_self_setup_lifecycle.py"
+        "tests/integration/facman_self_setup_lifecycle.py",
+        "tests/test_self_setup_recovery_contract.py",
+        "contracts/schema/facman/facman_setup_operation_journal.v1.schema.json"
       ],
       "native_targets": [
-        "facman_windows_integration_ownership_smoke"
+        "facman_windows_integration_ownership_smoke",
+        "facman_self_setup_recovery_smoke"
       ],
       "python_tests": [
         "tests.test_self_setup_package",
-        "tests.test_setup_package_routing"
+        "tests.test_setup_package_routing",
+        "tests.test_self_setup_recovery_contract"
       ],
       "strict_validators": [
         "tools/cmake_architecture_check.py",
