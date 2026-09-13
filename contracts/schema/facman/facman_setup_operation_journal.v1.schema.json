@@ -1,0 +1,627 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_setup_operation_journal.v1.schema.json",
+  "title": "FacMan composite setup operation journal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "operation_id",
+    "intent_digest",
+    "operation",
+    "install_root",
+    "install_root_identity",
+    "product",
+    "product_version",
+    "mode",
+    "provider",
+    "recovery",
+    "effects",
+    "state",
+    "recovery_boundary",
+    "last_error"
+  ],
+  "properties": {
+    "schema": {
+      "const": "facman.setup_operation_journal.v1"
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,160}$"
+    },
+    "intent_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "operation": {
+      "enum": [
+        "install",
+        "repair",
+        "uninstall"
+      ]
+    },
+    "install_root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192
+    },
+    "install_root_identity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "product": {
+      "const": "facman"
+    },
+    "product_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "mode": {
+      "enum": [
+        "installed",
+        "portable"
+      ]
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "state_root",
+        "acceptance_root",
+        "source_digest",
+        "request_id",
+        "plan_id",
+        "transaction_id",
+        "created_at",
+        "plan_digest",
+        "receipt_identity"
+      ],
+      "properties": {
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "state_root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "acceptance_root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "source_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^request\\.setup\\.[A-Za-z0-9._-]{1,152}$"
+        },
+        "plan_id": {
+          "type": "string",
+          "pattern": "^(?:request|plan)\\.setup\\.[A-Za-z0-9._-]{1,152}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "pattern": "^tx\\.setup\\.[A-Za-z0-9._-]{1,156}$"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        },
+        "plan_digest": {
+          "type": "string",
+          "pattern": "^$|^[a-f0-9]{64}$"
+        },
+        "receipt_identity": {
+          "type": "string",
+          "pattern": "^$|^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "plan_id",
+        "plan_digest",
+        "created_at",
+        "action"
+      ],
+      "properties": {
+        "plan_id": {
+          "type": "string",
+          "pattern": "^$|^recovery\\.plan\\.setup\\.[A-Za-z0-9._-]{1,144}$"
+        },
+        "plan_digest": {
+          "type": "string",
+          "pattern": "^$|^[a-f0-9]{64}$"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        },
+        "action": {
+          "enum": [
+            "",
+            "rollback"
+          ]
+        }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "shortcut",
+        "registration"
+      ],
+      "properties": {
+        "files": {
+          "enum": [
+            "pending",
+            "applied"
+          ]
+        },
+        "shortcut": {
+          "enum": [
+            "pending",
+            "applying",
+            "applied",
+            "not_applicable"
+          ]
+        },
+        "registration": {
+          "enum": [
+            "pending",
+            "applying",
+            "applied",
+            "not_applicable"
+          ]
+        }
+      }
+    },
+    "state": {
+      "enum": [
+        "intent",
+        "files_applying",
+        "files_applied",
+        "native_applying",
+        "completed",
+        "rolled_back",
+        "abandoned",
+        "recovery_required"
+      ]
+    },
+    "recovery_boundary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "last_error": {
+      "type": "string",
+      "maxLength": 1024
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "install"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "operation_id": {
+            "pattern": "^setup\\.install\\."
+          },
+          "provider": {
+            "properties": {
+              "request_id": {
+                "pattern": "^request\\.setup\\.install\\."
+              },
+              "plan_id": {
+                "pattern": "^request\\.setup\\.install\\."
+              },
+              "transaction_id": {
+                "pattern": "^tx\\.setup\\.install\\."
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "repair"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "operation_id": {
+            "pattern": "^setup\\.repair\\."
+          },
+          "provider": {
+            "properties": {
+              "request_id": {
+                "pattern": "^request\\.setup\\.repair\\."
+              },
+              "plan_id": {
+                "pattern": "^plan\\.setup\\.repair\\."
+              },
+              "transaction_id": {
+                "pattern": "^tx\\.setup\\.repair\\."
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "uninstall"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "operation_id": {
+            "pattern": "^setup\\.uninstall\\."
+          },
+          "provider": {
+            "properties": {
+              "request_id": {
+                "pattern": "^request\\.setup\\.uninstall\\."
+              },
+              "plan_id": {
+                "pattern": "^plan\\.setup\\.uninstall\\."
+              },
+              "transaction_id": {
+                "pattern": "^tx\\.setup\\.uninstall\\."
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "portable"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "shortcut": {
+                "const": "not_applicable"
+              },
+              "registration": {
+                "const": "not_applicable"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "completed"
+          },
+          "mode": {
+            "const": "installed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "files": {
+                "const": "applied"
+              },
+              "shortcut": {
+                "const": "applied"
+              },
+              "registration": {
+                "const": "applied"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "completed"
+          },
+          "mode": {
+            "const": "portable"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "files": {
+                "const": "applied"
+              },
+              "shortcut": {
+                "const": "not_applicable"
+              },
+              "registration": {
+                "const": "not_applicable"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "rolled_back"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "files": {
+                "const": "pending"
+              },
+              "shortcut": {
+                "not": {
+                  "const": "applied"
+                }
+              },
+              "registration": {
+                "not": {
+                  "const": "applied"
+                }
+              }
+            }
+          },
+          "provider": {
+            "properties": {
+              "plan_digest": {
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "recovery": {
+            "properties": {
+              "plan_id": {
+                "pattern": "^recovery\\.plan\\.setup\\."
+              },
+              "plan_digest": {
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "created_at": {
+                "pattern": "^[0-9]{4}-"
+              },
+              "action": {
+                "const": "rollback"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "abandoned"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "recovery_boundary": {
+            "const": "abandoned_before_provider_apply"
+          },
+          "provider": {
+            "properties": {
+              "plan_digest": {
+                "const": ""
+              },
+              "receipt_identity": {
+                "const": ""
+              }
+            }
+          },
+          "recovery": {
+            "properties": {
+              "plan_id": {
+                "const": ""
+              },
+              "plan_digest": {
+                "const": ""
+              },
+              "created_at": {
+                "const": ""
+              },
+              "action": {
+                "const": ""
+              }
+            }
+          },
+          "effects": {
+            "properties": {
+              "files": {
+                "const": "pending"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "abandoned"
+          },
+          "mode": {
+            "const": "installed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "shortcut": {
+                "const": "pending"
+              },
+              "registration": {
+                "const": "pending"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "abandoned"
+          },
+          "mode": {
+            "const": "portable"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "shortcut": {
+                "const": "not_applicable"
+              },
+              "registration": {
+                "const": "not_applicable"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "files": {
+                "const": "pending"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "shortcut": {
+                "not": {
+                  "const": "applied"
+                }
+              },
+              "registration": {
+                "not": {
+                  "const": "applied"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "recovery": {
+            "properties": {
+              "action": {
+                "const": "rollback"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "recovery": {
+            "properties": {
+              "plan_id": {
+                "pattern": "^recovery\\.plan\\.setup\\."
+              },
+              "plan_digest": {
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "created_at": {
+                "pattern": "^[0-9]{4}-"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "recovery": {
+            "properties": {
+              "action": {
+                "const": ""
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "recovery": {
+            "properties": {
+              "plan_id": {
+                "const": ""
+              },
+              "plan_digest": {
+                "const": ""
+              },
+              "created_at": {
+                "const": ""
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

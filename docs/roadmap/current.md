@@ -454,6 +454,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration.
+- [ ] **FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01** — Journal native setup effects and recover across setup phases
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`
+  - Outcome: Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback.
 - [x] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -547,10 +551,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`; closure prerequisites: none
   - Outcome: Implement installation/reconciliation/update/repair/removal over promoted USK mechanisms for the admitted local source formats.
-- [ ] **FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01** — Journal native setup effects and recover across setup phases
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`; closure prerequisites: none
-  - Outcome: Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback.
 - [ ] **FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01** — Complete independent FacMan self-maintenance
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
