@@ -780,6 +780,7 @@
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+        "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
         "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
       ]
     },
@@ -2698,16 +2699,17 @@
   "queue": {
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+      "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
       "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
       "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 1,
+      "active": 2,
       "active_automated": 2,
       "blocked": 2,
       "closed": 27,
-      "planned": 37,
+      "planned": 36,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
@@ -2729,6 +2731,12 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "closed"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
@@ -2948,12 +2956,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"
