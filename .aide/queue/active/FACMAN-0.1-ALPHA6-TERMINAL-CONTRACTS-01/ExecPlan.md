@@ -46,3 +46,16 @@ The first CMake invocation named the nonexistent `facman` target and the first
 combined Python invocation omitted the required repository/test import path.
 Both were invocation defects; the corrected `facman_cli` build and clean 37-test
 run passed. No failed result was relabelled or removed.
+
+## 2026-09-14 protected integration and closeout
+
+PR 279 merged the reviewed documentation checkpoint normally into protected
+`dev` as `3267db2e12f8ea4f95dd77a97736dd2afa1efc4f`, tree
+`391b881a54932b0d9903c5c9525d026db87e251d`. Its CI workflow run 34771494575
+passed Windows native/package, Linux native/coverage, macOS native/archive and
+AppKit compile jobs. Security, schema and synthetic provider checks also passed.
+
+The implementation commit, current Windows binary-bound receipt, independent
+model review and exact protected integration now satisfy this WorkUnit's two
+acceptance statements. The WorkUnit closes without granting Factorio execution,
+release, signing, publication or human UX acceptance.

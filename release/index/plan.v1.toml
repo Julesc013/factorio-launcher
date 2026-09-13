@@ -328,7 +328,7 @@ acceptance.""",
 id = "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01"
 title = "Close CLI JSON RPC and TUI compatibility mechanics"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "active"
+status = "complete"
 horizon = "next"
 priority = "P1"
 size = "M"
@@ -350,6 +350,13 @@ acceptance = [
 Unicode and bounded RPC failures.""",
   "Full-screen and linear workflows use typed views/actions and do not require raw JSON or Advanced.",
 ]
+
+integration_status = "integrated"
+reviewed_pull_request = 279
+dev_integration_revision = "3267db2e12f8ea4f95dd77a97736dd2afa1efc4f"
+dev_integration_tree = "391b881a54932b0d9903c5c9525d026db87e251d"
+integration_evidence = ".aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-contract-integration-closeout.v1.json"
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-contract-integration-closeout.v1.json"]
 
 
 [[workunit]]

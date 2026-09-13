@@ -450,8 +450,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Persist session identity before effects and reconcile crash/restart without adopting unrelated processes.
-- [ ] **FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01** — Close CLI JSON RPC and TUI compatibility mechanics
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01** — Close CLI JSON RPC and TUI compatibility mechanics
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
 - [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records

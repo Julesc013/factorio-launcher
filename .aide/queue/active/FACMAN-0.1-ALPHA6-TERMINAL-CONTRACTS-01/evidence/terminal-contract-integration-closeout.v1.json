@@ -1,0 +1,68 @@
+{
+  "schema": "facman.terminal-contract-workunit-closeout.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "result": "PASS",
+  "observed_utc": "2026-09-13T18:00:03Z",
+  "repository": "Julesc013/factorio-launcher",
+  "source": {
+    "implementation_commit": "1b962531f1d386294b44c2230c230c9f66ad2fcc",
+    "documentation_head": "17f7deee2de94f11af878337a090e4abd569ed8a",
+    "implementation_pull_request": 279,
+    "dev_revision": "3267db2e12f8ea4f95dd77a97736dd2afa1efc4f",
+    "tree": "391b881a54932b0d9903c5c9525d026db87e251d",
+    "parents": [
+      "a158a6aa6eae947832fdd16101531ac122f7a3a6",
+      "17f7deee2de94f11af878337a090e4abd569ed8a"
+    ],
+    "integration_status": "integrated"
+  },
+  "validation": {
+    "local_receipt": "terminal-contract-current-dev-validation.v1.json",
+    "source_review_receipt": "terminal-process-contract-source-review.v1.json",
+    "hosted_ci": {
+      "run_id": 34771494575,
+      "head_sha": "17f7deee2de94f11af878337a090e4abd569ed8a",
+      "conclusion": "success",
+      "jobs": {
+        "windows-native-package": 103761794897,
+        "linux-coverage": 103761795008,
+        "linux-native": 103761795202,
+        "macos-archive-core": 103761795007,
+        "macos-native-cli": 103761795076,
+        "appkit-compile": 103761795158
+      }
+    }
+  },
+  "acceptance": [
+    {
+      "text": "Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.",
+      "result": "PASS"
+    },
+    {
+      "text": "Full-screen and linear workflows use typed views/actions and do not require raw JSON or Advanced.",
+      "result": "PASS"
+    }
+  ],
+  "independent_review": {
+    "kind": "model_based_non_authoring",
+    "result": "ACCEPT",
+    "human_review_claimed": false,
+    "source": "terminal-process-contract-source-review.v1.json"
+  },
+  "authority": {
+    "release": false,
+    "signing": false,
+    "publication": false,
+    "tag": false,
+    "game": false,
+    "human_acceptance": false,
+    "live_installation": false,
+    "support": false
+  },
+  "limits": [
+    "This closes only the terminal contracts WorkUnit.",
+    "Hosted runner evidence does not claim human hardware or UX acceptance.",
+    "No Factorio execution, signing, tagging, publication, release or support authority is granted.",
+    "Later changes to terminal behavior require affected requalification."
+  ]
+}

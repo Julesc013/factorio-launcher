@@ -12,4 +12,6 @@ This checkpoint starts at exact protected `dev@a158a6aa6eae947832fdd16101531ac12
 - corrects `docs/architecture/unified_interaction_platform.v1.md` so nonempty `NO_COLOR` disables color without forcing an otherwise capable terminal into linear mode;
 - records current Windows native, RPC, terminal, TUI, ConPTY, architecture and AIDE validation without rewriting the immutable source-review receipt.
 
-No runtime or test source is changed by this checkpoint. Its documentation and lifecycle projection still require normal protected integration into `dev`.
+PR 279 normally integrated that checkpoint into protected `dev` at
+`3267db2e12f8ea4f95dd77a97736dd2afa1efc4f`. This follow-up records the exact
+merge and closes the WorkUnit in canonical, queue and generated project truth.
