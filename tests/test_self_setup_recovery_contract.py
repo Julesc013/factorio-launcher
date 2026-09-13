@@ -174,6 +174,50 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
             with self.subTest(boundary=boundary):
                 self.assertIn(boundary, source)
 
+    def test_qualification_interrupt_is_paired_permit_bound_and_consumed_before_setup(self) -> None:
+        source = (ROOT / "apps/setup/main.cpp").read_text(encoding="utf-8")
+        for token in (
+            "--qualification-interrupt-after",
+            "--qualification-interrupt-permit",
+            "duplicate option: --qualification-interrupt-after",
+            "duplicate option: --qualification-interrupt-permit",
+            "--noninteractive",
+            "--shell-integration",
+            "kQualificationPermitMaximumBytes = 4096U",
+            "kQualificationPermitMaximumLifetimeSeconds = 120U",
+            "now >= expires_at",
+            "facman.self_setup_qualification_interrupt_permit.v1",
+            '"issued_at_unix_seconds"',
+            '"expires_at_unix_seconds"',
+            "lowercase_hex_64(nonce)",
+            "path_crosses_link_or_reparse_point",
+            "validate_descendant(candidate, allow_absent_leaf)",
+            "validate_qualification_direct_child",
+            "must be a direct child of acceptance root",
+            "commit_no_replace(permit_path, consumed_path)",
+            "consumed.identity().same_object(permit.identity())",
+            "QualificationInterruptHook",
+            "request.durable_boundary_hook = &*qualification_hook",
+            "request.qualification_claims = qualification_interrupt->claims",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token, source)
+        self.assertNotIn("getenv(", source)
+        consumed = source.rindex("consume_qualification_interrupt(")
+        default_paths = source.index("facman::platform::user_paths()")
+        materialize = source.index("materialize_zip_overlay(", consumed)
+        self.assertLess(consumed, default_paths)
+        self.assertLess(consumed, materialize)
+        runtime = (ROOT / "runtime/self_setup/facman_self_setup.cpp").read_text(encoding="utf-8")
+        for token in (
+            "qualification claims do not bind the unfinished setup journal",
+            "qualification boundary was already crossed by the unfinished setup journal",
+            "journal.mode != (qualification->installed_mode ? \"installed\" : \"portable\")",
+            "self_setup_qualification_interrupt_invalid",
+        ):
+            with self.subTest(runtime_token=token):
+                self.assertIn(token, runtime)
+
 
 if __name__ == "__main__":
     unittest.main()

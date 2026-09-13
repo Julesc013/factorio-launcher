@@ -76,6 +76,8 @@ bool read_shortcut(HANDLE file, ShortcutIdentity &identity) {
       (info.dwFileAttributes & (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY)) ||
       !GetFileSizeEx(file, &size) || size.QuadPart <= 0 || size.QuadPart > 1024 * 1024)
     return false;
+  LARGE_INTEGER file_start{};
+  if (!SetFilePointerEx(file, file_start, nullptr, FILE_BEGIN)) return false;
   std::vector<unsigned char> bytes(static_cast<std::size_t>(size.QuadPart));
   DWORD read = 0;
   if (!ReadFile(file, bytes.data(), static_cast<DWORD>(bytes.size()), &read, nullptr) ||
@@ -422,8 +424,9 @@ Result write_registration_transacted(const fs::path &root, const fs::path &gui,
 
 class WindowsEffects final : public Effects {
 public:
-  WindowsEffects(fs::path root, fs::path state)
-      : root_(std::move(root)), state_(std::move(state)), link_(start_menu_link()) {}
+  WindowsEffects(fs::path root, fs::path state, fs::path link = {})
+      : root_(std::move(root)), state_(std::move(state)),
+        link_(link.empty() ? start_menu_link() : std::move(link)) {}
 
   Ownership inspect(Effect effect) override {
     if (effect == Effect::shortcut) {
@@ -460,7 +463,7 @@ public:
       const auto ownership = open_shortcut(link_, root_, true, file);
       if (ownership == Ownership::absent) return {true, "shortcut already absent"};
       if (ownership != Ownership::owned)
-        return {false, "Start Menu shortcut ownership changed or could not be read"};
+        return {false, "Start Menu shortcut ownership changed or could not be read", true};
       FILE_DISPOSITION_INFO disposition{TRUE};
       if (!SetFileInformationByHandle(file.value, FileDispositionInfo,
                                      &disposition, sizeof(disposition)))
@@ -478,7 +481,7 @@ public:
     const auto ownership = open_registration(root_, key, transaction.value);
     if (ownership == Ownership::absent) return {true, "registration already absent"};
     if (ownership != Ownership::owned)
-      return {false, "Uninstall registration ownership changed or could not be read"};
+      return {false, "Uninstall registration ownership changed or could not be read", true};
     const LSTATUS removed = RegDeleteKeyTransactedW(
         HKEY_CURRENT_USER, registry_path, 0, 0, transaction.value, nullptr);
     if (removed != ERROR_SUCCESS || !CommitTransaction(transaction.value)) {
@@ -632,5 +635,40 @@ Result apply_windows_effect(Effect effect, const fs::path &install_root,
   }
   return write_registration_transacted(normalized_root, gui, maintenance,
                                        product_version);
+}
+
+Ownership inspect_windows_shortcut_fixture(const fs::path &shortcut,
+                                           const fs::path &install_root,
+                                           const std::string &product_version) {
+  std::error_code error;
+  const auto root = fs::absolute(install_root, error);
+  if (error || shortcut.empty()) return Ownership::unreadable;
+  WindowsEffects effects(normalized(root), {}, shortcut);
+  return effects.inspect_desired(Effect::shortcut, product_version);
+}
+
+Result apply_windows_shortcut_fixture(const fs::path &shortcut,
+                                      const fs::path &install_root,
+                                      const std::string &product_version,
+                                      bool remove) {
+  std::error_code error;
+  const auto root = fs::absolute(install_root, error);
+  if (error || shortcut.empty()) return {false, "shortcut fixture root could not be made absolute"};
+  const fs::path normalized_root = normalized(root);
+  WindowsEffects effects(normalized_root, {}, shortcut);
+  if (remove) return effects.remove_owned(Effect::shortcut);
+  const Ownership ownership = effects.inspect_desired(Effect::shortcut, product_version);
+  if (ownership == Ownership::foreign || ownership == Ownership::unreadable)
+    return {false, "Windows integration ownership changed or could not be read", true};
+  const fs::path generation = normalized_root / "generations" / wide(product_version);
+  const fs::path gui = generation / "FacMan.exe";
+  const fs::path maintenance = normalized_root / "maintenance" / "FacManSetup.exe";
+  if (!fs::is_regular_file(gui, error) || error || !fs::is_regular_file(maintenance, error) || error)
+    return {false, "installed FacMan or maintenance entrypoint is missing"};
+  if (!fs::create_directories(shortcut.parent_path(), error) && error)
+    return {false, "Windows could not create the shortcut fixture directory"};
+  std::string detail;
+  if (!create_shortcut(gui, generation, shortcut, detail)) return {false, detail, true};
+  return {true, "owned shortcut installed"};
 }
 } // namespace facman::setup::integration
