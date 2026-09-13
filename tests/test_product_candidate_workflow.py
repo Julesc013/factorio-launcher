@@ -267,6 +267,8 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             "real current-user integration requires an exact absolute --payload file",
             "inspect_shortcut_no_follow",
             "powershell_shortcut_fields",
+            'str(path).encode("utf-16-le")',
+            '"-EncodedCommand", encoded_script',
             "winreg.KEY_WOW64_64KEY",
             "qualification_permit",
             "--shell-integration",

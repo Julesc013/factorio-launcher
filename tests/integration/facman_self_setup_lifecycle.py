@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import contextlib
 import hashlib
 import os
@@ -184,14 +185,17 @@ def windows_start_menu_shortcut() -> Path:
 
 
 def powershell_shortcut_fields(path: Path) -> dict[str, object]:
+    encoded_path = base64.b64encode(str(path).encode("utf-16-le")).decode("ascii")
     script = (
+        f"$path = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('{encoded_path}')); "
         "$shell = New-Object -ComObject WScript.Shell; "
-        "$shortcut = $shell.CreateShortcut($args[0]); "
+        "$shortcut = $shell.CreateShortcut($path); "
         "[ordered]@{target=$shortcut.TargetPath;working_directory=$shortcut.WorkingDirectory;"
         "arguments=$shortcut.Arguments} | ConvertTo-Json -Compress"
     )
+    encoded_script = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
     result = run_command([
-        "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script, str(path),
+        "powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded_script,
     ])
     if result.returncode:
         raise AssertionError("WScript.Shell shortcut inspection failed: " + result.stderr[-2000:])
