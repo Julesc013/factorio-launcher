@@ -34141,8 +34141,10 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
     resolved_trusted_main_oid = git_oid(args.repo_root, trusted_main_claim)
     if resolved_trusted_main_oid != trusted_main_claim:
         raise ValueError("--trusted-main must resolve to the exact supplied commit OID")
-    trusted_main_oid = git_oid(args.repo_root, TASK_TO_DEV_TRUSTED_MAIN_REF)
-    if trusted_main_oid != trusted_main_claim:
+    # This is public Git commit metadata. Keep its local name distinct from
+    # credential-bearing values while preserving the receipt's stable field name.
+    protected_main_commit_oid = git_oid(args.repo_root, TASK_TO_DEV_TRUSTED_MAIN_REF)
+    if protected_main_commit_oid != trusted_main_claim:
         raise ValueError("--trusted-main must match the exact fetched protected main ref")
     repository = str(args.repository).strip()
     if not re.fullmatch(r"[^/\s]+/[^/\s]+", repository):
@@ -34158,7 +34160,7 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
             raise
     range_text = f"{base_oid}..{head_oid}"
     blockers, candidate_oids, baseline_count = git_candidate_history_validation(
-        args.repo_root, base_oid, head_oid, trusted_main_oid
+        args.repo_root, base_oid, head_oid, protected_main_commit_oid
     )
     try:
         full_range_oids = git_commit_oids_for_revisions(args.repo_root, [head_oid, f"^{base_oid}"])
@@ -34172,7 +34174,7 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
         "base_oid": base_oid,
         "head_oid": head_oid,
         "range": range_text,
-        "trusted_main_oid": trusted_main_oid,
+        "trusted_main_oid": protected_main_commit_oid,
         "full_history_checked": True,
         "candidate_history_checked": True,
         "trusted_main_history_excluded": True,
