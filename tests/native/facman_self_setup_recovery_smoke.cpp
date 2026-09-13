@@ -3,6 +3,7 @@
 
 #include "facman_self_setup.h"
 #include "fl_json.h"
+#include "fl_sha256.h"
 
 #include <array>
 #include <condition_variable>
@@ -30,6 +31,11 @@ std::string string_member(const std::string &payload, const char *name) {
   auto document = json::parse(payload);
   const json::Value *value = document ? document.value().find(name) : nullptr;
   return value != nullptr && value->string_value() ? value->string_value().value() : std::string();
+}
+
+std::string sha256_text(const std::string &value) {
+  return facman::base::sha256_hex_bytes(
+      reinterpret_cast<const unsigned char *>(value.data()), value.size());
 }
 
 struct Provider final : setup::ProviderEffects {
@@ -273,6 +279,56 @@ void cases() {
   require(setup::execute(request_for(shortcut_boundary, shortcut_provider, &shortcut_native)) &&
               shortcut_provider.apply_calls == 1 && shortcut_native.apply_calls == std::array<int, 2>{1, 1},
           "shortcut-boundary resume inspects the durable shortcut and only applies registration");
+  Tree hosted_sequence{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-hosted-sequence"};
+  fs::remove_all(hosted_sequence.root, ignored); fs::create_directories(hosted_sequence.root);
+  std::ofstream(hosted_sequence.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider hosted_provider; Native hosted_native;
+  InterruptAt hosted_after_files(setup::DurableBoundary::files_applied);
+  auto hosted_files_request = request_for(hosted_sequence, hosted_provider, &hosted_native);
+  hosted_files_request.durable_boundary_hook = &hosted_after_files;
+  auto hosted_files_interrupted = setup::execute(hosted_files_request);
+  require(!hosted_files_interrupted && hosted_files_interrupted.error().code == "self_setup_interrupted" &&
+              hosted_native.apply_calls == std::array<int, 2>{0, 0},
+          "hosted sequence interrupts at files-applied before native effects");
+  require(setup::execute(request_for(hosted_sequence, hosted_provider, &hosted_native)) &&
+              hosted_native.apply_calls == std::array<int, 2>{1, 1},
+          "hosted sequence resumes the files-applied install");
+  require(setup::execute(request_for(hosted_sequence, hosted_provider, &hosted_native,
+                                     setup::Operation::uninstall)) &&
+              hosted_native.apply_calls == std::array<int, 2>{2, 2},
+          "hosted sequence completes uninstall before the fresh install");
+  InterruptAt hosted_after_shortcut(setup::DurableBoundary::shortcut_applied);
+  auto hosted_shortcut_request = request_for(hosted_sequence, hosted_provider, &hosted_native);
+  hosted_shortcut_request.durable_boundary_hook = &hosted_after_shortcut;
+  auto hosted_shortcut_interrupted = setup::execute(hosted_shortcut_request);
+  require(!hosted_shortcut_interrupted &&
+              hosted_shortcut_interrupted.error().code == "self_setup_interrupted" &&
+              hosted_after_shortcut.calls == 2 &&
+              hosted_native.apply_calls == std::array<int, 2>{3, 2},
+          "fresh same-intent install interrupts at shortcut-applied with exactly one native effect");
+  const fs::path hosted_history = hosted_sequence.root / "coordinator" /
+      "setup-operations" / "history";
+  std::vector<fs::path> hosted_archives;
+  for (fs::directory_iterator iterator(hosted_history, ignored), end;
+       !ignored && iterator != end; iterator.increment(ignored)) {
+    if (iterator->is_regular_file(ignored) && !ignored)
+      hosted_archives.push_back(iterator->path());
+  }
+  require(!ignored && hosted_archives.size() == 1,
+          "fresh same-intent install archives exactly one completed terminal journal");
+  std::ifstream hosted_archive_input(hosted_archives.front(), std::ios::binary);
+  const std::string hosted_archive_json{std::istreambuf_iterator<char>(hosted_archive_input), {}};
+  const std::string hosted_operation_id = string_member(hosted_archive_json, "operation_id");
+  const std::string hosted_intent_digest = string_member(hosted_archive_json, "intent_digest");
+  const std::string hosted_root_identity = string_member(hosted_archive_json, "install_root_identity");
+  const std::string hosted_operation = string_member(hosted_archive_json, "operation");
+  const std::string expected_hosted_history = "facman." + sha256_text(
+      "facman.setup.history.v1\n" + hosted_operation_id + "\n" + hosted_intent_digest + "\n" +
+      hosted_root_identity + "\n" + hosted_operation) + ".setup-history.v1.json";
+  require(hosted_operation == "install" && string_member(hosted_archive_json, "state") == "completed" &&
+              hosted_archives.front().filename().string() == expected_hosted_history &&
+              expected_hosted_history.size() <= 96U,
+          "completed install terminal journal has the bounded expected history archive name");
   const auto applied_effect_changed = [&](const char *suffix,
                                           setup::NativeOwnership replacement,
                                           setup::Operation operation) {

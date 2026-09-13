@@ -465,10 +465,16 @@ std::string journal_intent_digest(const SetupJournal &journal) {
 
 facman::core::Result<SetupJournal> load_journal(const fs::path &path);
 
+std::string history_filename(const SetupJournal &journal) {
+  const std::string identity = "facman.setup.history.v1\n" + journal.operation_id + "\n" +
+      journal.intent_digest + "\n" + journal.install_root_identity + "\n" + journal.operation;
+  return "facman." + digest_text(identity) + ".setup-history.v1.json";
+}
+
 facman::core::Result<void> archive_journal(const fs::path &active_path,
                                            const SetupJournal &journal) {
   const fs::path history = active_path.parent_path() / "history" /
-      (active_path.filename().string() + "." + journal.operation_id + ".json");
+      history_filename(journal);
   std::error_code status;
   if (fs::exists(history, status)) {
     if (status) return facman::core::Result<void>::failure(error(

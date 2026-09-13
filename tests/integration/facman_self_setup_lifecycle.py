@@ -380,7 +380,10 @@ def assert_interrupted(response: dict[str, object], boundary: str) -> None:
     error = response.get("error")
     if response.get("status") != "error" or not isinstance(error, dict) or \
             error.get("code") != "self_setup_interrupted":
-        raise AssertionError(f"qualification boundary {boundary} did not report self_setup_interrupted")
+        compact_response = json.dumps(response, sort_keys=True, separators=(",", ":"))
+        raise AssertionError(
+            f"qualification boundary {boundary} did not report self_setup_interrupted: {compact_response}"
+        )
 
 
 def run_real_current_user_integration(args: argparse.Namespace, executable: Path) -> int:
