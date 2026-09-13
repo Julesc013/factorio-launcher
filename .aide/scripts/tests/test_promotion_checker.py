@@ -14,6 +14,7 @@ import unittest
 from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -61,6 +62,7 @@ def init(root: Path) -> None:
     git(root, "add", ".aide")
     git(root, "commit", "-m", "chore(test): seed commit policy\n\nWork-Item: TEST-PROMOTION-1")
     git(root, "branch", "-M", "main")
+    git(root, "update-ref", aide_lite.TASK_TO_DEV_TRUSTED_MAIN_REF, "main")
     git(root, "checkout", "-b", "dev")
     git(root, "checkout", "-b", "task/example")
 
@@ -113,11 +115,13 @@ def merge_fixture(root: Path, external: Path, *, nested: bool = False) -> tuple[
     merge = git(root, "rev-parse", "HEAD")
     tree = git(root, "rev-parse", f"{merge}^{{tree}}")
     parents = git(root, "show", "-s", "--format=%P", merge).split()
-    reachable = git(root, "rev-list", "--reverse", f"{base}..{task_head}").splitlines()
+    trusted_main = git(root, "rev-parse", "main")
+    reachable = git(root, "rev-list", "--reverse", task_head, f"^{base}", f"^{trusted_main}").splitlines()
+    full_range = git(root, "rev-list", "--reverse", task_head, f"^{base}").splitlines()
     external.mkdir(parents=True, exist_ok=True)
     raw_pr = {"repository": "example/repo", "number": 7, "title": "Promotion fixture", "state": "closed", "draft": False, "merged": True, "base_ref": "dev", "base_oid": base, "head_ref": "task/example", "head_oid": parents[1], "merge_oid": merge}
     raw_protection = {"repository": "example/repo", "branch": "dev", "protected": True, "prior_base_oid": base, "required_status": "task-to-dev-promotion-check"}
-    raw_status = {"schema_version": aide_lite.TASK_TO_DEV_STATUS_SCHEMA, "repository": "example/repo", "pull_request_number": 7, "base_oid": base, "head_oid": parents[1], "range": f"{base}..{parents[1]}", "full_history_checked": True, "conclusion": "success", "commit_oids": reachable}
+    raw_status = {"schema_version": aide_lite.TASK_TO_DEV_STATUS_SCHEMA, "repository": "example/repo", "pull_request_number": 7, "base_oid": base, "head_oid": parents[1], "range": f"{base}..{parents[1]}", "trusted_main_oid": trusted_main, "full_history_checked": True, "candidate_history_checked": True, "trusted_main_history_excluded": True, "conclusion": "success", "commit_count": len(reachable), "commit_oids": reachable, "full_range_commit_count": len(full_range), "full_range_commit_oids": full_range}
     record = {"repository": "example/repo", "pull_request_number": 7, "pull_request_title": "Promotion fixture", "state": "closed", "draft": False, "merged": True, "base_ref": "dev", "base_oid": base, "head_ref": "task/example", "head_oid": parents[1], "merge_oid": merge, "merge_tree": tree, "parents": parents, "raw": {"pull_request": {"path": str(external / "pr.json"), "sha256": write_github_observation(external / "pr.json", raw_pr)}, "protection": {"path": str(external / "protection.json"), "sha256": write_github_observation(external / "protection.json", raw_protection)}, "status": {"path": str(external / "status.json"), "sha256": write_github_observation(external / "status.json", raw_status)}}}
     evidence = {"schema_version": aide_lite.VERIFIED_PROTECTED_PR_MERGE_SCHEMA, "repository": "example/repo", "merges": [record]}
     path = external / "merge-evidence.json"
@@ -255,7 +259,7 @@ class PromotionCheckerTests(unittest.TestCase):
     def test_embedded_workflow_python_registers_dataclass_module_before_execution(self) -> None:
         workflow = (REPO_ROOT / ".github/workflows/task-to-dev-promotion-check.yml").read_text(encoding="utf-8")
         steps = (
-            ("control-change", "Require exact-head owner command for protected control changes", "Fetch candidate history without checking it out", "def api"),
+            ("control-change", "Require exact-head owner command for protected control changes", "Fetch candidate and trusted main history without checking them out", "def api"),
             ("publication", "Publish exact-head trusted task-to-dev admission", "Retain raw status receipt", "workflow_id ="),
         )
         for name, step, next_step, prelude_end in steps:
@@ -282,6 +286,8 @@ class PromotionCheckerTests(unittest.TestCase):
             '["gh", "api", "--paginate", "--slurp"', "previous_filename",
             "checks: write", "owner_control_change_authorized", "final_comments", "WORKFLOW_SHA", "task_to_dev_workflow_identity_is_exact", "event_base",
             "Candidate code is fetched as Git objects only and is never executed",
+            "git/ref/heads/main", "task-to-dev-trusted-main", "trusted main moved between observation and fetch",
+            '--trusted-main "$TRUSTED_MAIN_OID"', 'receipt.get("trusted_main_oid") != default_branch_sha',
         ]:
             self.assertIn(marker, workflow)
         self.assertIn(".aide/scripts/aide_lite.py", aide_lite.PROTECTED_CONTROL_EXACT_PATHS)
@@ -315,18 +321,96 @@ class PromotionCheckerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             container = Path(temp); root = container / "repo"; root.mkdir(); init(root)
             base = git(root, "rev-parse", "dev")
+            trusted_main = git(root, "rev-parse", "main")
             head = commit(root, "fix(test): status fixture", "status.txt", "status\n")
             output = container / "external-status.json"
             result = aide_lite.command_git_task_to_dev_status(SimpleNamespace(
                 repo_root=root, repository="example/repo", pull_request=9,
-                base=base, head=head, output=str(output),
+                base=base, head=head, trusted_main=trusted_main, output=str(output),
             ))
             receipt = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(result, 0, receipt.get("blockers"))
             self.assertEqual(receipt["range"], f"{base}..{head}")
+            self.assertEqual(receipt["trusted_main_oid"], trusted_main)
             self.assertEqual(receipt["commit_oids"], [head])
+            self.assertEqual(receipt["full_range_commit_oids"], [head])
             self.assertTrue(receipt["full_history_checked"])
+            self.assertTrue(receipt["candidate_history_checked"])
             self.assertFalse(receipt["candidate_code_executed"])
+
+    def test_task_to_dev_status_excludes_only_trusted_main_history(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp); root = container / "repo"; root.mkdir(); init(root)
+            base = git(root, "rev-parse", "dev")
+            git(root, "checkout", "main")
+            protected_bad = commit(root, "ordinary protected merge subject", "protected.txt", "protected\n")
+            trusted_main = git(root, "rev-parse", "main")
+            git(root, "update-ref", aide_lite.TASK_TO_DEV_TRUSTED_MAIN_REF, trusted_main)
+            git(root, "checkout", "task/example")
+            git(root, "merge", "--no-ff", "main", "-m", "chore(test): synchronize protected main\n\nWork-Item: TEST-PROMOTION-1")
+            candidate_merge = git(root, "rev-parse", "HEAD")
+            head = commit(root, "fix(test): retain candidate validation", "candidate.txt", "candidate\n")
+            output = container / "external-status.json"
+            result = aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                repo_root=root, repository="example/repo", pull_request=10,
+                base=base, head=head, trusted_main=trusted_main, output=str(output),
+            ))
+            receipt = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(result, 0, receipt.get("blockers"))
+            self.assertNotIn(protected_bad, receipt["commit_oids"])
+            self.assertEqual(receipt["commit_oids"], [candidate_merge, head])
+            self.assertIn(protected_bad, receipt["full_range_commit_oids"])
+
+    def test_task_to_dev_status_requires_exact_lowercase_trusted_main_oid(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp); root = container / "repo"; root.mkdir(); init(root)
+            base = git(root, "rev-parse", "dev")
+            head = commit(root, "fix(test): status fixture", "status.txt", "status\n")
+            output = container / "external-status.json"
+            for trusted_main in ("main", "A" * 40, f" {git(root, 'rev-parse', 'main')}"):
+                with self.subTest(trusted_main=trusted_main), self.assertRaisesRegex(
+                    ValueError, "exact lowercase 40-character commit OID"
+                ):
+                    aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                        repo_root=root, repository="example/repo", pull_request=11,
+                        base=base, head=head, trusted_main=trusted_main, output=str(output),
+                    ))
+            self.assertFalse(output.exists())
+            with patch.object(aide_lite, "git_oid", side_effect=[base, head, "b" * 40]):
+                with self.assertRaisesRegex(ValueError, "exact supplied commit OID"):
+                    aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                        repo_root=root, repository="example/repo", pull_request=11,
+                        base=base, head=head, trusted_main="a" * 40, output=str(output),
+                    ))
+            self.assertFalse(output.exists())
+            with patch.object(aide_lite, "git_oid", side_effect=[base, head, "a" * 40, "b" * 40]):
+                with self.assertRaisesRegex(ValueError, "exact fetched protected main ref"):
+                    aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                        repo_root=root, repository="example/repo", pull_request=11,
+                        base=base, head=head, trusted_main="a" * 40, output=str(output),
+                    ))
+            self.assertFalse(output.exists())
+
+    def test_task_to_dev_status_rejects_unavailable_trusted_main_and_bad_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp); root = container / "repo"; root.mkdir(); init(root)
+            base = git(root, "rev-parse", "dev")
+            trusted_main = git(root, "rev-parse", "main")
+            bad = commit(root, "ordinary malformed", "bad-candidate.txt", "bad\n")
+            with self.assertRaises(ValueError):
+                aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                    repo_root=root, repository="example/repo", pull_request=11,
+                    base=base, head=bad, trusted_main="f" * 40,
+                    output=str(container / "unavailable.json"),
+                ))
+            output = container / "bad-status.json"
+            result = aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                repo_root=root, repository="example/repo", pull_request=11,
+                base=base, head=bad, trusted_main=trusted_main, output=str(output),
+            ))
+            receipt = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(result, 1)
+            self.assertIn("candidate_history_contains_malformed_commit", receipt["blockers"])
 
     def test_full_history_remains_default_and_first_parent_requires_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
