@@ -6,6 +6,7 @@
 #include "fl_sha256.h"
 #include "fl_system_services.h"
 #include "flb_factorio_execution.h"
+#include "flb_factorio_launch_plan.h"
 #include "last_run_provider.h"
 
 #include <atomic>
@@ -122,6 +123,24 @@ private:
     fs::path blocked_root_;
 };
 
+class SuccessfulSupervisor final : public launch::ProcessSupervisor {
+public:
+    facman::platform::ProcessResult run(
+        const facman::platform::ProcessRequest& request) override
+    {
+        ++calls;
+        facman::platform::ProcessResult result;
+        result.identity = {42001U, "fixture-process-v1", "fixture-process-v1:42001:1"};
+        if (request.started) request.started(result.identity);
+        result.termination = facman::platform::ProcessTermination::exited;
+        result.exit_code = 0;
+        result.native_status = 0;
+        return result;
+    }
+
+    std::size_t calls = 0;
+};
+
 bool has_state(const launch::LaunchSessionResult& session, const std::string& state)
 {
     for (const auto& event : session.lifecycle) if (event.state == state) return true;
@@ -132,6 +151,42 @@ std::string read_text(const fs::path& path)
 {
     std::ifstream input(path, std::ios::binary);
     return std::string((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+}
+
+fs::path write_interrupted_session(
+    const fs::path& instance_root,
+    const std::string& name,
+    const std::string& state,
+    facman::platform::ProcessIdentity identity)
+{
+    const fs::path journal_root = instance_root / "state" / "run-sessions";
+    std::error_code error;
+    fs::create_directories(journal_root, error);
+    if (error) return {};
+    launch::LaunchSessionResult session;
+    session.session_id = name;
+    session.operation_id = "operation-" + name;
+    session.attempt_id = "attempt-" + name;
+    session.runnable_reference = "facman.instance:" + name;
+    session.relaunch_reference = "relaunch:" + name;
+    session.instance_id = "foundation-test";
+    session.execution_mode = "foundation_test";
+    session.immutable_plan_identity = "plan-" + name;
+    session.current_state = state;
+    session.journal_path = journal_root / (name + ".launch-session.v1.json");
+    session.working_directory = instance_root;
+    session.lifecycle.push_back({"requested", "2026-09-10T00:00:00Z", "original lifecycle event"});
+    if (state != "requested") {
+        session.lifecycle.push_back({state, "2026-09-10T00:00:01Z", "interrupted lifecycle event"});
+    }
+    session.process.identity = std::move(identity);
+    session.process.termination = facman::platform::ProcessTermination::pending;
+    session.operation_outcome = "outcome_unknown";
+    session.recovery_required = true;
+    std::string detail;
+    if (!facman::base::write_text_new_atomic(
+            session.journal_path, launch::launch_session_json(session) + "\n", detail)) return {};
+    return session.journal_path;
 }
 
 int process_failure(
@@ -203,12 +258,8 @@ int main()
     auto restarted_last_run = application::make_ulk_session_last_run_provider(tree.path);
     if (restarted_last_run->last_run(success_request.runnable_reference).state !=
         application::LastRunAuthorityState::authoritative_record_available) return 17;
-#if defined(_WIN32) || defined(__linux__)
     const bool restart_identity_missing =
         !success.value().process.identity.restart_safe();
-#else
-    const bool restart_identity_missing = false;
-#endif
     if (!success.value().successful || !success.value().complete ||
         success.value().recovery_required || success.value().current_state != "complete" ||
         restart_identity_missing ||
@@ -272,12 +323,31 @@ int main()
     // published the process identity. A fixed delay can expire while a loaded
     // runner is still closing inherited descriptors before exec, where the
     // correct fail-closed result is pending rather than cancelled.
-    cancelled_request.process_started = [&](const facman::platform::ProcessIdentity&) {
+    bool live_identity_observed = false;
+    cancelled_request.process_started = [&](const facman::platform::ProcessIdentity& identity) {
+#if defined(_WIN32)
+        const std::string expected_platform = "windows-process-v1";
+#elif defined(__APPLE__)
+        const std::string expected_platform = "darwin-process-v1";
+#elif defined(__linux__)
+        const std::string expected_platform = "linux-process-v1";
+#else
+        const std::string expected_platform;
+#endif
+        const std::string expected_prefix = expected_platform.empty()
+            ? std::string {}
+            : expected_platform + ":" + std::to_string(identity.process_id) + ":";
+        live_identity_observed = !expected_platform.empty() &&
+            identity.platform == expected_platform &&
+            identity.stable_start_identity.rfind(expected_prefix, 0) == 0 &&
+            facman::platform::observe_process_identity(identity) ==
+                facman::platform::ProcessIdentityObservation::matching_alive;
         cancel.store(true);
     };
     auto cancelled = service.execute(cancelled_request);
     if (!cancelled || cancelled.value().process.termination != facman::platform::ProcessTermination::cancelled ||
-        !cancelled.value().complete || !has_state(cancelled.value(), "cancelled"))
+        !cancelled.value().complete || !has_state(cancelled.value(), "cancelled") ||
+        !live_identity_observed)
         return process_failure(6, "cancelled launch", cancelled);
     const auto cancelled_last_run = last_run->last_run(cancelled_request.runnable_reference);
     if (cancelled_last_run.state !=
@@ -458,20 +528,173 @@ int main()
     const auto invalid = service.execute(invalid_contract);
     if (invalid || invalid.error().code != "ulk_session_contract_invalid") return 32;
 
-    const fs::path interrupted_root = tree.path / "state" / "run-sessions";
-    fs::create_directories(interrupted_root, error);
-    const fs::path interrupted = interrupted_root / "interrupted.launch-session.v1.json";
-    const std::string interrupted_text =
-        "{\"schema\":\"factorio.launch_session.v1\",\"session_id\":\"interrupted\","
-        "\"instance_id\":\"foundation-test\",\"execution_mode\":\"foundation_test\","
-        "\"immutable_plan_identity\":\"test\",\"current_state\":\"running\","
-        "\"working_directory\":" + facman::core::json::quote_string(tree.path.string()) + ","
-        "\"process\":{\"identity\":{\"process_id\":4294967294,\"platform\":\"test\"}}}";
-    std::string detail;
-    if (!facman::base::write_text_new_atomic(interrupted, interrupted_text, detail)) return 14;
-    auto recovered = launch::recover_interrupted_launch_sessions(tree.path, clock, ids);
-    if (!recovered || recovered.value().recovered != 1 || recovered.value().still_running != 0 ||
-        read_text(interrupted).find("\"current_state\":\"complete\"") == std::string::npos ||
-        read_text(interrupted).find("\"recovered_from_state\":\"running\"") == std::string::npos) return 15;
+    const facman::platform::ProcessIdentity interrupted_identity {
+        4294967294U, "fixture-process-v1", "fixture-process-v1:4294967294:1"};
+
+    const fs::path mismatch_root = tree.path / "recovery-pid-reuse";
+    fs::create_directories(mismatch_root, error);
+    const fs::path interrupted = write_interrupted_session(
+        mismatch_root, "interrupted", "running", interrupted_identity);
+    if (interrupted.empty()) return 14;
+    bool mismatch_observed = false;
+    auto recovered = launch::recover_interrupted_launch_sessions(
+        mismatch_root, clock, ids,
+        [&](const facman::platform::ProcessIdentity& identity) {
+            mismatch_observed = identity.process_id == interrupted_identity.process_id &&
+                identity.stable_start_identity == interrupted_identity.stable_start_identity;
+            return facman::platform::ProcessIdentityObservation::not_matching_or_exited;
+        });
+    const std::string recovered_text = read_text(interrupted);
+    if (!recovered || !mismatch_observed || recovered.value().recovered != 1 ||
+        recovered.value().still_running != 0 || recovered.value().inconclusive != 0 ||
+        recovered_text.find("\"current_state\":\"complete\"") == std::string::npos ||
+        recovered_text.find("\"recovered_from_state\":\"running\"") == std::string::npos ||
+        recovered_text.find("\"operation_id\":\"operation-interrupted\"") == std::string::npos ||
+        recovered_text.find("original lifecycle event") == std::string::npos ||
+        recovered_text.find(interrupted_identity.stable_start_identity) == std::string::npos) return 15;
+
+    const fs::path live_root = tree.path / "recovery-live";
+    fs::create_directories(live_root, error);
+    const fs::path live = write_interrupted_session(
+        live_root, "live", "running", interrupted_identity);
+    const std::string live_before = read_text(live);
+    auto live_report = launch::recover_interrupted_launch_sessions(
+        live_root, clock, ids,
+        [](const facman::platform::ProcessIdentity&) {
+            return facman::platform::ProcessIdentityObservation::matching_alive;
+        });
+    if (!live_report || live_report.value().still_running != 1 ||
+        live_report.value().recovered != 0 || read_text(live) != live_before) return 37;
+
+    const fs::path unknown_root = tree.path / "recovery-inconclusive";
+    fs::create_directories(unknown_root, error);
+    const fs::path unknown_journal = write_interrupted_session(
+        unknown_root, "unknown", "starting", interrupted_identity);
+    const std::string unknown_before = read_text(unknown_journal);
+    auto unknown_report = launch::recover_interrupted_launch_sessions(
+        unknown_root, clock, ids,
+        [](const facman::platform::ProcessIdentity&) {
+            return facman::platform::ProcessIdentityObservation::inconclusive;
+        });
+    if (!unknown_report || unknown_report.value().inconclusive != 1 ||
+        unknown_report.value().recovered != 0 || read_text(unknown_journal) != unknown_before) return 38;
+
+    const fs::path legacy_root = tree.path / "recovery-legacy";
+    fs::create_directories(legacy_root, error);
+    auto legacy_identity = interrupted_identity;
+    legacy_identity.stable_start_identity.clear();
+    const fs::path legacy = write_interrupted_session(
+        legacy_root, "legacy", "running", legacy_identity);
+    const std::string legacy_before = read_text(legacy);
+    bool legacy_observer_called = false;
+    auto legacy_report = launch::recover_interrupted_launch_sessions(
+        legacy_root, clock, ids,
+        [&](const facman::platform::ProcessIdentity&) {
+            legacy_observer_called = true;
+            return facman::platform::ProcessIdentityObservation::not_matching_or_exited;
+        });
+    if (!legacy_report || legacy_observer_called || legacy_report.value().inconclusive != 1 ||
+        read_text(legacy) != legacy_before) return 39;
+
+    const fs::path predispatch_root = tree.path / "recovery-predispatch";
+    fs::create_directories(predispatch_root, error);
+    const fs::path predispatch = write_interrupted_session(
+        predispatch_root, "predispatch", "authorised", {});
+    auto predispatch_report = launch::recover_interrupted_launch_sessions(
+        predispatch_root, clock, ids,
+        [](const facman::platform::ProcessIdentity&) {
+            return facman::platform::ProcessIdentityObservation::inconclusive;
+        });
+    const std::string predispatch_text = read_text(predispatch);
+    if (!predispatch_report || predispatch_report.value().recovered != 1 ||
+        predispatch_text.find("\"operation_outcome\":\"refused_before_effects\"") ==
+            std::string::npos) return 40;
+
+    const fs::path automatic_root = tree.path / "recovery-before-launch";
+    fs::create_directories(automatic_root, error);
+    const fs::path automatic = write_interrupted_session(
+        automatic_root, "automatic", "running", interrupted_identity);
+    SuccessfulSupervisor successful_supervisor;
+    launch::LaunchExecutionService recovering_service(
+        successful_supervisor, clock, ids,
+        [](const facman::platform::ProcessIdentity&) {
+            return facman::platform::ProcessIdentityObservation::not_matching_or_exited;
+        });
+    auto automatic_request = request_for(automatic_root, "success");
+    auto automatic_result = recovering_service.execute(automatic_request);
+    if (!automatic_result || !automatic_result.value().successful ||
+        successful_supervisor.calls != 1 ||
+        read_text(automatic).find("\"current_state\":\"complete\"") == std::string::npos) return 41;
+
+    const fs::path blocked_recovery_root = tree.path / "recovery-blocked-launch";
+    fs::create_directories(blocked_recovery_root, error);
+    (void)write_interrupted_session(
+        blocked_recovery_root, "blocked", "running", interrupted_identity);
+    SuccessfulSupervisor blocked_supervisor;
+    launch::LaunchExecutionService blocked_service(
+        blocked_supervisor, clock, ids,
+        [](const facman::platform::ProcessIdentity&) {
+            return facman::platform::ProcessIdentityObservation::inconclusive;
+        });
+    auto blocked_launch = blocked_service.execute(request_for(blocked_recovery_root, "success"));
+    if (blocked_launch || blocked_launch.error().code != "prior_launch_recovery_incomplete" ||
+        blocked_supervisor.calls != 0) return 42;
+
+    const fs::path locked_root = tree.path / "recovery-concurrent";
+    fs::create_directories(locked_root, error);
+    launch::InstanceRunLock held_lock;
+    const auto held = launch::acquire_instance_run_lock(locked_root, 300, held_lock);
+    if (!held.acquired) return 43;
+    SuccessfulSupervisor concurrent_supervisor;
+    launch::LaunchExecutionService concurrent_service(concurrent_supervisor, clock, ids);
+    auto concurrent = concurrent_service.execute(request_for(locked_root, "success"));
+    std::string release_detail;
+    const bool released = launch::release_instance_run_lock(held_lock, release_detail);
+    if (concurrent || concurrent.error().code != "run_lock_contended" ||
+        concurrent_supervisor.calls != 0 || !released) return 44;
+
+    const fs::path link_root = tree.path / "recovery-link";
+    const fs::path link_target_root = tree.path / "recovery-link-target";
+    fs::create_directories(link_root / "state" / "run-sessions", error);
+    fs::create_directories(link_target_root, error);
+    const fs::path link_target = write_interrupted_session(
+        link_target_root, "target", "authorised", {});
+    const fs::path link = link_root / "state" / "run-sessions" / "linked.launch-session.v1.json";
+    fs::create_symlink(link_target, link, error);
+    if (!error) {
+        const std::string target_before = read_text(link_target);
+        auto link_report = launch::recover_interrupted_launch_sessions(link_root, clock, ids);
+        if (!link_report || link_report.value().failed != 1 ||
+            link_report.value().recovered != 0 || read_text(link_target) != target_before) return 45;
+    }
+
+    for (int linked_component = 0; linked_component < 2; ++linked_component) {
+        const fs::path root = tree.path /
+            (linked_component == 0 ? "recovery-linked-state" : "recovery-linked-root");
+        const fs::path target = tree.path /
+            (linked_component == 0 ? "recovery-linked-state-target" : "recovery-linked-root-target");
+        const fs::path target_journal = write_interrupted_session(
+            target, "target", "authorised", {});
+        const std::string target_before = read_text(target_journal);
+        fs::create_directories(root, error);
+        error.clear();
+        if (linked_component == 0) {
+            fs::create_directory_symlink(target / "state", root / "state", error);
+        } else {
+            fs::create_directories(root / "state", error);
+            if (!error) {
+                fs::create_directory_symlink(
+                    target / "state" / "run-sessions",
+                    root / "state" / "run-sessions",
+                    error);
+            }
+        }
+        if (!error) {
+            auto linked_report = launch::recover_interrupted_launch_sessions(root, clock, ids);
+            if (linked_report || linked_report.error().code != "launch_recovery_root_unsafe" ||
+                read_text(target_journal) != target_before) return 46 + linked_component;
+        }
+        error.clear();
+    }
     return 0;
 }

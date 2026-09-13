@@ -446,6 +446,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
+- [x] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable
+  - State: `complete`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Persist session identity before effects and reconcile crash/restart without adopting unrelated processes.
 - [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -454,8 +458,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
-- [ ] **FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01** — Create galleries from production controls and deterministic states
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01** — Create galleries from production controls and deterministic states
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `frontend-maintainer`; dependencies: none
   - Outcome: Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, contrast and overflow fixtures.
 - [x] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
@@ -531,10 +535,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none
   - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
-- [ ] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Persist session identity before effects and reconcile crash/restart without adopting unrelated processes.
 - [ ] **FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01** — Close CLI JSON RPC and TUI compatibility mechanics
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none

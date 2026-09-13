@@ -41,6 +41,12 @@ struct ProcessIdentity {
     bool restart_safe() const noexcept { return !stable_start_identity.empty(); }
 };
 
+enum class ProcessIdentityObservation {
+    matching_alive,
+    not_matching_or_exited,
+    inconclusive,
+};
+
 struct ProcessRequest {
     std::filesystem::path executable;
     std::vector<std::string> arguments;
@@ -88,6 +94,7 @@ struct ProcessResult {
 ProcessResult supervise_process(const ProcessRequest& request);
 bool process_identity_alive(std::uint64_t process_id) noexcept;
 bool process_identity_alive(const ProcessIdentity& identity) noexcept;
+ProcessIdentityObservation observe_process_identity(const ProcessIdentity& identity) noexcept;
 
 } // namespace facman::platform
 

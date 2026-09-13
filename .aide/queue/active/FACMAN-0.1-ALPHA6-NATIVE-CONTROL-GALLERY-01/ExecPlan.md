@@ -315,3 +315,33 @@ receipt records independent model acceptance and exact component/archive hashes.
 This qualifies neither a resource-inspection command nor a live backend, real
 GUI/human experience, game, setup, signing, tag, publication, support, release,
 Beta authority, or WorkUnit completion; status remains `active_automated`.
+
+## Integrated gallery closeout
+
+PR 266 qualified the complete current gallery tree and merged normally into
+`dev` as `4ae50d6e1b72a1ffa967c54642168e2028677a32`. Its tree
+`950676fec250c9c791a363eca4e16cbcdcdd1a75` is identical to the tested head and
+the Linux synthetic-merge checkout. All eleven protected `dev` checks passed.
+The two task-to-dev control-plane checks failed for their already-recorded
+owner-command requirement; they are advisory, supplied no gallery evidence and
+were not represented as passing.
+
+Fresh hosted GTK evidence passed 56 cells, 19,088 assertions and 5,408 mapped
+font-label observations with no missing-font cell. The current Windows source
+receipt passed 28 cells, one constrained cell and 6,729 assertions. The hosted
+self-setup payload then supplied the exact same managed assembly to the gallery
+probe, distinct from the packaged native CLI, and repeated all 6,729 assertions
+without constructing live transport.
+
+The first packaged successor retained a real GDI+ image-save failure after all
+28 ordinary cells because the evidence pathname exceeded the legacy boundary.
+The identical immutable inputs passed from the shorter marker-owned `pg8` path;
+the failed attempt was neither removed nor relabelled. Exact source, CI,
+component and archive bindings are recorded in
+`evidence/integrated-closeout.v1.json`.
+
+Both canonical acceptance statements are now satisfied. Physical-monitor DPI
+and desktop-theme transitions, genuine keyboard/screen-reader experience and
+live game/setup behavior remain programme acceptance work outside this
+recording-only gallery result. No release, signing, publication, support, Beta
+or stable authority follows from closing this WorkUnit.

@@ -1,0 +1,61 @@
+{
+  "schema": "facman.session-recovery-source-validation.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+  "result": "PASS_SOURCE_CHECKPOINT",
+  "recorded_at": "2026-09-10T16:06:00Z",
+  "base": "757e2332e0c47f2d3e488ea8fcfdcc51f588595f",
+  "source_aggregate_sha256": "24fd2409504af7ef735ebbbeda473a5933eb8a2dd2fa46dea101e5f127d04a8f",
+  "windows_native": {
+    "build_root": "facman-development://tasks/task-facman-s-2b810b6568/native-smoke",
+    "build_identity_sha256": "dbc1e545bed8385624baf5da328f9030c38d0eb3549f74d7dbaa19ea07aae3f6",
+    "executable_sha256": "768fc3108f42ada88c2cd842793837e3f33fc41f4854c865b8d1aafcd3f3a56e",
+    "focused_command": "ctest --test-dir <owned-native-smoke> -C Debug -R ^facman_execution_foundation_smoke$ --output-on-failure",
+    "focused_result": "PASS 1/1 in 2.78 seconds",
+    "affected_native_result": "PASS build; PASS 44/44 CTests"
+  },
+  "affected_python": {
+    "selection": 147,
+    "first_result": "146 passed, 1 failed",
+    "failure": "generated contract catalogs stale after schema change",
+    "remediation": "tools/codegen/generate_metadata.py --write updated the two canonical generated catalogs",
+    "post_remediation": "complete strict suite PASS"
+  },
+  "final_checks": [
+    {
+      "command": "python -B tools/strict_check.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python -B tools/codegen/generate_metadata.py --check",
+      "result": "PASS"
+    },
+    {
+      "command": "python -B tools/generate_plan_views.py --check",
+      "result": "PASS"
+    },
+    {
+      "command": "python -B tools/project_state.py --validate",
+      "result": "PASS"
+    },
+    {
+      "command": "python -B .aide/scripts/aide_lite.py test",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    }
+  ],
+  "generated_report_state": "restored and verified byte-for-byte and mtime-for-mtime after AIDE validation",
+  "scope": {
+    "source_validation": true,
+    "windows_native_current_source": true,
+    "hosted_macos_current_source": false,
+    "hosted_linux_current_source": false,
+    "protected_dev_integration": false,
+    "packaged_real_play": false,
+    "human_experience": false,
+    "release_acceptance": false
+  },
+  "workunit_state": "active"
+}

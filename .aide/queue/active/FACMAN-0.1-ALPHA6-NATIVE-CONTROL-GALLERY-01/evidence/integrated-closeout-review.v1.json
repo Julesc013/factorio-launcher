@@ -1,0 +1,43 @@
+{
+  "schema": "facman.independent_model_review.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "reviewed_utc": "2026-09-13T10:49:50Z",
+  "reviewer": {
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "xhigh",
+    "role": "non_authoring",
+    "human_review": false
+  },
+  "subject": {
+    "base_commit": "4ae50d6e1b72a1ffa967c54642168e2028677a32",
+    "integrated_tree": "950676fec250c9c791a363eca4e16cbcdcdd1a75",
+    "primary_receipt": "evidence/integrated-closeout.v1.json",
+    "primary_receipt_prelink_sha256": "11c0ebddcaaf6d292526637d21e0ed5870534093a5aaf5094d264984ac8e877f"
+  },
+  "verdict": "PASS",
+  "findings": [
+    "The integrated dev tree, qualifying PR head tree and hosted synthetic-merge tree are identical.",
+    "All eleven checks in the active protected dev ruleset passed for the qualifying change.",
+    "Windows, GTK and packaged-candidate hashes and assertion counts reconcile with the retained receipts.",
+    "The long-path GDI+ failure is retained and accurately distinguished from the successful short-path rerun.",
+    "Task, queue, canonical plan, generated roadmap, dashboard and project-state projections consistently record the WorkUnit as closed.",
+    "Human experience, physical-monitor transitions, live product effects, signing, release and publication remain unclaimed."
+  ],
+  "read_only_validation": {
+    "project_state_validate": "PASS",
+    "generated_plan_views_check": "PASS",
+    "git_diff_check": "PASS",
+    "task_inspect": "PASS",
+    "task_noop_check": "PASS"
+  },
+  "post_review_delta": {
+    "scope": "The primary receipt gained only this review's verdict, model, role, path and final receipt SHA-256; its source, acceptance, qualification, failure and authority claims are unchanged.",
+    "effect_on_verdict": "none"
+  },
+  "authority": {
+    "technical_model_review": true,
+    "human_review": false,
+    "release": false,
+    "publication": false
+  }
+}

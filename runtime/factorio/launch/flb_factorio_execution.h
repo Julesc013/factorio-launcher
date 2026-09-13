@@ -96,8 +96,12 @@ struct LaunchRecoveryReport {
     std::size_t examined = 0;
     std::size_t recovered = 0;
     std::size_t still_running = 0;
+    std::size_t inconclusive = 0;
     std::size_t failed = 0;
 };
+
+using ProcessIdentityObserver = std::function<facman::platform::ProcessIdentityObservation(
+    const facman::platform::ProcessIdentity&)>;
 
 class ProcessSupervisor {
 public:
@@ -117,7 +121,8 @@ public:
     LaunchExecutionService(
         ProcessSupervisor& supervisor,
         facman::core::Clock& clock,
-        facman::core::IdGenerator& ids);
+        facman::core::IdGenerator& ids,
+        ProcessIdentityObserver process_identity_observer = facman::platform::observe_process_identity);
 
     facman::core::Result<LaunchSessionResult> execute(
         const LaunchExecutionRequest& request);
@@ -126,6 +131,7 @@ private:
     ProcessSupervisor& supervisor_;
     facman::core::Clock& clock_;
     facman::core::IdGenerator& ids_;
+    ProcessIdentityObserver process_identity_observer_;
 };
 
 std::string launch_session_json(const LaunchSessionResult& session);
@@ -134,6 +140,12 @@ facman::core::Result<LaunchRecoveryReport> recover_interrupted_launch_sessions(
     const std::filesystem::path& instance_root,
     facman::core::Clock& clock,
     facman::core::IdGenerator& ids);
+
+facman::core::Result<LaunchRecoveryReport> recover_interrupted_launch_sessions(
+    const std::filesystem::path& instance_root,
+    facman::core::Clock& clock,
+    facman::core::IdGenerator& ids,
+    const ProcessIdentityObserver& process_identity_observer);
 
 } // namespace facman::factorio::launch
 

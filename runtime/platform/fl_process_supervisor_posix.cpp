@@ -320,6 +320,19 @@ std::string posix_start_identity(pid_t process_id) noexcept
     } catch (...) {
         return {};
     }
+#elif defined(__APPLE__)
+    try {
+        kinfo_proc process {};
+        std::size_t size = sizeof(process);
+        int query[4] {CTL_KERN, KERN_PROC, KERN_PROC_PID, process_id};
+        if (sysctl(query, 4, &process, &size, nullptr, 0) != 0 ||
+            size != sizeof(process) || process.kp_proc.p_pid != process_id) return {};
+        return "darwin-process-v1:" + std::to_string(process_id) + ":" +
+            std::to_string(process.kp_proc.p_starttime.tv_sec) + ":" +
+            std::to_string(process.kp_proc.p_starttime.tv_usec);
+    } catch (...) {
+        return {};
+    }
 #else
     (void)process_id;
     return {};
@@ -424,6 +437,8 @@ ProcessResult supervise_process(const ProcessRequest& request)
                 static_cast<std::uint64_t>(child),
 #ifdef __linux__
                 "linux-process-v1",
+#elif defined(__APPLE__)
+                "darwin-process-v1",
 #else
                 "posix-pid",
 #endif
@@ -503,13 +518,38 @@ bool process_identity_alive(std::uint64_t process_id) noexcept
 
 bool process_identity_alive(const ProcessIdentity& identity) noexcept
 {
+    return observe_process_identity(identity) == ProcessIdentityObservation::matching_alive;
+}
+
+ProcessIdentityObservation observe_process_identity(const ProcessIdentity& identity) noexcept
+{
     if (identity.process_id == 0 ||
         identity.process_id > static_cast<std::uint64_t>(std::numeric_limits<pid_t>::max()) ||
-        identity.stable_start_identity.empty()) return false;
+        identity.platform.empty() || identity.stable_start_identity.empty()) {
+        return ProcessIdentityObservation::inconclusive;
+    }
+#ifdef __linux__
+    constexpr const char* expected_platform = "linux-process-v1";
+#elif defined(__APPLE__)
+    constexpr const char* expected_platform = "darwin-process-v1";
+#else
+    constexpr const char* expected_platform = "posix-pid";
+#endif
+    const std::string expected_prefix = std::string(expected_platform) + ":" +
+        std::to_string(identity.process_id) + ":";
+    if (identity.platform != expected_platform ||
+        identity.stable_start_identity.rfind(expected_prefix, 0) != 0) {
+        return ProcessIdentityObservation::inconclusive;
+    }
     const pid_t process_id = static_cast<pid_t>(identity.process_id);
     const int status = kill(process_id, 0);
-    if (status != 0 && errno != EPERM) return false;
-    return posix_start_identity(process_id) == identity.stable_start_identity;
+    if (status != 0 && errno == ESRCH) return ProcessIdentityObservation::not_matching_or_exited;
+    if (status != 0 && errno != EPERM) return ProcessIdentityObservation::inconclusive;
+    const std::string observed = posix_start_identity(process_id);
+    if (observed.empty()) return ProcessIdentityObservation::inconclusive;
+    return observed == identity.stable_start_identity
+        ? ProcessIdentityObservation::matching_alive
+        : ProcessIdentityObservation::not_matching_or_exited;
 }
 
 } // namespace facman::platform

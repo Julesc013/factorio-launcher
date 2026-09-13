@@ -358,17 +358,40 @@ bool process_identity_alive(std::uint64_t process_id) noexcept
 
 bool process_identity_alive(const ProcessIdentity& identity) noexcept
 {
+    return observe_process_identity(identity) == ProcessIdentityObservation::matching_alive;
+}
+
+ProcessIdentityObservation observe_process_identity(const ProcessIdentity& identity) noexcept
+{
     if (identity.process_id == 0 ||
         identity.process_id > static_cast<std::uint64_t>(MAXDWORD) ||
-        identity.stable_start_identity.empty()) return false;
+        identity.platform.empty() || identity.stable_start_identity.empty()) {
+        return ProcessIdentityObservation::inconclusive;
+    }
+    const std::string expected_prefix = "windows-process-v1:" +
+        std::to_string(identity.process_id) + ":";
+    if (identity.platform != "windows-process-v1" ||
+        identity.stable_start_identity.rfind(expected_prefix, 0) != 0) {
+        return ProcessIdentityObservation::inconclusive;
+    }
     Handle process(OpenProcess(
         SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
         FALSE,
         static_cast<DWORD>(identity.process_id)));
-    if (!process || WaitForSingleObject(process.get(), 0) != WAIT_TIMEOUT) return false;
-    return windows_start_identity(
-        process.get(), static_cast<DWORD>(identity.process_id)) ==
-        identity.stable_start_identity;
+    if (!process) {
+        return GetLastError() == ERROR_INVALID_PARAMETER
+            ? ProcessIdentityObservation::not_matching_or_exited
+            : ProcessIdentityObservation::inconclusive;
+    }
+    const DWORD wait = WaitForSingleObject(process.get(), 0);
+    if (wait == WAIT_OBJECT_0) return ProcessIdentityObservation::not_matching_or_exited;
+    if (wait != WAIT_TIMEOUT) return ProcessIdentityObservation::inconclusive;
+    const std::string observed = windows_start_identity(
+        process.get(), static_cast<DWORD>(identity.process_id));
+    if (observed.empty()) return ProcessIdentityObservation::inconclusive;
+    return observed == identity.stable_start_identity
+        ? ProcessIdentityObservation::matching_alive
+        : ProcessIdentityObservation::not_matching_or_exited;
 }
 
 } // namespace facman::platform
