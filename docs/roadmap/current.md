@@ -450,6 +450,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Persist session identity before effects and reconcile crash/restart without adopting unrelated processes.
+- [ ] **FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01** — Close CLI JSON RPC and TUI compatibility mechanics
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
 - [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -539,10 +543,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none
   - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
-- [ ] **FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01** — Close CLI JSON RPC and TUI compatibility mechanics
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
 - [ ] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none

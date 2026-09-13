@@ -780,6 +780,7 @@
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+        "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
         "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
       ]
     },
@@ -2699,15 +2700,16 @@
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
       "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
-      "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+      "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+      "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 1,
+      "active": 2,
       "active_automated": 2,
       "blocked": 2,
       "closed": 26,
-      "planned": 38,
+      "planned": 37,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
@@ -2750,6 +2752,12 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
         "lifecycle_state": "active",
         "queue": "active",
         "status": "active"
@@ -2954,12 +2962,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

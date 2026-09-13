@@ -45,6 +45,12 @@ items:
     title: Journal native setup effects and recover across setup phases
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence
+  - id: FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01
+    status: active
+    lifecycle_state: active
+    title: Close CLI JSON RPC and TUI compatibility mechanics
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence
   - id: FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01
     status: closed
     lifecycle_state: closed
@@ -249,12 +255,6 @@ items:
     title: Complete independent FacMan self-maintenance
     task: .aide/queue/next/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/evidence
-  - id: FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01
-    status: planned
-    lifecycle_state: planned
-    title: Close CLI JSON RPC and TUI compatibility mechanics
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence
   - id: FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01
     status: planned
     lifecycle_state: planned
