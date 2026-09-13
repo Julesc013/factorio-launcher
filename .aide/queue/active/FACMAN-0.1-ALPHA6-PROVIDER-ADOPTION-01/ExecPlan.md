@@ -83,3 +83,7 @@ drifted from the older policy; ABI, contract, public-header and licence
 identities remained stable. The refreshed launcher inventory values come from
 that exact six-profile run. The next immutable evidence context must be the
 commit that owns both refreshed provider policies.
+
+That combined-provider policy context is now commit
+`8f283ed5160bb1d5c0951445b3b2527da00cc345`. The hosted importer and tracked
+reconciliation validator both bind this exact immutable revision.
