@@ -264,11 +264,13 @@ actual runtime seams.""",
 id = "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01"
 title = "Make Play session ownership and crash recovery durable"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "active"
+status = "complete"
 horizon = "next"
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
+branch = "task/facman-session-recovery-01"
+base_revision = "757e2332e0c47f2d3e488ea8fcfdcc51f588595f"
 repos = ["FacMan"]
 outcome = "Persist session identity before effects and reconcile crash/restart without adopting unrelated processes."
 source_bundles = ["F06"]
@@ -284,6 +286,13 @@ acceptance = [
   "Persist session identity before effects and reconcile crash/restart without adopting unrelated processes.",
   "Test lost observations, PID reuse, concurrent launches, cancellation and stale session state.",
 ]
+
+integration_status = "integrated"
+reviewed_pull_request = 270
+dev_integration_revision = "782be06e22d2979723f2f614cf77561f6c7c7f97"
+dev_integration_tree = "5a1364a5eee146662e3391983944573fd34cc03c"
+integration_evidence = ".aide/queue/active/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/evidence/integration-closeout.v1.json"
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/evidence/integration-closeout.v1.json"]
 
 
 [[workunit]]

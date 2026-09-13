@@ -12,7 +12,7 @@ this roadmap and the release indexes take precedence.
 ## Current Product Sequence
 
 The active phase is **facman_0_1_alpha6_workspace_migration_recovery** and the primary active WorkUnit is `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`.
-Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`, `FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01`, `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`.
+Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`, `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`.
 
 Current release obligations are selected only by `release/index/active_release_view.v1.toml`.
 

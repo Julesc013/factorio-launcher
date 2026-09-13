@@ -1,0 +1,99 @@
+{
+  "schema": "facman.session-recovery-integration-closeout.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+  "result": "PASS",
+  "source": "4b19f4b34a5dd1f95560356ffe521a9ffba26ab9",
+  "source_tree": "5a1364a5eee146662e3391983944573fd34cc03c",
+  "base": "757e2332e0c47f2d3e488ea8fcfdcc51f588595f",
+  "pull_request": 270,
+  "pull_request_url": "https://github.com/Julesc013/factorio-launcher/pull/270",
+  "merged_at": "2026-09-10T16:58:52Z",
+  "integration": "782be06e22d2979723f2f614cf77561f6c7c7f97",
+  "integration_tree": "5a1364a5eee146662e3391983944573fd34cc03c",
+  "target": "dev",
+  "merge_method": "normal protected merge commit",
+  "required_checks": [
+    {
+      "name": "linux-native",
+      "run": 34501769891,
+      "job": 102954031698,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "windows-native-package",
+      "run": 34501769891,
+      "job": 102954031737,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "linux-coverage",
+      "run": 34501769891,
+      "job": 102954031657,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "macos-archive-core",
+      "run": 34501769891,
+      "job": 102954031648,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "macos-native-cli",
+      "run": 34501769891,
+      "job": 102954031668,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "appkit-compile",
+      "run": 34501769891,
+      "job": 102954031374,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "policy-check",
+      "run": 34501769911,
+      "job": 102954031521,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "development-only-cross-provider-fixture",
+      "run": 34501769946,
+      "job": 102954034356,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "c-cpp",
+      "run": 34501769999,
+      "job": 102954033051,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "python",
+      "run": 34501769999,
+      "job": 102954033374,
+      "conclusion": "SUCCESS"
+    },
+    {
+      "name": "csharp",
+      "run": 34501769999,
+      "job": 102954033386,
+      "conclusion": "SUCCESS"
+    }
+  ],
+  "advisory": {
+    "codeql": "SUCCESS",
+    "task_to_dev_promotion_check": "FAILURE: FACMAN_TASK_TO_DEV_REQUIRED_WORKFLOW_ID unset; not in live dev ruleset",
+    "bypassed": false
+  },
+  "qualification": {
+    "current_windows_hosted": true,
+    "current_linux_hosted": true,
+    "current_macos_hosted": true,
+    "process_identity_and_recovery_source": true,
+    "real_factorio_game_session": false,
+    "packaged_play_acceptance": false,
+    "human_experience": false,
+    "alpha6_release": false,
+    "beta1_release": false
+  }
+}

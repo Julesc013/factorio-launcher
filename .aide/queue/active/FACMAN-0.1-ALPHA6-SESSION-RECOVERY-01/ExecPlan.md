@@ -43,3 +43,23 @@ This checkpoint qualifies its exact current source and Windows test inputs.
 Fresh hosted macOS and Linux evidence, protected integration, packaged real-Play
 effects and human experience remain pending. The WorkUnit stays active and no
 release acceptance, signing, tagging or publication claim is made.
+
+### Protected dev integration closeout — 2026-09-10 UTC
+
+PR 270 qualified exact source `4b19f4b34a5dd1f95560356ffe521a9ffba26ab9`
+and tree `5a1364a5eee146662e3391983944573fd34cc03c` against exact base
+`757e2332e0c47f2d3e488ea8fcfdcc51f588595f`. All eleven checks in the live
+`dev` ruleset passed, including current Windows, Linux and macOS native/package
+jobs, Linux coverage, AppKit compile and the three language security jobs.
+CodeQL also passed. The normal protected merge produced
+`782be06e22d2979723f2f614cf77561f6c7c7f97` with the same tree, and local
+`dev` was fast-forwarded to that exact merge.
+
+The task-to-dev promotion advisory failed because the repository variable that
+names its trusted ruleset workflow is unset. It is not a live ruleset check and
+was neither bypassed nor relabelled as passing. Its separate repair remains on
+PR 266.
+
+The source and hosted-platform obligations of this WorkUnit are complete. It
+does not qualify an actual Factorio game session, packaged Play acceptance,
+human experience, signing, publication or the wider Alpha.6/Beta.1 programme.
