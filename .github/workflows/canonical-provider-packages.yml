@@ -164,6 +164,7 @@ jobs:
     timeout-minutes: 15
     env:
       FACMAN_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+      FACMAN_EVIDENCE_REVISION: 01c42719923d57836644f1b6d351b2cfb80e0a00
     steps:
       - name: Check out exact FacMan source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -249,7 +250,7 @@ jobs:
               --provider-source-root "$source_root" \
               --protected-ref refs/heads/main \
               --release-index release/index \
-              --facman-revision "$FACMAN_REVISION" \
+              --facman-revision "$FACMAN_EVIDENCE_REVISION" \
               --apply
           }
           import_provider ulk universal_launcher source/universal-launcher

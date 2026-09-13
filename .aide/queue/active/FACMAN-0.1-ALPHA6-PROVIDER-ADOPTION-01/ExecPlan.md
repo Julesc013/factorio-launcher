@@ -58,3 +58,8 @@ lock and SBOM projection. The five release projections remain pending until the
 complete hosted matrices are admitted atomically against a committed FacMan
 policy context. The WorkUnit remains active and consumer qualification is not
 yet claimed.
+
+The immutable FacMan policy context for both provider imports is commit
+`01c42719923d57836644f1b6d351b2cfb80e0a00`. Later workflow or generated-file
+commits must keep that evidence identity rather than using a moving PR head or
+inventing a self-referential generated revision.
