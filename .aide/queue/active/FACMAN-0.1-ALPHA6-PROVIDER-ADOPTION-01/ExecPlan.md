@@ -268,6 +268,28 @@ replace fresh hosted Linux qualification or weaken either assertion.
 The WorkUnit allowed-path declaration now names `cmake/FacManInstall.cmake`,
 which is the exact installer input required to close the Windows package failure.
 
+## 2026-09-15 provider-adoption closeout
+
+PR #282 integrated implementation head
+`117ba3943a18934c927130f3a3ead4baadf36ff1` into protected `dev` as
+`2c61a4e325353901fbdf52b671b6597881758e81`, preserving tree
+`9341909b7ebc6de5af27c11f2acc4f67b15391dd`. The exact promoted provider
+identities, corrected twelve-cell package matrix, five imported projections,
+Zlib notice custody, historical invalidation record and bounded transaction-ID
+repair satisfy both WorkUnit acceptance statements.
+
+A fresh non-authoring GPT-5.6 Sol review of the complete implementation range,
+merge topology and retained evidence returned `ACCEPT_CLOSE` with no material
+findings. This was model-based source and Git-object assurance; it did not rerun
+the heavy native/package work or claim human review. The two failed governance
+checks are separately diagnosed task-to-dev trust-anchor failures and do not
+contradict the 33 successful engineering checks.
+
+The closeout grants no release, publication, signing, real-game,
+human-experience, route or live Setup authority. Later changes to a provider,
+package, projection, licensing payload, staging identity or consumer source
+require fresh qualification.
+
 ## 2026-09-14 Windows Zlib notice checkout remediation
 
 PR run `34798731276`, Windows job `103836917710`, passed native Debug and

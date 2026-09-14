@@ -212,7 +212,7 @@ evidence = [
 id = "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01"
 title = "Adopt promoted provider identities with exact consumer proof"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "active"
+status = "complete"
 horizon = "next"
 priority = "P1"
 size = "M"
@@ -232,6 +232,16 @@ acceptance = [
   """Require exact USK/ULK source reachable from each provider main and package provenance before changing \
 consumer pins.""",
   "Run required consumer native/package modes against those exact identities; retain old/new lock evidence.",
+]
+
+integration_status = "integrated"
+reviewed_pull_request = 282
+dev_integration_revision = "2c61a4e325353901fbdf52b671b6597881758e81"
+dev_integration_tree = "9341909b7ebc6de5af27c11f2acc4f67b15391dd"
+integration_evidence = ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/evidence/provider-adoption-closeout.json"
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/evidence/provider-adoption-closeout.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/evidence/validation.md",
 ]
 
 

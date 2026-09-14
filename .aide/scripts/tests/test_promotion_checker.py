@@ -243,18 +243,46 @@ class PromotionCheckerTests(unittest.TestCase):
             for malformed in (b"\0" + signature, signature + b"\0", (int.from_bytes(signature, "big") + modulus).to_bytes(len(signature) + 1, "big")):
                 self.assertFalse(aide_lite.verify_trusted_workflow_attestation(envelope["payload"], envelope["key_id"], base64.b64encode(malformed).decode("ascii")))
 
-    def test_workflow_identity_binds_each_event_to_its_protected_ref_and_sha(self) -> None:
-        repo = "example/repo"; workflow = ".github/workflows/task-to-dev-promotion-check.yml"
-        dev = "a" * 40; main = "b" * 40
-        self.assertTrue(aide_lite.task_to_dev_workflow_identity_is_exact("pull_request_target", repo, f"{repo}/{workflow}@refs/heads/dev", dev, dev, "main", main, 7, 7, dev))
-        self.assertTrue(aide_lite.task_to_dev_workflow_identity_is_exact("issue_comment", repo, f"{repo}/{workflow}@refs/heads/main", main, dev, "main", main, 7, 7, main))
-        for event, ref, sha, run_sha in [
-            ("pull_request_target", f"{repo}/{workflow}@refs/heads/main", dev, dev),
-            ("pull_request_target", f"{repo}/{workflow}@refs/heads/dev", main, main),
-            ("issue_comment", f"{repo}/{workflow}@refs/heads/dev", main, main),
-            ("issue_comment", f"{repo}/{workflow}@refs/heads/main", dev, dev),
-        ]:
-            self.assertFalse(aide_lite.task_to_dev_workflow_identity_is_exact(event, repo, ref, sha, dev, "main", main, 7, 7, run_sha))
+    def test_workflow_identity_binds_each_event_to_default_branch_code_and_run_head(self) -> None:
+        repo = "example/repo"
+        workflow = ".github/workflows/task-to-dev-promotion-check.yml"
+        dev = "a" * 40
+        main = "b" * 40
+        candidate = "c" * 40
+        main_ref = f"{repo}/{workflow}@refs/heads/main"
+        dev_ref = f"{repo}/{workflow}@refs/heads/dev"
+
+        self.assertTrue(aide_lite.task_to_dev_workflow_identity_is_exact(
+            "pull_request_target", repo, main_ref, main, dev, candidate,
+            "main", main, 7, 7, candidate,
+        ))
+        self.assertTrue(aide_lite.task_to_dev_workflow_identity_is_exact(
+            "issue_comment", repo, main_ref, main, dev, candidate,
+            "main", main, 7, 7, main,
+        ))
+
+        refusals = [
+            ("pull_request_target", main_ref, "d" * 40, 7, candidate),
+            ("pull_request_target", dev_ref, main, 7, candidate),
+            ("pull_request_target", main_ref, main, 7, "d" * 40),
+            ("pull_request_target", main_ref, main, 8, candidate),
+            ("issue_comment", main_ref, main, 7, candidate),
+            ("issue_comment", main_ref, "d" * 40, 7, main),
+            ("issue_comment", dev_ref, main, 7, main),
+            ("issue_comment", main_ref, main, 8, main),
+            ("push", main_ref, main, 7, main),
+        ]
+        for event, ref, sha, workflow_id, run_sha in refusals:
+            with self.subTest(event=event, ref=ref, sha=sha, workflow_id=workflow_id, run_sha=run_sha):
+                self.assertFalse(aide_lite.task_to_dev_workflow_identity_is_exact(
+                    event, repo, ref, sha, dev, candidate,
+                    "main", main, workflow_id, 7, run_sha,
+                ))
+
+        self.assertFalse(aide_lite.task_to_dev_workflow_identity_is_exact(
+            "pull_request_target", repo, main_ref, main, dev, candidate,
+            "trunk", main, 7, 7, candidate,
+        ))
 
     def test_embedded_workflow_python_registers_dataclass_module_before_execution(self) -> None:
         workflow = (REPO_ROOT / ".github/workflows/task-to-dev-promotion-check.yml").read_text(encoding="utf-8")
