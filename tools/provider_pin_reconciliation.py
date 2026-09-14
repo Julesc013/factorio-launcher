@@ -25,7 +25,7 @@ from tools.release_compiler.canonical import (  # noqa: E402
 
 SCHEMA = "facman.provider_pin_reconciliation.v1"
 PACKAGE_SET_DOMAIN = "facman.provider_sdk_package_set.v1"
-EVIDENCE_REVISION = "323fe8a196816db7292a06db739886563d5f7bb8"
+EVIDENCE_REVISION = "8bbe5051339d828ad7d39aae880be0d293ef2a89"
 ROUTE_V1_SHA256 = "98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632"
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 HEX_64 = re.compile(r"^[0-9a-f]{64}$")
@@ -53,8 +53,8 @@ PROVIDERS = {
         "source": "universal-setup",
         "repository": "Julesc013/universal-setup",
         "remote": "https://github.com/Julesc013/universal-setup.git",
-        "revision": "bffb60fbf83ca57f71849aafaa36bbaf934f9179",
-        "tree": "7b7134352db149fdfe45862eb794fc06e0b5fc70",
+        "revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+        "tree": "499013a2099f872c998932505a51489343606382",
         "prior_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
         "package_version": "1.0.0",
         "cmake_package_version": "1.0.0",

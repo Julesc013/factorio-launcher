@@ -161,12 +161,11 @@ jobs:
   project-release-inputs:
     name: project exact provider release inputs
     needs: package
-    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       FACMAN_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
-      FACMAN_EVIDENCE_REVISION: 323fe8a196816db7292a06db739886563d5f7bb8
+      FACMAN_EVIDENCE_REVISION: 8bbe5051339d828ad7d39aae880be0d293ef2a89
     steps:
       - name: Check out exact FacMan source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -188,7 +187,7 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: Julesc013/universal-setup
-          ref: bffb60fbf83ca57f71849aafaa36bbaf934f9179
+          ref: 279ad4876dc325f8e1fcdc918c91b098a11bc616
           path: source/universal-setup
           fetch-depth: 0
           persist-credentials: false
@@ -204,19 +203,19 @@ jobs:
         shell: bash
         run: |
           git -C source/universal-launcher checkout -B main 5479939ca5cbc9ee0f901608a92012778b4752ae
-          git -C source/universal-setup checkout -B main bffb60fbf83ca57f71849aafaa36bbaf934f9179
+          git -C source/universal-setup checkout -B main 279ad4876dc325f8e1fcdc918c91b098a11bc616
           test "$(git -C source/universal-launcher symbolic-ref HEAD)" = refs/heads/main
           test "$(git -C source/universal-setup symbolic-ref HEAD)" = refs/heads/main
 
       - name: Download policy-bound package matrix
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
-          artifact-ids: 10327537210,10327507523,10327467768,10327268319,10327223436,10327153648,10327023930,10326934348,10326894549,10326844915,10326783859,10326609232
+          artifact-ids: 10328805080,10328776053,10328742824,10328742637,10328698204,10328537425,10328323992,10328227775,10328078103,10327998258,10327753418,10327579450
           path: downloaded-packages
           merge-multiple: false
           github-token: ${{ github.token }}
           repository: Julesc013/factorio-launcher
-          run-id: 34788538157
+          run-id: 34792335969
 
       - name: Extract package roots
         shell: bash

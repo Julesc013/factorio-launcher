@@ -173,3 +173,10 @@ All twelve artifact objects reported `expired=false`. The two import policies
 now bind their exact per-profile artifact, contract and public-header inventory
 digests. Projection generation remains disabled until this policy snapshot has
 its own committed custody identity.
+
+The corrected import-policy custody commit is
+`8bbe5051339d828ad7d39aae880be0d293ef2a89`. The aggregate import now binds
+that exact policy snapshot, corrected matrix run `34792335969`, all twelve
+immutable artifact IDs, and USK protected-main commit
+`279ad4876dc325f8e1fcdc918c91b098a11bc616`. The reconciliation validator and
+tracked WinForms provider identity use the same source and policy context.
