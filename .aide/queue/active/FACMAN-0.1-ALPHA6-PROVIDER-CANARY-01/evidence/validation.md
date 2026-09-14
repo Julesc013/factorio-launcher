@@ -40,3 +40,12 @@ Repository lifecycle, plan-generation, project-state, focused unit, strict,
 AIDE Lite, commit-message, and diff checks will be recorded after that final
 receipt content is available. No current statement treats green job status as
 provider adoption or WorkUnit closeout.
+
+## 2026-09-14 closeout
+
+The retained hosted conformance observations and independent review cover the
+WorkUnit acceptance surface on Linux, macOS and Windows. Provider adoption was
+reviewed and integrated separately through PR #282. AIDE inspect, noop-check,
+dependencies, recover, verify, review and close completed, so the canary
+WorkUnit is closed with PASS. Release, publication, signing, human-experience
+and real-game qualification remain outside this evidence.
