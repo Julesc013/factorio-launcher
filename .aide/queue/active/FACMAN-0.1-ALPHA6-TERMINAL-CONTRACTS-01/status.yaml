@@ -1,0 +1,17 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+result: PASS
+created_at: 2026-09-06
+evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/
+source_validated_at: 2026-09-10T07:41:59Z
+implementation_state: implemented
+source_validation_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-process-contract-source-review.v1.json
+current_validation_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-contract-current-dev-validation.v1.json
+active_at: 2026-09-13T17:07:34Z
+verified_pending_closeout_at: 2026-09-13T17:58:05Z
+reviewed_at: 2026-09-13T18:00:03Z
+closed_at: 2026-09-13T18:00:03Z
+integration_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-contract-integration-closeout.v1.json

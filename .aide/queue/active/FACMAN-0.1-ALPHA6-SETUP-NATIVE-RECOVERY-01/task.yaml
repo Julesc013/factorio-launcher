@@ -1,30 +1,36 @@
 schema_version: aide.queue-task.v1
-id: FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01
-title: Close CLI JSON RPC and TUI compatibility mechanics
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+id: FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01
+title: Journal native setup effects and recover across setup phases
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
 admission_workunit: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
-objective: "Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures."
+objective: "Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback."
 source_bundles:
-  - "F07"
+  - "F12"
 allowed_paths:
-  - "apps/**"
+  - "release/index/plan.v1.toml"
+  - "release/index/current_state.v1.toml"
+  - ".aide/queue/index.yaml"
+  - ".aide/memory/**"
+  - "README.md"
+  - "todo.md"
   - "runtime/**"
+  - "apps/**"
   - "contracts/**"
   - "tests/**"
   - "docs/**"
-  - ".aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
   - ".aide/history/**"
 acceptance:
-  - "Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures."
-  - "Full-screen and linear workflows use typed views/actions and do not require raw JSON or Advanced."
+  - "Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback."
+  - "Test phase-boundary failure, restart, stale ownership and installed-use versus portable behavior."
 validation_protocol:
   - "Inspect existing affected native/Python tests and strict validators before implementation; record exact commands and results."
   - "Exercise applicable positive, refusal, concurrency, fault/recovery and package effects with independent oracles."
@@ -34,3 +40,4 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+active_at: 2026-09-13T11:36:17Z

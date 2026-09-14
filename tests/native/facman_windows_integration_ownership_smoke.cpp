@@ -205,6 +205,55 @@ void receipt_publication_cases() {
   fs::remove(destination);
   require(fs::remove(fixture), "owned empty fixture directory retired");
 }
+
+void shortcut_lifecycle_cases() {
+  namespace fs = std::filesystem;
+  const fs::path fixture = fs::path(FACMAN_TEST_TEMP_ROOT) /
+      ("shortcut-lifecycle-" + std::to_string(GetCurrentProcessId()));
+  const fs::path root = fixture / "install";
+  const fs::path shortcut = fixture / "Programs" / "FacMan.lnk";
+  std::error_code error;
+  fs::create_directories(fixture.parent_path(), error);
+  require(!error, "shortcut lifecycle fixture parent created");
+  fs::remove_all(fixture, error);
+  fs::create_directories(root / "generations" / "1.0.0", error);
+  require(!error, "shortcut lifecycle fixture generation directory created");
+  fs::create_directories(root / "maintenance", error);
+  require(!error, "shortcut lifecycle fixture maintenance directory created");
+  std::ofstream(root / "generations" / "1.0.0" / "FacMan.exe", std::ios::binary) << "fixture";
+  std::ofstream(root / "maintenance" / "FacManSetup.exe", std::ios::binary) << "fixture";
+
+  const auto created = integration::apply_windows_shortcut_fixture(shortcut, root, "1.0.0", false);
+  require(created.ok, "owned real shortcut created in the isolated fixture");
+  const auto first = integration::inspect_windows_shortcut_fixture(shortcut, root, "1.0.0");
+  const auto repeated = integration::inspect_windows_shortcut_fixture(shortcut, root, "1.0.0");
+  require(first == Ownership::owned && repeated == Ownership::owned,
+          "an owned real shortcut remains inspectable after repeated reads");
+  fs::remove_all(root, error);
+  require(!error, "shortcut lifecycle target root deleted");
+  require(integration::inspect_windows_shortcut_fixture(shortcut, root, "1.0.0") == Ownership::owned,
+          "owned shortcut remains owned after its target root is deleted");
+  const auto removed = integration::apply_windows_shortcut_fixture(shortcut, root, "", true);
+  require(removed.ok, "owned real shortcut is removable after target root deletion");
+
+  const fs::path foreign_root = fixture / "foreign";
+  fs::create_directories(foreign_root / "generations" / "9.9.9", error);
+  require(!error, "foreign shortcut fixture generation directory created");
+  fs::create_directories(foreign_root / "maintenance", error);
+  require(!error, "foreign shortcut fixture maintenance directory created");
+  std::ofstream(foreign_root / "generations" / "9.9.9" / "FacMan.exe",
+                std::ios::binary) << "foreign fixture";
+  std::ofstream(foreign_root / "maintenance" / "FacManSetup.exe",
+                std::ios::binary) << "foreign fixture";
+  const auto substituted = integration::apply_windows_shortcut_fixture(
+      shortcut, foreign_root, "9.9.9", false);
+  require(substituted.ok, "foreign substitute shortcut created inside the isolated fixture");
+  const auto refused = integration::apply_windows_shortcut_fixture(shortcut, root, "", true);
+  require(!refused.ok && refused.recovery_required && fs::is_regular_file(shortcut),
+          "mutation-edge shortcut substitution requires recovery and is preserved");
+  fs::remove_all(fixture, error);
+  require(!error, "owned shortcut lifecycle fixture retired");
+}
 #endif
 
 #ifdef FACMAN_TEST_WINDOWS_INTEGRATION_ADAPTER
@@ -267,7 +316,8 @@ int main() {
   #ifdef FACMAN_TEST_WINDOWS_INTEGRATION_ADAPTER
   identity_cases();
   receipt_publication_cases();
+  shortcut_lifecycle_cases();
   #endif
   std::cout << "PASS: " << checks << " native integration ownership checks; "
-            << "native effects injected; local receipt fixture only, no real registry or shortcut mutations\n";
+            << "native effects injected; shortcut fixture stays under the CMake test root\n";
 }

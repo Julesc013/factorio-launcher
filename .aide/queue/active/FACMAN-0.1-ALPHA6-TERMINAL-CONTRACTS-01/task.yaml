@@ -1,30 +1,35 @@
 schema_version: aide.queue-task.v1
-id: FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01
-title: Journal native setup effects and recover across setup phases
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+id: FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01
+title: Close CLI JSON RPC and TUI compatibility mechanics
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
 admission_workunit: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
-objective: "Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback."
+objective: "Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures."
 source_bundles:
-  - "F12"
+  - "F07"
 allowed_paths:
-  - "runtime/**"
+  - "release/index/**"
+  - ".aide/queue/index.yaml"
+  - ".aide/memory/**"
+  - "README.md"
+  - "todo.md"
   - "apps/**"
+  - "runtime/**"
   - "contracts/**"
   - "tests/**"
   - "docs/**"
-  - ".aide/queue/next/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
   - ".aide/history/**"
 acceptance:
-  - "Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback."
-  - "Test phase-boundary failure, restart, stale ownership and installed-use versus portable behavior."
+  - "Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures."
+  - "Full-screen and linear workflows use typed views/actions and do not require raw JSON or Advanced."
 validation_protocol:
   - "Inspect existing affected native/Python tests and strict validators before implementation; record exact commands and results."
   - "Exercise applicable positive, refusal, concurrency, fault/recovery and package effects with independent oracles."
@@ -34,3 +39,10 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+active_at: 2026-09-13T17:07:34Z
+verified_pending_closeout_at: 2026-09-13T17:58:05Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-09-13T18:00:03Z
+closed_at: 2026-09-13T18:00:03Z
+integration_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-contract-integration-closeout.v1.json

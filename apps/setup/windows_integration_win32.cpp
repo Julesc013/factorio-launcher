@@ -76,6 +76,8 @@ bool read_shortcut(HANDLE file, ShortcutIdentity &identity) {
       (info.dwFileAttributes & (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY)) ||
       !GetFileSizeEx(file, &size) || size.QuadPart <= 0 || size.QuadPart > 1024 * 1024)
     return false;
+  LARGE_INTEGER file_start{};
+  if (!SetFilePointerEx(file, file_start, nullptr, FILE_BEGIN)) return false;
   std::vector<unsigned char> bytes(static_cast<std::size_t>(size.QuadPart));
   DWORD read = 0;
   if (!ReadFile(file, bytes.data(), static_cast<DWORD>(bytes.size()), &read, nullptr) ||
@@ -199,10 +201,232 @@ std::string utf8(const std::wstring &value) {
   return output;
 }
 
+std::wstring wide(const std::string &value) {
+  if (value.empty()) return {};
+  const int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+      value.data(), static_cast<int>(value.size()), nullptr, 0);
+  if (count <= 0) return {};
+  std::wstring output(static_cast<std::size_t>(count), L'\0');
+  MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, value.data(),
+      static_cast<int>(value.size()), output.data(), count);
+  return output;
+}
+
+bool set_registry_string(HKEY key, const wchar_t *name, const std::wstring &value) {
+  return RegSetValueExW(key, name, 0, REG_SZ,
+      reinterpret_cast<const BYTE *>(value.c_str()),
+      static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t))) == ERROR_SUCCESS;
+}
+
+bool set_registry_dword(HKEY key, const wchar_t *name, DWORD value) {
+  return RegSetValueExW(key, name, 0, REG_DWORD,
+      reinterpret_cast<const BYTE *>(&value), sizeof(value)) == ERROR_SUCCESS;
+}
+
+bool registry_dword(HKEY key, const wchar_t *name, DWORD expected) {
+  DWORD type = 0, bytes = sizeof(DWORD), value = 0;
+  return RegQueryValueExW(key, name, nullptr, &type,
+      reinterpret_cast<BYTE *>(&value), &bytes) == ERROR_SUCCESS &&
+      type == REG_DWORD && bytes == sizeof(DWORD) && value == expected;
+}
+
+bool desired_registration(HKEY key, const fs::path &root,
+                          const std::string &product_version) {
+  const fs::path generation = root / "generations" / wide(product_version);
+  const fs::path gui = generation / "FacMan.exe";
+  const fs::path maintenance = root / "maintenance" / "FacManSetup.exe";
+  const std::wstring uninstall = L"\"" + maintenance.wstring() + L"\" uninstall --yes";
+  std::wstring display_name, display_version, publisher, install_location,
+      display_icon, uninstall_string, quiet_uninstall, modify_path;
+  return registry_string(key, L"DisplayName", display_name) && display_name == L"FacMan" &&
+      registry_string(key, L"DisplayVersion", display_version) && display_version == wide(product_version) &&
+      registry_string(key, L"Publisher", publisher) && publisher == L"Jules C" &&
+      registry_string(key, L"InstallLocation", install_location) && equal(install_location, root.wstring()) &&
+      registry_string(key, L"DisplayIcon", display_icon) && display_icon == L"\"" + gui.wstring() + L"\"" &&
+      registry_string(key, L"UninstallString", uninstall_string) && uninstall_string == uninstall &&
+      registry_string(key, L"QuietUninstallString", quiet_uninstall) && quiet_uninstall == uninstall + L" --json" &&
+      registry_string(key, L"ModifyPath", modify_path) && modify_path == L"\"" + maintenance.wstring() + L"\" repair --yes" &&
+      registry_dword(key, L"NoModify", 1) && registry_dword(key, L"NoRepair", 0) &&
+      registration_ownership(key, root) == Ownership::owned;
+}
+
+bool shortcut_bytes(const fs::path &target, const fs::path &working_directory,
+                    std::vector<unsigned char> &bytes, std::string &detail) {
+  Apartment apartment;
+  IShellLinkW *shell_link = nullptr;
+  HRESULT status = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                                    IID_IShellLinkW, reinterpret_cast<void **>(&shell_link));
+  if (FAILED(status) || shell_link == nullptr) {
+    detail = "Windows could not create the Start Menu shortcut object";
+    return false;
+  }
+  status = shell_link->SetPath(target.c_str());
+  if (SUCCEEDED(status)) status = shell_link->SetWorkingDirectory(working_directory.c_str());
+  if (SUCCEEDED(status)) status = shell_link->SetDescription(L"FacMan");
+  IPersistStream *persist = nullptr;
+  if (SUCCEEDED(status)) status = shell_link->QueryInterface(
+      IID_IPersistStream, reinterpret_cast<void **>(&persist));
+  IStream *stream = nullptr;
+  if (SUCCEEDED(status)) status = CreateStreamOnHGlobal(nullptr, TRUE, &stream);
+  if (SUCCEEDED(status) && persist != nullptr) status = persist->Save(stream, TRUE);
+  STATSTG stat{};
+  if (SUCCEEDED(status)) status = stream->Stat(&stat, STATFLAG_NONAME);
+  HGLOBAL memory = nullptr;
+  if (SUCCEEDED(status)) {
+    memory = nullptr;
+    status = GetHGlobalFromStream(stream, &memory);
+  }
+  if (SUCCEEDED(status) && (stat.cbSize.QuadPart == 0 || stat.cbSize.QuadPart > 1024 * 1024)) status = E_FAIL;
+  if (SUCCEEDED(status)) {
+    void *data = GlobalLock(memory);
+    if (data == nullptr) status = E_FAIL;
+    else { bytes.assign(static_cast<unsigned char *>(data), static_cast<unsigned char *>(data) + stat.cbSize.QuadPart); GlobalUnlock(memory); }
+  }
+  if (persist != nullptr) persist->Release();
+  if (stream != nullptr) stream->Release();
+  shell_link->Release();
+  if (FAILED(status)) {
+    detail = "Windows could not serialize the FacMan Start Menu shortcut";
+    return false;
+  }
+  return true;
+}
+
+struct PreparedShortcut {
+  HANDLE handle = INVALID_HANDLE_VALUE;
+  ~PreparedShortcut() {
+    if (handle != INVALID_HANDLE_VALUE) {
+      FILE_DISPOSITION_INFO disposition{TRUE};
+      (void)SetFileInformationByHandle(handle, FileDispositionInfo, &disposition, sizeof(disposition));
+      CloseHandle(handle);
+    }
+  }
+};
+
+bool rename_open_file_no_replace(HANDLE file, const fs::path &destination);
+
+bool prepare_shortcut(const fs::path &target, const fs::path &working_directory,
+                      const fs::path &link, PreparedShortcut &prepared,
+                      std::string &detail) {
+  std::vector<unsigned char> bytes;
+  if (!shortcut_bytes(target, working_directory, bytes, detail)) return false;
+  const fs::path temporary = link.parent_path() / (link.filename().wstring() +
+      L".facman-pending." + std::to_wstring(GetCurrentProcessId()) + L"." +
+      std::to_wstring(GetTickCount64()));
+  prepared.handle = CreateFileW(temporary.c_str(), GENERIC_WRITE | DELETE,
+      0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  if (prepared.handle == INVALID_HANDLE_VALUE) { detail = "Windows could not create an exclusive shortcut temporary"; return false; }
+  DWORD written = 0;
+  if (!WriteFile(prepared.handle, bytes.data(), static_cast<DWORD>(bytes.size()), &written, nullptr) ||
+      written != bytes.size() || !FlushFileBuffers(prepared.handle)) {
+    detail = "Windows could not durably write the shortcut temporary"; return false;
+  }
+  return true;
+}
+
+bool publish_prepared_shortcut(PreparedShortcut &prepared, const fs::path &link) {
+  if (!rename_open_file_no_replace(prepared.handle, link)) return false;
+  CloseHandle(prepared.handle); prepared.handle = INVALID_HANDLE_VALUE;
+  return true;
+}
+
+bool create_shortcut(const fs::path &target, const fs::path &working_directory,
+                     const fs::path &link, std::string &detail) {
+  PreparedShortcut prepared;
+  return prepare_shortcut(target, working_directory, link, prepared, detail) &&
+      publish_prepared_shortcut(prepared, link);
+}
+
+bool rename_open_file_no_replace(HANDLE file, const fs::path &destination) {
+  const std::wstring name = destination.wstring();
+  std::vector<unsigned char> bytes(sizeof(FILE_RENAME_INFO) +
+      name.size() * sizeof(wchar_t));
+  auto *info = reinterpret_cast<FILE_RENAME_INFO *>(bytes.data());
+  info->ReplaceIfExists = FALSE;
+  info->RootDirectory = nullptr;
+  info->FileNameLength = static_cast<DWORD>(name.size() * sizeof(wchar_t));
+  std::memcpy(info->FileName, name.data(), info->FileNameLength);
+  return SetFileInformationByHandle(file, FileRenameInfo, info,
+                                    static_cast<DWORD>(bytes.size())) != FALSE;
+}
+
+Result replace_stale_shortcut(const fs::path &link, const fs::path &root,
+                              const fs::path &target,
+                              const fs::path &working_directory) {
+  PreparedShortcut prepared;
+  std::string detail;
+  if (!prepare_shortcut(target, working_directory, link, prepared, detail))
+    return {false, detail, true};
+  Handle existing;
+  if (open_shortcut(link, root, true, existing) != Ownership::owned)
+    return {false, "Start Menu shortcut changed before stale-owned replacement", true};
+  const fs::path backup = link.parent_path() /
+      (link.filename().wstring() + L".facman-backup." +
+       std::to_wstring(GetCurrentProcessId()) + L"." +
+       std::to_wstring(GetTickCount64()));
+  if (!rename_open_file_no_replace(existing.value, backup))
+    return {false, "Windows could not bind the stale shortcut to a private backup", true};
+  if (!publish_prepared_shortcut(prepared, link)) {
+    detail = "Windows could not publish the replacement Start Menu shortcut";
+    // This is no-replace restoration through the same opened file.  If a
+    // foreign caller has occupied the destination, retain our backup rather
+    // than overwrite it and force durable recovery.
+    if (!rename_open_file_no_replace(existing.value, link))
+      detail += "; stale shortcut backup was retained for recovery";
+    return {false, detail, true};
+  }
+  FILE_DISPOSITION_INFO disposition{TRUE};
+  if (!SetFileInformationByHandle(existing.value, FileDispositionInfo,
+                                  &disposition, sizeof(disposition)))
+    return {false, "new shortcut was published but stale shortcut backup could not be retired", true};
+  return {true, "owned shortcut updated"};
+}
+
+Result write_registration_transacted(const fs::path &root, const fs::path &gui,
+                                     const fs::path &maintenance,
+                                     const std::string &product_version) {
+  Handle transaction;
+  transaction.value = CreateTransaction(nullptr, nullptr, 0, 0, 0, 0, nullptr);
+  if (transaction.value == INVALID_HANDLE_VALUE)
+    return {false, "Windows could not begin a per-user uninstall registration transaction", true};
+  Key key;
+  DWORD disposition = 0;
+  const LSTATUS opened = RegCreateKeyTransactedW(
+      HKEY_CURRENT_USER, registry_path, 0, nullptr, REG_OPTION_NON_VOLATILE,
+      KEY_READ | KEY_WRITE, nullptr, &key.value, &disposition,
+      transaction.value, nullptr);
+  if (opened != ERROR_SUCCESS)
+    return {false, "Windows could not open the per-user uninstall registration transaction", true};
+  if (disposition != REG_CREATED_NEW_KEY) {
+    const Ownership current = registration_ownership(key.value, root);
+    if (current != Ownership::owned) {
+      RollbackTransaction(transaction.value);
+      return {false, "per-user uninstall registration changed to a foreign or unreadable object", true};
+    }
+  }
+  const std::wstring uninstall = L"\"" + maintenance.wstring() + L"\" uninstall --yes";
+  const bool written =
+      set_registry_string(key.value, L"DisplayName", L"FacMan") &&
+      set_registry_string(key.value, L"DisplayVersion", wide(product_version)) &&
+      set_registry_string(key.value, L"Publisher", L"Jules C") &&
+      set_registry_string(key.value, L"InstallLocation", root.wstring()) &&
+      set_registry_string(key.value, L"DisplayIcon", L"\"" + gui.wstring() + L"\"") &&
+      set_registry_string(key.value, L"UninstallString", uninstall) &&
+      set_registry_string(key.value, L"QuietUninstallString", uninstall + L" --json") &&
+      set_registry_string(key.value, L"ModifyPath", L"\"" + maintenance.wstring() + L"\" repair --yes") &&
+      set_registry_dword(key.value, L"NoModify", 1) && set_registry_dword(key.value, L"NoRepair", 0);
+  if (!written || !CommitTransaction(transaction.value)) {
+    RollbackTransaction(transaction.value);
+    return {false, "Windows could not commit the per-user uninstall registration update", true};
+  }
+  return {true, "owned uninstall registration installed"};
+}
+
 class WindowsEffects final : public Effects {
 public:
-  WindowsEffects(fs::path root, fs::path state)
-      : root_(std::move(root)), state_(std::move(state)), link_(start_menu_link()) {}
+  WindowsEffects(fs::path root, fs::path state, fs::path link = {})
+      : root_(std::move(root)), state_(std::move(state)),
+        link_(link.empty() ? start_menu_link() : std::move(link)) {}
 
   Ownership inspect(Effect effect) override {
     if (effect == Effect::shortcut) {
@@ -213,13 +437,33 @@ public:
     return open_registration(root_, key);
   }
 
+  Ownership inspect_desired(Effect effect, const std::string &product_version) {
+    if (product_version.empty()) return inspect(effect);
+    if (effect == Effect::shortcut) {
+      Handle file;
+      const Ownership ownership = open_shortcut(link_, root_, false, file);
+      if (ownership != Ownership::owned) return ownership;
+      ShortcutIdentity identity;
+      if (!read_shortcut(file.value, identity)) return Ownership::unreadable;
+      const fs::path generation = root_ / "generations" / wide(product_version);
+      return same_path(identity.target, generation / "FacMan.exe") &&
+              same_path(identity.working_directory, generation) &&
+              identity.arguments.empty() ? Ownership::owned : Ownership::owned_stale;
+    }
+    Key key;
+    const Ownership ownership = open_registration(root_, key);
+    if (ownership != Ownership::owned) return ownership;
+    return desired_registration(key.value, root_, product_version)
+        ? Ownership::owned : Ownership::owned_stale;
+  }
+
   Result remove_owned(Effect effect) override {
     if (effect == Effect::shortcut) {
       Handle file;
       const auto ownership = open_shortcut(link_, root_, true, file);
       if (ownership == Ownership::absent) return {true, "shortcut already absent"};
       if (ownership != Ownership::owned)
-        return {false, "Start Menu shortcut ownership changed or could not be read"};
+        return {false, "Start Menu shortcut ownership changed or could not be read", true};
       FILE_DISPOSITION_INFO disposition{TRUE};
       if (!SetFileInformationByHandle(file.value, FileDispositionInfo,
                                      &disposition, sizeof(disposition)))
@@ -237,7 +481,7 @@ public:
     const auto ownership = open_registration(root_, key, transaction.value);
     if (ownership == Ownership::absent) return {true, "registration already absent"};
     if (ownership != Ownership::owned)
-      return {false, "Uninstall registration ownership changed or could not be read"};
+      return {false, "Uninstall registration ownership changed or could not be read", true};
     const LSTATUS removed = RegDeleteKeyTransactedW(
         HKEY_CURRENT_USER, registry_path, 0, 0, transaction.value, nullptr);
     if (removed != ERROR_SUCCESS || !CommitTransaction(transaction.value)) {
@@ -351,5 +595,80 @@ Result remove_windows(const fs::path &install_root, const fs::path &state_root) 
   if (error) return {false, "install root could not be made absolute"};
   WindowsEffects effects(normalized(root), state_root);
   return remove(effects);
+}
+
+Ownership inspect_windows_effect(Effect effect, const fs::path &install_root,
+                                 const std::string &product_version) {
+  std::error_code error;
+  const auto root = fs::absolute(install_root, error);
+  if (error) return Ownership::unreadable;
+  WindowsEffects effects(normalized(root), {});
+  return effects.inspect_desired(effect, product_version);
+}
+
+Result apply_windows_effect(Effect effect, const fs::path &install_root,
+                            const std::string &product_version, bool remove) {
+  std::error_code error;
+  const auto root = fs::absolute(install_root, error);
+  if (error) return {false, "install root could not be made absolute"};
+  const fs::path normalized_root = normalized(root);
+  WindowsEffects effects(normalized_root, {});
+  if (remove) return effects.remove_owned(effect);
+  const Ownership ownership = effects.inspect_desired(effect, product_version);
+  if (ownership == Ownership::foreign || ownership == Ownership::unreadable)
+    return {false, "Windows integration ownership changed or could not be read", true};
+  const fs::path generation = normalized_root / "generations" / wide(product_version);
+  const fs::path gui = generation / "FacMan.exe";
+  const fs::path maintenance = normalized_root / "maintenance" / "FacManSetup.exe";
+  if (!fs::is_regular_file(gui, error) || error || !fs::is_regular_file(maintenance, error) || error)
+    return {false, "installed FacMan or maintenance entrypoint is missing"};
+  if (effect == Effect::shortcut) {
+    const fs::path link = start_menu_link();
+    if (link.empty()) return {false, "Windows could not resolve the current-user Start Menu"};
+    fs::create_directories(link.parent_path(), error);
+    if (error) return {false, "Windows could not create the Start Menu directory"};
+    if (ownership == Ownership::owned_stale)
+      return replace_stale_shortcut(link, normalized_root, gui, generation);
+    std::string detail;
+    return create_shortcut(gui, generation, link, detail) ? Result{true, "owned shortcut installed"}
+                                                         : Result{false, detail, true};
+  }
+  return write_registration_transacted(normalized_root, gui, maintenance,
+                                       product_version);
+}
+
+Ownership inspect_windows_shortcut_fixture(const fs::path &shortcut,
+                                           const fs::path &install_root,
+                                           const std::string &product_version) {
+  std::error_code error;
+  const auto root = fs::absolute(install_root, error);
+  if (error || shortcut.empty()) return Ownership::unreadable;
+  WindowsEffects effects(normalized(root), {}, shortcut);
+  return effects.inspect_desired(Effect::shortcut, product_version);
+}
+
+Result apply_windows_shortcut_fixture(const fs::path &shortcut,
+                                      const fs::path &install_root,
+                                      const std::string &product_version,
+                                      bool remove) {
+  std::error_code error;
+  const auto root = fs::absolute(install_root, error);
+  if (error || shortcut.empty()) return {false, "shortcut fixture root could not be made absolute"};
+  const fs::path normalized_root = normalized(root);
+  WindowsEffects effects(normalized_root, {}, shortcut);
+  if (remove) return effects.remove_owned(Effect::shortcut);
+  const Ownership ownership = effects.inspect_desired(Effect::shortcut, product_version);
+  if (ownership == Ownership::foreign || ownership == Ownership::unreadable)
+    return {false, "Windows integration ownership changed or could not be read", true};
+  const fs::path generation = normalized_root / "generations" / wide(product_version);
+  const fs::path gui = generation / "FacMan.exe";
+  const fs::path maintenance = normalized_root / "maintenance" / "FacManSetup.exe";
+  if (!fs::is_regular_file(gui, error) || error || !fs::is_regular_file(maintenance, error) || error)
+    return {false, "installed FacMan or maintenance entrypoint is missing"};
+  if (!fs::create_directories(shortcut.parent_path(), error) && error)
+    return {false, "Windows could not create the shortcut fixture directory"};
+  std::string detail;
+  if (!create_shortcut(gui, generation, shortcut, detail)) return {false, detail, true};
+  return {true, "owned shortcut installed"};
 }
 } // namespace facman::setup::integration

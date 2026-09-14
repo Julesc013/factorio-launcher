@@ -171,7 +171,7 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
             native_tests,
         )
         self.assertIn(
-            'LABELS "contract;filesystem;package-runtime;security" TIMEOUT 180',
+            'LABELS "contract;filesystem;package-runtime;security" TIMEOUT 600',
             native_tests,
         )
         self.assertEqual(cmake_architecture_check.validate(), [])

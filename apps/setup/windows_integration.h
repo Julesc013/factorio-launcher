@@ -10,11 +10,12 @@
 namespace facman::setup::integration {
 
 enum class Effect { shortcut, registration };
-enum class Ownership { absent, owned, foreign, unreadable };
+enum class Ownership { absent, owned, owned_stale, foreign, unreadable };
 
 struct Result {
   bool ok = false;
   std::string detail;
+  bool recovery_required = false;
 };
 
 struct RemovalRecord {
@@ -62,5 +63,23 @@ Result publish_receipt(const std::filesystem::path &destination,
 Result inspect_existing_windows(const std::filesystem::path &install_root);
 Result remove_windows(const std::filesystem::path &install_root,
                       const std::filesystem::path &state_root);
+// Per-effect entrypoints used by the portable setup-operation coordinator.
+// They remain current-user only and re-check ownership at the mutation edge.
+Ownership inspect_windows_effect(Effect effect,
+                                 const std::filesystem::path &install_root,
+                                 const std::string &product_version = {});
+Result apply_windows_effect(Effect effect,
+                            const std::filesystem::path &install_root,
+                            const std::string &product_version,
+                            bool remove);
+// Native smoke-test helpers bind a shortcut operation to an isolated fixture
+// path; production entry points always resolve the current-user Start Menu.
+Ownership inspect_windows_shortcut_fixture(const std::filesystem::path &shortcut,
+                                           const std::filesystem::path &install_root,
+                                           const std::string &product_version = {});
+Result apply_windows_shortcut_fixture(const std::filesystem::path &shortcut,
+                                      const std::filesystem::path &install_root,
+                                      const std::string &product_version,
+                                      bool remove);
 } // namespace facman::setup::integration
 #endif
