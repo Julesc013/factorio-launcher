@@ -1387,7 +1387,6 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical main must equal the recorded planning promotion revision")
     if status.get("truth_closeout_revision") != status.get("dev_synchronization_revision"):
         problems.append("truth closeout must bind the reviewed dev synchronization revision")
-    closeout = status.get("canonical_plan_and_truth_closeout", {})
     problems.extend(project_state_alpha5.validate_status(status))
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
@@ -1434,9 +1433,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
         "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
         "universal_launcher_consumed_pin": "5479939ca5cbc9ee0f901608a92012778b4752ae",
-        "universal_setup_main_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
-        "universal_setup_dev_revision": "d7057ee397fd172863d4ed31aaf7cc6dcf57b961",
-        "universal_setup_consumed_pin": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+        "universal_setup_main_revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+        "universal_setup_dev_revision": "f28e543dcc2220ade10d645d4298daba28f88ec3",
+        "universal_setup_consumed_pin": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
         "provider_promotions_complete": True,
         "provider_pins_reconciled": True,
         "factorio_execution": False,
@@ -1453,19 +1452,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "qualified_clean_windows_host_and_private_read_only_archive_not_yet_bound",
     ]:
         problems.append("provider convergence must retain only the qualified-host/archive blocker")
-    closeout_provider_fields = {
-        "universal_launcher_main_revision": "universal_launcher_main_revision",
-        "universal_launcher_dev_revision": "universal_launcher_dev_revision",
-        "universal_launcher_pin_revision": "universal_launcher_consumed_pin",
-        "universal_setup_main_revision": "universal_setup_main_revision",
-        "universal_setup_dev_revision": "universal_setup_dev_revision",
-        "universal_setup_pin_revision": "universal_setup_consumed_pin",
-    }
-    for closeout_field, convergence_field in closeout_provider_fields.items():
-        if closeout.get(closeout_field) != provider_convergence.get(convergence_field):
-            problems.append(
-                f"canonical truth closeout {closeout_field} must agree with provider convergence"
-            )
+    # The Alpha.5 closeout is an immutable historical observation. Current
+    # provider convergence is validated against the live locks above and may
+    # advance without rewriting or relabelling that closed candidate.
     convergence_closeout = status.get("post_convergence_truth_closeout", {})
     expected_convergence_closeout = {
         "work_unit": "FACMAN-POST-CONVERGENCE-TRUTH-CLOSEOUT-01",

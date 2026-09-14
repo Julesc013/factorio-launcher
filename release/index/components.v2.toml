@@ -174,6 +174,22 @@ uninstall_behavior = "remove_with_payload"
 preservation_behavior = "never_preserve"
 
 [[component.path]]
+id = "usk_zlib_license"
+source = "repo://LICENSES/UniversalSetupZlib.txt"
+destination = "licenses/UniversalSetupZlib.txt"
+source_kind = "file"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"
+
+[[component.path]]
 id = "miniz_license"
 source = "repo://LICENSES/Miniz.txt"
 destination = "licenses/Miniz.txt"

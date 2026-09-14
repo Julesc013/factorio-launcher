@@ -1,0 +1,122 @@
+{
+  "schema": "facman.terminal_contract_current_dev_validation.v1",
+  "recorded_at_utc": "2026-09-13T17:18:52.9855266Z",
+  "work_item": "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "result": "CURRENT_WINDOWS_VALIDATION_PASS_PENDING_CONTRACT_DOC_PROTECTED_INTEGRATION",
+  "source": {
+    "branch": "task/facman-terminal-contracts-closeout-01",
+    "dev_commit": "a158a6aa6eae947832fdd16101531ac122f7a3a6",
+    "dev_tree": "f47600447ae36b67e35d077fa05e94817f506a8d",
+    "dev_parents": [
+      "78c0b12bc4997ede8c20282aee67bd11e3d55212",
+      "1cfa2d6cc7806ab4da940b8479c2b4d9f101acb0"
+    ],
+    "implementation_commit": "1b962531f1d386294b44c2230c230c9f66ad2fcc",
+    "implementation_is_ancestor_of_dev": true,
+    "dirty_source_files_at_build": [],
+    "files": {
+      "runtime/client/facman_transport_process.cpp": "6d5dbb625cbccc570afd885fafd20dc1537e55ed1540138a79ac84d02f9da670",
+      "tests/native/facman_client_smoke.cpp": "6a3f40c9dc7d97a0a419b0885d64c4eb177c257ec3727ae997ef53fd61b6aeac",
+      "tests/native/facman_process_probe.cpp": "9e6cd6e92bc76eb9a225ceceb961bab7053abcd3826f4e4490cc4812c169b0ca",
+      "tests/native/facman_terminal_capabilities_smoke.cpp": "c0c3b29b4d148c66cd1ace58c57b2ac962e5d2660bcad3ec1ecb7dbe8fa6ddb7",
+      "tests/test_machine_transport.py": "7b3c0c6c7c1b2cfb97a64359006d8067920dbd4fb49d6d8855bad0a0d0b6b316",
+      "tests/test_terminal_frontend_foundation.py": "61d43c605a363a4cf7824cb1c90ab8daf956131e85ed405126572077bbfc2eca",
+      "tests/test_tui_product.py": "c081ccb5893801a80f4df7c3e7e4e78555b7e5c6986fad8bb49f9f2c14f69d36",
+      "tests/test_tui_conpty.py": "225f1f83cebc7f2a06cf9fe2db98e95816a2c7b82731420bbdfcaaf6690699c8",
+      "docs/architecture/unified_interaction_platform.v1.md": "fb68f19c66e37659af876cf1bfeb7c0e66be28cc39221b021b82e3ee5fff69cf"
+    }
+  },
+  "build": {
+    "owned_root": "C:/Users/Jules/AppData/Local/FacMan/Development/repositories/factorio-launcher-5db2844e2f29/tasks/task-facman-t-b6bfe8a6f8/native-developer",
+    "configuration": "Debug",
+    "generator": "Visual Studio 18 2026",
+    "generator_instance": "C:/Program Files/Microsoft Visual Studio/18/Enterprise",
+    "provider_mode": "source",
+    "provider_linkage": "static",
+    "providers": {
+      "universal_launcher": {
+        "commit": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+        "tree": "7728e4d415539a0f24e6f17aa7d22be00cc99d80",
+        "clean": true
+      },
+      "universal_setup": {
+        "commit": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+        "tree": "291d63214cdd0cd3d15c809de5744ee3514fb2b2",
+        "clean": true
+      }
+    },
+    "binaries": {
+      "facman.exe": {
+        "sha256": "22bbb506ac7c41fab40f2a760228f6bd46bf1192fe3850921d73f548be0a6c73",
+        "bytes": 11224576
+      },
+      "facman_client_smoke.exe": {
+        "sha256": "024e0304bdc3d9b228226338929754b7d6ec953ae8d63692b738aa61a457059d",
+        "bytes": 10434048
+      },
+      "facman_terminal_capabilities_smoke.exe": {
+        "sha256": "b2a2cf9d1d98ebd7e24187a08c61c7752f90ecc8630b8edb299e6eb1bc3516bb",
+        "bytes": 1802752
+      },
+      "facman_process_probe.exe": {
+        "sha256": "391c293a812b8b1f87d3b79256cc0d0758e6b38d5e89539e16823b0f3e0a4ce5",
+        "bytes": 2137600
+      }
+    }
+  },
+  "validation": [
+    {
+      "command": "ctest --test-dir <owned_build_root> -C Debug --output-on-failure -R '^(facman_client_smoke|facman_terminal_capabilities_smoke)$'",
+      "result": "PASS",
+      "tests": 2,
+      "seconds": 3.43
+    },
+    {
+      "command": "FACMAN_CLI_EXE=<owned_facman> PYTHONPATH=tests python -B -m unittest -v tests.test_machine_transport tests.test_terminal_frontend_foundation tests.test_tui_product tests.test_cross_frontend_journey_conformance",
+      "result": "PASS",
+      "tests": 37,
+      "seconds": 3.446
+    },
+    {
+      "command": "FACMAN_CLI_EXE=<owned_facman> python -B -m unittest -v test_tui_conpty test_tui_pty",
+      "result": "PASS",
+      "tests": 5,
+      "skipped_not_applicable": 3,
+      "seconds": 10.311
+    },
+    {
+      "command": "python -B -m unittest tests.test_architecture_fitness",
+      "result": "PASS",
+      "tests": 2
+    },
+    {
+      "command": "python -B tools/client_cli_boundary_check.py; python -B tools/source_format_check.py; python -B tools/generate_plan_views.py --check; python -B tools/project_state.py --validate; python -B .aide/scripts/aide_lite.py test",
+      "result": "PASS"
+    }
+  ],
+  "retained_invocation_failures": [
+    {
+      "operation": "targeted CMake build",
+      "failure": "The requested target facman does not exist in the generated Visual Studio project.",
+      "correction": "Use the real facman_cli target; facman_cli, facman_client_smoke and facman_terminal_capabilities_smoke then built successfully."
+    },
+    {
+      "operation": "combined Python acceptance invocation",
+      "failure": "Three test modules could not import repository helpers when launched from tests without the repository root on sys.path.",
+      "correction": "Run from the repository root with tests on PYTHONPATH; all 37 tests then passed."
+    }
+  ],
+  "review": {
+    "kind": "independent_model_based_read_only_gap_assessment",
+    "model": "GPT-5.6 Terra",
+    "authoring": false,
+    "result": "ACCEPT_EXISTING_INTEGRATED_SOURCE_WITH_DOCUMENTATION_CORRECTION",
+    "human_review": false
+  },
+  "limits": [
+    "The documentation and WorkUnit lifecycle checkpoint is not yet protected-integrated.",
+    "This local receipt qualifies Windows Debug and ConPTY behavior; POSIX PTY and physical Linux host claims are not made.",
+    "The host 16 MiB response ceiling was not exercised with a synthetic 16 MiB product response.",
+    "No real game, signing, public publication or human UX acceptance was exercised."
+  ]
+}

@@ -74,7 +74,7 @@ class ProviderConformanceTests(unittest.TestCase):
     def _tracked_consumed() -> dict[str, dict[str, str]]:
         return {
             "universal_launcher": {"pin": "5479939ca5cbc9ee0f901608a92012778b4752ae"},
-            "universal_setup": {"pin": "d2a2aae7e61c47035c92334b0522143b4fea3880"},
+            "universal_setup": {"pin": "279ad4876dc325f8e1fcdc918c91b098a11bc616"},
         }
 
     def _provider_fixture(

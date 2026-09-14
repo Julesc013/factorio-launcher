@@ -446,10 +446,18 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
+- [ ] **FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01** — Adopt promoted provider identities with exact consumer proof
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Require exact USK/ULK source reachable from each provider main and package provenance before changing consumer pins.
 - [x] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Persist session identity before effects and reconcile crash/restart without adopting unrelated processes.
+- [x] **FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01** — Close CLI JSON RPC and TUI compatibility mechanics
+  - State: `complete`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
 - [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -531,18 +539,10 @@ independent preparation.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — admitted backlog
 
-- [ ] **FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01** — Adopt promoted provider identities with exact consumer proof
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`; closure prerequisites: none
-  - Outcome: Require exact USK/ULK source reachable from each provider main and package provenance before changing consumer pins.
 - [ ] **FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01** — Complete existing-install readiness and launch isolation
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none
   - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
-- [ ] **FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01** — Close CLI JSON RPC and TUI compatibility mechanics
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
 - [ ] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none

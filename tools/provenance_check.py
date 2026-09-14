@@ -23,7 +23,12 @@ def validate() -> list[str]:
         if isinstance(component, dict) and component.get("id")
     }
     for component_id in ("factorio_binding", "universal_launcher", "universal_setup", "miniz", "picojson"):
-        if components.get(component_id, {}).get("license") not in {"MIT", "BSD-2-Clause", "NOASSERTION"}:
+        if components.get(component_id, {}).get("license") not in {
+            "MIT",
+            "MIT AND Zlib",
+            "BSD-2-Clause",
+            "NOASSERTION",
+        }:
             problems.append(f"dependency license truth is missing: {component_id}")
     for schema in (
         "contracts/schema/release/spdx_document.v2.3.repository_identity.v1.schema.json",

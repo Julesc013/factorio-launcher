@@ -989,12 +989,14 @@ def project_release_inputs(
         abi_contract_version=policy.abi_version,
         pin=source["commit"],
         tree=source["tree"],
+        license=policy.licence,
     )
     build.update(version=policy.package_version, abi_version=policy.abi_major)
     sbom.update(
         version=policy.package_version,
         commit=source["commit"],
         tree=source["tree"],
+        license=policy.licence,
     )
     replacement = [
         _profile_record(package, policy, evidence_revision) for package in packages

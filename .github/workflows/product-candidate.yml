@@ -292,11 +292,12 @@ jobs:
           python tests/integration/facman_self_setup_lifecycle.py `
             --setup-exe "$root/native-product/Release/FacManSetup.exe" `
             --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
-            --workspace-lifecycle-evidence "$root/evidence/windows-installed-workspace-lifecycle.v1.json" `
-            --resource-package-evidence "$root/evidence/windows-installed-resource-package.v1.json"
+            --workspace-lifecycle-evidence "$root/evidence/windows-installed-workspace-lifecycle.v1.json" --resource-package-evidence "$root/evidence/windows-installed-resource-package.v1.json"
+          python tests/integration/facman_self_setup_lifecycle.py --real-current-user-integration `
+            --setup-exe "$root/native-product/Release/FacManSetup.exe" --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
+            --fixture-root "$root/evidence/real-current-user-integration" --evidence "$root/evidence/real-current-user-integration/windows-real-current-user-integration.v1.json" --real-command-timeout 300
           python tools/package_contract_tck.py `
-            --profile windows_product_x64 `
-            --canonical-stage "$root/packages/windows_product_x64" `
+            --profile windows_product_x64 --canonical-stage "$root/packages/windows_product_x64" `
             --payload-zip "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
             --canonical-artifact "$portable" `
             --payload-artifact "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
@@ -418,16 +419,15 @@ jobs:
             ${{ env.FACMAN_TASK_ROOT }}/dist/FacMan-${{ needs.contract.outputs.version }}-${{ matrix.platform }}-x64-portable.*
             ${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${{ needs.contract.outputs.version }}-${{ matrix.platform }}-x64-setup.*
             ${{ env.FACMAN_TASK_ROOT }}/evidence/product-candidate-platform.v1.json
-            ${{ env.FACMAN_TASK_ROOT }}/evidence/${{ matrix.platform }}-payload-equivalence.v1.json
-            ${{ env.FACMAN_TASK_ROOT }}/evidence/${{ matrix.platform }}-*-workspace-lifecycle.v1.json
+            ${{ env.FACMAN_TASK_ROOT }}/evidence/**/${{ matrix.platform }}-*.v1.json
           if-no-files-found: error
           retention-days: 14
-      - name: Preserve resource receipts and visible proof artifacts
+      - name: Preserve failed platform receipts and visible proof artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: product-candidate-resource-proof-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
-          path: ${{ env.FACMAN_TASK_ROOT }}/evidence/${{ matrix.platform }}-*-resource-package*
+          path: ${{ env.FACMAN_TASK_ROOT }}/evidence/**/${{ matrix.platform }}-*
           if-no-files-found: warn
           retention-days: 14
 

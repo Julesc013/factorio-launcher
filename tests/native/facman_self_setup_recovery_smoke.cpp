@@ -3,6 +3,7 @@
 
 #include "facman_self_setup.h"
 #include "fl_json.h"
+#include "fl_sha256.h"
 
 #include <array>
 #include <condition_variable>
@@ -30,6 +31,11 @@ std::string string_member(const std::string &payload, const char *name) {
   auto document = json::parse(payload);
   const json::Value *value = document ? document.value().find(name) : nullptr;
   return value != nullptr && value->string_value() ? value->string_value().value() : std::string();
+}
+
+std::string sha256_text(const std::string &value) {
+  return facman::base::sha256_hex_bytes(
+      reinterpret_cast<const unsigned char *>(value.data()), value.size());
 }
 
 struct Provider final : setup::ProviderEffects {
@@ -107,15 +113,35 @@ struct Provider final : setup::ProviderEffects {
 
 struct Native final : setup::NativeEffects {
   std::array<setup::NativeOwnership, 2> state{setup::NativeOwnership::absent, setup::NativeOwnership::absent};
-  std::array<int, 2> calls{0, 0};
+  std::array<int, 2> inspect_calls{0, 0};
+  std::array<int, 2> apply_calls{0, 0};
+  std::vector<fs::path> inspect_roots;
+  std::vector<fs::path> apply_roots;
   int lose_receipt = -1;
   int require_recovery = -1;
-  setup::NativeOwnership inspect(setup::NativeEffect effect, const std::string &) override { return state[static_cast<int>(effect)]; }
-  setup::NativeResult apply(setup::NativeEffect effect, setup::Operation operation, const std::string &) override {
-    const int index = static_cast<int>(effect); ++calls[index];
+  setup::NativeOwnership inspect(const fs::path &install_root, setup::NativeEffect effect,
+                                 const std::string &) override {
+    const int index = static_cast<int>(effect);
+    ++inspect_calls[index]; inspect_roots.push_back(install_root);
+    return state[index];
+  }
+  setup::NativeResult apply(const fs::path &install_root, setup::NativeEffect effect,
+                            setup::Operation operation, const std::string &) override {
+    const int index = static_cast<int>(effect); ++apply_calls[index];
+    apply_roots.push_back(install_root);
     state[index] = operation == setup::Operation::uninstall ? setup::NativeOwnership::absent : setup::NativeOwnership::owned;
     if (index == require_recovery) return {false, "native substitution", true};
     return index == lose_receipt ? setup::NativeResult{false, "lost native receipt"} : setup::NativeResult{true, {}};
+  }
+};
+
+struct InterruptAt final : setup::DurableBoundaryHook {
+  explicit InterruptAt(setup::DurableBoundary target) : target(target) {}
+  setup::DurableBoundary target;
+  int calls = 0;
+  bool reached(setup::DurableBoundary boundary) override {
+    ++calls;
+    return boundary != target;
   }
 };
 
@@ -138,7 +164,7 @@ void cases() {
   std::ofstream(tree.root / "payload.zip", std::ios::binary) << "fixture";
   Provider provider; Native native;
   auto first = setup::execute(request_for(tree, provider, &native));
-  require(first && native.calls == std::array<int, 2>{1, 1}, "install applies injected native effects once");
+  require(first && native.apply_calls == std::array<int, 2>{1, 1}, "install applies injected native effects once");
   require(!fs::exists(tree.root / "state"), "coordinator does not pre-create the USK provider state root");
   require(fs::exists(tree.root / "coordinator"), "injected coordinator uses its isolated app-owned test root");
   auto repeated = setup::execute(request_for(tree, provider, &native));
@@ -146,6 +172,17 @@ void cases() {
   auto repair_request = request_for(tree, provider, &native, setup::Operation::repair);
   require(setup::execute(repair_request) && provider.apply_calls == 3,
           "later same-version repair has a distinct durable operation identity");
+  require(provider.apply_transaction_ids.size() == 3 &&
+              provider.apply_transaction_ids[0].size() == 33 &&
+              provider.apply_transaction_ids[1].size() == 33 &&
+              provider.apply_transaction_ids[2].size() == 33 &&
+              provider.apply_transaction_ids[0].rfind("tx.setup.", 0) == 0 &&
+              provider.apply_transaction_ids[1].rfind("tx.setup.", 0) == 0 &&
+              provider.apply_transaction_ids[2].rfind("tx.setup.", 0) == 0 &&
+              provider.apply_transaction_ids[0] != provider.apply_transaction_ids[1] &&
+              provider.apply_transaction_ids[1] != provider.apply_transaction_ids[2] &&
+              provider.apply_transaction_ids[0] != provider.apply_transaction_ids[2],
+          "provider transaction identities are unique and bounded for Windows staging paths");
   Tree contention{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-contention"};
   fs::remove_all(contention.root, ignored); fs::create_directories(contention.root);
   std::ofstream(contention.root / "payload.zip", std::ios::binary) << "fixture";
@@ -189,7 +226,147 @@ void cases() {
   require(!failed && lost.state[0] == setup::NativeOwnership::owned, "shortcut receipt loss leaves observed effect");
   lost.lose_receipt = -1;
   auto resumed = setup::execute(request_for(interrupted, native_provider, &lost));
-  require(resumed && lost.calls[0] == 1 && lost.calls[1] == 1, "restart reconciles lost shortcut receipt without duplicate effect");
+  require(resumed && lost.apply_calls[0] == 1 && lost.apply_calls[1] == 1, "restart reconciles lost shortcut receipt without duplicate effect");
+  Tree files_boundary{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-files-boundary"};
+  fs::remove_all(files_boundary.root, ignored); fs::create_directories(files_boundary.root);
+  std::ofstream(files_boundary.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider files_provider; Native files_native;
+  InterruptAt after_files(setup::DurableBoundary::files_applied);
+  auto files_request = request_for(files_boundary, files_provider, &files_native);
+  files_request.durable_boundary_hook = &after_files;
+  auto files_interrupted = setup::execute(files_request);
+  require(!files_interrupted && files_interrupted.error().code == "self_setup_interrupted" &&
+              after_files.calls == 1 && files_native.apply_calls == std::array<int, 2>{0, 0},
+          "installed files boundary interruption occurs after persistence and before native effects");
+  auto crossed_claim = request_for(files_boundary, files_provider, &files_native);
+  setup::QualificationClaims crossed;
+  crossed.operation = crossed_claim.operation;
+  crossed.install_root = crossed_claim.install_root;
+  crossed.state_root = crossed_claim.state_root;
+  crossed.acceptance_root = crossed_claim.acceptance_root;
+  crossed.product_version = crossed_claim.product_version;
+  crossed.installed_mode = true;
+  crossed.boundary = setup::DurableBoundary::files_applied;
+  crossed_claim.qualification_claims = crossed;
+  auto crossed_result = setup::execute(crossed_claim);
+  require(!crossed_result && crossed_result.error().code == "self_setup_qualification_interrupt_invalid" &&
+              files_provider.apply_calls == 1 && files_native.apply_calls == std::array<int, 2>{0, 0},
+          "a consumed qualification permit cannot silently target an already crossed boundary");
+  auto mismatched_claim = request_for(files_boundary, files_provider, &files_native);
+  mismatched_claim.state_root = files_boundary.root / "other-state";
+  auto mismatched = crossed;
+  mismatched.state_root = mismatched_claim.state_root;
+  mismatched_claim.qualification_claims = mismatched;
+  auto mismatch_result = setup::execute(mismatched_claim);
+  require(!mismatch_result && mismatch_result.error().code == "self_setup_qualification_interrupt_invalid" &&
+              files_provider.apply_calls == 1 && files_native.apply_calls == std::array<int, 2>{0, 0},
+          "qualification claims reject a pending journal with a mismatched provider authority before effects");
+  auto files_retry = request_for(files_boundary, files_provider, &files_native);
+#ifdef _WIN32
+  files_retry.install_root = files_boundary.root / "INSTALL";
+#else
+  const fs::path files_alias = files_boundary.root / "root-alias";
+  fs::create_directory_symlink(files_boundary.root, files_alias, ignored);
+  require(!ignored, "POSIX files-boundary fixture creates a canonical directory alias");
+  files_retry.install_root = files_alias / "install";
+#endif
+  const fs::path durable_install_root = files_boundary.root / "install";
+  require(setup::execute(files_retry) && files_provider.apply_calls == 1 &&
+              files_native.apply_calls == std::array<int, 2>{1, 1} &&
+              files_native.inspect_roots == std::vector<fs::path>{durable_install_root, durable_install_root} &&
+              files_native.apply_roots == std::vector<fs::path>{durable_install_root, durable_install_root},
+          "files-boundary resume uses the journal install root despite a caller alias");
+  Tree shortcut_boundary{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-shortcut-boundary"};
+  fs::remove_all(shortcut_boundary.root, ignored); fs::create_directories(shortcut_boundary.root);
+  std::ofstream(shortcut_boundary.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider shortcut_provider; Native shortcut_native;
+  InterruptAt after_shortcut(setup::DurableBoundary::shortcut_applied);
+  auto shortcut_request = request_for(shortcut_boundary, shortcut_provider, &shortcut_native);
+  shortcut_request.durable_boundary_hook = &after_shortcut;
+  auto shortcut_interrupted = setup::execute(shortcut_request);
+  require(!shortcut_interrupted && shortcut_interrupted.error().code == "self_setup_interrupted" &&
+              after_shortcut.calls == 2 && shortcut_native.apply_calls == std::array<int, 2>{1, 0},
+          "shortcut boundary interruption leaves exactly one durable native effect");
+  require(setup::execute(request_for(shortcut_boundary, shortcut_provider, &shortcut_native)) &&
+              shortcut_provider.apply_calls == 1 && shortcut_native.apply_calls == std::array<int, 2>{1, 1},
+          "shortcut-boundary resume inspects the durable shortcut and only applies registration");
+  Tree hosted_sequence{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-hosted-sequence"};
+  fs::remove_all(hosted_sequence.root, ignored); fs::create_directories(hosted_sequence.root);
+  std::ofstream(hosted_sequence.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider hosted_provider; Native hosted_native;
+  InterruptAt hosted_after_files(setup::DurableBoundary::files_applied);
+  auto hosted_files_request = request_for(hosted_sequence, hosted_provider, &hosted_native);
+  hosted_files_request.durable_boundary_hook = &hosted_after_files;
+  auto hosted_files_interrupted = setup::execute(hosted_files_request);
+  require(!hosted_files_interrupted && hosted_files_interrupted.error().code == "self_setup_interrupted" &&
+              hosted_native.apply_calls == std::array<int, 2>{0, 0},
+          "hosted sequence interrupts at files-applied before native effects");
+  require(setup::execute(request_for(hosted_sequence, hosted_provider, &hosted_native)) &&
+              hosted_native.apply_calls == std::array<int, 2>{1, 1},
+          "hosted sequence resumes the files-applied install");
+  require(setup::execute(request_for(hosted_sequence, hosted_provider, &hosted_native,
+                                     setup::Operation::uninstall)) &&
+              hosted_native.apply_calls == std::array<int, 2>{2, 2},
+          "hosted sequence completes uninstall before the fresh install");
+  InterruptAt hosted_after_shortcut(setup::DurableBoundary::shortcut_applied);
+  auto hosted_shortcut_request = request_for(hosted_sequence, hosted_provider, &hosted_native);
+  hosted_shortcut_request.durable_boundary_hook = &hosted_after_shortcut;
+  auto hosted_shortcut_interrupted = setup::execute(hosted_shortcut_request);
+  require(!hosted_shortcut_interrupted &&
+              hosted_shortcut_interrupted.error().code == "self_setup_interrupted" &&
+              hosted_after_shortcut.calls == 2 &&
+              hosted_native.apply_calls == std::array<int, 2>{3, 2},
+          "fresh same-intent install interrupts at shortcut-applied with exactly one native effect");
+  const fs::path hosted_history = hosted_sequence.root / "coordinator" /
+      "setup-operations" / "history";
+  std::vector<fs::path> hosted_archives;
+  for (fs::directory_iterator iterator(hosted_history, ignored), end;
+       !ignored && iterator != end; iterator.increment(ignored)) {
+    if (iterator->is_regular_file(ignored) && !ignored)
+      hosted_archives.push_back(iterator->path());
+  }
+  require(!ignored && hosted_archives.size() == 1,
+          "fresh same-intent install archives exactly one completed terminal journal");
+  std::ifstream hosted_archive_input(hosted_archives.front(), std::ios::binary);
+  const std::string hosted_archive_json{std::istreambuf_iterator<char>(hosted_archive_input), {}};
+  const std::string hosted_operation_id = string_member(hosted_archive_json, "operation_id");
+  const std::string hosted_intent_digest = string_member(hosted_archive_json, "intent_digest");
+  const std::string hosted_root_identity = string_member(hosted_archive_json, "install_root_identity");
+  const std::string hosted_operation = string_member(hosted_archive_json, "operation");
+  const std::string expected_hosted_history = "facman." + sha256_text(
+      "facman.setup.history.v1\n" + hosted_operation_id + "\n" + hosted_intent_digest + "\n" +
+      hosted_root_identity + "\n" + hosted_operation) + ".setup-history.v1.json";
+  require(hosted_operation == "install" && string_member(hosted_archive_json, "state") == "completed" &&
+              hosted_archives.front().filename().string() == expected_hosted_history &&
+              expected_hosted_history.size() <= 96U,
+          "completed install terminal journal has the bounded expected history archive name");
+  const auto applied_effect_changed = [&](const char *suffix,
+                                          setup::NativeOwnership replacement,
+                                          setup::Operation operation) {
+    Tree changed{fs::temp_directory_path() / (std::string("facman-self-setup-recovery-smoke-applied-") + suffix)};
+    fs::remove_all(changed.root, ignored); fs::create_directories(changed.root);
+    std::ofstream(changed.root / "payload.zip", std::ios::binary) << "fixture";
+    Provider changed_provider; Native changed_native;
+    if (operation == setup::Operation::uninstall)
+      changed_native.state = {setup::NativeOwnership::owned, setup::NativeOwnership::owned};
+    InterruptAt after_applied(setup::DurableBoundary::shortcut_applied);
+    auto changed_request = request_for(changed, changed_provider, &changed_native, operation);
+    changed_request.durable_boundary_hook = &after_applied;
+    auto interrupted_change = setup::execute(changed_request);
+    require(!interrupted_change && interrupted_change.error().code == "self_setup_interrupted" &&
+                changed_native.apply_calls == std::array<int, 2>{1, 0},
+            "shortcut durable boundary is reachable before an applied-state substitution");
+    changed_native.state[0] = replacement;
+    auto recovered_change = setup::execute(request_for(changed, changed_provider, &changed_native, operation));
+    require(!recovered_change && recovered_change.error().code == "self_setup_recovery_required" &&
+                changed_provider.apply_calls == 1 && changed_native.apply_calls == std::array<int, 2>{1, 0},
+            "changed durable native effect is retained for manual recovery without another apply");
+  };
+  applied_effect_changed("absent", setup::NativeOwnership::absent, setup::Operation::install);
+  applied_effect_changed("stale", setup::NativeOwnership::owned_stale, setup::Operation::install);
+  applied_effect_changed("foreign", setup::NativeOwnership::foreign, setup::Operation::install);
+  applied_effect_changed("unreadable", setup::NativeOwnership::unreadable, setup::Operation::install);
+  applied_effect_changed("uninstall-owned", setup::NativeOwnership::owned, setup::Operation::uninstall);
   Tree provider_crash{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-provider"};
   fs::remove_all(provider_crash.root, ignored); fs::create_directories(provider_crash.root);
   std::ofstream(provider_crash.root / "payload.zip", std::ios::binary) << "fixture";
@@ -242,7 +419,7 @@ void cases() {
   fs::remove_all(blocked.root, ignored); fs::create_directories(blocked.root);
   std::ofstream(blocked.root / "payload.zip", std::ios::binary) << "fixture";
   Provider blocked_provider; Native foreign; foreign.state[0] = setup::NativeOwnership::foreign;
-  require(!setup::execute(request_for(blocked, blocked_provider, &foreign)) && foreign.calls[0] == 0,
+  require(!setup::execute(request_for(blocked, blocked_provider, &foreign)) && foreign.apply_calls[0] == 0,
           "foreign native ownership is preserved without an apply call");
   Tree adapter{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-adapter"};
   fs::remove_all(adapter.root, ignored); fs::create_directories(adapter.root);
@@ -255,7 +432,7 @@ void cases() {
   fs::remove_all(removal.root, ignored); fs::create_directories(removal.root);
   Provider removal_provider; Native stale; stale.state = {setup::NativeOwnership::owned_stale, setup::NativeOwnership::owned_stale};
   auto uninstall_request = request_for(removal, removal_provider, &stale, setup::Operation::uninstall);
-  require(setup::execute(uninstall_request) && stale.calls == std::array<int, 2>{1, 1},
+  require(setup::execute(uninstall_request) && stale.apply_calls == std::array<int, 2>{1, 1},
           "uninstall removes owned stale native effects after provider file removal");
   Tree refusal{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-refusal"};
   fs::remove_all(refusal.root, ignored); fs::create_directories(refusal.root);
@@ -275,27 +452,17 @@ void cases() {
   Tree portable{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-portable"};
   fs::remove_all(portable.root, ignored); fs::create_directories(portable.root);
   std::ofstream(portable.root / "payload.zip", std::ios::binary) << "fixture";
-  Provider portable_provider; Native portable_native; auto portable_request = request_for(portable, portable_provider, nullptr);
-  require(setup::execute(portable_request) && portable_native.calls == std::array<int, 2>{0, 0}, "portable setup makes no native calls");
-  fs::path portable_journal;
-  for (const auto &entry : fs::directory_iterator(portable.root / "coordinator" / "setup-operations")) {
-    if (entry.path().extension() == ".json") { portable_journal = entry.path(); break; }
-  }
-  require(!portable_journal.empty(), "portable completion leaves a coordinator journal for restart simulation");
-  std::ifstream journal_input(portable_journal, std::ios::binary);
-  std::string journal_bytes((std::istreambuf_iterator<char>(journal_input)), std::istreambuf_iterator<char>());
-  const std::string completed = "\"state\":\"completed\",\"recovery_boundary\":\"fully_committed\"";
-  const std::string interrupted_boundary = "\"state\":\"files_applied\",\"recovery_boundary\":\"files_applied_before_native\"";
-  const auto position = journal_bytes.find(completed);
-  require(position != std::string::npos, "portable journal has a completed terminal boundary");
-  journal_bytes.replace(position, completed.size(), interrupted_boundary);
-  journal_input.close();
-  std::ofstream journal_output(portable_journal, std::ios::binary | std::ios::trunc);
-  journal_output << journal_bytes;
-  journal_output.close();
+  Provider portable_provider; Native portable_native;
+  InterruptAt portable_after_files(setup::DurableBoundary::files_applied);
+  auto portable_request = request_for(portable, portable_provider, nullptr);
+  portable_request.durable_boundary_hook = &portable_after_files;
+  auto portable_interrupted = setup::execute(portable_request);
+  require(!portable_interrupted && portable_interrupted.error().code == "self_setup_interrupted" &&
+              portable_native.apply_calls == std::array<int, 2>{0, 0},
+          "portable files boundary interruption makes no native calls");
   const int portable_provider_calls = portable_provider.apply_calls;
   auto portable_retry = request_for(portable, portable_provider, &portable_native);
-  require(setup::execute(portable_retry) && portable_native.calls == std::array<int, 2>{0, 0} &&
+  require(setup::execute(portable_retry) && portable_native.apply_calls == std::array<int, 2>{0, 0} &&
               portable_provider.apply_calls == portable_provider_calls,
           "portable files-applied recovery ignores a newly supplied native adapter without provider replay");
 }

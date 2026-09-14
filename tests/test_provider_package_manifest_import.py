@@ -345,8 +345,10 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
         self.assertEqual(workspace["pin"], self.commit)
         self.assertEqual(workspace["tree"], self.tree)
         self.assertEqual(dependency["version"], "1.9.1")
+        self.assertEqual(dependency["license"], self.policy.licence)
         self.assertEqual(build["version"], "1.9.1")
         self.assertEqual(sbom["version"], "1.9.1")
+        self.assertEqual(sbom["license"], self.policy.licence)
         self.assertEqual(provider["cmake_package_version"], "1.9.1")
         self.assertEqual(provider["abi_version"], "1.9")
         rows = [
@@ -429,6 +431,27 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             ).read_text(encoding="utf-8")
         )
         jsonschema.Draft202012Validator(evidence_schema).validate(summary)
+
+    def test_projects_changed_package_licence_into_dependency_and_sbom(self) -> None:
+        policy = dataclasses.replace(self.policy, licence="MIT AND Zlib")
+        projected = provider_import.project_release_inputs(
+            provider_import.load_release_inputs(self.index),
+            self._accepted(),
+            policy,
+            self.commit,
+        )
+        dependency = provider_import._row(
+            projected["dependency_lock.v1.toml"]["component"],
+            "universal_launcher",
+            "dependency",
+        )
+        sbom = provider_import._row(
+            projected["sbom.components.v1.json"]["components"],
+            "universal_launcher",
+            "SBOM",
+        )
+        self.assertEqual(dependency["license"], "MIT AND Zlib")
+        self.assertEqual(sbom["license"], "MIT AND Zlib")
 
     def test_refuses_stale_manual_release_surface(self) -> None:
         current = provider_import.load_release_inputs(self.index)

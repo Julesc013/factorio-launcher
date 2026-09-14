@@ -81,6 +81,7 @@ class BuiltPackageArtifactTests(unittest.TestCase):
             "licenses/LICENSE",
             "licenses/UniversalLauncher.txt",
             "licenses/UniversalSetup.txt",
+            "licenses/UniversalSetupZlib.txt",
             "licenses/Miniz.txt",
             "licenses/PicoJSON.txt",
             "licenses/THIRD_PARTY_NOTICES.md",
@@ -95,6 +96,7 @@ class BuiltPackageArtifactTests(unittest.TestCase):
         for packaged, vendored in (
             ("licenses/UniversalLauncher.txt", "LICENSES/UniversalLauncher.txt"),
             ("licenses/UniversalSetup.txt", "LICENSES/UniversalSetup.txt"),
+            ("licenses/UniversalSetupZlib.txt", "LICENSES/UniversalSetupZlib.txt"),
             ("licenses/Miniz.txt", "external/miniz/LICENSE"),
             ("licenses/PicoJSON.txt", "external/picojson/LICENSE"),
         ):

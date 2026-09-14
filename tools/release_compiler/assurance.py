@@ -40,7 +40,8 @@ LICENCES = (
     ("facman", "licenses/LICENSE", "MIT"),
     ("third_party_notices", "licenses/THIRD_PARTY_NOTICES.md", "NOASSERTION"),
     ("universal_launcher", "licenses/UniversalLauncher.txt", "MIT"),
-    ("universal_setup", "licenses/UniversalSetup.txt", "MIT"),
+    ("universal_setup", "licenses/UniversalSetup.txt", "MIT AND Zlib"),
+    ("universal_setup_zlib", "licenses/UniversalSetupZlib.txt", "Zlib"),
     ("miniz", "licenses/Miniz.txt", "MIT"),
     ("picojson", "licenses/PicoJSON.txt", "BSD-2-Clause"),
 )
