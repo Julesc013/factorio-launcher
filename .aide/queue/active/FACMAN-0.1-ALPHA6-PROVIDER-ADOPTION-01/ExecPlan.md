@@ -264,3 +264,6 @@ retained as non-host-equivalent DrvFS observations: the case-insensitive mounted
 Windows filesystem aliases Linux `facman` and `FacMan` fixture paths, and it
 cannot satisfy the Linux run-lock identity predicate. Those observations do not
 replace fresh hosted Linux qualification or weaken either assertion.
+
+The WorkUnit allowed-path declaration now names `cmake/FacManInstall.cmake`,
+which is the exact installer input required to close the Windows package failure.

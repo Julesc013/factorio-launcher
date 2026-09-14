@@ -28,6 +28,7 @@ allowed_paths:
   - ".github/workflows/provider-conformance.yml"
   - ".github/workflows/provider-sdk-consumption.yml"
   - ".github/workflows/synthetic-product-tck.yml"
+  - "cmake/FacManInstall.cmake"
   - "apps/gui/windows/winforms/provider_identity.tracked.v1.txt"
   - "apps/gui/windows/winforms/GeneratedCommandCatalog.cs"
   - "runtime/core/generated/version.h"
