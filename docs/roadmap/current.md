@@ -446,8 +446,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
-- [ ] **FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01** — Adopt promoted provider identities with exact consumer proof
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01** — Adopt promoted provider identities with exact consumer proof
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Require exact USK/ULK source reachable from each provider main and package provenance before changing consumer pins.
 - [x] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable

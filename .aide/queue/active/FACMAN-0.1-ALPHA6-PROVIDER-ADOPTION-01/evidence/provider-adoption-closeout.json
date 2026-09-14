@@ -1,0 +1,96 @@
+{
+  "schema": "facman.provider-adoption-workunit-closeout.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
+  "result": "PASS",
+  "observed_utc": "2026-09-14T23:15:34Z",
+  "repository": "Julesc013/factorio-launcher",
+  "source": {
+    "implementation_base": "77c37e4cd9278c42307cf6b752e1ff2225bc914a",
+    "implementation_head": "117ba3943a18934c927130f3a3ead4baadf36ff1",
+    "implementation_pull_request": 282,
+    "dev_integration_revision": "2c61a4e325353901fbdf52b671b6597881758e81",
+    "tree": "9341909b7ebc6de5af27c11f2acc4f67b15391dd",
+    "integration_status": "integrated"
+  },
+  "providers": {
+    "universal_launcher": {
+      "revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "tree": "7728e4d415539a0f24e6f17aa7d22be00cc99d80",
+      "version": "1.9.1",
+      "abi": "1.9",
+      "license": "MIT"
+    },
+    "universal_setup": {
+      "revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+      "tree": "499013a2099f872c998932505a51489343606382",
+      "version": "1.0.0",
+      "abi": "1.0",
+      "license": "MIT AND Zlib"
+    }
+  },
+  "package_evidence": {
+    "corrected_matrix_run": 34792335969,
+    "policy_custody_revision": "8bbe5051339d828ad7d39aae880be0d293ef2a89",
+    "platform_linkage_cells": 12,
+    "authorizing": false
+  },
+  "five_projection_import": {
+    "run": 34793208025,
+    "aggregate_job": 103821556004,
+    "source_head": "e6b1a3439bee3f6cdceaffa0f303cf26cada7cae",
+    "sha256": {
+      "workspace": "83a000bbc6ed1f8585f97d4462b41860dd50c19b7b85c35a38daa8b3e0ce7395",
+      "dependency": "9c28173442fdaf497bf6da2dc24b746f9abd6254374c8b0351e78884b042e420",
+      "providers": "732c675ae982e940c5662bb9d2487f32e6c1fe3d7b9bdd854a2972963cf4f4a9",
+      "build_manifest": "92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be",
+      "sbom": "cff10ca2e7ead40c889100078c89c79fdedb71c9d9f7ab9446ce1029a3cd8c79"
+    }
+  },
+  "qualification": {
+    "successful_engineering_checks": 33,
+    "zlib_notice_sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
+    "transaction_id_length": 33,
+    "transaction_id_entropy_bits": 96,
+    "historical_evidence_families_invalidated": 8,
+    "fresh_evidence_required_after_input_change": true
+  },
+  "acceptance": [
+    {
+      "text": "Require exact USK/ULK protected-main tips and package provenance before changing consumer pins through the existing five-projection importer.",
+      "result": "PASS"
+    },
+    {
+      "text": "Run required consumer native/package modes against those exact identities; retain old/new lock evidence.",
+      "result": "PASS"
+    }
+  ],
+  "independent_review": {
+    "model": "gpt-5.6-sol",
+    "verdict": "ACCEPT_CLOSE",
+    "human_review_claimed": false,
+    "scope": "Exact implementation range, integration tree, package/projection identities, licensing and staging repair"
+  },
+  "governance_failures": {
+    "count": 2,
+    "classification": "separately diagnosed task-to-dev workflow trust-anchor predicate/configuration failures",
+    "product_evidence_contradicted": false
+  },
+  "authority": {
+    "protected_integration": false,
+    "execution": false,
+    "setup_mutation": false,
+    "human_acceptance": false,
+    "route": false,
+    "signing": false,
+    "publication": false,
+    "release": false,
+    "support": false
+  },
+  "limits": [
+    "This closes only exact provider adoption and its package-consumer evidence.",
+    "The independent review was model-based and did not rerun heavy builds.",
+    "Hosted conclusions remain bound to their immutable run, job, source and artifact identities.",
+    "No release, publication, signing, game, human-experience or live Setup authority is granted.",
+    "Later provider, package, workflow or consumer changes require fresh qualification."
+  ]
+}

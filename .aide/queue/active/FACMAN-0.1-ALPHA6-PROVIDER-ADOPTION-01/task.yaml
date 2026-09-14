@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01
 title: Adopt promoted provider identities with exact consumer proof
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -64,3 +64,8 @@ retained_boundaries:
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
 active_at: 2026-09-13T22:24:05Z
+verified_pending_closeout_at: 2026-09-14T23:14:07Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-09-14T23:14:08Z
+closed_at: 2026-09-14T23:14:09Z
