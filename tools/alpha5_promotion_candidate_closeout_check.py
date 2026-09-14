@@ -16,6 +16,8 @@ from typing import Any
 
 import jsonschema
 
+from tools import provider_adoption_successor_check
+
 
 ROOT = Path(__file__).resolve().parents[1]
 RECEIPT = ROOT / "release/index/alpha5_promotion_candidate_closeout.v1.toml"
@@ -679,8 +681,8 @@ def validate_repository_bindings(
     project: dict[str, Any],
     plan: dict[str, Any],
     version_train: dict[str, Any],
-    provider_lock: dict[str, Any],
-    workspace_lock: dict[str, Any],
+    _provider_lock: dict[str, Any],
+    _workspace_lock: dict[str, Any],
 ) -> list[str]:
     problems: list[str] = []
     if release_index.get("alpha5_promotion_candidate_closeout") != RECEIPT_PATH:
@@ -733,37 +735,6 @@ def validate_repository_bindings(
         if version_train.get("publication_authorized") is not False:
             problems.append("version train publication authority must remain false")
 
-    providers = {
-        row.get("id"): row
-        for row in provider_lock.get("provider", [])
-        if isinstance(row, dict)
-    }
-    workspace = {
-        row.get("id"): row
-        for row in workspace_lock.get("component", [])
-        if isinstance(row, dict) and row.get("id") in providers
-    }
-    receipt_providers = {row["id"]: row for row in receipt.get("provider", [])}
-    if set(receipt_providers) != {"universal_launcher", "universal_setup"}:
-        problems.append("receipt provider set differs")
-    for provider_id, record in receipt_providers.items():
-        current = providers.get(provider_id, {})
-        pinned = workspace.get(provider_id, {})
-        for receipt_key, current_key in (
-            ("source_revision", "source_revision"),
-            ("source_tree", "source_tree"),
-            ("package_version", "package_version"),
-            ("package_digest", "package_digest"),
-            ("abi_version", "abi_version"),
-            ("abi_manifest_digest", "abi_manifest_digest"),
-            ("contract_digest", "contract_digest"),
-        ):
-            if record.get(receipt_key) != current.get(current_key):
-                problems.append(f"{provider_id} historical provider binding differs")
-        if record.get("workspace_pin") != pinned.get("pin"):
-            problems.append(f"{provider_id} historical workspace pin differs")
-        if record.get("workspace_tree") != pinned.get("tree"):
-            problems.append(f"{provider_id} historical workspace tree differs")
     return problems
 
 
@@ -776,6 +747,13 @@ def repository_problems(receipt: dict[str, Any]) -> list[str]:
         )
     ]
     problems = validate_repository_bindings(receipt, *values)
+    problems.extend(
+        provider_adoption_successor_check.historical_binding_problems(
+            "alpha5_promotion_candidate_closeout.v1",
+            PROVIDER_LOCK_SHA256,
+            WORKSPACE_LOCK_SHA256,
+        )
+    )
     if sha256_text_lf(ARCHIVE_INDEX) != ARCHIVE_SHA256:
         problems.append("immutable alpha.5 archive index canonical LF bytes changed")
     archive = load_json(ARCHIVE_INDEX)
@@ -790,10 +768,6 @@ def repository_problems(receipt: dict[str, Any]) -> list[str]:
     }
     if task_ids != {"FACMAN-0.1-BETA-READINESS-01", "FACMAN-0.1-ULTIMATE-REBASE-01"}:
         problems.append("archive index does not contain the exact two foundation tasks")
-    if sha256(PROVIDER_LOCK) != PROVIDER_LOCK_SHA256:
-        problems.append("current provider-lock bytes differ from the alpha.5 binding")
-    if sha256(WORKSPACE_LOCK) != WORKSPACE_LOCK_SHA256:
-        problems.append("current workspace-lock bytes differ from the alpha.5 binding")
     return problems
 
 

@@ -43,9 +43,15 @@ def validate() -> list[str]:
     for component_id, component in components.items():
         if seed_components.get(component_id, {}).get("license") != component.get("license"):
             problems.append(f"SBOM seed license differs from dependency lock: {component_id}")
-    for provider in ("universal_launcher", "universal_setup"):
-        if components.get(provider, {}).get("license") != "MIT":
-            problems.append(f"provider license must match the accepted MIT decision: {provider}")
+    expected_provider_licenses = {
+        "universal_launcher": "MIT",
+        "universal_setup": "MIT AND Zlib",
+    }
+    for provider, expected_license in expected_provider_licenses.items():
+        if components.get(provider, {}).get("license") != expected_license:
+            problems.append(
+                f"provider license must match the accepted package expression: {provider}"
+            )
     miniz = components.get("miniz", {})
     hashes = {
         "miniz_c_sha256": ROOT / "external" / "miniz" / "miniz.c",
@@ -70,6 +76,13 @@ def validate() -> list[str]:
         pin = str(components.get(provider, {}).get("pin", ""))
         if not pin or pin not in notices:
             problems.append(f"third-party notice is missing current pin: {provider}")
+    for anchor in (
+        "Universal Setup bundled dependency: Zlib 1.3.2",
+        "(C) 1995-2026 Jean-loup Gailly and Mark Adler",
+        "This notice may not be removed or altered from any source distribution.",
+    ):
+        if anchor not in notices:
+            problems.append(f"Universal Setup Zlib notice is missing: {anchor}")
     reuse = (ROOT / "REUSE.toml").read_text(encoding="utf-8")
     for anchor in ("SPDX-PackageName", "external/miniz/**", "external/picojson/**", "NOASSERTION"):
         if anchor == "NOASSERTION":
@@ -87,6 +100,12 @@ def validate() -> list[str]:
             problems.append(f"packaged dependency notice is missing: {packaged_notice}")
         elif normalized_notice(ROOT / packaged_notice) != normalized_notice(ROOT / upstream_notice):
             problems.append(f"packaged dependency notice differs from upstream: {packaged_notice}")
+    usk_zlib_notice = ROOT / "LICENSES" / "UniversalSetupZlib.txt"
+    expected_usk_zlib_sha256 = "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2"
+    if not usk_zlib_notice.is_file():
+        problems.append("packaged dependency notice is missing: LICENSES/UniversalSetupZlib.txt")
+    elif sha256(usk_zlib_notice) != expected_usk_zlib_sha256:
+        problems.append("packaged Universal Setup Zlib notice differs from the adopted provider source")
     for provider, packaged_notice in (
         ("universal_launcher", "LICENSES/UniversalLauncher.txt"),
         ("universal_setup", "LICENSES/UniversalSetup.txt"),
@@ -111,6 +130,7 @@ def validate() -> list[str]:
     required_provider_notices = {
         "LICENSES/UniversalLauncher.txt",
         "LICENSES/UniversalSetup.txt",
+        "LICENSES/UniversalSetupZlib.txt",
     }
     for profile_path in sorted((ROOT / "release" / "profiles").glob("*/profile.toml")):
         with profile_path.open("rb") as handle:

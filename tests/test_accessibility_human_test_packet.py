@@ -7,6 +7,7 @@ import copy
 import json
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 from pathlib import Path
 
@@ -21,9 +22,22 @@ class AccessibilityHumanTestPacketTests(unittest.TestCase):
     STAGE_DIGEST = "e" * 64
 
     def setUp(self) -> None:
+        self.original_file_sha256 = packet_check.file_sha256
+        self.provider_hash_patcher = mock.patch.object(
+            packet_check,
+            "file_sha256",
+            side_effect=self.historical_file_sha256,
+        )
+        self.provider_hash_patcher.start()
+        self.addCleanup(self.provider_hash_patcher.stop)
         self.template = packet_check.load_template()
         self.matrix = packet_check.load_matrix()
         self.packet_text = packet_check.PACKET.read_text(encoding="utf-8")
+
+    def historical_file_sha256(self, path: Path) -> str:
+        if Path(path) == packet_check.PROVIDER_LOCK:
+            return packet_check.EXPECTED_PROVIDER_LOCK_SHA256
+        return self.original_file_sha256(path)
 
     def validate_template(self, template: dict | None = None) -> list[str]:
         return packet_check.validate_template(
@@ -230,6 +244,17 @@ class AccessibilityHumanTestPacketTests(unittest.TestCase):
                 ),
                 [],
             )
+
+    def test_current_provider_adoption_requires_a_fresh_packet(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            package, resolution = self.write_artifacts(Path(raw))
+            with mock.patch.object(
+                packet_check,
+                "file_sha256",
+                side_effect=self.original_file_sha256,
+            ):
+                _, problems = packet_check.bind_pending_receipt(package, resolution)
+        self.assertTrue(any("invalidated by provider adoption" in item for item in problems))
 
     def test_pending_packet_rejects_stale_resolution_root(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

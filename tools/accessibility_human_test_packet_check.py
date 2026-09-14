@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import factorio_2_1_14_route_packet_check as schema_adapter
+from tools import provider_adoption_successor_check
 from tools.release_compiler.canonical import domain_digest_value
 
 
@@ -227,6 +228,12 @@ def _artifact_binding(
         return {}, problems
     assert package is not None and resolution is not None
 
+    if file_sha256(PROVIDER_LOCK) != EXPECTED_PROVIDER_LOCK_SHA256:
+        problems.append(
+            "alpha.1 accessibility packet was invalidated by provider adoption; "
+            "fresh candidate artifacts and a fresh packet are required"
+        )
+
     alpha_source = load_toml(ALPHA_SOURCE)
     expected_name = alpha_route_package(alpha_source).get("filename")
     if package.name != expected_name:
@@ -297,9 +304,12 @@ def _input_problems(
     problems.extend(
         schema_adapter._schema_problems(record, schema, "accessibility receipt")
     )
-    if file_sha256(PROVIDER_LOCK) != EXPECTED_PROVIDER_LOCK_SHA256:
-        problems.append("tracked provider lock no longer matches the packet binding")
-
+    problems.extend(
+        provider_adoption_successor_check.historical_binding_problems(
+            "facman_accessibility_human_test_packet.alpha1",
+            EXPECTED_PROVIDER_LOCK_SHA256,
+        )
+    )
     journeys = record.get("journeys", [])
     journey_ids = [item.get("id") for item in journeys if isinstance(item, dict)]
     if journey_ids != list(REQUIRED_JOURNEYS):

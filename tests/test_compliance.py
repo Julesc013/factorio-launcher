@@ -38,7 +38,7 @@ class ComplianceTests(unittest.TestCase):
         self.assertEqual([], provenance_build.verify_sbom_component_coverage(document, records))
         licenses = {package["name"]: package["licenseDeclared"] for package in document["packages"]}
         self.assertEqual("MIT", licenses["Universal Launcher"])
-        self.assertEqual("MIT", licenses["Universal Setup"])
+        self.assertEqual("MIT AND Zlib", licenses["Universal Setup"])
 
     def test_sbom_component_coverage_rejects_missing_component(self) -> None:
         record = {"name": "console_cli"}

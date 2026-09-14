@@ -40,6 +40,7 @@ REQUIRED_LICENSES = {
     "licenses/THIRD_PARTY_NOTICES.md",
     "licenses/UniversalLauncher.txt",
     "licenses/UniversalSetup.txt",
+    "licenses/UniversalSetupZlib.txt",
     "licenses/Miniz.txt",
     "licenses/PicoJSON.txt",
 }

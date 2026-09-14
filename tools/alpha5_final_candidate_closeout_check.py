@@ -16,6 +16,8 @@ from typing import Any
 
 import jsonschema
 
+from tools import provider_adoption_successor_check
+
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -465,10 +467,13 @@ def repository_problems() -> list[str]:
     )
     problems.extend(historical_role_problems(values["final_distribution"]))
     problems.extend(current_view_problems())
-    if sha256(PROVIDER_LOCK) != "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00":
-        problems.append("provider lock bytes differ from the final candidate binding")
-    if sha256(WORKSPACE_LOCK) != "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf":
-        problems.append("workspace lock bytes differ from the final candidate binding")
+    problems.extend(
+        provider_adoption_successor_check.historical_binding_problems(
+            "alpha5_final_candidate_closeout.v1",
+            "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+            "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf",
+        )
+    )
     return problems
 
 

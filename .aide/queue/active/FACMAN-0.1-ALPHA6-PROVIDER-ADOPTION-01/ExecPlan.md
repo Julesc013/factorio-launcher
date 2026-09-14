@@ -180,3 +180,52 @@ that exact policy snapshot, corrected matrix run `34792335969`, all twelve
 immutable artifact IDs, and USK protected-main commit
 `279ad4876dc325f8e1fcdc918c91b098a11bc616`. The reconciliation validator and
 tracked WinForms provider identity use the same source and policy context.
+
+Hosted run `34793208025` at FacMan head
+`e6b1a3439bee3f6cdceaffa0f303cf26cada7cae` passed all twelve current package
+jobs and aggregate job `103821556004`. The importer accepted both six-profile
+sets, the reconciliation validator passed, and the job emitted the five exact
+release projections. Their independently decoded and hash-verified bytes are
+retained under the owned task root in `provider-projections-34793208025`:
+
+| Projection | SHA-256 |
+| --- | --- |
+| `workspace_lock.v1.toml` | `83a000bbc6ed1f8585f97d4462b41860dd50c19b7b85c35a38daa8b3e0ce7395` |
+| `dependency_lock.v1.toml` | `9c28173442fdaf497bf6da2dc24b746f9abd6254374c8b0351e78884b042e420` |
+| `providers.lock.v2.toml` | `732c675ae982e940c5662bb9d2487f32e6c1fe3d7b9bdd854a2972963cf4f4a9` |
+| `build_manifest.v1.toml` | `92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be` |
+| `sbom.components.v1.json` | `cff10ca2e7ead40c889100078c89c79fdedb71c9d9f7ab9446ce1029a3cd8c79` |
+
+Those exact bytes are now applied locally; `build_manifest.v1.toml` was already
+byte-identical. Local reconciliation passes with evidence digest
+`34f858798671df6e35bfe5348d0e80e20c75133c241982a9e91c0e2cdc26d26c`.
+The temporary retained-artifact aggregate job and its `actions: read` permission
+are removed from the durable workflow.
+
+The current-source adoption checkpoint applies those five verified projections,
+updates live provider truth to USK protected-main commit
+`279ad4876dc325f8e1fcdc918c91b098a11bc616`, and preserves the former lock and
+candidate bytes as historical evidence. The machine-readable Provider Adoption
+successor record binds run `34793208025`, aggregate job `103821556004`, all five
+projection digests, eight invalidated evidence families, and false release,
+execution, installation, publication, and signing authority. Historical
+validators now prove their original inputs and require that explicit invalidation
+before evaluating current provider state.
+
+Universal Setup's adopted package expression is `MIT AND Zlib`. Every release
+profile and portable package contract now carries the provider MIT notice plus
+the exact upstream Zlib 1.3.2 notice at
+`LICENSES/UniversalSetupZlib.txt` (SHA-256
+`e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2`).
+The component model, compliance validation, candidate-security checks and
+package-runtime assertions bind that additional immutable payload.
+
+Local current-source validation passed 178 focused adoption, history,
+compliance, release-compiler, package-contract and candidate tests plus 21
+release-staging assurance tests with one declared skip; the full strict check
+passed with 419 schemas; and the portable AIDE Lite test passed.
+The package-runtime proof class separately refused to run because its required
+clean-source Windows binary was absent from the non-persistent checkout build
+path. Fresh hosted package/native qualification remains pending after this
+source checkpoint, so the WorkUnit and all effect/release authorities remain
+active and closed respectively.

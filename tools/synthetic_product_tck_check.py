@@ -20,7 +20,7 @@ WORKFLOW = ROOT / ".github" / "workflows" / "synthetic-product-tck.yml"
 LOCK = ROOT / "release" / "index" / "workspace_lock.v1.toml"
 EXPECTED_PINS = {
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
-    "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+    "universal_setup": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
 }
 
 

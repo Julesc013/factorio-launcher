@@ -696,7 +696,7 @@
     "contracts": 131,
     "refusal_codes": 250,
     "registered_routes": 129,
-    "schemas": 418
+    "schemas": 419
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
@@ -720,7 +720,7 @@
     "runtime_candidate": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "truth_closeout": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
-    "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
+    "universal_setup": "279ad4876dc325f8e1fcdc918c91b098a11bc616"
   },
   "execution": {
     "current_gate_status": "alpha6_workspace_migration_recovery_active",
@@ -2654,9 +2654,9 @@
     "universal_launcher_consumed_pin": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
     "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
-    "universal_setup_consumed_pin": "d2a2aae7e61c47035c92334b0522143b4fea3880",
-    "universal_setup_dev_revision": "d7057ee397fd172863d4ed31aaf7cc6dcf57b961",
-    "universal_setup_main_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880"
+    "universal_setup_consumed_pin": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+    "universal_setup_dev_revision": "f28e543dcc2220ade10d645d4298daba28f88ec3",
+    "universal_setup_main_revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616"
   },
   "provider_pins": {
     "factorio_binding": {
@@ -2680,7 +2680,7 @@
       "reachability": "required_for_source_closure",
       "remote": "https://github.com/Julesc013/universal-setup.git",
       "required_ref": "refs/heads/main",
-      "revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+      "revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
       "source": "universal-setup"
     }
   },

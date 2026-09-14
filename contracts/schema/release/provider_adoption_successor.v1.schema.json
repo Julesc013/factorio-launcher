@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.provider_adoption_successor.v1",
+  "title": "FacMan provider adoption successor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "work_unit",
+    "status",
+    "facman_base_revision",
+    "projection_source",
+    "prior_inputs",
+    "current_inputs",
+    "providers",
+    "invalidated_evidence",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.provider_adoption_successor.v1" },
+    "work_unit": { "const": "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01" },
+    "status": { "const": "candidate_applied_pending_protected_dev_integration" },
+    "facman_base_revision": { "$ref": "#/$defs/revision" },
+    "projection_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workflow_run", "aggregate_job", "head_revision", "evidence_revision"],
+      "properties": {
+        "workflow_run": { "const": 34793208025 },
+        "aggregate_job": { "const": 103821556004 },
+        "head_revision": { "$ref": "#/$defs/revision" },
+        "evidence_revision": { "$ref": "#/$defs/revision" }
+      }
+    },
+    "prior_inputs": { "$ref": "#/$defs/inputs" },
+    "current_inputs": { "$ref": "#/$defs/inputs" },
+    "providers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/provider" }
+    },
+    "invalidated_evidence": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/invalidation" }
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_lock", "dependency_lock", "providers_lock", "build_manifest", "sbom"],
+      "properties": {
+        "workspace_lock": { "$ref": "#/$defs/sha256" },
+        "dependency_lock": { "$ref": "#/$defs/sha256" },
+        "providers_lock": { "$ref": "#/$defs/sha256" },
+        "build_manifest": { "$ref": "#/$defs/sha256" },
+        "sbom": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prior_revision", "revision", "tree", "package_version", "abi_version", "contract_digest", "package_set_digest", "license"],
+      "properties": {
+        "id": { "enum": ["universal_launcher", "universal_setup"] },
+        "prior_revision": { "$ref": "#/$defs/revision" },
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "package_version": { "type": "string", "minLength": 1 },
+        "abi_version": { "type": "string", "minLength": 1 },
+        "contract_digest": { "$ref": "#/$defs/sha256" },
+        "package_set_digest": { "$ref": "#/$defs/sha256" },
+        "license": { "enum": ["MIT", "MIT AND Zlib"] }
+      }
+    },
+    "invalidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "provider_lock_sha256", "fresh_evidence_required", "authority_reused"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "provider_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "workspace_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "fresh_evidence_required": { "const": true },
+        "authority_reused": { "const": false }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protected_integration", "factorio_execution", "setup_mutation", "human_verdict", "route_capability", "route_promotion", "signing", "publication", "support"],
+      "properties": {
+        "protected_integration": { "const": false },
+        "factorio_execution": { "const": false },
+        "setup_mutation": { "const": false },
+        "human_verdict": { "const": false },
+        "route_capability": { "const": false },
+        "route_promotion": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false },
+        "support": { "const": false }
+      }
+    }
+  }
+}

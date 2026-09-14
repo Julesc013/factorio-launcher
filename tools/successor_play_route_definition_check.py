@@ -106,6 +106,10 @@ PROTECTED_PACKAGE_PROVIDER_PINS = {
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880",
 }
+CORRECTED_PACKAGE_PROVIDER_PINS = {
+    "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+}
 EXPECTED_PROVIDER_BINDINGS = [
     {
         "id": "universal_launcher",
@@ -495,6 +499,7 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
                 RECONCILED_PROVIDER_PINS,
                 ADOPTED_PROVIDER_PINS,
                 PROTECTED_PACKAGE_PROVIDER_PINS,
+                CORRECTED_PACKAGE_PROVIDER_PINS,
             ):
                 problems.append(
                     "workspace lock is neither the immutable route-v1 provider set "
@@ -857,11 +862,14 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
                     == "invalidated_by_ulk_provider_adoption"
             )
             package_adoption_is_explicit = (
-                live_pins == PROTECTED_PACKAGE_PROVIDER_PINS
+                live_pins in (
+                    PROTECTED_PACKAGE_PROVIDER_PINS,
+                    CORRECTED_PACKAGE_PROVIDER_PINS,
+                )
                 and convergence.get("universal_launcher_consumed_pin")
-                    == PROTECTED_PACKAGE_PROVIDER_PINS["universal_launcher"]
+                    == live_pins["universal_launcher"]
                 and convergence.get("universal_setup_consumed_pin")
-                    == PROTECTED_PACKAGE_PROVIDER_PINS["universal_setup"]
+                    == live_pins["universal_setup"]
                 and convergence.get("active_route_integration")
                     == "invalidated_by_protected_provider_package_adoption"
             )
