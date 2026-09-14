@@ -23,20 +23,20 @@
   },
   "inventory": {
     "artifacts_sha256": {
-      "linux/static": "0ea6c3382a1859fd44347f0134ce5adf63066a0405a8f3a0ab1909990935bfa8",
-      "linux/shared": "8c98782f1514029d70fce1e1755b95ada1b040ed752c2e5a541b7f75030c878e",
-      "macos/static": "28074e1d3deddf6ba4ea0fcc95c8f14c1590fea1d58c985b1d42588209772fb7",
-      "macos/shared": "049b136bf5307f212be2b846a8176a4dc2fdde93bd49f7a6cbe00971f0c0413a",
-      "windows/static": "d50816b0711016d0f3603a4c05deedeb7220a6fc127fa837929615ca1ed12110",
-      "windows/shared": "e15e5ab3fb1cd4b6d19c18ae81d7b9d1342e4d3158d320a49bb3b47a9fff0941"
+      "linux/static": "33c17e9f5bb33e06dfebb0e05a1b349ff05d4f88cda6d54a78f7863db21df4df",
+      "linux/shared": "d1d670643f0d338a553a3c958bb4a4715f5f967ca6ca45192a3f11875b0c8309",
+      "macos/static": "8c1f90e2fc958796a9be32c2073685de2568c4801eec71494d3eaae729414d66",
+      "macos/shared": "4fa89a73f4d3645f75aaee8667e635dd4ee5ab833ae617c029225867f1dcfdbf",
+      "windows/static": "834a23257fb823a62b6f724eea13b3be84a2b1b5b609d395eeefad1036cd3078",
+      "windows/shared": "b295fd1baad83b20a0ab3129780f093b7dd071d50d3e04929e0e4063565e274c"
     },
     "contracts_sha256": {
-      "linux/static": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
-      "linux/shared": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
-      "macos/static": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
-      "macos/shared": "f34b1ece2bdedcef1e1050cd71e3d9682cbfe1d1031b933a0b9a1453d4883abd",
-      "windows/static": "1ea8008a0816dd75c83253b62ca6b40e167d52b1c2a190a3f55c3c47b83f5106",
-      "windows/shared": "1ea8008a0816dd75c83253b62ca6b40e167d52b1c2a190a3f55c3c47b83f5106"
+      "linux/static": "2d641ddadcab3e5755c7be74fd95e8f2a9b57d61e4da13d3219f356998bc95bf",
+      "linux/shared": "2d641ddadcab3e5755c7be74fd95e8f2a9b57d61e4da13d3219f356998bc95bf",
+      "macos/static": "2d641ddadcab3e5755c7be74fd95e8f2a9b57d61e4da13d3219f356998bc95bf",
+      "macos/shared": "2d641ddadcab3e5755c7be74fd95e8f2a9b57d61e4da13d3219f356998bc95bf",
+      "windows/static": "6cc338056c77bb59fe74fba660e9c1de50dfef78decaaa3545e402e0b569d228",
+      "windows/shared": "6cc338056c77bb59fe74fba660e9c1de50dfef78decaaa3545e402e0b569d228"
     },
     "contract_set": [
       "share/universal-setup/contracts/schema/package/component_manifest.v1.schema.json",

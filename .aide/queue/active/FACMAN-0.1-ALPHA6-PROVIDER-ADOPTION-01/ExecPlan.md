@@ -146,3 +146,30 @@ identity builds one fresh twelve-package matrix. After that matrix passes, a
 separate policy checkpoint will bind its exact manifests, followed by an exact
 artifact-ID import checkpoint. This keeps package production, policy custody
 and projection generation distinct without relabelling the rejected artifacts.
+
+Hosted run `34792335969` at FacMan head
+`3ef2afa9cefea86a9382108786ab1a69b1e19be8` passed all twelve corrected
+provider package jobs; its aggregate was skipped as declared. The complete
+matrix binds ULK `5479939ca5cbc9ee0f901608a92012778b4752ae` and USK
+`279ad4876dc325f8e1fcdc918c91b098a11bc616`. The selected immutable artifact
+objects are:
+
+| Artifact | ID | Archive SHA-256 |
+| --- | ---: | --- |
+| ULK Windows static | `10328805080` | `e63870c73cbc76ee660b2886cfa52fc5d58505df8f6da057341460745c479ab7` |
+| USK Windows static | `10328776053` | `d8b44362ad798bb9bc4e7e0ac9805abdbf2384a7cc28cbf07df8a52077c31082` |
+| ULK macOS shared | `10328742824` | `c263d76f5e0d0a145c4b11470fd5853c95fcc57af7c1ff412fcfdca9dfd8fbba` |
+| ULK macOS static | `10328742637` | `7b49bad70310a017b37b42690dddf2e62bd01ec1f00186c1ea541237f78f67e9` |
+| USK Linux static | `10328698204` | `efe134882428606674cf3dfd9cd1fe42141127cdc5de25ef3486d16a5883cf35` |
+| USK macOS shared | `10328537425` | `ed6b36a856f1ee786a027b70342bc3ff6cb120de31b33b1720cee705e1b2b008` |
+| ULK Linux static | `10328323992` | `8fdffed127e7c5b96cc2d4c66dfe5084c67dd9e5a1e01918aad58d0071e8012d` |
+| USK Linux shared | `10328227775` | `293e66e469501a0bcd7d274db177c9b57eec5dec6d45155de28f8cb3fb03c6a8` |
+| USK Windows shared | `10328078103` | `ac4d7035fc9b6a4e2a17844d82004313c65285c5fefa0b10a5316faf75f4ec25` |
+| USK macOS static | `10327998258` | `71d0728e7a809206437912a4d38e9c62cfa94c59bc78d6d554b1e72748987cf0` |
+| ULK Linux shared | `10327753418` | `0feb64b6a149c48a01e3d4b5522279276bba7cec0eb95d3e69df74ae3a34ea80` |
+| ULK Windows shared | `10327579450` | `b416422286108cb6931513d3180c82956ec53a29e7a5276d0bf8e54133f53f57` |
+
+All twelve artifact objects reported `expired=false`. The two import policies
+now bind their exact per-profile artifact, contract and public-header inventory
+digests. Projection generation remains disabled until this policy snapshot has
+its own committed custody identity.
