@@ -236,3 +236,31 @@ repository package importable during direct script execution. Both Alpha.5
 candidate validators now establish `ROOT` and `sys.path` before importing from
 `tools`. A direct-script regression covers both entrypoints; the two direct
 checks and 22 focused successor/Alpha.5 tests pass locally.
+
+PR run `34796108571` at FacMan head
+`cbd56fe1b1f9d1b7bcd6cfe51b55021f6100f94c` completed with three concrete CI
+failures. Linux job `103829490126` and macOS job `103829490145` both stopped
+during native compilation because the M1 system-proof fixture used aggregate
+initializers that omitted fields added by the promoted Universal Setup
+`PayloadFile` and `RecipeBinding` contracts. Windows job `103829490175` passed
+its native Debug and Release work, then the package reproducibility proof found
+that `UniversalSetupZlib.txt` was declared by the package profiles but absent
+from the CMake `Licenses` install component. The later package-proof artifact
+step consequently had no receipt to upload.
+
+The bounded CI successor replaces those two aggregate initializers with explicit
+field assignment, preserving the fixture's legacy byte-backed payload and empty
+restart-binding semantics while avoiding future trailing-field warnings. It also
+adds the exact Zlib notice to the CMake `Licenses` component. An Ubuntu WSL
+reproduction using ULK `5479939ca5cbc9ee0f901608a92012778b4752ae` and USK
+`279ad4876dc325f8e1fcdc918c91b098a11bc616` reproduced the hosted compiler
+failure and then completed the full 100% native build after the repair. The
+focused `m1_three_repository_system_proof` passed, and a component install
+produced `share/doc/facman/licenses/UniversalSetupZlib.txt` with SHA-256
+`e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2`.
+
+The wider local CTest observation passed 45 of 47 tests. Its two failures are
+retained as non-host-equivalent DrvFS observations: the case-insensitive mounted
+Windows filesystem aliases Linux `facman` and `FacMan` fixture paths, and it
+cannot satisfy the Linux run-lock identity predicate. Those observations do not
+replace fresh hosted Linux qualification or weaken either assertion.
