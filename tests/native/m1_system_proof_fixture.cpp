@@ -131,7 +131,10 @@ SyntheticArchive make_factorio_archive(const fs::path& root)
         static_cast<std::streamsize>(archive_bytes.size()));
     if (!output) throw std::runtime_error("cannot write synthetic Factorio archive");
     for (const ZipEntry& entry : entries) {
-        result.payload.push_back({entry.path.substr(9), bytes(entry.data)});
+        usk::lifecycle::PayloadFile payload;
+        payload.relative_path = entry.path.substr(9);
+        payload.bytes = bytes(entry.data);
+        result.payload.push_back(std::move(payload));
     }
     return result;
 }
@@ -140,9 +143,16 @@ usk::lifecycle::RecipeBinding factorio_recipe(
     const std::string& recipe_digest,
     const std::string& archive_digest)
 {
-    return {"factorio", "2.0.77", recipe_digest, archive_digest,
-        std::string(64, 'c'), "universal-setup-m1-wu7", {"base", "space-age"},
-        {{"primary", "bin/x64/factorio.exe", "application"}}};
+    usk::lifecycle::RecipeBinding recipe;
+    recipe.product_id = "factorio";
+    recipe.product_version = "2.0.77";
+    recipe.recipe_digest = recipe_digest;
+    recipe.source_archive_digest = archive_digest;
+    recipe.policy_digest = std::string(64, 'c');
+    recipe.provider_revision = "universal-setup-m1-wu7";
+    recipe.components = {"base", "space-age"};
+    recipe.entrypoints = {{"primary", "bin/x64/factorio.exe", "application"}};
+    return recipe;
 }
 
 ulk_string_view view(const std::string& value)

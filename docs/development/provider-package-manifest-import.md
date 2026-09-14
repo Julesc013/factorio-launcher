@@ -18,6 +18,12 @@ filtered Git blob must be owned by the exact `--facman-revision`. An arbitrary
 external `--policy` file is refused. The requested protected ref must exactly
 match the stable ref in that owned policy.
 
+Use an immutable FacMan commit that already owns every policy in the combined
+provider import as the evidence revision. Do not use a moving task head or try
+to make a generated projection refer to the commit that will later contain
+that projection. When all provider package rows share the immutable context,
+the importer advances the aggregate SDK qualification revision to it.
+
 The reviewed policy binds:
 
 - the provider repository and `refs/heads/main`;
@@ -49,6 +55,11 @@ importer projects these files together:
 - `providers.lock.v2.toml`, including the release compiler's six SDK profiles;
 - `build_manifest.v1.toml`;
 - `sbom.components.v1.json`.
+
+The dependency lock and SBOM package licence are importer-owned projections of
+the policy value after the installed manifests have matched that policy. The
+package metadata and inventory digests also bind the installed licence object
+and exact licence-file set for every platform/linkage profile.
 
 The CMake exact package version is the generated `cmake_package_version` in the
 provider record. `cmake/FacManProviders.cmake` reads it from the lock and has no

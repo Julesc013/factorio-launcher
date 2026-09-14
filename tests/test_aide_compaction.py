@@ -1067,7 +1067,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "d2a2aae7e61c47035c92334b0522143b4fea3880",
+            "279ad4876dc325f8e1fcdc918c91b098a11bc616",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

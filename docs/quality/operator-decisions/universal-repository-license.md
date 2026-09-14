@@ -2,7 +2,8 @@
 
 - WorkUnit: `FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01`
 - Status: accepted
-- Decision: MIT for Universal Launcher and Universal Setup
+- Decision: MIT for Universal Launcher and Universal Setup source; retain the
+  complete `MIT AND Zlib` package expression when Universal Setup bundles Zlib
 - Operator authorization date: 2026-07-14
 - Publication authority: not granted
 
@@ -19,6 +20,9 @@ Each provider contains a repository-root MIT `LICENSE`, machine-readable
 `release/license.v1.toml`, strict SPDX coverage, and LF normalization for the
 extensionless license file. FacMan packages retain exact provider notices in
 `LICENSES/UniversalLauncher.txt` and `LICENSES/UniversalSetup.txt`.
+Universal Setup's current package metadata additionally declares its bundled
+Zlib dependency. FacMan records the resulting `MIT AND Zlib` expression and
+retains the Zlib notice in `THIRD_PARTY_NOTICES.md`.
 
 This resolves license identity and redistribution notice truth. It does not
 authorize signing, publication, publisher-authenticity claims, network access,

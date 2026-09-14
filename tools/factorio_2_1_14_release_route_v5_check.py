@@ -24,6 +24,7 @@ from tools.factorio_2_1_14_release_route_v4_check import (  # noqa: E402
     canonical_digest,
     source_file_sha256,
 )
+from tools import provider_adoption_successor_check  # noqa: E402
 
 POLICY = ROOT / "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v3.toml"
 POLICY_SCHEMA = ROOT / "contracts/schema/factorio/factorio_2_1_14_sandbox_play_policy.v3.schema.json"
@@ -320,7 +321,6 @@ def validate(
     for path, expected, label in (
         (HISTORICAL_POLICY, EXPECTED_V2_POLICY_SHA256, "frozen policy v2"),
         (HISTORICAL_ROUTE, EXPECTED_V4_SHA256, "frozen route v4"),
-        (PROVIDER_LOCK, EXPECTED_PROVIDER_LOCK, "provider lock"),
     ):
         try:
             actual = source_file_sha256(path)
@@ -336,6 +336,12 @@ def validate(
     else:
         if route_index.get("current_route_id") == EXPECTED_ROUTE_ID:
             problems.append("unaccepted route v5 was selected in the active route index")
+    problems.extend(
+        provider_adoption_successor_check.historical_binding_problems(
+            "factorio_2_1_14_release_route.v5",
+            EXPECTED_PROVIDER_LOCK,
+        )
+    )
     return problems
 
 

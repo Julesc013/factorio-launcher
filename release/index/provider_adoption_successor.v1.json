@@ -1,0 +1,114 @@
+{
+  "authority": {
+    "factorio_execution": false,
+    "human_verdict": false,
+    "protected_integration": false,
+    "publication": false,
+    "route_capability": false,
+    "route_promotion": false,
+    "setup_mutation": false,
+    "signing": false,
+    "support": false
+  },
+  "current_inputs": {
+    "build_manifest": "92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be",
+    "dependency_lock": "9c28173442fdaf497bf6da2dc24b746f9abd6254374c8b0351e78884b042e420",
+    "providers_lock": "732c675ae982e940c5662bb9d2487f32e6c1fe3d7b9bdd854a2972963cf4f4a9",
+    "sbom": "cff10ca2e7ead40c889100078c89c79fdedb71c9d9f7ab9446ce1029a3cd8c79",
+    "workspace_lock": "83a000bbc6ed1f8585f97d4462b41860dd50c19b7b85c35a38daa8b3e0ce7395"
+  },
+  "facman_base_revision": "77c37e4cd9278c42307cf6b752e1ff2225bc914a",
+  "invalidated_evidence": [
+    {
+      "authority_reused": false,
+      "fresh_evidence_required": true,
+      "id": "alpha5_promotion_candidate_closeout.v1",
+      "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+      "workspace_lock_sha256": "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf"
+    },
+    {
+      "authority_reused": false,
+      "fresh_evidence_required": true,
+      "id": "alpha5_final_candidate_closeout.v1",
+      "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+      "workspace_lock_sha256": "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf"
+    },
+    {
+      "authority_reused": false,
+      "fresh_evidence_required": true,
+      "id": "facman_accessibility_human_test_packet.alpha1",
+      "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+    },
+    {
+      "authority_reused": false,
+      "fresh_evidence_required": true,
+      "id": "successor_play_route.v2",
+      "provider_lock_sha256": "59376482126a8226bb28c5b5d73e980d21d3081b76bdf10bd5c10297f2462249",
+      "workspace_lock_sha256": "510511d597ef4ff1ce58f198b7d45796d7723411d09ca15f0e87d539445408e3"
+    },
+    {
+      "authority_reused": false,
+      "fresh_evidence_required": true,
+      "id": "factorio_2_1_14_release_route.v3",
+      "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+    },
+    {
+      "authority_reused": false,
+      "fresh_evidence_required": true,
+      "id": "factorio_2_1_14_release_route.v4",
+      "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+    },
+    {
+      "authority_reused": false,
+      "fresh_evidence_required": true,
+      "id": "factorio_2_1_14_release_route.v5",
+      "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+    },
+    {
+      "authority_reused": false,
+      "fresh_evidence_required": true,
+      "id": "factorio_2_1_14_route_packet.v1",
+      "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+    }
+  ],
+  "prior_inputs": {
+    "build_manifest": "92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be",
+    "dependency_lock": "d2e131e300f9b20bea0aa2a4169f86a95e48740c4cda35b424f5f8ae942060a3",
+    "providers_lock": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+    "sbom": "c1be8ed61893107e335de4cbbef32d7449ca72d26670b4735ac1a6cba88880c2",
+    "workspace_lock": "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf"
+  },
+  "projection_source": {
+    "aggregate_job": 103821556004,
+    "evidence_revision": "8bbe5051339d828ad7d39aae880be0d293ef2a89",
+    "head_revision": "e6b1a3439bee3f6cdceaffa0f303cf26cada7cae",
+    "workflow_run": 34793208025
+  },
+  "providers": [
+    {
+      "abi_version": "1.9",
+      "contract_digest": "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9",
+      "id": "universal_launcher",
+      "license": "MIT",
+      "package_set_digest": "51e3f7ba5d9f72b0d06ddb409fd190d3e613597d6a0a19a90adb12d5d4898dff",
+      "package_version": "1.9.1",
+      "prior_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "tree": "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+    },
+    {
+      "abi_version": "1.0",
+      "contract_digest": "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56",
+      "id": "universal_setup",
+      "license": "MIT AND Zlib",
+      "package_set_digest": "a47cb9b409c365d4639cc4879941321f0bbfe6d4dbccb9910dcf0bccf550f09f",
+      "package_version": "1.0.0",
+      "prior_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+      "revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+      "tree": "499013a2099f872c998932505a51489343606382"
+    }
+  ],
+  "schema": "facman.provider_adoption_successor.v1",
+  "status": "candidate_applied_pending_protected_dev_integration",
+  "work_unit": "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01"
+}

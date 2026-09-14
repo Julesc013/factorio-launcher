@@ -100,8 +100,15 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
         problems.append(f"{prefix}: version is required")
     elif version in FORBIDDEN_FLOATING_PINS:
         problems.append(f"{prefix}: version must not be floating")
-    if component.get("license") not in {"MIT", "BSD-2-Clause", "NOASSERTION"}:
-        problems.append(f"{prefix}: license must be MIT, BSD-2-Clause, or NOASSERTION")
+    if component.get("license") not in {
+        "MIT",
+        "MIT AND Zlib",
+        "BSD-2-Clause",
+        "NOASSERTION",
+    }:
+        problems.append(
+            f"{prefix}: license must be MIT, MIT AND Zlib, BSD-2-Clause, or NOASSERTION"
+        )
     return problems
 
 
@@ -151,12 +158,12 @@ def validate_universal_provider(
         "universal_setup": {
             "version": "1.0.0",
             "abi_contract_version": "1.0",
-            "pin": "d2a2aae7e61c47035c92334b0522143b4fea3880",
-            "tree": "291d63214cdd0cd3d15c809de5744ee3514fb2b2",
+            "pin": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+            "tree": "499013a2099f872c998932505a51489343606382",
             "remote": "https://github.com/Julesc013/universal-setup.git",
             "required_ref": "refs/heads/main",
             "reachability": "required_for_source_closure",
-            "license": "MIT",
+            "license": "MIT AND Zlib",
             "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
         },
     }[component_id]

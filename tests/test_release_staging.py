@@ -553,7 +553,18 @@ class CanonicalCandidateAssuranceTests(unittest.TestCase):
             report["stage"]["stage_digest"],
             load_stage_manifest(self.stage)["stage_digest"],
         )
-        self.assertEqual(len(report["licences"]), 6)
+        self.assertEqual(len(report["licences"]), 7)
+        zlib_notice = next(
+            item
+            for item in report["licences"]
+            if item["component_id"] == "universal_setup_zlib"
+        )
+        self.assertEqual(zlib_notice["path"], "licenses/UniversalSetupZlib.txt")
+        self.assertEqual(zlib_notice["spdx"], "Zlib")
+        self.assertEqual(
+            zlib_notice["sha256"],
+            "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
+        )
         self.assertTrue(report["runtime_verifier"]["static_closure_verified"])
         self.assertFalse(report["runtime_verifier"]["source_release_eligible"])
         self.assertFalse(report["runtime_verifier"]["native_admission_ready"])

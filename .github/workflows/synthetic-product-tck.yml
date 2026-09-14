@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: Julesc013/universal-setup
-          ref: d2a2aae7e61c47035c92334b0522143b4fea3880
+          ref: 279ad4876dc325f8e1fcdc918c91b098a11bc616
           path: build/platform-canary/universal-setup
           fetch-depth: 0
           persist-credentials: false
@@ -53,7 +53,7 @@ jobs:
           --ulk-root build/platform-canary/universal-launcher
           --usk-root build/platform-canary/universal-setup
           --expected-ulk-sha 5479939ca5cbc9ee0f901608a92012778b4752ae
-          --expected-usk-sha d2a2aae7e61c47035c92334b0522143b4fea3880
+          --expected-usk-sha 279ad4876dc325f8e1fcdc918c91b098a11bc616
           --output-dir "${{ runner.temp }}/synthetic-product-tck"
       - name: Preserve exact development-only observation
         if: always()
