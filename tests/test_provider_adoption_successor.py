@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import copy
+import subprocess
+import sys
 import unittest
 
 from tools import provider_adoption_successor_check as successor
@@ -34,6 +36,21 @@ class ProviderAdoptionSuccessorTests(unittest.TestCase):
         changed["invalidated_evidence"] = changed["invalidated_evidence"][1:]
         problems = successor.validate(record=changed)
         self.assertTrue(any("invalidation set differs" in item for item in problems))
+
+    def test_historical_candidate_validators_run_as_direct_scripts(self) -> None:
+        for script in (
+            "tools/alpha5_promotion_candidate_closeout_check.py",
+            "tools/alpha5_final_candidate_closeout_check.py",
+        ):
+            with self.subTest(script=script):
+                result = subprocess.run(
+                    [sys.executable, "-B", script],
+                    cwd=successor.ROOT,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":

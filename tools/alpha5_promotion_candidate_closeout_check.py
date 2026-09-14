@@ -14,12 +14,15 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import jsonschema
 
 from tools import provider_adoption_successor_check
 
 
-ROOT = Path(__file__).resolve().parents[1]
 RECEIPT = ROOT / "release/index/alpha5_promotion_candidate_closeout.v1.toml"
 SCHEMA = (
     ROOT

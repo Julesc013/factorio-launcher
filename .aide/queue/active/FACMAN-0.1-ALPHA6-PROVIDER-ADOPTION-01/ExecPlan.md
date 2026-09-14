@@ -229,3 +229,10 @@ clean-source Windows binary was absent from the non-persistent checkout build
 path. Fresh hosted package/native qualification remains pending after this
 source checkpoint, so the WorkUnit and all effect/release authorities remain
 active and closed respectively.
+
+PR validation run `34795769577`, job `103828446131`, then found that the Alpha.5
+promotion validator imported the new successor checker before making the
+repository package importable during direct script execution. Both Alpha.5
+candidate validators now establish `ROOT` and `sys.path` before importing from
+`tools`. A direct-script regression covers both entrypoints; the two direct
+checks and 22 focused successor/Alpha.5 tests pass locally.

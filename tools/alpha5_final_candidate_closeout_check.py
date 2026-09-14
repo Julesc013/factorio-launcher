@@ -16,13 +16,10 @@ from typing import Any
 
 import jsonschema
 
-from tools import provider_adoption_successor_check
-
-
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from tools import project_state_release_view
+from tools import project_state_release_view, provider_adoption_successor_check
 RECEIPT_PATH = "release/index/alpha5_final_candidate_closeout.v1.toml"
 RECEIPT = ROOT / RECEIPT_PATH
 SCHEMA = ROOT / "contracts/schema/release/alpha5_final_candidate_closeout.v1.schema.json"
