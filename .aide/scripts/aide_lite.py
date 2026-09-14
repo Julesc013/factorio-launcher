@@ -4004,21 +4004,26 @@ def owner_control_change_authorized(
 
 def task_to_dev_workflow_identity_is_exact(
     event_name: object, repository: object, workflow_ref: object, workflow_sha: object,
-    live_base_sha: object, default_branch: object, default_branch_sha: object,
+    live_base_sha: object, live_head_sha: object, default_branch: object, default_branch_sha: object,
     run_workflow_id: object, required_workflow_id: object, run_head_sha: object,
 ) -> bool:
-    """Bind the base-only publisher to the protected ref that supplied its code."""
-    if not all(isinstance(value, str) for value in (event_name, repository, workflow_ref, workflow_sha, live_base_sha, default_branch, default_branch_sha, run_head_sha)):
+    """Bind the publisher to default-branch code and the event's exact run head."""
+    if not all(isinstance(value, str) for value in (
+        event_name, repository, workflow_ref, workflow_sha, live_base_sha,
+        live_head_sha, default_branch, default_branch_sha, run_head_sha,
+    )):
         return False
     if not isinstance(run_workflow_id, int) or not isinstance(required_workflow_id, int):
         return False
-    if run_workflow_id != required_workflow_id or run_head_sha != workflow_sha:
+    if run_workflow_id != required_workflow_id or default_branch != "main":
         return False
     path = repository + "/.github/workflows/task-to-dev-promotion-check.yml@refs/heads/"
+    if workflow_ref != path + default_branch or workflow_sha != default_branch_sha:
+        return False
     if event_name == "pull_request_target":
-        return workflow_ref == path + "dev" and workflow_sha == live_base_sha
+        return run_head_sha == live_head_sha
     if event_name == "issue_comment":
-        return default_branch == "main" and workflow_ref == path + default_branch and workflow_sha == default_branch_sha
+        return run_head_sha == default_branch_sha
     return False
 
 
