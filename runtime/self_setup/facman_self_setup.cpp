@@ -1352,7 +1352,10 @@ facman::core::Result<Response> execute(const Request &request) {
     intended.provider_state_root = facman::platform::path_to_utf8(active.state_root);
     intended.provider_acceptance_root = facman::platform::path_to_utf8(active.acceptance_root);
     intent_digest = journal_intent_digest(intended);
-    operation_id = "setup." + operation + "." + identifier("attempt") + "." + intent_digest.substr(0, 16);
+    const std::string attempt_id = identifier("attempt");
+    operation_id = "setup." + digest_text(
+        "facman.setup.operation.v2\n" + operation + "\n" + attempt_id + "\n" +
+        intent_digest).substr(0, 24);
     record_path = journal_path(coordinator.value(), operation, root_identity, intent_digest);
     std::error_code exists_error;
     if (fs::exists(record_path, exists_error) && !exists_error) {

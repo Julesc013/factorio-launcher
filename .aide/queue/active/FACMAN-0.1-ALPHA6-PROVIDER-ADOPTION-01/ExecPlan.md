@@ -285,3 +285,33 @@ The bounded successor adds the same explicit `text eol=lf` checkout rule already
 used for the two provider notices. The WorkUnit owns exactly `.gitattributes`
 for this cross-platform evidence correction; no wider control, package or
 mutation authority is added.
+
+## 2026-09-14 Windows self-setup path-capacity remediation
+
+PR run `34801191538`, Windows job `103844042905`, passed both 45-test native
+configurations, shared WinForms validation, 1,735 Python tests, strict checking,
+package creation and package smoke. The subsequent real self-setup lifecycle
+was refused before provider effects with `native_path_limit_exceeded`. The
+572-file payload's longest installed contract path is 120 characters. FacMan's
+verbose `tx.setup.install.attempt...` identity expanded the provider staging
+root enough to exceed Universal Setup's conservative 259 UTF-16-code-unit
+Windows file-path limit under the hosted temporary root.
+
+The successor retains the operation name, full intent digest and unique attempt
+input in a domain-separated SHA-256 binding, while storing a 24-hex-character
+suffix as the durable operation identity. Its derived provider transaction ID
+is exactly 33 characters instead of roughly 60. Existing journals remain
+readable because their identity relationship and schema are unchanged. A native
+regression proves three successive install/repair attempts receive distinct,
+bounded `tx.setup.*` identities. No path limit, provider check, payload member,
+or setup authority is weakened.
+
+Focused native qualification used MSVC 19.51.36252.0 and the exact locked
+provider commits `5479939ca5cbc9ee0f901608a92012778b4752ae` and
+`279ad4876dc325f8e1fcdc918c91b098a11bc616` from the owned external
+`windows-self-setup-path-rx1` root. The recovery/security smoke passed in both
+Debug and Release. The 34 related Python recovery-contract, package and
+provider-mode tests passed, as did the complete strict check over 419 schemas
+and `git diff --check`. Hosted package-lifecycle requalification remains tied
+to the successor commit and must not be inferred from the failed predecessor
+run.

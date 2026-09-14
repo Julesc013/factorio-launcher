@@ -172,6 +172,17 @@ void cases() {
   auto repair_request = request_for(tree, provider, &native, setup::Operation::repair);
   require(setup::execute(repair_request) && provider.apply_calls == 3,
           "later same-version repair has a distinct durable operation identity");
+  require(provider.apply_transaction_ids.size() == 3 &&
+              provider.apply_transaction_ids[0].size() == 33 &&
+              provider.apply_transaction_ids[1].size() == 33 &&
+              provider.apply_transaction_ids[2].size() == 33 &&
+              provider.apply_transaction_ids[0].rfind("tx.setup.", 0) == 0 &&
+              provider.apply_transaction_ids[1].rfind("tx.setup.", 0) == 0 &&
+              provider.apply_transaction_ids[2].rfind("tx.setup.", 0) == 0 &&
+              provider.apply_transaction_ids[0] != provider.apply_transaction_ids[1] &&
+              provider.apply_transaction_ids[1] != provider.apply_transaction_ids[2] &&
+              provider.apply_transaction_ids[0] != provider.apply_transaction_ids[2],
+          "provider transaction identities are unique and bounded for Windows staging paths");
   Tree contention{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-contention"};
   fs::remove_all(contention.root, ignored); fs::create_directories(contention.root);
   std::ofstream(contention.root / "payload.zip", std::ios::binary) << "fixture";
