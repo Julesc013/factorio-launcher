@@ -12,6 +12,7 @@ objective: "Require exact USK/ULK protected-main tips and package provenance bef
 source_bundles:
   - "F05"
 allowed_paths:
+  - ".gitattributes"
   - "release/index/plan.v1.toml"
   - "release/index/current_state.v1.toml"
   - "release/index/project_status.v2.toml"

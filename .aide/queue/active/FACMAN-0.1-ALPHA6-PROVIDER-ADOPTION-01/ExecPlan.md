@@ -267,3 +267,21 @@ replace fresh hosted Linux qualification or weaken either assertion.
 
 The WorkUnit allowed-path declaration now names `cmake/FacManInstall.cmake`,
 which is the exact installer input required to close the Windows package failure.
+
+## 2026-09-14 Windows Zlib notice checkout remediation
+
+PR run `34798731276`, Windows job `103836917710`, passed native Debug and
+Release checks and then ran 1,735 Python tests. Three tests reported the same
+root failure: Git for Windows checked out the extension-bearing Universal Setup
+Zlib notice with CRLF bytes because it had no explicit attributes rule. Its
+physical SHA-256 became
+`439c75ab12b340c5362b9d4b08ff05ec3a4d0eb7667a6fff49a9b16d8795c78e`
+instead of the adopted provider's canonical LF digest
+`e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2`.
+Compliance, candidate assurance and the enclosing strict-check test correctly
+refused that byte drift; later Windows package proof steps did not run.
+
+The bounded successor adds the same explicit `text eol=lf` checkout rule already
+used for the two provider notices. The WorkUnit owns exactly `.gitattributes`
+for this cross-platform evidence correction; no wider control, package or
+mutation authority is added.
