@@ -1,8 +1,12 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01
-status: active_automated
-lifecycle_state: active_automated
-planning_state: next
-result: PENDING
+status: passed
+lifecycle_state: closed
+planning_state: closed
+result: PASS
 created_at: 2026-09-06
 evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/
+verified_pending_closeout_at: 2026-09-14T22:20:46Z
+implementation_state: implemented
+reviewed_at: 2026-09-14T22:20:48Z
+closed_at: 2026-09-14T22:20:49Z

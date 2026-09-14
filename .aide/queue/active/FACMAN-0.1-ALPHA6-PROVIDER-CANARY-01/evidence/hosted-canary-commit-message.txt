@@ -1,0 +1,7 @@
+docs(provider): retain hosted canary conformance
+
+Bind the three-platform seven-mode provider observations and independent
+review while keeping SDK consumption and provider adoption pending.
+
+Work-Item: FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/hosted-provider-conformance-independent-review.v1.json

@@ -179,7 +179,7 @@ evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence
 id = "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01"
 title = "Qualify coherent provider packages through disposable consumer canaries"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "active"
+status = "complete"
 horizon = "next"
 priority = "P1"
 size = "M"
@@ -200,6 +200,11 @@ acceptance = [
   """Run source/target/archive compatibility, interruption and damaged-package fixtures in each applicable \
 consumption mode.""",
   "Reject mixed provider identities and preserve standalone importer ownership.",
+]
+
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/hosted-provider-conformance-independent-review.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/validation.md",
 ]
 
 
