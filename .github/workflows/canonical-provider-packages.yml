@@ -52,8 +52,8 @@ jobs:
             source_dir: universal-launcher
           - provider: usk
             repository: Julesc013/universal-setup
-            revision: bffb60fbf83ca57f71849aafaa36bbaf934f9179
-            tree: 7b7134352db149fdfe45862eb794fc06e0b5fc70
+            revision: 279ad4876dc325f8e1fcdc918c91b098a11bc616
+            tree: 499013a2099f872c998932505a51489343606382
             source_dir: universal-setup
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
@@ -161,6 +161,7 @@ jobs:
   project-release-inputs:
     name: project exact provider release inputs
     needs: package
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:

@@ -130,3 +130,19 @@ artifact IDs and GitHub archive digests are:
 | ULK Windows shared | `10326844915` | `e2223d4bf89fffe106e2950df8ae7805b2a6de9200998520e2caa8bc099a2335` |
 | ULK macOS static | `10326783859` | `0e335ece620e32c244e7653143c096b8b119925b8221a899de3e37c30b60a4e3` |
 | ULK Windows static | `10326609232` | `a136b2b5eff1957859c154c3e98f9dd79c29a2113f0e3e0a754655c46907f028` |
+
+The immutable-artifact import in run `34790043807` accepted all six ULK
+packages and then correctly rejected the USK package set. Universal Setup
+generated `MIT AND Zlib` licence expressions while its bundled native manifest
+schema still required `MIT`. Universal Setup PR 52 corrected the provider
+schema, passed all six hosted contexts, and merged to `dev`; PR 53 promoted the
+same tree to `main` as commit
+`279ad4876dc325f8e1fcdc918c91b098a11bc616`, tree
+`499013a2099f872c998932505a51489343606382`. The old twelve artifacts remain
+retained failure evidence and are not eligible release inputs.
+
+The aggregate import is explicitly skipped while the corrected provider-main
+identity builds one fresh twelve-package matrix. After that matrix passes, a
+separate policy checkpoint will bind its exact manifests, followed by an exact
+artifact-ID import checkpoint. This keeps package production, policy custody
+and projection generation distinct without relabelling the rejected artifacts.
