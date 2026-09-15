@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import contextlib
+import ctypes
 import hashlib
 import os
 import secrets
@@ -97,6 +98,54 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
             "bounded_process_receipt": getattr(result, "facman_bounded_receipt", None),
         })
     return response
+
+
+def windows_command_argv(command_line: str) -> list[str]:
+    argc = ctypes.c_int()
+    shell32 = ctypes.WinDLL("shell32", use_last_error=True)
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    shell32.CommandLineToArgvW.argtypes = [ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_int)]
+    shell32.CommandLineToArgvW.restype = ctypes.POINTER(ctypes.c_wchar_p)
+    kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+    kernel32.LocalFree.restype = ctypes.c_void_p
+    values = shell32.CommandLineToArgvW(command_line, ctypes.byref(argc))
+    if not values:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        return [values[index] for index in range(argc.value)]
+    finally:
+        kernel32.LocalFree(ctypes.cast(values, ctypes.c_void_p))
+
+
+def invoke_registered(command_line: str, *extra: object,
+                      expected: int = 0) -> subprocess.CompletedProcess[str]:
+    command = windows_command_argv(command_line) + [str(value) for value in extra]
+    result = run_command(command)
+    REAL_COMMANDS.append({
+        "registered_command": command_line,
+        "command": command,
+        "exit_code": result.returncode,
+        "stdout_sha256": hashlib.sha256(result.stdout.encode("utf-8")).hexdigest(),
+        "stderr_sha256": hashlib.sha256(result.stderr.encode("utf-8")).hexdigest(),
+        "bounded_process_receipt": getattr(result, "facman_bounded_receipt", None),
+    })
+    if result.returncode != expected:
+        raise AssertionError(
+            f"registered command returned {result.returncode}, expected {expected}: {command_line}\n"
+            f"stdout={result.stdout[-8000:]}\nstderr={result.stderr[-8000:]}"
+        )
+    return result
+
+
+def registry_text(registry: dict[str, object], name: str) -> str:
+    values = registry.get("values")
+    if not isinstance(values, list):
+        raise AssertionError(f"registry values are unavailable while reading {name}")
+    matches = [item.get("value") for item in values
+               if isinstance(item, dict) and item.get("name") == name]
+    if len(matches) != 1 or not isinstance(matches[0], str):
+        raise AssertionError(f"registry value {name} is absent or ambiguous")
+    return matches[0]
 
 
 def stored_payload(path: Path, executable: Path, version: str, compression: int = zipfile.ZIP_STORED) -> None:
@@ -299,7 +348,8 @@ def same_windows_path(left: object, right: Path) -> bool:
 
 
 def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object],
-                        install: Path, version: str, phase: str) -> None:
+                        install: Path, state_root: Path, acceptance_root: Path,
+                        version: str, phase: str) -> None:
     generation = install / "generations" / version
     fields = shortcut.get("fields") if shortcut.get("state") == "present" else None
     if not isinstance(fields, dict) or not same_windows_path(fields.get("target"), generation / "FacMan.exe") or \
@@ -311,15 +361,41 @@ def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object]
     if not isinstance(values, list):
         raise AssertionError(f"{phase}: uninstall registration values are unreadable")
     table = {item["name"]: item for item in values if isinstance(item, dict) and "name" in item}
+    sources = list((state_root / "repair-sources").glob("*.zip"))
+    if len(sources) != 1 or sources[0].stem != sha256_path(sources[0]):
+        raise AssertionError(f"{phase}: exact digest-named offline repair source is absent")
+    repair_source = sources[0]
+    maintenance = repair_source.with_name(f"{repair_source.stem}.FacManSetup.exe")
+    if not maintenance.is_file():
+        raise AssertionError(f"{phase}: external offline maintenance launcher is absent")
+    receipt = repair_source.with_name(f"{repair_source.stem}.maintenance.v1")
+    expected_receipt = (
+        "facman-repair-source-receipt-v1\n"
+        f"source_sha256={repair_source.stem}\n"
+        f"launcher_sha256={sha256_path(maintenance)}\n"
+    )
+    if not receipt.is_file() or receipt.read_text(encoding="utf-8") != expected_receipt or \
+            repair_source.stat().st_nlink != 1 or maintenance.stat().st_nlink != 1 or \
+            receipt.stat().st_nlink != 1:
+        raise AssertionError(f"{phase}: retained maintenance custody receipt is invalid")
+    uninstall = (
+        f'"{maintenance}" uninstall --root "{install}" --state-root "{state_root}" '
+        f'--acceptance-root "{acceptance_root}" --yes --noninteractive --shell-integration'
+    )
+    modify = (
+        f'"{maintenance}" repair --package "{repair_source}" --root "{install}" '
+        f'--state-root "{state_root}" --acceptance-root "{acceptance_root}" '
+        f'--yes --noninteractive --shell-integration'
+    )
     expected = {
         "DisplayName": ("FacMan", 1),
         "DisplayVersion": (version, 1),
         "Publisher": ("Jules C", 1),
         "InstallLocation": (str(install), 1),
         "DisplayIcon": (f'"{generation / "FacMan.exe"}"', 1),
-        "UninstallString": (f'"{install / "maintenance/FacManSetup.exe"}" uninstall --yes', 1),
-        "QuietUninstallString": (f'"{install / "maintenance/FacManSetup.exe"}" uninstall --yes --json', 1),
-        "ModifyPath": (f'"{install / "maintenance/FacManSetup.exe"}" repair --yes', 1),
+        "UninstallString": (uninstall, 1),
+        "QuietUninstallString": (uninstall + " --json", 1),
+        "ModifyPath": (modify, 1),
         "NoModify": (1, 4),
         "NoRepair": (0, 4),
     }
@@ -435,6 +511,19 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         keep = workspace / "keep.txt"
         keep.write_text("preserve\n", encoding="utf-8")
 
+        packaged_install = invoke(executable, "install", *common,
+                                  shell_integration=True, noninteractive=True)
+        if packaged_install.get("status") != "ok":
+            raise AssertionError("produced setup executable did not install from its own overlay")
+        shortcut, registry = observe("packaged_argv0_install_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root, version,
+                            "packaged argv0 install")
+        invoke_registered(registry_text(registry, "UninstallString"))
+        shortcut, registry = observe("registered_uninstall_completed")
+        assert_absent_native(shortcut, registry, "registered uninstall")
+        if install.exists():
+            raise AssertionError("registered uninstall did not remove the managed install")
+
         permit = qualification_permit(root, "files_applied", "install", version, install, state_root)
         boundary_a = invoke(executable, "install", "--package", payload, *common, expected=4,
                             shell_integration=True, noninteractive=True,
@@ -452,18 +541,30 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         if resumed_a.get("status") != "ok":
             raise AssertionError("ordinary install resume after files boundary failed")
         shortcut, registry = observe("install_files_applied_resumed")
-        assert_owned_native(shortcut, registry, install, version, "files-boundary resume")
+        assert_owned_native(shortcut, registry, install, state_root, root, version, "files-boundary resume")
         if file_inventory(install) != files_boundary_inventory:
             raise AssertionError("files-boundary resume replayed provider-visible install content")
 
-        cleanup_a = invoke(executable, "uninstall", *common, shell_integration=True,
-                           noninteractive=True)
-        if cleanup_a.get("status") != "ok":
-            raise AssertionError("ordinary uninstall after files-boundary resume failed")
-        shortcut, registry = observe("uninstall_after_files_boundary")
-        assert_absent_native(shortcut, registry, "uninstall after files boundary")
+        permit = qualification_permit(root, "files_applied", "uninstall", version,
+                                      install, state_root)
+        registered_uninstall_a = registry_text(registry, "UninstallString")
+        uninstall_boundary_a_result = invoke_registered(
+            registered_uninstall_a, "--json",
+            "--qualification-interrupt-after", "files_applied",
+            "--qualification-interrupt-permit", permit, expected=4,
+        )
+        uninstall_boundary_a = json.loads(uninstall_boundary_a_result.stdout)
+        assert_interrupted(uninstall_boundary_a, "files_applied")
+        shortcut, registry = observe("uninstall_files_applied_interrupted")
+        assert_owned_native(shortcut, registry, install, state_root, root, version,
+                            "uninstall files boundary")
+        if install.exists():
+            raise AssertionError("uninstall files boundary retained provider-owned files")
+        invoke_registered(registered_uninstall_a)
+        shortcut, registry = observe("uninstall_files_applied_resumed")
+        assert_absent_native(shortcut, registry, "uninstall files-boundary resume")
         if install.exists() or not keep.is_file() or not state_root.is_dir():
-            raise AssertionError("first ordinary uninstall exceeded its owned fixture scope")
+            raise AssertionError("uninstall files-boundary resume exceeded its owned fixture scope")
 
         permit = qualification_permit(root, "shortcut_applied", "install", version, install, state_root)
         boundary_b = invoke(executable, "install", "--package", payload, *common, expected=4,
@@ -486,10 +587,36 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         if resumed_b.get("status") != "ok":
             raise AssertionError("ordinary install resume after shortcut boundary failed")
         shortcut, registry = observe("install_shortcut_applied_resumed")
-        assert_owned_native(shortcut, registry, install, version, "shortcut-boundary resume")
+        assert_owned_native(shortcut, registry, install, state_root, root, version, "shortcut-boundary resume")
         if shortcut != shortcut_boundary_observation or \
                 file_inventory(install) != shortcut_boundary_inventory:
             raise AssertionError("shortcut-boundary resume replayed an observable native or provider effect")
+
+        permit = qualification_permit(root, "shortcut_applied", "uninstall", version,
+                                      install, state_root)
+        registered_uninstall_b = registry_text(registry, "UninstallString")
+        uninstall_boundary_b_result = invoke_registered(
+            registered_uninstall_b, "--json",
+            "--qualification-interrupt-after", "shortcut_applied",
+            "--qualification-interrupt-permit", permit, expected=4,
+        )
+        uninstall_boundary_b = json.loads(uninstall_boundary_b_result.stdout)
+        assert_interrupted(uninstall_boundary_b, "shortcut_applied")
+        shortcut, registry = observe("uninstall_shortcut_applied_interrupted")
+        if shortcut.get("state") != "absent" or registry.get("state") != "present":
+            raise AssertionError(
+                "uninstall shortcut boundary did not expose exactly the retained registration"
+            )
+        invoke_registered(registered_uninstall_b)
+        shortcut, registry = observe("uninstall_shortcut_applied_resumed")
+        assert_absent_native(shortcut, registry, "uninstall shortcut-boundary resume")
+        reinstalled = invoke(executable, "install", "--package", payload, *common,
+                             shell_integration=True, noninteractive=True)
+        if reinstalled.get("status") != "ok":
+            raise AssertionError("install after uninstall recovery qualification failed")
+        shortcut, registry = observe("install_after_uninstall_recovery")
+        assert_owned_native(shortcut, registry, install, state_root, root, version,
+                            "install after uninstall recovery")
 
         gui = install / "generations" / version / "FacMan.exe"
         gui.write_bytes(b"deliberate real-mode owned damage\n")
@@ -497,12 +624,15 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
                          "--acceptance-root", root, shell_integration=True, noninteractive=True)
         if damaged.get("provider", {}).get("payload", {}).get("status") != "fail":
             raise AssertionError("real-mode owned damage was not detected")
-        repaired = invoke(executable, "repair", "--package", payload, *common,
-                          shell_integration=True, noninteractive=True)
-        if repaired.get("provider", {}).get("payload", {}).get("status") != "completed":
-            raise AssertionError("real-mode repair did not complete")
+        invoke_registered(registry_text(registry, "ModifyPath"))
+        repaired_verify = invoke(executable, "verify", "--root", install,
+                                 "--state-root", state_root,
+                                 "--acceptance-root", root,
+                                 shell_integration=True, noninteractive=True)
+        if repaired_verify.get("provider", {}).get("payload", {}).get("status") != "pass":
+            raise AssertionError("registered offline repair did not restore the exact closure")
         shortcut, registry = observe("repair_completed")
-        assert_owned_native(shortcut, registry, install, version, "repair")
+        assert_owned_native(shortcut, registry, install, state_root, root, version, "repair")
 
         foreign = install / "operator-note.txt"
         foreign.write_text("retain\n", encoding="utf-8")
@@ -527,11 +657,8 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         if not journal_observation(install):
             raise AssertionError("owned cleanup requires a matching durable setup journal")
         shortcut, registry = observe("pre_clean_uninstall")
-        assert_owned_native(shortcut, registry, install, version, "pre-clean-uninstall")
-        removed = invoke(executable, "uninstall", *common, shell_integration=True,
-                         noninteractive=True)
-        if removed.get("status") != "ok":
-            raise AssertionError("ordinary clean uninstall failed")
+        assert_owned_native(shortcut, registry, install, state_root, root, version, "pre-clean-uninstall")
+        invoke_registered(registry_text(registry, "UninstallString"))
         shortcut, registry = observe("clean_uninstall_completed")
         assert_absent_native(shortcut, registry, "clean uninstall")
         if install.exists() or not keep.is_file() or not state_root.is_dir():

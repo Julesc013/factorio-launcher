@@ -35,6 +35,7 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
                 "state_root": "C:/Users/Tester/AppData/Local/FacMan/usk-state",
                 "acceptance_root": "C:/Users/Tester/Programs/FacMan",
                 "source_digest": "d" * 64,
+                "installed_source_digest": "d" * 64,
                 "request_id": "request.setup.install.0123456789abcdef0123456789abcdef",
                 "plan_id": "request.setup.install.0123456789abcdef0123456789abcdef",
                 "transaction_id": "tx.setup.install.0123456789abcdef0123456789abcdef",
@@ -45,6 +46,7 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
             "recovery": {"plan_id": "", "plan_digest": "", "created_at": "", "action": ""},
             "effects": {
                 "files": "applied",
+                "repair_source": "applied",
                 "shortcut": "applying",
                 "registration": "pending",
             },
@@ -96,24 +98,25 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
     def test_phase_boundaries_cover_install_repair_uninstall_and_portable_modes(self) -> None:
         cases = (
             # Crash after the provider file receipt, before native integration.
-            ("install", "installed", "files_applied", "pending", "pending"),
+            ("install", "installed", "files_applied", "pending", "pending", "pending"),
             # Crash after the shortcut receipt and before registry application.
-            ("repair", "installed", "native_applying", "applied", "pending"),
+            ("repair", "installed", "native_applying", "applied", "applied", "pending"),
             # Native effect may have happened although its receipt was lost.
-            ("repair", "installed", "native_applying", "applying", "pending"),
+            ("repair", "installed", "native_applying", "applied", "applying", "pending"),
             # USK uninstall can commit before owned native effects are removed.
-            ("uninstall", "installed", "files_applied", "pending", "pending"),
+            ("uninstall", "installed", "files_applied", "not_applicable", "pending", "pending"),
             # --no-shell-integration never claims Windows effects.
-            ("install", "portable", "completed", "not_applicable", "not_applicable"),
+            ("install", "portable", "completed", "not_applicable", "not_applicable", "not_applicable"),
             # Provider rollback is terminal and permits a later fresh attempt.
-            ("install", "installed", "rolled_back", "pending", "pending"),
+            ("install", "installed", "rolled_back", "pending", "pending", "pending"),
         )
-        for operation, mode, state, shortcut, registration in cases:
+        for operation, mode, state, repair_source, shortcut, registration in cases:
             with self.subTest(operation=operation, mode=mode, state=state):
                 value = json.loads(json.dumps(self.value))
                 self.set_operation(value, operation)
                 value["mode"] = mode
                 value["state"] = state
+                value["effects"]["repair_source"] = repair_source
                 value["effects"]["shortcut"] = shortcut
                 value["effects"]["registration"] = registration
                 if state == "rolled_back":
@@ -132,16 +135,26 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         completed["state"] = "completed"
         completed["effects"]["shortcut"] = "pending"
         cases.append(completed)
+        completed_uninstall = json.loads(json.dumps(self.value))
+        self.set_operation(completed_uninstall, "uninstall")
+        completed_uninstall["state"] = "completed"
+        completed_uninstall["effects"] = {
+            "files": "pending",
+            "repair_source": "not_applicable",
+            "shortcut": "pending",
+            "registration": "pending",
+        }
+        cases.append(completed_uninstall)
         rolled_back = json.loads(json.dumps(self.value))
         rolled_back["state"] = "rolled_back"
-        rolled_back["effects"] = {"files": "pending", "shortcut": "pending", "registration": "pending"}
+        rolled_back["effects"] = {"files": "pending", "repair_source": "applied", "shortcut": "pending", "registration": "pending"}
         cases.append(rolled_back)
         partial_review = json.loads(json.dumps(self.value))
         partial_review["recovery"] = {"plan_id": "recovery.plan.setup.install.x", "plan_digest": "", "created_at": "", "action": "rollback"}
         cases.append(partial_review)
         abandoned = json.loads(json.dumps(self.value))
         abandoned["state"] = "abandoned"
-        abandoned["effects"] = {"files": "pending", "shortcut": "pending", "registration": "pending"}
+        abandoned["effects"] = {"files": "pending", "repair_source": "pending", "shortcut": "pending", "registration": "pending"}
         abandoned["provider"]["plan_digest"] = ""
         abandoned["recovery_boundary"] = "wrong"
         cases.append(abandoned)
@@ -154,10 +167,27 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         self.assert_schema_invalid(value)
         value = json.loads(json.dumps(self.value))
         value["state"] = "abandoned"
-        value["effects"] = {"files": "pending", "shortcut": "pending", "registration": "pending"}
+        value["effects"] = {"files": "pending", "repair_source": "pending", "shortcut": "pending", "registration": "pending"}
         value["provider"]["plan_digest"] = ""
         value["provider"]["receipt_identity"] = ""
         value["recovery_boundary"] = "abandoned_before_provider_apply"
+        self.assert_schema_valid(value)
+
+    def test_installed_source_identity_is_bound_when_provider_effects_can_exist(self) -> None:
+        value = json.loads(json.dumps(self.value))
+        value["provider"]["installed_source_digest"] = ""
+        self.assert_schema_invalid(value)
+
+        self.set_operation(value, "uninstall")
+        value["effects"]["repair_source"] = "not_applicable"
+        value["provider"]["plan_digest"] = ""
+        value["state"] = "intent"
+        value["effects"]["files"] = "pending"
+        value["effects"]["shortcut"] = "pending"
+        self.assert_schema_valid(value)
+        value["provider"]["plan_digest"] = "b" * 64
+        self.assert_schema_invalid(value)
+        value["provider"]["installed_source_digest"] = "d" * 64
         self.assert_schema_valid(value)
 
     def test_runtime_admission_binds_stale_identity_and_ownership_to_recovery(self) -> None:

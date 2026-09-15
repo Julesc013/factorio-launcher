@@ -294,8 +294,8 @@ jobs:
             --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
             --workspace-lifecycle-evidence "$root/evidence/windows-installed-workspace-lifecycle.v1.json" --resource-package-evidence "$root/evidence/windows-installed-resource-package.v1.json"
           python tests/integration/facman_self_setup_lifecycle.py --real-current-user-integration `
-            --setup-exe "$root/native-product/Release/FacManSetup.exe" --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
-            --fixture-root "$root/evidence/real-current-user-integration" --evidence "$root/evidence/real-current-user-integration/windows-real-current-user-integration.v1.json" --real-command-timeout 300
+            --setup-exe "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
+            --fixture-root "$root/evidence/real current-user integration" --evidence "$root/evidence/real current-user integration/windows-real-current-user-integration.v1.json" --real-command-timeout 300
           python tools/package_contract_tck.py `
             --profile windows_product_x64 --canonical-stage "$root/packages/windows_product_x64" `
             --payload-zip "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `

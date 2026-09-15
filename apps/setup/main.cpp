@@ -6,6 +6,7 @@
 #include "fl_file_io.h"
 #include "fl_json.h"
 #include "fl_path_safety.h"
+#include "fl_sha256.h"
 #include "fl_user_paths.h"
 #include "version.h"
 
@@ -668,17 +669,417 @@ void print_error(const facman::core::Error &value, bool json_mode) {
   std::cout << output.serialize() << '\n';
 }
 
+constexpr std::uint64_t kMaximumRepairSourceBytes =
+    16ULL * 1024ULL * 1024ULL * 1024ULL;
+constexpr std::uint64_t kMaximumRepairLauncherBytes =
+    256ULL * 1024ULL * 1024ULL;
+constexpr char kRepairSourceMarker[] = "facman-repair-sources-v1\n";
+
+std::optional<std::string> digest_stable_input(
+    facman::platform::StableInputFile &file) {
+  facman::base::Sha256Hasher hash;
+  std::vector<unsigned char> buffer(1024U * 1024U);
+  for (std::uint64_t offset = 0; offset < file.size();) {
+    const std::size_t requested = static_cast<std::size_t>((std::min)(
+        static_cast<std::uint64_t>(buffer.size()), file.size() - offset));
+    if (file.read_at(offset, buffer.data(), requested) != requested)
+      return std::nullopt;
+    hash.update(buffer.data(), requested);
+    offset += requested;
+  }
+  if (!file.revalidate().ok()) return std::nullopt;
+  return hash.finish();
+}
+
+std::optional<std::string> digest_stable_file(
+    const fs::path &path, std::uint64_t maximum_bytes) {
+  facman::platform::StableInputFile file;
+  const auto opened = file.open_no_follow(path);
+  if (!opened.ok() || !file.identity().regular_file ||
+      file.identity().link_count != 1U || file.size() == 0U ||
+      file.size() > maximum_bytes)
+    return std::nullopt;
+  return digest_stable_input(file);
+}
+
+std::optional<std::string> read_stable_text(
+    const fs::path &path, std::uint64_t maximum_bytes) {
+  facman::platform::StableInputFile file;
+  const auto opened = file.open_no_follow(path);
+  if (!opened.ok() || !file.identity().regular_file ||
+      file.identity().link_count != 1U || file.size() == 0U ||
+      file.size() > maximum_bytes)
+    return std::nullopt;
+  std::string result(static_cast<std::size_t>(file.size()), '\0');
+  if (file.read_at(0, result.data(), result.size()) != result.size() ||
+      !file.revalidate().ok()) return std::nullopt;
+  return result;
+}
+
+std::optional<std::string> read_stable_input(
+    facman::platform::StableInputFile &file, std::uint64_t maximum_bytes) {
+  if (!file.open() || !file.identity().regular_file ||
+      file.identity().link_count != 1U || file.size() == 0U ||
+      file.size() > maximum_bytes)
+    return std::nullopt;
+  std::string result(static_cast<std::size_t>(file.size()), '\0');
+  if (file.read_at(0, result.data(), result.size()) != result.size() ||
+      !file.revalidate().ok()) return std::nullopt;
+  return result;
+}
+
+fs::path repair_launcher_path(const fs::path &repair_source) {
+  return repair_source.parent_path() /
+      fs::path(repair_source.stem().wstring() + L".FacManSetup.exe");
+}
+
+fs::path repair_receipt_path(const fs::path &repair_source) {
+  return repair_source.parent_path() /
+      fs::path(repair_source.stem().wstring() + L".maintenance.v1");
+}
+
+std::string repair_receipt_bytes(const std::string &source_sha256,
+                                 const std::string &launcher_sha256) {
+  return "facman-repair-source-receipt-v1\nsource_sha256=" + source_sha256 +
+      "\nlauncher_sha256=" + launcher_sha256 + "\n";
+}
+
+struct PinnedRepairSource {
+  facman::platform::StableDirectoryObject state;
+  facman::platform::StableDirectoryObject cache;
+  facman::platform::StableInputFile marker;
+  facman::platform::StableInputFile receipt;
+  facman::platform::StableInputFile source;
+  facman::platform::StableInputFile launcher;
+
+  bool revalidate(std::string &detail) const {
+    const std::pair<const char *, const facman::platform::StableInputFile *>
+        files[] = {{"cache marker", &marker}, {"maintenance receipt", &receipt},
+                   {"repair source", &source}, {"maintenance launcher", &launcher}};
+    for (const auto &[label, file] : files) {
+      const auto status = file->revalidate_path();
+      if (!status.ok()) {
+        detail = std::string(label) + " pathname no longer binds its pinned object: " +
+            status.detail;
+        return false;
+      }
+    }
+    const auto cache_status = cache.revalidate();
+    const auto state_status = state.revalidate();
+    if (!cache_status.ok() || !state_status.ok()) {
+      detail = "repair source cache directory identity changed while pinned";
+      return false;
+    }
+    detail.clear();
+    return true;
+  }
+};
+
+bool write_text_new_pinned(const fs::path &path, const std::string &text,
+                           std::string &detail) {
+  const fs::path temporary = path.parent_path() /
+      facman::platform::path_from_utf8("." +
+          facman::platform::path_to_utf8(path.filename()) + ".pending." +
+          std::to_string(GetCurrentProcessId()) + "." +
+          std::to_string(GetTickCount64()) + ".tmp");
+  facman::platform::DurableOutputFile output;
+  const auto created = output.create_exclusive(temporary, text.size());
+  if (!created.ok()) {
+    detail = "temporary could not be created: " + created.detail;
+    return false;
+  }
+  if (output.write_at(0, text.data(), text.size()) != text.size()) {
+    detail = "temporary could not be written";
+    const auto discarded = output.discard_open();
+    if (!discarded.ok()) detail += "; cleanup: " + discarded.detail;
+    return false;
+  }
+  const auto published = output.publish_no_replace(path);
+  if (!published.ok()) {
+    detail = "temporary could not be published: " + published.detail;
+    const auto discarded = output.discard_open();
+    if (!discarded.ok()) detail += "; cleanup: " + discarded.detail;
+    return false;
+  }
+  detail.clear();
+  return true;
+}
+
+facman::self_setup::RetainedSourceResult validate_repair_source(
+    const facman::self_setup::NativeContext &context,
+    const std::string &expected_sha256,
+    PinnedRepairSource *retained_pins = nullptr) {
+  const fs::path source = context.repair_source;
+  if (!lowercase_hex_64(expected_sha256) ||
+      source.filename() !=
+          facman::platform::path_from_utf8(expected_sha256 + ".zip"))
+    return {false, {}, "repair source path does not bind the installed source", true};
+  const fs::path directory = source.parent_path();
+  const fs::path state_root = directory.parent_path();
+  const fs::path launcher = repair_launcher_path(source);
+  const fs::path receipt = repair_receipt_path(source);
+  const fs::path marker = directory / ".facman-repair-sources.v1";
+  if (state_root.lexically_normal() != context.state_root.lexically_normal())
+    return {false, {}, "repair source cache does not bind the setup-state root", true};
+  PinnedRepairSource local;
+  PinnedRepairSource &pins = retained_pins == nullptr ? local : *retained_pins;
+  if (!pins.state.open_no_follow(state_root).ok() ||
+      !pins.cache.open_no_follow(directory).ok() ||
+      !pins.state.validate_descendant(source, false).ok() ||
+      !pins.state.validate_descendant(launcher, false).ok() ||
+      !pins.state.validate_descendant(receipt, false).ok() ||
+      !pins.state.validate_descendant(marker, false).ok())
+    return {false, {}, "repair source cache identity is unsafe or incomplete", true};
+  if (!pins.marker.open_no_follow_pinned(marker).ok() ||
+      !pins.receipt.open_no_follow_pinned(receipt).ok() ||
+      !pins.source.open_no_follow_pinned(source).ok() ||
+      !pins.launcher.open_no_follow_pinned(launcher).ok())
+    return {false, {}, "repair source cache files could not be pinned", true};
+  if (!pins.source.identity().regular_file ||
+      pins.source.identity().link_count != 1U || pins.source.size() == 0U ||
+      pins.source.size() > kMaximumRepairSourceBytes ||
+      !pins.launcher.identity().regular_file ||
+      pins.launcher.identity().link_count != 1U || pins.launcher.size() == 0U ||
+      pins.launcher.size() > kMaximumRepairLauncherBytes)
+    return {false, {}, "repair source or launcher has unsafe file identity", true};
+  const auto marker_bytes = read_stable_input(pins.marker, 128U);
+  const auto receipt_content = read_stable_input(pins.receipt, 512U);
+  const std::string prefix =
+      "facman-repair-source-receipt-v1\nsource_sha256=" + expected_sha256 +
+      "\nlauncher_sha256=";
+  if (!marker_bytes.has_value() || *marker_bytes != kRepairSourceMarker ||
+      !receipt_content.has_value() ||
+      receipt_content->size() != prefix.size() + 65U ||
+      receipt_content->compare(0, prefix.size(), prefix) != 0 ||
+      receipt_content->back() != '\n')
+    return {false, {}, "repair source receipt is absent, changed, or incompatible", true};
+  const std::string launcher_sha256 = receipt_content->substr(prefix.size(), 64U);
+  if (!lowercase_hex_64(launcher_sha256) ||
+      *receipt_content != repair_receipt_bytes(expected_sha256, launcher_sha256))
+    return {false, {}, "repair source receipt has an invalid launcher identity", true};
+  const auto source_digest = digest_stable_input(pins.source);
+  const auto launcher_digest = digest_stable_input(pins.launcher);
+  std::string pin_detail;
+  if (!source_digest.has_value() || *source_digest != expected_sha256 ||
+      !launcher_digest.has_value() || *launcher_digest != launcher_sha256 ||
+      !pins.revalidate(pin_detail))
+    return {false, {}, "repair source or maintenance launcher changed after retention", true};
+  return {true, source, "retained repair source and launcher identity verified"};
+}
+
+facman::self_setup::RetainedSourceResult retain_repair_source(
+    const facman::self_setup::NativeContext &context,
+    const fs::path &package, const std::string &expected_sha256) {
+  const fs::path destination = context.repair_source;
+  if (expected_sha256.size() != 64U || destination.filename() !=
+          facman::platform::path_from_utf8(expected_sha256 + ".zip"))
+    return {false, {}, "repair source destination is not digest-bound", true};
+
+  const fs::path directory = destination.parent_path();
+  const fs::path state_root = directory.parent_path();
+  facman::platform::StableDirectoryObject state;
+  const auto state_opened = state.open_no_follow(state_root);
+  if (!state_opened.ok() ||
+      !state.validate_descendant(directory, true).ok() ||
+      !state.validate_descendant(destination, true).ok())
+    return {false, {}, "repair source cache is outside the stable setup-state root", true};
+
+  std::error_code status;
+  if (!fs::exists(directory, status)) {
+    if (status || !fs::create_directory(directory, status) || status)
+      return {false, {}, "repair source cache directory could not be created"};
+  } else if (status) {
+    return {false, {}, "repair source cache directory could not be inspected", true};
+  }
+  facman::platform::StableDirectoryObject cache;
+  if (!cache.open_no_follow(directory).ok() ||
+      !state.revalidate().ok() ||
+      !state.validate_descendant(destination, true).ok())
+    return {false, {}, "repair source cache directory is linked or changed", true};
+
+  const fs::path marker = directory / ".facman-repair-sources.v1";
+  facman::platform::PathIdentity marker_identity;
+  auto marker_status = facman::platform::inspect_path_no_follow(marker, marker_identity);
+  if (!marker_status.ok())
+    return {false, {}, "repair source cache marker could not be inspected", true};
+  if (!marker_identity.exists) {
+    if (!fs::is_empty(directory, status) || status)
+      return {false, {}, "unmarked repair source cache contains foreign content", true};
+    std::string detail;
+    if (!write_text_new_pinned(marker, kRepairSourceMarker, detail))
+      return {false, {}, "repair source cache marker could not be committed: " + detail};
+  }
+  facman::platform::StableInputFile marker_file;
+  if (!marker_file.open_no_follow(marker).ok() ||
+      !marker_file.identity().regular_file ||
+      marker_file.identity().link_count != 1U ||
+      marker_file.size() != sizeof(kRepairSourceMarker) - 1U)
+    return {false, {}, "repair source cache marker is unreadable or substituted", true};
+  std::string marker_bytes(sizeof(kRepairSourceMarker) - 1U, '\0');
+  if (marker_file.read_at(0, marker_bytes.data(), marker_bytes.size()) !=
+          marker_bytes.size() ||
+      marker_bytes != kRepairSourceMarker || !marker_file.revalidate().ok() ||
+      !cache.revalidate().ok())
+    return {false, {}, "repair source cache marker changed or is incompatible", true};
+
+  auto retain_file = [&](const fs::path &source, const fs::path &target,
+                         std::uint64_t maximum_bytes,
+                         const std::string &bound_digest,
+                         const char *label)
+      -> facman::self_setup::RetainedSourceResult {
+    facman::platform::StableInputFile input;
+    const auto opened = input.open_no_follow(source);
+    if (!opened.ok() || !input.identity().regular_file ||
+        input.identity().link_count != 1U || input.size() == 0U ||
+        input.size() > maximum_bytes)
+      return {false, {}, std::string(label) +
+          " input is absent, unsafe, or exceeds its byte limit"};
+    const auto source_digest = digest_stable_input(input);
+    if (!source_digest.has_value() ||
+        (!bound_digest.empty() && *source_digest != bound_digest))
+      return {false, {}, std::string(label) +
+          " digest differs from its durable identity"};
+
+    facman::platform::PathIdentity existing_identity;
+    const auto inspected = facman::platform::inspect_path_no_follow(
+        target, existing_identity);
+    if (!inspected.ok())
+      return {false, {}, std::string(label) +
+          " destination could not be inspected", true};
+    if (existing_identity.exists) {
+      facman::platform::StableInputFile existing;
+      const auto existing_opened = existing.open_no_follow(target);
+      const auto existing_digest = existing_opened.ok() &&
+              existing.identity().regular_file && existing.identity().link_count == 1U
+          ? digest_stable_input(existing) : std::optional<std::string>{};
+      return existing_digest.has_value() && *existing_digest == *source_digest
+          ? facman::self_setup::RetainedSourceResult{
+                true, target, std::string("exact ") + label + " already retained"}
+          : facman::self_setup::RetainedSourceResult{
+                false, {}, std::string(label) +
+                    " destination is foreign or changed", true};
+    }
+
+    const fs::path temporary = directory /
+        facman::platform::path_from_utf8("." +
+            facman::platform::path_to_utf8(target.filename()) + ".pending." +
+            std::to_string(GetCurrentProcessId()) + "." +
+            std::to_string(GetTickCount64()) + ".tmp");
+    facman::platform::DurableOutputFile output;
+    const auto created = output.create_exclusive(temporary, input.size());
+    if (!created.ok())
+      return {false, {}, std::string(label) +
+          " temporary could not be created: " + created.detail};
+    facman::base::Sha256Hasher copied_hash;
+    std::vector<unsigned char> buffer(1024U * 1024U);
+    for (std::uint64_t offset = 0; offset < input.size();) {
+      const std::size_t requested = static_cast<std::size_t>((std::min)(
+          static_cast<std::uint64_t>(buffer.size()), input.size() - offset));
+      if (input.read_at(offset, buffer.data(), requested) != requested ||
+          output.write_at(offset, buffer.data(), requested) != requested) {
+        std::string detail = std::string(label) + " changed or could not be copied";
+        const auto discarded = output.discard_open();
+        if (!discarded.ok()) detail += "; cleanup: " + discarded.detail;
+        return {false, {}, detail};
+      }
+      copied_hash.update(buffer.data(), requested);
+      offset += requested;
+    }
+    if (!input.revalidate().ok() || copied_hash.finish() != *source_digest) {
+      std::string detail = std::string(label) + " changed while it was retained";
+      const auto discarded = output.discard_open();
+      if (!discarded.ok()) detail += "; cleanup: " + discarded.detail;
+      return {false, {}, detail, true};
+    }
+    const auto committed = output.publish_no_replace(target);
+    if (!committed.ok()) {
+      std::string detail = std::string(label) +
+          " could not be published without replacement: " + committed.detail;
+      const auto discarded = output.discard_open();
+      if (!discarded.ok()) detail += "; cleanup: " + discarded.detail;
+      return {false, {}, detail, true};
+    }
+    facman::platform::StableInputFile retained;
+    const auto retained_opened = retained.open_no_follow(target);
+    const auto retained_digest = retained_opened.ok() &&
+            retained.identity().regular_file && retained.identity().link_count == 1U
+        ? digest_stable_input(retained) : std::optional<std::string>{};
+    if (!retained_digest.has_value() || *retained_digest != *source_digest ||
+        !cache.revalidate().ok() || !state.revalidate().ok())
+      return {false, {}, std::string("published ") + label +
+          " identity could not be revalidated", true};
+    return {true, target, std::string("exact ") + label + " retained"};
+  };
+
+  const auto retained_source = retain_file(
+      package, destination, kMaximumRepairSourceBytes, expected_sha256,
+      "offline repair source");
+  if (!retained_source.ok) return retained_source;
+  const fs::path launcher = repair_launcher_path(destination);
+  if (!state.validate_descendant(launcher, true).ok())
+    return {false, {}, "offline maintenance launcher is outside the stable setup-state root", true};
+  const auto retained_launcher = retain_file(
+      context.install_root / "maintenance" / "FacManSetup.exe", launcher,
+      kMaximumRepairLauncherBytes, {}, "offline maintenance launcher");
+  if (!retained_launcher.ok) return retained_launcher;
+  const auto launcher_digest = digest_stable_file(
+      launcher, kMaximumRepairLauncherBytes);
+  if (!launcher_digest.has_value())
+    return {false, {}, "retained maintenance launcher could not be identified", true};
+  const fs::path receipt = repair_receipt_path(destination);
+  if (!state.validate_descendant(receipt, true).ok())
+    return {false, {}, "repair source receipt is outside the stable setup-state root", true};
+  const std::string receipt_content = repair_receipt_bytes(
+      expected_sha256, *launcher_digest);
+  const auto existing_receipt = read_stable_text(receipt, 512U);
+  if (existing_receipt.has_value()) {
+    if (*existing_receipt != receipt_content)
+      return {false, {}, "repair source receipt is foreign or changed", true};
+  } else {
+    facman::platform::PathIdentity receipt_identity;
+    if (!facman::platform::inspect_path_no_follow(receipt, receipt_identity).ok() ||
+        receipt_identity.exists)
+      return {false, {}, "repair source receipt is unreadable or substituted", true};
+    std::string detail;
+    if (!write_text_new_pinned(receipt, receipt_content, detail))
+      return {false, {}, "repair source receipt could not be committed: " + detail};
+  }
+  return validate_repair_source(context, expected_sha256);
+}
+
 class SetupNativeEffects final : public facman::self_setup::NativeEffects {
 public:
+  facman::self_setup::RetainedSourceResult retain_repair_source(
+      const facman::self_setup::NativeContext &context,
+      const fs::path &package,
+      const std::string &expected_sha256) override {
+    return ::retain_repair_source(context, package, expected_sha256);
+  }
+
+  facman::self_setup::RetainedSourceResult validate_repair_source(
+      const facman::self_setup::NativeContext &context,
+      const std::string &expected_sha256) override {
+    return ::validate_repair_source(context, expected_sha256);
+  }
+
   facman::self_setup::NativeOwnership inspect(
-      const fs::path &install_root,
-      facman::self_setup::NativeEffect effect,
-      const std::string &product_version) override {
+      const facman::self_setup::NativeContext &context,
+      facman::self_setup::NativeEffect effect) override {
+    PinnedRepairSource pins;
+    const auto retained = ::validate_repair_source(
+        context, context.repair_source.stem().string(), &pins);
+    if (!retained.ok) return facman::self_setup::NativeOwnership::unreadable;
     const auto observed = facman::setup::integration::inspect_windows_effect(
         effect == facman::self_setup::NativeEffect::shortcut
             ? facman::setup::integration::Effect::shortcut
             : facman::setup::integration::Effect::registration,
-        install_root, product_version);
+        {context.install_root, context.state_root, context.acceptance_root,
+         context.repair_source},
+        context.product_version,
+        context.operation == facman::self_setup::Operation::uninstall);
+    std::string pin_detail;
+    if (!pins.revalidate(pin_detail))
+      return facman::self_setup::NativeOwnership::unreadable;
     switch (observed) {
     case facman::setup::integration::Ownership::absent:
       return facman::self_setup::NativeOwnership::absent;
@@ -695,15 +1096,26 @@ public:
   }
 
   facman::self_setup::NativeResult apply(
-      const fs::path &install_root,
-      facman::self_setup::NativeEffect effect,
-      facman::self_setup::Operation operation,
-      const std::string &product_version) override {
+      const facman::self_setup::NativeContext &context,
+      facman::self_setup::NativeEffect effect) override {
+    PinnedRepairSource pins;
+    const auto retained = ::validate_repair_source(
+        context, context.repair_source.stem().string(), &pins);
+    if (!retained.ok) return {false, retained.detail, true};
     const auto result = facman::setup::integration::apply_windows_effect(
         effect == facman::self_setup::NativeEffect::shortcut
             ? facman::setup::integration::Effect::shortcut
             : facman::setup::integration::Effect::registration,
-        install_root, product_version, operation == facman::self_setup::Operation::uninstall);
+        {context.install_root, context.state_root, context.acceptance_root,
+         context.repair_source},
+        context.product_version,
+        context.operation == facman::self_setup::Operation::uninstall);
+    std::string pin_detail;
+    if (!pins.revalidate(pin_detail)) {
+      const std::string detail = result.detail.empty()
+          ? pin_detail : result.detail + "; cache revalidation: " + pin_detail;
+      return {false, detail, true};
+    }
     return {result.ok, result.detail, result.recovery_required};
   }
 };

@@ -255,10 +255,10 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         )
         for token in (
             "--real-current-user-integration",
-            "--fixture-root \"$root/evidence/real-current-user-integration\"",
-            "--evidence \"$root/evidence/real-current-user-integration/windows-real-current-user-integration.v1.json\"",
+            "--fixture-root \"$root/evidence/real current-user integration\"",
+            "--evidence \"$root/evidence/real current-user integration/windows-real-current-user-integration.v1.json\"",
             "--real-command-timeout 300",
-            "evidence/real-current-user-integration/windows-real-current-user-integration.v1.json",
+            "evidence/real current-user integration/windows-real-current-user-integration.v1.json",
             "Preserve failed platform receipts and visible proof artifacts",
             "${{ env.FACMAN_TASK_ROOT }}/evidence/**/${{ matrix.platform }}-*",
         ):
@@ -275,7 +275,7 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             "--noninteractive",
             "self_setup_interrupted",
             "journal_observation",
-            "ordinary clean uninstall failed",
+            "uninstall shortcut boundary did not expose exactly the retained registration",
             "real current-user integration requires --real-command-timeout",
             "provider_canary_process as bounded",
             "setup-child deadline",

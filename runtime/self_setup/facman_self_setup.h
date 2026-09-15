@@ -35,15 +35,36 @@ struct NativeResult {
   bool recovery_required = false;
 };
 
+struct RetainedSourceResult {
+  bool ok = false;
+  std::filesystem::path path;
+  std::string detail;
+  bool recovery_required = false;
+};
+
+struct NativeContext {
+  Operation operation = Operation::verify;
+  std::filesystem::path install_root;
+  std::filesystem::path state_root;
+  std::filesystem::path acceptance_root;
+  std::filesystem::path repair_source;
+  std::string product_version;
+};
+
 class NativeEffects {
 public:
   virtual ~NativeEffects() = default;
-  virtual NativeOwnership inspect(const std::filesystem::path &install_root,
-                                 NativeEffect effect,
-                                 const std::string &product_version) = 0;
-  virtual NativeResult apply(const std::filesystem::path &install_root,
-                             NativeEffect effect, Operation operation,
-                             const std::string &product_version) = 0;
+  virtual RetainedSourceResult retain_repair_source(
+      const NativeContext &context,
+      const std::filesystem::path &package,
+      const std::string &expected_sha256) = 0;
+  virtual RetainedSourceResult validate_repair_source(
+      const NativeContext &context,
+      const std::string &expected_sha256) = 0;
+  virtual NativeOwnership inspect(const NativeContext &context,
+                                  NativeEffect effect) = 0;
+  virtual NativeResult apply(const NativeContext &context,
+                             NativeEffect effect) = 0;
 };
 
 // Called only after a named durable journal boundary is successfully

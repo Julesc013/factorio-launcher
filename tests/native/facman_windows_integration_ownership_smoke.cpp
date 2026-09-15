@@ -289,24 +289,43 @@ void identity_cases() {
   require(!integration::owns_shortcut(root, changed), "relative shortcut target refused");
   require(!integration::owns_shortcut("FacMan", shortcut), "relative owner root refused");
 
-  integration::RegistrationIdentity registration{
-      root, L"FacMan", L"\"" + (root / "maintenance" / "FacManSetup.exe").wstring() +
-                            L"\" uninstall --yes", false};
-  require(integration::owns_registration(root, registration), "owned registration accepted");
-  require(integration::owns_registration(LR"(c:\users\TESTER\programs\facman\)", registration),
+  const fs::path state = LR"(C:\Users\Tester\AppData\Local\FacMan\setup)";
+  const fs::path acceptance = LR"(C:\Users\Tester\AppData\Local)";
+  const fs::path source = state / "repair-sources" /
+      (std::string(64, 'a') + ".zip");
+  integration::MaintenanceContext context{root, state, acceptance, source};
+  const fs::path launcher = source.parent_path() /
+      (std::string(64, 'a') + ".FacManSetup.exe");
+  const std::wstring uninstall = L"\"" +
+      launcher.wstring() +
+      L"\" uninstall --root \"" + root.wstring() +
+      L"\" --state-root \"" + state.wstring() +
+      L"\" --acceptance-root \"" + acceptance.wstring() +
+      L"\" --yes --noninteractive --shell-integration";
+  integration::RegistrationIdentity registration{root, L"FacMan", uninstall, false};
+  require(integration::owns_registration(context, registration), "owned registration accepted");
+  auto legacy = registration;
+  legacy.uninstall_command = L"\"" +
+      (root / "maintenance" / "FacManSetup.exe").wstring() +
+      L"\" uninstall --yes";
+  require(integration::owns_registration(context, legacy),
+          "exact earlier FacMan registration remains owned for migration");
+  auto case_context = context;
+  case_context.install_root = LR"(c:\users\TESTER\programs\facman\)";
+  require(integration::owns_registration(case_context, registration),
           "registration owner path follows Windows path comparison");
   auto foreign = registration;
   foreign.install_location = root.parent_path() / "Other";
-  require(!integration::owns_registration(root, foreign), "foreign InstallLocation refused");
+  require(!integration::owns_registration(context, foreign), "foreign InstallLocation refused");
   foreign = registration;
   foreign.uninstall_command += L" & foreign.exe";
-  require(!integration::owns_registration(root, foreign), "foreign maintenance command refused");
+  require(!integration::owns_registration(context, foreign), "foreign maintenance command refused");
   foreign = registration;
   foreign.display_name = L"Other product";
-  require(!integration::owns_registration(root, foreign), "foreign product identity refused");
+  require(!integration::owns_registration(context, foreign), "foreign product identity refused");
   foreign = registration;
   foreign.unexpected_content = true;
-  require(!integration::owns_registration(root, foreign), "unknown registry values/subkeys preserved");
+  require(!integration::owns_registration(context, foreign), "unknown registry values/subkeys preserved");
 }
 #endif
 } // namespace

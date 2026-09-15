@@ -23,6 +23,8 @@ allowed_paths:
   - "contracts/**"
   - "tests/**"
   - "docs/**"
+  - ".github/workflows/product-candidate.yml"
+  - "release/packaging/windows/facman_installer.v1.toml"
   - ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/**"
 forbidden_paths:
   - ".git/**"

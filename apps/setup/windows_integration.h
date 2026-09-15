@@ -51,25 +51,32 @@ struct RegistrationIdentity {
   bool unexpected_content = false;
 };
 
+struct MaintenanceContext {
+  std::filesystem::path install_root;
+  std::filesystem::path state_root;
+  std::filesystem::path acceptance_root;
+  std::filesystem::path repair_source;
+};
+
 bool owns_shortcut(const std::filesystem::path &install_root,
                    const ShortcutIdentity &identity);
-bool owns_registration(const std::filesystem::path &install_root,
+bool owns_registration(const MaintenanceContext &context,
                        const RegistrationIdentity &identity);
 using ReceiptPublishHook = void (*)(const std::filesystem::path &, void *);
 Result publish_receipt(const std::filesystem::path &destination,
                        const std::string &bytes,
                        ReceiptPublishHook before_publish = nullptr,
                        void *hook_context = nullptr);
-Result inspect_existing_windows(const std::filesystem::path &install_root);
-Result remove_windows(const std::filesystem::path &install_root,
-                      const std::filesystem::path &state_root);
+Result inspect_existing_windows(const MaintenanceContext &context);
+Result remove_windows(const MaintenanceContext &context);
 // Per-effect entrypoints used by the portable setup-operation coordinator.
 // They remain current-user only and re-check ownership at the mutation edge.
 Ownership inspect_windows_effect(Effect effect,
-                                 const std::filesystem::path &install_root,
-                                 const std::string &product_version = {});
+                                 const MaintenanceContext &context,
+                                 const std::string &product_version = {},
+                                 bool remove = false);
 Result apply_windows_effect(Effect effect,
-                            const std::filesystem::path &install_root,
+                            const MaintenanceContext &context,
                             const std::string &product_version,
                             bool remove);
 // Native smoke-test helpers bind a shortcut operation to an isolated fixture
