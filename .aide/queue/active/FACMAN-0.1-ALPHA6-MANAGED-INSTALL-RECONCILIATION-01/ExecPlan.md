@@ -45,3 +45,51 @@ separate. Unavailable host/input cells block their own qualification only.
 - This is one bounded slice. Update, repair apply, removal, transition leases,
   crash recovery and genuine managed-install product evidence remain open, so
   the WorkUnit stays active and no Alpha/Beta release claim is made.
+
+## 2026-09-15 — provider-backed managed uninstall planning slice
+
+- Advanced `installs.uninstall.plan` on the current task branch source
+  `f4fcd1fbb76cb444aee269095e75fa438b73dd3f`. The route remains an always
+  dry-run USK `uninstall.plan` request; `installs.uninstall.apply` and every
+  live mutation route remain closed.
+- Admission requires a registered managed record in lifecycle `active`,
+  `verification_failed`, or `recovery_required`, with target, setup-state,
+  verification and state-revision evidence. Foreign, unknown, terminal and
+  incomplete records refuse before provider entry.
+- The gateway sends `usk.uninstall_plan_request.v1` and admits only a strict
+  `usk.operation_plan.v1` uninstall response bound to request identity,
+  target, installed-state/ownership/policy/provider evidence, owned effects
+  and immediate revalidation. It preserves the raw provider plan and creates
+  no FacMan state or target writes.
+- Current-source focused checks, Windows Debug gateway build/smoke, generated
+  metadata, project-state, Technical Preview outputs and full strict validation
+  pass. This is source and native negative-path evidence only; it does not
+  qualify a real managed uninstall or any release gate.
+
+## 2026-09-15 — strengthened provider-backed managed uninstall planning
+
+- Tightened the read-only route to inspect the current USK installed state before
+  requesting a plan. The retained FacMan record must bind the exact Universal
+  Setup provider/source, target, canonical setup-state reference, verification
+  digest, transaction-plus-ownership state revision and compatible lifecycle.
+- The runtime decoder now accepts only exact response/envelope, root, effect,
+  revalidation and path forms from the promoted USK plan contract. It rejects
+  extras, duplicate identities, non-owned effects and unsafe paths. Apply and
+  every mutation remain closed.
+- Added current-source M1 proof against an actual private USK installed-state
+  fixture. It proves the real handler emits a valid raw plan and makes no bytes
+  change in the target, FacMan workspace, USK state/audit, or public USK root;
+  stale record evidence and provider/source mismatches fail closed.
+- Final remediation also recomputes the provider's canonical installed-state
+  digest from the inspected state and requires the later plan to bind that
+  exact digest. The mirrored response schema now expresses the exact four-root,
+  uninstall-effect and five-invalidator shapes admitted by the runtime.
+- WorkUnit remains active: this proof advances plan admission only and does not
+  establish uninstall execution, recovery, product acceptance or release
+  eligibility.
+- Independent postimage review confirmed the runtime binding and no-write proof,
+  then found the mirrored response schema still admitted unsafe relative paths
+  and incomplete or duplicate state effects. The schema now requires normalized
+  absolute roots, safe component-only effect paths, and exactly one journal,
+  state and audit effect; focused negative schema regressions cover the reviewed
+  counterexamples. The corrected source and contract checks pass.

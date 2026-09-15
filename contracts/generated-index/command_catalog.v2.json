@@ -2325,8 +2325,8 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs uninstall plan <install-id> --json",
       "cli_grammar": {
@@ -2362,6 +2362,8 @@
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.uninstall.plan.refusal.json",
+      "golden_success": "tests/golden/commands/installs.uninstall.plan.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.uninstall.plan.title",
         "command.installs.uninstall.plan.description"
@@ -2369,6 +2371,12 @@
       "mutates_workspace": false,
       "native_id": "installs_uninstall_plan",
       "owner": "facman",
+      "refusal_codes": [
+        "ownership_denied",
+        "managed_install_provider_mismatch",
+        "uninstall_lifecycle_ineligible",
+        "managed_install_evidence_incomplete"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_uninstall_plan",
@@ -2387,7 +2395,7 @@
       "required_capabilities": [
         "setup_preview"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/usk_operation_plan.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "installs.uninstall.plan",
@@ -11813,6 +11821,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "f99f418bbaf1df4c8996a04960fa2edc7707cf2c16dc0f0054f9bdd5dfaa6419",
+  "source_digest": "f5a9168fa3e8542aa4f8b0dd2240ebbf6b08046ed45c439292a9c873643390aa",
   "version": "facman-0.1.0-alpha.5"
 }

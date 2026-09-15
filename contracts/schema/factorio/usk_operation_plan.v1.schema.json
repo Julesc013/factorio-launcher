@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/usk_operation_plan.v1.schema.json",
+  "title": "Universal Setup managed lifecycle operation plan",
+  "type": "object",
+  "required": ["schema", "plan_id", "plan_digest", "operation", "status", "created_at", "install_id", "input_identity", "roots", "effects", "target_snapshots", "unknown_file_policy", "revalidation"],
+  "properties": {
+    "schema": { "const": "usk.operation_plan.v1" },
+    "plan_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "plan_digest": { "$ref": "#/$defs/sha256" },
+    "operation": { "const": "uninstall" },
+    "status": { "const": "planned" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "install_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "input_identity": {
+      "type": "object",
+      "required": ["installed_state_digest", "ownership_manifest_digest", "recipe_digest", "source_digest", "policy_digest", "provider_revision"],
+      "properties": {
+        "installed_state_digest": { "$ref": "#/$defs/sha256" },
+        "ownership_manifest_digest": { "$ref": "#/$defs/sha256" },
+        "recipe_digest": { "$ref": "#/$defs/sha256" },
+        "source_digest": { "$ref": "#/$defs/sha256" },
+        "policy_digest": { "$ref": "#/$defs/sha256" },
+        "provider_revision": { "type": "string", "minLength": 1, "maxLength": 256 }
+      },
+      "additionalProperties": false
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "allOf": [
+        { "contains": { "type": "object", "required": ["role"], "properties": { "role": { "const": "current" } } }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "type": "object", "required": ["role"], "properties": { "role": { "const": "staging" } } }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "type": "object", "required": ["role"], "properties": { "role": { "const": "setup_state" } } }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "type": "object", "required": ["role"], "properties": { "role": { "const": "audit" } } }, "minContains": 1, "maxContains": 1 }
+      ],
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/current_root" },
+          { "$ref": "#/$defs/staging_root" },
+          { "$ref": "#/$defs/setup_state_root" },
+          { "$ref": "#/$defs/audit_root" }
+        ]
+      }
+    },
+    "effects": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "$ref": "#/$defs/journal_effect" }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "$ref": "#/$defs/state_effect" }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "$ref": "#/$defs/audit_effect" }, "minContains": 1, "maxContains": 1 }
+      ],
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/delete_effect" },
+          { "$ref": "#/$defs/retain_effect" },
+          { "$ref": "#/$defs/journal_effect" },
+          { "$ref": "#/$defs/state_effect" },
+          { "$ref": "#/$defs/audit_effect" }
+        ]
+      }
+    },
+    "target_snapshots": {
+      "type": "object",
+      "required": ["pre_target_digest"],
+      "properties": { "pre_target_digest": { "$ref": "#/$defs/sha256" } },
+      "additionalProperties": false
+    },
+    "unknown_file_policy": { "const": "retain_and_report" },
+    "revalidation": {
+      "type": "object",
+      "required": ["immediately_before_apply", "invalidate_on"],
+      "properties": {
+        "immediately_before_apply": { "const": true },
+        "invalidate_on": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": { "enum": ["target", "installed_state", "ownership_manifest", "policy", "provider_revision"] }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "path": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 32768,
+      "pattern": "^(?!.*(?:^|/)(?:\\.{1,2})(?:/|$))(?!.*//)(?:[A-Za-z]:/|/)(?:[^/:\\\\\\u0000]+/)*[^/:\\\\\\u0000]+$"
+    },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!.*(?:^|/)(?:\\.{1,2})(?:/|$))(?!.*//)[^/:\\\\\\u0000]+(?:/[^/:\\\\\\u0000]+)*$"
+    },
+    "current_root": { "type": "object", "required": ["role", "root", "classification"], "properties": { "role": { "const": "current" }, "root": { "$ref": "#/$defs/path" }, "classification": { "const": "managed_install" } }, "additionalProperties": false },
+    "staging_root": { "type": "object", "required": ["role", "root", "classification"], "properties": { "role": { "const": "staging" }, "root": { "$ref": "#/$defs/path" }, "classification": { "const": "setup_owned" } }, "additionalProperties": false },
+    "setup_state_root": { "type": "object", "required": ["role", "root", "classification"], "properties": { "role": { "const": "setup_state" }, "root": { "$ref": "#/$defs/path" }, "classification": { "const": "setup_owned" } }, "additionalProperties": false },
+    "audit_root": { "type": "object", "required": ["role", "root", "classification"], "properties": { "role": { "const": "audit" }, "root": { "$ref": "#/$defs/path" }, "classification": { "const": "audit_owned" } }, "additionalProperties": false },
+    "delete_effect": { "type": "object", "required": ["effect_id", "kind", "root_role", "relative_path", "ownership_required", "expected_sha256"], "properties": { "effect_id": { "type": "string", "minLength": 1, "maxLength": 256 }, "kind": { "const": "delete_owned_file" }, "root_role": { "const": "current" }, "relative_path": { "$ref": "#/$defs/relative_path" }, "ownership_required": { "const": true }, "expected_sha256": { "$ref": "#/$defs/sha256" } }, "additionalProperties": false },
+    "retain_effect": { "type": "object", "required": ["effect_id", "kind", "root_role", "relative_path", "ownership_required"], "properties": { "effect_id": { "type": "string", "minLength": 1, "maxLength": 256 }, "kind": { "const": "retain_path" }, "root_role": { "const": "current" }, "relative_path": { "$ref": "#/$defs/relative_path" }, "ownership_required": { "const": true }, "expected_sha256": { "$ref": "#/$defs/sha256" } }, "additionalProperties": false },
+    "journal_effect": { "type": "object", "required": ["effect_id", "kind", "root_role", "relative_path", "ownership_required"], "properties": { "effect_id": { "type": "string", "minLength": 1, "maxLength": 256 }, "kind": { "const": "write_journal" }, "root_role": { "const": "setup_state" }, "relative_path": { "const": "transactions" }, "ownership_required": { "const": true } }, "additionalProperties": false },
+    "state_effect": { "type": "object", "required": ["effect_id", "kind", "root_role", "relative_path", "ownership_required"], "properties": { "effect_id": { "type": "string", "minLength": 1, "maxLength": 256 }, "kind": { "const": "write_state" }, "root_role": { "const": "setup_state" }, "relative_path": { "const": "installed" }, "ownership_required": { "const": true } }, "additionalProperties": false },
+    "audit_effect": { "type": "object", "required": ["effect_id", "kind", "root_role", "relative_path", "ownership_required"], "properties": { "effect_id": { "type": "string", "minLength": 1, "maxLength": 256 }, "kind": { "const": "write_audit" }, "root_role": { "const": "audit" }, "relative_path": { "const": "chains" }, "ownership_required": { "const": true } }, "additionalProperties": false }
+  },
+  "additionalProperties": false
+}

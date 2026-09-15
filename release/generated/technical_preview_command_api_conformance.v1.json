@@ -1064,7 +1064,7 @@
       }
     },
     {
-      "availability": "unavailable_until_gateway",
+      "availability": "implemented",
       "command_id": "installs.uninstall.plan",
       "contract_path": "contracts/command/factorio/installs.uninstall.plan.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
@@ -1078,7 +1078,7 @@
         "winforms": "not_inferred_from_command_registration"
       },
       "golden_refusal": "tests/golden/commands/installs.uninstall.plan.refusal.json",
-      "golden_success": "",
+      "golden_success": "tests/golden/commands/installs.uninstall.plan.success.json",
       "native_id": "installs_uninstall_plan",
       "observed_classification": "outside_preview",
       "product_capability_ids": [
@@ -1086,7 +1086,7 @@
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "request_schema": "contracts/schema/command/installs.uninstall.plan.request.v1.schema.json",
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/usk_operation_plan.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_capability_ids": [

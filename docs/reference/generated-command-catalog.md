@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `f99f418bbaf1df4c8996a04960fa2edc7707cf2c16dc0f0054f9bdd5dfaa6419`.
+Source digest: `f5a9168fa3e8542aa4f8b0dd2240ebbf6b08046ed45c439292a9c873643390aa`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -35,7 +35,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.scan` | `install_refs.scan` | `install_scan` | no | install-refs.scan | available | workspace_read | `facman installs scan [--search-root <path>] --json` |
 | `installs.uninstall` | `installs.uninstall` | `installs_uninstall` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs uninstall <install-id> --json` |
 | `installs.uninstall.apply` | `installs.uninstall.apply` | `installs_uninstall_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs uninstall apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
-| `installs.uninstall.plan` | `installs.uninstall.plan` | `installs_uninstall_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs uninstall plan <install-id> --json` |
+| `installs.uninstall.plan` | `installs.uninstall.plan` | `installs_uninstall_plan` | no | - | implemented | setup_preview | `facman installs uninstall plan <install-id> --json` |
 | `installs.verify` | `installs.verify` | `installs_verify` | no | - | unavailable_until_gateway | setup_preview | `facman installs verify <install-id> --json` |
 | `instance.export` | `instance.export` | `instance_export` | yes | - | available | workspace_read, workspace_write | `facman export instance <instance-id> <pack.zip> --json` |
 | `instance.import` | `instance.import` | `instance_import` | yes | - | available | workspace_read, workspace_write | `facman import instance <pack.zip> --json` |

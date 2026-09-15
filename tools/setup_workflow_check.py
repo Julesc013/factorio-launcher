@@ -48,7 +48,11 @@ def validate() -> list[str]:
         command = commands[command_id]
         expected_availability = (
             "implemented"
-            if command_id in {"installs.install.plan", "installs.repair.plan"}
+            if command_id in {
+                "installs.install.plan",
+                "installs.repair.plan",
+                "installs.uninstall.plan",
+            }
             else "unavailable_until_gateway"
         )
         if command.get("availability") != expected_availability:

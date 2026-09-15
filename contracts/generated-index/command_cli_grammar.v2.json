@@ -1783,7 +1783,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -9338,5 +9338,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "f99f418bbaf1df4c8996a04960fa2edc7707cf2c16dc0f0054f9bdd5dfaa6419"
+  "source_digest": "f5a9168fa3e8542aa4f8b0dd2240ebbf6b08046ed45c439292a9c873643390aa"
 }

@@ -473,6 +473,78 @@ class CliTests(unittest.TestCase):
                     "repair_lifecycle_ineligible", json.loads(stdout)["refusal"]["code"])
                 self.assertEqual(lifecycle_refusal_before, tree_snapshot(workspace))
 
+    def test_managed_uninstall_plan_requires_bound_lifecycle_evidence_without_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace = root / "workspace"
+            install = root / "managed-install"
+            shutil.copytree(FIXTURE_INSTALL, install)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "import", str(install),
+                "--id", "managed-uninstall", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            record_path = workspace / "installs" / "refs" / "managed-uninstall.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            record.update({
+                "ownership": "managed",
+                "provider_id": "universal-setup",
+                "source": "universal-setup",
+                "lifecycle_status": "active",
+            })
+            record_path.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
+            before = tree_snapshot(workspace)
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "uninstall", "plan",
+                "managed-uninstall", "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual(
+                "managed_install_evidence_incomplete", json.loads(stdout)["refusal"]["code"])
+            self.assertEqual(before, tree_snapshot(workspace))
+
+            record.update({
+                "setup_state_ref": "setup-state:fixture",
+                "last_verification_identity": "verification:fixture",
+                "state_revision": "revision:fixture",
+            })
+            for lifecycle_status in ("retired", "uninstalled", "missing", "unknown", "unsupported"):
+                record["lifecycle_status"] = lifecycle_status
+                record_path.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
+                before = tree_snapshot(workspace)
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "installs", "uninstall", "plan",
+                    "managed-uninstall", "--json",
+                ])
+                self.assertNotEqual(code, 0, stderr)
+                self.assertEqual(
+                    "uninstall_lifecycle_ineligible", json.loads(stdout)["refusal"]["code"])
+                self.assertEqual(before, tree_snapshot(workspace))
+
+            record.update({"ownership": "imported", "lifecycle_status": "active"})
+            record_path.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
+            before = tree_snapshot(workspace)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "uninstall", "plan",
+                "managed-uninstall", "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual("ownership_denied", json.loads(stdout)["refusal"]["code"])
+            self.assertEqual(before, tree_snapshot(workspace))
+
+            record.update({"ownership": "managed", "source": "imported"})
+            record_path.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
+            before = tree_snapshot(workspace)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "uninstall", "plan",
+                "managed-uninstall", "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual(
+                "managed_install_provider_mismatch", json.loads(stdout)["refusal"]["code"])
+            self.assertEqual(before, tree_snapshot(workspace))
+
     def test_create_instance_can_preserve_program_local_player_data(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

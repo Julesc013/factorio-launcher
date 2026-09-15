@@ -751,6 +751,27 @@ retryable = true
 message = "Repair planning requires an active, verification_failed, or recovery_required managed install."
 
 [[code]]
+id = "uninstall_lifecycle_ineligible"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Uninstall planning requires an active, verification_failed, or recovery_required managed install."
+
+[[code]]
+id = "managed_install_provider_mismatch"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Managed uninstall planning requires a Universal Setup managed record."
+
+[[code]]
+id = "managed_install_evidence_incomplete"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Managed uninstall planning requires target, setup, verification, and revision evidence."
+
+[[code]]
 id = "unknown_instance"
 severity = "blocked"
 effect = "workspace_read"
