@@ -125,6 +125,24 @@ class ClangTidyChangedTests(unittest.TestCase):
                 self.assertEqual([], omitted)
                 self.assertEqual([], missing)
 
+    def test_windows_maintenance_handoff_is_omitted_only_off_windows(self) -> None:
+        handoff = clang_tidy_changed.ROOT / "apps/setup/windows_maintenance_handoff.cpp"
+        smoke = clang_tidy_changed.ROOT / "tests/native/facman_windows_maintenance_handoff_smoke.cpp"
+        sources = [handoff, smoke]
+        for platform in ("linux", "darwin", "win32"):
+            with self.subTest(platform=platform):
+                selected, omitted, missing = clang_tidy_changed.select_compiled_sources(
+                    sources, set(), clang_tidy_changed.allowed_omissions(platform)
+                )
+                if platform == "win32":
+                    self.assertEqual([], selected)
+                    self.assertEqual([], omitted)
+                    self.assertEqual(sources, missing)
+                else:
+                    self.assertEqual([], selected)
+                    self.assertEqual(sources, omitted)
+                    self.assertEqual([], missing)
+
     def test_operator_only_harness_is_an_explicit_nondefault_omission(self) -> None:
         harness = (
             clang_tidy_changed.ROOT
