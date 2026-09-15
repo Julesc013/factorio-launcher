@@ -10,6 +10,6 @@ target_link_libraries(facman_self_setup_static PUBLIC
   facman_base_static
   facman_core_static
   facman_platform_static
-  FacManProvider::Setup)
+  FacManProvider::SetupBootstrap)
 add_library(facman::self_setup ALIAS facman_self_setup_static)
 facman_apply_policies(facman_self_setup_static)
