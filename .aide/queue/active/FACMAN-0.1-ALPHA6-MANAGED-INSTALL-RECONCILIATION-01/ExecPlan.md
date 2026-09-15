@@ -216,3 +216,30 @@ separate. Unavailable host/input cells block their own qualification only.
 - Expanded strict repair report negatives for invalid status enums, malformed
   verification digests, wrong verification references, recipe/source binding
   drift and repaired-file digest drift.
+
+## 2026-09-16 — operation-specific managed repair recovery
+
+- Advanced the existing `installs.recovery.inspect/apply` commands to interpret
+  retained `facman.managed_repair_coordinator.v1` journals. Inspection produces
+  an exact deterministic recovery plan and classifies only a proved absence of
+  provider effects, an exactly completed repair, or an indeterminate state.
+- Apply revalidates the plan, journal and current install-reference preimage
+  under the shared managed-install recovery lease. It either closes a proved
+  no-effect operation or projects the exact repaired provider terminal state by
+  compare-and-swap; indeterminate evidence remains blocked.
+- The provider gateway loads the canonical no-follow pre-repair snapshot and
+  binds its recorded installed-state, ownership, recipe and source identities.
+  A completed terminal state must preserve product/version, setup ABI, provider
+  revision, components, entrypoints, target and audit identity before FacMan can
+  classify or project it.
+- The M1 system proof covers interruption before provider entry, stale recovery
+  plans, completed provider repair, interruption after FacMan projection,
+  idempotent retry, and one-family-at-a-time terminal identity drift. The shared
+  response schema now rejects impossible operation/journal/target combinations.
+- Independent Sol postimage review found the initial terminal binding and shared
+  schema too weak. Both were corrected; the exact corrected postimage received
+  a PASS with no remaining blocker. Full Windows Debug CTest passes 45/45 and
+  the strict repository gate passes with 428 schemas and 290 refusal codes.
+- The WorkUnit remains active. Cross-operation coordination, the remaining
+  install/move/verify/adoption lifecycle, genuine Factorio and physical host
+  qualification, packaging, signing and release acceptance remain open.

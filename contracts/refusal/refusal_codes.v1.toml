@@ -25,6 +25,11 @@ required_codes = [
   "setup_uninstall_recovery_response_invalid",
   "uninstall_recovery_indeterminate",
   "uninstall_recovery_projection_conflict",
+  "setup_repair_recovery_input_invalid",
+  "setup_repair_recovery_inspection_refused",
+  "setup_repair_recovery_response_invalid",
+  "repair_recovery_indeterminate",
+  "repair_recovery_projection_conflict",
   "recovery_lock_contended",
   "launch_preflight_failed",
   "run_lock_contended",
@@ -1106,6 +1111,41 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = false
 message = "The managed install reference no longer matches the recovery preimage or prepared postimage."
+
+[[code]]
+id = "setup_repair_recovery_input_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed repair recovery input does not bind an exact durable coordinator identity."
+
+[[code]]
+id = "setup_repair_recovery_inspection_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup refused inspection of the exact managed repair transaction."
+
+[[code]]
+id = "setup_repair_recovery_response_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup repair recovery evidence failed exact identity or integrity validation."
+
+[[code]]
+id = "repair_recovery_indeterminate"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The interrupted repair has no safely projectable terminal provider state."
+
+[[code]]
+id = "repair_recovery_projection_conflict"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The managed install reference no longer matches the repair recovery preimage or terminal postimage."
 
 [[code]]
 id = "setup_uninstall_report_response_invalid"

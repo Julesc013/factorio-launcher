@@ -1,37 +1,28 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/facman_managed_uninstall_recovery.v1.schema.json",
-  "title": "FacMan managed uninstall recovery plan and result",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/facman_managed_install_recovery.v1.schema.json",
+  "title": "FacMan managed install operation recovery",
   "type": "object",
   "required": [
-    "schema",
-    "status",
-    "transaction_id",
-    "install_id",
-    "plan_id",
-    "plan_digest",
-    "classification",
-    "action",
-    "facman_journal_sha256",
-    "pre_record_sha256",
-    "current_record_sha256",
-    "provider_journal_present",
-    "provider_observed_state",
-    "provider_journal_digest",
-    "provider_journal_snapshot_sha256",
-    "provider_installed_state_sha256",
-    "target_exists",
-    "projected_record_sha256"
+    "schema", "status", "transaction_id", "install_id", "plan_id", "plan_digest",
+    "classification", "action", "facman_journal_sha256", "pre_record_sha256",
+    "current_record_sha256", "provider_journal_present", "provider_observed_state",
+    "provider_journal_digest", "provider_journal_snapshot_sha256",
+    "provider_installed_state_sha256", "target_exists", "projected_record_sha256"
   ],
   "properties": {
-    "schema": { "const": "facman.managed_uninstall_recovery.v1" },
+    "schema": {
+      "enum": ["facman.managed_uninstall_recovery.v1", "facman.managed_repair_recovery.v1"]
+    },
+    "operation": { "const": "repair" },
     "status": { "enum": ["planned", "blocked", "completed"] },
     "transaction_id": { "$ref": "#/$defs/transaction_id" },
     "install_id": { "type": "string", "minLength": 1, "maxLength": 256 },
     "plan_id": { "type": "string", "minLength": 1, "maxLength": 256 },
     "plan_digest": { "$ref": "#/$defs/sha256" },
     "classification": {
-      "enum": ["no_provider_effect", "provider_retired", "provider_uninstall_blocked", "indeterminate"]
+      "enum": ["no_provider_effect", "provider_repaired", "provider_retired",
+        "provider_uninstall_blocked", "indeterminate"]
     },
     "action": { "enum": ["close_no_provider_effect", "project_terminal", "none"] },
     "facman_journal_sha256": { "$ref": "#/$defs/sha256" },
@@ -47,6 +38,26 @@
   },
   "allOf": [
     {
+      "if": {
+        "properties": { "schema": { "const": "facman.managed_repair_recovery.v1" } },
+        "required": ["schema"]
+      },
+      "then": {
+        "required": ["operation"],
+        "properties": {
+          "classification": { "enum": ["no_provider_effect", "provider_repaired", "indeterminate"] }
+        }
+      },
+      "else": {
+        "not": { "required": ["operation"] },
+        "properties": {
+          "classification": {
+            "enum": ["no_provider_effect", "provider_retired", "provider_uninstall_blocked", "indeterminate"]
+          }
+        }
+      }
+    },
+    {
       "if": { "properties": { "classification": { "const": "indeterminate" } }, "required": ["classification"] },
       "then": { "properties": { "status": { "const": "blocked" }, "action": { "const": "none" } } }
     },
@@ -59,6 +70,20 @@
           "provider_observed_state": { "const": "" },
           "provider_journal_digest": { "const": "" },
           "provider_journal_snapshot_sha256": { "const": "" },
+          "provider_installed_state_sha256": { "$ref": "#/$defs/sha256" },
+          "target_exists": { "const": true }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "classification": { "const": "provider_repaired" } }, "required": ["classification"] },
+      "then": {
+        "properties": {
+          "action": { "const": "project_terminal" },
+          "provider_journal_present": { "const": true },
+          "provider_observed_state": { "const": "completed" },
+          "provider_journal_digest": { "$ref": "#/$defs/sha256" },
+          "provider_journal_snapshot_sha256": { "$ref": "#/$defs/sha256" },
           "provider_installed_state_sha256": { "$ref": "#/$defs/sha256" },
           "target_exists": { "const": true }
         }
@@ -97,9 +122,7 @@
     "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "optional_sha256": { "type": "string", "pattern": "^(?:[a-f0-9]{64})?$" },
     "transaction_id": {
-      "type": "string",
-      "minLength": 4,
-      "maxLength": 64,
+      "type": "string", "minLength": 4, "maxLength": 64,
       "pattern": "^tx-[a-z0-9]+(?:-[a-z0-9]+)*$"
     }
   },

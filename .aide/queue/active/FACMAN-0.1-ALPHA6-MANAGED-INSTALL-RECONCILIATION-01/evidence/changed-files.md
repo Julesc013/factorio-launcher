@@ -337,3 +337,49 @@ Exact final uncommitted path set (63 paths):
 - `tests/test_generated_metadata.py`
 - `tools/codegen/generate_metadata.py`
 - `tools/setup_workflow_check.py`
+
+## Managed repair recovery exact commit-candidate paths — 2026-09-16
+
+The reviewed recovery successor contains exactly 41 substantive paths:
+
+- `.aide/memory/project-state.md`
+- `.aide/memory/project-state.v2.json`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/changed-files.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/remaining-risks.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/validation.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/ExecPlan.md`
+- `apps/cli/completions/_facman`
+- `apps/cli/completions/facman.bash`
+- `apps/cli/completions/facman.fish`
+- `apps/cli/completions/FacMan.ps1`
+- `apps/cli/generated/command_help.inc`
+- `apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h`
+- `apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m`
+- `apps/gui/windows/winforms/GeneratedCommandCatalog.cs`
+- `apps/tui/generated_command_catalog.hpp`
+- `contracts/command/factorio/installs.recovery.apply.v1.toml`
+- `contracts/command/factorio/installs.recovery.inspect.v1.toml`
+- `contracts/generated-index/command_catalog.v2.json`
+- `contracts/generated-index/command_cli_grammar.v2.json`
+- `contracts/generated-index/frontend_command_catalog.v1.json`
+- `contracts/refusal/refusal_codes.v1.toml`
+- `contracts/schema/factorio/facman_managed_install_recovery.v1.schema.json`
+- `contracts/schema/factorio/facman_managed_repair_recovery.v1.schema.json`
+- `contracts/schema/factorio/facman_managed_uninstall_recovery.v1.schema.json`
+- `docs/architecture/managed-setup-command-workflows.v1.md`
+- `docs/reference/generated-command-catalog.md`
+- `README.md`
+- `release/generated/technical_preview_command_api_conformance.v1.json`
+- `runtime/core/generated/command_catalog.h`
+- `runtime/core/generated/version.h`
+- `runtime/factorio/application/command_admission.cpp`
+- `runtime/factorio/application/generated/command_ids.inc`
+- `runtime/factorio/application/generated/command_lookup.inc`
+- `runtime/factorio/application/generated/command_names.inc`
+- `runtime/factorio/application/generated/command_writes.inc`
+- `runtime/factorio/application/generated/request_contracts.inc`
+- `runtime/factorio/application/handlers/setup.cpp`
+- `runtime/factorio/application/setup_gateway.cpp`
+- `runtime/factorio/application/setup_gateway.h`
+- `tests/native/m1_three_repository_system_proof.cpp`
+- `tests/test_command_contracts.py`

@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `5c578b2078163cfc7e4f376fc630c30b5ae64a32d92f778ee97b8712c3c95f4f`.
+Source digest: `38d30b116fc5b2402823010e070511e412dcc04bcbaed16ff4d38f8c2feed788`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 

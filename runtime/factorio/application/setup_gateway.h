@@ -124,6 +124,64 @@ struct RepairReport {
     std::string provider_response;
 };
 
+struct RepairRecoveryRequest {
+    std::string request_id;
+    std::string plan_id;
+    std::string install_id;
+    std::string plan_created_at;
+    std::string reviewed_plan_digest;
+    std::string provider_plan_digest;
+    std::string transaction_id;
+    std::string applied_at;
+    std::filesystem::path target;
+    std::string pre_installed_state_digest;
+    std::string pre_ownership_manifest_digest;
+    std::string recipe_digest;
+    std::string source_digest;
+    std::string pre_setup_state_ref;
+    std::string pre_last_verification_identity;
+    std::string pre_state_revision;
+    std::string pre_lifecycle_status;
+};
+
+struct RepairRecoveryInspection {
+    std::string classification;
+    std::string provider_observed_state;
+    std::string provider_journal_digest;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_installed_state_digest;
+    RepairReport terminal_report;
+    bool provider_journal_present = false;
+    bool target_exists = false;
+};
+
+struct ManagedRepairCoordinator {
+    std::string request_id;
+    std::string plan_id;
+    std::string install_id;
+    std::string plan_created_at;
+    std::string reviewed_plan_digest;
+    std::string provider_plan_digest;
+    std::string provider_installed_state_digest;
+    std::string provider_ownership_manifest_digest;
+    std::string provider_recipe_digest;
+    std::string provider_source_digest;
+    std::string transaction_id;
+    std::string applied_at;
+    std::string target_root;
+    std::string pre_record_sha256;
+    std::string pre_setup_state_ref;
+    std::string pre_last_verification_identity;
+    std::string pre_state_revision;
+    std::string pre_lifecycle_status;
+    std::string phase;
+};
+
+bool decode_managed_repair_coordinator(
+    const std::string& text,
+    ManagedRepairCoordinator& output,
+    std::string& detail);
+
 struct ManagedRepairEnvelope {
     std::string document;
     std::string digest;
@@ -244,7 +302,7 @@ bool decode_managed_uninstall_coordinator(
     const std::string& text,
     ManagedUninstallCoordinator& output,
     std::string& detail);
-bool validate_managed_uninstall_recovery_lock(
+bool validate_managed_install_recovery_lock(
     const std::string& text,
     const std::string& transaction_id,
     const std::string& identity,
@@ -277,6 +335,8 @@ public:
         const RepairPlanRequest& request) = 0;
     virtual facman::core::Result<RepairReport> apply_repair(
         const RepairApplyRequest& request) = 0;
+    virtual facman::core::Result<RepairRecoveryInspection> inspect_repair_recovery(
+        const RepairRecoveryRequest& request) = 0;
     virtual facman::core::Result<UninstallReport> apply_uninstall(
         const UninstallApplyRequest& request) = 0;
     virtual facman::core::Result<UninstallRecoveryInspection> inspect_uninstall_recovery(
