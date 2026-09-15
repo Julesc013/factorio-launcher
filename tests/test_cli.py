@@ -1232,14 +1232,21 @@ class CliTests(unittest.TestCase):
 
             for operation in ("repair", "move", "uninstall"):
                 args = ["--workspace", str(workspace), "installs", operation, "plan", "fixture"]
-                if operation == "move":
+                if operation == "repair":
+                    args.extend(["--archive", str(Path(tmp) / "repair.zip")])
+                elif operation == "move":
                     args.extend(["--target", str(Path(tmp) / "moved")])
                 args.append("--json")
                 code, stdout, _stderr = invoke(args)
                 self.assertEqual(code, 1)
                 refusal = json.loads(stdout)
                 self.assertEqual(refusal["operation"], f"installs.{operation}.plan")
-                self.assertEqual(refusal["refusal"]["code"], "ownership_denied")
+                expected_code = (
+                    "setup_repair_plan_authority_required"
+                    if operation == "repair"
+                    else "ownership_denied"
+                )
+                self.assertEqual(refusal["refusal"]["code"], expected_code)
 
             code, stdout, _stderr = invoke(
                 ["--workspace", str(workspace), "installs", "recovery", "inspect", "tx-fixture", "--json"]
