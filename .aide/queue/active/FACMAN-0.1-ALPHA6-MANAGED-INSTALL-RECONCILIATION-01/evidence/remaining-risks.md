@@ -99,3 +99,21 @@ Beta.1 or stable release eligibility.
 
 The WorkUnit remains active; this slice does not establish Alpha.6, Beta.1 or
 stable release eligibility.
+
+## Managed repair recovery — remaining boundaries
+
+- Operation-specific repair recovery now closes a proved no-effect interruption
+  and projects a strictly bound completed repair. It does not guess when the
+  provider journal, target, terminal state, audit chain, or retained FacMan
+  record disagree; those cases remain `repair_recovery_indeterminate`.
+- Repair and uninstall recovery share the same stable recovery lease. A broader
+  coordinator covering competing plan/apply operations and separate transaction
+  identifiers remains required before cross-operation lifecycle concurrency is
+  complete.
+- Current validation uses an owned synthetic Windows Debug fixture. Hosted and
+  physical platform qualification, packaged behavior, genuine managed Factorio,
+  hostile interruption, human experience, signing and publication remain under
+  their existing gates.
+- Install apply, move plan/apply, live verify, adoption/reconciliation and
+  self-maintenance update/downgrade remain open. This WorkUnit stays active and
+  does not establish Alpha.6, Beta.1 or stable release eligibility.

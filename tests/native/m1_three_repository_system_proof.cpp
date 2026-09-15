@@ -431,6 +431,22 @@ std::string replace_json_string_field(std::string text, const char* key, const s
     return text;
 }
 
+std::string replace_json_unsigned_field(std::string text, const char* key, const std::string& value)
+{
+    const std::string prefix = std::string("\"") + key + "\":";
+    const std::size_t position = text.find(prefix);
+    if (position == std::string::npos || text.find(prefix, position + prefix.size()) != std::string::npos) {
+        throw std::runtime_error(std::string("managed fixture record does not have a unique ") + key + " field");
+    }
+    std::size_t end = position + prefix.size();
+    while (end < text.size() && text[end] >= '0' && text[end] <= '9') ++end;
+    if (end == position + prefix.size()) {
+        throw std::runtime_error(std::string("managed fixture record has a non-numeric ") + key + " field");
+    }
+    text.replace(position + prefix.size(), end - (position + prefix.size()), value);
+    return text;
+}
+
 std::string managed_repair_outer_digest(const std::string& document)
 {
     auto parsed = facman::core::json::parse(document);
@@ -906,7 +922,7 @@ proof::LauncherReference prove_move_and_repair(
     return current;
 }
 
-void prove_repair_interruption_requires_operation_specific_recovery(
+void prove_repair_interruption_recovery(
     proof::Fixture& fixture,
     const proof::SyntheticArchive& archive)
 {
@@ -983,6 +999,54 @@ void prove_repair_interruption_requires_operation_specific_recovery(
         throw std::runtime_error("provable no-effect provider repair refusal did not close safely");
     }
 
+    apply.transaction_id = "tx-m1-facman-repair-pre-provider";
+    set_environment("FACMAN_TEST_REPAIR_INTERRUPT_BEFORE_PROVIDER", "1");
+    const auto pre_provider = application::handlers::apply_repair_install(context, apply);
+    clear_environment("FACMAN_TEST_REPAIR_INTERRUPT_BEFORE_PROVIDER");
+    application::ServiceOperationRequest no_effect_recovery;
+    no_effect_recovery.transaction_id = apply.transaction_id;
+    const auto no_effect_inspection =
+        application::handlers::inspect_install_recovery(context, no_effect_recovery);
+    auto no_effect_plan = std::holds_alternative<std::string>(no_effect_inspection.output)
+        ? facman::core::json::parse(std::get<std::string>(no_effect_inspection.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (pre_provider.status == ULK_STATUS_OK ||
+        pre_provider.error_code != "transaction_recovery_required" ||
+        no_effect_inspection.status != ULK_STATUS_OK || !no_effect_plan ||
+        json_string(no_effect_plan.value(), "classification") != "no_provider_effect" ||
+        json_string(no_effect_plan.value(), "action") != "close_no_provider_effect" ||
+        tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before) {
+        throw std::runtime_error("pre-provider repair interruption was not classified without effects");
+    }
+    no_effect_recovery.plan_id = json_string(no_effect_plan.value(), "plan_id");
+    no_effect_recovery.plan_digest = std::string(64, '0');
+    no_effect_recovery.confirmation = "APPLY";
+    const auto stale_recovery =
+        application::handlers::apply_install_recovery(context, no_effect_recovery);
+    if (stale_recovery.status == ULK_STATUS_OK || stale_recovery.error_code != "stale_plan" ||
+        tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before) {
+        throw std::runtime_error("stale no-effect repair recovery reached effects");
+    }
+    no_effect_recovery.plan_digest = json_string(no_effect_plan.value(), "plan_digest");
+    const auto no_effect_recovered =
+        application::handlers::apply_install_recovery(context, no_effect_recovery);
+    auto no_effect_transaction = facman::core::TransactionId::parse(apply.transaction_id);
+    const auto closed_no_effect = no_effect_transaction
+        ? context.transactions().load_journal(no_effect_transaction.value())
+        : facman::core::Result<std::string>::failure({"invalid", "invalid", ""});
+    if (no_effect_recovered.status != ULK_STATUS_OK || !closed_no_effect ||
+        closed_no_effect.value().find("\"state\":\"complete\"") == std::string::npos ||
+        closed_no_effect.value().find("confirmed_no_provider_effect") == std::string::npos ||
+        tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before) {
+        throw std::runtime_error("no-effect repair recovery did not close without provider mutation");
+    }
+
     apply.transaction_id = "tx-m1-facman-repair-interrupted";
     apply.applied_at = "2098-01-01T01:10:03Z";
     set_environment("FACMAN_TEST_REPAIR_TERMINAL_UNKNOWN_INSTALL", "1");
@@ -1009,14 +1073,85 @@ void prove_repair_interruption_requires_operation_specific_recovery(
     application::RecoveryRequest generic;
     generic.transaction_id = apply.transaction_id;
     const auto generic_result = application::handlers::recovery_apply(context, generic);
-    const auto journal_after = context.transactions().load_journal(transaction_id.value());
     if (repeated.status == ULK_STATUS_OK ||
         repeated.error_code != "operation_specific_recovery_required" ||
         generic_result.status == ULK_STATUS_OK ||
         generic_result.error_code != "operation_specific_recovery_required" ||
-        !journal_after || journal_after.value() != journal.value() ||
         read_text(before.value().source_path) != record_before) {
-        throw std::runtime_error("repair recovery retry was not explicitly and idempotently refused");
+        throw std::runtime_error("repair recovery did not preserve its operation-specific route");
+    }
+
+    application::ServiceOperationRequest recovery;
+    recovery.transaction_id = apply.transaction_id;
+    const fs::path repaired_state_path = fixture.setup_roots.state_root / "installed" /
+        (launcher.install_id + "." + apply.transaction_id + ".json");
+    const std::string repaired_state = read_text(repaired_state_path);
+    const std::vector<std::pair<const char*, std::string>> terminal_identity_drifts {
+        {"product id", replace_json_string_field(repaired_state, "product_id", "factorio-drift")},
+        {"product version", replace_json_string_field(repaired_state, "product_version", "2.0.78")},
+        {"provider revision", replace_json_string_field(repaired_state, "provider_revision", "provider-drift")},
+        {"setup ABI", replace_json_unsigned_field(repaired_state, "minor", "999")},
+        {"components", replaced_once(repaired_state,
+            "\"component_selection\":[\"base\",\"space-age\"]",
+            "\"component_selection\":[\"base\"]", "repair component selection")},
+        {"entrypoints", replace_json_string_field(repaired_state, "entrypoint_id", "primary-drift")},
+    };
+    for (const auto& [label, drifted_state] : terminal_identity_drifts) {
+        write_text_exact(repaired_state_path, drifted_state);
+        const auto refused = application::handlers::inspect_install_recovery(context, recovery);
+        write_text_exact(repaired_state_path, repaired_state);
+        if (refused.status == ULK_STATUS_OK ||
+            refused.error_code != "setup_repair_recovery_response_invalid" ||
+            read_text(before.value().source_path) != record_before) {
+            throw std::runtime_error(std::string("repair recovery accepted terminal identity drift: ") + label);
+        }
+    }
+    const auto recovery_inspection = application::handlers::inspect_install_recovery(context, recovery);
+    auto recovery_plan = std::holds_alternative<std::string>(recovery_inspection.output)
+        ? facman::core::json::parse(std::get<std::string>(recovery_inspection.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (recovery_inspection.status != ULK_STATUS_OK || !recovery_plan ||
+        json_string(recovery_plan.value(), "schema") != "facman.managed_repair_recovery.v1" ||
+        json_string(recovery_plan.value(), "operation") != "repair" ||
+        json_string(recovery_plan.value(), "status") != "planned" ||
+        json_string(recovery_plan.value(), "classification") != "provider_repaired" ||
+        json_string(recovery_plan.value(), "action") != "project_terminal") {
+        throw std::runtime_error("completed provider repair was not recoverably classified");
+    }
+    recovery.plan_id = json_string(recovery_plan.value(), "plan_id");
+    recovery.plan_digest = json_string(recovery_plan.value(), "plan_digest");
+    recovery.confirmation = "APPLY";
+    set_environment("FACMAN_TEST_REPAIR_RECOVERY_INTERRUPT_AFTER_PROJECTION", "1");
+    const auto recovery_interrupted = application::handlers::apply_install_recovery(context, recovery);
+    clear_environment("FACMAN_TEST_REPAIR_RECOVERY_INTERRUPT_AFTER_PROJECTION");
+    const auto projected = context.installs().load(install_id.value());
+    if (recovery_interrupted.status == ULK_STATUS_OK ||
+        recovery_interrupted.error_code != "transaction_recovery_required" || !projected ||
+        projected.value().lifecycle_status != "active" ||
+        projected.value().state_revision.rfind(apply.transaction_id + ":", 0U) != 0U ||
+        read_text(before.value().source_path) == record_before) {
+        throw std::runtime_error("repair recovery projection interruption was not durable and retryable");
+    }
+    const auto reinspected = application::handlers::inspect_install_recovery(context, recovery);
+    auto retry_plan = std::holds_alternative<std::string>(reinspected.output)
+        ? facman::core::json::parse(std::get<std::string>(reinspected.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (reinspected.status != ULK_STATUS_OK || !retry_plan ||
+        json_string(retry_plan.value(), "classification") != "provider_repaired") {
+        throw std::runtime_error("projected repair recovery could not be reinspected");
+    }
+    recovery.plan_id = json_string(retry_plan.value(), "plan_id");
+    recovery.plan_digest = json_string(retry_plan.value(), "plan_digest");
+    const auto recovered = application::handlers::apply_install_recovery(context, recovery);
+    const auto journal_after = context.transactions().load_journal(transaction_id.value());
+    auto recovery_result = std::holds_alternative<std::string>(recovered.output)
+        ? facman::core::json::parse(std::get<std::string>(recovered.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (recovered.status != ULK_STATUS_OK || !recovery_result ||
+        json_string(recovery_result.value(), "status") != "completed" ||
+        !journal_after || journal_after.value().find("\"state\":\"complete\"") == std::string::npos ||
+        journal_after.value().find("projected_repaired_install_reference") == std::string::npos) {
+        throw std::runtime_error("repair recovery did not close the coordinator idempotently");
     }
 }
 
@@ -1795,7 +1930,7 @@ int run()
     prove_uninstall_recovery_gateway_decoding();
     proof::Fixture fixture;
     const proof::SyntheticArchive archive = proof::make_factorio_archive(fixture.root);
-    prove_repair_interruption_requires_operation_specific_recovery(fixture, archive);
+    prove_repair_interruption_recovery(fixture, archive);
     const fs::path target = fixture.root / "targets/portable";
     fs::create_directories(target.parent_path());
     auto reference = prove_install(fixture, archive, target);
