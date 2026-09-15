@@ -43,3 +43,33 @@ Base: `57a1745bac987a79658cfa825789ff48ec393329`
 Independent review remediation is confined to command admission, the Setup
 gateway recovery decoder/refusal adapter, and their two existing native proof
 targets. No public request or response schema changed in that remediation.
+
+## 2026-09-15 external maintenance and packaged recovery slice
+
+Base: `0129f7ec6fa5864c40c6c6f4a3d3aab98b41f7ba`
+
+- `apps/setup/` and `runtime/self_setup/` retain the raw provider package and
+  maintenance launcher outside the managed install root, publish an exact
+  digest receipt, validate every cache object through stable no-follow
+  single-link reads, and bind install/repair/uninstall restart semantics to the
+  durable journal.
+- `runtime/platform/fl_file_io.{h,cpp}` adds Windows pinned stable inputs with
+  pathname revalidation plus handle-owned no-replace publication and discard;
+  `tests/native/fl_platform_io_smoke.cpp` exercises their substitution and
+  foreign-destination boundaries.
+- Windows integration registers exact external repair and uninstall command
+  lines, migrates only the exact prior FacMan command shape as stale-owned, and
+  keeps every other registration or shortcut classification foreign.
+- The setup journal schema records installed-source and repair-source state and
+  rejects incomplete completed installed-mode operations.
+- The Windows installer manifest and product-candidate workflow exercise the
+  produced self-contained setup, offline registered repair, registered
+  uninstall, interruption/resume, paths containing spaces, and exact current
+  user Start Menu and registry observations.
+- Focused native, integration and Python tests cover cache substitution,
+  provider source mismatch, retryable source inputs, registered-command
+  quoting, legacy migration, terminal state, and clean successor uninstall
+  after a definitive foreign-content refusal.
+- Product documentation and generated command/version catalogs reflect the
+  current contract identity. Hosted current-user package qualification remains
+  required before this active WorkUnit can close.

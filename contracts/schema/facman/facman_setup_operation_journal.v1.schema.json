@@ -71,6 +71,7 @@
         "state_root",
         "acceptance_root",
         "source_digest",
+        "installed_source_digest",
         "request_id",
         "plan_id",
         "transaction_id",
@@ -97,6 +98,10 @@
         "source_digest": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "installed_source_digest": {
+          "type": "string",
+          "pattern": "^$|^[a-f0-9]{64}$"
         },
         "request_id": {
           "type": "string",
@@ -159,6 +164,7 @@
       "additionalProperties": false,
       "required": [
         "files",
+        "repair_source",
         "shortcut",
         "registration"
       ],
@@ -167,6 +173,14 @@
           "enum": [
             "pending",
             "applied"
+          ]
+        },
+        "repair_source": {
+          "enum": [
+            "pending",
+            "applying",
+            "applied",
+            "not_applicable"
           ]
         },
         "shortcut": {
@@ -300,6 +314,56 @@
     {
       "if": {
         "properties": {
+          "operation": {
+            "enum": [
+              "install",
+              "repair"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provider": {
+            "properties": {
+              "installed_source_digest": {
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "uninstall"
+          },
+          "provider": {
+            "properties": {
+              "plan_digest": {
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provider": {
+            "properties": {
+              "installed_source_digest": {
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
           "mode": {
             "const": "portable"
           }
@@ -309,6 +373,9 @@
         "properties": {
           "effects": {
             "properties": {
+              "repair_source": {
+                "const": "not_applicable"
+              },
               "shortcut": {
                 "const": "not_applicable"
               },
@@ -328,6 +395,12 @@
           },
           "mode": {
             "const": "installed"
+          },
+          "operation": {
+            "enum": [
+              "install",
+              "repair"
+            ]
           }
         }
       },
@@ -337,6 +410,67 @@
             "properties": {
               "files": {
                 "const": "applied"
+              },
+              "repair_source": {
+                "const": "applied"
+              },
+              "shortcut": {
+                "const": "applied"
+              },
+              "registration": {
+                "const": "applied"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "installed"
+          },
+          "operation": {
+            "const": "uninstall"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "repair_source": {
+                "const": "not_applicable"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "completed"
+          },
+          "mode": {
+            "const": "installed"
+          },
+          "operation": {
+            "const": "uninstall"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "files": {
+                "const": "applied"
+              },
+              "repair_source": {
+                "const": "not_applicable"
               },
               "shortcut": {
                 "const": "applied"
@@ -366,6 +500,9 @@
             "properties": {
               "files": {
                 "const": "applied"
+              },
+              "repair_source": {
+                "const": "not_applicable"
               },
               "shortcut": {
                 "const": "not_applicable"
@@ -392,6 +529,11 @@
             "properties": {
               "files": {
                 "const": "pending"
+              },
+              "repair_source": {
+                "not": {
+                  "const": "applied"
+                }
               },
               "shortcut": {
                 "not": {
@@ -524,6 +666,9 @@
               "shortcut": {
                 "const": "not_applicable"
               },
+              "repair_source": {
+                "const": "not_applicable"
+              },
               "registration": {
                 "const": "not_applicable"
               }
@@ -549,6 +694,11 @@
           "effects": {
             "properties": {
               "shortcut": {
+                "not": {
+                  "const": "applied"
+                }
+              },
+              "repair_source": {
                 "not": {
                   "const": "applied"
                 }

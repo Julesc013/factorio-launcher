@@ -10,6 +10,7 @@
 #include <cstring>
 #include <cwchar>
 #include <limits>
+#include <vector>
 
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -145,6 +146,7 @@ IoStatus flush_directory(const std::filesystem::path& directory)
 struct StableInputFile::Impl {
     NativeHandle handle = kInvalidHandle;
     FileIdentity identity;
+    std::filesystem::path path;
 };
 
 StableInputFile::StableInputFile() : impl_(std::make_unique<Impl>()) {}
@@ -161,11 +163,25 @@ StableInputFile::~StableInputFile()
 
 IoStatus StableInputFile::open_no_follow(const std::filesystem::path& path)
 {
+    return open_no_follow_impl(path, false);
+}
+
+IoStatus StableInputFile::open_no_follow_pinned(const std::filesystem::path& path)
+{
+    return open_no_follow_impl(path, true);
+}
+
+IoStatus StableInputFile::open_no_follow_impl(
+    const std::filesystem::path& path,
+    bool pinned)
+{
     if (open()) return IoStatus::failure("input_already_open", path_to_utf8(path));
 #ifdef _WIN32
     const std::wstring native_path = windows_extended_path(path);
     impl_->handle = CreateFileW(
-        native_path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+        native_path.c_str(), GENERIC_READ,
+        pinned ? FILE_SHARE_READ : FILE_SHARE_READ | FILE_SHARE_DELETE,
+        nullptr, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_RANDOM_ACCESS, nullptr);
     if (impl_->handle == kInvalidHandle) return IoStatus::failure("input_open_failed", windows_error("CreateFileW"));
     BY_HANDLE_FILE_INFORMATION info {};
@@ -188,15 +204,18 @@ IoStatus StableInputFile::open_no_follow(const std::filesystem::path& path)
     }
     impl_->identity = identity_from_stat(info);
 #endif
-    if (!impl_->identity.regular_file) {
+    if (!impl_->identity.regular_file || (pinned && impl_->identity.link_count != 1U)) {
 #ifdef _WIN32
         CloseHandle(impl_->handle);
 #else
         ::close(impl_->handle);
 #endif
         impl_->handle = kInvalidHandle;
-        return IoStatus::failure("input_not_regular", path_to_utf8(path));
+        return IoStatus::failure(
+            impl_->identity.regular_file ? "input_multiple_links" : "input_not_regular",
+            path_to_utf8(path));
     }
+    impl_->path = path;
     return IoStatus::success();
 }
 
@@ -232,6 +251,24 @@ IoStatus StableInputFile::revalidate() const
     current = identity_from_stat(info);
 #endif
     return impl_->identity.unchanged(current) ? IoStatus::success() : IoStatus::failure("input_identity_changed", "stable input identity changed while open");
+}
+
+IoStatus StableInputFile::revalidate_path() const
+{
+    const IoStatus held = revalidate();
+    if (!held.ok()) return held;
+    PathIdentity current;
+    const IoStatus observed = inspect_path_no_follow(impl_->path, current);
+    if (!observed.ok()) return observed;
+    if (!current.exists || current.reparse_or_link ||
+        current.kind != PathObjectKind::regular_file ||
+        current.device != impl_->identity.device ||
+        current.object != impl_->identity.object ||
+        current.size != impl_->identity.size) {
+        return IoStatus::failure(
+            "input_path_identity_changed", path_to_utf8(impl_->path));
+    }
+    return IoStatus::success();
 }
 const FileIdentity& StableInputFile::identity() const noexcept { return impl_->identity; }
 std::uint64_t StableInputFile::size() const noexcept { return impl_->identity.size; }
@@ -450,7 +487,8 @@ IoStatus DurableOutputFile::create_exclusive(const std::filesystem::path& path, 
     if (impl_->handle != kInvalidHandle) return IoStatus::failure("output_already_open", path_to_utf8(path));
 #ifdef _WIN32
     const std::wstring native_path = windows_extended_path(path);
-    impl_->handle = CreateFileW(native_path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+    impl_->handle = CreateFileW(native_path.c_str(), GENERIC_WRITE | DELETE, 0,
+        nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (impl_->handle == kInvalidHandle) return IoStatus::failure("output_create_failed", windows_error("CreateFileW"));
 #else
     impl_->handle = ::open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
@@ -492,6 +530,103 @@ IoStatus DurableOutputFile::flush_file_and_parent()
     if (::close(impl_->handle) != 0) return IoStatus::failure("output_close_failed", std::strerror(errno));
     impl_->handle = kInvalidHandle;
     return flush_directory(impl_->path.parent_path());
+#endif
+}
+
+IoStatus DurableOutputFile::publish_no_replace(
+    const std::filesystem::path& destination)
+{
+    if (impl_->handle == kInvalidHandle) return IoStatus::failure("output_not_open", "");
+#ifdef _WIN32
+    if (!FlushFileBuffers(impl_->handle)) {
+        return IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
+    }
+    const std::wstring native_destination = windows_extended_path(destination);
+    const std::size_t name_bytes = native_destination.size() * sizeof(wchar_t);
+    std::vector<unsigned char> storage(
+        offsetof(FILE_RENAME_INFO, FileName) + name_bytes + sizeof(wchar_t), 0U);
+    auto* rename = reinterpret_cast<FILE_RENAME_INFO*>(storage.data());
+    rename->ReplaceIfExists = FALSE;
+    rename->RootDirectory = nullptr;
+    rename->FileNameLength = static_cast<DWORD>(name_bytes);
+    std::memcpy(rename->FileName, native_destination.data(), name_bytes);
+    if (!SetFileInformationByHandle(
+            impl_->handle, FileRenameInfo, rename,
+            static_cast<DWORD>(storage.size()))) {
+        return IoStatus::failure(
+            "commit_no_replace_failed",
+            windows_error("SetFileInformationByHandle(FileRenameInfo)"));
+    }
+    if (!CloseHandle(impl_->handle)) {
+        return IoStatus::failure("output_close_failed", windows_error("CloseHandle"));
+    }
+    impl_->handle = kInvalidHandle;
+    impl_->path = destination;
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+#else
+    if (::fsync(impl_->handle) != 0) {
+        return IoStatus::failure("output_flush_failed", std::strerror(errno));
+    }
+    struct stat held {};
+    struct stat named {};
+    if (::fstat(impl_->handle, &held) != 0 || ::lstat(impl_->path.c_str(), &named) != 0 ||
+        held.st_dev != named.st_dev || held.st_ino != named.st_ino) {
+        return IoStatus::failure(
+            "commit_source_identity_changed", path_to_utf8(impl_->path));
+    }
+    if (::link(impl_->path.c_str(), destination.c_str()) != 0) {
+        return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
+    }
+    struct stat published {};
+    if (::fstat(impl_->handle, &held) != 0 || ::lstat(destination.c_str(), &published) != 0 ||
+        held.st_dev != published.st_dev || held.st_ino != published.st_ino) {
+        return IoStatus::failure(
+            "commit_destination_identity_changed", path_to_utf8(destination));
+    }
+    if (::unlink(impl_->path.c_str()) != 0) {
+        return IoStatus::failure("commit_source_remove_failed", std::strerror(errno));
+    }
+    if (::close(impl_->handle) != 0) {
+        return IoStatus::failure("output_close_failed", std::strerror(errno));
+    }
+    impl_->handle = kInvalidHandle;
+    const std::filesystem::path source_parent = impl_->path.parent_path();
+    IoStatus source_flush = flush_directory(source_parent);
+    if (!source_flush.ok()) return source_flush;
+    impl_->path = destination;
+    if (destination.parent_path() != source_parent) {
+        return flush_directory(destination.parent_path());
+    }
+    return source_flush;
+#endif
+}
+
+IoStatus DurableOutputFile::discard_open()
+{
+    if (impl_->handle == kInvalidHandle) return IoStatus::success();
+#ifdef _WIN32
+    FILE_DISPOSITION_INFO disposition {};
+    disposition.DeleteFile = TRUE;
+    if (!SetFileInformationByHandle(
+            impl_->handle, FileDispositionInfo, &disposition,
+            static_cast<DWORD>(sizeof(disposition)))) {
+        return IoStatus::failure(
+            "output_discard_failed",
+            windows_error("SetFileInformationByHandle(FileDispositionInfo)"));
+    }
+    if (!CloseHandle(impl_->handle)) {
+        return IoStatus::failure("output_close_failed", windows_error("CloseHandle"));
+    }
+    impl_->handle = kInvalidHandle;
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+#else
+    if (::close(impl_->handle) != 0) {
+        return IoStatus::failure("output_close_failed", std::strerror(errno));
+    }
+    impl_->handle = kInvalidHandle;
+    return IoStatus::failure(
+        "output_discard_preserved",
+        "open temporary is preserved because handle-owned unlink is unavailable");
 #endif
 }
 void DurableOutputFile::close_without_flush() noexcept

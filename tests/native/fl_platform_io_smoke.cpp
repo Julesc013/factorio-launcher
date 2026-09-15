@@ -6,7 +6,9 @@
 #include "fl_user_paths.h"
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 
 int main()
@@ -33,6 +35,79 @@ int main()
     if (input.read_at(0, read.data(), read.size()) != read.size() || read != payload) return 6;
     if (!input.revalidate().ok()) return 7;
     if (!facman::platform::remove_exact_object(destination, input.identity()).ok()) return 8;
+    const fs::path pinned_staging = root / "pinned.tmp";
+    const fs::path pinned_destination = root / "pinned.txt";
+    facman::platform::DurableOutputFile pinned_output;
+    status = pinned_output.create_exclusive(pinned_staging, 1024);
+    if (!status.ok() ||
+        pinned_output.write_at(0, payload.data(), payload.size()) != payload.size() ||
+        !pinned_output.publish_no_replace(pinned_destination).ok()) return 18;
+    {
+        facman::platform::StableInputFile pinned;
+        const auto opened_pinned = pinned.open_no_follow_pinned(pinned_destination);
+        const auto validated_pinned = opened_pinned.ok()
+            ? pinned.revalidate_path()
+            : opened_pinned;
+        if (!opened_pinned.ok() || !validated_pinned.ok()) {
+            std::cerr << "pinned input validation failed: " << opened_pinned.code
+                      << ':' << opened_pinned.detail << ' ' << validated_pinned.code
+                      << ':' << validated_pinned.detail << '\n';
+            return 19;
+        }
+        const fs::path moved = root / "pinned-moved.txt";
+        error.clear();
+        fs::rename(pinned_destination, moved, error);
+#ifdef _WIN32
+        if (!error || !pinned.revalidate_path().ok() || !fs::exists(pinned_destination)) return 20;
+#else
+        if (error) return 20;
+        std::ofstream(pinned_destination, std::ios::binary) << "replacement";
+        if (pinned.revalidate_path().ok()) return 21;
+        fs::remove(pinned_destination, error);
+        error.clear();
+        fs::rename(moved, pinned_destination, error);
+        if (error) return 22;
+#endif
+    }
+    fs::remove(pinned_destination, error);
+    if (error) return 23;
+    const fs::path refused_staging = root / "refused.tmp";
+    const fs::path foreign_destination = root / "foreign.txt";
+    const std::string foreign = "foreign bytes";
+    std::ofstream(foreign_destination, std::ios::binary) << foreign;
+    facman::platform::DurableOutputFile refused_output;
+    status = refused_output.create_exclusive(refused_staging, 1024);
+    if (!status.ok() ||
+        refused_output.write_at(0, payload.data(), payload.size()) != payload.size() ||
+        refused_output.publish_no_replace(foreign_destination).ok()) return 24;
+    const auto discarded = refused_output.discard_open();
+#ifdef _WIN32
+    if (!discarded.ok() || fs::exists(refused_staging)) return 25;
+#else
+    if (discarded.ok() || !fs::exists(refused_staging)) return 25;
+    fs::remove(refused_staging, error);
+    if (error) return 26;
+#endif
+    std::ifstream foreign_input(foreign_destination, std::ios::binary);
+    const std::string foreign_after{std::istreambuf_iterator<char>(foreign_input), {}};
+    if (foreign_after != foreign) return 27;
+#ifdef _WIN32
+    const fs::path linked_source = root / "linked-source.zip";
+    const fs::path linked_source_alias = root / "linked-source-alias.zip";
+    const fs::path linked_launcher = root / "linked-launcher.exe";
+    const fs::path linked_launcher_alias = root / "linked-launcher-alias.exe";
+    std::ofstream(linked_source, std::ios::binary) << payload;
+    std::ofstream(linked_launcher, std::ios::binary) << payload;
+    error.clear();
+    fs::create_hard_link(linked_source, linked_source_alias, error);
+    if (error) return 28;
+    fs::create_hard_link(linked_launcher, linked_launcher_alias, error);
+    if (error) return 29;
+    facman::platform::StableInputFile linked_source_input;
+    facman::platform::StableInputFile linked_launcher_input;
+    if (linked_source_input.open_no_follow_pinned(linked_source).ok() ||
+        linked_launcher_input.open_no_follow_pinned(linked_launcher).ok()) return 30;
+#endif
 #ifdef _WIN32
     const std::size_t root_length = fs::absolute(root).native().size();
     const std::size_t padding = root_length < 235 ? 235 - root_length : 80;

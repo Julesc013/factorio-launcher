@@ -47,6 +47,14 @@ class PackageManifestTests(unittest.TestCase):
         for relative in expected:
             self.assertTrue((ROOT / relative).is_file(), relative)
 
+    def test_windows_installer_declares_its_native_effects(self) -> None:
+        with (ROOT / "release/packaging/windows/facman_installer.v1.toml").open("rb") as stream:
+            manifest = tomllib.load(stream)
+        self.assertIn("start_menu", manifest["installer_features"])
+        self.assertIn("registry_uninstall", manifest["installer_features"])
+        self.assertNotIn("start_menu", manifest["excluded_features"])
+        self.assertNotIn("registry_uninstall", manifest["excluded_features"])
+
     def test_packaging_schema_namespace_exists(self) -> None:
         self.assertTrue(
             (ROOT / "contracts" / "schema" / "release" / "packaging" / "bundle_manifest.v1.schema.json").is_file()
