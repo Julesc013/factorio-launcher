@@ -6,7 +6,7 @@
   "required": ["schema", "transaction_id", "command_id", "workspace_id", "marker_nonce", "target", "source_identities", "created_utc", "updated_utc", "state", "completed_steps", "owned_staging_roots", "expected_files", "commit_strategy", "error", "recovery_actions"],
   "properties": {
     "schema": { "const": "facman.transaction.v2" },
-    "transaction_id": { "type": "string", "pattern": "^tx-[0-9a-f]{32}$" },
+    "transaction_id": { "type": "string", "minLength": 4, "maxLength": 64, "pattern": "^tx-[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "command_id": { "type": "string", "minLength": 1 },
     "workspace_id": { "type": "string", "minLength": 1 },
     "marker_nonce": { "type": "string", "pattern": "^nonce-[0-9a-f]{32}$" },
@@ -31,6 +31,7 @@
       }
     },
     "commit_strategy": { "type": "string" },
+    "operation_context": { "type": "string" },
     "error": { "type": "string" },
     "recovery_actions": { "type": "array", "items": { "type": "string" } }
   },

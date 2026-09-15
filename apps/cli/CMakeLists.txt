@@ -7,6 +7,7 @@ add_executable(facman_cli
   resource_commands.cpp
   resource_export_command.cpp
   resource_response.cpp
+  setup_commands.cpp
   workspace_commands.cpp
 )
 if(WIN32)

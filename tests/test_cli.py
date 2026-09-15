@@ -545,6 +545,27 @@ class CliTests(unittest.TestCase):
                 "managed_install_provider_mismatch", json.loads(stdout)["refusal"]["code"])
             self.assertEqual(before, tree_snapshot(workspace))
 
+    def test_managed_uninstall_apply_cli_maps_full_replay_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            setup = Path(tmp) / "setup"
+            environment = {
+                "FACMAN_SETUP_STATE_ROOT": str(setup),
+                "FACMAN_SETUP_ACCEPTANCE_ROOT": str(Path(tmp) / "acceptance"),
+                "FACMAN_SETUP_POLICY_ACTIVATION": "operator_acceptance_candidate",
+            }
+            with mock.patch.dict(os.environ, environment, clear=False):
+                code, stdout, stderr = invoke([
+                    "--workspace", tmp, "installs", "uninstall", "apply",
+                    "managed-uninstall", "uninstall-plan.managed-uninstall",
+                    "--digest", "1" * 64,
+                    "--plan-created-at", "2099-01-01T00:00:00Z",
+                    "--transaction-id", "tx-managed-uninstall",
+                    "--applied-at", "2099-01-01T00:00:01Z",
+                    "--confirm", "APPLY", "--json",
+                ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
+
     def test_create_instance_can_preserve_program_local_player_data(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1271,7 +1292,7 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(refusal["refusal"]["code"], "ownership_denied")
 
             code, stdout, _stderr = invoke(
-                ["--workspace", str(workspace), "installs", "recovery", "inspect", "tx.fixture", "--json"]
+                ["--workspace", str(workspace), "installs", "recovery", "inspect", "tx-fixture", "--json"]
             )
             self.assertEqual(code, 1)
             recovery = json.loads(stdout)

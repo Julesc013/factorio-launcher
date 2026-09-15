@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `f5a9168fa3e8542aa4f8b0dd2240ebbf6b08046ed45c439292a9c873643390aa`.
+Source digest: `db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -34,7 +34,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.repair.plan` | `installs.repair.plan` | `installs_repair_plan` | no | - | implemented | workspace_read | `facman installs repair plan <install-id> [--archive <path>] --json` |
 | `installs.scan` | `install_refs.scan` | `install_scan` | no | install-refs.scan | available | workspace_read | `facman installs scan [--search-root <path>] --json` |
 | `installs.uninstall` | `installs.uninstall` | `installs_uninstall` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs uninstall <install-id> --json` |
-| `installs.uninstall.apply` | `installs.uninstall.apply` | `installs_uninstall_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs uninstall apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.uninstall.apply` | `installs.uninstall.apply` | `installs_uninstall_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs uninstall apply <install-id> <plan-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
 | `installs.uninstall.plan` | `installs.uninstall.plan` | `installs_uninstall_plan` | no | - | implemented | setup_preview | `facman installs uninstall plan <install-id> --json` |
 | `installs.verify` | `installs.verify` | `installs_verify` | no | - | unavailable_until_gateway | setup_preview | `facman installs verify <install-id> --json` |
 | `instance.export` | `instance.export` | `instance_export` | yes | - | available | workspace_read, workspace_write | `facman export instance <instance-id> <pack.zip> --json` |

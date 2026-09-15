@@ -53,6 +53,14 @@ commands = ["installs.install.apply"]
 description = "Apply a reviewed managed-install plan through Universal Setup."
 
 [[capability]]
+id = "install.managed.uninstall.apply"
+domain = "installs"
+status = "conditional"
+required_effects = ["workspace_read", "workspace_write", "setup_mutation"]
+commands = ["installs.uninstall.apply"]
+description = "Apply an exact reviewed uninstall plan for a FacMan-managed installation when Universal Setup mutation roots and policy are explicitly configured."
+
+[[capability]]
 id = "install.existing.inspect"
 domain = "installs"
 status = "backlog"

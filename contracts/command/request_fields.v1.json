@@ -205,7 +205,7 @@
     ],
     "installs.recovery.inspect": [
       {
-        "kind": "identifier",
+        "kind": "transaction_identifier",
         "name": "transaction_id",
         "required": true
       }
@@ -256,12 +256,32 @@
     "installs.uninstall.apply": [
       {
         "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
         "name": "plan_id",
         "required": true
       },
       {
         "kind": "sha256",
         "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "utc_timestamp",
+        "name": "plan_created_at",
+        "required": true
+      },
+      {
+        "kind": "transaction_identifier",
+        "name": "transaction_id",
+        "required": true
+      },
+      {
+        "kind": "utc_timestamp",
+        "name": "applied_at",
         "required": true
       },
       {
@@ -1968,7 +1988,7 @@
     ],
     "workspace.recovery.apply": [
       {
-        "kind": "identifier",
+        "kind": "transaction_identifier",
         "name": "transaction_id",
         "required": true
       }
@@ -2017,7 +2037,7 @@
     ],
     "workspace.recovery.plan": [
       {
-        "kind": "identifier",
+        "kind": "transaction_identifier",
         "name": "transaction_id",
         "required": true
       }

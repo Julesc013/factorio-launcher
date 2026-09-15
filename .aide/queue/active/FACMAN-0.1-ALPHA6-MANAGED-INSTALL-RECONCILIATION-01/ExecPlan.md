@@ -93,3 +93,61 @@ separate. Unavailable host/input cells block their own qualification only.
   absolute roots, safe component-only effect paths, and exactly one journal,
   state and audit effect; focused negative schema regressions cover the reviewed
   counterexamples. The corrected source and contract checks pass.
+
+## 2026-09-15 — provider-backed managed uninstall apply slice
+
+- Advanced `installs.uninstall.apply` from its acceptance stub on the current
+  successor based on integrated `dev@81fe4d671fb0e132f8995a2b27c58d3a65206d65`.
+  The request carries the exact public plan handoff plus caller-selected stable
+  transaction and apply-time identities; it never regenerates those identities
+  during provider entry or retry.
+- Admission revalidates the retained managed record, reconstructs the exact USK
+  plan request, persists a coordinator journal before provider entry, invokes
+  USK uninstall apply, validates the canonical provider report and re-inspects
+  terminal provider state before replacing the FacMan install reference.
+- Provider refusals that are known to precede effects close the coordinator as
+  refused. An exception after provider entry retains a recovery-required journal
+  and the old FacMan reference so later recovery can distinguish unknown effects
+  without falsely reporting success.
+- The install-reference replace path now uses the expected preimage digest and
+  a stable per-record lock, verifies the preimage immediately before replacement,
+  and removes owned temporary and lock files on handled exits.
+- Current-source Windows Debug gateway and M1 system proofs pass. The M1 fixture
+  covers clean owned removal, stale plan, retained foreign content, restart-visible
+  transaction context, stale-record replacement refusal and interruption after
+  provider effects. Full strict validation passes with 421 schemas and 257
+  refusal codes.
+- This is private synthetic fixture evidence. Automated projection recovery for
+  a target-absent interrupted uninstall, physical Linux/macOS qualification,
+  genuine managed Factorio acceptance, the remaining managed lifecycle routes
+  and release gates remain open. The WorkUnit stays active.
+
+## 2026-09-15 — managed uninstall apply postimage assurance
+
+- Independent postimage review found six correctness gaps in the first apply
+  successor: generic recovery could misclassify an interrupted uninstall,
+  supported install writers did not share one stable repository lock, provider
+  refusal data could escape its phase, terminal inspection retained too little
+  immutable state, transaction identifiers disagreed across contracts, and the
+  advertised capability was broader than configured mutation authority.
+- The corrected successor makes generic recovery refuse operation-specific
+  uninstall journals without changing bytes, serializes supported install
+  writers on `installs/.repository.lock`, validates provider refusals exactly,
+  binds the full immutable terminal state, gives transaction identifiers one
+  generated request-field contract, and advertises only
+  `install.managed.uninstall.apply` when setup mutation is configured.
+- A second review found one residual post-effect phase bug: a provider
+  `unknown_install`, `stale_plan`, or `invalid_argument` returned by terminal
+  inspection could enter the pre-effect refusal whitelist. Terminal inspection
+  now always reports the phase-specific
+  `setup_uninstall_terminal_state_inspection_refused` recovery outcome and
+  retains the raw provider envelope. The M1 proof exercises exact
+  `unknown_install` after target removal and proves that the target remains
+  absent, the old install reference and recovery journal remain, and generic
+  recovery makes no mutation.
+- Current-source focused native and Python validation passes after the final
+  correction. The full strict and portable AIDE gates are rerun at the commit
+  boundary, with hosted checks required before normal integration.
+- Operation-specific automated recovery, physical host and packaged product
+  qualification, genuine managed Factorio evidence and the remaining lifecycle
+  leaves remain open. This WorkUnit remains active.

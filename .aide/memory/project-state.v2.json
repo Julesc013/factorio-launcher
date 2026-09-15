@@ -300,6 +300,20 @@
     },
     {
       "commands": [
+        "installs.uninstall.apply"
+      ],
+      "description": "Apply an exact reviewed uninstall plan for a FacMan-managed installation when Universal Setup mutation roots and policy are explicitly configured.",
+      "domain": "installs",
+      "id": "install.managed.uninstall.apply",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "setup_mutation"
+      ],
+      "status": "conditional"
+    },
+    {
+      "commands": [
         "installs.describe"
       ],
       "description": "Project a registered installation into independent source, deployment, ownership, data, integration, provenance, verification, and filesystem capability axes.",
@@ -692,11 +706,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "f5a9168fa3e8542aa4f8b0dd2240ebbf6b08046ed45c439292a9c873643390aa",
+    "catalog_digest": "db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b",
     "contracts": 131,
-    "refusal_codes": 254,
+    "refusal_codes": 267,
     "registered_routes": 129,
-    "schemas": 420
+    "schemas": 421
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",

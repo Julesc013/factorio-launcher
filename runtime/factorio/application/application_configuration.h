@@ -22,6 +22,11 @@ struct SetupConfiguration {
     {
         return !state_root.empty() || !acceptance_root.empty() || !policy_activation.empty();
     }
+    bool mutation_configured() const noexcept
+    {
+        return !state_root.empty() && !acceptance_root.empty() &&
+            policy_activation == "operator_acceptance_candidate";
+    }
 };
 
 // A process-lifetime snapshot. Environment and user preferences are read only

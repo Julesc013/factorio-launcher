@@ -20,6 +20,7 @@ REQUIRED_CAPABILITIES = {
     "install.reconciliation.plan",
     "install.managed.plan",
     "install.managed.apply",
+    "install.managed.uninstall.apply",
     "install.existing.inspect",
     "install.existing.adoption.plan",
     "install.existing.adoption.apply",

@@ -16,6 +16,22 @@ ApplicationResult recovery_plan(ApplicationContext& context, const RecoveryReque
 }
 ApplicationResult recovery_apply(ApplicationContext& context, const RecoveryRequest& request)
 {
+    transactions::Record record;
+    std::string detail;
+    if (transactions::read_record(context.workspace(), request.transaction_id, record, detail) &&
+        record.command_id == "installs.uninstall.apply") {
+        return refused(
+            safety_refusal(
+                "workspace.recovery.apply",
+                "operation_specific_recovery_required",
+                "Managed uninstall recovery must use its operation-specific recovery path",
+                request.transaction_id,
+                true,
+                false),
+            "operation_specific_recovery_required",
+            "Generic workspace recovery cannot classify an interrupted managed uninstall",
+            facman::core::OutcomeKind::recovery_required);
+    }
     return from_recovery_outcome(transactions::apply(context.workspace(), request.transaction_id));
 }
 ApplicationResult migration(

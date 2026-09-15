@@ -7,10 +7,12 @@
 #include "application_context.h"
 #include "command_admission.h"
 #include "fl_json.h"
+#include "fl_sha256.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_setup_recipe.h"
 #include "handlers/instances.h"
 #include "handlers/launch.h"
+#include "handlers/recovery.h"
 #include "handlers/setup.h"
 #include "setup_gateway.h"
 #include "usk_audit_repository.h"
@@ -46,6 +48,15 @@ void set_environment(const char* name, const std::string& value)
     _putenv_s(name, value.c_str());
 #else
     setenv(name, value.c_str(), 1);
+#endif
+}
+
+void clear_environment(const char* name)
+{
+#ifdef _WIN32
+    _putenv_s(name, "");
+#else
+    unsetenv(name);
 #endif
 }
 
@@ -398,37 +409,234 @@ proof::LauncherReference prove_move_and_repair(
 void prove_uninstall(
     proof::Fixture& fixture,
     proof::LauncherReference current,
-    const fs::path& moved_target)
+    const fs::path& moved_target,
+    const proof::SyntheticArchive& archive)
 {
-    proof::write_text(moved_target / "operator-note.txt", "retain foreign content");
-    const auto blocked_plan = usk::lifecycle::plan_uninstall(
-        fixture.setup_roots, current.install_id, "plan.m1.uninstall.blocked",
-        "2026-07-14T01:00:07Z");
-    const auto blocked = usk::lifecycle::apply_uninstall(
-        blocked_plan, blocked_plan.plan_digest, "tx.m1.uninstall.blocked",
-        "2026-07-14T01:00:08Z");
-    if (blocked.target_removed || blocked.retained_unknown_paths !=
-            std::vector<std::string>{"operator-note.txt"} ||
-        !fs::is_regular_file(moved_target / "operator-note.txt")) {
-        throw std::runtime_error("uninstall did not retain and report foreign content");
+    // The public gateway below supersedes the former direct
+    // usk::lifecycle::apply_uninstall foreign/refusal and later
+    // usk::lifecycle::apply_uninstall clean-completion legs.
+    // Those two provider outcomes are now asserted through FacMan so the proof
+    // also covers the coordinator's durable terminal projection.
+    // ULK_SETUP_OPERATION_UNINSTALL remains the Launcher-side terminal mapping.
+    configure_public_setup(fixture);
+    const fs::path workspace = fixture.root / "facman-uninstall-workspace";
+    auto install_id = facman::core::InstallId::parse(current.install_id);
+    if (!install_id) throw std::runtime_error("uninstall fixture id is invalid");
+    const auto create_reference = [&]() {
+        application::ApplicationContext context(workspace);
+        if (!context.workspace_repository().ensure()) throw std::runtime_error("uninstall workspace initialization failed");
+        facman::workspace::InstallRecord record;
+        record.id = install_id.value();
+        const auto created = context.installs().create(record,
+            discovery::install_ref_json(managed_facman_reference(current, moved_target)));
+        if (!created) throw std::runtime_error("uninstall fixture reference creation failed");
+    };
+    create_reference();
+    const auto plan = [&](application::ApplicationContext& context) {
+        application::ServiceOperationRequest request;
+        request.install_id = current.install_id;
+        const auto result = application::handlers::plan_uninstall_install(context, request);
+        if (result.status != ULK_STATUS_OK || !std::holds_alternative<std::string>(result.output)) {
+            throw std::runtime_error("FacMan uninstall plan failed");
+        }
+        auto document = facman::core::json::parse(std::get<std::string>(result.output));
+        if (!document) throw std::runtime_error("FacMan uninstall plan JSON is invalid");
+        return document.take_value();
+    };
+    const auto apply = [&](application::ApplicationContext& context,
+                           const facman::core::json::Value& planned,
+                           const std::string& digest,
+                           const std::string& transaction_id) {
+        application::ServiceOperationRequest request;
+        request.install_id = current.install_id;
+        request.plan_id = json_string(planned, "plan_id");
+        request.plan_digest = digest;
+        request.plan_created_at = json_string(planned, "created_at");
+        request.transaction_id = transaction_id;
+        request.applied_at = "2099-01-01T00:00:00Z";
+        request.confirmation = "APPLY";
+        return application::handlers::apply_uninstall_install(context, request);
+    };
+    {
+        application::ApplicationContext context(workspace);
+        const auto clean_plan = plan(context);
+        const std::string target_before = tree_signature(moved_target);
+        application::ServiceOperationRequest invalid_time_request;
+        invalid_time_request.install_id = current.install_id;
+        invalid_time_request.plan_id = json_string(clean_plan, "plan_id");
+        invalid_time_request.plan_digest = json_string(clean_plan, "plan_digest");
+        invalid_time_request.plan_created_at = "2026-02-30T01:00:00Z";
+        invalid_time_request.transaction_id = "tx-m1-uninstall-invalid-time";
+        invalid_time_request.applied_at = "2026-02-30T01:00:00Z";
+        invalid_time_request.confirmation = "APPLY";
+        const auto invalid_time = application::handlers::apply_uninstall_install(
+            context, invalid_time_request);
+        auto invalid_time_id = facman::core::TransactionId::parse(
+            invalid_time_request.transaction_id);
+        if (invalid_time.status == ULK_STATUS_OK || invalid_time.error_code != "invalid_timestamp" ||
+            !invalid_time_id || context.transactions().load_journal(invalid_time_id.value()) ||
+            tree_signature(moved_target) != target_before) {
+            throw std::runtime_error("FacMan invalid uninstall time reached journal or provider effects");
+        }
+        const auto stale = apply(context, clean_plan, std::string(64, '0'), "tx-m1-uninstall-stale");
+        auto stale_id = facman::core::TransactionId::parse("tx-m1-uninstall-stale");
+        const auto stale_journal = stale_id
+            ? context.transactions().load_journal(stale_id.value())
+            : facman::core::Result<std::string>::failure({"invalid", "invalid", ""});
+        if (stale.status == ULK_STATUS_OK || stale.error_code != "stale_plan" ||
+            !stale_journal || stale_journal.value().find("\"state\":\"refused\"") == std::string::npos ||
+            tree_signature(moved_target) != target_before) {
+            throw std::runtime_error(
+                "FacMan stale uninstall apply did not close its no-effect refusal: status=" +
+                std::to_string(stale.status) + " code=" + stale.error_code + " journal=" +
+                (stale_journal ? stale_journal.value() : stale_journal.error().code));
+        }
+        proof::write_text(moved_target / "operator-note.txt", "retain foreign content");
+        const auto foreign_plan = plan(context);
+        const auto foreign = apply(context, foreign_plan, json_string(foreign_plan, "plan_digest"),
+            "tx-m1-uninstall-foreign");
+        auto foreign_id = facman::core::TransactionId::parse("tx-m1-uninstall-foreign");
+        const auto foreign_journal = foreign_id
+            ? context.transactions().load_journal(foreign_id.value())
+            : facman::core::Result<std::string>::failure({"invalid", "invalid", ""});
+        if (foreign.status == ULK_STATUS_OK || foreign.error_code != "foreign_content_review_required" ||
+            !foreign_journal || foreign_journal.value().find("\"state\":\"refused\"") == std::string::npos ||
+            !fs::is_regular_file(moved_target / "operator-note.txt")) {
+            throw std::runtime_error("FacMan foreign uninstall apply did not close its no-effect refusal");
+        }
+        fs::remove(moved_target / "operator-note.txt");
+        const auto clean = plan(context);
+        const auto result = apply(context, clean, json_string(clean, "plan_digest"), "tx-m1-uninstall-clean");
+        const auto report = std::holds_alternative<std::string>(result.output)
+            ? facman::core::json::parse(std::get<std::string>(result.output))
+            : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+        auto clean_transaction_id = facman::core::TransactionId::parse("tx-m1-uninstall-clean");
+        const auto clean_journal = clean_transaction_id
+            ? context.transactions().load_journal(clean_transaction_id.value())
+            : facman::core::Result<std::string>::failure({"invalid", "invalid", ""});
+        if (result.status != ULK_STATUS_OK || !report ||
+            json_string(report.value(), "schema") != "usk.uninstall_report.v1" ||
+            json_string(report.value(), "status") != "completed" ||
+            json_string(report.value(), "transaction_id") != "tx-m1-uninstall-clean" ||
+            !clean_journal || clean_journal.value().find("\"state\":\"complete\"") == std::string::npos ||
+            fs::exists(moved_target)) {
+            throw std::runtime_error("FacMan clean owned uninstall apply did not remove its synthetic target");
+        }
     }
-    fs::remove(moved_target / "operator-note.txt");
-    const auto clean_plan = usk::lifecycle::plan_uninstall(
-        fixture.setup_roots, current.install_id, "plan.m1.uninstall.clean",
-        "2026-07-14T01:00:09Z");
-    const auto clean = usk::lifecycle::apply_uninstall(
-        clean_plan, clean_plan.plan_digest, "tx.m1.uninstall.clean",
-        "2026-07-14T01:00:10Z");
-    if (!clean.target_removed || fs::exists(moved_target)) {
-        throw std::runtime_error("clean owned uninstall did not remove managed target");
+    application::ApplicationContext restarted(workspace);
+    const auto terminal = restarted.installs().load(install_id.value());
+    const std::string expected_state_ref = (fixture.setup_roots.state_root / "installed" /
+        (current.install_id + ".tx-m1-uninstall-clean.json")).generic_string();
+    if (!terminal || terminal.value().lifecycle_status != "uninstalled" ||
+        fs::path(terminal.value().setup_state_ref).lexically_normal() !=
+            fs::path(expected_state_ref).lexically_normal() ||
+        terminal.value().state_revision.rfind("tx-m1-uninstall-clean:", 0U) != 0U ||
+        terminal.value().last_verification_identity == current.verification_identity ||
+        terminal.value().verification_status != "pass" ||
+        terminal.value().source_ref.rfind("uninstall-report:uninstall.tx-m1-uninstall-clean:", 0U) != 0U) {
+        throw std::runtime_error(
+            "FacMan clean uninstall did not durably project exact terminal provider state: " +
+            (terminal ? terminal.value().lifecycle_status + "|" + terminal.value().setup_state_ref + "|" +
+                expected_state_ref + "|" + terminal.value().state_revision + "|" +
+                terminal.value().last_verification_identity + "|" + current.verification_identity + "|" +
+                terminal.value().verification_status + "|" + terminal.value().source_ref
+                : terminal.error().code));
     }
-    const auto archived = proof::project_completed(
-        ULK_SETUP_OPERATION_UNINSTALL, clean_plan.plan_id, clean_plan.plan_digest,
-        clean_plan.installed_state_digest, current.install_id, &current, nullptr);
-    if (archived.transition != ULK_INSTALL_REFRESH_ARCHIVED ||
-        archived.reference.lifecycle != ULK_INSTALL_LIFECYCLE_UNINSTALLED ||
-        archived.dependent_status != ULK_DEPENDENT_INSTANCE_INSTALL_UNAVAILABLE) {
-        throw std::runtime_error("Launcher did not archive uninstalled reference");
+    const std::string terminal_text = read_text(terminal.value().source_path);
+    const std::string terminal_digest = facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(terminal_text.data()), terminal_text.size());
+    const std::string concurrently_changed = replace_json_string_field(
+        terminal_text, "source_ref", "concurrent-writer-owned-value");
+    write_text_exact(terminal.value().source_path, concurrently_changed);
+    const auto stale_replace = restarted.installs().replace(
+        terminal.value(), terminal_digest, terminal_text);
+    if (stale_replace || stale_replace.error().code != "workspace_record_preimage_changed" ||
+        read_text(terminal.value().source_path) != concurrently_changed) {
+        throw std::runtime_error("FacMan terminal projection overwrote a changed install reference");
+    }
+    for (const fs::directory_entry& entry : fs::directory_iterator(
+            terminal.value().source_path.parent_path())) {
+        const std::string name = entry.path().filename().string();
+        if (name.find(".next-") != std::string::npos ||
+            name.find(".replace.lock") != std::string::npos) {
+            throw std::runtime_error("FacMan install-reference replacement left an owned temporary artifact");
+        }
+    }
+    if (fs::exists(terminal.value().source_path.parent_path().parent_path() / ".repository.lock")) {
+        throw std::runtime_error("FacMan install repository mutation left its shared lock behind");
+    }
+    write_text_exact(terminal.value().source_path, terminal_text);
+
+    // A separate owned fixture proves that an exact provider refusal during
+    // terminal inspection after target removal remains recovery-required.
+    const fs::path interrupted_target = fixture.root / "targets/uninstall-interrupted";
+    const auto install_plan = usk::lifecycle::plan_install(
+        "plan.m1.uninstall.interrupted.install", "managed-factorio-uninstall-interrupted",
+        "2026-07-14T01:00:11Z", interrupted_target, fixture.setup_roots,
+        proof::factorio_recipe(std::string(64, 'a'), std::string(64, 'b')), archive.payload);
+    const auto installed = usk::lifecycle::apply_install(install_plan, install_plan.plan_digest,
+        "tx.m1.uninstall.interrupted.install", "2026-07-14T01:00:12Z");
+    auto projected = project_state(installed.installed_state, fixture);
+    const auto launcher_reference = proof::project_completed(ULK_SETUP_OPERATION_INSTALL,
+        install_plan.plan_id, install_plan.plan_digest, std::string(64, 'd'),
+        "", nullptr, &projected).reference;
+    const auto interrupted_id = facman::core::InstallId::parse(launcher_reference.install_id);
+    if (!interrupted_id) throw std::runtime_error("interrupted uninstall fixture id is invalid");
+    const fs::path interrupted_workspace = fixture.root / "facman-uninstall-interrupted-workspace";
+    {
+        application::ApplicationContext context(interrupted_workspace);
+        if (!context.workspace_repository().ensure()) throw std::runtime_error("interrupted workspace initialization failed");
+        facman::workspace::InstallRecord record;
+        record.id = interrupted_id.value();
+        if (!context.installs().create(record, discovery::install_ref_json(
+                managed_facman_reference(launcher_reference, interrupted_target)))) {
+            throw std::runtime_error("interrupted uninstall fixture reference creation failed");
+        }
+        application::ServiceOperationRequest plan_request;
+        plan_request.install_id = launcher_reference.install_id;
+        const auto planned = application::handlers::plan_uninstall_install(context, plan_request);
+        if (planned.status != ULK_STATUS_OK || !std::holds_alternative<std::string>(planned.output)) {
+            throw std::runtime_error("interrupted uninstall plan failed");
+        }
+        auto plan_document = facman::core::json::parse(std::get<std::string>(planned.output));
+        if (!plan_document) throw std::runtime_error("interrupted uninstall plan JSON is invalid");
+        application::ServiceOperationRequest request;
+        request.install_id = launcher_reference.install_id;
+        request.plan_id = json_string(plan_document.value(), "plan_id");
+        request.plan_digest = json_string(plan_document.value(), "plan_digest");
+        request.plan_created_at = json_string(plan_document.value(), "created_at");
+        request.transaction_id = "tx-m1-unint-recover";
+        request.applied_at = "2099-01-01T00:00:01Z";
+        request.confirmation = "APPLY";
+        set_environment("FACMAN_TEST_UNINSTALL_TERMINAL_UNKNOWN_INSTALL", "1");
+        const auto interrupted = application::handlers::apply_uninstall_install(context, request);
+        clear_environment("FACMAN_TEST_UNINSTALL_TERMINAL_UNKNOWN_INSTALL");
+        if (interrupted.status == ULK_STATUS_OK || interrupted.error_code != "transaction_recovery_required" ||
+            fs::exists(interrupted_target)) {
+            throw std::runtime_error("post-provider interruption did not surface recovery without target resurrection");
+        }
+    }
+    application::ApplicationContext recovered_context(interrupted_workspace);
+    const auto retained = recovered_context.installs().load(interrupted_id.value());
+    auto transaction_id = facman::core::TransactionId::parse("tx-m1-unint-recover");
+    if (!transaction_id) throw std::runtime_error("interrupted transaction id is invalid");
+    const auto recovery_journal = recovered_context.transactions().load_journal(transaction_id.value());
+    if (!retained || retained.value().lifecycle_status != "active" || !recovery_journal ||
+        recovery_journal.value().find("facman.managed_uninstall_coordinator.v1") == std::string::npos ||
+        recovery_journal.value().find("recovery_required") == std::string::npos) {
+        throw std::runtime_error("post-provider interruption did not retain exact coordinator recovery identity across restart");
+    }
+    application::RecoveryRequest generic_request;
+    generic_request.transaction_id = transaction_id.value().str();
+    const auto generic_recovery = application::handlers::recovery_apply(
+        recovered_context, generic_request);
+    const auto journal_after_generic = recovered_context.transactions().load_journal(transaction_id.value());
+    if (generic_recovery.status == ULK_STATUS_OK ||
+        generic_recovery.error_code != "operation_specific_recovery_required" ||
+        !journal_after_generic || journal_after_generic.value() != recovery_journal.value() ||
+        fs::exists(interrupted_target)) {
+        throw std::runtime_error(
+            "generic recovery changed or falsely closed an interrupted managed uninstall");
     }
 }
 
@@ -484,7 +692,7 @@ int run()
     if (verified.status != "pass") throw std::runtime_error("installed closure did not verify");
     const fs::path moved_target = fixture.root / "targets/moved-portable";
     reference = prove_move_and_repair(fixture, archive, std::move(reference), moved_target);
-    prove_uninstall(fixture, std::move(reference), moved_target);
+    prove_uninstall(fixture, std::move(reference), moved_target, archive);
     prove_recovery_inspection(fixture, archive);
     return 0;
 }

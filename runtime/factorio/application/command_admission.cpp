@@ -40,6 +40,10 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
         policy.effects.push_back("setup_mutation");
         policy.capabilities.push_back("install.managed.apply");
         break;
+    case CommandId::installs_uninstall_apply:
+        policy.effects.push_back("setup_mutation");
+        policy.capabilities.push_back("install.managed.uninstall.apply");
+        break;
     case CommandId::launch_plan_build:
     case CommandId::run_preview:
         policy.capabilities.push_back("launch.preview");
@@ -95,6 +99,11 @@ CommandAdmissionDecision admit_command(
     CommandId command)
 {
     const CommandAdmissionPolicy policy = command_admission_policy(command);
+    if (command == CommandId::installs_uninstall_apply &&
+        !configuration.setup().mutation_configured()) {
+        return {false, "setup_authority_required",
+            "managed uninstall apply requires complete accepted Universal Setup mutation configuration"};
+    }
     for (const std::string& effect : policy.effects) {
         if (effect == "process_execute" && !configuration.process_execution_authorized()) {
             if (command == CommandId::run_execute) {

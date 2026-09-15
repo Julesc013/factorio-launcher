@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
+#include <cstdlib>
 #include <initializer_list>
 #include <set>
 #include <system_error>
@@ -52,6 +54,10 @@ public:
     facman::core::Result<UninstallPlan> plan_uninstall(const UninstallPlanRequest&) override
     {
         return facman::core::Result<UninstallPlan>::failure(unavailable_error());
+    }
+    facman::core::Result<UninstallReport> apply_uninstall(const UninstallApplyRequest&) override
+    {
+        return facman::core::Result<UninstallReport>::failure(unavailable_error());
     }
     facman::core::Result<SetupRefusal> verify_install(const std::string&) override
     {
@@ -238,10 +244,18 @@ bool response_envelope(
 struct InspectedInstallState {
     std::filesystem::path target;
     std::string installed_state_digest;
+    std::string product_id;
+    std::string product_version;
     std::string ownership_manifest_digest;
+    std::string ownership_manifest_ref;
     std::string recipe_digest;
     std::string source_digest;
+    std::string audit_chain_id;
     std::string provider_revision;
+    std::string component_selection;
+    std::string entrypoints;
+    std::uint64_t setup_abi_major = 0;
+    std::uint64_t setup_abi_minor = 0;
 };
 
 facman::core::Result<std::string> installed_state_digest(
@@ -260,6 +274,31 @@ facman::core::Result<std::string> installed_state_digest(
                 "setup_installed_state_response_invalid",
                 "Universal Setup returned an invalid installed-state response",
                 "installed-state digest input"});
+        }
+    }
+    auto document = facman::core::json::parse(payload.serialize());
+    if (!document) return facman::core::Result<std::string>::failure(document.error());
+    auto canonical = facman::core::json::canonical_integer_json(document.value());
+    if (!canonical) return facman::core::Result<std::string>::failure(canonical.error());
+    const std::string& bytes = canonical.value();
+    return facman::core::Result<std::string>::success(facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(bytes.data()), bytes.size()));
+}
+
+facman::core::Result<std::string> uninstall_report_digest(
+    const facman::core::json::Value& report)
+{
+    facman::core::json::ObjectBuilder payload;
+    for (const char* key : {
+            "completed_at", "deleted_owned_files", "install_id", "ownership_manifest_digest",
+            "plan_id", "report_id", "retained_changed_owned_files", "retained_directories",
+            "retained_unknown_paths", "schema", "source_archive_deleted", "status", "transaction_id"}) {
+        const auto* value = report.find(key);
+        if (value == nullptr || !payload.add_value(key, *value)) {
+            return facman::core::Result<std::string>::failure({
+                "setup_uninstall_report_response_invalid",
+                "Universal Setup returned an invalid managed uninstall report",
+                "report digest input"});
         }
     }
     auto document = facman::core::json::parse(payload.serialize());
@@ -373,10 +412,18 @@ facman::core::Result<InspectedInstallState> decode_installed_state(
     InspectedInstallState result;
     result.target = expected_target.take_value();
     result.installed_state_digest = digest.take_value();
+    result.product_id = string_field(*state, "product_id");
+    result.product_version = string_field(*state, "product_version");
     result.ownership_manifest_digest = string_field(*state, "ownership_manifest_digest");
+    result.ownership_manifest_ref = string_field(*state, "ownership_manifest_ref");
     result.recipe_digest = string_field(*state, "recipe_digest");
     result.source_digest = string_field(*state, "source_archive_digest");
+    result.audit_chain_id = string_field(*state, "audit_chain_id");
     result.provider_revision = string_field(*abi, "provider_revision");
+    result.component_selection = components->serialize();
+    result.entrypoints = entrypoints->serialize();
+    result.setup_abi_major = major_value.value();
+    result.setup_abi_minor = minor_value.value();
     return facman::core::Result<InspectedInstallState>::success(std::move(result));
 }
 
@@ -503,21 +550,210 @@ facman::core::Result<UninstallPlan> decode_uninstall_plan(
     return facman::core::Result<UninstallPlan>::success(std::move(result));
 }
 
+bool relative_path_array(const facman::core::json::Value* value)
+{
+    if (value == nullptr || !value->is_array()) return false;
+    std::set<std::string> paths;
+    for (std::size_t index = 0; index < value->size(); ++index) {
+        const auto* item = value->at(index);
+        if (item == nullptr || !item->is_string()) return false;
+        const auto text = item->string_value();
+        if (!text || !safe_relative_path(text.value()) || !paths.insert(text.value()).second) return false;
+    }
+    return true;
+}
+
+facman::core::Result<UninstallReport> decode_uninstall_report(
+    const std::string& response,
+    const UninstallApplyRequest& request,
+    const InspectedInstallState& installed)
+{
+    const auto invalid = [](const char* detail) {
+        return facman::core::Result<UninstallReport>::failure({
+            "setup_uninstall_report_response_invalid",
+            "Universal Setup returned an invalid managed uninstall report", detail});
+    };
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 4U * 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 100000;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(response, limits);
+    const facman::core::json::Value* report = nullptr;
+    if (!document || !response_envelope(document.value(), report) ||
+        !exact_members(*report, {"completed_at", "deleted_owned_files", "install_id",
+            "ownership_manifest_digest", "plan_id", "report_digest", "report_id",
+            "retained_changed_owned_files", "retained_directories", "retained_unknown_paths",
+            "schema", "source_archive_deleted", "status", "transaction_id"}) ||
+        string_field(*report, "schema") != "usk.uninstall_report.v1" ||
+        (string_field(*report, "status") != "completed" &&
+            string_field(*report, "status") != "retained_foreign_content") ||
+        string_field(*report, "install_id") != request.plan_request.install_id ||
+        string_field(*report, "plan_id") != request.reviewed_plan_id ||
+        string_field(*report, "transaction_id") != request.transaction_id ||
+        string_field(*report, "report_id") != "uninstall." + request.transaction_id ||
+        string_field(*report, "ownership_manifest_digest") != installed.ownership_manifest_digest ||
+        string_field(*report, "completed_at") != request.applied_at ||
+        !bounded_string(*report, "report_id", 256) || !sha256_field(string_field(*report, "report_digest")) ||
+        !valid_utc_seconds(string_field(*report, "completed_at"))) return invalid("identity envelope");
+    const auto* source_archive_deleted = report->find("source_archive_deleted");
+    const auto* retained_changed = report->find("retained_changed_owned_files");
+    const auto* retained_unknown = report->find("retained_unknown_paths");
+    const auto* retained_directories = report->find("retained_directories");
+    if (source_archive_deleted == nullptr || !source_archive_deleted->is_bool() ||
+        source_archive_deleted->bool_value().value() ||
+        !relative_path_array(report->find("deleted_owned_files")) ||
+        !relative_path_array(retained_changed) || !relative_path_array(retained_unknown) ||
+        !relative_path_array(retained_directories)) return invalid("effect report");
+    const std::size_t retained_count = retained_changed->size() + retained_unknown->size() +
+        retained_directories->size();
+    if ((string_field(*report, "status") == "completed" && retained_count != 0U) ||
+        (string_field(*report, "status") == "retained_foreign_content" && retained_count == 0U)) {
+        return invalid("status effects");
+    }
+    auto digest = uninstall_report_digest(*report);
+    if (!digest || digest.value() != string_field(*report, "report_digest")) {
+        return invalid("report digest");
+    }
+    UninstallReport result;
+    result.report_id = string_field(*report, "report_id");
+    result.report_digest = string_field(*report, "report_digest");
+    result.status = string_field(*report, "status");
+    result.completed_at = string_field(*report, "completed_at");
+    result.ownership_manifest_digest = string_field(*report, "ownership_manifest_digest");
+    result.provider_response = report->serialize();
+    return facman::core::Result<UninstallReport>::success(std::move(result));
+}
+
+facman::core::Result<UninstallReport> bind_uninstall_terminal_state(
+    const std::string& response,
+    const UninstallApplyRequest& request,
+    const InspectedInstallState& before,
+    const SetupConfiguration& configuration,
+    UninstallReport report)
+{
+    const auto invalid = [](const char* detail) {
+        return facman::core::Result<UninstallReport>::failure({
+            "setup_uninstall_terminal_state_response_invalid",
+            "Universal Setup returned an invalid terminal installed-state response",
+            detail});
+    };
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 4U * 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 100000;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(response, limits);
+    const facman::core::json::Value* state = nullptr;
+    if (!document || !response_envelope(document.value(), state) ||
+        !exact_members(*state, {"audit_chain_id", "component_selection", "created_at", "entrypoints",
+            "install_id", "last_verification", "lifecycle_status", "ownership_manifest_digest",
+            "ownership_manifest_ref", "product_id", "product_version", "recipe_digest", "schema",
+            "setup_abi", "source_archive_digest", "target_root", "target_scope", "transaction_id"}) ||
+        string_field(*state, "schema") != "usk.installed_state.v1" ||
+        string_field(*state, "target_scope") != "portable" ||
+        string_field(*state, "install_id") != request.plan_request.install_id ||
+        string_field(*state, "transaction_id") != request.transaction_id ||
+        string_field(*state, "created_at") != request.applied_at ||
+        string_field(*state, "product_id") != before.product_id ||
+        string_field(*state, "product_version") != before.product_version ||
+        string_field(*state, "ownership_manifest_digest") != report.ownership_manifest_digest ||
+        string_field(*state, "ownership_manifest_ref") != before.ownership_manifest_ref ||
+        string_field(*state, "recipe_digest") != before.recipe_digest ||
+        string_field(*state, "source_archive_digest") != before.source_digest ||
+        string_field(*state, "audit_chain_id") != before.audit_chain_id ||
+        !sha256_field(string_field(*state, "recipe_digest")) ||
+        !sha256_field(string_field(*state, "source_archive_digest"))) return invalid("state envelope");
+
+    const std::string expected_lifecycle = report.status == "completed" ? "retired" : "uninstall_blocked";
+    const std::string expected_verification = report.status == "completed" ? "pass" : "warn";
+    if (string_field(*state, "lifecycle_status") != expected_lifecycle) return invalid("lifecycle status");
+    auto expected_target = absolute_normalized(request.plan_request.target, "target");
+    auto setup_root = absolute_normalized(
+        facman::platform::path_from_utf8(configuration.state_root), "setup state root");
+    if (!expected_target || !setup_root ||
+        !normalized_absolute_path(string_field(*state, "target_root"), expected_target.value())) {
+        return invalid("target binding");
+    }
+
+    const auto* verification = state->find("last_verification");
+    const auto* abi = state->find("setup_abi");
+    const auto* components = state->find("component_selection");
+    const auto* entrypoints = state->find("entrypoints");
+    if (verification == nullptr || abi == nullptr || components == nullptr || entrypoints == nullptr ||
+        !exact_members(*verification, {"report_digest", "report_id", "status", "verified_at"}) ||
+        !exact_members(*abi, {"major", "minor", "provider_revision"}) ||
+        !components->is_array() || components->size() == 0 ||
+        !entrypoints->is_array() || entrypoints->size() == 0 ||
+        !sha256_field(string_field(*verification, "report_digest")) ||
+        string_field(*verification, "report_id") != "verify." + request.transaction_id + ".uninstall" ||
+        string_field(*verification, "status") != expected_verification ||
+        string_field(*verification, "verified_at") != request.applied_at ||
+        string_field(*abi, "provider_revision") != before.provider_revision) return invalid("terminal evidence");
+    const auto* major = abi->find("major");
+    const auto* minor = abi->find("minor");
+    if (major == nullptr || minor == nullptr || !major->unsigned_integer_value() ||
+        !minor->unsigned_integer_value() || major->unsigned_integer_value().value() == 0) {
+        return invalid("setup ABI");
+    }
+    if (major->unsigned_integer_value().value() != before.setup_abi_major ||
+        minor->unsigned_integer_value().value() != before.setup_abi_minor ||
+        components->serialize() != before.component_selection ||
+        entrypoints->serialize() != before.entrypoints) return invalid("immutable installed-state binding");
+    for (std::size_t index = 0; index < components->size(); ++index) {
+        const auto* component = components->at(index);
+        if (component == nullptr || !component->is_string() ||
+            component->string_value().value().empty() || component->string_value().value().size() > 256) {
+            return invalid("component");
+        }
+    }
+    for (std::size_t index = 0; index < entrypoints->size(); ++index) {
+        const auto* entrypoint = entrypoints->at(index);
+        if (entrypoint == nullptr ||
+            !exact_members(*entrypoint, {"entrypoint_id", "kind", "relative_path"}) ||
+            !bounded_string(*entrypoint, "entrypoint_id", 256) ||
+            !safe_relative_path(string_field(*entrypoint, "relative_path")) ||
+            (string_field(*entrypoint, "kind") != "application" &&
+                string_field(*entrypoint, "kind") != "tool" &&
+                string_field(*entrypoint, "kind") != "server")) return invalid("entrypoint");
+    }
+
+    const std::filesystem::path state_ref = setup_root.value() / "state" / "installed" /
+        (request.plan_request.install_id + "." + request.transaction_id + ".json");
+    report.setup_state_ref = facman::platform::path_to_utf8(state_ref);
+    report.last_verification_identity = string_field(*verification, "report_digest");
+    report.state_revision = request.transaction_id + ":" + report.ownership_manifest_digest;
+    report.lifecycle_status = report.status == "completed" ? "uninstalled" : "verification_failed";
+    report.verification_status = expected_verification;
+    return facman::core::Result<UninstallReport>::success(std::move(report));
+}
+
 facman::core::Error provider_error(
     const facman::core::Error& fallback,
     const char* default_code,
     const char* default_message)
 {
-    auto document = facman::core::json::parse(fallback.detail);
-    const auto* error = document && document.value().is_object()
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 4U * 1024U * 1024U;
+    limits.maximum_depth = 8;
+    limits.maximum_nodes = 128;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(fallback.detail, limits);
+    const auto* error = document &&
+            exact_members(document.value(), {"error", "payload", "schema", "status"}) &&
+            string_field(document.value(), "schema") == "usk.command_response.v1" &&
+            (string_field(document.value(), "status") == "refused" ||
+             string_field(document.value(), "status") == "invalid_argument")
         ? document.value().find("error")
         : nullptr;
-    const std::string code = error != nullptr && error->is_object()
-        ? string_field(*error, "code")
-        : std::string();
-    const std::string message = error != nullptr && error->is_object()
-        ? string_field(*error, "message")
-        : std::string();
+    const auto* payload = document && document.value().is_object()
+        ? document.value().find("payload")
+        : nullptr;
+    const bool exact_refusal = error != nullptr && payload != nullptr && payload->is_null() &&
+        exact_members(*error, {"code", "message"}) &&
+        bounded_string(*error, "code", 128) && bounded_string(*error, "message", 32768);
+    const std::string code = exact_refusal ? string_field(*error, "code") : std::string();
+    const std::string message = exact_refusal ? string_field(*error, "message") : std::string();
     facman::core::Error result {
         code.empty() ? default_code : code,
         message.empty() ? default_message : message,
@@ -875,6 +1111,80 @@ public:
         return decode_uninstall_plan(response.value(), request, inspected.value(), configuration_);
     }
 
+    facman::core::Result<UninstallReport> apply_uninstall(
+        const UninstallApplyRequest& request) override
+    {
+        const UninstallPlanRequest& plan = request.plan_request;
+        if (plan.request_id != plan.plan_id || plan.request_id != request.reviewed_plan_id ||
+            plan.install_id.empty() || !sha256_field(request.reviewed_plan_digest) ||
+            request.transaction_id.empty() || request.confirmation != "APPLY" ||
+            !valid_utc_seconds(plan.created_at) || !valid_utc_seconds(request.applied_at) ||
+            request.applied_at <= plan.created_at) {
+            return facman::core::Result<UninstallReport>::failure({
+                "setup_uninstall_apply_input_invalid",
+                "Managed uninstall apply requires the exact reviewed plan request and stable replay identities", ""});
+        }
+        // Re-read and bind the current installed state before entering the provider.
+        facman::core::json::ObjectBuilder inspect_payload;
+        inspect_payload.add_string("schema", "usk.installed_inspect_request.v1");
+        inspect_payload.add_string("request_id", plan.request_id + ".apply.inspect");
+        inspect_payload.add_string("install_id", plan.install_id);
+        auto inspected_response = execute_setup("installed.inspect", inspect_payload.serialize(), configuration_);
+        if (!inspected_response) return facman::core::Result<UninstallReport>::failure(provider_error(
+            inspected_response.error(), "setup_installed_state_inspection_refused",
+            "Universal Setup refused managed installed-state inspection before uninstall"));
+        auto installed = decode_installed_state(inspected_response.value(), plan, configuration_);
+        if (!installed) return facman::core::Result<UninstallReport>::failure(installed.error());
+
+        facman::core::json::ObjectBuilder plan_payload;
+        plan_payload.add_string("schema", "usk.uninstall_plan_request.v1");
+        plan_payload.add_string("request_id", plan.request_id);
+        plan_payload.add_string("plan_id", plan.plan_id);
+        plan_payload.add_string("install_id", plan.install_id);
+        plan_payload.add_string("created_at", plan.created_at);
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.uninstall_apply_request.v1");
+        payload.add_object("plan_request", plan_payload);
+        payload.add_string("reviewed_plan_id", request.reviewed_plan_id);
+        payload.add_string("reviewed_plan_digest", request.reviewed_plan_digest);
+        payload.add_string("transaction_id", request.transaction_id);
+        payload.add_string("applied_at", request.applied_at);
+        payload.add_string("confirmation", request.confirmation);
+        auto response = execute_setup("uninstall.apply", payload.serialize(), configuration_, false);
+        if (!response) return facman::core::Result<UninstallReport>::failure(provider_error(
+            response.error(), "setup_uninstall_apply_refused",
+            "Universal Setup refused the managed uninstall apply"));
+        auto report = decode_uninstall_report(response.value(), request, installed.value());
+        if (!report) return report;
+        facman::core::json::ObjectBuilder terminal_inspect_payload;
+        terminal_inspect_payload.add_string("schema", "usk.installed_inspect_request.v1");
+        terminal_inspect_payload.add_string("request_id", plan.request_id + ".apply.terminal.inspect");
+        const char* inject_terminal_unknown =
+            std::getenv("FACMAN_TEST_UNINSTALL_TERMINAL_UNKNOWN_INSTALL");
+        terminal_inspect_payload.add_string(
+            "install_id",
+            inject_terminal_unknown != nullptr && std::string(inject_terminal_unknown) == "1"
+                ? plan.install_id + "-missing"
+                : plan.install_id);
+        auto terminal_response = execute_setup(
+            "installed.inspect", terminal_inspect_payload.serialize(), configuration_);
+        if (!terminal_response) {
+            const auto provider = provider_error(
+                terminal_response.error(), "setup_uninstall_terminal_state_inspection_refused",
+                "Universal Setup terminal installed-state inspection failed after uninstall");
+            facman::core::Error terminal_error {
+                "setup_uninstall_terminal_state_inspection_refused",
+                "Universal Setup terminal installed-state inspection failed after uninstall: " +
+                    provider.code + ": " + provider.message,
+                "",
+                facman::core::OutcomeKind::recovery_required};
+            terminal_error.detail = terminal_response.error().detail;
+            return facman::core::Result<UninstallReport>::failure(std::move(terminal_error));
+        }
+        return bind_uninstall_terminal_state(
+            terminal_response.value(), request, installed.value(), configuration_, report.take_value());
+    }
+
     facman::core::Result<SetupRefusal> verify_install(const std::string&) override
     {
         return unsupported(
@@ -905,6 +1215,35 @@ private:
 #endif
 
 } // namespace
+
+bool valid_utc_seconds(const std::string& value) noexcept
+{
+    if (value.size() != 20U || value[4] != '-' || value[7] != '-' ||
+        value[10] != 'T' || value[13] != ':' || value[16] != ':' || value[19] != 'Z') return false;
+    const std::array<std::size_t, 14> digits {{0, 1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18}};
+    if (!std::all_of(digits.begin(), digits.end(), [&](std::size_t index) {
+            return value[index] >= '0' && value[index] <= '9';
+        })) return false;
+    const auto number = [&](std::size_t offset, std::size_t count) {
+        unsigned result = 0;
+        for (std::size_t index = 0; index < count; ++index) {
+            result = result * 10U + static_cast<unsigned>(value[offset + index] - '0');
+        }
+        return result;
+    };
+    const unsigned year = number(0, 4);
+    const unsigned month = number(5, 2);
+    const unsigned day = number(8, 2);
+    const unsigned hour = number(11, 2);
+    const unsigned minute = number(14, 2);
+    const unsigned second = number(17, 2);
+    if (year == 0 || month == 0 || month > 12 || hour > 23 || minute > 59 || second > 59) return false;
+    static constexpr std::array<unsigned, 12> days {{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}};
+    unsigned maximum_day = days[month - 1U];
+    const bool leap = year % 4U == 0U && (year % 100U != 0U || year % 400U == 0U);
+    if (month == 2U && leap) maximum_day = 29U;
+    return day != 0U && day <= maximum_day;
+}
 
 std::unique_ptr<SetupGateway> make_setup_gateway(const SetupConfiguration& configuration)
 {
