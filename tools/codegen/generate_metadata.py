@@ -273,8 +273,10 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
         "string",
         "path",
         "identifier",
+        "transaction_identifier",
         "enum",
         "sha256",
+        "utc_timestamp",
         "bounded_unsigned",
         "bounded_ticks",
         "unsigned64",
@@ -344,6 +346,8 @@ def request_schema_path(runtime_id: str) -> str:
 
 
 def frontend_field_kind(kind: str) -> str:
+    if kind == "transaction_identifier":
+        return "identifier"
     return kind if kind in {"path", "identifier", "enum", "sha256", "string_array"} else "string"
 
 
@@ -357,12 +361,20 @@ def request_schema(runtime_id: str) -> str:
             properties[name] = {"type": "string"}
             if kind == "identifier":
                 properties[name]["pattern"] = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+            elif kind == "transaction_identifier":
+                properties[name].update({
+                    "minLength": 4,
+                    "maxLength": 64,
+                    "pattern": r"^tx-[a-z0-9]+(?:-[a-z0-9]+)*$",
+                })
             elif kind == "sha256":
                 properties[name].update({
                     "minLength": 64,
                     "maxLength": 64,
                     "pattern": r"^[0-9a-f]{64}$",
                 })
+            elif kind == "utc_timestamp":
+                properties[name]["pattern"] = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
             elif kind == "bounded_unsigned":
                 properties[name]["pattern"] = r"^(?:[0-9]{1,6}|1000000)$"
             elif kind == "bounded_ticks":
@@ -438,13 +450,20 @@ def cli_grammar(item: dict[str, Any]) -> dict[str, Any]:
     index = 0
     while index < len(tokens):
         token = tokens[index]
+        repair_archive_option = runtime_id == "installs.repair.plan" and token == "[--archive"
+        if repair_archive_option:
+            token = "--archive"
         if token.startswith("<") and token.endswith(">"):
             positionals.append({"name": token[1:-1], "required": True})
         elif token.startswith("--"):
             value = None
-            if index + 1 < len(tokens) and tokens[index + 1].startswith("<"):
-                value = tokens[index + 1][1:-1]
-                index += 1
+            if index + 1 < len(tokens) and (
+                tokens[index + 1].startswith("<") or repair_archive_option
+            ):
+                next_token = tokens[index + 1].removesuffix("]")
+                if next_token.startswith("<") and next_token.endswith(">"):
+                    value = next_token[1:-1]
+                    index += 1
             options.append({"name": token, "value": value, "repeatable": False})
         elif not positionals and not options:
             path.append(token)
@@ -468,6 +487,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
     effects = [str(value) for value in item.get("effects", [])]
     writes = "workspace_write" in effects
     executes = "process_execute" in effects
+    mutates_setup = "setup_mutation" in effects
     deprecated = runtime_id in {"setup.operation", "utility.operation"} | LEGACY_SETUP_COMMANDS
     grammar = cli_grammar(item)
     return {
@@ -478,7 +498,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
         "deprecation": "deprecated_compatibility" if deprecated else "active",
         "availability_refusal_code": refusal_code(item) if runtime_availability(item) != "available" else "",
         "required_capabilities": effects,
-        "risk_tier": "process_execution" if executes else "persistent_local_write" if writes else "read_only",
+        "risk_tier": "process_execution" if executes else "setup_mutation" if mutates_setup else "persistent_local_write" if writes else "read_only",
         "renderer": application_identifier(runtime_id),
         "frontend_category": runtime_id.split(".", 1)[0],
         "localization_keys": [f"command.{runtime_id}.title", f"command.{runtime_id}.description"],
@@ -1175,8 +1195,10 @@ def render(
         "string": "string_value",
         "path": "string_value",
         "identifier": "identifier",
+        "transaction_identifier": "transaction_identifier",
         "enum": "enumeration",
         "sha256": "sha256",
+        "utc_timestamp": "string_value",
         "bounded_unsigned": "bounded_unsigned",
         "bounded_ticks": "bounded_ticks",
         "unsigned64": "unsigned64",

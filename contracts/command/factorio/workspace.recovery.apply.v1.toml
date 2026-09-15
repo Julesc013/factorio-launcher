@@ -9,5 +9,6 @@ diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
 dry_run_default = false
 executes_process = false
 mutates_workspace = true
+refusal_codes = ["operation_specific_recovery_required"]
 golden_success = "tests/golden/commands/workspace.recovery.apply.success.json"
 golden_refusal = "tests/golden/commands/workspace.recovery.apply.refusal.json"

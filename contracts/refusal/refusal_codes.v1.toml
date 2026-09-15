@@ -744,6 +744,55 @@ message = "The requested install id is not registered in the workspace."
 suggested_next_command = "facman installs scan --json"
 
 [[code]]
+id = "repair_lifecycle_ineligible"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Repair planning requires an active, verification_failed, or recovery_required managed install."
+
+[[code]]
+id = "uninstall_lifecycle_ineligible"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Uninstall planning requires an active, verification_failed, or recovery_required managed install."
+
+[[code]]
+id = "managed_install_provider_mismatch"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Managed uninstall planning requires a Universal Setup managed record."
+
+[[code]]
+id = "managed_install_evidence_incomplete"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Managed uninstall planning requires target, setup, verification, and revision evidence."
+
+[[code]]
+id = "invalid_timestamp"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = true
+message = "The operation timestamps are invalid or do not advance the reviewed plan."
+
+[[code]]
+id = "stale_plan"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = true
+message = "The reviewed setup plan no longer matches the current managed installation."
+
+[[code]]
+id = "foreign_content_review_required"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = true
+message = "Changed or unknown target content must be reviewed before setup mutation."
+
+[[code]]
 id = "unknown_instance"
 severity = "blocked"
 effect = "workspace_read"
@@ -917,6 +966,76 @@ severity = "blocked"
 effect = "setup_mutation"
 retryable = false
 message = "The requested setup mutation requires Universal Setup authority."
+
+[[code]]
+id = "setup_uninstall_apply_refused"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Universal Setup refused uninstall apply without a strictly valid refusal envelope."
+
+[[code]]
+id = "setup_uninstall_report_response_invalid"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Universal Setup returned an invalid uninstall report after mutation was attempted."
+
+[[code]]
+id = "setup_uninstall_terminal_state_inspection_refused"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = true
+message = "Universal Setup could not provide terminal installed-state evidence after uninstall."
+
+[[code]]
+id = "setup_uninstall_terminal_state_response_invalid"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Universal Setup terminal installed-state evidence failed exact identity validation."
+
+[[code]]
+id = "operation_specific_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "This transaction requires its operation-specific recovery path."
+
+[[code]]
+id = "workspace_record_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A managed workspace record could not be read stably."
+
+[[code]]
+id = "setup_uninstall_apply_input_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed uninstall apply input does not bind a valid reviewed plan replay."
+
+[[code]]
+id = "setup_installed_state_inspection_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup refused the required installed-state inspection."
+
+[[code]]
+id = "setup_installed_state_response_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup returned installed-state evidence that failed exact validation."
+
+[[code]]
+id = "invalid_argument"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "A provider rejected an invalid bounded command argument."
 
 [[code]]
 id = "save_locked"

@@ -300,6 +300,20 @@
     },
     {
       "commands": [
+        "installs.uninstall.apply"
+      ],
+      "description": "Apply an exact reviewed uninstall plan for a FacMan-managed installation when Universal Setup mutation roots and policy are explicitly configured.",
+      "domain": "installs",
+      "id": "install.managed.uninstall.apply",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "setup_mutation"
+      ],
+      "status": "conditional"
+    },
+    {
+      "commands": [
         "installs.describe"
       ],
       "description": "Project a registered installation into independent source, deployment, ownership, data, integration, provenance, verification, and filesystem capability axes.",
@@ -692,11 +706,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "535183d19263892d224965cc1ca1ab6b73e8d2da969926f8af07b78d1c702f9d",
+    "catalog_digest": "db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b",
     "contracts": 131,
-    "refusal_codes": 250,
+    "refusal_codes": 267,
     "registered_routes": 129,
-    "schemas": 419
+    "schemas": 421
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
@@ -779,6 +793,7 @@
       "source_record": "release/index/plan.v1.toml",
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+        "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
         "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
       ]
     },
@@ -2697,15 +2712,16 @@
   "queue": {
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+      "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
       "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 1,
+      "active": 2,
       "active_automated": 1,
       "blocked": 2,
       "closed": 29,
-      "planned": 36,
+      "planned": 35,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
@@ -2715,6 +2731,12 @@
         "lifecycle_state": "active_automated",
         "queue": "active",
         "status": "active_automated"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
@@ -2946,12 +2968,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

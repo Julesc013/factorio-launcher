@@ -3,11 +3,26 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "applied_at": {
+      "minLength": 1,
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "type": "string"
+    },
     "confirmation": {
       "enum": [
         "APPLY"
       ],
       "minLength": 1,
+      "type": "string"
+    },
+    "install_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "plan_created_at": {
+      "minLength": 1,
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
       "type": "string"
     },
     "plan_digest": {
@@ -20,11 +35,21 @@
       "minLength": 1,
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
+    },
+    "transaction_id": {
+      "maxLength": 64,
+      "minLength": 4,
+      "pattern": "^tx-[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "type": "string"
     }
   },
   "required": [
+    "install_id",
     "plan_id",
     "plan_digest",
+    "plan_created_at",
+    "transaction_id",
+    "applied_at",
     "confirmation"
   ],
   "title": "installs.uninstall.apply request",

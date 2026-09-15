@@ -916,12 +916,12 @@
       }
     },
     {
-      "availability": "unavailable_until_gateway",
+      "availability": "implemented",
       "command_id": "installs.repair.plan",
       "contract_path": "contracts/command/factorio/installs.repair.plan.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "effects": [
-        "setup_preview"
+        "workspace_read"
       ],
       "frontends": {
         "cli_human": "not_required_for_preview",
@@ -930,7 +930,7 @@
         "winforms": "not_inferred_from_command_registration"
       },
       "golden_refusal": "tests/golden/commands/installs.repair.plan.refusal.json",
-      "golden_success": "",
+      "golden_success": "tests/golden/commands/installs.repair.plan.success.json",
       "native_id": "installs_repair_plan",
       "observed_classification": "outside_preview",
       "product_capability_ids": [
@@ -938,11 +938,11 @@
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "request_schema": "contracts/schema/command/installs.repair.plan.request.v1.schema.json",
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_install_reconciliation_plan.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_capability_ids": [
-        "setup_preview"
+        "workspace_read"
       ],
       "runtime_id": "installs.repair.plan",
       "transports": {
@@ -1026,13 +1026,14 @@
       }
     },
     {
-      "availability": "unavailable_until_gateway",
+      "availability": "implemented",
       "command_id": "installs.uninstall.apply",
       "contract_path": "contracts/command/factorio/installs.uninstall.apply.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "effects": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
       "frontends": {
         "cli_human": "not_required_for_preview",
@@ -1041,7 +1042,7 @@
         "winforms": "not_inferred_from_command_registration"
       },
       "golden_refusal": "tests/golden/commands/installs.uninstall.apply.refusal.json",
-      "golden_success": "",
+      "golden_success": "tests/golden/commands/installs.uninstall.apply.success.json",
       "native_id": "installs_uninstall_apply",
       "observed_classification": "outside_preview",
       "product_capability_ids": [
@@ -1049,12 +1050,13 @@
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "request_schema": "contracts/schema/command/installs.uninstall.apply.request.v1.schema.json",
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/usk_uninstall_report.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
-      "risk_tier": "persistent_local_write",
+      "risk_tier": "setup_mutation",
       "runtime_capability_ids": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
       "runtime_id": "installs.uninstall.apply",
       "transports": {
@@ -1064,7 +1066,7 @@
       }
     },
     {
-      "availability": "unavailable_until_gateway",
+      "availability": "implemented",
       "command_id": "installs.uninstall.plan",
       "contract_path": "contracts/command/factorio/installs.uninstall.plan.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
@@ -1078,7 +1080,7 @@
         "winforms": "not_inferred_from_command_registration"
       },
       "golden_refusal": "tests/golden/commands/installs.uninstall.plan.refusal.json",
-      "golden_success": "",
+      "golden_success": "tests/golden/commands/installs.uninstall.plan.success.json",
       "native_id": "installs_uninstall_plan",
       "observed_classification": "outside_preview",
       "product_capability_ids": [
@@ -1086,7 +1088,7 @@
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "request_schema": "contracts/schema/command/installs.uninstall.plan.request.v1.schema.json",
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/usk_operation_plan.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_capability_ids": [

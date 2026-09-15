@@ -81,7 +81,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.current_active_workunits]
-value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"]
+value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01", "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"]
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-06"
 freshness = "current_plan_projection"
@@ -305,6 +305,7 @@ available = [
 ]
 conditional = [
   "install.managed.plan",
+  "install.managed.uninstall.apply",
   "process.execute",
 ]
 unavailable = [
@@ -336,10 +337,12 @@ observed_player_journeys = 0
 primary_workunit = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
 active_workunits = [
   "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+  "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
 ]
 active_automated = [
   "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+  "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
 ]
 awaiting_operator = [
@@ -354,7 +357,6 @@ planned = [
   "FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01",
   "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
   "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
-  "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
   "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
   "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",

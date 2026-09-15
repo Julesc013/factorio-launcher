@@ -23,11 +23,18 @@ struct DesiredInstallationState {
     std::string update_policy = "preserve";
 };
 
+enum class ReconciliationPlanIntent {
+    reconcile,
+    repair,
+};
+
 std::string installation_model_json(const discovery::InstallRef& install);
 
 facman::core::Result<std::string> reconciliation_plan_json(
     const discovery::InstallRef& install,
-    const DesiredInstallationState& desired);
+    const DesiredInstallationState& desired,
+    const char* command = "installs.reconcile.plan",
+    ReconciliationPlanIntent intent = ReconciliationPlanIntent::reconcile);
 
 } // namespace facman::factorio::installation
 

@@ -93,6 +93,10 @@ public:
     Result<InstallRecord> load(const InstallId& id) const;
     Result<std::vector<InstallRecord>> list() const;
     Result<std::filesystem::path> create(const InstallRecord& record, const std::string& json) const;
+    Result<std::filesystem::path> replace(
+        const InstallRecord& record,
+        const std::string& expected_sha256,
+        const std::string& json) const;
 
 private:
     WorkspaceLayout layout_;

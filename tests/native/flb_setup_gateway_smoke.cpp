@@ -261,6 +261,15 @@ int main()
         return 3;
     }
 
+    application::UninstallPlanRequest uninstall_request;
+    uninstall_request.request_id = "uninstall.factorio.2-0-77";
+    uninstall_request.plan_id = "uninstall-plan.factorio.2-0-77";
+    uninstall_request.install_id = plan_request.install_id;
+    uninstall_request.created_at = plan_request.created_at;
+    uninstall_request.target = plan_request.target;
+    auto uninstall = configured_gateway->plan_uninstall(uninstall_request);
+    if (uninstall || fs::exists(setup_state) || fs::exists(plan_request.target)) return 10;
+
     const fs::path incomplete = make_archive(fixture.root, "incomplete", false, false);
     request.archive = incomplete;
     auto refused = gateway->inspect_install_archive(request);

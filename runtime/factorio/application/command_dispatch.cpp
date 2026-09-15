@@ -130,6 +130,7 @@ bool optional_string_array(const json::Value& object, const char* key, std::vect
 enum class RequestFieldKind {
     string_value,
     identifier,
+    transaction_identifier,
     enumeration,
     sha256,
     bounded_unsigned,
@@ -182,6 +183,12 @@ bool validate_request_string(
                 return ascii_alphanumeric(ch) || ch == '.' || ch == '_' || ch == '-';
             }))) {
         detail = std::string("invalid_identifier: request payload field must be a valid identifier: ") + key;
+        return false;
+    }
+    if (kind == RequestFieldKind::transaction_identifier &&
+        (value.rfind("tx-", 0U) != 0U || !facman::core::TransactionId::parse(value))) {
+        detail = std::string(
+            "invalid_identifier: request payload field must be a portable tx-prefixed transaction identifier: ") + key;
         return false;
     }
     if (kind == RequestFieldKind::sha256 && (
@@ -365,9 +372,9 @@ bool decode_service_request(
     case CommandId::installs_install_apply:
     case CommandId::installs_repair_apply:
     case CommandId::installs_move_apply:
-    case CommandId::installs_uninstall_apply:
     case CommandId::installs_recovery_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
-    case CommandId::installs_repair_plan: allowed = {"install_id", "archive"}; break;
+    case CommandId::installs_uninstall_apply: allowed = {
+        "install_id", "plan_id", "plan_digest", "plan_created_at", "transaction_id", "applied_at", "confirmation"}; break;
     case CommandId::installs_move_plan: allowed = {"install_id", "target_root"}; break;
     case CommandId::installs_uninstall_plan: allowed = {"install_id"}; break;
     case CommandId::installs_recovery_inspect: allowed = {"transaction_id"}; break;
@@ -403,7 +410,9 @@ bool decode_service_request(
         !optional_string(payload, "plan_id", typed.plan_id, detail) ||
         !optional_string(payload, "plan_digest", typed.plan_digest, detail) ||
         !optional_string(payload, "confirmation", typed.confirmation, detail) ||
-        !optional_string(payload, "transaction_id", typed.transaction_id, detail)) return false;
+        !optional_string(payload, "transaction_id", typed.transaction_id, detail) ||
+        !optional_string(payload, "applied_at", typed.applied_at, detail) ||
+        !optional_string(payload, "plan_created_at", typed.plan_created_at, detail)) return false;
     if (command == CommandId::installs_install_version && typed.version.empty()) {
         detail = "request payload is missing non-empty string field: version"; return false;
     }
@@ -430,6 +439,12 @@ bool decode_service_request(
          command == CommandId::installs_recovery_apply) &&
         (typed.plan_id.empty() || typed.plan_digest.empty() || typed.confirmation != "APPLY")) {
         detail = "setup apply requires a plan_id, plan_digest, and exact APPLY confirmation"; return false;
+    }
+    if (command == CommandId::installs_uninstall_apply &&
+        (typed.install_id.empty() || typed.plan_created_at.empty() || typed.transaction_id.empty() ||
+            typed.applied_at.empty())) {
+        detail = "installs.uninstall.apply requires install_id, reviewed plan identities, transaction_id, and applied_at";
+        return false;
     }
     if (command == CommandId::servers_create && (typed.name.empty() || typed.instance_id.empty())) {
         detail = "servers.create requires non-empty name and instance_id fields"; return false;
@@ -609,7 +624,6 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     case CommandId::installs_install_apply:
     case CommandId::installs_install_version:
     case CommandId::installs_verify:
-    case CommandId::installs_repair_plan:
     case CommandId::installs_repair_apply:
     case CommandId::installs_repair:
     case CommandId::installs_move_plan:
@@ -674,7 +688,15 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "install_id", typed.install_id, detail)) return false;
         request.payload = std::move(typed); return true;
     }
-    case CommandId::installs_reconcile_plan: {
+    case CommandId::installs_reconcile_plan:
+    case CommandId::installs_repair_plan: {
+        if (command == CommandId::installs_repair_plan) {
+            if (!validate_fields(payload, {"install_id", "archive"}, detail)) return false;
+            ReconcileInstallRequest typed;
+            if (!required_string(payload, "install_id", typed.install_id, detail) ||
+                !optional_string(payload, "archive", typed.source_ref, detail)) return false;
+            request.payload = std::move(typed); return true;
+        }
         if (!validate_fields(payload, {
                 "install_id", "version", "source_ref", "target_root", "management_mode",
                 "deployment_style", "data_policy", "integration_mode", "update_policy"}, detail)) return false;

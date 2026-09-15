@@ -1,13 +1,25 @@
 command_id = "installs.uninstall.apply"
-cli = "facman installs uninstall apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
-effects = ["workspace_write", "setup_preview"]
+cli = "facman installs uninstall apply <install-id> <plan-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json"
+effects = ["workspace_read", "workspace_write", "setup_mutation"]
 request_schema = "contracts/schema/command/installs.uninstall.apply.request.v1.schema.json"
-response_schema = "contracts/schema/common/result.v1.schema.json"
+response_schema = "contracts/schema/factorio/usk_uninstall_report.v1.schema.json"
 result_schema = "contracts/result/result.v1.schema.json"
 refusal_schema = "contracts/refusal/refusal.v1.schema.json"
 diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
 dry_run_default = false
 executes_process = false
 mutates_workspace = true
-availability = "unavailable_until_gateway"
+availability = "implemented"
+refusal_codes = [
+  "setup_authority_required", "invalid_timestamp", "invalid_identifier",
+  "invalid_legacy_identifier", "unknown_install", "managed_install_evidence_incomplete",
+  "workspace_record_read_failed", "recovery_write_refused",
+  "setup_uninstall_apply_input_invalid", "setup_installed_state_inspection_refused",
+  "setup_installed_state_response_invalid", "invalid_argument", "stale_plan",
+  "foreign_content_review_required", "setup_uninstall_apply_refused",
+  "setup_uninstall_report_response_invalid", "setup_uninstall_terminal_state_inspection_refused",
+  "setup_uninstall_terminal_state_response_invalid", "transaction_recovery_required",
+]
+golden_success = "tests/golden/commands/installs.uninstall.apply.success.json"
+golden_success_shape = "response"
 golden_refusal = "tests/golden/commands/installs.uninstall.apply.refusal.json"

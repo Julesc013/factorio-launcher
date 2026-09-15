@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01
 title: Finish bounded managed install update repair and removal
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -14,10 +14,25 @@ source_bundles:
 allowed_paths:
   - "runtime/**"
   - "contracts/**"
+  - "content/factorio/strings/en-US.toml"
   - "apps/**"
   - "tests/**"
   - "docs/**"
+  - "tools/alpha_vertical_slice_check.py"
+  - "tools/command_contract_check.py"
+  - "tools/setup_workflow_check.py"
+  - "tools/codegen/generate_metadata.py"
+  - "tools/capability_policy_check.py"
+  - "release/generated/technical_preview_command_api_conformance.v1.json"
+  - "release/index/current_state.v1.toml"
+  - "release/index/plan.v1.toml"
+  - "README.md"
+  - "todo.md"
+  - ".aide/memory/project-state.md"
+  - ".aide/memory/project-state.v2.json"
+  - ".aide/queue/index.yaml"
   - ".aide/queue/next/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
@@ -34,3 +49,4 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+active_at: 2026-09-15T00:01:00Z

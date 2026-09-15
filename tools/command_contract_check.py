@@ -9,6 +9,8 @@ import sys
 import tomllib
 from pathlib import Path
 
+import jsonschema
+
 ROOT = Path(__file__).resolve().parents[1]
 COMMAND_ROOT = ROOT / "contracts" / "command" / "factorio"
 EFFECTS_POLICY = ROOT / "contracts" / "policy" / "effects.v1.toml"
@@ -243,6 +245,15 @@ def validate_contract(path: Path, contract: dict, allowed_effects: set[str]) -> 
         problems.append(f"{path.relative_to(ROOT)}: unsupported availability {availability!r}")
     if availability == "implemented" and "golden_success" not in contract:
         problems.append(f"{path.relative_to(ROOT)}: implemented command missing golden_success")
+    golden_success_shape = contract.get("golden_success_shape", "command")
+    if golden_success_shape not in {"command", "response"}:
+        problems.append(
+            f"{path.relative_to(ROOT)}: golden_success_shape must be command or response"
+        )
+    if golden_success_shape == "response" and "golden_success" not in contract:
+        problems.append(
+            f"{path.relative_to(ROOT)}: response-shaped golden requires golden_success"
+        )
 
     golden_keys = ["golden_refusal"]
     if "golden_success" in contract:
@@ -252,7 +263,13 @@ def validate_contract(path: Path, contract: dict, allowed_effects: set[str]) -> 
         if not referenced.is_file():
             problems.append(f"{path.relative_to(ROOT)}: {key} does not exist: {contract[key]}")
             continue
-        problems.extend(validate_golden(command_id, key, referenced))
+        problems.extend(validate_golden(
+            command_id,
+            key,
+            referenced,
+            ROOT / contract["response_schema"],
+            contract.get("golden_success_shape") == "response",
+        ))
 
     for key in ["dry_run_default", "executes_process", "mutates_workspace"]:
         if not isinstance(contract[key], bool):
@@ -273,7 +290,13 @@ def validate_contract(path: Path, contract: dict, allowed_effects: set[str]) -> 
     return problems
 
 
-def validate_golden(command_id: str, key: str, path: Path) -> list[str]:
+def validate_golden(
+    command_id: str,
+    key: str,
+    path: Path,
+    response_schema: Path,
+    success_is_response: bool,
+) -> list[str]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -283,13 +306,23 @@ def validate_golden(command_id: str, key: str, path: Path) -> list[str]:
         return [f"{path.relative_to(ROOT)}: golden output must be an object"]
     if "schema" not in data:
         problems.append(f"{path.relative_to(ROOT)}: missing schema")
-    if data.get("command") != command_id:
+    if not (key == "golden_success" and success_is_response) and data.get("command") != command_id:
         problems.append(f"{path.relative_to(ROOT)}: command must be {command_id}")
     if key == "golden_refusal":
         if data.get("status") != "refused":
             problems.append(f"{path.relative_to(ROOT)}: refusal golden must have status refused")
         if "refusal" not in data:
             problems.append(f"{path.relative_to(ROOT)}: refusal golden missing refusal object")
+    if key == "golden_success" and success_is_response:
+        try:
+            schema = json.loads(response_schema.read_text(encoding="utf-8"))
+            jsonschema.Draft202012Validator.check_schema(schema)
+            errors = list(jsonschema.Draft202012Validator(schema).iter_errors(data))
+        except (OSError, json.JSONDecodeError, jsonschema.SchemaError) as exc:
+            problems.append(f"{path.relative_to(ROOT)}: cannot validate response schema: {exc}")
+        else:
+            for error in errors:
+                problems.append(f"{path.relative_to(ROOT)}: response schema: {error.message}")
     return problems
 
 

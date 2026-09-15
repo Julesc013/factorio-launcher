@@ -79,6 +79,7 @@ struct Record {
     std::vector<std::filesystem::path> staging_roots;
     std::vector<ExpectedFile> expected_files;
     std::string commit_strategy;
+    std::string operation_context;
     std::string error;
     std::vector<std::string> recovery_actions;
 };
@@ -102,6 +103,7 @@ public:
     bool committing(const std::string& step = "commit_started");
     bool committed(const std::string& step = "target_committed");
     bool commit_uncertain(const std::string& step = "commit_result_uncertain");
+    bool refused(const std::string& error);
     bool complete();
     void failed(const std::string& error);
     Record& record() noexcept { return record_; }
@@ -162,6 +164,11 @@ bool fail(
     const std::string& error,
     std::string& detail);
 bool complete(const std::filesystem::path& workspace, Record& record, std::string& detail);
+bool read_record(
+    const std::filesystem::path& workspace,
+    const std::string& transaction_id,
+    Record& record,
+    std::string& detail);
 bool apply_retention(
     const std::filesystem::path& workspace,
     const RetentionPolicy& policy,
