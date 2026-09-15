@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b`.
+Source digest: `c8fbe146a1aa9eab2b7a4a2e432bba4785fc1dd9749b80473ffe748523aaef07`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -27,8 +27,8 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.move.plan` | `installs.move.plan` | `installs_move_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs move plan <install-id> --target <path> --json` |
 | `installs.reconcile.plan` | `installs.reconcile.plan` | `installs_reconcile_plan` | no | - | implemented | workspace_read | `facman installs reconcile plan <install-id> [--version <v>] [--source-ref <ref>] [--target <path>] [--management <mode>] [--deployment-style <style>] [--data-policy <policy>] [--integration <mode>] [--update-policy <policy>] --json` |
-| `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
-| `installs.recovery.inspect` | `installs.recovery.inspect` | `installs_recovery_inspect` | no | - | unavailable_until_gateway | setup_preview | `facman installs recovery inspect <transaction-id> --json` |
+| `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | implemented | workspace_read, workspace_write, setup_preview | `facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.recovery.inspect` | `installs.recovery.inspect` | `installs_recovery_inspect` | no | - | implemented | workspace_read, setup_preview | `facman installs recovery inspect <transaction-id> --json` |
 | `installs.repair` | `installs.repair` | `installs_repair` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs repair <install-id> --json` |
 | `installs.repair.apply` | `installs.repair.apply` | `installs_repair_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.repair.plan` | `installs.repair.plan` | `installs_repair_plan` | no | - | implemented | workspace_read | `facman installs repair plan <install-id> [--archive <path>] --json` |

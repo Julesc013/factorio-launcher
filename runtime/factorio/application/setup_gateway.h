@@ -85,8 +85,85 @@ struct UninstallReport {
     std::string state_revision;
     std::string lifecycle_status;
     std::string verification_status;
+    std::string installed_state_digest;
+    std::string audit_chain_id;
     std::string provider_response;
 };
+
+struct UninstallRecoveryRequest {
+    UninstallPlanRequest plan_request;
+    std::string reviewed_plan_digest;
+    std::string transaction_id;
+    std::string applied_at;
+};
+
+struct UninstallRecoveryInspection {
+    std::string classification;
+    std::string provider_observed_state;
+    std::string provider_journal_digest;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_installed_state_digest;
+    std::string ownership_manifest_digest;
+    std::string setup_state_ref;
+    std::string last_verification_identity;
+    std::string state_revision;
+    std::string lifecycle_status;
+    std::string verification_status;
+    bool provider_journal_present = false;
+    bool target_exists = false;
+};
+
+struct UninstallProviderRecoveryReport {
+    std::string observed_state;
+    std::string journal_digest;
+    std::string snapshot_sha256;
+    std::string audit_chain_id;
+    std::string audit_chain_digest;
+};
+
+facman::core::Result<UninstallProviderRecoveryReport>
+decode_uninstall_provider_recovery_report(
+    const std::string& response,
+    const UninstallRecoveryRequest& request);
+facman::core::Error wrap_uninstall_recovery_inspection_refusal(
+    const facman::core::Error& provider_error,
+    const std::string& message);
+
+struct ManagedUninstallCoordinator {
+    std::string schema;
+    std::string request_id;
+    std::string plan_id;
+    std::string install_id;
+    std::string plan_created_at;
+    std::string reviewed_plan_digest;
+    std::string transaction_id;
+    std::string applied_at;
+    std::string target_root;
+    std::string pre_record_sha256;
+    std::string pre_setup_state_ref;
+    std::string pre_last_verification_identity;
+    std::string pre_state_revision;
+    std::string pre_lifecycle_status;
+    std::string phase;
+    std::string recovery_plan_id;
+    std::string recovery_plan_digest;
+    std::string classification;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_installed_state_sha256;
+    std::string projected_record_sha256;
+};
+
+bool decode_managed_uninstall_coordinator(
+    const std::string& text,
+    ManagedUninstallCoordinator& output,
+    std::string& detail);
+bool validate_managed_uninstall_recovery_lock(
+    const std::string& text,
+    const std::string& transaction_id,
+    const std::string& identity,
+    std::string& detail);
+facman::core::Result<std::string> canonicalize_managed_uninstall_recovery_plan(
+    const std::string& text);
 
 bool valid_utc_seconds(const std::string& value) noexcept;
 
@@ -111,6 +188,8 @@ public:
         const UninstallPlanRequest& request) = 0;
     virtual facman::core::Result<UninstallReport> apply_uninstall(
         const UninstallApplyRequest& request) = 0;
+    virtual facman::core::Result<UninstallRecoveryInspection> inspect_uninstall_recovery(
+        const UninstallRecoveryRequest& request) = 0;
     virtual facman::core::Result<SetupRefusal> verify_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> repair_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> uninstall_install(const std::string& install_id) = 0;

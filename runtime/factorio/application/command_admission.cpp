@@ -44,6 +44,11 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
         policy.effects.push_back("setup_mutation");
         policy.capabilities.push_back("install.managed.uninstall.apply");
         break;
+    case CommandId::installs_recovery_inspect:
+    case CommandId::installs_recovery_apply:
+        policy.effects.push_back("setup_preview");
+        policy.capabilities.push_back("install.managed.uninstall.recover");
+        break;
     case CommandId::launch_plan_build:
     case CommandId::run_preview:
         policy.capabilities.push_back("launch.preview");
@@ -103,6 +108,12 @@ CommandAdmissionDecision admit_command(
         !configuration.setup().mutation_configured()) {
         return {false, "setup_authority_required",
             "managed uninstall apply requires complete accepted Universal Setup mutation configuration"};
+    }
+    if ((command == CommandId::installs_recovery_inspect ||
+         command == CommandId::installs_recovery_apply) &&
+        !configuration.setup().mutation_configured()) {
+        return {false, "setup_uninstall_recovery_authority_required",
+            "managed uninstall recovery requires complete accepted Universal Setup configuration"};
     }
     for (const std::string& effect : policy.effects) {
         if (effect == "process_execute" && !configuration.process_execution_authorized()) {

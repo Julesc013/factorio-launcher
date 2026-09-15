@@ -39,6 +39,13 @@ std::optional<SetupApplyCommand> setup_apply_request(
     const std::string digest = option(args, "--digest");
     const std::string confirmation = option(args, "--confirm");
     if (!positional(args, 3) || digest.empty() || confirmation != "APPLY") return std::nullopt;
+    if (action == "recovery") {
+        if (!positional(args, 4)) return std::nullopt;
+        return SetupApplyCommand {"installs.recovery.apply", payload({
+            {"transaction_id", args[3]}, {"plan_id", args[4]},
+            {"plan_digest", digest}, {"confirmation", confirmation}}),
+            "Managed uninstall recovery apply dispatched."};
+    }
     if (action != "uninstall") {
         return SetupApplyCommand {"installs." + action + ".apply", payload({
             {"plan_id", args[3]}, {"plan_digest", digest}, {"confirmation", confirmation}}),

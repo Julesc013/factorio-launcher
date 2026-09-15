@@ -371,8 +371,9 @@ bool decode_service_request(
     case CommandId::installs_install_plan: allowed = {"version", "archive", "target_root", "install_id"}; break;
     case CommandId::installs_install_apply:
     case CommandId::installs_repair_apply:
-    case CommandId::installs_move_apply:
-    case CommandId::installs_recovery_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
+    case CommandId::installs_move_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
+    case CommandId::installs_recovery_apply: allowed = {
+        "transaction_id", "plan_id", "plan_digest", "confirmation"}; break;
     case CommandId::installs_uninstall_apply: allowed = {
         "install_id", "plan_id", "plan_digest", "plan_created_at", "transaction_id", "applied_at", "confirmation"}; break;
     case CommandId::installs_move_plan: allowed = {"install_id", "target_root"}; break;
@@ -433,6 +434,9 @@ bool decode_service_request(
     }
     if (command == CommandId::installs_recovery_inspect && typed.transaction_id.empty()) {
         detail = "installs.recovery.inspect requires a non-empty transaction_id"; return false;
+    }
+    if (command == CommandId::installs_recovery_apply && typed.transaction_id.empty()) {
+        detail = "installs.recovery.apply requires a non-empty transaction_id"; return false;
     }
     if ((command == CommandId::installs_install_apply || command == CommandId::installs_repair_apply ||
          command == CommandId::installs_move_apply || command == CommandId::installs_uninstall_apply ||

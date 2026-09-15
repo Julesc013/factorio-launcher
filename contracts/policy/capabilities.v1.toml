@@ -61,6 +61,14 @@ commands = ["installs.uninstall.apply"]
 description = "Apply an exact reviewed uninstall plan for a FacMan-managed installation when Universal Setup mutation roots and policy are explicitly configured."
 
 [[capability]]
+id = "install.managed.uninstall.recover"
+domain = "installs"
+status = "conditional"
+required_effects = ["workspace_read", "workspace_write", "setup_preview"]
+commands = ["installs.recovery.inspect", "installs.recovery.apply"]
+description = "Inspect and safely project an interrupted managed uninstall from exact durable FacMan and Universal Setup evidence."
+
+[[capability]]
 id = "install.existing.inspect"
 domain = "installs"
 status = "backlog"

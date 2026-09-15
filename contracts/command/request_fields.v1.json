@@ -188,6 +188,11 @@
     ],
     "installs.recovery.apply": [
       {
+        "kind": "transaction_identifier",
+        "name": "transaction_id",
+        "required": true
+      },
+      {
         "kind": "identifier",
         "name": "plan_id",
         "required": true
