@@ -77,3 +77,54 @@ publication, game execution or human-verdict artifact is introduced.
   non-absolute roots, unsafe relative effect paths, and missing or duplicate
   journal/state/audit effects. `tests/test_command_contracts.py` fixes those
   reviewed malformed responses as schema-negative regressions.
+
+## Provider-backed managed uninstall apply classification
+
+Base source: `dev@81fe4d671fb0e132f8995a2b27c58d3a65206d65`.
+
+- `apps/cli/setup_commands.{h,cpp}`, its build registration and the main command
+  dispatcher parse the shared setup applies while mapping uninstall's complete
+  public replay identity without increasing the existing dispatcher's frozen
+  source or complexity budgets.
+- `contracts/command/**`, request fields, the strict uninstall-report response
+  schema, refusal registry, goldens and generated catalogs publish the exact
+  implemented apply request, response and refusal surface.
+- `runtime/factorio/application/{setup_gateway,handlers/setup,command_dispatch,
+  command_admission}*` performs managed-record admission, exact provider request
+  reconstruction, report and terminal-state validation, coordinator lifecycle
+  handling and final FacMan projection.
+- `runtime/transaction/**` retains operation context and supports a truthful
+  terminal refused state for known no-effect provider refusals.
+- `runtime/workspace/**` adds expected-preimage replacement with an owned local
+  lock and residue cleanup for the install-reference projection.
+- `tests/native/m1_three_repository_system_proof.cpp` and
+  `tests/test_command_contracts.py` cover positive, refusal, restart,
+  interruption, compare-and-swap and malformed-response cases. Existing gateway
+  smoke coverage is rebuilt against the changed implementation.
+- Generated CLI, TUI, WinForms and AppKit catalogs, localized strings, reference
+  docs, project memory and Technical Preview census are regenerated from the
+  canonical contract. The WorkUnit evidence records this bounded slice.
+
+No package publication, real Factorio target mutation, human verdict, physical
+Linux/macOS qualification or release status is added by this source change.
+
+## Managed uninstall apply postimage correction classification
+
+- `runtime/factorio/application/handlers/recovery.cpp` and
+  `runtime/transaction/fl_transaction.{h,cpp}` expose and inspect the retained
+  journal so generic recovery refuses operation-specific uninstall recovery
+  without changing its state.
+- `runtime/workspace/fl_workspace_store.{h,cpp}` and native workspace tests give
+  supported install-reference writers one stable repository lock, retain the
+  expected-preimage replacement check, and cover contention and residue.
+- `runtime/factorio/application/setup_gateway.{h,cpp}` strictly decodes provider
+  refusal envelopes, retains the complete immutable installed-state binding,
+  prevents post-effect terminal-inspection failures from entering no-effect
+  refusal handling, and exposes configured mutation authority to admission.
+- Application request/admission code, generated request contracts, transaction
+  schema, command request schemas and native/Python tests align transaction
+  identifiers and the narrow conditional uninstall-apply capability.
+- Refusal and capability contracts, `tools/capability_policy_check.py`, generated
+  command surfaces, project state and WorkUnit records carry the resulting
+  contract identities and evidence. The task allowlist names the one changed
+  policy checker exactly.

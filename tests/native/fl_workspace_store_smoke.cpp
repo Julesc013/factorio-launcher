@@ -4,6 +4,7 @@
 #include "fl_workspace_store.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_local_operation_lock.h"
 #include "fl_sha256.h"
 #include "fl_transaction.h"
 
@@ -131,6 +132,20 @@ int prove_store(const fs::path& root)
     auto loaded = installs.load(InstallId::parse("fixture").value());
     if (!written || !loaded || loaded.value().root != install_root || loaded.value().legacy_path ||
         loaded.value().verification_status != "structural") return 12;
+
+    facman::base::StableLocalLock repository_lock;
+    const fs::path repository_lock_path = root / "installs" / ".repository.lock";
+    if (!repository_lock.create(repository_lock_path).acquired()) return 99;
+    InstallRecord blocked;
+    blocked.id = InstallId::parse("blocked-fixture").take_value();
+    const auto blocked_create = installs.create(blocked, install_json("blocked-fixture", install_root));
+    const std::string install_digest = facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(install_text.data()), install_text.size());
+    const auto blocked_replace = installs.replace(loaded.value(), install_digest, install_text);
+    if (blocked_create || blocked_create.error().code != "workspace_install_repository_contended" ||
+        blocked_replace || blocked_replace.error().code != "workspace_install_repository_contended") return 100;
+    std::string repository_unlock_detail;
+    if (!repository_lock.remove_exact(repository_unlock_detail)) return 101;
 
     InstallRecord managed;
     managed.id = InstallId::parse("managed-fixture").take_value();

@@ -52,6 +52,7 @@ def validate() -> list[str]:
                 "installs.install.plan",
                 "installs.repair.plan",
                 "installs.uninstall.plan",
+                "installs.uninstall.apply",
             }
             else "unavailable_until_gateway"
         )
@@ -62,7 +63,7 @@ def validate() -> list[str]:
         if command.get("executes_process"):
             problems.append(f"{command_id}: setup workflows must never execute Factorio")
         effects = set(command.get("effects", []))
-        if effects - {"workspace_read", "setup_preview", "workspace_write"}:
+        if effects - {"workspace_read", "setup_preview", "workspace_write", "setup_mutation"}:
             problems.append(f"{command_id}: setup workflow declares an out-of-scope effect")
 
     for command_id in sorted(PLAN_COMMANDS & commands.keys()):
@@ -71,8 +72,9 @@ def validate() -> list[str]:
 
     for command_id in sorted(APPLY_COMMANDS & commands.keys()):
         command = commands[command_id]
-        if command.get("risk_tier") != "persistent_local_write":
-            problems.append(f"{command_id}: apply must be classified as a persistent local write")
+        expected_risk = "setup_mutation" if command_id == "installs.uninstall.apply" else "persistent_local_write"
+        if command.get("risk_tier") != expected_risk:
+            problems.append(f"{command_id}: apply must be classified as {expected_risk}")
         fields = {field["name"]: field for field in command.get("request_fields", [])}
         if fields.get("plan_id", {}).get("type") != "identifier":
             problems.append(f"{command_id}: apply must consume an identified reviewed plan")
@@ -91,6 +93,9 @@ def validate() -> list[str]:
     }
     if install_fields != {"version", "archive", "target_root", "install_id"}:
         problems.append("installs.install.plan must bind version, archive, target, and install identity")
+    uninstall_apply = commands.get("installs.uninstall.apply", {})
+    if set(uninstall_apply.get("effects", [])) != {"workspace_read", "workspace_write", "setup_mutation"}:
+        problems.append("installs.uninstall.apply must disclose workspace and setup mutation effects")
 
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
     handler = (ROOT / "runtime/factorio/application/handlers/setup.cpp").read_text(encoding="utf-8")
@@ -118,7 +123,7 @@ def main() -> int:
         return 1
     print(
         "setup-workflow-check: ok "
-        f"({len(PLAN_COMMANDS)} plans, {len(APPLY_COMMANDS)} guarded applies, {len(READ_COMMANDS)} reads)"
+        f"({len(PLAN_COMMANDS)} plans, {len(APPLY_COMMANDS)} applies, {len(READ_COMMANDS)} reads)"
     )
     return 0
 

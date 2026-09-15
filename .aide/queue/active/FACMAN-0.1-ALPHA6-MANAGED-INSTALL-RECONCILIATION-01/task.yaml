@@ -22,6 +22,7 @@ allowed_paths:
   - "tools/command_contract_check.py"
   - "tools/setup_workflow_check.py"
   - "tools/codegen/generate_metadata.py"
+  - "tools/capability_policy_check.py"
   - "release/generated/technical_preview_command_api_conformance.v1.json"
   - "release/index/current_state.v1.toml"
   - "release/index/plan.v1.toml"

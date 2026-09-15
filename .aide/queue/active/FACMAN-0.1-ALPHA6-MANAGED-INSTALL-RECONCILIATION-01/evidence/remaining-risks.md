@@ -41,3 +41,38 @@ does not establish Alpha.6, Beta.1 or stable release eligibility.
   target, state, ownership, policy and provider revision must be revalidated
   under a reviewed transition/lease, with crash recovery and foreign-state
   preservation evidence.
+
+## Provider-backed managed uninstall apply — remaining risks
+
+- The implemented source is qualified against a private owned Windows Debug
+  fixture. Hosted Windows plus physical Linux/macOS checks and packaged product
+  behavior must still qualify the committed postimage.
+- A failure after provider entry retains exact coordinator context and reports
+  recovery required, but the generic recovery-apply route does not yet project
+  a target-absent completed uninstall into the FacMan install reference. That
+  automated recovery step remains required before the lifecycle is complete.
+- Real managed Factorio install/uninstall evidence, transition concurrency beyond
+  the install-reference compare-and-swap proof, and human review of retained
+  foreign content remain open acceptance work.
+- Update, repair apply, managed adoption/reconciliation and the other recorded
+  installation lifecycle leaves remain open. Packaging, signing, game execution,
+  human experience and release publication are outside this slice.
+
+The WorkUnit remains active. This source slice alone does not establish Alpha.6,
+Beta.1 or stable release eligibility.
+
+## Managed uninstall apply postimage boundaries
+
+- Generic recovery now detects and safely refuses the operation-specific
+  uninstall journal without mutating it. Automated operation-specific recovery
+  still must reconcile the target-absent/provider-complete case into the FacMan
+  install reference before the lifecycle is complete.
+- `installs/.repository.lock` serializes every supported `create` and `replace`
+  writer in this repository. External direct file mutation is outside that
+  writer protocol; the expected-preimage check detects a change observed before
+  replacement, and lock release failures remain explicit errors requiring
+  recovery rather than silent success.
+- The current proof is a private Windows Debug fixture. Physical platform,
+  packaged-product, genuine Factorio, hostile interruption, human experience,
+  signing and publication gates remain open under their existing acceptance
+  records.

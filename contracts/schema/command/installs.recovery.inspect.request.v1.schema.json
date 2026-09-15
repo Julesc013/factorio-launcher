@@ -4,8 +4,9 @@
   "additionalProperties": false,
   "properties": {
     "transaction_id": {
-      "minLength": 1,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "maxLength": 64,
+      "minLength": 4,
+      "pattern": "^tx-[a-z0-9]+(?:-[a-z0-9]+)*$",
       "type": "string"
     }
   },

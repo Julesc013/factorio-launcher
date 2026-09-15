@@ -77,10 +77,10 @@ bool can_transition(State from, State to) noexcept
     case State::requested: return to == State::validated || to == State::refused || to == State::cancelled;
     case State::validated: return to == State::planned || to == State::refused || to == State::cancelled;
     case State::planned: return to == State::staging || to == State::staged || to == State::refused || to == State::cancelled;
-    case State::staging: return to == State::staged;
-    case State::staged: return to == State::verified;
-    case State::verified: return to == State::committing;
-    case State::committing: return to == State::committed || to == State::commit_uncertain;
+    case State::staging: return to == State::staged || to == State::refused;
+    case State::staged: return to == State::verified || to == State::refused;
+    case State::verified: return to == State::committing || to == State::refused;
+    case State::committing: return to == State::committed || to == State::commit_uncertain || to == State::refused;
     case State::committed: return to == State::audited;
     case State::audited: return to == State::complete;
     case State::rollback_required: return to == State::rolled_back;
@@ -217,6 +217,7 @@ std::string record_json(const Record& record)
         document.add_array("expected_file_hashes", json::ArrayBuilder {});
     }
     document.add_string("commit_strategy", record.commit_strategy);
+    document.add_string("operation_context", record.operation_context);
     document.add_string("error", record.error);
     document.add_array("recovery_actions", string_array_builder(record.recovery_actions));
     return document.serialize() + "\n";
@@ -298,6 +299,7 @@ bool load_record(const fs::path& workspace, const std::string& id, Record& recor
         !object_string(document.value(), "updated_utc", record.updated_utc, true, detail) ||
         !object_string(document.value(), "state", state, true, detail) ||
         !object_string(document.value(), "commit_strategy", record.commit_strategy, false, detail) ||
+        !object_string(document.value(), "operation_context", record.operation_context, false, detail) ||
         !object_string(document.value(), "error", record.error, false, detail) ||
         !object_string(document.value(), "marker_nonce", record.marker_nonce, schema == "facman.transaction.v2", detail)) {
         if (detail.empty()) detail = "journal schema is unsupported";
@@ -468,6 +470,15 @@ std::string recovery_json(const std::string& command, const std::vector<Record>&
 
 const char* transaction_staging_marker_name() noexcept { return transaction_marker_name(); }
 
+bool read_record(
+    const fs::path& workspace,
+    const std::string& transaction_id,
+    Record& record,
+    std::string& detail)
+{
+    return load_record(workspace, transaction_id, record, detail);
+}
+
 bool begin(const fs::path& workspace, Record& record, std::string& detail)
 {
     auto workspace_record = facman::workspace::WorkspaceRepository(
@@ -592,6 +603,14 @@ bool TransactionSession::verified(const std::string& step) { return transition(S
 bool TransactionSession::committing(const std::string& step) { return transition(State::committing, step); }
 bool TransactionSession::committed(const std::string& step) { return transition(State::committed, step); }
 bool TransactionSession::commit_uncertain(const std::string& step) { return transition(State::commit_uncertain, step); }
+
+bool TransactionSession::refused(const std::string& error)
+{
+    if (!active_) { detail_ = "transaction session is no longer active"; return false; }
+    if (!facman::transaction::fail(workspace_, record_, "refused", error, detail_)) return false;
+    active_ = false;
+    return true;
+}
 
 bool TransactionSession::complete()
 {

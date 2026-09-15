@@ -4,6 +4,7 @@
 #include "command_dispatch.h"
 #include "cli_text.h"
 #include "resource_commands.h"
+#include "setup_commands.h"
 #include "workspace_commands.h"
 
 #include "facman_client.h"
@@ -696,15 +697,10 @@ int command_installs(const Options& options)
                     : "Managed " + action + " plan reviewed through Universal Setup.");
         }
         if (phase == "apply") {
-            const std::string digest = option(options.args, "--digest");
-            const std::string confirmation = option(options.args, "--confirm");
-            if (digest.empty() || confirmation != "APPLY") return 2;
-            return emit_basic(
-                call(options, "installs." + action + ".apply", exact_fields_payload({
-                    {"plan_id", options.args[3]}, {"plan_digest", digest},
-                    {"confirmation", confirmation}}), false),
-                flag(options.args, "--json"),
-                "Managed " + action + " apply dispatched.");
+            auto apply = facman::cli::setup_apply_request(action, options.args);
+            if (!apply) return 2;
+            return emit_basic(call(options, apply->command, apply->payload, false),
+                flag(options.args, "--json"), apply->success_message);
         }
         return 2;
     }

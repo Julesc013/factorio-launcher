@@ -8,7 +8,19 @@
 
 #include <string>
 #include <algorithm>
+#include <cstdlib>
 #include <variant>
+
+namespace {
+void set_environment(const char* name, const char* value)
+{
+#ifdef _WIN32
+    _putenv_s(name, value);
+#else
+    setenv(name, value, 1);
+#endif
+}
+}
 
 int main()
 {
@@ -51,5 +63,21 @@ int main()
         DeniedAdmissionDisposition::transform_to_product_refusal) return 12;
     if (denied_admission_disposition(CommandId::saves_list, network) !=
         DeniedAdmissionDisposition::reject) return 13;
+    set_environment("FACMAN_SETUP_STATE_ROOT", "");
+    set_environment("FACMAN_SETUP_ACCEPTANCE_ROOT", "");
+    set_environment("FACMAN_SETUP_POLICY_ACTIVATION", "");
+    const ApplicationConfiguration setup_missing = ApplicationConfiguration::load({});
+    const CommandAdmissionDecision uninstall_denied =
+        admit_command(setup_missing, CommandId::installs_uninstall_apply);
+    if (uninstall_denied.admitted || uninstall_denied.code != "setup_authority_required") return 14;
+    set_environment("FACMAN_SETUP_STATE_ROOT", "state");
+    set_environment("FACMAN_SETUP_ACCEPTANCE_ROOT", "acceptance");
+    set_environment("FACMAN_SETUP_POLICY_ACTIVATION", "operator_acceptance_candidate");
+    const ApplicationConfiguration setup_present = ApplicationConfiguration::load({});
+    if (!admit_command(setup_present, CommandId::installs_uninstall_apply).admitted) return 15;
+    const CommandAdmissionPolicy uninstall_policy =
+        command_admission_policy(CommandId::installs_uninstall_apply);
+    if (std::find(uninstall_policy.capabilities.begin(), uninstall_policy.capabilities.end(),
+            "install.managed.uninstall.apply") == uninstall_policy.capabilities.end()) return 16;
     return 0;
 }

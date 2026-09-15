@@ -11,7 +11,9 @@
 
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
+#include "fl_sha256.h"
 #include "fl_system_services.h"
 #include "fl_workspace_root_authority.h"
 
@@ -241,7 +243,135 @@ Result<fs::path> InstallRepository::create(const InstallRecord& record, const st
 {
     auto target = layout_.install_ref(record.id);
     if (!target) return failure<fs::path>(target.error().code, target.error().message);
-    return write_new_durable(target.value(), json_text);
+    std::error_code directory_error;
+    fs::create_directories(target.value().parent_path(), directory_error);
+    if (directory_error) {
+        return failure<fs::path>(
+            "workspace_directory_create_failed", directory_error.message(), target.value().parent_path());
+    }
+    const fs::path lock_path = layout_.root() / "installs" / ".repository.lock";
+    facman::base::StableLocalLock repository_lock;
+    const auto lock_result = repository_lock.create(lock_path);
+    if (!lock_result.acquired()) {
+        return failure<fs::path>(
+            lock_result.code == facman::base::StableLockCode::exists
+                ? "workspace_install_repository_contended"
+                : "workspace_install_repository_lock_refused",
+            lock_result.detail, lock_path);
+    }
+    json::ObjectBuilder lock_document;
+    lock_document.add_string("schema", "facman.install_repository_lock.v1");
+    lock_document.add_string("operation", "create");
+    lock_document.add_string("install_id", record.id.str());
+    lock_document.add_string("identity", repository_lock.identity_text());
+    std::string detail;
+    if (!repository_lock.write_text(lock_document.serialize() + "\n", detail)) {
+        std::string ignored;
+        (void)repository_lock.remove_exact(ignored);
+        return failure<fs::path>("workspace_install_repository_lock_refused", detail, lock_path);
+    }
+    auto written = write_new_durable(target.value(), json_text);
+    if (!repository_lock.remove_exact(detail)) {
+        return failure<fs::path>(
+            "workspace_install_repository_lock_release_failed", detail, lock_path);
+    }
+    return written;
+}
+
+Result<fs::path> InstallRepository::replace(
+    const InstallRecord& record,
+    const std::string& expected_sha256,
+    const std::string& json_text) const
+{
+    if (record.source_path.empty()) {
+        return failure<fs::path>("workspace_record_path_missing", "install record has no durable source path");
+    }
+    if (expected_sha256.size() != 64U ||
+        !std::all_of(expected_sha256.begin(), expected_sha256.end(), [](unsigned char character) {
+            return (character >= '0' && character <= '9') || (character >= 'a' && character <= 'f');
+        })) {
+        return failure<fs::path>(
+            "workspace_record_preimage_invalid", "install record preimage digest is invalid", record.source_path);
+    }
+    const fs::path lock_path = layout_.root() / "installs" / ".repository.lock";
+    facman::base::StableLocalLock repository_lock;
+    const auto lock_result = repository_lock.create(lock_path);
+    if (!lock_result.acquired()) {
+        return failure<fs::path>(
+            lock_result.code == facman::base::StableLockCode::exists
+                ? "workspace_install_repository_contended"
+                : "workspace_install_repository_lock_refused",
+            lock_result.detail, lock_path);
+    }
+    json::ObjectBuilder lock_document;
+    lock_document.add_string("schema", "facman.install_repository_lock.v1");
+    lock_document.add_string("operation", "replace");
+    lock_document.add_string("install_id", record.id.str());
+    lock_document.add_string("expected_sha256", expected_sha256);
+    lock_document.add_string("identity", repository_lock.identity_text());
+    std::string detail;
+    if (!repository_lock.write_text(lock_document.serialize() + "\n", detail)) {
+        std::string ignored;
+        (void)repository_lock.remove_exact(ignored);
+        return failure<fs::path>("workspace_install_repository_lock_refused", detail, lock_path);
+    }
+    facman::platform::RandomIdGenerator random;
+    const fs::path temporary = record.source_path.parent_path() /
+        (record.source_path.filename().string() + ".next-" + random.next("install-ref"));
+    const auto remove_temporary = [&]() {
+        facman::platform::StableInputFile created;
+        if (created.open_no_follow(temporary).ok()) {
+            (void)facman::platform::remove_exact_object(temporary, created.identity());
+        }
+    };
+    const auto fail_locked = [&](std::string code, std::string message, const fs::path& path) {
+        remove_temporary();
+        std::string unlock_detail;
+        if (!repository_lock.remove_exact(unlock_detail)) {
+            return failure<fs::path>(
+                "workspace_install_repository_lock_release_failed", unlock_detail, lock_path);
+        }
+        return failure<fs::path>(std::move(code), std::move(message), path);
+    };
+    auto current = read_bounded(record.source_path);
+    if (!current) return fail_locked(current.error().code, current.error().message, record.source_path);
+    const auto digest = [](const std::string& text) {
+        return facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(text.data()), text.size());
+    };
+    if (digest(current.value()) != expected_sha256) {
+        return fail_locked(
+            "workspace_record_preimage_changed",
+            "install record changed after the managed operation was planned",
+            record.source_path);
+    }
+    facman::platform::DurableOutputFile output;
+    auto status = output.create_exclusive(temporary, 1024ULL * 1024ULL);
+    if (!status.ok()) return fail_locked(status.code, status.detail, temporary);
+    if (output.write_at(0U, json_text.data(), json_text.size()) != json_text.size()) {
+        output.close_without_flush();
+        return fail_locked("workspace_record_write_failed", "short install record write", temporary);
+    }
+    status = output.flush_file_and_parent();
+    if (!status.ok()) {
+        output.close_without_flush();
+        return fail_locked(status.code, status.detail, temporary);
+    }
+    current = read_bounded(record.source_path);
+    if (!current) return fail_locked(current.error().code, current.error().message, record.source_path);
+    if (digest(current.value()) != expected_sha256) {
+        return fail_locked(
+            "workspace_record_preimage_changed",
+            "install record changed immediately before terminal projection",
+            record.source_path);
+    }
+    status = facman::platform::replace_existing_durable(temporary, record.source_path);
+    if (!status.ok()) return fail_locked(status.code, status.detail, record.source_path);
+    if (!repository_lock.remove_exact(detail)) {
+        return failure<fs::path>(
+            "workspace_install_repository_lock_release_failed", detail, lock_path);
+    }
+    return Result<fs::path>::success(record.source_path);
 }
 
 InstanceRepository::InstanceRepository(WorkspaceLayout layout) : layout_(std::move(layout)) {}

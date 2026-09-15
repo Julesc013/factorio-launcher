@@ -1,0 +1,16 @@
+{
+  "schema": "usk.uninstall_report.v1",
+  "report_id": "uninstall.tx-managed-factorio-2-0-77",
+  "report_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "transaction_id": "tx-managed-factorio-2-0-77",
+  "plan_id": "uninstall-plan.factorio-2-0-77",
+  "install_id": "managed-factorio-2-0-77",
+  "ownership_manifest_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+  "deleted_owned_files": ["bin/x64/factorio.exe"],
+  "retained_changed_owned_files": [],
+  "retained_unknown_paths": [],
+  "retained_directories": [],
+  "source_archive_deleted": false,
+  "status": "completed",
+  "completed_at": "2026-09-15T00:00:01Z"
+}

@@ -305,6 +305,7 @@ available = [
 ]
 conditional = [
   "install.managed.plan",
+  "install.managed.uninstall.apply",
   "process.execute",
 ]
 unavailable = [

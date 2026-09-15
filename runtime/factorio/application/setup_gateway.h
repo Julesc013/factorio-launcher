@@ -65,6 +65,31 @@ struct UninstallPlan {
     std::string provider_response;
 };
 
+struct UninstallApplyRequest {
+    UninstallPlanRequest plan_request;
+    std::string reviewed_plan_id;
+    std::string reviewed_plan_digest;
+    std::string transaction_id;
+    std::string applied_at;
+    std::string confirmation;
+};
+
+struct UninstallReport {
+    std::string report_id;
+    std::string report_digest;
+    std::string status;
+    std::string completed_at;
+    std::string ownership_manifest_digest;
+    std::string setup_state_ref;
+    std::string last_verification_identity;
+    std::string state_revision;
+    std::string lifecycle_status;
+    std::string verification_status;
+    std::string provider_response;
+};
+
+bool valid_utc_seconds(const std::string& value) noexcept;
+
 struct FactorioArchiveInspectRequest {
     std::string version;
     std::filesystem::path archive;
@@ -84,6 +109,8 @@ public:
     virtual facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest& request) = 0;
     virtual facman::core::Result<UninstallPlan> plan_uninstall(
         const UninstallPlanRequest& request) = 0;
+    virtual facman::core::Result<UninstallReport> apply_uninstall(
+        const UninstallApplyRequest& request) = 0;
     virtual facman::core::Result<SetupRefusal> verify_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> repair_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> uninstall_install(const std::string& install_id) = 0;

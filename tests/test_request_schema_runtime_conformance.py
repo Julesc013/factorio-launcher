@@ -23,6 +23,10 @@ def sample_value(rule: dict[str, Any]) -> Any:
     if rule.get("type") == "array":
         return []
     pattern = str(rule.get("pattern", ""))
+    if pattern.startswith("^tx-"):
+        return "tx-sample"
+    if "[0-9]{4}-[0-9]{2}-[0-9]{2}T" in pattern:
+        return "2026-07-14T00:00:00Z"
     if "0-9a-f" in pattern and int(rule.get("minLength", 0)) == 64:
         return "a" * 64
     if "0-9" in pattern:
