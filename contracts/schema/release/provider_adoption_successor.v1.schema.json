@@ -24,10 +24,23 @@
     "projection_source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["workflow_run", "aggregate_job", "head_revision", "evidence_revision"],
+      "required": ["workflow_run", "aggregate_job", "artifact_jobs", "head_revision", "evidence_revision"],
       "properties": {
-        "workflow_run": { "const": 34793208025 },
-        "aggregate_job": { "const": 103821556004 },
+        "workflow_run": { "const": 35003750747 },
+        "aggregate_job": { "type": "null" },
+        "artifact_jobs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["linux/static", "linux/shared", "macos/static", "macos/shared", "windows/static", "windows/shared"],
+          "properties": {
+            "linux/static": { "const": 104498238663 },
+            "linux/shared": { "const": 104498238745 },
+            "macos/static": { "const": 104498238799 },
+            "macos/shared": { "const": 104498238957 },
+            "windows/static": { "const": 104498238997 },
+            "windows/shared": { "const": 104498238991 }
+          }
+        },
         "head_revision": { "$ref": "#/$defs/revision" },
         "evidence_revision": { "$ref": "#/$defs/revision" }
       }

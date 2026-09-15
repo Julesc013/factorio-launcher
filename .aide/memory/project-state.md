@@ -99,7 +99,7 @@ Generate that fail-closed observation after checkout with
 - last closed WorkUnit: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`;
 - accepted FacMan integration: `c5262596483a5a9767b4c66d4d5ef51b8086cfdc`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
-- Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `279ad4876dc325f8e1fcdc918c91b098a11bc616`;
+- Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `4c766b342e68656a2d4e26a14cfe51ab2209ad41`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 

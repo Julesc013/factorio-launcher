@@ -48,14 +48,15 @@ PROVIDERS = {
         "license": "MIT",
         "maturity": "canonical_main_experimental_session_subset_consumer_qualified",
         "sdk_adoption": "accepted_exact_main_session_provider",
+        "evidence_revision": "8bbe5051339d828ad7d39aae880be0d293ef2a89",
     },
     "universal_setup": {
         "source": "universal-setup",
         "repository": "Julesc013/universal-setup",
         "remote": "https://github.com/Julesc013/universal-setup.git",
-        "revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
-        "tree": "499013a2099f872c998932505a51489343606382",
-        "prior_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+        "revision": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
+        "tree": "d0e4eef8cd6303079f1b25688d29a636a2e4c558",
+        "prior_revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
         "package_version": "1.0.0",
         "cmake_package_version": "1.0.0",
         "abi_version": "1.0",
@@ -65,6 +66,7 @@ PROVIDERS = {
         "license": "MIT AND Zlib",
         "maturity": "canonical_main_sdk_qualified",
         "sdk_adoption": "accepted_non_authorizing_input",
+        "evidence_revision": "fa08d4e88e1a98881b95f69e12ddae367d469cdb",
     },
 }
 AUTHORITY = {
@@ -180,7 +182,7 @@ def validate(root: Path = ROOT) -> list[str]:
             "package_version": expected["package_version"],
             "abi_manifest_sha256": expected["abi_manifest_digest"],
             "contract_digest": expected["contract_digest"],
-            "evidence_facman_revision": EVIDENCE_REVISION,
+            "evidence_facman_revision": expected["evidence_revision"],
             "authorizing": False,
         }
         if system not in SYSTEMS or linkage not in LINKAGES:

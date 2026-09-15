@@ -25,6 +25,24 @@ class ProviderAdoptionSuccessorTests(unittest.TestCase):
         problems = successor.validate(record=changed)
         self.assertTrue(any("current input closure differs" in item for item in problems))
 
+    def test_current_projection_binds_six_jobs_without_an_aggregate(self) -> None:
+        self.assertIsNone(self.record["projection_source"]["aggregate_job"])
+        self.assertEqual(
+            set(self.record["projection_source"]["artifact_jobs"]),
+            {
+                "linux/static",
+                "linux/shared",
+                "macos/static",
+                "macos/shared",
+                "windows/static",
+                "windows/shared",
+            },
+        )
+        changed = copy.deepcopy(self.record)
+        changed["projection_source"]["artifact_jobs"].pop("windows/shared")
+        problems = successor.validate(record=changed)
+        self.assertTrue(any("hosted projection source" in item for item in problems))
+
     def test_authority_reuse_is_rejected(self) -> None:
         changed = copy.deepcopy(self.record)
         changed["authority"]["route_promotion"] = True
