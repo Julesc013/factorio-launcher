@@ -21,6 +21,7 @@ REQUIRED_CAPABILITIES = {
     "install.managed.plan",
     "install.managed.apply",
     "install.managed.uninstall.apply",
+    "install.managed.uninstall.recover",
     "install.existing.inspect",
     "install.existing.adoption.plan",
     "install.existing.adoption.apply",

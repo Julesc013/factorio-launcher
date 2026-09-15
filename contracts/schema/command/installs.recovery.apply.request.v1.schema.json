@@ -20,9 +20,16 @@
       "minLength": 1,
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
+    },
+    "transaction_id": {
+      "maxLength": 64,
+      "minLength": 4,
+      "pattern": "^tx-[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "type": "string"
     }
   },
   "required": [
+    "transaction_id",
     "plan_id",
     "plan_digest",
     "confirmation"

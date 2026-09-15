@@ -70,14 +70,42 @@ int main()
     const CommandAdmissionDecision uninstall_denied =
         admit_command(setup_missing, CommandId::installs_uninstall_apply);
     if (uninstall_denied.admitted || uninstall_denied.code != "setup_authority_required") return 14;
+    for (const CommandId recovery_command : {
+            CommandId::installs_recovery_inspect,
+            CommandId::installs_recovery_apply}) {
+        const CommandAdmissionDecision denied = admit_command(setup_missing, recovery_command);
+        if (denied.admitted ||
+            denied.code != "setup_uninstall_recovery_authority_required") return 15;
+        const CommandAdmissionPolicy recovery_policy = command_admission_policy(recovery_command);
+        if (std::find(recovery_policy.effects.begin(), recovery_policy.effects.end(),
+                "setup_preview") == recovery_policy.effects.end() ||
+            std::find(recovery_policy.capabilities.begin(), recovery_policy.capabilities.end(),
+                "install.managed.uninstall.recover") == recovery_policy.capabilities.end() ||
+            recovery_policy.capabilities.size() != 1U ||
+            recovery_policy.effects.size() !=
+                (recovery_command == CommandId::installs_recovery_apply ? 3U : 2U) ||
+            (std::find(recovery_policy.effects.begin(), recovery_policy.effects.end(),
+                "workspace_write") != recovery_policy.effects.end()) !=
+                (recovery_command == CommandId::installs_recovery_apply)) return 16;
+    }
     set_environment("FACMAN_SETUP_STATE_ROOT", "state");
+    const ApplicationConfiguration setup_incomplete = ApplicationConfiguration::load({});
+    const CommandAdmissionDecision incomplete_inspect =
+        admit_command(setup_incomplete, CommandId::installs_recovery_inspect);
+    const CommandAdmissionDecision incomplete_apply =
+        admit_command(setup_incomplete, CommandId::installs_recovery_apply);
+    if (incomplete_inspect.admitted || incomplete_apply.admitted ||
+        incomplete_inspect.code != "setup_uninstall_recovery_authority_required" ||
+        incomplete_apply.code != "setup_uninstall_recovery_authority_required") return 17;
     set_environment("FACMAN_SETUP_ACCEPTANCE_ROOT", "acceptance");
     set_environment("FACMAN_SETUP_POLICY_ACTIVATION", "operator_acceptance_candidate");
     const ApplicationConfiguration setup_present = ApplicationConfiguration::load({});
-    if (!admit_command(setup_present, CommandId::installs_uninstall_apply).admitted) return 15;
+    if (!admit_command(setup_present, CommandId::installs_uninstall_apply).admitted) return 18;
+    if (!admit_command(setup_present, CommandId::installs_recovery_inspect).admitted ||
+        !admit_command(setup_present, CommandId::installs_recovery_apply).admitted) return 19;
     const CommandAdmissionPolicy uninstall_policy =
         command_admission_policy(CommandId::installs_uninstall_apply);
     if (std::find(uninstall_policy.capabilities.begin(), uninstall_policy.capabilities.end(),
-            "install.managed.uninstall.apply") == uninstall_policy.capabilities.end()) return 16;
+            "install.managed.uninstall.apply") == uninstall_policy.capabilities.end()) return 20;
     return 0;
 }

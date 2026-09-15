@@ -13,13 +13,17 @@
 #if FACMAN_WITH_SETUP
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_local_operation_lock.h"
+#include "fl_path_safety.h"
 #include "fl_runtime_verify.h"
 #include "fl_sha256.h"
 #include "fl_transaction.h"
 #include "flb_factorio_discovery.h"
 
 #include <filesystem>
+#include <algorithm>
 #include <cstdlib>
+#include <memory>
 #endif
 #include <string>
 
@@ -41,7 +45,7 @@ std::string managed_uninstall_context(
     plan_request.add_string("install_id", plan.install_id);
     plan_request.add_string("created_at", plan.created_at);
     facman::core::json::ObjectBuilder document;
-    document.add_string("schema", "facman.managed_uninstall_coordinator.v1");
+    document.add_string("schema", "facman.managed_uninstall_coordinator.v2");
     document.add_object("plan_request", plan_request);
     document.add_string("reviewed_plan_id", request.plan_id);
     document.add_string("reviewed_plan_digest", request.plan_digest);
@@ -49,6 +53,10 @@ std::string managed_uninstall_context(
     document.add_string("applied_at", request.applied_at);
     document.add_string("target_root", target);
     document.add_string("pre_record_sha256", pre_record_digest);
+    document.add_string("pre_setup_state_ref", plan.setup_state_ref);
+    document.add_string("pre_last_verification_identity", plan.last_verification_identity);
+    document.add_string("pre_state_revision", plan.state_revision);
+    document.add_string("pre_lifecycle_status", plan.lifecycle_status);
     document.add_string("phase", "provider_entry_pending");
     return document.serialize();
 }
@@ -65,7 +73,8 @@ std::string uninstalled_install_record(
     terminal.version = record.version;
     terminal.ownership = "managed";
     terminal.source = "universal-setup";
-    terminal.source_ref = "uninstall-report:" + report.report_id + ":" + report.report_digest;
+    terminal.source_ref = "uninstall-state:" + report.state_revision.substr(
+        0U, report.state_revision.find(':')) + ":" + report.installed_state_digest;
     terminal.platform = record.platform;
     terminal.distribution_origin = record.distribution_origin;
     terminal.platform_integration = record.platform_integration;
@@ -88,6 +97,114 @@ bool uninstall_refusal_proves_no_provider_effect(const std::string& code)
         code == "setup_installed_state_response_invalid";
 }
 
+std::string digest_text(const std::string& value)
+{
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(value.data()), value.size());
+}
+
+std::string checkpointed_uninstall_context(
+    const ManagedUninstallCoordinator& context,
+    const UninstallRecoveryInspection& inspection,
+    const std::string& recovery_plan_id,
+    const std::string& recovery_plan_digest,
+    const std::string& projected_record_sha256)
+{
+    facman::core::json::ObjectBuilder plan_request;
+    plan_request.add_string("schema", "usk.uninstall_plan_request.v1");
+    plan_request.add_string("request_id", context.request_id);
+    plan_request.add_string("plan_id", context.plan_id);
+    plan_request.add_string("install_id", context.install_id);
+    plan_request.add_string("created_at", context.plan_created_at);
+    facman::core::json::ObjectBuilder document;
+    document.add_string("schema", "facman.managed_uninstall_coordinator.v2");
+    document.add_object("plan_request", plan_request);
+    document.add_string("reviewed_plan_id", context.plan_id);
+    document.add_string("reviewed_plan_digest", context.reviewed_plan_digest);
+    document.add_string("transaction_id", context.transaction_id);
+    document.add_string("applied_at", context.applied_at);
+    document.add_string("target_root", context.target_root);
+    document.add_string("pre_record_sha256", context.pre_record_sha256);
+    document.add_string("pre_setup_state_ref", context.pre_setup_state_ref);
+    document.add_string("pre_last_verification_identity", context.pre_last_verification_identity);
+    document.add_string("pre_state_revision", context.pre_state_revision);
+    document.add_string("pre_lifecycle_status", context.pre_lifecycle_status);
+    document.add_string("phase", "terminal_projection_prepared");
+    document.add_string("recovery_plan_id", recovery_plan_id);
+    document.add_string("recovery_plan_digest", recovery_plan_digest);
+    document.add_string("classification", inspection.classification);
+    document.add_string("provider_journal_snapshot_sha256", inspection.provider_journal_snapshot_sha256);
+    document.add_string("provider_installed_state_sha256", inspection.provider_installed_state_digest);
+    document.add_string("projected_record_sha256", projected_record_sha256);
+    return document.serialize();
+}
+
+class ManagedUninstallLease {
+public:
+    static facman::core::Result<std::unique_ptr<ManagedUninstallLease>> acquire(
+        const fs::path& workspace,
+        const std::string& transaction_id,
+        bool adopt_existing)
+    {
+        auto parsed = facman::core::TransactionId::parse(transaction_id);
+        if (!parsed) return facman::core::Result<std::unique_ptr<ManagedUninstallLease>>::failure(parsed.error());
+        auto journal = facman::workspace::WorkspaceLayout(workspace).transaction_journal(parsed.value());
+        if (!journal) return facman::core::Result<std::unique_ptr<ManagedUninstallLease>>::failure(journal.error());
+        auto lease = std::unique_ptr<ManagedUninstallLease>(new ManagedUninstallLease());
+        lease->path_ = journal.value();
+        lease->path_ += ".recovery.lock";
+        auto acquired = lease->lock_.create(lease->path_);
+        if (acquired.code == facman::base::StableLockCode::exists && adopt_existing) {
+            std::string stored;
+            acquired = lease->lock_.open_existing(lease->path_, 4096U, stored);
+            if (acquired.acquired()) {
+                std::string metadata_detail;
+                if (!validate_managed_uninstall_recovery_lock(
+                        stored, transaction_id, lease->lock_.identity_text(), metadata_detail)) {
+                    lease->lock_.close();
+                    return facman::core::Result<std::unique_ptr<ManagedUninstallLease>>::failure({
+                        "recovery_write_refused", "Existing uninstall recovery lock identity is invalid",
+                        metadata_detail});
+                }
+                lease->owned_ = true;
+                return facman::core::Result<std::unique_ptr<ManagedUninstallLease>>::success(std::move(lease));
+            }
+        }
+        if (!acquired.acquired()) return facman::core::Result<std::unique_ptr<ManagedUninstallLease>>::failure({
+            acquired.code == facman::base::StableLockCode::exists ||
+                acquired.code == facman::base::StableLockCode::contended
+                ? "recovery_lock_contended" : "recovery_write_refused",
+            acquired.detail.empty() ? "Another uninstall or recovery owns this transaction" : acquired.detail,
+            facman::platform::path_to_utf8(lease->path_)});
+        facman::core::json::ObjectBuilder metadata;
+        metadata.add_string("schema", "facman.managed_uninstall_recovery_lock.v1");
+        metadata.add_string("transaction_id", transaction_id);
+        metadata.add_string("identity", lease->lock_.identity_text());
+        std::string detail;
+        if (!lease->lock_.write_text(metadata.serialize() + "\n", detail)) {
+            std::string ignored;
+            (void)lease->lock_.remove_exact(ignored);
+            return facman::core::Result<std::unique_ptr<ManagedUninstallLease>>::failure({
+                "recovery_write_refused", "Uninstall recovery lock metadata could not be written", detail});
+        }
+        lease->owned_ = true;
+        return facman::core::Result<std::unique_ptr<ManagedUninstallLease>>::success(std::move(lease));
+    }
+
+    ~ManagedUninstallLease()
+    {
+        if (!owned_) return;
+        std::string ignored;
+        (void)lock_.remove_exact(ignored);
+    }
+
+private:
+    ManagedUninstallLease() = default;
+    facman::base::StableLocalLock lock_;
+    fs::path path_;
+    bool owned_ = false;
+};
+
 std::string read_text(const fs::path& path)
 {
     facman::platform::StableInputFile input;
@@ -100,6 +217,193 @@ std::string read_text(const fs::path& path)
         offset += count;
     }
     return input.revalidate().ok() ? text : std::string();
+}
+
+struct ManagedUninstallRecoveryPlan {
+    facman::transaction::Record journal;
+    ManagedUninstallCoordinator coordinator;
+    facman::workspace::InstallRecord install;
+    std::string install_record_text;
+    std::string journal_sha256;
+    UninstallRecoveryInspection inspection;
+    std::string plan_id;
+    std::string plan_digest;
+    std::string action;
+    std::string projected_record;
+    std::string projected_record_sha256;
+    std::string output;
+};
+
+std::string uninstall_recovery_document(
+    const ManagedUninstallRecoveryPlan& plan,
+    const std::string& status,
+    const std::string& digest)
+{
+    facman::core::json::ObjectBuilder document;
+    document.add_string("schema", "facman.managed_uninstall_recovery.v1");
+    document.add_string("status", status);
+    document.add_string("transaction_id", plan.coordinator.transaction_id);
+    document.add_string("install_id", plan.coordinator.install_id);
+    document.add_string("plan_id", plan.plan_id);
+    if (!digest.empty()) document.add_string("plan_digest", digest);
+    document.add_string("classification", plan.inspection.classification);
+    document.add_string("action", plan.action);
+    document.add_string("facman_journal_sha256", plan.journal_sha256);
+    document.add_string("pre_record_sha256", plan.coordinator.pre_record_sha256);
+    document.add_string("current_record_sha256", digest_text(plan.install_record_text));
+    document.add_bool("provider_journal_present", plan.inspection.provider_journal_present);
+    document.add_string("provider_observed_state", plan.inspection.provider_observed_state);
+    document.add_string("provider_journal_digest", plan.inspection.provider_journal_digest);
+    document.add_string("provider_journal_snapshot_sha256", plan.inspection.provider_journal_snapshot_sha256);
+    document.add_string("provider_installed_state_sha256", plan.inspection.provider_installed_state_digest);
+    document.add_bool("target_exists", plan.inspection.target_exists);
+    document.add_string("projected_record_sha256", plan.projected_record_sha256);
+    return document.serialize();
+}
+
+facman::core::Result<ManagedUninstallRecoveryPlan> build_uninstall_recovery_plan(
+    ApplicationContext& application,
+    const std::string& transaction_id)
+{
+    ManagedUninstallRecoveryPlan result;
+    std::string detail;
+    if (!facman::transaction::read_record(
+            application.workspace(), transaction_id, result.journal, detail)) {
+        return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+            "recovery_journal_invalid", "Managed uninstall coordinator journal is invalid", detail});
+    }
+    if (result.journal.schema_version != 2U ||
+        result.journal.command_id != "installs.uninstall.apply" ||
+        result.journal.commit_strategy != "provider_uninstall_then_durable_install_reference_replacement" ||
+        result.journal.transaction_id != transaction_id || result.journal.sources.size() != 1U ||
+        !decode_managed_uninstall_coordinator(
+            result.journal.operation_context, result.coordinator, detail) ||
+        result.coordinator.transaction_id != transaction_id) {
+        return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+            "recovery_journal_invalid", "Transaction is not an exact managed uninstall coordinator", detail});
+    }
+    const bool pending_state = result.journal.state == facman::transaction::State::committing ||
+        result.journal.state == facman::transaction::State::commit_uncertain ||
+        result.journal.state == facman::transaction::State::recovery_required;
+    const bool prepared_state = pending_state ||
+        result.journal.state == facman::transaction::State::committed ||
+        result.journal.state == facman::transaction::State::audited ||
+        (result.journal.state == facman::transaction::State::complete &&
+            !result.coordinator.recovery_plan_id.empty());
+    if ((result.coordinator.phase == "provider_entry_pending" && !pending_state) ||
+        (result.coordinator.phase == "terminal_projection_prepared" && !prepared_state)) {
+        return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+            "recovery_journal_invalid",
+            "Managed uninstall coordinator is not in a recoverable phase",
+            facman::transaction::state_name(result.journal.state)});
+    }
+    auto workspace = application.workspace_repository().load();
+    if (!workspace || result.journal.workspace_id != workspace.value().id.str()) {
+        return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+            "recovery_journal_invalid", "Managed uninstall coordinator belongs to another workspace", "workspace id"});
+    }
+    auto install_id = facman::core::InstallId::parse_legacy(result.coordinator.install_id);
+    if (!install_id) return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+        "recovery_journal_invalid", "Managed uninstall coordinator install id is invalid", install_id.error().message});
+    auto loaded = application.installs().load(install_id.value());
+    if (!loaded) return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+        "uninstall_recovery_projection_conflict", "Managed install reference is unavailable", loaded.error().message});
+    result.install = loaded.take_value();
+    result.install_record_text = read_text(result.install.source_path);
+    if (result.install_record_text.empty() ||
+        result.journal.sources.front().lexically_normal() != result.install.source_path.lexically_normal() ||
+        result.journal.target.lexically_normal() !=
+            facman::platform::path_from_utf8(result.coordinator.target_root).lexically_normal() ||
+        result.install.root.lexically_normal() != result.journal.target.lexically_normal()) {
+        return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+            "uninstall_recovery_projection_conflict",
+            "Managed install reference no longer binds the uninstall coordinator", "record path or target"});
+    }
+    const std::string current_sha256 = digest_text(result.install_record_text);
+    if (result.coordinator.schema == "facman.managed_uninstall_coordinator.v1") {
+        if (current_sha256 != result.coordinator.pre_record_sha256) {
+            return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+                "uninstall_recovery_projection_conflict",
+                "Legacy uninstall coordinator has no durable terminal postimage identity", current_sha256});
+        }
+        result.coordinator.pre_setup_state_ref = result.install.setup_state_ref;
+        result.coordinator.pre_last_verification_identity = result.install.last_verification_identity;
+        result.coordinator.pre_state_revision = result.install.state_revision;
+        result.coordinator.pre_lifecycle_status = result.install.lifecycle_status;
+    } else if (result.coordinator.phase == "provider_entry_pending" &&
+        current_sha256 != result.coordinator.pre_record_sha256) {
+        return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+            "uninstall_recovery_projection_conflict",
+            "Managed install reference changed before terminal projection", current_sha256});
+    } else if (result.coordinator.phase == "terminal_projection_prepared" &&
+        current_sha256 != result.coordinator.pre_record_sha256 &&
+        current_sha256 != result.coordinator.projected_record_sha256) {
+        return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+            "uninstall_recovery_projection_conflict",
+            "Managed install reference is neither the prepared preimage nor postimage", current_sha256});
+    }
+    UninstallRecoveryRequest request;
+    request.plan_request.request_id = result.coordinator.request_id;
+    request.plan_request.plan_id = result.coordinator.plan_id;
+    request.plan_request.install_id = result.coordinator.install_id;
+    request.plan_request.created_at = result.coordinator.plan_created_at;
+    request.plan_request.target = facman::platform::path_from_utf8(result.coordinator.target_root);
+    request.plan_request.setup_state_ref = result.coordinator.pre_setup_state_ref;
+    request.plan_request.last_verification_identity = result.coordinator.pre_last_verification_identity;
+    request.plan_request.state_revision = result.coordinator.pre_state_revision;
+    request.plan_request.lifecycle_status = result.coordinator.pre_lifecycle_status;
+    request.reviewed_plan_digest = result.coordinator.reviewed_plan_digest;
+    request.transaction_id = result.coordinator.transaction_id;
+    request.applied_at = result.coordinator.applied_at;
+    auto inspected = application.setup().inspect_uninstall_recovery(request);
+    if (!inspected) return facman::core::Result<ManagedUninstallRecoveryPlan>::failure(inspected.error());
+    result.inspection = inspected.take_value();
+    result.action = result.inspection.classification == "no_provider_effect" ? "close_no_provider_effect" :
+        (result.inspection.classification == "provider_retired" ||
+         result.inspection.classification == "provider_uninstall_blocked") ? "project_terminal" : "none";
+    if (result.action == "project_terminal") {
+        UninstallReport report;
+        report.setup_state_ref = result.inspection.setup_state_ref;
+        report.last_verification_identity = result.inspection.last_verification_identity;
+        report.state_revision = result.inspection.state_revision;
+        report.lifecycle_status = result.inspection.lifecycle_status;
+        report.verification_status = result.inspection.verification_status;
+        report.installed_state_digest = result.inspection.provider_installed_state_digest;
+        result.projected_record = uninstalled_install_record(result.install, report);
+        result.projected_record_sha256 = digest_text(result.projected_record);
+    } else {
+        result.projected_record = result.install_record_text;
+        result.projected_record_sha256 = result.coordinator.pre_record_sha256;
+    }
+    auto raw_journal = application.transactions().load_journal(
+        facman::core::TransactionId::parse(transaction_id).value());
+    if (!raw_journal) return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
+        "recovery_journal_invalid", "Managed uninstall coordinator could not be read stably", raw_journal.error().message});
+    result.journal_sha256 = digest_text(raw_journal.value());
+    result.plan_id = "uninstall-recovery." + transaction_id;
+    const std::string unsigned_plan = uninstall_recovery_document(
+        result, result.action == "none" ? "blocked" : "planned", "");
+    auto canonical_plan = canonicalize_managed_uninstall_recovery_plan(unsigned_plan);
+    if (!canonical_plan) return facman::core::Result<ManagedUninstallRecoveryPlan>::failure(canonical_plan.error());
+    result.plan_digest = digest_text(canonical_plan.value());
+    result.output = uninstall_recovery_document(
+        result, result.action == "none" ? "blocked" : "planned", result.plan_digest);
+    return facman::core::Result<ManagedUninstallRecoveryPlan>::success(std::move(result));
+}
+
+ApplicationResult uninstall_recovery_failure(
+    const std::string& operation,
+    const facman::core::Error& error)
+{
+    const bool conflict = error.code == "uninstall_recovery_projection_conflict";
+    const bool retryable = error.code == "recovery_lock_contended" ||
+        error.code == "recovery_write_refused" || error.code == "stale_plan";
+    return refused(
+        safety_refusal(operation, error.code, error.message, error.detail, true, retryable),
+        error.code, error.message,
+        conflict ? facman::core::OutcomeKind::conflict :
+            error.code == "uninstall_recovery_indeterminate" ?
+                facman::core::OutcomeKind::recovery_required : error.kind);
 }
 
 std::string toml_value(const std::string& text, const std::string& key)
@@ -502,6 +806,16 @@ ApplicationResult apply_uninstall_install(ApplicationContext& context, const Ser
         safety_refusal("installs.uninstall.apply", "recovery_write_refused", "Uninstall coordinator journal could not be prepared", started.error().message, true),
         "recovery_write_refused", started.error().message);
     auto session = started.take_value();
+    auto coordinator_lease = ManagedUninstallLease::acquire(
+        context.workspace(), request.transaction_id, false);
+    if (!coordinator_lease) {
+        session.failed(coordinator_lease.error().code + ": " + coordinator_lease.error().message);
+        return refused(
+            safety_refusal("installs.uninstall.apply", coordinator_lease.error().code,
+                "Uninstall coordinator lease could not be acquired", coordinator_lease.error().message, true),
+            coordinator_lease.error().code, coordinator_lease.error().message,
+            facman::core::OutcomeKind::recovery_required);
+    }
     if (!session.validated("reviewed_plan_bound") || !session.planned("exact_plan_request_persisted") ||
         !session.staged("provider_entry_prepared") || !session.verified("current_record_bound") ||
         !session.committing("provider_entry_started")) return refused(
@@ -514,6 +828,15 @@ ApplicationResult apply_uninstall_install(ApplicationContext& context, const Ser
     apply.transaction_id = request.transaction_id;
     apply.applied_at = request.applied_at;
     apply.confirmation = request.confirmation;
+    const char* before_provider = std::getenv("FACMAN_TEST_UNINSTALL_INTERRUPT_BEFORE_PROVIDER");
+    if (before_provider != nullptr && std::string(before_provider) == "1") {
+        session.failed("Injected interruption before provider uninstall");
+        return refused(
+            safety_refusal("installs.uninstall.apply", "transaction_recovery_required",
+                "Injected interruption before provider uninstall", request.transaction_id, false),
+            "transaction_recovery_required", "Injected interruption before provider uninstall",
+            facman::core::OutcomeKind::recovery_required);
+    }
     auto report = context.setup().apply_uninstall(apply);
     if (!report) {
         if (uninstall_refusal_proves_no_provider_effect(report.error().code)) {
@@ -533,20 +856,86 @@ ApplicationResult apply_uninstall_install(ApplicationContext& context, const Ser
             "transaction_recovery_required", report.error().code + ": " + report.error().message,
             facman::core::OutcomeKind::recovery_required);
     }
+    UninstallRecoveryRequest recovery_evidence_request;
+    recovery_evidence_request.plan_request = plan;
+    recovery_evidence_request.reviewed_plan_digest = request.plan_digest;
+    recovery_evidence_request.transaction_id = request.transaction_id;
+    recovery_evidence_request.applied_at = request.applied_at;
+    auto recovery_evidence = context.setup().inspect_uninstall_recovery(
+        recovery_evidence_request);
+    const std::string expected_classification =
+        report.value().lifecycle_status == "uninstalled" ?
+            "provider_retired" : "provider_uninstall_blocked";
+    if (!recovery_evidence ||
+        recovery_evidence.value().classification != expected_classification ||
+        recovery_evidence.value().provider_installed_state_digest !=
+            report.value().installed_state_digest ||
+        recovery_evidence.value().setup_state_ref != report.value().setup_state_ref ||
+        recovery_evidence.value().last_verification_identity !=
+            report.value().last_verification_identity ||
+        recovery_evidence.value().state_revision != report.value().state_revision ||
+        recovery_evidence.value().lifecycle_status != report.value().lifecycle_status ||
+        recovery_evidence.value().verification_status != report.value().verification_status) {
+        const std::string evidence_detail = recovery_evidence ?
+            "provider terminal identity mismatch" :
+            recovery_evidence.error().code + ": " + recovery_evidence.error().message;
+        session.failed("terminal provider evidence inspection failed: " + evidence_detail);
+        return refused(safety_refusal("installs.uninstall.apply", "transaction_recovery_required",
+            "Uninstall provider result requires exact recovery inspection before projection",
+            evidence_detail, false),
+            "transaction_recovery_required", evidence_detail,
+            facman::core::OutcomeKind::recovery_required);
+    }
+    const std::string terminal_record = uninstalled_install_record(record, report.value());
+    const std::string terminal_record_digest = digest_text(terminal_record);
+    ManagedUninstallCoordinator coordinator;
+    std::string coordinator_detail;
+    if (!decode_managed_uninstall_coordinator(
+            session.record().operation_context, coordinator, coordinator_detail)) {
+        session.failed("coordinator checkpoint decode failed: " + coordinator_detail);
+        return refused(safety_refusal("installs.uninstall.apply", "transaction_recovery_required",
+            "Uninstall provider result could not be checkpointed", coordinator_detail, false),
+            "transaction_recovery_required", coordinator_detail,
+            facman::core::OutcomeKind::recovery_required);
+    }
+    session.record().operation_context = checkpointed_uninstall_context(
+        coordinator, recovery_evidence.value(), "", "", terminal_record_digest);
+    if (!session.checkpoint("terminal_projection_prepared")) {
+        const std::string checkpoint_detail = session.detail();
+        session.failed("terminal projection checkpoint failed: " + checkpoint_detail);
+        return refused(
+            safety_refusal("installs.uninstall.apply", "transaction_recovery_required",
+                "Uninstall terminal projection intent could not be recorded", checkpoint_detail, false),
+            "transaction_recovery_required", checkpoint_detail,
+            facman::core::OutcomeKind::recovery_required);
+    }
     const char* injected = std::getenv("FACMAN_TEST_UNINSTALL_INTERRUPT_AFTER_PROVIDER");
-    if (injected != nullptr && std::string(injected) == "1") return refused(
-        safety_refusal("installs.uninstall.apply", "transaction_recovery_required",
-            "Injected interruption after provider uninstall", request.transaction_id, false),
-        "transaction_recovery_required", "Injected interruption after provider uninstall",
-        facman::core::OutcomeKind::recovery_required);
+    if (injected != nullptr && std::string(injected) == "1") {
+        session.failed("Injected interruption after provider uninstall");
+        return refused(
+            safety_refusal("installs.uninstall.apply", "transaction_recovery_required",
+                "Injected interruption after provider uninstall", request.transaction_id, false),
+            "transaction_recovery_required", "Injected interruption after provider uninstall",
+            facman::core::OutcomeKind::recovery_required);
+    }
     const std::string pre_record_digest = facman::base::sha256_hex_bytes(
         reinterpret_cast<const unsigned char*>(record_text.data()), record_text.size());
     auto replaced = context.installs().replace(
-        record, pre_record_digest, uninstalled_install_record(record, report.value()));
-    if (!replaced || !session.committed("uninstalled_reference_projected") || !session.complete()) return refused(
-        safety_refusal("installs.uninstall.apply", "transaction_recovery_required", "Uninstall provider result requires recovery before terminal projection is durable", replaced ? session.detail() : replaced.error().message, false),
-        "transaction_recovery_required", replaced ? session.detail() : replaced.error().message,
-        facman::core::OutcomeKind::recovery_required);
+        record, pre_record_digest, terminal_record);
+    if (!replaced) {
+        session.failed("terminal projection failed: " + replaced.error().message);
+        return refused(
+            safety_refusal("installs.uninstall.apply", "transaction_recovery_required",
+                "Uninstall provider result requires recovery before terminal projection is durable",
+                replaced.error().message, false),
+            "transaction_recovery_required", replaced.error().message,
+            facman::core::OutcomeKind::recovery_required);
+    }
+    if (!session.committed("uninstalled_reference_projected") || !session.complete()) return refused(
+        safety_refusal("installs.uninstall.apply", "transaction_recovery_required",
+            "Uninstall provider result requires recovery before terminal projection is durable",
+            session.detail(), false),
+        "transaction_recovery_required", session.detail(), facman::core::OutcomeKind::recovery_required);
     ApplicationResult result;
     result.output = report.value().provider_response;
     return result;
@@ -556,18 +945,143 @@ ApplicationResult apply_uninstall_install(ApplicationContext& context, const Ser
 #endif
 }
 
-ApplicationResult inspect_install_recovery(ApplicationContext& context, const ServiceOperationRequest&)
+ApplicationResult inspect_install_recovery(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    return unavailable(
-        context,
-        "installs.recovery.inspect",
-        "live_target_acceptance_required",
-        "Managed-target recovery is unavailable until its separate live-target policy gate passes");
+#if FACMAN_WITH_SETUP
+    auto parsed = facman::core::TransactionId::parse(request.transaction_id);
+    if (!parsed) return uninstall_recovery_failure("installs.recovery.inspect", parsed.error());
+    auto planned = build_uninstall_recovery_plan(context, parsed.value().str());
+    if (!planned) return uninstall_recovery_failure("installs.recovery.inspect", planned.error());
+    ApplicationResult result;
+    result.output = planned.value().output;
+    return result;
+#else
+    (void)request;
+    return unavailable(context, "installs.recovery.inspect", "setup_unavailable",
+        "Universal Setup support is disabled in this build");
+#endif
 }
 
-ApplicationResult apply_install_recovery(ApplicationContext& context, const ServiceOperationRequest&)
+ApplicationResult apply_install_recovery(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    return live_target_acceptance_required(context, "installs.recovery.apply");
+#if FACMAN_WITH_SETUP
+    auto parsed = facman::core::TransactionId::parse(request.transaction_id);
+    if (!parsed) return uninstall_recovery_failure("installs.recovery.apply", parsed.error());
+    auto lease = ManagedUninstallLease::acquire(context.workspace(), parsed.value().str(), true);
+    if (!lease) return uninstall_recovery_failure("installs.recovery.apply", lease.error());
+    auto planned = build_uninstall_recovery_plan(context, parsed.value().str());
+    if (!planned) return uninstall_recovery_failure("installs.recovery.apply", planned.error());
+    auto plan = planned.take_value();
+    const bool checkpointed_review = !plan.coordinator.recovery_plan_id.empty();
+    const std::string expected_plan_id = checkpointed_review ?
+        plan.coordinator.recovery_plan_id : plan.plan_id;
+    const std::string expected_plan_digest = checkpointed_review ?
+        plan.coordinator.recovery_plan_digest : plan.plan_digest;
+    if (request.confirmation != "APPLY" || request.plan_id != expected_plan_id ||
+        request.plan_digest != expected_plan_digest) {
+        return uninstall_recovery_failure("installs.recovery.apply", {
+            "stale_plan", "Reviewed uninstall recovery plan changed before apply", request.plan_id});
+    }
+    if (plan.action == "none") return uninstall_recovery_failure("installs.recovery.apply", {
+        "uninstall_recovery_indeterminate",
+        "Universal Setup uninstall is not in a safely projectable terminal state",
+        plan.inspection.provider_observed_state});
+    if (plan.coordinator.phase == "terminal_projection_prepared") {
+        if (plan.coordinator.classification != plan.inspection.classification ||
+            plan.coordinator.provider_installed_state_sha256 !=
+                plan.inspection.provider_installed_state_digest ||
+            plan.coordinator.projected_record_sha256 != plan.projected_record_sha256 ||
+            (!plan.coordinator.provider_journal_snapshot_sha256.empty() &&
+             plan.coordinator.provider_journal_snapshot_sha256 !=
+                plan.inspection.provider_journal_snapshot_sha256)) {
+            return uninstall_recovery_failure("installs.recovery.apply", {
+                "stale_plan", "Prepared uninstall terminal identity changed before recovery", "checkpoint"});
+        }
+    }
+    if (facman::transaction::terminal(plan.journal.state)) {
+        plan.plan_id = request.plan_id;
+        plan.plan_digest = request.plan_digest;
+        ApplicationResult result;
+        result.output = uninstall_recovery_document(plan, "completed", request.plan_digest);
+        return result;
+    }
+    plan.journal.operation_context = checkpointed_uninstall_context(
+        plan.coordinator, plan.inspection, request.plan_id, request.plan_digest,
+        plan.projected_record_sha256);
+    std::string detail;
+    if (!facman::transaction::checkpoint(
+            context.workspace(), plan.journal, "terminal_projection_prepared", detail)) {
+        return uninstall_recovery_failure("installs.recovery.apply", {
+            "recovery_write_refused", "Uninstall terminal projection checkpoint failed", detail});
+    }
+    const std::string current_sha256 = digest_text(plan.install_record_text);
+    if (current_sha256 == plan.coordinator.pre_record_sha256) {
+        auto replaced = context.installs().replace(
+            plan.install, plan.coordinator.pre_record_sha256, plan.projected_record);
+        if (!replaced) return uninstall_recovery_failure("installs.recovery.apply", {
+            replaced.error().code == "workspace_record_preimage_changed" ?
+                "uninstall_recovery_projection_conflict" : "recovery_write_refused",
+            "Uninstall terminal reference projection failed", replaced.error().message});
+    } else if (current_sha256 != plan.coordinator.pre_record_sha256 &&
+        current_sha256 != plan.projected_record_sha256) {
+        return uninstall_recovery_failure("installs.recovery.apply", {
+            "uninstall_recovery_projection_conflict",
+            "Managed install reference changed before recovery projection", current_sha256});
+    }
+    const char* interrupt = std::getenv("FACMAN_TEST_UNINSTALL_RECOVERY_INTERRUPT_AFTER_PROJECTION");
+    if (interrupt != nullptr && std::string(interrupt) == "1") {
+        return uninstall_recovery_failure("installs.recovery.apply", {
+            "transaction_recovery_required",
+            "Injected interruption after uninstall recovery projection", request.transaction_id});
+    }
+    plan.journal.recovery_actions.push_back(
+        plan.action == "project_terminal" ? "projected_terminal_install_reference" :
+            "confirmed_no_provider_effect");
+    if (plan.journal.state == facman::transaction::State::committing) {
+        if (plan.action == "project_terminal") {
+            if (!facman::transaction::advance(
+                    context.workspace(), plan.journal, "committed",
+                    "uninstall_terminal_projection_recovered", detail)) {
+                return uninstall_recovery_failure("installs.recovery.apply", {
+                    "recovery_write_refused", "Recovered uninstall commit could not be recorded", detail});
+            }
+        } else if (!facman::transaction::advance(
+                context.workspace(), plan.journal, "recovery_required",
+                "uninstall_no_effect_recovered", detail)) {
+            return uninstall_recovery_failure("installs.recovery.apply", {
+                "recovery_write_refused", "No-effect uninstall recovery could not be recorded", detail});
+        }
+    }
+    if (plan.journal.state == facman::transaction::State::audited) {
+        if (!facman::transaction::advance(
+                context.workspace(), plan.journal, "complete", "journal_closed", detail)) {
+            return uninstall_recovery_failure("installs.recovery.apply", {
+                "recovery_write_refused", "Uninstall recovery journal could not be closed", detail});
+        }
+    } else if (!facman::transaction::terminal(plan.journal.state) &&
+        !facman::transaction::complete(context.workspace(), plan.journal, detail)) {
+        return uninstall_recovery_failure("installs.recovery.apply", {
+            "recovery_write_refused", "Uninstall recovery journal could not be closed", detail});
+    }
+    plan.plan_id = request.plan_id;
+    plan.plan_digest = request.plan_digest;
+    auto final_journal = context.transactions().load_journal(parsed.value());
+    if (!final_journal) return uninstall_recovery_failure("installs.recovery.apply", {
+        "recovery_write_refused", "Completed uninstall recovery journal could not be read",
+        final_journal.error().message});
+    plan.journal_sha256 = digest_text(final_journal.value());
+    plan.install_record_text = read_text(plan.install.source_path);
+    if (plan.install_record_text.empty()) return uninstall_recovery_failure("installs.recovery.apply", {
+        "workspace_record_read_failed", "Completed uninstall recovery reference could not be read",
+        facman::platform::path_to_utf8(plan.install.source_path)});
+    ApplicationResult result;
+    result.output = uninstall_recovery_document(plan, "completed", request.plan_digest);
+    return result;
+#else
+    (void)request;
+    return unavailable(context, "installs.recovery.apply", "setup_unavailable",
+        "Universal Setup support is disabled in this build");
+#endif
 }
 
 ApplicationResult install_version(ApplicationContext& context, const ServiceOperationRequest& request)

@@ -19,6 +19,13 @@ required_codes = [
   "credential_required",
   "credential_redacted",
   "setup_authority_required",
+  "setup_uninstall_recovery_authority_required",
+  "setup_uninstall_recovery_input_invalid",
+  "setup_uninstall_recovery_inspection_refused",
+  "setup_uninstall_recovery_response_invalid",
+  "uninstall_recovery_indeterminate",
+  "uninstall_recovery_projection_conflict",
+  "recovery_lock_contended",
   "launch_preflight_failed",
   "run_lock_contended",
   "run_lock_malformed",
@@ -973,6 +980,48 @@ severity = "blocked"
 effect = "setup_mutation"
 retryable = false
 message = "Universal Setup refused uninstall apply without a strictly valid refusal envelope."
+
+[[code]]
+id = "setup_uninstall_recovery_authority_required"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Managed uninstall recovery requires complete accepted Universal Setup configuration."
+
+[[code]]
+id = "setup_uninstall_recovery_input_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed uninstall recovery input does not bind an exact durable coordinator identity."
+
+[[code]]
+id = "setup_uninstall_recovery_inspection_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup refused inspection of the exact managed uninstall transaction."
+
+[[code]]
+id = "setup_uninstall_recovery_response_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup recovery evidence failed exact identity or integrity validation."
+
+[[code]]
+id = "uninstall_recovery_indeterminate"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The interrupted uninstall has no safely projectable terminal provider state."
+
+[[code]]
+id = "uninstall_recovery_projection_conflict"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The managed install reference no longer matches the recovery preimage or prepared postimage."
 
 [[code]]
 id = "setup_uninstall_report_response_invalid"

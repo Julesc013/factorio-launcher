@@ -1546,10 +1546,10 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
+      "cli": "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json",
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1576,11 +1576,15 @@
         ],
         "positionals": [
           {
+            "name": "transaction-id",
+            "required": true
+          },
+          {
             "name": "plan-id",
             "required": true
           }
         ],
-        "usage": "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+        "usage": "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json"
       },
       "command_id": "installs.recovery.apply",
       "contract_path": "contracts/command/factorio/installs.recovery.apply.v1.toml",
@@ -1588,12 +1592,15 @@
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "dry_run_default": false,
       "effects": [
+        "workspace_read",
         "workspace_write",
         "setup_preview"
       ],
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.recovery.apply.refusal.json",
+      "golden_success": "tests/golden/commands/installs.recovery.apply.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.recovery.apply.title",
         "command.installs.recovery.apply.description"
@@ -1601,10 +1608,35 @@
       "mutates_workspace": true,
       "native_id": "installs_recovery_apply",
       "owner": "facman",
+      "refusal_codes": [
+        "invalid_identifier",
+        "stale_plan",
+        "recovery_journal_invalid",
+        "recovery_lock_contended",
+        "recovery_write_refused",
+        "transaction_recovery_required",
+        "uninstall_recovery_indeterminate",
+        "uninstall_recovery_projection_conflict",
+        "setup_uninstall_recovery_authority_required",
+        "setup_uninstall_recovery_input_invalid",
+        "setup_uninstall_recovery_inspection_refused",
+        "setup_uninstall_recovery_response_invalid",
+        "setup_unavailable",
+        "workspace_record_read_failed"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_recovery_apply",
       "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        },
         {
           "choices": [],
           "default": null,
@@ -1637,10 +1669,11 @@
       ],
       "request_schema": "contracts/schema/command/installs.recovery.apply.request.v1.schema.json",
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
         "setup_preview"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/facman_managed_uninstall_recovery.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "persistent_local_write",
       "runtime_id": "installs.recovery.apply",
@@ -1650,8 +1683,8 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs recovery inspect <transaction-id> --json",
       "cli_grammar": {
@@ -1682,11 +1715,14 @@
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "dry_run_default": true,
       "effects": [
+        "workspace_read",
         "setup_preview"
       ],
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.recovery.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/installs.recovery.inspect.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.recovery.inspect.title",
         "command.installs.recovery.inspect.description"
@@ -1694,6 +1730,16 @@
       "mutates_workspace": false,
       "native_id": "installs_recovery_inspect",
       "owner": "facman",
+      "refusal_codes": [
+        "invalid_identifier",
+        "recovery_journal_invalid",
+        "setup_uninstall_recovery_authority_required",
+        "uninstall_recovery_projection_conflict",
+        "setup_uninstall_recovery_input_invalid",
+        "setup_uninstall_recovery_inspection_refused",
+        "setup_uninstall_recovery_response_invalid",
+        "setup_unavailable"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_recovery_inspect",
@@ -1710,9 +1756,10 @@
       ],
       "request_schema": "contracts/schema/command/installs.recovery.inspect.request.v1.schema.json",
       "required_capabilities": [
+        "workspace_read",
         "setup_preview"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/facman_managed_uninstall_recovery.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "installs.recovery.inspect",
@@ -11425,7 +11472,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b",
+  "source_digest": "c8fbe146a1aa9eab2b7a4a2e432bba4785fc1dd9749b80473ffe748523aaef07",
   "workflows": [
     {
       "always_visible_fields": [

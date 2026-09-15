@@ -1296,7 +1296,7 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(code, 1)
             recovery = json.loads(stdout)
-            self.assertEqual(recovery["refusal"]["code"], "live_target_acceptance_required")
+            self.assertEqual(recovery["refusal"]["code"], "setup_uninstall_recovery_authority_required")
 
     def test_saves_backup_clone_and_instance_export_are_portable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

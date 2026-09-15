@@ -1246,7 +1246,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1274,11 +1274,15 @@
         ],
         "positionals": [
           {
+            "name": "transaction-id",
+            "required": true
+          },
+          {
             "name": "plan-id",
             "required": true
           }
         ],
-        "usage": "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+        "usage": "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json"
       },
       "command_id": "installs.recovery.apply",
       "deprecation": "active",
@@ -1290,6 +1294,15 @@
       "owner": "facman",
       "renderer": "installs_recovery_apply",
       "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        },
         {
           "choices": [],
           "default": null,
@@ -1321,6 +1334,7 @@
         }
       ],
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
         "setup_preview"
       ],
@@ -1331,7 +1345,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1376,6 +1390,7 @@
         }
       ],
       "required_capabilities": [
+        "workspace_read",
         "setup_preview"
       ],
       "risk_tier": "read_only",
@@ -9394,5 +9409,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b"
+  "source_digest": "c8fbe146a1aa9eab2b7a4a2e432bba4785fc1dd9749b80473ffe748523aaef07"
 }

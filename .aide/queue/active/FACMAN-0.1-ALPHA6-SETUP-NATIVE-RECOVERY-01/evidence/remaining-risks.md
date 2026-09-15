@@ -19,3 +19,17 @@ This checkpoint does not close the WorkUnit or qualify an Alpha release.
 - `workspace_hygiene.py doctor --measure --max-task-roots 10` previously could
   not read an older task-root `manifest/resolution` path. No cleanup or resource
   ceiling increase was performed.
+
+## 2026-09-15 managed uninstall recovery boundary
+
+- Universal Setup public recovery finalization remains `install_local` only.
+  FacMan therefore projects only an already completed uninstall journal and
+  never invokes provider finalize, recovery apply, or rollback for uninstall.
+- An incomplete, corrupt, mismatched, unsafe, or nonterminal provider journal
+  remains recovery-required for later provider/operator resolution. FacMan does
+  not infer completion or replay uninstall.
+- The qualification uses owned synthetic install roots and provider state. It
+  does not qualify recovery against a real user installation or a packaged
+  release candidate.
+- `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01` remains active; this
+  operation-specific recovery checkpoint does not close or supersede it.
