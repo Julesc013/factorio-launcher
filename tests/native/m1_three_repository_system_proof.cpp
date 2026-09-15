@@ -142,7 +142,7 @@ void prove_uninstall_recovery_gateway_decoding()
             request, "completed", {}, {}, {}, {}, false, {}, false, "not-a-time"))) {
         throw std::runtime_error("malformed recovery provider report was accepted");
     }
-    for (const std::string& provider_code : {
+    for (const std::string provider_code : {
             "unknown_install", "lifecycle_refused", "stale_plan"}) {
         const std::string envelope =
             "{\"error\":{\"code\":\"" + provider_code +
