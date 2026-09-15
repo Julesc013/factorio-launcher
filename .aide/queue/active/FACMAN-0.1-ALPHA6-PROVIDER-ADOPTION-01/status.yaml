@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+result: PASS
+created_at: 2026-09-06
+evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/evidence/
+active_at: 2026-09-13T22:24:05Z
+verified_pending_closeout_at: 2026-09-14T23:14:07Z
+implementation_state: implemented
+reviewed_at: 2026-09-14T23:14:08Z
+closed_at: 2026-09-14T23:14:09Z

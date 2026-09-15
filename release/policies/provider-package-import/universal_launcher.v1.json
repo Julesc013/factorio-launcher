@@ -19,12 +19,12 @@
   },
   "inventory": {
     "artifacts_sha256": {
-      "linux/static": "c57ab4d94f84bb87ec98630e3128dd7527b8d4a6c1d6e846c7f43c99e11e818e",
-      "linux/shared": "5c3906c8471732eb343174bbb1e1f1f52d0191691d59c34fe4d1c159e3b24e28",
-      "macos/static": "baa4fa89c4c8bef72140c28ea801fcb5ffb140c53cbd0aa0e4f9dd509201d640",
+      "linux/static": "1b96d8072e09aa9ee11148d26c793bebeaefba8ec164a31733df331e73ed2948",
+      "linux/shared": "f992d3a38ba7f40e26ec551c611f29b2a40f693f5547c85a6df623e6286e4833",
+      "macos/static": "ae883093c67ba46ce3d1666df9de17531428d12a660c4c6a8cd5b9b789caebdc",
       "macos/shared": "3c93bf269af9f88bc6ec2df636e6e034508dc0e153600a315b63d823bed142f7",
-      "windows/static": "6a2c2d103852ae9d49717d75a983085ab8f4a6bb9a03f0071ab36e9a44b1e2c2",
-      "windows/shared": "29a56d948ae66d4615a492b088003cb9c7a9cc0d110978ba3aaccc12258806b6"
+      "windows/static": "19a39c1beecdbca81f256eeabe0a25d200028c58b46db9e5352699c2e0b2e4e2",
+      "windows/shared": "c9a1abb177b3e2ddbff635c621a4d7e8667788920887ba88341c9d3d0d37e45b"
     },
     "contracts_sha256": {
       "linux/static": "f35f5697aa0c2459f6328d402c0b3931cde59f9302079e1a73c3e565c5b6786c",

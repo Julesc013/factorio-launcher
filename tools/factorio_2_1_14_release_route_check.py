@@ -22,7 +22,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - strict CI installs the lock
     jsonschema = None
 
-from tools import json_contract
+from tools import json_contract, provider_adoption_successor_check
 
 
 POLICY = (
@@ -411,7 +411,6 @@ def validate(
     for path, expected, label in (
         (PREDECESSOR_PACKET, EXPECTED_PACKET_SHA256, "predecessor packet"),
         (PREDECESSOR_ROUTE, EXPECTED_V2_SHA256, "predecessor route"),
-        (PROVIDER_LOCK, EXPECTED_PROVIDER_LOCK, "provider lock"),
         (OBSERVER_SOURCE, EXPECTED_OBSERVER_RECORD["harness_source_sha256"], "observer source"),
         (OBSERVER_BUILD_DEFINITION, EXPECTED_OBSERVER_RECORD["build_definition_sha256"], "observer build definition"),
         (OBSERVER_GUEST_RUNNER, EXPECTED_OBSERVER_RECORD["guest_runner_sha256"], "observer guest runner"),
@@ -443,6 +442,13 @@ def validate(
             problems.append("unaccepted route v3 was selected in the active route index")
         if record.get("active_route_index_unchanged") is not True:
             problems.append("release route record claims the route index changed")
+
+    problems.extend(
+        provider_adoption_successor_check.historical_binding_problems(
+            "factorio_2_1_14_release_route.v3",
+            EXPECTED_PROVIDER_LOCK,
+        )
+    )
 
     return problems
 

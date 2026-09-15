@@ -1,0 +1,139 @@
+{
+  "schema_version": "facman.provider-canary-independent-review.v1",
+  "reviewed_at_utc": "2026-09-13T16:23:57.0094301Z",
+  "reviewer": {
+    "kind": "model_based_independent_technical_review",
+    "model": "GPT-5.6 Sol",
+    "role": "non_authoring_receipt_reviewer"
+  },
+  "workflow": {
+    "repository": "Julesc013/factorio-launcher",
+    "run_id": 34762715681,
+    "run_url": "https://github.com/Julesc013/factorio-launcher/actions/runs/34762715681",
+    "artifact_ids": {
+      "input_linux": 10320376135,
+      "input_windows": 10320946376,
+      "semantic_linux": 10320486183,
+      "semantic_macos": 10321072602,
+      "semantic_windows": 10320436391
+    }
+  },
+  "source": {
+    "commit": "081a342a498273dbbd5aa91a7bed234dcd987ffc",
+    "tree": "f47600447ae36b67e35d077fa05e94817f506a8d",
+    "current_review_tree": "f47600447ae36b67e35d077fa05e94817f506a8d",
+    "exact_tree_still_current": true
+  },
+  "providers": [
+    {
+      "id": "universal_launcher",
+      "commit": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "tree": "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+    },
+    {
+      "id": "universal_setup",
+      "commit": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+      "tree": "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+    }
+  ],
+  "receipts": [
+    {
+      "path": "provider-conformance/provider-input-conformance-Linux-X64-081a342a498273dbbd5aa91a7bed234dcd987ffc/provider-conformance-observation.v1.json",
+      "sha256": "48003cc3892226b4c0e216b77c6368a863ad22f6f1664ce234c05ce81e8d0a0b",
+      "result": "bounded_provider_input_conformance_pass",
+      "platform": null,
+      "mode_count": null,
+      "interrupted_recovery": null,
+      "negative_control_count": 19,
+      "tracked_lock_mutated": false
+    },
+    {
+      "path": "provider-conformance/provider-input-conformance-Windows-X64-081a342a498273dbbd5aa91a7bed234dcd987ffc/provider-conformance-observation.v1.json",
+      "sha256": "d3fa2107c14d8d4e2b7613f2456a3d2c5ab01ac5c501f28baaffaae5fbc3fbbb",
+      "result": "bounded_provider_input_conformance_pass",
+      "platform": null,
+      "mode_count": null,
+      "interrupted_recovery": null,
+      "negative_control_count": 19,
+      "tracked_lock_mutated": false
+    },
+    {
+      "path": "provider-conformance/provider-semantic-conformance-Linux-X64-081a342a498273dbbd5aa91a7bed234dcd987ffc/provider-input-phase-a/provider-conformance-observation.v1.json",
+      "sha256": "da224fc95ee2454b737ca492d0b44a78bdd291f60b7a517ffd3efc6a0bcd0b3b",
+      "result": "bounded_provider_input_conformance_pass",
+      "platform": null,
+      "mode_count": null,
+      "interrupted_recovery": null,
+      "negative_control_count": 19,
+      "tracked_lock_mutated": false
+    },
+    {
+      "path": "provider-conformance/provider-semantic-conformance-Linux-X64-081a342a498273dbbd5aa91a7bed234dcd987ffc/provider-semantic-conformance-observation.v1.json",
+      "sha256": "ee00231489770a17dbeecff722e33bc1f61a1142b064dced39c8edab2ecf447b",
+      "result": "provider_semantic_conformance_pass",
+      "platform": "Linux",
+      "mode_count": 7,
+      "interrupted_recovery": "pass",
+      "negative_control_count": 11,
+      "tracked_lock_mutated": false
+    },
+    {
+      "path": "provider-conformance/provider-semantic-conformance-macOS-X64-081a342a498273dbbd5aa91a7bed234dcd987ffc/provider-input-phase-a/provider-conformance-observation.v1.json",
+      "sha256": "4bb1e0eb7cfd64cbeb81ab4660c271ecd367706a69c41f6b0de7c038aac2fb00",
+      "result": "bounded_provider_input_conformance_pass",
+      "platform": null,
+      "mode_count": null,
+      "interrupted_recovery": null,
+      "negative_control_count": 19,
+      "tracked_lock_mutated": false
+    },
+    {
+      "path": "provider-conformance/provider-semantic-conformance-macOS-X64-081a342a498273dbbd5aa91a7bed234dcd987ffc/provider-semantic-conformance-observation.v1.json",
+      "sha256": "6c0ed7bc861d962206fd0acdd4495861f88bd76c22bb6f271951583eae2cecaf",
+      "result": "provider_semantic_conformance_pass",
+      "platform": "macOS",
+      "mode_count": 7,
+      "interrupted_recovery": "pass",
+      "negative_control_count": 11,
+      "tracked_lock_mutated": false
+    },
+    {
+      "path": "provider-conformance/provider-semantic-conformance-Windows-X64-081a342a498273dbbd5aa91a7bed234dcd987ffc/provider-input-phase-a/provider-conformance-observation.v1.json",
+      "sha256": "88c3856adff85d27493baeead30dcf5adc1614e6158340442afaf039fc49130b",
+      "result": "bounded_provider_input_conformance_pass",
+      "platform": null,
+      "mode_count": null,
+      "interrupted_recovery": null,
+      "negative_control_count": 19,
+      "tracked_lock_mutated": false
+    },
+    {
+      "path": "provider-conformance/provider-semantic-conformance-Windows-X64-081a342a498273dbbd5aa91a7bed234dcd987ffc/provider-semantic-conformance-observation.v1.json",
+      "sha256": "3602e8be6e030b6665c86bfc65128d191148fdd9516fbcbdc0c6ce6c0bfce265",
+      "result": "provider_semantic_conformance_pass",
+      "platform": "Windows",
+      "mode_count": 7,
+      "interrupted_recovery": "pass",
+      "negative_control_count": 11,
+      "tracked_lock_mutated": false
+    }
+  ],
+  "checks": {
+    "parsed_receipts": 8,
+    "errors": [],
+    "all_results_pass": true,
+    "three_platform_semantic_matrix": true,
+    "seven_modes_per_platform": true,
+    "interrupted_recovery_per_platform": true,
+    "negative_controls_refused": true,
+    "tracked_locks_unchanged": true,
+    "release_eligible": false,
+    "provider_adoption": false
+  },
+  "conclusion": "PASS_HOSTED_PROVIDER_CONFORMANCE_NOT_ADOPTION",
+  "limits": [
+    "This review covers hosted input and semantic conformance from run 34762715681.",
+    "Provider SDK consumption run 34762715690 remains separately pending and must be reviewed before WorkUnit closeout.",
+    "The observations do not adopt provider pins, qualify a release, or authorize publication."
+  ]
+}

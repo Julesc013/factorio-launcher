@@ -29,8 +29,8 @@ UNIVERSAL_PROVIDER_SOURCE = {
         "required_ref": "refs/heads/main",
     },
     "universal_setup": {
-        "pin": "d2a2aae7e61c47035c92334b0522143b4fea3880",
-        "tree": "291d63214cdd0cd3d15c809de5744ee3514fb2b2",
+        "pin": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+        "tree": "499013a2099f872c998932505a51489343606382",
         "remote": "https://github.com/Julesc013/universal-setup.git",
         "required_ref": "refs/heads/main",
     },

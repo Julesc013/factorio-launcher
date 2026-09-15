@@ -51,8 +51,8 @@ jobs:
             source_dir: universal-launcher
           - provider: usk
             repository: Julesc013/universal-setup
-            revision: d2a2aae7e61c47035c92334b0522143b4fea3880
-            tree: 291d63214cdd0cd3d15c809de5744ee3514fb2b2
+            revision: 279ad4876dc325f8e1fcdc918c91b098a11bc616
+            tree: 499013a2099f872c998932505a51489343606382
             source_dir: universal-setup
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
@@ -125,6 +125,18 @@ jobs:
               --expected-transaction-journal-read-versions 1 \
               --expected-transaction-journal-write-version 1
           fi
+
+      - name: Report bounded package manifest
+        shell: bash
+        run: |
+          temp_root="$RUNNER_TEMP"
+          if command -v cygpath >/dev/null 2>&1; then
+            temp_root="$(cygpath -u "$RUNNER_TEMP")"
+          fi
+          prefix="$temp_root/${{ matrix.provider }}-${{ matrix.linkage }}-prefix"
+          manifest="$(find "$prefix" -type f -name provider-package-manifest.v1.json -print -quit)"
+          test -n "$manifest"
+          python -c 'import json,sys; value=json.load(open(sys.argv[1], encoding="utf-8")); print("FACMAN_PROVIDER_MANIFEST=" + json.dumps(value, sort_keys=True, separators=(",", ":")))' "$manifest"
 
       - name: Preserve relocatable package prefix
         shell: bash

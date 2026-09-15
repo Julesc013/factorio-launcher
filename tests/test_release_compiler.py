@@ -72,7 +72,7 @@ class ReleaseCompilerTests(unittest.TestCase):
                 "runtime_metadata",
             })
             self.assertEqual(len(outputs["components"]["components"]), 7)
-            self.assertEqual(len(outputs["paths"]["paths"]), 9)
+            self.assertEqual(len(outputs["paths"]["paths"]), 10)
             self.assertFalse(outputs["authority"]["product_authority_granted"])
             self.assertFalse(outputs["qualification_plan"]["qualified"])
             digests.add(outputs["resolution_set"]["root_digest"])

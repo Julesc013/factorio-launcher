@@ -179,3 +179,40 @@ fixtures; it performs no SDK install, project compiler configuration or build.
 No existing binaries, provider pins, hosted result or release claim changed.
 The seven-file source/checkpoint proposal requires independent review before
 commit and later fresh product/SDK qualification.
+
+## 2026-09-14 hosted provider-conformance review
+
+Workflow run 34762715681 retained exact Linux, macOS and Windows observations
+for the current FacMan source tree f47600447ae36b67e35d077fa05e94817f506a8d
+and unchanged tracked provider pins. Each platform passed source static/shared,
+installed static/shared, relocated installed static/shared and private-runtime
+consumption. Interrupted recovery passed on all three platforms; negative
+controls refused and tracked locks remained unchanged.
+
+A fresh non-authoring GPT-5.6 Sol review parsed all eight retained observations
+with zero findings. Its repository receipt concludes
+PASS_HOSTED_PROVIDER_CONFORMANCE_NOT_ADOPTION and binds the external custody
+packet by exact receipt digests.
+
+The WorkUnit remains active/PENDING. Provider SDK-consumption run 34762715690
+passed on Linux, macOS and Windows; every job completed both the
+production-capable non-adopted SDK proof and tracked reconciled-provider proof.
+Review the retained observation bytes before running the AIDE
+verify/review/close lifecycle. Green job conclusions alone do not close the
+WorkUnit. The conformance result changes no provider pin and grants no adoption,
+release, publication or stable authority.
+
+## 2026-09-14 closeout
+
+The retained hosted conformance observations satisfy the WorkUnit's exact
+source/target/archive, seven-mode, interruption, damaged-package and
+mixed-identity acceptance checks on Linux, macOS and Windows. The independent
+non-authoring review remains scoped to provider canary conformance; provider
+adoption was reviewed and integrated separately through PR #282.
+
+AIDE inspect, noop-check, dependencies and recover completed against the
+reconciled task. The verify, review and close lifecycle then recorded PASS and
+closed the queue item. The canonical plan now records this WorkUnit complete,
+and generated project-state, TODO and roadmap surfaces are regenerated from
+that input. This closeout grants no Alpha.6 release, Beta.1, stable publication,
+signing, human-experience or real-game authority.

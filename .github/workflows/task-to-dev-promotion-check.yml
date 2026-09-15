@@ -216,7 +216,8 @@ jobs:
           run = json.loads(subprocess.run(["gh", "api", f"repos/{os.environ['REPOSITORY']}/actions/runs/{os.environ['RUN_ID']}"], check=True, text=True, stdout=subprocess.PIPE).stdout)
           if not aide_lite.task_to_dev_workflow_identity_is_exact(
                   os.environ["EVENT_NAME"], os.environ["REPOSITORY"], os.environ["WORKFLOW_REF"], os.environ["WORKFLOW_SHA"],
-                  live_base["sha"], default_branch, default_branch_sha, run.get("workflow_id"), int(workflow_id), run.get("head_sha")):
+                  live_base["sha"], head, default_branch, default_branch_sha,
+                  run.get("workflow_id"), int(workflow_id), run.get("head_sha")):
               raise SystemExit("current run is not the configured trusted workflow path and SHA on its admitted protected ref")
           payload = {"name": "task-to-dev-promotion-check", "head_sha": head,
                      "status": "completed", "conclusion": "success",

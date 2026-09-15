@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01
 title: Adopt promoted provider identities with exact consumer proof
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -12,16 +12,41 @@ objective: "Require exact USK/ULK protected-main tips and package provenance bef
 source_bundles:
   - "F05"
 allowed_paths:
+  - ".gitattributes"
+  - "release/index/plan.v1.toml"
+  - "release/index/current_state.v1.toml"
+  - "release/index/project_status.v2.toml"
+  - "release/index/release_index.v1.toml"
+  - "release/index/provider_adoption_successor.v1.json"
+  - "release/index/components.v2.toml"
   - "release/index/workspace_lock.v1.toml"
   - "release/index/dependency_lock.v1.toml"
   - "release/index/providers.lock.v2.toml"
   - "release/index/build_manifest.v1.toml"
   - "release/index/sbom.components.v1.json"
   - "release/policies/provider-package-import/*.v1.json"
+  - ".github/workflows/canonical-provider-packages.yml"
+  - ".github/workflows/provider-conformance.yml"
+  - ".github/workflows/provider-sdk-consumption.yml"
+  - ".github/workflows/synthetic-product-tck.yml"
+  - "cmake/FacManInstall.cmake"
+  - "apps/gui/windows/winforms/provider_identity.tracked.v1.txt"
+  - "apps/gui/windows/winforms/GeneratedCommandCatalog.cs"
+  - "runtime/core/generated/version.h"
   - "tools/**"
   - "tests/**"
   - "docs/**"
+  - "README.md"
+  - "todo.md"
+  - "THIRD_PARTY_NOTICES.md"
+  - "LICENSES/UniversalSetupZlib.txt"
+  - "release/profiles/*/profile.toml"
+  - "release/packaging/portable/package_contracts.v1.toml"
+  - "contracts/schema/release/provider_adoption_successor.v1.schema.json"
+  - ".aide/queue/index.yaml"
+  - ".aide/memory/**"
   - ".aide/queue/next/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
@@ -38,3 +63,9 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+active_at: 2026-09-13T22:24:05Z
+verified_pending_closeout_at: 2026-09-14T23:14:07Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-09-14T23:14:08Z
+closed_at: 2026-09-14T23:14:09Z

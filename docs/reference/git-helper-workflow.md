@@ -142,9 +142,13 @@ not activate that event path, and same-name third-party checks remain
 insufficient without the ruleset publisher binding.
 
 The publisher separately verifies `github.workflow_ref` and
-`github.workflow_sha`: `pull_request_target` must use the protected `dev` ref
-and exact live PR base SHA; `issue_comment` must use default `main` and its
-current workflow SHA. In both cases the live PR receipt base/head remain exact.
+`github.workflow_sha`. GitHub supplies this `pull_request_target` and
+`issue_comment` workflow from the repository's default `main` branch, so both
+events must use that exact workflow ref and current default-branch SHA. A
+`pull_request_target` run head must equal the live candidate head; an
+`issue_comment` run head must equal the current default-branch SHA. In both
+cases the independently queried live PR and status receipt keep the protected
+`dev` base and candidate head exact.
 
 The final exact-head `task-to-dev-promotion-check` is published only when the
 repository variable `FACMAN_TASK_TO_DEV_REQUIRED_WORKFLOW_ID` names the

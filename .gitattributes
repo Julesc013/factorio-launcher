@@ -24,3 +24,4 @@ external/miniz/LICENSE binary
 external/picojson/LICENSE binary
 LICENSES/UniversalLauncher.txt text eol=lf
 LICENSES/UniversalSetup.txt text eol=lf
+LICENSES/UniversalSetupZlib.txt text eol=lf

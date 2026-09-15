@@ -22,7 +22,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - strict CI installs the lock
     jsonschema = None
 
-from tools import json_contract
+from tools import json_contract, provider_adoption_successor_check
 
 POLICY = ROOT / "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v2.toml"
 POLICY_SCHEMA = ROOT / "contracts/schema/factorio/factorio_2_1_14_sandbox_play_policy.v2.schema.json"
@@ -357,7 +357,6 @@ def validate(
         (HISTORICAL_POLICY, EXPECTED_V1_POLICY_SHA256, "frozen policy v1"),
         (HISTORICAL_ROUTE, EXPECTED_V3_SHA256, "frozen route v3"),
         (HISTORICAL_RECORD, EXPECTED_V1_RECORD_SHA256, "historical route record v1"),
-        (PROVIDER_LOCK, EXPECTED_PROVIDER_LOCK, "provider lock"),
     ):
         try:
             actual = source_file_sha256(path)
@@ -374,6 +373,12 @@ def validate(
     else:
         if route_index.get("current_route_id") == EXPECTED_ROUTE_ID:
             problems.append("unaccepted route v4 was selected in the active route index")
+    problems.extend(
+        provider_adoption_successor_check.historical_binding_problems(
+            "factorio_2_1_14_release_route.v4",
+            EXPECTED_PROVIDER_LOCK,
+        )
+    )
     return problems
 
 

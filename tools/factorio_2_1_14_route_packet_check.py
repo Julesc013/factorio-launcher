@@ -20,7 +20,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - strict CI installs the lock
     jsonschema = None
 
-from tools import json_contract
+from tools import json_contract, provider_adoption_successor_check
 
 
 PACKET = ROOT / "release/index/factorio_2_1_14_route_packet.v1.toml"
@@ -475,6 +475,13 @@ def validate(
         ):
             if anchor not in checkpoint:
                 problems.append(f"route packet checkpoint is missing {anchor!r}")
+
+    problems.extend(
+        provider_adoption_successor_check.historical_binding_problems(
+            "factorio_2_1_14_route_packet.v1",
+            EXPECTED_CANDIDATE["provider_lock_sha256"],
+        )
+    )
 
     return problems
 
