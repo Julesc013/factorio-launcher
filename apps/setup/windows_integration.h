@@ -11,6 +11,14 @@ namespace facman::setup::integration {
 
 enum class Effect { shortcut, registration };
 enum class Ownership { absent, owned, owned_stale, foreign, unreadable };
+enum class CutoverOwnership {
+  absent,
+  old_exact,
+  new_exact,
+  facman_owned_other,
+  foreign,
+  unreadable,
+};
 
 struct Result {
   bool ok = false;
@@ -58,6 +66,14 @@ struct MaintenanceContext {
   std::filesystem::path repair_source;
 };
 
+struct CutoverContext {
+  MaintenanceContext source;
+  MaintenanceContext target;
+  std::string source_version;
+  std::string target_version;
+  std::string operation_id;
+};
+
 bool owns_shortcut(const std::filesystem::path &install_root,
                    const ShortcutIdentity &identity);
 bool owns_registration(const MaintenanceContext &context,
@@ -79,6 +95,14 @@ Result apply_windows_effect(Effect effect,
                             const MaintenanceContext &context,
                             const std::string &product_version,
                             bool remove);
+CutoverOwnership inspect_windows_cutover_effect(
+    Effect effect, const CutoverContext &context);
+// Reconciles an interrupted exact old->new transition. Shortcut replacement
+// uses an operation-bound same-directory backup; registration uses one KTM
+// transaction. Foreign, unreadable, and different owned generations are
+// preserved for recovery.
+Result apply_windows_cutover_effect(Effect effect,
+                                    const CutoverContext &context);
 // Native smoke-test helpers bind a shortcut operation to an isolated fixture
 // path; production entry points always resolve the current-user Start Menu.
 Ownership inspect_windows_shortcut_fixture(const std::filesystem::path &shortcut,
@@ -88,5 +112,9 @@ Result apply_windows_shortcut_fixture(const std::filesystem::path &shortcut,
                                       const std::filesystem::path &install_root,
                                       const std::string &product_version,
                                       bool remove);
+CutoverOwnership inspect_windows_shortcut_cutover_fixture(
+    const std::filesystem::path &shortcut, const CutoverContext &context);
+Result apply_windows_shortcut_cutover_fixture(
+    const std::filesystem::path &shortcut, const CutoverContext &context);
 } // namespace facman::setup::integration
 #endif

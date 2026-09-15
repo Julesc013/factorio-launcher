@@ -137,6 +137,27 @@ def tree_digest(entries: list[Entry]) -> str:
     return digest.hexdigest()
 
 
+def maintenance_descriptor(
+    *, version: str, facman_revision: str, usk_revision: str
+) -> dict[str, object]:
+    return {
+        "schema": "facman.self_maintenance_package.v1",
+        "product_id": "facman",
+        "product_version": version,
+        "generation_relative_path": f"generations/{version}",
+        "facman_source_revision": facman_revision,
+        "universal_setup_revision": usk_revision,
+        "setup_protocol": "facman.self_maintenance.v1",
+        "package_layout": "versioned_generation_with_maintenance_v1",
+        "entrypoints": {
+            "gui_relative_path": "FacMan.exe",
+            "cli_relative_path": "bin/facman.exe",
+            "maintenance_relative_path": "maintenance/FacManSetup.exe",
+        },
+        "automatic_update": False,
+    }
+
+
 def build(
     portable: Path,
     bootstrap: Path,
@@ -154,6 +175,14 @@ def build(
     runtime = portable_entries(portable)
     entries = [Entry(generation + item.path, item.data) for item in runtime]
     entries.append(Entry("facman/maintenance/FacManSetup.exe", bootstrap.read_bytes()))
+    entries.append(Entry(
+        "facman/state/self-maintenance-package.v1.json",
+        canonical_json(maintenance_descriptor(
+            version=version,
+            facman_revision=facman_revision,
+            usk_revision=usk_revision,
+        )),
+    ))
     entries.append(Entry(
         "facman/state/current-generation.v1.json",
         canonical_json({

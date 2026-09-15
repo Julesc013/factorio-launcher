@@ -30,6 +30,12 @@ no administrator rights and creates:
   repair-sources\<payload-sha256>.zip
   repair-sources\<payload-sha256>.FacManSetup.exe
 
+%LOCALAPPDATA%\FacMan\setup-coordinator.v1\
+  setup-operations\facman.self.lock
+  generations\generation.<identity>.v1.json
+  activations\activation.<operation>.v1.json
+  maintenance\<operation>\<phase>.v1.json
+
 %APPDATA%\Microsoft\Windows\Start Menu\Programs\FacMan.lnk
 HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\FacMan
 ```
@@ -64,6 +70,46 @@ retained-source paths; changed or foreign registrations are preserved for
 review.
 Unknown files inside the managed installation root cause uninstall refusal.
 Workspaces and retained setup receipts remain untouched.
+
+The source implementation now defines the independent maintenance transition
+used by explicit update, downgrade, and rollback. A package contains a closed
+`facman.self_maintenance_package.v1` descriptor. FacMan derives a digest-bound
+sibling root and the distinct install ID
+`facman.self.generation.<generation-id>`, requests only Universal Setup
+`install_local`, and requires exact installed-state inspection and verification
+before changing either Windows shell object. It never requests the provider's
+whole-root `update` operation.
+
+Generation and activation records are immutable. Each activation binds the
+name and digest of the unique previous chain head. The scanner requires one
+genesis and one connected linear chain, and it binds each child's source
+generation to its parent's target generation. A missing predecessor, fork,
+cycle, changed record, malformed record, or stale active generation stops
+before another effect. Rollback selects an existing retained generation with
+exact absolute layout paths and performs no provider mutation. Old and
+candidate roots are retained through cutover.
+
+Windows shortcut cutover accepts only the exact old or exact new entrypoint.
+It keeps an operation-bound same-directory backup so an interruption between
+rename and publication can be reconciled. HKCU registration cutover uses one
+registry transaction and points maintenance commands at the retained external
+helper. Foreign, unreadable, or different owned generations are preserved for
+recovery.
+
+The locked-executable handoff duplicates the initiating process handle with
+only synchronization and limited-query rights, passes it through an explicit
+handle list, and binds its PID and creation time. The launcher holds no-write,
+no-delete-sharing handles for the exact helper and journal through process
+creation. It creates the primary thread suspended, revalidates both paths, and
+resumes the thread only after successful admission; mismatch or deadline expiry
+terminates it while suspended. A post-create refusal is closed only after both
+`TerminateProcess` succeeds and bounded waiting confirms process exit. Otherwise
+the result retains the spawned PID and reports cleanup outcome unknown. The
+external helper validates the inherited process handle, spends the remaining
+portion of the original absolute monotonic deadline, closes the handle, and
+only then may reacquire the global coordinator lock. It never reopens a process
+by PID and is not attached to the product process supervisor's kill-on-close
+job.
 
 A fresh repair request whose package is absent returns
 `self_setup_package_missing` before a setup journal, provider apply, or native
@@ -117,9 +163,13 @@ installed-state and receipts, and preserves workspaces and Factorio data.
 - All packages are unsigned; macOS is not notarized.
 - No downloader, automatic updater, service, file association, or default PATH
   mutation.
-- Explicit FacMan update/downgrade and locked-file restart handoff remain
-  unimplemented; this maintenance slice qualifies repair/remove input custody
-  and interruption recovery only.
+- The update/downgrade/rollback coordinator, immutable record chain, exact
+  Windows cutover adapter, and inherited-handle primitive form a focused,
+  locally tested source slice.
+  Public setup command routing, migration of a legacy single-root install,
+  multi-generation repair/removal, a full parent-exit/helper-resume run, and
+  two source-distinct package lifecycle qualification remain pending. The
+  active WorkUnits therefore remain open.
 - Windows is the 0.1 support direction. macOS Intel and Ubuntu 24.04 x64
   GTK/X11 are experimental previews.
 - No setup package grants real-Factorio execution authority.

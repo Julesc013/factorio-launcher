@@ -376,10 +376,12 @@ facman::core::Result<ScopedSetupLock> acquire_setup_lock(
   fs::create_directories(directory, status);
   if (status) return facman::core::Result<ScopedSetupLock>::failure(error(
       "self_setup_lock_unsafe", "setup operation lock directory could not be created", status.message()));
-  // Setup changes one owned root across all mutating modes.  An uninstall
-  // cannot race an install or repair merely because their journal names differ.
-  const fs::path path = directory / ("facman.root." +
-      root_identity + ".lock");
+  // Start Menu and HKCU registration are per-user product objects. Every
+  // FacMan root therefore shares one coordinator lock: allowing the caller's
+  // selected root to choose the lock would let two individually valid roots
+  // race those singleton effects during an update or rollback.
+  (void)root_identity;
+  const fs::path path = directory / "facman.self.lock";
   ScopedSetupLock result;
   auto acquired = result.value.create(path);
   if (acquired.code == facman::base::StableLockCode::exists) {

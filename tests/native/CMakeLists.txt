@@ -64,6 +64,22 @@ facman_native_test(facman_self_setup_recovery_smoke
 target_compile_features(facman_self_setup_recovery_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_self_setup_recovery_smoke PRIVATE facman_self_setup_static)
 set_tests_properties(facman_self_setup_recovery_smoke PROPERTIES TIMEOUT 30)
+facman_native_test(facman_self_maintenance_smoke
+  facman_self_maintenance_smoke.cpp "fast-unit;setup;security;recovery")
+target_compile_features(facman_self_maintenance_smoke PRIVATE cxx_std_17)
+target_link_libraries(facman_self_maintenance_smoke PRIVATE facman_self_setup_static)
+set_tests_properties(facman_self_maintenance_smoke PROPERTIES TIMEOUT 30)
+if(WIN32 AND TARGET facman_windows_integration_static)
+  facman_native_test(facman_windows_maintenance_handoff_smoke
+    facman_windows_maintenance_handoff_smoke.cpp
+    "fast-unit;setup;security;recovery;platform")
+  target_compile_features(facman_windows_maintenance_handoff_smoke PRIVATE cxx_std_17)
+  target_compile_definitions(facman_windows_maintenance_handoff_smoke PRIVATE
+    FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/maintenance-handoff")
+  target_link_libraries(facman_windows_maintenance_handoff_smoke PRIVATE
+    facman_windows_integration_static)
+  set_tests_properties(facman_windows_maintenance_handoff_smoke PROPERTIES TIMEOUT 10)
+endif()
 
 facman_native_test(miniz_dependency_smoke miniz_dependency_smoke.c "fast-unit;contract")
 target_link_libraries(miniz_dependency_smoke PRIVATE miniz_static)
