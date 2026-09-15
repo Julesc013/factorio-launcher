@@ -347,131 +347,81 @@ class CliTests(unittest.TestCase):
             self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
             self.assertFalse(absent_workspace.exists())
 
-    def test_managed_repair_plan_is_a_read_only_reconciliation_alias(self) -> None:
+    def test_managed_repair_cli_requires_bound_replay_identity(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             workspace = root / "workspace"
-            install = root / "managed-install"
-            archive = root / "unverified-archive.zip"
-            shutil.copytree(FIXTURE_INSTALL, install)
-            archive.write_bytes(b"unverified archive fixture")
-            install_before = tree_snapshot(install)
-            archive_before = hashlib.sha256(archive.read_bytes()).hexdigest()
-
-            code, stdout, stderr = invoke([
-                "--workspace", str(workspace), "installs", "import", str(install),
-                "--id", "managed-fixture", "--json",
-            ])
-            self.assertEqual(code, 0, stderr or stdout)
-            record_path = workspace / "installs" / "refs" / "managed-fixture.json"
-            record = json.loads(record_path.read_text(encoding="utf-8"))
-            record.update({
-                "ownership": "managed",
-                "setup_state_ref": "setup-state:fixture",
-                "last_verification_identity": "verification:fixture",
-                "state_revision": "revision:fixture",
-                "lifecycle_status": "active",
-            })
-            record_path.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
-            workspace_before = tree_snapshot(workspace)
+            archive = root / "archive.zip"
+            archive.write_bytes(b"repair archive")
+            before = tree_snapshot(root)
 
             for arguments in (
-                ["--bogus", "ignored"],
+                [],
                 ["--archive"],
                 ["--archive", str(archive), "--archive", str(archive)],
-                ["--json", "--json"],
+                ["--archive", str(archive), "--json", "--json"],
             ):
                 code, _stdout, _stderr = invoke([
                     "--workspace", str(workspace), "installs", "repair", "plan",
                     "managed-fixture", *arguments,
                 ])
                 self.assertEqual(code, 2)
-            self.assertEqual(workspace_before, tree_snapshot(workspace))
-
-            code, stdout, stderr = invoke([
-                "--workspace", str(workspace), "installs", "repair", "plan",
-                "managed-fixture", "--json",
-            ])
-            self.assertEqual(code, 0, stderr or stdout)
-            no_archive = json.loads(stdout)
-            self.assertEqual("installs.repair.plan", no_archive["command"])
-            self.assertEqual("already_reconciled", no_archive["summary"]["status"])
-            self.assertEqual("unselected", no_archive["desired_state"]["source"]["trust_status"])
-            self.assertFalse(no_archive["mutation_executed"])
-            self.assertFalse(no_archive["apply_available"])
-
-            code, stdout, stderr = invoke([
-                "--workspace", str(workspace), "installs", "reconcile", "plan",
-                "managed-fixture", "--json",
-            ])
-            self.assertEqual(code, 0, stderr or stdout)
-            reconcile = json.loads(stdout)
-            self.assertEqual("installs.reconcile.plan", reconcile["command"])
-            self.assertEqual(reconcile["plan_digest"], no_archive["plan_digest"])
+            self.assertEqual(before, tree_snapshot(root))
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "installs", "repair", "plan",
                 "managed-fixture", "--archive", str(archive), "--json",
             ])
-            self.assertEqual(code, 0, stderr or stdout)
-            selected = json.loads(stdout)
-            self.assertEqual("installs.repair.plan", selected["command"])
-            self.assertEqual("blocked_plan", selected["summary"]["status"])
-            self.assertEqual("selected_unverified", selected["desired_state"]["source"]["trust_status"])
-            self.assertIn("source_inspection_required_for_materialisation", selected["blockers"])
-            steps = {step["step_kind"]: step for step in selected["steps"]}
-            self.assertEqual("blocked_pending_source_inspection", steps["source.inspect"]["status"])
-            self.assertFalse(selected["mutation_executed"])
-            self.assertFalse(selected["apply_available"])
-            self.assertTrue(all(value is False for value in selected["no_write_guarantees"].values()))
-            plan_schema = json_contract.load_schema(
-                ROOT / "contracts/schema/factorio/factorio_install_reconciliation_plan.v1.schema.json"
-            )
-            self.assertEqual(json_contract.validate(selected, plan_schema), [])
-            self.assertEqual(workspace_before, tree_snapshot(workspace))
-            self.assertEqual(install_before, tree_snapshot(install))
-            self.assertEqual(archive_before, hashlib.sha256(archive.read_bytes()).hexdigest())
-
-            record["ownership"] = "imported"
-            record_path.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
-            ownership_refusal_before = tree_snapshot(workspace)
-            code, stdout, stderr = invoke([
-                "--workspace", str(workspace), "installs", "repair", "plan",
-                "managed-fixture", "--json",
-            ])
             self.assertNotEqual(code, 0, stderr)
-            self.assertEqual("ownership_denied", json.loads(stdout)["refusal"]["code"])
-            self.assertEqual(ownership_refusal_before, tree_snapshot(workspace))
+            self.assertEqual(
+                "setup_repair_plan_authority_required", json.loads(stdout)["refusal"]["code"]
+            )
+            self.assertEqual(before, tree_snapshot(root))
 
-            for install_id, refusal_code in (("missing", "unknown_install"), ("bad/id", "invalid_identifier")):
-                code, stdout, stderr = invoke([
-                    "--workspace", str(workspace), "installs", "repair", "plan",
-                    install_id, "--json",
-                ])
-                self.assertNotEqual(code, 0, stderr)
-                self.assertEqual(refusal_code, json.loads(stdout)["refusal"]["code"])
+            environment = {
+                "FACMAN_SETUP_STATE_ROOT": str(root / "setup"),
+                "FACMAN_SETUP_ACCEPTANCE_ROOT": str(root / "acceptance"),
+                "FACMAN_SETUP_POLICY_ACTIVATION": "operator_acceptance_candidate",
+            }
+            required_apply = [
+                "--archive", str(archive), "--digest", "1" * 64,
+                "--plan-created-at", "2099-01-01T00:00:00Z",
+                "--record-digest", "2" * 64,
+                "--transaction-id", "tx-managed-repair",
+                "--applied-at", "2099-01-01T00:00:01Z",
+                "--confirm", "APPLY",
+            ]
+            malformed_apply = [
+                required_apply + ["--digest", "3" * 64],
+                required_apply + ["--unknown", "value"],
+                required_apply + ["stray-token"],
+                required_apply + ["--json", "--json"],
+                required_apply[:-1],
+                required_apply[:8] + required_apply[10:],
+            ]
+            before_apply = tree_snapshot(root)
+            with mock.patch.dict(os.environ, environment, clear=False):
+                for arguments in malformed_apply:
+                    code, _stdout, _stderr = invoke([
+                        "--workspace", str(workspace), "installs", "repair", "apply",
+                        "managed-fixture", "repair-plan.managed-fixture", *arguments,
+                    ])
+                    self.assertEqual(code, 2, arguments)
+            self.assertEqual(before_apply, tree_snapshot(root))
 
-            for lifecycle_status in ("active", "verification_failed", "recovery_required"):
-                record.update({"ownership": "managed", "lifecycle_status": lifecycle_status})
-                record_path.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
+            with mock.patch.dict(os.environ, environment, clear=False):
                 code, stdout, stderr = invoke([
-                    "--workspace", str(workspace), "installs", "repair", "plan",
-                    "managed-fixture", "--json",
+                    "--workspace", str(workspace), "installs", "repair", "apply",
+                    "managed-fixture", "repair-plan.managed-fixture",
+                    "--archive", str(archive), "--digest", "1" * 64,
+                    "--plan-created-at", "2099-01-01T00:00:00Z",
+                    "--record-digest", "2" * 64,
+                    "--transaction-id", "tx-managed-repair",
+                    "--applied-at", "2099-01-01T00:00:01Z",
+                    "--confirm", "APPLY", "--json",
                 ])
-                self.assertEqual(code, 0, stderr or stdout)
-
-            for lifecycle_status in ("retired", "uninstalled", "terminal", "unknown"):
-                record.update({"ownership": "managed", "lifecycle_status": lifecycle_status})
-                record_path.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
-                lifecycle_refusal_before = tree_snapshot(workspace)
-                code, stdout, stderr = invoke([
-                    "--workspace", str(workspace), "installs", "repair", "plan",
-                    "managed-fixture", "--json",
-                ])
-                self.assertNotEqual(code, 0, stderr)
-                self.assertEqual(
-                    "repair_lifecycle_ineligible", json.loads(stdout)["refusal"]["code"])
-                self.assertEqual(lifecycle_refusal_before, tree_snapshot(workspace))
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
 
     def test_managed_uninstall_plan_requires_bound_lifecycle_evidence_without_writes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -15,8 +15,7 @@ bool InstallationApplicationModule::handles(CommandId command) const noexcept
         command == CommandId::install_import ||
         command == CommandId::install_inspect ||
         command == CommandId::installs_describe ||
-        command == CommandId::installs_reconcile_plan ||
-        command == CommandId::installs_repair_plan;
+        command == CommandId::installs_reconcile_plan;
 }
 
 ApplicationResult InstallationApplicationModule::execute(
@@ -38,9 +37,6 @@ ApplicationResult InstallationApplicationModule::execute(
         return handlers::describe_install(context, std::get<DescribeInstallRequest>(request.payload));
     case CommandId::installs_reconcile_plan:
         return handlers::plan_install_reconciliation(
-            context, std::get<ReconcileInstallRequest>(request.payload));
-    case CommandId::installs_repair_plan:
-        return handlers::plan_managed_install_repair(
             context, std::get<ReconcileInstallRequest>(request.payload));
     default:
         return refused(

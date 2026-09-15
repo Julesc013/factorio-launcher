@@ -5,6 +5,8 @@
 
 #include "fl_json.h"
 
+#include <map>
+#include <set>
 #include <utility>
 
 namespace facman::cli {
@@ -30,12 +32,54 @@ std::string payload(const std::vector<std::pair<std::string, std::string>>& fiel
     return output.serialize();
 }
 
+std::optional<std::map<std::string, std::string>> exact_repair_apply_options(
+    const std::vector<std::string>& args)
+{
+    static const std::set<std::string> value_options {
+        "--archive", "--digest", "--plan-created-at", "--record-digest",
+        "--transaction-id", "--applied-at", "--confirm"};
+    if (!positional(args, 3) || !positional(args, 4)) return std::nullopt;
+    std::map<std::string, std::string> values;
+    bool json_seen = false;
+    for (std::size_t index = 5; index < args.size(); ++index) {
+        const std::string& token = args[index];
+        if (token == "--json") {
+            if (json_seen) return std::nullopt;
+            json_seen = true;
+            continue;
+        }
+        if (value_options.count(token) == 0U || values.count(token) != 0U ||
+            index + 1U >= args.size() || args[index + 1U].empty() ||
+            args[index + 1U].compare(0, 2, "--") == 0) {
+            return std::nullopt;
+        }
+        values.emplace(token, args[++index]);
+    }
+    if (values.size() != value_options.size() || values["--confirm"] != "APPLY") {
+        return std::nullopt;
+    }
+    return values;
+}
+
 } // namespace
 
 std::optional<SetupApplyCommand> setup_apply_request(
     const std::string& action,
     const std::vector<std::string>& args)
 {
+    if (action == "repair") {
+        auto values = exact_repair_apply_options(args);
+        if (!values) return std::nullopt;
+        return SetupApplyCommand {"installs.repair.apply", payload({
+            {"install_id", args[3]}, {"archive", values->at("--archive")},
+            {"plan_id", args[4]}, {"plan_digest", values->at("--digest")},
+            {"plan_created_at", values->at("--plan-created-at")},
+            {"install_record_sha256", values->at("--record-digest")},
+            {"transaction_id", values->at("--transaction-id")},
+            {"applied_at", values->at("--applied-at")},
+            {"confirmation", values->at("--confirm")}}),
+            "Managed repair apply dispatched."};
+    }
     const std::string digest = option(args, "--digest");
     const std::string confirmation = option(args, "--confirm");
     if (!positional(args, 3) || digest.empty() || confirmation != "APPLY") return std::nullopt;

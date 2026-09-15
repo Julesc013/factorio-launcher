@@ -32,6 +32,40 @@ namespace facman::factorio::application::handlers {
 namespace fs = std::filesystem;
 
 namespace {
+std::string digest_text(const std::string& value);
+
+std::string managed_repair_result(
+    const ServiceOperationRequest& request,
+    const RepairPlan& plan,
+    const RepairReport& report)
+{
+    facman::core::json::ObjectBuilder document;
+    document.add_string("schema", "factorio.managed_repair_apply_result.v1");
+    document.add_string("status", "completed");
+    document.add_string("disposition", "applied");
+    document.add_string("install_id", request.install_id);
+    document.add_string("plan_id", request.plan_id);
+    document.add_string("plan_digest", request.plan_digest);
+    document.add_string("provider_plan_digest", plan.provider_plan_digest);
+    document.add_string("transaction_id", request.transaction_id);
+    document.add_string("completed_at", request.applied_at);
+    document.add_string("installed_state_digest", report.installed_state_digest);
+    document.add_string("setup_state_ref", report.setup_state_ref);
+    document.add_string("last_verification_identity", report.last_verification_identity);
+    document.add_string("state_revision", report.state_revision);
+    document.add_string("verification_status", report.verification_status);
+    return document.serialize();
+}
+
+bool repair_refusal_proves_no_provider_effect(const std::string& code)
+{
+    return code == "stale_plan" || code == "source_drift" || code == "invalid_argument" ||
+        code == "unknown_install" ||
+        code == "setup_repair_apply_input_invalid" ||
+        code == "setup_installed_state_inspection_refused" ||
+        code == "setup_installed_state_response_invalid";
+}
+
 std::string managed_uninstall_context(
     const UninstallPlanRequest& plan,
     const ServiceOperationRequest& request,
@@ -723,9 +757,228 @@ ApplicationResult repair_install(ApplicationContext& context, const ServiceOpera
     return managed_install_policy(context, request, "installs.repair");
 }
 
-ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest&)
+ApplicationResult plan_repair_install(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    return live_target_acceptance_required(context, "installs.repair.apply");
+#if FACMAN_WITH_SETUP
+    auto parsed_id = facman::core::InstallId::parse_legacy(request.install_id);
+    if (!parsed_id) return refused(
+        safety_refusal("installs.repair.plan", parsed_id.error().code, "Install id is invalid", parsed_id.error().message, false),
+        parsed_id.error().code, parsed_id.error().message, parsed_id.error().kind);
+    auto install = context.installs().load(parsed_id.value());
+    if (!install) return refused(
+        safety_refusal("installs.repair.plan", "unknown_install", "Install reference is not registered", request.install_id, true),
+        "unknown_install", "Install reference is not registered");
+    const auto& record = install.value();
+    if (record.ownership != "managed") return refused(
+        safety_refusal("installs.repair.plan", "ownership_denied", "Repair planning is available only for registered managed installs", record.ownership, true),
+        "ownership_denied", "Repair planning is available only for registered managed installs");
+    if (record.provider_id != "universal-setup" || record.source != "universal-setup") return refused(
+        safety_refusal("installs.repair.plan", "managed_install_provider_mismatch", "Managed repair planning requires a Universal Setup managed record", record.provider_id + ":" + record.source, true),
+        "managed_install_provider_mismatch", "Managed repair planning requires a Universal Setup managed record");
+    if (record.lifecycle_status == "recovery_required") return refused(
+        safety_refusal("installs.repair.plan", "operation_specific_recovery_required", "Interrupted managed installation work must be recovered before repair", request.install_id, true),
+        "operation_specific_recovery_required", "Interrupted managed installation work must be recovered before repair",
+        facman::core::OutcomeKind::recovery_required);
+    if (record.lifecycle_status != "active" && record.lifecycle_status != "verification_failed") return refused(
+        safety_refusal("installs.repair.plan", "repair_lifecycle_ineligible", "Repair planning requires an active or verification_failed managed install", record.lifecycle_status, true),
+        "repair_lifecycle_ineligible", "Repair planning requires an active or verification_failed managed install");
+    if (record.root.empty() || record.version.empty() || request.archive.empty() ||
+        record.setup_state_ref.empty() || record.last_verification_identity.empty() || record.state_revision.empty()) {
+        return refused(
+            safety_refusal("installs.repair.plan", "managed_install_evidence_incomplete", "Managed repair planning requires archive, version, target, setup, verification, and revision evidence", request.install_id, true),
+            "managed_install_evidence_incomplete", "Managed repair planning requires complete managed-install evidence");
+    }
+    const std::string record_text = read_text(record.source_path);
+    if (record_text.empty()) return refused(
+        safety_refusal("installs.repair.plan", "workspace_record_read_failed", "Managed install record cannot be read stably", record.source_path.string(), true),
+        "workspace_record_read_failed", "Managed install record cannot be read stably");
+    RepairPlanRequest plan_request;
+    plan_request.plan_id = context.ids().next("repair-plan");
+    plan_request.request_id = plan_request.plan_id;
+    plan_request.install_id = record.id.str();
+    plan_request.created_at = context.clock().now_utc();
+    plan_request.version = record.version;
+    plan_request.archive = facman::platform::path_from_utf8(request.archive);
+    plan_request.target = record.root;
+    plan_request.setup_state_ref = record.setup_state_ref;
+    plan_request.last_verification_identity = record.last_verification_identity;
+    plan_request.state_revision = record.state_revision;
+    plan_request.lifecycle_status = record.lifecycle_status;
+    auto plan = context.setup().plan_repair(plan_request);
+    if (!plan) return refused(
+        safety_refusal("installs.repair.plan", plan.error().code, "Universal Setup refused managed repair planning",
+            plan.error().path.empty() ? plan.error().message : plan.error().message + ": " + plan.error().path, true),
+        plan.error().code, plan.error().message, plan.error().kind);
+    auto envelope = encode_managed_repair_envelope(plan.value(), digest_text(record_text));
+    if (!envelope) return refused(
+        safety_refusal("installs.repair.plan", envelope.error().code, "Managed repair plan could not be bound", envelope.error().message, true),
+        envelope.error().code, envelope.error().message);
+    ApplicationResult result;
+    result.output = envelope.value().document;
+    return result;
+#else
+    (void)request;
+    return unavailable(context, "installs.repair.plan", "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
+}
+
+ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+#if FACMAN_WITH_SETUP
+    // This implemented provider route replaces the former live_target_acceptance_required stub.
+    if (!valid_utc_seconds(request.plan_created_at) || !valid_utc_seconds(request.applied_at) ||
+        request.applied_at <= request.plan_created_at || request.confirmation != "APPLY") return refused(
+        safety_refusal("installs.repair.apply", "invalid_timestamp", "Repair apply requires exact confirmation and advancing UTC timestamps", "plan_created_at/applied_at", false),
+        "invalid_timestamp", "Repair apply requires exact confirmation and advancing UTC timestamps");
+    auto parsed_transaction = facman::core::TransactionId::parse(request.transaction_id);
+    if (!parsed_transaction) return refused(
+        safety_refusal("installs.repair.apply", parsed_transaction.error().code, "Transaction id is not portable", parsed_transaction.error().message, false),
+        parsed_transaction.error().code, parsed_transaction.error().message, parsed_transaction.error().kind);
+    facman::transaction::Record existing;
+    std::string existing_detail;
+    if (facman::transaction::read_record(context.workspace(), parsed_transaction.value().str(), existing, existing_detail)) {
+        return refused(
+            safety_refusal("installs.repair.apply", "operation_specific_recovery_required", "Existing managed repair transaction requires operation-specific recovery", request.transaction_id, true),
+            "operation_specific_recovery_required", "Existing managed repair transaction requires operation-specific recovery",
+            facman::core::OutcomeKind::recovery_required);
+    }
+    auto parsed_id = facman::core::InstallId::parse_legacy(request.install_id);
+    if (!parsed_id) return refused(
+        safety_refusal("installs.repair.apply", parsed_id.error().code, "Install id is invalid", parsed_id.error().message, false),
+        parsed_id.error().code, parsed_id.error().message, parsed_id.error().kind);
+    auto install = context.installs().load(parsed_id.value());
+    if (!install) return refused(
+        safety_refusal("installs.repair.apply", "unknown_install", "Install reference is not registered", request.install_id, true),
+        "unknown_install", "Install reference is not registered");
+    const auto& record = install.value();
+    if (record.ownership != "managed" || record.provider_id != "universal-setup" ||
+        record.source != "universal-setup" ||
+        (record.lifecycle_status != "active" && record.lifecycle_status != "verification_failed") ||
+        record.root.empty() || record.version.empty() || request.archive.empty() ||
+        record.setup_state_ref.empty() || record.last_verification_identity.empty() || record.state_revision.empty()) {
+        return refused(
+            safety_refusal("installs.repair.apply", "managed_install_evidence_incomplete", "Managed repair apply requires an eligible Universal Setup managed install", request.install_id, true),
+            "managed_install_evidence_incomplete", "Managed repair apply requires an eligible Universal Setup managed install");
+    }
+    const std::string record_text = read_text(record.source_path);
+    if (record_text.empty()) return refused(
+        safety_refusal("installs.repair.apply", "workspace_record_read_failed", "Managed install record cannot be read stably", record.source_path.string(), true),
+        "workspace_record_read_failed", "Managed install record cannot be read stably");
+    const std::string record_digest = digest_text(record_text);
+    if (request.install_record_sha256 != record_digest) return refused(
+        safety_refusal("installs.repair.apply", "managed_install_record_preimage_changed", "Managed install record changed after repair planning", request.install_id, true),
+        "managed_install_record_preimage_changed", "Managed install record changed after repair planning",
+        facman::core::OutcomeKind::conflict);
+    RepairPlanRequest plan_request;
+    plan_request.plan_id = request.plan_id;
+    plan_request.request_id = request.plan_id;
+    plan_request.install_id = record.id.str();
+    plan_request.created_at = request.plan_created_at;
+    plan_request.version = record.version;
+    plan_request.archive = facman::platform::path_from_utf8(request.archive);
+    plan_request.target = record.root;
+    plan_request.setup_state_ref = record.setup_state_ref;
+    plan_request.last_verification_identity = record.last_verification_identity;
+    plan_request.state_revision = record.state_revision;
+    plan_request.lifecycle_status = record.lifecycle_status;
+    auto plan = context.setup().plan_repair(plan_request);
+    if (!plan) return refused(
+        safety_refusal("installs.repair.apply", "stale_plan", "Reviewed repair plan no longer revalidates", plan.error().code + ": " + plan.error().message, true),
+        "stale_plan", plan.error().code + ": " + plan.error().message);
+    auto envelope = encode_managed_repair_envelope(plan.value(), record_digest);
+    if (!envelope || envelope.value().digest != request.plan_digest) return refused(
+        safety_refusal("installs.repair.apply", "stale_plan", "Reviewed repair plan identity changed before apply", request.plan_id, true),
+        "stale_plan", "Reviewed repair plan identity changed before apply");
+
+    facman::transaction::Record journal_record;
+    journal_record.transaction_id = parsed_transaction.value().str();
+    journal_record.command_id = "installs.repair.apply";
+    journal_record.target = record.root;
+    journal_record.sources = {record.source_path, plan_request.archive};
+    journal_record.commit_strategy = "provider_repair_then_durable_install_reference_replacement";
+    journal_record.operation_context = encode_managed_repair_context(
+        plan_request, plan.value(), request.plan_id, request.plan_digest,
+        request.transaction_id, request.applied_at, facman::platform::path_to_utf8(record.root),
+        record_digest, "provider_entry_pending", nullptr, "");
+    auto started = facman::transaction::TransactionSession::begin(context.workspace(), std::move(journal_record));
+    if (!started) return refused(
+        safety_refusal("installs.repair.apply", "recovery_write_refused", "Repair coordinator journal could not be prepared", started.error().message, true),
+        "recovery_write_refused", started.error().message, facman::core::OutcomeKind::recovery_required);
+    auto session = started.take_value();
+    if (!session.validated("reviewed_outer_plan_bound") || !session.planned("exact_provider_plan_persisted") ||
+        !session.staged("provider_entry_prepared") || !session.verified("current_record_bound")) {
+        return refused(safety_refusal("installs.repair.apply", "recovery_write_refused", "Repair coordinator journal could not enter provider phase", session.detail(), true),
+            "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
+    }
+    session.record().operation_context = encode_managed_repair_context(
+        plan_request, plan.value(), request.plan_id, request.plan_digest,
+        request.transaction_id, request.applied_at, facman::platform::path_to_utf8(record.root),
+        record_digest, "provider_entry_started", nullptr, "");
+    if (!session.committing("provider_entry_started")) return refused(
+        safety_refusal("installs.repair.apply", "recovery_write_refused", "Repair provider-entry intent could not be recorded", session.detail(), true),
+        "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
+    RepairApplyRequest apply;
+    apply.plan_request = plan_request;
+    apply.reviewed_plan = plan.value();
+    apply.transaction_id = request.transaction_id;
+    apply.applied_at = request.applied_at;
+    apply.confirmation = request.confirmation;
+    auto report = context.setup().apply_repair(apply);
+    if (!report) {
+        if (repair_refusal_proves_no_provider_effect(report.error().code)) {
+            if (!session.refused(report.error().code + ": " + report.error().message)) {
+                return refused(safety_refusal("installs.repair.apply", "recovery_write_refused", "Provider repair refusal could not be durably closed", session.detail(), true),
+                    "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
+            }
+            return refused(safety_refusal("installs.repair.apply", report.error().code, "Universal Setup refused managed repair before mutation", report.error().message, true),
+                report.error().code, report.error().message, report.error().kind);
+        }
+        session.failed(report.error().code + ": " + report.error().message);
+        return refused(safety_refusal("installs.repair.apply", "transaction_recovery_required", "Universal Setup repair outcome requires recovery", report.error().detail.empty() ? report.error().message : report.error().detail, false),
+            "transaction_recovery_required", report.error().code + ": " + report.error().message,
+            facman::core::OutcomeKind::recovery_required);
+    }
+    const std::string terminal_record = project_repaired_install_record(record_text, report.value());
+    if (terminal_record.empty()) {
+        session.failed("terminal record projection could not preserve the managed record");
+        return refused(safety_refusal("installs.repair.apply", "transaction_recovery_required", "Repair completed in Universal Setup but its FacMan record cannot be projected", request.install_id, false),
+            "transaction_recovery_required", "Managed install record projection failed",
+            facman::core::OutcomeKind::recovery_required);
+    }
+    const std::string terminal_digest = digest_text(terminal_record);
+    session.record().operation_context = encode_managed_repair_context(
+        plan_request, plan.value(), request.plan_id, request.plan_digest,
+        request.transaction_id, request.applied_at, facman::platform::path_to_utf8(record.root),
+        record_digest, "terminal_projection_prepared", &report.value(), terminal_digest);
+    if (!session.checkpoint("terminal_projection_prepared")) {
+        const std::string detail = session.detail();
+        session.failed("terminal projection checkpoint failed: " + detail);
+        return refused(safety_refusal("installs.repair.apply", "transaction_recovery_required", "Repair terminal projection intent could not be recorded", detail, false),
+            "transaction_recovery_required", detail, facman::core::OutcomeKind::recovery_required);
+    }
+    const char* injected = std::getenv("FACMAN_TEST_REPAIR_INTERRUPT_AFTER_PROVIDER");
+    if (injected != nullptr && std::string(injected) == "1") {
+        session.failed("Injected interruption after provider repair");
+        return refused(safety_refusal("installs.repair.apply", "transaction_recovery_required", "Injected interruption after provider repair", request.transaction_id, false),
+            "transaction_recovery_required", "Injected interruption after provider repair",
+            facman::core::OutcomeKind::recovery_required);
+    }
+    auto replaced = context.installs().replace(record, record_digest, terminal_record);
+    if (!replaced) {
+        session.failed("terminal projection failed: " + replaced.error().message);
+        return refused(safety_refusal("installs.repair.apply", "transaction_recovery_required", "Repair completed in Universal Setup but its FacMan reference requires recovery", replaced.error().message, false),
+            "transaction_recovery_required", replaced.error().message, facman::core::OutcomeKind::recovery_required);
+    }
+    if (!session.committed("repaired_reference_projected") || !session.complete()) return refused(
+        safety_refusal("installs.repair.apply", "transaction_recovery_required", "Repair projection completed but its coordinator could not close", session.detail(), false),
+        "transaction_recovery_required", session.detail(), facman::core::OutcomeKind::recovery_required);
+    ApplicationResult result;
+    result.output = managed_repair_result(request, plan.value(), report.value());
+    return result;
+#else
+    (void)request;
+    return unavailable(context, "installs.repair.apply", "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
 }
 
 ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOperationRequest& request)
@@ -751,6 +1004,7 @@ ApplicationResult plan_uninstall_install(ApplicationContext& context, const Serv
 ApplicationResult apply_uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request)
 {
 #if FACMAN_WITH_SETUP
+    // This implemented provider route replaces the former live_target_acceptance_required stub.
     if (!valid_utc_seconds(request.plan_created_at) || !valid_utc_seconds(request.applied_at) ||
         request.applied_at <= request.plan_created_at) return refused(
         safety_refusal("installs.uninstall.apply", "invalid_timestamp",
@@ -1108,6 +1362,7 @@ bool is_setup_command(CommandId command) noexcept
     case CommandId::installs_install_apply:
     case CommandId::installs_install_version:
     case CommandId::installs_verify:
+    case CommandId::installs_repair_plan:
     case CommandId::installs_repair_apply:
     case CommandId::installs_repair:
     case CommandId::installs_move_plan:
@@ -1133,6 +1388,7 @@ ApplicationResult dispatch_setup(ApplicationContext& context, const ApplicationR
     case CommandId::installs_install_apply: return apply_install(context, operation);
     case CommandId::installs_install_version: return install_version(context, operation);
     case CommandId::installs_verify: return verify_install(context, operation);
+    case CommandId::installs_repair_plan: return plan_repair_install(context, operation);
     case CommandId::installs_repair_apply: return apply_repair_install(context, operation);
     case CommandId::installs_repair: return repair_install(context, operation);
     case CommandId::installs_move_plan: return plan_move_install(context, operation);

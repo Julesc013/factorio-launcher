@@ -151,3 +151,68 @@ separate. Unavailable host/input cells block their own qualification only.
 - Operation-specific automated recovery, physical host and packaged product
   qualification, genuine managed Factorio evidence and the remaining lifecycle
   leaves remain open. This WorkUnit remains active.
+
+## 2026-09-15 — provider-backed managed repair plan/apply slice
+
+- Advanced `installs.repair.plan` from the read-only reconciliation alias to an
+  exact provider-backed plan over the reviewed archive and managed-record
+  preimage. The FacMan outer digest binds the complete USK request and provider
+  plan so separate CLI invocations can replay the reviewed identity.
+- Implemented `installs.repair.apply` with the full plan/preimage/transaction
+  handoff. Apply replans before any coordinator write, persists the exact
+  provider plan and a provider-entry checkpoint before mutation, validates the
+  strict provider report and terminal installed state, and replaces the
+  existing FacMan record through its exact preimage CAS while preserving all
+  unrelated record members and unknown target content.
+- Known pre-effect provider refusals close the coordinator as refused. Any
+  other failure after provider entry retains a recovery-required journal and
+  the old FacMan reference. A durable `terminal_projection_prepared` checkpoint
+  makes post-provider/pre-CAS interruption inspectable. Exact apply retry and
+  generic recovery refuse with `operation_specific_recovery_required` until a
+  repair-specific recovery successor exists; no USK finalize or rollback path
+  is called.
+- Updated command/request/response/coordinator schemas, refusal and admission
+  policy, CLI parsing, frontend metadata, generated catalogs, goldens and
+  focused native/Python proofs. Strict report decoding rejects extra members,
+  invalid enums/timestamps/digests, unsafe or duplicate paths, identity drift,
+  and changed reviewed unknown-content sets.
+- Current-source Windows Debug build and focused native proofs, focused
+  command/refusal/frontend/CLI checks, the 426-schema strict suite and portable
+  AIDE Lite suite pass. This is synthetic owned-fixture evidence and does not
+  qualify a genuine Factorio install or additional hosts.
+- Cross-operation FacMan repair/uninstall lease unification and automated
+  repair recovery remain bounded successors. The provider transaction layer
+  still excludes competing provider mutation, while this slice explicitly
+  refuses ambiguous retry/recovery rather than claiming completion. The
+  WorkUnit remains active.
+
+## 2026-09-15 — repair terminal-inspection phase remediation
+
+- Independent review found that a provider refusal returned by the terminal
+  `installed.inspect` after a successful repair could retain a pre-effect code
+  and be misclassified as a no-effect refusal by the coordinator.
+- Terminal repair inspection refusals now always use
+  `setup_repair_terminal_state_inspection_refused`; terminal response decoding
+  failures always use `setup_repair_terminal_state_response_invalid`. Both carry
+  recovery-required phase provenance while preserving nested provider detail.
+- The owned M1 fixture now injects provider `unknown_install` only at the
+  terminal inspection after the repair effect and proves repaired provider
+  state, unchanged FacMan preimage, a recovery-required coordinator, no refused
+  closure, and idempotent operation-specific recovery refusal.
+
+## 2026-09-15 — final repair apply review remediation
+
+- Replaced the repair-apply CLI's first-match option lookup with an exact scan
+  from argv index 5. Every published value option must occur exactly once,
+  `--json` may occur at most once, and duplicate, unknown, stray or missing
+  tokens refuse locally before dispatch.
+- Added a coordinator proof in which FacMan durably records provider entry and
+  Universal Setup returns exact `stale_plan` before mutation. The coordinator
+  closes refused while target bytes, provider state and the FacMan record remain
+  byte-identical.
+- Added independent FacMan outer-digest perturbations for the nested provider
+  plan, archive-bearing plan request and raw record preimage. Each changes the
+  digest and the tampered identity refuses before journal/provider entry.
+- Expanded strict repair report negatives for invalid status enums, malformed
+  verification digests, wrong verification references, recipe/source binding
+  drift and repaired-file digest drift.

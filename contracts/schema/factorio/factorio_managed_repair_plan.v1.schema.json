@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_managed_repair_plan.v1.schema.json",
+  "title": "FacMan Managed Repair Plan",
+  "type": "object",
+  "required": ["schema", "command", "install_id", "plan_id", "plan_digest", "created_at",
+    "install_record_sha256", "plan_request", "provider_plan"],
+  "properties": {
+    "schema": { "const": "factorio.managed_repair_plan.v1" },
+    "command": { "const": "installs.repair.plan" },
+    "install_id": { "$ref": "#/$defs/id" },
+    "plan_id": { "$ref": "#/$defs/id" },
+    "plan_digest": { "$ref": "#/$defs/sha256" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "install_record_sha256": { "$ref": "#/$defs/sha256" },
+    "plan_request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "request_id", "plan_id", "install_id", "created_at", "archive"],
+      "properties": {
+        "schema": { "const": "usk.repair_plan_request.v1" },
+        "request_id": { "$ref": "#/$defs/id" },
+        "plan_id": { "$ref": "#/$defs/id" },
+        "install_id": { "$ref": "#/$defs/id" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "archive": {
+          "type": "object", "additionalProperties": false,
+          "required": ["path", "format", "expected_sha256", "strip_prefix"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1, "maxLength": 32768 },
+            "format": { "const": "zip" },
+            "expected_sha256": { "$ref": "#/$defs/sha256" },
+            "strip_prefix": { "type": "string", "maxLength": 4096 }
+          }
+        }
+      }
+    },
+    "provider_plan": { "$ref": "usk_repair_plan.v1.schema.json" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false
+}

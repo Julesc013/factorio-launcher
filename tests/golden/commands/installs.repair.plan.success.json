@@ -1,11 +1,47 @@
 {
-  "schema": "factorio.install_reconciliation_plan.v1",
+  "schema": "factorio.managed_repair_plan.v1",
   "command": "installs.repair.plan",
   "install_id": "managed-fixture",
-  "mode": "plan_only",
-  "mutation_executed": false,
-  "apply_available": false,
-  "summary": {
-    "status": "already_reconciled"
+  "plan_id": "repair-plan.managed-fixture",
+  "plan_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "created_at": "2026-09-15T00:00:00Z",
+  "install_record_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "plan_request": {
+    "schema": "usk.repair_plan_request.v1",
+    "request_id": "repair-plan.managed-fixture",
+    "plan_id": "repair-plan.managed-fixture",
+    "install_id": "managed-fixture",
+    "created_at": "2026-09-15T00:00:00Z",
+    "archive": {
+      "path": "C:/fixtures/factorio.zip",
+      "format": "zip",
+      "expected_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "strip_prefix": "factorio/"
+    }
+  },
+  "provider_plan": {
+    "schema": "usk.repair_plan.v1",
+    "plan_id": "repair-plan.managed-fixture",
+    "plan_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+    "operation": "repair",
+    "status": "planned",
+    "created_at": "2026-09-15T00:00:00Z",
+    "install_id": "managed-fixture",
+    "recipe_digest": "5555555555555555555555555555555555555555555555555555555555555555",
+    "source_digest": "3333333333333333333333333333333333333333333333333333333333333333",
+    "installed_state_digest": "6666666666666666666666666666666666666666666666666666666666666666",
+    "ownership_manifest_digest": "7777777777777777777777777777777777777777777777777777777777777777",
+    "before_verification_digest": "8888888888888888888888888888888888888888888888888888888888888888",
+    "pre_target_snapshot_digest": "9999999999999999999999999999999999999999999999999999999999999999",
+    "repairs": [{
+      "relative_path": "bin/x64/factorio.exe",
+      "reason": "modified",
+      "expected_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }],
+    "retained_unknown_paths": ["operator-note.txt"],
+    "revalidation": {
+      "immediately_before_apply": true,
+      "invalidate_on": ["source", "recipe", "target", "installed_state", "ownership_manifest", "policy", "provider_revision"]
+    }
   }
 }

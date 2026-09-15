@@ -1,0 +1,16 @@
+{
+  "schema": "factorio.managed_repair_apply_result.v1",
+  "status": "completed",
+  "disposition": "applied",
+  "install_id": "managed-fixture",
+  "plan_id": "repair-plan.managed-fixture",
+  "plan_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "provider_plan_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+  "transaction_id": "tx-managed-fixture-repair",
+  "completed_at": "2026-09-15T00:00:01Z",
+  "installed_state_digest": "3333333333333333333333333333333333333333333333333333333333333333",
+  "setup_state_ref": "C:/setup/state/installed/managed-fixture.tx-managed-fixture-repair.json",
+  "last_verification_identity": "4444444444444444444444444444444444444444444444444444444444444444",
+  "state_revision": "tx-managed-fixture-repair:5555555555555555555555555555555555555555555555555555555555555555",
+  "verification_status": "warn"
+}
