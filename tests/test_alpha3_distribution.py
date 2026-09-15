@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import io
+import json
 import tempfile
 import tomllib
 import unittest
@@ -105,6 +106,19 @@ class Alpha3DistributionTests(unittest.TestCase):
                 f"facman/generations/{VERSION}/bin/facman.exe", names
             )
             self.assertIn("facman/maintenance/FacManSetup.exe", names)
+            self.assertIn(
+                "facman/state/self-maintenance-package.v1.json", names
+            )
+            with zipfile.ZipFile(setup) as archive:
+                maintenance = json.loads(
+                    archive.read(
+                        "facman/state/self-maintenance-package.v1.json"
+                    )
+                )
+            self.assertEqual(
+                maintenance["setup_protocol"], "facman.self_maintenance.v1"
+            )
+            self.assertFalse(maintenance["automatic_update"])
 
     def test_windows_layout_has_no_case_fold_collision(self) -> None:
         bundle = load_toml(

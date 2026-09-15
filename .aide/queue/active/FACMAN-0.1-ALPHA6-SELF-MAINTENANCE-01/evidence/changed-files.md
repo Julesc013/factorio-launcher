@@ -32,3 +32,38 @@ self-maintenance slice:
 
 No Universal Setup source, update operation, package manifest, or GitHub
 workflow was changed.
+
+## Side-by-side transition source checkpoint
+
+Base: `b2f2465965cd72fe2e8e8d7dbddbca3f668095a8`
+
+- `runtime/self_setup/facman_self_maintenance.{h,cpp}` adds explicit
+  update/downgrade/rollback planning, digest-bound sibling roots and install
+  IDs, immutable generation/phase/activation records, semantic activation
+  continuity, candidate verification before shell mutation, recovery, and
+  rollback without provider mutation.
+- `runtime/self_setup/facman_self_setup.cpp` moves all setup roots onto the one
+  per-user `facman.self.lock` needed to serialize singleton Start Menu and HKCU
+  effects.
+- `apps/setup/windows_integration*` adds exact old/new shortcut and registration
+  classification, a deterministic same-directory shortcut backup, and
+  transactional registration cutover.
+- `apps/setup/windows_maintenance_handoff.{h,cpp}` adds the Windows-only
+  suspended helper launch, pinned helper/journal custody, absolute monotonic
+  deadline, inherited process-handle identity, and explicit rejected-child
+  cleanup accounting.
+- Four `contracts/schema/facman/facman_self_*` schemas bind the package,
+  generation, activation, and phase records, including operation-specific
+  provider/package/receipt relationships.
+- The two Windows package builders embed the closed maintenance descriptor.
+  Native and Python tests cover positive, refusal, interruption, substitution,
+  chain, SemVer, deadline, and cleanup behavior.
+- Product documentation and this WorkUnit evidence describe the implemented
+  source boundary and retain the production bridge and package qualification as
+  remaining work.
+- Canonically generated project-state, README, roadmap, current-state,
+  WinForms catalog, and native version views were refreshed after strict
+  validation identified their stale preimages.
+
+Universal Setup source and `update.*` authority, public command routing, and
+GitHub workflow definitions are unchanged.

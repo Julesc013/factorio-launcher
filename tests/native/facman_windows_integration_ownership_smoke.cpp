@@ -16,6 +16,7 @@
 #include <windows.h>
 #endif
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace integration = facman::setup::integration;
@@ -254,6 +255,62 @@ void shortcut_lifecycle_cases() {
   fs::remove_all(fixture, error);
   require(!error, "owned shortcut lifecycle fixture retired");
 }
+
+void shortcut_cutover_cases() {
+  namespace fs = std::filesystem;
+  const fs::path fixture = fs::path(FACMAN_TEST_TEMP_ROOT) /
+      ("shortcut-cutover-" + std::to_string(GetCurrentProcessId()));
+  const fs::path old_root = fixture / "FacMan.old";
+  const fs::path new_root = fixture / "FacMan.new";
+  const fs::path shortcut = fixture / "Programs" / "FacMan.lnk";
+  std::error_code error;
+  fs::remove_all(fixture, error);
+  for (const auto &root_version :
+       {std::pair<fs::path, std::string>{old_root, "1.0.0"},
+        std::pair<fs::path, std::string>{new_root, "2.0.0"}}) {
+    fs::create_directories(root_version.first / "generations" /
+                               root_version.second,
+                           error);
+    require(!error, "cutover generation directory created");
+    fs::create_directories(root_version.first / "maintenance", error);
+    require(!error, "cutover maintenance directory created");
+    std::ofstream(root_version.first / "generations" /
+                      root_version.second / "FacMan.exe",
+                  std::ios::binary) << root_version.second;
+    std::ofstream(root_version.first / "maintenance" / "FacManSetup.exe",
+                  std::ios::binary) << "setup";
+  }
+  require(integration::apply_windows_shortcut_fixture(
+              shortcut, old_root, "1.0.0", false).ok,
+          "source shortcut created");
+  integration::CutoverContext context{
+      {old_root, {}, {}, {}}, {new_root, {}, {}, {}},
+      "1.0.0", "2.0.0", "maintenance.update.fixture"};
+  require(integration::inspect_windows_shortcut_cutover_fixture(
+              shortcut, context) == integration::CutoverOwnership::old_exact,
+          "source shortcut is classified exactly");
+  require(integration::apply_windows_shortcut_cutover_fixture(
+              shortcut, context).ok,
+          "side-by-side shortcut cutover completes");
+  require(integration::inspect_windows_shortcut_cutover_fixture(
+              shortcut, context) == integration::CutoverOwnership::new_exact,
+          "target shortcut is classified exactly");
+  const fs::path backup = shortcut.parent_path() /
+      (shortcut.filename().wstring() +
+       L".facman-backup.maintenance.update.fixture");
+  require(fs::is_regular_file(backup),
+          "operation-bound source shortcut backup is retained");
+  fs::remove(shortcut, error);
+  require(!error, "published shortcut removed to simulate lost publication");
+  require(integration::apply_windows_shortcut_cutover_fixture(
+              shortcut, context).ok,
+          "cutover resumes from exact operation-bound backup");
+  require(integration::inspect_windows_shortcut_cutover_fixture(
+              shortcut, context) == integration::CutoverOwnership::new_exact,
+          "resumed cutover publishes the exact target");
+  fs::remove_all(fixture, error);
+  require(!error, "shortcut cutover fixture retired");
+}
 #endif
 
 #ifdef FACMAN_TEST_WINDOWS_INTEGRATION_ADAPTER
@@ -359,6 +416,7 @@ int main() {
   identity_cases();
   receipt_publication_cases();
   shortcut_lifecycle_cases();
+  shortcut_cutover_cases();
   #endif
   std::cout << "PASS: " << checks << " native integration ownership checks; "
             << "native effects injected; shortcut fixture stays under the CMake test root\n";

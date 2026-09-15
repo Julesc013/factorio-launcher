@@ -163,6 +163,28 @@ def tree_digest(entries: list[InputEntry]) -> str:
     return digest.hexdigest()
 
 
+def maintenance_descriptor(
+    *, version: str, facman_revision: str, usk_revision: str
+) -> dict[str, object]:
+    return {
+        "schema": "facman.self_maintenance_package.v1",
+        "product_id": "facman",
+        "product_version": version,
+        "generation_relative_path": f"generations/{version}",
+        "facman_source_revision": facman_revision,
+        "universal_setup_revision": usk_revision,
+        "setup_protocol": "facman.self_maintenance.v1",
+        "package_layout": "versioned_generation_with_maintenance_v1",
+        "entrypoints": {
+            "gui_relative_path": "FacMan.exe",
+            "cli_relative_path": "bin/facman.exe",
+            "maintenance_relative_path": "maintenance/FacManSetup.exe",
+        },
+        # Package discovery and download remain separately gated product work.
+        "automatic_update": False,
+    }
+
+
 def build(
     portable: Path,
     setup_exe: Path,
@@ -189,6 +211,14 @@ def build(
             installed_path = "FacMan.exe"
         entries.append(InputEntry(generation_prefix + installed_path, entry.data))
     entries.append(InputEntry("facman/maintenance/FacManSetup.exe", setup_bytes))
+    entries.append(InputEntry(
+        "facman/state/self-maintenance-package.v1.json",
+        canonical_json(maintenance_descriptor(
+            version=version,
+            facman_revision=facman_revision,
+            usk_revision=usk_revision,
+        )),
+    ))
     activation = {
         "schema": "facman.current_generation.v1",
         "product_id": "facman",
@@ -249,7 +279,7 @@ def build(
         "portable_input": {
             "filename": portable.name,
             "sha256": portable_hash,
-            "generation_file_count": len(entries) - 2,
+            "generation_file_count": len(entries) - 3,
         },
     }
     record_path = output / f"facman-{version}-self-setup-package.v1.json"

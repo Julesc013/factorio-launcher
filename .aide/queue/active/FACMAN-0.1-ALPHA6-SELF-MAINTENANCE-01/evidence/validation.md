@@ -69,3 +69,26 @@ The final local Debug rebuild and complete 45-test native matrix passed after
 that review in 13.29 seconds; the recovery smoke took 2.16 seconds within the
 parallel matrix. The 36 focused Python contract/package/candidate tests and the
 426-schema strict check also passed.
+
+## Side-by-side transition source checkpoint
+
+Against exact base `b2f2465965cd72fe2e8e8d7dbddbca3f668095a8`, the new
+transition and handoff source passed the focused Debug and Release matrices,
+the Release `FacManSetup.exe` link, 42 adjacent Python tests, schema validation
+for 432 schemas, source format, component ownership, code security, security
+policy, portable AIDE Lite, and `git diff --check`. The complete current-source
+Debug native matrix passed 47/47.
+
+Independent non-authoring Sol review initially returned `CHANGES_REQUIRED` for
+helper launch custody, deadline extension, incomplete activation continuity,
+truncated physical identities, permissive phase schemas, and overstated
+evidence. Re-review found source/target SemVer traversal and pre-execution path
+revalidation gaps. A final re-review found rejected suspended-child cleanup was
+not distinguished from confirmed closure. Each finding received a direct
+regression and remediation. The final reviewer result was `PASS`; its own
+handoff smoke rerun passed 1/1.
+
+After deterministic project-state and metadata regeneration, the full strict
+check passed with 131 commands, 432 schemas, and 290 refusal codes. The
+checkpoint remains source qualification only: public verb/provider wiring,
+two-package Windows lifecycle effects, and WorkUnit acceptance remain pending.
