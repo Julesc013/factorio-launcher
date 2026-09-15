@@ -262,7 +262,7 @@ def exported_inventory(root: Path, oracle: dict) -> dict:
 
 
 def run_cases(driver, root: Path, names: tuple, profile: str, before: dict, oracle: dict,
-              work: Path, complete) -> None:
+              work: Path, complete, *, export_timeout: float) -> None:
     identity_cases(driver, root / names[0], names, profile, root, oracle, before, "original")
     complete("original_identity")
     relocated = work / "Relocated package \u00e9 \u03b2"
@@ -277,7 +277,10 @@ def run_cases(driver, root: Path, names: tuple, profile: str, before: dict, orac
         for option in ("--help", "--version"):
             driver.raw(label + "_" + option[2:], image, [option])
     destination = work / "Exported resources"
-    result = driver.json("export", executable, ["resources", "export", str(destination), "--json"])
+    result = driver.json(
+        "export", executable, ["resources", "export", str(destination), "--json"],
+        timeout=export_timeout,
+    )
     require(result.get("schema") == "facman.runtime_resource_pack_export.v1" and
             result.get("status") == "pass" and result.get("entry_count") == len(oracle["entries"]) and
             "source" in result and "destination" in result,

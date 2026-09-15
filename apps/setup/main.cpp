@@ -76,6 +76,16 @@ struct MaterializedPackage {
   }
 };
 
+class SetupPackageMaterializer final
+    : public facman::self_setup::PackageMaterializer {
+public:
+  facman::core::Result<fs::path> materialize(
+      const fs::path &source) override;
+
+private:
+  MaterializedPackage materialized_;
+};
+
 std::uint16_t little_u16(const std::vector<unsigned char> &value,
                          std::size_t offset) {
   return static_cast<std::uint16_t>(value[offset]) |
@@ -213,6 +223,22 @@ bool materialize_zip_overlay(const fs::path &source,
   return true;
 }
 
+facman::core::Result<fs::path> SetupPackageMaterializer::materialize(
+    const fs::path &source) {
+  std::error_code status;
+  if (!fs::is_regular_file(source, status) || status)
+    return facman::core::Result<fs::path>::failure({
+        "self_setup_package_missing",
+        "The setup payload is not a regular file",
+        facman::platform::path_to_utf8(source)});
+  std::string problem;
+  if (!materialize_zip_overlay(source, materialized_, problem))
+    return facman::core::Result<fs::path>::failure({
+        "self_setup_payload_invalid",
+        "FacMan Setup could not read its embedded payload", problem});
+  return facman::core::Result<fs::path>::success(materialized_.path);
+}
+
 std::string utf8(const std::wstring &value) {
   if (value.empty())
     return {};
@@ -225,6 +251,24 @@ std::string utf8(const std::wstring &value) {
   WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, value.data(),
                       static_cast<int>(value.size()), result.data(), needed,
                       nullptr, nullptr);
+  return result;
+}
+
+std::optional<fs::path> current_executable_path(std::string &problem) {
+  std::vector<wchar_t> buffer(32768U, L'\0');
+  const DWORD length = GetModuleFileNameW(
+      nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+  if (length == 0U || length >= buffer.size()) {
+    problem = "Windows could not identify the running maintenance launcher";
+    return std::nullopt;
+  }
+  std::error_code status;
+  const fs::path result = fs::absolute(
+      fs::path(std::wstring(buffer.data(), length)), status).lexically_normal();
+  if (status || result.empty()) {
+    problem = "The running maintenance launcher path is invalid";
+    return std::nullopt;
+  }
   return result;
 }
 
@@ -241,7 +285,7 @@ void usage() {
       << "  FacManSetup uninstall [--root PATH] [--state-root PATH] "
          "[--acceptance-root PATH] [--yes] [--json]\n\n"
       << "Qualification interruption requires both "
-         "--qualification-interrupt-after files_applied|shortcut_applied and "
+         "--qualification-interrupt-after provider_plan_reviewed|files_applied|shortcut_applied and "
          "--qualification-interrupt-permit PATH, with explicit noninteractive "
          "installed-operation inputs.\n\n"
       << "Double-clicking starts the guided per-user install flow. Without "
@@ -332,7 +376,9 @@ bool parse(int argc, wchar_t **argv, Options &options, std::string &problem) {
           return false;
         }
         const std::wstring value(argv[index]);
-        if (value == L"files_applied")
+        if (value == L"provider_plan_reviewed")
+          options.qualification_interrupt_after = facman::self_setup::DurableBoundary::provider_plan_reviewed;
+        else if (value == L"files_applied")
           options.qualification_interrupt_after = facman::self_setup::DurableBoundary::files_applied;
         else if (value == L"shortcut_applied")
           options.qualification_interrupt_after = facman::self_setup::DurableBoundary::shortcut_applied;
@@ -371,8 +417,15 @@ std::string operation_text(facman::self_setup::Operation operation) {
 }
 
 std::string boundary_text(facman::self_setup::DurableBoundary boundary) {
-  return boundary == facman::self_setup::DurableBoundary::files_applied
-      ? "files_applied" : "shortcut_applied";
+  switch (boundary) {
+  case facman::self_setup::DurableBoundary::provider_plan_reviewed:
+    return "provider_plan_reviewed";
+  case facman::self_setup::DurableBoundary::files_applied:
+    return "files_applied";
+  case facman::self_setup::DurableBoundary::shortcut_applied:
+    return "shortcut_applied";
+  }
+  return "files_applied";
 }
 
 bool exact_keys(const facman::core::json::Value &object,
@@ -751,15 +804,24 @@ struct PinnedRepairSource {
   facman::platform::StableInputFile receipt;
   facman::platform::StableInputFile source;
   facman::platform::StableInputFile launcher;
+  bool source_pinned = false;
 
   bool revalidate(std::string &detail) const {
     const std::pair<const char *, const facman::platform::StableInputFile *>
         files[] = {{"cache marker", &marker}, {"maintenance receipt", &receipt},
-                   {"repair source", &source}, {"maintenance launcher", &launcher}};
+                   {"maintenance launcher", &launcher}};
     for (const auto &[label, file] : files) {
       const auto status = file->revalidate_path();
       if (!status.ok()) {
         detail = std::string(label) + " pathname no longer binds its pinned object: " +
+            status.detail;
+        return false;
+      }
+    }
+    if (source_pinned) {
+      const auto status = source.revalidate_path();
+      if (!status.ok()) {
+        detail = "repair source pathname no longer binds its pinned object: " +
             status.detail;
         return false;
       }
@@ -805,9 +867,10 @@ bool write_text_new_pinned(const fs::path &path, const std::string &text,
   return true;
 }
 
-facman::self_setup::RetainedSourceResult validate_repair_source(
+facman::self_setup::RetainedSourceResult validate_maintenance_identity(
     const facman::self_setup::NativeContext &context,
     const std::string &expected_sha256,
+    bool require_source,
     PinnedRepairSource *retained_pins = nullptr) {
   const fs::path source = context.repair_source;
   if (!lowercase_hex_64(expected_sha256) ||
@@ -825,19 +888,20 @@ facman::self_setup::RetainedSourceResult validate_repair_source(
   PinnedRepairSource &pins = retained_pins == nullptr ? local : *retained_pins;
   if (!pins.state.open_no_follow(state_root).ok() ||
       !pins.cache.open_no_follow(directory).ok() ||
-      !pins.state.validate_descendant(source, false).ok() ||
+      !pins.state.validate_descendant(source, !require_source).ok() ||
       !pins.state.validate_descendant(launcher, false).ok() ||
       !pins.state.validate_descendant(receipt, false).ok() ||
       !pins.state.validate_descendant(marker, false).ok())
     return {false, {}, "repair source cache identity is unsafe or incomplete", true};
   if (!pins.marker.open_no_follow_pinned(marker).ok() ||
       !pins.receipt.open_no_follow_pinned(receipt).ok() ||
-      !pins.source.open_no_follow_pinned(source).ok() ||
+      (require_source && !pins.source.open_no_follow_pinned(source).ok()) ||
       !pins.launcher.open_no_follow_pinned(launcher).ok())
     return {false, {}, "repair source cache files could not be pinned", true};
-  if (!pins.source.identity().regular_file ||
-      pins.source.identity().link_count != 1U || pins.source.size() == 0U ||
-      pins.source.size() > kMaximumRepairSourceBytes ||
+  pins.source_pinned = require_source;
+  if ((require_source && (!pins.source.identity().regular_file ||
+       pins.source.identity().link_count != 1U || pins.source.size() == 0U ||
+       pins.source.size() > kMaximumRepairSourceBytes)) ||
       !pins.launcher.identity().regular_file ||
       pins.launcher.identity().link_count != 1U || pins.launcher.size() == 0U ||
       pins.launcher.size() > kMaximumRepairLauncherBytes)
@@ -857,19 +921,41 @@ facman::self_setup::RetainedSourceResult validate_repair_source(
   if (!lowercase_hex_64(launcher_sha256) ||
       *receipt_content != repair_receipt_bytes(expected_sha256, launcher_sha256))
     return {false, {}, "repair source receipt has an invalid launcher identity", true};
-  const auto source_digest = digest_stable_input(pins.source);
+  const auto source_digest = require_source
+      ? digest_stable_input(pins.source) : std::optional<std::string>{};
   const auto launcher_digest = digest_stable_input(pins.launcher);
   std::string pin_detail;
-  if (!source_digest.has_value() || *source_digest != expected_sha256 ||
+  if ((require_source && (!source_digest.has_value() ||
+                          *source_digest != expected_sha256)) ||
       !launcher_digest.has_value() || *launcher_digest != launcher_sha256 ||
       !pins.revalidate(pin_detail))
     return {false, {}, "repair source or maintenance launcher changed after retention", true};
-  return {true, source, "retained repair source and launcher identity verified"};
+  return {true, require_source ? source : launcher,
+          require_source
+              ? "retained repair source and launcher identity verified"
+              : "retained maintenance launcher identity verified"};
+}
+
+facman::self_setup::RetainedSourceResult validate_repair_source(
+    const facman::self_setup::NativeContext &context,
+    const std::string &expected_sha256,
+    PinnedRepairSource *retained_pins = nullptr) {
+  return validate_maintenance_identity(
+      context, expected_sha256, true, retained_pins);
+}
+
+facman::self_setup::RetainedSourceResult validate_maintenance_launcher(
+    const facman::self_setup::NativeContext &context,
+    const std::string &expected_sha256,
+    PinnedRepairSource *retained_pins = nullptr) {
+  return validate_maintenance_identity(
+      context, expected_sha256, false, retained_pins);
 }
 
 facman::self_setup::RetainedSourceResult retain_repair_source(
     const facman::self_setup::NativeContext &context,
-    const fs::path &package, const std::string &expected_sha256) {
+    const fs::path &package, const fs::path &maintenance_launcher,
+    const std::string &expected_sha256) {
   const fs::path destination = context.repair_source;
   if (expected_sha256.size() != 64U || destination.filename() !=
           facman::platform::path_from_utf8(expected_sha256 + ".zip"))
@@ -877,14 +963,19 @@ facman::self_setup::RetainedSourceResult retain_repair_source(
 
   const fs::path directory = destination.parent_path();
   const fs::path state_root = directory.parent_path();
+  std::error_code status;
+  if (!fs::exists(state_root, status)) {
+    if (status || !fs::create_directory(state_root, status) || status)
+      return {false, {}, "setup-state root for repair retention could not be created"};
+  } else if (status) {
+    return {false, {}, "setup-state root for repair retention could not be inspected", true};
+  }
   facman::platform::StableDirectoryObject state;
   const auto state_opened = state.open_no_follow(state_root);
   if (!state_opened.ok() ||
-      !state.validate_descendant(directory, true).ok() ||
-      !state.validate_descendant(destination, true).ok())
+      !state.validate_descendant(directory, true).ok())
     return {false, {}, "repair source cache is outside the stable setup-state root", true};
 
-  std::error_code status;
   if (!fs::exists(directory, status)) {
     if (status || !fs::create_directory(directory, status) || status)
       return {false, {}, "repair source cache directory could not be created"};
@@ -1019,7 +1110,7 @@ facman::self_setup::RetainedSourceResult retain_repair_source(
   if (!state.validate_descendant(launcher, true).ok())
     return {false, {}, "offline maintenance launcher is outside the stable setup-state root", true};
   const auto retained_launcher = retain_file(
-      context.install_root / "maintenance" / "FacManSetup.exe", launcher,
+      maintenance_launcher, launcher,
       kMaximumRepairLauncherBytes, {}, "offline maintenance launcher");
   if (!retained_launcher.ok) return retained_launcher;
   const auto launcher_digest = digest_stable_file(
@@ -1052,8 +1143,10 @@ public:
   facman::self_setup::RetainedSourceResult retain_repair_source(
       const facman::self_setup::NativeContext &context,
       const fs::path &package,
+      const fs::path &maintenance_launcher,
       const std::string &expected_sha256) override {
-    return ::retain_repair_source(context, package, expected_sha256);
+    return ::retain_repair_source(
+        context, package, maintenance_launcher, expected_sha256);
   }
 
   facman::self_setup::RetainedSourceResult validate_repair_source(
@@ -1062,12 +1155,21 @@ public:
     return ::validate_repair_source(context, expected_sha256);
   }
 
+  facman::self_setup::RetainedSourceResult validate_maintenance_launcher(
+      const facman::self_setup::NativeContext &context,
+      const std::string &expected_sha256) override {
+    return ::validate_maintenance_launcher(context, expected_sha256);
+  }
+
   facman::self_setup::NativeOwnership inspect(
       const facman::self_setup::NativeContext &context,
       facman::self_setup::NativeEffect effect) override {
     PinnedRepairSource pins;
-    const auto retained = ::validate_repair_source(
-        context, context.repair_source.stem().string(), &pins);
+    const auto retained = context.operation == facman::self_setup::Operation::uninstall
+        ? ::validate_maintenance_launcher(
+              context, context.repair_source.stem().string(), &pins)
+        : ::validate_repair_source(
+              context, context.repair_source.stem().string(), &pins);
     if (!retained.ok) return facman::self_setup::NativeOwnership::unreadable;
     const auto observed = facman::setup::integration::inspect_windows_effect(
         effect == facman::self_setup::NativeEffect::shortcut
@@ -1099,8 +1201,11 @@ public:
       const facman::self_setup::NativeContext &context,
       facman::self_setup::NativeEffect effect) override {
     PinnedRepairSource pins;
-    const auto retained = ::validate_repair_source(
-        context, context.repair_source.stem().string(), &pins);
+    const auto retained = context.operation == facman::self_setup::Operation::uninstall
+        ? ::validate_maintenance_launcher(
+              context, context.repair_source.stem().string(), &pins)
+        : ::validate_repair_source(
+              context, context.repair_source.stem().string(), &pins);
     if (!retained.ok) return {false, retained.detail, true};
     const auto result = facman::setup::integration::apply_windows_effect(
         effect == facman::self_setup::NativeEffect::shortcut
@@ -1173,12 +1278,19 @@ int wmain(int argc, wchar_t **argv) {
   if (options.acceptance_root.empty()) {
     options.acceptance_root = local;
   }
+  fs::path maintenance_launcher;
+  if (options.operation != facman::self_setup::Operation::verify) {
+    auto executable = current_executable_path(problem);
+    if (!executable.has_value()) {
+      print_error({"self_setup_launcher_invalid", problem, ""}, options.json);
+      return 4;
+    }
+    maintenance_launcher = std::move(*executable);
+  }
   if (options.package.empty() &&
       (options.operation == facman::self_setup::Operation::install ||
        options.operation == facman::self_setup::Operation::repair)) {
-    const fs::path executable =
-        fs::absolute(fs::path(argv[0])).lexically_normal();
-    options.package = executable;
+    options.package = maintenance_launcher;
   }
 
   if (options.interactive) {
@@ -1193,30 +1305,22 @@ int wmain(int argc, wchar_t **argv) {
     options.apply = true;
   }
 
-  MaterializedPackage materialized;
-  if (options.operation == facman::self_setup::Operation::install ||
-      options.operation == facman::self_setup::Operation::repair) {
-    if (!materialize_zip_overlay(options.package, materialized, problem)) {
-      facman::core::Error package_error{
-          "self_setup_payload_invalid",
-          "FacMan Setup could not read its embedded payload", problem};
-      print_error(package_error, options.json);
-      return 4;
-    }
-    options.package = materialized.path;
-  }
-
   facman::self_setup::Request request;
   request.operation = options.operation;
   request.package = options.package;
+  request.maintenance_launcher = maintenance_launcher;
   request.install_root = options.install_root;
   request.state_root = options.state_root;
   request.acceptance_root = options.acceptance_root;
   request.product_version = FACMAN_VERSION_SEMVER;
   request.apply = options.apply;
   SetupNativeEffects native_effects;
+  SetupPackageMaterializer package_materializer;
   if (options.shell_integration)
     request.native_effects = &native_effects;
+  if (options.operation == facman::self_setup::Operation::install ||
+      options.operation == facman::self_setup::Operation::repair)
+    request.package_materializer = &package_materializer;
   std::optional<QualificationInterruptHook> qualification_hook;
   if (qualification_interrupt.has_value()) {
     qualification_hook.emplace(qualification_interrupt->boundary);

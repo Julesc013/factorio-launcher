@@ -125,3 +125,18 @@ Current source base:
 
 Hosted produced-package qualification remains pending. This source validation
 does not close the WorkUnit or claim a real Start Menu/registry result.
+
+## 2026-09-16 integrated checkpoint
+
+PR #292 source `6ef1a9d3c95523b4e2b36aa5277ef498f555d523` and tree
+`6fdbda15fd22db01c4de0794efed790a22b837ff` passed CI run
+`34976666277`. Windows package job `104406007552` passed, including
+`Build and exercise deterministic per-user self-setup package`. Protected
+promotion rerun `34976666335` passed, and the same tree integrated to dev at
+`c65c66ade1d4ca2c0c03b6b9aa78bfea2b977ae6`.
+
+These exact source, tree, hosted package, protected-promotion, and integration
+identities qualify the implemented install, repair and uninstall recovery
+checkpoint. The WorkUnit remains active because they do not qualify explicit
+FacMan update/downgrade recovery. They also do not qualify locked-file restart
+handoff or close the self-maintenance WorkUnit.

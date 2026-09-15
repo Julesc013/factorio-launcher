@@ -41,6 +41,7 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
                 "transaction_id": "tx.setup.install.0123456789abcdef0123456789abcdef",
                 "created_at": "2026-09-13T00:00:00Z",
                 "plan_digest": "b" * 64,
+                "phase": "apply_entered",
                 "receipt_identity": "c" * 64,
             },
             "recovery": {"plan_id": "", "plan_digest": "", "created_at": "", "action": ""},
@@ -108,7 +109,9 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
             # --no-shell-integration never claims Windows effects.
             ("install", "portable", "completed", "not_applicable", "not_applicable", "not_applicable"),
             # Provider rollback is terminal and permits a later fresh attempt.
-            ("install", "installed", "rolled_back", "pending", "pending", "pending"),
+            ("install", "installed", "rolled_back", "applied", "pending", "pending"),
+            # Repair retention may commit before a reviewed provider plan.
+            ("repair", "installed", "intent", "applied", "pending", "pending"),
         )
         for operation, mode, state, repair_source, shortcut, registration in cases:
             with self.subTest(operation=operation, mode=mode, state=state):
@@ -127,6 +130,11 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
                         "created_at": "2026-09-13T00:00:01Z",
                         "action": "rollback",
                     }
+                if state == "intent":
+                    value["effects"]["files"] = "pending"
+                    value["provider"]["plan_digest"] = ""
+                    value["provider"]["phase"] = "before_plan"
+                    value["provider"]["receipt_identity"] = ""
                 self.assert_schema_valid(value)
 
     def test_terminal_and_recovery_cross_fields_reject_incompatible_records(self) -> None:
@@ -147,7 +155,7 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         cases.append(completed_uninstall)
         rolled_back = json.loads(json.dumps(self.value))
         rolled_back["state"] = "rolled_back"
-        rolled_back["effects"] = {"files": "pending", "repair_source": "applied", "shortcut": "pending", "registration": "pending"}
+        rolled_back["effects"] = {"files": "pending", "repair_source": "applied", "shortcut": "applied", "registration": "pending"}
         cases.append(rolled_back)
         partial_review = json.loads(json.dumps(self.value))
         partial_review["recovery"] = {"plan_id": "recovery.plan.setup.install.x", "plan_digest": "", "created_at": "", "action": "rollback"}
@@ -156,6 +164,7 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         abandoned["state"] = "abandoned"
         abandoned["effects"] = {"files": "pending", "repair_source": "pending", "shortcut": "pending", "registration": "pending"}
         abandoned["provider"]["plan_digest"] = ""
+        abandoned["provider"]["phase"] = "before_plan"
         abandoned["recovery_boundary"] = "wrong"
         cases.append(abandoned)
         for value in cases:
@@ -169,9 +178,32 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         value["state"] = "abandoned"
         value["effects"] = {"files": "pending", "repair_source": "pending", "shortcut": "pending", "registration": "pending"}
         value["provider"]["plan_digest"] = ""
+        value["provider"]["phase"] = "before_plan"
         value["provider"]["receipt_identity"] = ""
         value["recovery_boundary"] = "abandoned_before_provider_apply"
         self.assert_schema_valid(value)
+
+    def test_provider_phase_separates_preentry_from_ambiguous_apply(self) -> None:
+        preentry = json.loads(json.dumps(self.value))
+        preentry["state"] = "files_applying"
+        preentry["effects"]["files"] = "pending"
+        preentry["effects"]["shortcut"] = "pending"
+        preentry["effects"]["registration"] = "pending"
+        preentry["provider"]["receipt_identity"] = ""
+        preentry["provider"]["phase"] = "plan_reviewed"
+        self.assert_schema_valid(preentry)
+
+        contradictory = json.loads(json.dumps(preentry))
+        contradictory["provider"]["phase"] = "before_plan"
+        self.assert_schema_invalid(contradictory)
+
+        crossed = json.loads(json.dumps(self.value))
+        crossed["provider"]["phase"] = "plan_reviewed"
+        self.assert_schema_invalid(crossed)
+
+        legacy = json.loads(json.dumps(self.value))
+        del legacy["provider"]["phase"]
+        self.assert_schema_valid(legacy)
 
     def test_installed_source_identity_is_bound_when_provider_effects_can_exist(self) -> None:
         value = json.loads(json.dumps(self.value))
@@ -181,11 +213,13 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         self.set_operation(value, "uninstall")
         value["effects"]["repair_source"] = "not_applicable"
         value["provider"]["plan_digest"] = ""
+        value["provider"]["phase"] = "before_plan"
         value["state"] = "intent"
         value["effects"]["files"] = "pending"
         value["effects"]["shortcut"] = "pending"
         self.assert_schema_valid(value)
         value["provider"]["plan_digest"] = "b" * 64
+        value["provider"]["phase"] = "plan_reviewed"
         self.assert_schema_invalid(value)
         value["provider"]["installed_source_digest"] = "d" * 64
         self.assert_schema_valid(value)
@@ -196,6 +230,9 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
             'discover_root_journal(coordinator.value(), root_identity)',
             'active.product_version = journal.product_version',
             'journal.provider_state_root',
+            'journal.provider_phase',
+            'provider_plan_reviewed_before_apply',
+            'repair_source_applied_before_provider',
             'abandoned_before_provider_apply',
             'observed == NativeOwnership::foreign',
             'observed == NativeOwnership::unreadable',
@@ -227,6 +264,9 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
             "commit_no_replace(permit_path, consumed_path)",
             "consumed.identity().same_object(permit.identity())",
             "QualificationInterruptHook",
+            "current_executable_path",
+            "SetupPackageMaterializer",
+            "validate_maintenance_launcher",
             "request.durable_boundary_hook = &*qualification_hook",
             "request.qualification_claims = qualification_interrupt->claims",
         ):
@@ -235,18 +275,58 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         self.assertNotIn("getenv(", source)
         consumed = source.rindex("consume_qualification_interrupt(")
         default_paths = source.index("facman::platform::user_paths()")
-        materialize = source.index("materialize_zip_overlay(", consumed)
+        materializer_binding = source.index(
+            "request.package_materializer = &package_materializer", consumed
+        )
         self.assertLess(consumed, default_paths)
-        self.assertLess(consumed, materialize)
+        self.assertLess(consumed, materializer_binding)
         runtime = (ROOT / "runtime/self_setup/facman_self_setup.cpp").read_text(encoding="utf-8")
         for token in (
             "qualification claims do not bind the unfinished setup journal",
             "qualification boundary was already crossed by the unfinished setup journal",
             "journal.mode != (qualification->installed_mode ? \"installed\" : \"portable\")",
             "self_setup_qualification_interrupt_invalid",
+            "active.package_materializer->materialize(active.package)",
+            "journal.repair_source == \"applied\"",
         ):
             with self.subTest(runtime_token=token):
                 self.assertIn(token, runtime)
+
+    def test_first_repair_retention_creates_and_pins_cache_before_leaf_validation(self) -> None:
+        source = (ROOT / "apps/setup/main.cpp").read_text(encoding="utf-8")
+        start = source.index("facman::self_setup::RetainedSourceResult retain_repair_source(")
+        end = source.index("\nclass SetupNativeEffects final", start)
+        retention = source[start:end]
+
+        state_open = retention.index("state.open_no_follow(state_root)")
+        absent_cache = retention.index("state.validate_descendant(directory, true)")
+        create_cache = retention.index("fs::create_directory(directory, status)")
+        pin_cache = retention.index("cache.open_no_follow(directory)")
+        revalidate_state = retention.index("state.revalidate()", pin_cache)
+        absent_destination = retention.index(
+            "state.validate_descendant(destination, true)", pin_cache
+        )
+        self.assertLess(state_open, absent_cache)
+        self.assertLess(absent_cache, create_cache)
+        self.assertLess(create_cache, pin_cache)
+        self.assertLess(pin_cache, revalidate_state)
+        self.assertLess(revalidate_state, absent_destination)
+        self.assertNotIn(
+            "state.validate_descendant(destination, true)",
+            retention[absent_cache:create_cache],
+        )
+
+    def test_provider_state_is_isolated_below_facman_owned_setup_state(self) -> None:
+        source = (ROOT / "runtime/self_setup/facman_self_setup.cpp").read_text(
+            encoding="utf-8"
+        )
+        command = source[source.index("facman::core::Result<std::string> command(") :]
+        injected = command.index("injected_provider->command(")
+        provider_child = command.index('(state_root / "usk").lexically_normal()')
+        provider_config = command.index("config.state_root = state.c_str()")
+        self.assertLess(injected, provider_child)
+        self.assertLess(provider_child, provider_config)
+        self.assertIn('active.state_root / "repair-sources"', source)
 
 
 if __name__ == "__main__":

@@ -34,12 +34,30 @@ std::string string_member(const std::string &payload, const char *name) {
   return value != nullptr && value->string_value() ? value->string_value().value() : std::string();
 }
 
+std::string nested_string_member(const std::string &payload,
+                                 const char *parent, const char *name) {
+  auto document = json::parse(payload);
+  const json::Value *object = document ? document.value().find(parent) : nullptr;
+  const json::Value *value = object != nullptr && object->is_object()
+      ? object->find(name) : nullptr;
+  return value != nullptr && value->string_value()
+      ? value->string_value().value() : std::string();
+}
+
 std::string sha256_text(const std::string &value) {
   return facman::base::sha256_hex_bytes(
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
 }
 
+struct Clock final : setup::Clock {
+  bool advance = true;
+  std::string after(const std::string &lower_bound) override {
+    return advance ? "9999-12-31T23:59:59Z" : lower_bound;
+  }
+};
+
 struct Provider final : setup::ProviderEffects {
+  Clock clock;
   fs::path coordinator_root;
   int apply_calls = 0;
   bool lose_apply_receipt = false;
@@ -61,6 +79,7 @@ struct Provider final : setup::ProviderEffects {
   std::string last_transaction_id;
   fs::path recovery_state_root;
   std::vector<std::string> apply_transaction_ids;
+  std::vector<std::string> *events = nullptr;
   fs::path test_coordinator_root() const override { return coordinator_root; }
   facman::core::Result<std::string> command(const std::string &name,
       const std::string &payload, const fs::path &state_root, const fs::path &, bool) override {
@@ -122,6 +141,7 @@ struct Provider final : setup::ProviderEffects {
           setup::provider_revision() + "\"}}}");
     }
     if (name == "install_local.apply" || name == "repair.apply" || name == "uninstall.apply") {
+      if (events != nullptr) events->push_back("provider_apply");
       ++apply_calls;
       last_transaction_id = string_member(payload, "transaction_id");
       apply_transaction_ids.push_back(string_member(payload, "transaction_id"));
@@ -176,13 +196,32 @@ struct Native final : setup::NativeEffects {
   int require_recovery = -1;
   int retain_calls = 0;
   int validate_calls = 0;
+  int validate_launcher_calls = 0;
   bool retain_fails = false;
   bool retain_requires_recovery = false;
   bool validation_fails = false;
+  bool launcher_validation_fails = false;
+  std::vector<std::string> *events = nullptr;
   setup::RetainedSourceResult retain_repair_source(
-      const setup::NativeContext &context, const fs::path &,
+      const setup::NativeContext &context, const fs::path &package,
+      const fs::path &maintenance_launcher,
       const std::string &) override {
     ++retain_calls;
+    if (events != nullptr) events->push_back("retain");
+    if (!retain_fails) {
+      std::error_code status;
+      fs::create_directories(context.repair_source.parent_path(), status);
+      if (!status && package != context.repair_source)
+        fs::copy_file(package, context.repair_source,
+                      fs::copy_options::skip_existing, status);
+      const fs::path launcher = context.repair_source.parent_path() /
+          fs::path(context.repair_source.stem().wstring() + L".FacManSetup.exe");
+      if (!status && maintenance_launcher != launcher)
+        fs::copy_file(maintenance_launcher, launcher,
+                      fs::copy_options::skip_existing, status);
+      if (status)
+        return {false, {}, "fake retention copy failed: " + status.message()};
+    }
     return retain_fails
         ? setup::RetainedSourceResult{false, {}, "injected retain failure",
                                       retain_requires_recovery}
@@ -194,6 +233,16 @@ struct Native final : setup::NativeEffects {
     return validation_fails
         ? setup::RetainedSourceResult{false, {}, "injected validation failure", true}
         : setup::RetainedSourceResult{true, context.repair_source, "validated"};
+  }
+  setup::RetainedSourceResult validate_maintenance_launcher(
+      const setup::NativeContext &context, const std::string &) override {
+    ++validate_launcher_calls;
+    const fs::path launcher = context.repair_source.parent_path() /
+        fs::path(context.repair_source.stem().wstring() + L".FacManSetup.exe");
+    return launcher_validation_fails
+        ? setup::RetainedSourceResult{
+              false, {}, "injected launcher validation failure", true}
+        : setup::RetainedSourceResult{true, launcher, "launcher validated"};
   }
   setup::NativeOwnership inspect(const setup::NativeContext &context,
                                  setup::NativeEffect effect) override {
@@ -245,8 +294,12 @@ setup::Request request_for(const Tree &tree, Provider &provider, Native *native,
   request.operation = operation; request.install_root = tree.root / "install";
   request.state_root = tree.root / "state"; request.acceptance_root = tree.root;
   request.package = tree.root / "payload.zip"; request.product_version = "1.0.0";
+  request.maintenance_launcher = tree.root / "FacManSetup.exe";
+  if (!fs::exists(request.maintenance_launcher))
+    std::ofstream(request.maintenance_launcher, std::ios::binary) << "launcher";
   provider.coordinator_root = tree.root / "coordinator";
   request.apply = true; request.provider_effects = &provider; request.native_effects = native;
+  request.clock = &provider.clock;
   return request;
 }
 
@@ -255,11 +308,18 @@ void cases() {
   std::error_code ignored; fs::remove_all(tree.root, ignored); fs::create_directories(tree.root);
   std::ofstream(tree.root / "payload.zip", std::ios::binary) << "fixture";
   Provider provider; Native native;
+  std::vector<std::string> initial_events;
+  provider.events = &initial_events;
+  native.events = &initial_events;
   auto first = setup::execute(request_for(tree, provider, &native));
   require(first && native.retain_calls == 1 &&
-              native.apply_calls == std::array<int, 2>{1, 1},
-          "install retains its repair inputs before native effects");
-  require(!fs::exists(tree.root / "state"), "coordinator does not pre-create the USK provider state root");
+              native.apply_calls == std::array<int, 2>{1, 1} &&
+              initial_events.size() >= 2U && initial_events[0] == "retain" &&
+              initial_events[1] == "provider_apply",
+          "install retains its repair inputs before provider and native effects");
+  require(fs::is_regular_file(tree.root / "state" / "repair-sources" /
+              (sha256_text("fixture") + ".zip")),
+          "installed setup keeps the exact repair package before provider mutation");
   require(fs::exists(tree.root / "coordinator"), "injected coordinator uses its isolated app-owned test root");
   auto repeated = setup::execute(request_for(tree, provider, &native));
   require(repeated && provider.apply_calls == 2 && native.retain_calls == 2,
@@ -323,6 +383,44 @@ void cases() {
   lost.lose_receipt = -1;
   auto resumed = setup::execute(request_for(interrupted, native_provider, &lost));
   require(resumed && lost.apply_calls[0] == 1 && lost.apply_calls[1] == 1, "restart reconciles lost shortcut receipt without duplicate effect");
+  Tree pre_entry{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-pre-entry"};
+  fs::remove_all(pre_entry.root, ignored); fs::create_directories(pre_entry.root);
+  std::ofstream(pre_entry.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider pre_entry_provider; Native pre_entry_native;
+  InterruptAt after_plan(setup::DurableBoundary::provider_plan_reviewed);
+  auto pre_entry_request = request_for(
+      pre_entry, pre_entry_provider, &pre_entry_native, setup::Operation::repair);
+  pre_entry_request.durable_boundary_hook = &after_plan;
+  auto pre_entry_interrupted = setup::execute(pre_entry_request);
+  require(!pre_entry_interrupted &&
+              pre_entry_interrupted.error().code == "self_setup_interrupted" &&
+              pre_entry_provider.apply_calls == 0 &&
+              pre_entry_native.retain_calls == 1 && after_plan.calls == 1 &&
+              nested_string_member(active_journal(pre_entry), "provider", "phase") ==
+                  "plan_reviewed",
+          "provider plan-review interruption is durably distinct from apply entry");
+  fs::remove(pre_entry.root / "payload.zip", ignored);
+  auto missing_original = request_for(
+      pre_entry, pre_entry_provider, &pre_entry_native, setup::Operation::repair);
+  missing_original.package = pre_entry.root / "payload.zip";
+  require(setup::execute(missing_original) &&
+              pre_entry_provider.apply_calls == 1 &&
+              pre_entry_native.retain_calls == 1 &&
+              pre_entry_native.validate_calls == 1,
+          "pre-entry repair resumes from its retained package when the caller source is gone");
+  Tree fresh_missing{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-fresh-missing"};
+  fs::remove_all(fresh_missing.root, ignored); fs::create_directories(fresh_missing.root);
+  Provider fresh_missing_provider; Native fresh_missing_native;
+  auto fresh_missing_request = request_for(
+      fresh_missing, fresh_missing_provider, &fresh_missing_native,
+      setup::Operation::repair);
+  auto fresh_missing_result = setup::execute(fresh_missing_request);
+  require(!fresh_missing_result &&
+              fresh_missing_result.error().code == "self_setup_package_missing" &&
+              fresh_missing_provider.apply_calls == 0 &&
+              fresh_missing_native.retain_calls == 0 &&
+              active_journal(fresh_missing).empty(),
+          "fresh repair with a missing package is a typed no-effect refusal");
   Tree files_boundary{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-files-boundary"};
   fs::remove_all(files_boundary.root, ignored); fs::create_directories(files_boundary.root);
   std::ofstream(files_boundary.root / "payload.zip", std::ios::binary) << "fixture";
@@ -332,7 +430,7 @@ void cases() {
   files_request.durable_boundary_hook = &after_files;
   auto files_interrupted = setup::execute(files_request);
   require(!files_interrupted && files_interrupted.error().code == "self_setup_interrupted" &&
-              after_files.calls == 1 && files_native.apply_calls == std::array<int, 2>{0, 0},
+              after_files.calls == 2 && files_native.apply_calls == std::array<int, 2>{0, 0},
           "installed files boundary interruption occurs after persistence and before native effects");
   auto crossed_claim = request_for(files_boundary, files_provider, &files_native);
   setup::QualificationClaims crossed;
@@ -381,7 +479,7 @@ void cases() {
   shortcut_request.durable_boundary_hook = &after_shortcut;
   auto shortcut_interrupted = setup::execute(shortcut_request);
   require(!shortcut_interrupted && shortcut_interrupted.error().code == "self_setup_interrupted" &&
-              after_shortcut.calls == 2 && shortcut_native.apply_calls == std::array<int, 2>{1, 0},
+              after_shortcut.calls == 3 && shortcut_native.apply_calls == std::array<int, 2>{1, 0},
           "shortcut boundary interruption leaves exactly one durable native effect");
   require(setup::execute(request_for(shortcut_boundary, shortcut_provider, &shortcut_native)) &&
               shortcut_provider.apply_calls == 1 && shortcut_native.apply_calls == std::array<int, 2>{1, 1},
@@ -416,7 +514,7 @@ void cases() {
   auto hosted_shortcut_interrupted = setup::execute(hosted_shortcut_request);
   require(!hosted_shortcut_interrupted &&
               hosted_shortcut_interrupted.error().code == "self_setup_interrupted" &&
-              hosted_after_shortcut.calls == 2 &&
+              hosted_after_shortcut.calls == 3 &&
               hosted_native.apply_calls == std::array<int, 2>{3, 2},
           "fresh same-intent install interrupts at shortcut-applied with exactly one native effect");
   const fs::path hosted_history = hosted_sequence.root / "coordinator" /
@@ -507,6 +605,16 @@ void cases() {
   changed_preapply.product_version = "2.0.0";
   require(setup::execute(changed_preapply) && preapply_provider.apply_calls == 1,
           "a changed request starts after the prior pre-effect refusal was retired");
+  Tree clock_failure{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-clock"};
+  fs::remove_all(clock_failure.root, ignored); fs::create_directories(clock_failure.root);
+  std::ofstream(clock_failure.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider clock_provider; Native clock_native;
+  clock_provider.clock.advance = false;
+  auto clock_result = setup::execute(request_for(clock_failure, clock_provider, &clock_native));
+  require(!clock_result && clock_result.error().code == "self_setup_clock_unusable" &&
+              clock_provider.apply_calls == 0 &&
+              clock_native.apply_calls == std::array<int, 2>{0, 0},
+          "a non-advancing injected timestamp is refused before provider apply");
   Tree visible{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-visible"};
   fs::remove_all(visible.root, ignored); fs::create_directories(visible.root);
   std::ofstream(visible.root / "payload.zip", std::ios::binary) << "fixture";
@@ -529,14 +637,14 @@ void cases() {
   auto retain_failed = setup::execute(request_for(retain_retry, retain_provider, &retryable_retain));
   require(!retain_failed &&
               retain_failed.error().code == "self_setup_windows_integration_failed" &&
-              retain_provider.apply_calls == 1 && retryable_retain.retain_calls == 1 &&
+              retain_provider.apply_calls == 0 && retryable_retain.retain_calls == 1 &&
               retryable_retain.apply_calls == std::array<int, 2>{0, 0},
-          "retryable retained-source failure stops before native effects");
+          "retryable retained-source failure stops before provider and native effects");
   retryable_retain.retain_fails = false;
   require(setup::execute(request_for(retain_retry, retain_provider, &retryable_retain)) &&
               retain_provider.apply_calls == 1 && retryable_retain.retain_calls == 2 &&
               retryable_retain.apply_calls == std::array<int, 2>{1, 1},
-          "retained-source retry resumes without replaying provider files");
+          "retained-source retry proceeds through its first provider apply");
   Tree retain_frozen{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-retain-frozen"};
   fs::remove_all(retain_frozen.root, ignored); fs::create_directories(retain_frozen.root);
   std::ofstream(retain_frozen.root / "payload.zip", std::ios::binary) << "fixture";
@@ -544,8 +652,9 @@ void cases() {
   frozen_retain.retain_fails = true; frozen_retain.retain_requires_recovery = true;
   auto frozen_result = setup::execute(request_for(retain_frozen, frozen_provider, &frozen_retain));
   require(!frozen_result && frozen_result.error().code == "self_setup_recovery_required" &&
+              frozen_provider.apply_calls == 0 &&
               frozen_retain.apply_calls == std::array<int, 2>{0, 0},
-          "foreign retained-source identity freezes recovery before native effects");
+          "foreign retained-source identity freezes recovery before provider and native effects");
   Tree adapter{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-adapter"};
   fs::remove_all(adapter.root, ignored); fs::create_directories(adapter.root);
   std::ofstream(adapter.root / "payload.zip", std::ios::binary) << "fixture";
@@ -558,20 +667,22 @@ void cases() {
   Provider removal_provider;
   removal_provider.installed_lifecycle_status = "verified";
   Native stale; stale.state = {setup::NativeOwnership::owned_stale, setup::NativeOwnership::owned_stale};
+  stale.validation_fails = true;
   auto uninstall_request = request_for(removal, removal_provider, &stale, setup::Operation::uninstall);
   const fs::path expected_removal_source = removal.root / "state" / "repair-sources" /
       (std::string(64, 'd') + ".zip");
   require(setup::execute(uninstall_request) && stale.retain_calls == 0 &&
+              stale.validate_calls == 0 && stale.validate_launcher_calls == 1 &&
               stale.apply_calls == std::array<int, 2>{1, 1} &&
               stale.apply_repair_sources ==
                   std::vector<fs::path>{expected_removal_source, expected_removal_source},
-          "uninstall removes owned stale native effects after provider file removal");
+          "uninstall removes owned stale native effects without repair-package validation");
   Tree invalid_uninstall_cache{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-uninstall-cache"};
   fs::remove_all(invalid_uninstall_cache.root, ignored);
   fs::create_directories(invalid_uninstall_cache.root);
   Provider invalid_cache_provider; Native invalid_cache_native;
   invalid_cache_native.state = {setup::NativeOwnership::owned, setup::NativeOwnership::owned};
-  invalid_cache_native.validation_fails = true;
+  invalid_cache_native.launcher_validation_fails = true;
   auto invalid_cache_request = request_for(
       invalid_uninstall_cache, invalid_cache_provider, &invalid_cache_native,
       setup::Operation::uninstall);
@@ -580,17 +691,17 @@ void cases() {
   require(!invalid_cache_result &&
               invalid_cache_result.error().code == "self_setup_recovery_required" &&
               invalid_cache_provider.apply_calls == 0 &&
-              invalid_cache_native.validate_calls == 1 &&
+              invalid_cache_native.validate_launcher_calls == 1 &&
               invalid_cache_native.apply_calls == std::array<int, 2>{0, 0} &&
               string_member(invalid_cache_journal, "state") == "recovery_required" &&
               string_member(invalid_cache_journal, "recovery_boundary") ==
-                  "repair_source_ownership_unproven",
+                  "maintenance_launcher_ownership_unproven",
           "uninstall persists invalid retained maintenance identity as recovery-required before provider effects");
   auto invalid_cache_retry = setup::execute(invalid_cache_request);
   require(!invalid_cache_retry &&
               invalid_cache_retry.error().code == "self_setup_recovery_required" &&
               invalid_cache_provider.apply_calls == 0 &&
-              invalid_cache_native.validate_calls == 1,
+              invalid_cache_native.validate_launcher_calls == 1,
           "invalid retained maintenance identity cannot be auto-abandoned on restart");
   Tree mismatched_uninstall{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-uninstall-source"};
   fs::remove_all(mismatched_uninstall.root, ignored);
@@ -604,7 +715,7 @@ void cases() {
   require(!mismatched_uninstall_result &&
               mismatched_uninstall_result.error().code == "self_setup_response_invalid" &&
               mismatched_provider.apply_calls == 0 &&
-              mismatched_native.validate_calls == 0,
+              mismatched_native.validate_launcher_calls == 0,
           "uninstall plan source must match authoritative installed-state inspection");
   require(string_member(active_journal(mismatched_uninstall), "state") == "abandoned",
           "proven pre-effect uninstall plan mismatch is durably retired");
@@ -624,7 +735,7 @@ void cases() {
   require(!invalid_inspection_result &&
               invalid_inspection_result.error().code == "self_setup_response_invalid" &&
               invalid_inspection_provider.apply_calls == 0 &&
-              invalid_inspection_native.validate_calls == 0 &&
+              invalid_inspection_native.validate_launcher_calls == 0 &&
               string_member(active_journal(invalid_inspection), "state") == "abandoned",
           "malformed installed-state envelope is rejected and retired before provider effects");
   Tree refusal{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-refusal"};

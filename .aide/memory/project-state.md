@@ -17,7 +17,7 @@ Generate that fail-closed observation after checkout with
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-0-1-alpha6-workspace-migration-recovery`;
 - active WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
-- all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`;
+- all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`;
 - next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
 - next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
 - truth scope: `phase0_governance_integrated_alpha6_workspace_migration_recovery_active_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
@@ -99,7 +99,7 @@ Generate that fail-closed observation after checkout with
 - last closed WorkUnit: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`;
 - accepted FacMan integration: `c5262596483a5a9767b4c66d4d5ef51b8086cfdc`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
-- Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `279ad4876dc325f8e1fcdc918c91b098a11bc616`;
+- Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `4c766b342e68656a2d4e26a14cfe51ab2209ad41`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 

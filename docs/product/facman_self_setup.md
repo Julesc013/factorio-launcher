@@ -26,7 +26,7 @@ no administrator rights and creates:
   state\current-generation.v1.json
 
 %LOCALAPPDATA%\FacMan\setup\
-  Universal Setup journals, manifests, and receipts
+  usk\                          Universal Setup journals, manifests, and receipts
   repair-sources\<payload-sha256>.zip
   repair-sources\<payload-sha256>.FacManSetup.exe
 
@@ -35,11 +35,14 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\FacMan
 ```
 
 The EXE embeds the exact portable payload; no sibling ZIP is needed. Installed
-mode retains a digest-bound payload and a small maintenance launcher outside
-the managed install root. The registered repair command uses that pair, so it
-does not depend on the original download or on the files it is repairing. The
-registered uninstall command uses the same external launcher, so removal does
-not delete its running entrypoint.
+mode retains the digest-bound payload and the currently running maintenance
+launcher outside the managed install root before entering the provider plan or
+apply operation. The registered repair command uses that pair, so it does not
+depend on the original download or on the files it is repairing. The
+registered uninstall command validates the receipt-bound external launcher
+independently of the repair ZIP. Removal can therefore run when that ZIP is
+absent, while a changed or missing launcher remains a recovery-required
+condition.
 
 ```powershell
 .\FacMan-<version>-windows-x64-setup.exe
@@ -61,6 +64,14 @@ retained-source paths; changed or foreign registrations are preserved for
 review.
 Unknown files inside the managed installation root cause uninstall refusal.
 Workspaces and retained setup receipts remain untouched.
+
+A fresh repair request whose package is absent returns
+`self_setup_package_missing` before a setup journal, provider apply, or native
+integration effect is created. An unfinished installed repair that already
+crossed the retained-source boundary instead resumes from the digest-bound
+cached ZIP. The setup journal records `before_plan`, `plan_reviewed`, and
+`apply_entered` provider phases so a later invocation can distinguish a safe
+pre-entry interruption from an apply whose receipt is unknown.
 
 ## macOS Intel x64
 
@@ -106,6 +117,9 @@ installed-state and receipts, and preserves workspaces and Factorio data.
 - All packages are unsigned; macOS is not notarized.
 - No downloader, automatic updater, service, file association, or default PATH
   mutation.
+- Explicit FacMan update/downgrade and locked-file restart handoff remain
+  unimplemented; this maintenance slice qualifies repair/remove input custody
+  and interruption recovery only.
 - Windows is the 0.1 support direction. macOS Intel and Ubuntu 24.04 x64
   GTK/X11 are experimental previews.
 - No setup package grants real-Factorio execution authority.

@@ -20,9 +20,9 @@ last_reviewed: 2026-09-06
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
-- WIP: 3/4 including external gates
+- WIP: 4/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/9; in-flight work: 3
+- Near-term queued work: 5/9; in-flight work: 4
 
 ## North star
 
@@ -73,6 +73,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01` [P1/M] — Journal native setup effects and recover across setup phases
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback.
+- [ ] `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01` [P1/M] — Complete independent FacMan self-maintenance
+  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
+  - Outcome: Update, repair and remove FacMan independently of Factorio install/content authority.
 
 ## Ready queue
 
@@ -99,7 +102,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Admitted backlog
 
-30 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
+29 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
 
 ## Blocking decisions
 

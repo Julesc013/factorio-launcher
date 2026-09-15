@@ -1614,6 +1614,10 @@ macro(facman_configure_providers)
     endif()
     if(FACMAN_WITH_SETUP)
       set(FACMAN_UNIVERSAL_SETUP_HEADERS_TARGET usk_headers)
+      # FacManSetup is a single-file bootstrap.  It must enter the provider
+      # before an embedded payload can be extracted, so it cannot depend on
+      # the shared provider runtime selected for the installed product.
+      set(FACMAN_UNIVERSAL_SETUP_BOOTSTRAP_TARGET usk_static)
       if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared")
         set(FACMAN_UNIVERSAL_SETUP_CORE_TARGET usk_shared)
       else()
@@ -1767,6 +1771,7 @@ macro(facman_configure_providers)
     set(FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR "${FACMAN_ULK_SDK_INCLUDE_DIR}")
     set(FACMAN_UNIVERSAL_LAUNCHER_HEADERS_TARGET UniversalLauncher::Headers)
     set(FACMAN_UNIVERSAL_SETUP_HEADERS_TARGET UniversalSetup::Headers)
+    set(FACMAN_UNIVERSAL_SETUP_BOOTSTRAP_TARGET UniversalSetup::CoreStatic)
     if(FACMAN_PROVIDER_MODE STREQUAL "installed_static")
       set(FACMAN_UNIVERSAL_LAUNCHER_CORE_TARGET UniversalLauncher::CoreStatic)
       set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET UniversalLauncher::CoreStatic)
@@ -1800,6 +1805,8 @@ macro(facman_configure_providers)
       FacManProvider::SetupHeaders "${FACMAN_UNIVERSAL_SETUP_HEADERS_TARGET}")
     _facman_define_provider_wrapper(facman_provider_setup
       FacManProvider::Setup "${FACMAN_UNIVERSAL_SETUP_CORE_TARGET}")
+    _facman_define_provider_wrapper(facman_provider_setup_bootstrap
+      FacManProvider::SetupBootstrap "${FACMAN_UNIVERSAL_SETUP_BOOTSTRAP_TARGET}")
   endif()
   set(FACMAN_UNIVERSAL_LAUNCHER_TARGET FacManProvider::Launcher)
   set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_TARGET FacManProvider::LauncherSharedClosure)

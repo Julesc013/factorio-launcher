@@ -17,6 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 PROVIDERS = (ROOT / "cmake" / "FacManProviders.cmake").read_text(encoding="utf-8")
 TOP_LEVEL = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
 INSTALL = (ROOT / "cmake" / "FacManInstall.cmake").read_text(encoding="utf-8")
+SELF_SETUP = (ROOT / "runtime" / "self_setup" / "CMakeLists.txt").read_text(
+    encoding="utf-8"
+)
 WORKFLOWS = {
     name: (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
     for name in ("ci.yml", "codeql.yml")
@@ -126,6 +129,21 @@ def candidate_lock(
 
 
 class FacManProviderModeTests(unittest.TestCase):
+    def test_single_file_setup_bootstrap_always_uses_static_provider(self) -> None:
+        self.assertIn(
+            "set(FACMAN_UNIVERSAL_SETUP_BOOTSTRAP_TARGET usk_static)", PROVIDERS
+        )
+        self.assertIn(
+            "set(FACMAN_UNIVERSAL_SETUP_BOOTSTRAP_TARGET "
+            "UniversalSetup::CoreStatic)",
+            PROVIDERS,
+        )
+        self.assertIn(
+            'FacManProvider::SetupBootstrap "${FACMAN_UNIVERSAL_SETUP_BOOTSTRAP_TARGET}"',
+            PROVIDERS,
+        )
+        self.assertIn("FacManProvider::SetupBootstrap", SELF_SETUP)
+
     def test_mode_is_a_closed_enum_and_enters_build_identity(self) -> None:
         policy = "cmake_policy(SET CMP0057 NEW)"
         mode_check = "FACMAN_PROVIDER_MODE IN_LIST _FACMAN_PROVIDER_MODES"
