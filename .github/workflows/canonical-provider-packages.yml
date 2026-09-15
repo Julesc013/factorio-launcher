@@ -51,8 +51,8 @@ jobs:
             source_dir: universal-launcher
           - provider: usk
             repository: Julesc013/universal-setup
-            revision: 279ad4876dc325f8e1fcdc918c91b098a11bc616
-            tree: 499013a2099f872c998932505a51489343606382
+            revision: 4c766b342e68656a2d4e26a14cfe51ab2209ad41
+            tree: d0e4eef8cd6303079f1b25688d29a636a2e4c558
             source_dir: universal-setup
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
