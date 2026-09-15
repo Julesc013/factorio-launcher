@@ -46,3 +46,26 @@ whose acceptance also requires update recovery. The predecessor task, status,
 canonical plan and generated views now remain active/PENDING; its exact PR #292
 receipt is explicitly PARTIAL with `workunit_closed=false`. The independent
 re-review returned PASS after that correction.
+
+## Hosted coverage timeout remediation
+
+PR #296 run `34988087343`, job `104445285350`, checked out exact source
+`9b42bf7f418c2c1fb9230fb41bc65ba3484f48d8`. Its coverage lane passed 46 of
+47 CTests and passed coverage evidence generation and policy enforcement, but
+`facman_self_setup_recovery_smoke` reached its 30-second CTest limit. The smoke
+used the production second-resolution wait for each injected operation and had
+already taken 28.63 seconds in the current-source Windows Debug matrix.
+
+The remediation adds a narrow injected clock for tests and embedders. Null
+production requests retain the bounded system-clock wait. Injected timestamps
+must remain valid and strictly advance the bound; a new negative assertion
+proves a non-advancing clock refuses before provider apply. The 63-assertion
+recovery smoke now passes locally in 1.78 seconds without changing its
+30-second test limit. Independent non-authoring review passed after the clock
+surface was narrowed to advancing timestamps only. Full hosted requalification
+remains pending on the successor commit.
+
+The final local Debug rebuild and complete 45-test native matrix passed after
+that review in 13.29 seconds; the recovery smoke took 2.16 seconds within the
+parallel matrix. The 36 focused Python contract/package/candidate tests and the
+426-schema strict check also passed.

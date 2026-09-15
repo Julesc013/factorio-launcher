@@ -123,6 +123,14 @@ public:
       const std::filesystem::path &source) = 0;
 };
 
+// Narrow test/embedding seam for second-resolution provider timestamps.
+// Production uses the system clock when this is null.
+class Clock {
+public:
+  virtual ~Clock() = default;
+  virtual std::string after(const std::string &lower_bound) = 0;
+};
+
 struct Request {
   Operation operation = Operation::verify;
   std::filesystem::path package;
@@ -138,6 +146,7 @@ struct Request {
   ProviderEffects *provider_effects = nullptr;
   PackageMaterializer *package_materializer = nullptr;
   DurableBoundaryHook *durable_boundary_hook = nullptr;
+  Clock *clock = nullptr;
   std::optional<QualificationClaims> qualification_claims;
 };
 

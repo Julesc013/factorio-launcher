@@ -8,7 +8,8 @@ self-maintenance slice:
 - `runtime/self_setup/facman_self_setup.{h,cpp}` defers package materialization
   until durable admission, resumes admitted installed operations from retained
   input, retains maintenance inputs before provider mutation, splits repair ZIP
-  and launcher validation, and records provider entry phase.
+  and launcher validation, records provider entry phase, and exposes a validated
+  clock seam so injected lifecycle tests do not wait on real wall-clock seconds.
 - `apps/setup/main.cpp` supplies the exact running setup executable, owns the
   deferred ZIP overlay lifetime, retains it outside the managed root, and uses
   launcher-only validation during uninstall.
@@ -17,7 +18,8 @@ self-maintenance slice:
   before provider files are applied.
 - Native and Python tests cover missing package refusal, retained-source resume,
   launcher-only uninstall, phase interruption, package declarations, and the
-  candidate workflow's real current-user scenarios.
+  candidate workflow's real current-user scenarios. The native recovery smoke
+  also proves a non-advancing injected timestamp cannot reach provider apply.
 - `docs/product/facman_self_setup.md` describes the implemented repair/remove
   behavior and leaves update and locked-file handoff open.
 - The canonical release plan and AIDE queue move this WorkUnit from `next` to

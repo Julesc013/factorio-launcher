@@ -49,7 +49,15 @@ std::string sha256_text(const std::string &value) {
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
 }
 
+struct Clock final : setup::Clock {
+  bool advance = true;
+  std::string after(const std::string &lower_bound) override {
+    return advance ? "9999-12-31T23:59:59Z" : lower_bound;
+  }
+};
+
 struct Provider final : setup::ProviderEffects {
+  Clock clock;
   fs::path coordinator_root;
   int apply_calls = 0;
   bool lose_apply_receipt = false;
@@ -291,6 +299,7 @@ setup::Request request_for(const Tree &tree, Provider &provider, Native *native,
     std::ofstream(request.maintenance_launcher, std::ios::binary) << "launcher";
   provider.coordinator_root = tree.root / "coordinator";
   request.apply = true; request.provider_effects = &provider; request.native_effects = native;
+  request.clock = &provider.clock;
   return request;
 }
 
@@ -596,6 +605,16 @@ void cases() {
   changed_preapply.product_version = "2.0.0";
   require(setup::execute(changed_preapply) && preapply_provider.apply_calls == 1,
           "a changed request starts after the prior pre-effect refusal was retired");
+  Tree clock_failure{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-clock"};
+  fs::remove_all(clock_failure.root, ignored); fs::create_directories(clock_failure.root);
+  std::ofstream(clock_failure.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider clock_provider; Native clock_native;
+  clock_provider.clock.advance = false;
+  auto clock_result = setup::execute(request_for(clock_failure, clock_provider, &clock_native));
+  require(!clock_result && clock_result.error().code == "self_setup_clock_unusable" &&
+              clock_provider.apply_calls == 0 &&
+              clock_native.apply_calls == std::array<int, 2>{0, 0},
+          "a non-advancing injected timestamp is refused before provider apply");
   Tree visible{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-visible"};
   fs::remove_all(visible.root, ignored); fs::create_directories(visible.root);
   std::ofstream(visible.root / "payload.zip", std::ios::binary) << "fixture";

@@ -198,10 +198,19 @@ bool valid_timestamp(const std::string &value) {
   return day >= 1 && day <= maximum_day;
 }
 
-facman::core::Result<std::string> timestamp_after(const std::string &lower_bound) {
+facman::core::Result<std::string> timestamp_after(
+    const std::string &lower_bound, Clock *clock) {
   if (!valid_timestamp(lower_bound))
     return facman::core::Result<std::string>::failure(error(
         "self_setup_clock_unusable", "setup lifecycle lower timestamp is malformed"));
+  if (clock != nullptr) {
+    const std::string current = clock->after(lower_bound);
+    if (valid_timestamp(current) && current > lower_bound)
+      return facman::core::Result<std::string>::success(current);
+    return facman::core::Result<std::string>::failure(error(
+        "self_setup_clock_unusable",
+        "setup lifecycle injected timestamp did not advance"));
+  }
   constexpr int attempts = 80;
   for (int attempt = 0; attempt < attempts; ++attempt) {
     const std::string current = timestamp();
@@ -915,9 +924,10 @@ facman::core::Result<json::ObjectBuilder> apply_request(const char *schema,
                                   const std::string &plan_id,
                                   const std::string &digest,
                                   const std::string &plan_created_at,
-                                  const std::string &transaction_id) {
+                                  const std::string &transaction_id,
+                                  Clock *clock) {
   auto parsed_plan = json::parse(plan.serialize());
-  auto applied_at = timestamp_after(plan_created_at);
+  auto applied_at = timestamp_after(plan_created_at, clock);
   if (!applied_at)
     return facman::core::Result<json::ObjectBuilder>::failure(applied_at.error());
   json::ObjectBuilder apply;
@@ -959,7 +969,8 @@ install_or_repair(const Request &request, const fs::path &package,
               "The setup payload could not be hashed"));
   }
   const std::string source_digest = stable_digest.take_value();
-  const std::string created_at = identity == nullptr ? timestamp() : identity->provider_created_at;
+  const std::string created_at = identity == nullptr
+      ? timestamp() : identity->provider_created_at;
   const std::string request_id = identity == nullptr ? identifier(
       request.operation == Operation::install ? "request.facman.install"
                                               : "request.facman.repair") : identity->provider_request_id;
@@ -1033,7 +1044,8 @@ install_or_repair(const Request &request, const fs::path &package,
     *provider_progress = ProviderProgress::plan_reviewed;
   auto apply =
       apply_request(apply_schema, plan, reviewed.value().plan_id, reviewed.value().digest, created_at,
-                    identity == nullptr ? identifier("tx.facman.self") : identity->provider_transaction_id);
+                    identity == nullptr ? identifier("tx.facman.self") : identity->provider_transaction_id,
+                    request.clock);
   if (!apply) return facman::core::Result<Response>::failure(apply.error());
   if (identity != nullptr) {
     identity->provider_phase = "apply_entered";
@@ -1135,7 +1147,8 @@ facman::core::Result<Response> uninstall(const Request &request,
   if (provider_progress != nullptr)
     *provider_progress = ProviderProgress::before_plan;
   const std::string plan_id = identity == nullptr ? identifier("plan.facman.uninstall") : identity->provider_plan_id;
-  const std::string created_at = identity == nullptr ? timestamp() : identity->provider_created_at;
+  const std::string created_at = identity == nullptr
+      ? timestamp() : identity->provider_created_at;
   json::ObjectBuilder plan;
   plan.add_string("schema", "usk.uninstall_plan_request.v1");
   plan.add_string("request_id", identity == nullptr ? identifier("request.facman.uninstall") : identity->provider_request_id);
@@ -1236,7 +1249,8 @@ facman::core::Result<Response> uninstall(const Request &request,
   auto apply =
       apply_request("usk.uninstall_apply_request.v1", plan, plan_id,
                     reviewed.value().digest, created_at,
-                    identity == nullptr ? identifier("tx.facman.self") : identity->provider_transaction_id);
+                    identity == nullptr ? identifier("tx.facman.self") : identity->provider_transaction_id,
+                    request.clock);
   if (!apply) return facman::core::Result<Response>::failure(apply.error());
   if (identity != nullptr) {
     identity->provider_phase = "apply_entered";
@@ -1331,7 +1345,8 @@ facman::core::Result<Response> review_provider_rollback(
 
 facman::core::Result<void> apply_reviewed_provider_rollback(
     const SetupJournal &journal, const fs::path &target_root,
-    const fs::path &state_root, const fs::path &acceptance_root) {
+    const fs::path &state_root, const fs::path &acceptance_root,
+    Clock *clock) {
   if (journal.recovery_action != "rollback" || journal.recovery_plan_id.empty() ||
       journal.recovery_plan_digest.empty() || journal.recovery_plan_created_at.empty())
     return facman::core::Result<void>::failure(error(
@@ -1362,7 +1377,7 @@ facman::core::Result<void> apply_reviewed_provider_rollback(
     return facman::core::Result<void>::failure(error(
         "self_setup_recovery_preview_required", "provider recovery plan changed; review a new plan before applying", planned.value()));
   auto plan_value = json::parse(plan_bytes);
-  auto applied_at = timestamp_after(journal.recovery_plan_created_at);
+  auto applied_at = timestamp_after(journal.recovery_plan_created_at, clock);
   if (!plan_value || !applied_at) return facman::core::Result<void>::failure(
       applied_at ? error("self_setup_recovery_required", "recovery plan could not be reconstructed") : applied_at.error());
   json::ObjectBuilder apply;
@@ -1512,15 +1527,17 @@ facman::core::Result<Response> execute(const Request &request) {
     if (journal.files != "applied" &&
         journal.provider_phase == "apply_entered") {
       if (!active.apply) {
-        auto reviewed = review_provider_rollback(journal, active.install_root,
-                                                  active.state_root, active.acceptance_root);
+        auto reviewed = review_provider_rollback(
+            journal, active.install_root, active.state_root,
+            active.acceptance_root);
         if (!reviewed) return facman::core::Result<Response>::failure(reviewed.error());
         auto persisted = persist_journal(record_path, journal);
         if (!persisted) return facman::core::Result<Response>::failure(persisted.error());
         return reviewed;
       } else {
-        auto recovered = apply_reviewed_provider_rollback(journal, active.install_root,
-                                                          active.state_root, active.acceptance_root);
+        auto recovered = apply_reviewed_provider_rollback(
+            journal, active.install_root, active.state_root,
+            active.acceptance_root, active.clock);
         if (!recovered) return facman::core::Result<Response>::failure(recovered.error());
         journal.state = "rolled_back";
         journal.recovery_boundary = "provider_rollback_completed";
@@ -1767,8 +1784,9 @@ facman::core::Result<Response> execute(const Request &request) {
   Response provider_response;
   if (journal.files != "applied") {
     if (journal.provider_phase == "apply_entered") {
-      auto recovered = apply_reviewed_provider_rollback(journal, active.install_root,
-                                                         active.state_root, active.acceptance_root);
+      auto recovered = apply_reviewed_provider_rollback(
+          journal, active.install_root, active.state_root,
+          active.acceptance_root, active.clock);
       if (recovered) {
         journal.state = "rolled_back";
         journal.recovery_boundary = "provider_rollback_completed";
