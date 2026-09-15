@@ -123,7 +123,17 @@ std::vector<std::string> option_values(const std::vector<std::string>& args, con
     for (std::size_t index = 0; index + 1 < args.size(); ++index) if (args[index] == name) output.push_back(args[++index]);
     return output;
 }
-
+bool repair_plan_arguments_valid(const std::vector<std::string>& args)
+{
+    if (args.size() < 4) return false;
+    std::size_t archive_count = 0, json_count = 0;
+    for (std::size_t index = 4; index < args.size(); ++index) {
+        if (args[index] == "--json" && ++json_count == 1) continue;
+        if (args[index] != "--archive" || ++archive_count > 1 || ++index >= args.size() ||
+            args[index].compare(0, 2, "--") == 0) return false;
+    }
+    return true;
+}
 CliResponse call(
     const Options& options,
     const std::string& command,
@@ -671,6 +681,7 @@ int command_installs(const Options& options)
         (options.args[2] == "plan" || options.args[2] == "apply")) {
         const std::string phase = options.args[2];
         if (phase == "plan") {
+            if (action == "repair" && !repair_plan_arguments_valid(options.args)) return 2;
             std::vector<std::pair<std::string, std::string>> fields = {{"install_id", options.args[3]}};
             if (action == "repair") fields.push_back({"archive", option(options.args, "--archive")});
             if (action == "move") {
@@ -681,7 +692,8 @@ int command_installs(const Options& options)
             return emit_basic(
                 call(options, "installs." + action + ".plan", exact_fields_payload(fields)),
                 flag(options.args, "--json"),
-                "Managed " + action + " plan reviewed through Universal Setup.");
+                action == "repair" ? "Managed repair reconciliation plan rendered."
+                    : "Managed " + action + " plan reviewed through Universal Setup.");
         }
         if (phase == "apply") {
             const std::string digest = option(options.args, "--digest");

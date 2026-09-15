@@ -114,7 +114,7 @@ FacMan ships as the first serious Factorio product binding.
 ## Current Status
 
 **Phase:** `facman_0_1_alpha6_workspace_migration_recovery`. **Primary active WorkUnit:** `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`. **Next:** `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
-Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`.
+Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`.
 
 Current release obligations come only from
 `release/index/active_release_view.v1.toml`.
@@ -127,7 +127,7 @@ Catalog-only CLI, TUI, toolkit, and earlier distribution records are not current
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 131 commands, 419 schemas, and 250 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 131 commands, 419 schemas, and 251 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `279ad4876dc325f8e1fcdc918c91b098a11bc616`.

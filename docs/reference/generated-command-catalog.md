@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `535183d19263892d224965cc1ca1ab6b73e8d2da969926f8af07b78d1c702f9d`.
+Source digest: `f99f418bbaf1df4c8996a04960fa2edc7707cf2c16dc0f0054f9bdd5dfaa6419`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -31,7 +31,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.recovery.inspect` | `installs.recovery.inspect` | `installs_recovery_inspect` | no | - | unavailable_until_gateway | setup_preview | `facman installs recovery inspect <transaction-id> --json` |
 | `installs.repair` | `installs.repair` | `installs_repair` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs repair <install-id> --json` |
 | `installs.repair.apply` | `installs.repair.apply` | `installs_repair_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
-| `installs.repair.plan` | `installs.repair.plan` | `installs_repair_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs repair plan <install-id> --archive <path> --json` |
+| `installs.repair.plan` | `installs.repair.plan` | `installs_repair_plan` | no | - | implemented | workspace_read | `facman installs repair plan <install-id> [--archive <path>] --json` |
 | `installs.scan` | `install_refs.scan` | `install_scan` | no | install-refs.scan | available | workspace_read | `facman installs scan [--search-root <path>] --json` |
 | `installs.uninstall` | `installs.uninstall` | `installs_uninstall` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs uninstall <install-id> --json` |
 | `installs.uninstall.apply` | `installs.uninstall.apply` | `installs_uninstall_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs uninstall apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |

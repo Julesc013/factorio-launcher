@@ -23,6 +23,7 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
         policy.capabilities.push_back("install.model.inspect");
         break;
     case CommandId::installs_reconcile_plan:
+    case CommandId::installs_repair_plan:
         policy.capabilities.push_back("install.reconciliation.plan");
         break;
     case CommandId::instances_describe:

@@ -17,7 +17,6 @@ ApplicationResult plan_install(ApplicationContext& context, const ServiceOperati
 ApplicationResult apply_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult verify_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
-ApplicationResult plan_repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult apply_move_install(ApplicationContext& context, const ServiceOperationRequest& request);

@@ -4,8 +4,8 @@
   "status": "refused",
   "refusal": {
     "schema": "common.refusal.v1",
-    "code": "live_target_acceptance_required",
-    "reason": "A human M2 live-target acceptance Pass is required before managed repair planning is activated.",
-    "recoverable": false
+    "code": "ownership_denied",
+    "reason": "Repair planning is available only for registered managed installs",
+    "recoverable": true
   }
 }

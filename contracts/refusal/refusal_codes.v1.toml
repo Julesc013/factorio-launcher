@@ -744,6 +744,13 @@ message = "The requested install id is not registered in the workspace."
 suggested_next_command = "facman installs scan --json"
 
 [[code]]
+id = "repair_lifecycle_ineligible"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Repair planning requires an active, verification_failed, or recovery_required managed install."
+
+[[code]]
 id = "unknown_instance"
 severity = "blocked"
 effect = "workspace_read"

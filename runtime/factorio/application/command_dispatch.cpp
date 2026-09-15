@@ -367,7 +367,6 @@ bool decode_service_request(
     case CommandId::installs_move_apply:
     case CommandId::installs_uninstall_apply:
     case CommandId::installs_recovery_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
-    case CommandId::installs_repair_plan: allowed = {"install_id", "archive"}; break;
     case CommandId::installs_move_plan: allowed = {"install_id", "target_root"}; break;
     case CommandId::installs_uninstall_plan: allowed = {"install_id"}; break;
     case CommandId::installs_recovery_inspect: allowed = {"transaction_id"}; break;
@@ -609,7 +608,6 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     case CommandId::installs_install_apply:
     case CommandId::installs_install_version:
     case CommandId::installs_verify:
-    case CommandId::installs_repair_plan:
     case CommandId::installs_repair_apply:
     case CommandId::installs_repair:
     case CommandId::installs_move_plan:
@@ -674,7 +672,15 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "install_id", typed.install_id, detail)) return false;
         request.payload = std::move(typed); return true;
     }
-    case CommandId::installs_reconcile_plan: {
+    case CommandId::installs_reconcile_plan:
+    case CommandId::installs_repair_plan: {
+        if (command == CommandId::installs_repair_plan) {
+            if (!validate_fields(payload, {"install_id", "archive"}, detail)) return false;
+            ReconcileInstallRequest typed;
+            if (!required_string(payload, "install_id", typed.install_id, detail) ||
+                !optional_string(payload, "archive", typed.source_ref, detail)) return false;
+            request.payload = std::move(typed); return true;
+        }
         if (!validate_fields(payload, {
                 "install_id", "version", "source_ref", "target_root", "management_mode",
                 "deployment_style", "data_policy", "integration_mode", "update_policy"}, detail)) return false;

@@ -9,6 +9,7 @@
 #include "flb_factorio_install_model.h"
 
 #include <filesystem>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -17,33 +18,46 @@ namespace fs = std::filesystem;
 namespace discovery = facman::factorio::discovery;
 
 namespace {
+discovery::InstallRef install_ref_from_record(const facman::workspace::InstallRecord& record)
+{
+    discovery::InstallRef install;
+    install.install_id = record.id.str();
+    install.provider_id = record.provider_id;
+    install.root = record.root;
+    install.executable = record.executable;
+    install.version = record.version;
+    install.ownership = record.ownership;
+    install.source = record.source;
+    install.source_ref = record.source_ref;
+    install.platform = record.platform;
+    install.distribution_origin = record.distribution_origin;
+    install.platform_integration = record.platform_integration;
+    install.strict_isolation_eligibility = record.strict_isolation_eligibility;
+    install.external_state_domains = record.external_state_domains;
+    install.setup_state_ref = record.setup_state_ref;
+    install.lifecycle_status = record.lifecycle_status;
+    install.last_verification_identity = record.last_verification_identity;
+    install.state_revision = record.state_revision;
+    install.verification_status = record.verification_status;
+    discovery::classify_install_isolation(install);
+    discovery::classify_install_layout(install);
+    return install;
+}
+
 bool load_install(ApplicationContext& context, const std::string& id, discovery::InstallRef& install)
 {
     auto parsed_id = facman::core::InstallId::parse_legacy(id);
     if (!parsed_id) return false;
     auto record = context.installs().load(parsed_id.value());
     if (!record) return false;
-    install.install_id = record.value().id.str();
-    install.provider_id = record.value().provider_id;
-    install.root = record.value().root;
-    install.executable = record.value().executable;
-    install.version = record.value().version;
-    install.ownership = record.value().ownership;
-    install.source = record.value().source;
-    install.source_ref = record.value().source_ref;
-    install.platform = record.value().platform;
-    install.distribution_origin = record.value().distribution_origin;
-    install.platform_integration = record.value().platform_integration;
-    install.strict_isolation_eligibility = record.value().strict_isolation_eligibility;
-    install.external_state_domains = record.value().external_state_domains;
-    install.setup_state_ref = record.value().setup_state_ref;
-    install.lifecycle_status = record.value().lifecycle_status;
-    install.last_verification_identity = record.value().last_verification_identity;
-    install.state_revision = record.value().state_revision;
-    install.verification_status = record.value().verification_status;
-    discovery::classify_install_isolation(install);
-    discovery::classify_install_layout(install);
+    install = install_ref_from_record(record.value());
     return true;
+}
+
+bool repair_plan_lifecycle_eligible(std::string_view lifecycle)
+{
+    return lifecycle == "active" || lifecycle == "verification_failed" ||
+        lifecycle == "recovery_required";
 }
 }
 
@@ -176,6 +190,68 @@ ApplicationResult plan_install_reconciliation(
     if (!plan) return refused(
         safety_refusal(
             "installs.reconcile.plan",
+            plan.error().code,
+            "Desired installation state is not compatible with this runtime",
+            plan.error().message,
+            false),
+        plan.error().code,
+        plan.error().message,
+        plan.error().kind);
+    ApplicationResult result;
+    result.output = plan.take_value();
+    return result;
+}
+
+ApplicationResult plan_managed_install_repair(
+    ApplicationContext& context,
+    const ReconcileInstallRequest& request)
+{
+    auto parsed_id = facman::core::InstallId::parse_legacy(request.install_id);
+    if (!parsed_id) return refused(
+        safety_refusal(
+            "installs.repair.plan",
+            parsed_id.error().code,
+            "Install id is invalid",
+            parsed_id.error().message,
+            false),
+        parsed_id.error().code,
+        parsed_id.error().message,
+        parsed_id.error().kind);
+    auto record = context.installs().load(parsed_id.value());
+    if (!record) return refused(
+        safety_refusal(
+            "installs.repair.plan",
+            "unknown_install",
+            "Install reference is not registered",
+            request.install_id,
+            true),
+        "unknown_install",
+        "Install reference is not registered");
+    if (record.value().ownership != "managed") return refused(
+        safety_refusal(
+            "installs.repair.plan",
+            "ownership_denied",
+            "Repair planning is available only for registered managed installs",
+            record.value().ownership,
+            true),
+        "ownership_denied",
+        "Repair planning is available only for registered managed installs");
+    if (!repair_plan_lifecycle_eligible(record.value().lifecycle_status)) return refused(
+        safety_refusal(
+            "installs.repair.plan",
+            "repair_lifecycle_ineligible",
+            "Repair planning requires an active, verification_failed, or recovery_required managed install",
+            record.value().lifecycle_status.empty() ? "unknown" : record.value().lifecycle_status,
+            true),
+        "repair_lifecycle_ineligible",
+        "Repair planning requires an active, verification_failed, or recovery_required managed install");
+
+    auto plan = installation::reconciliation_plan_json(
+        install_ref_from_record(record.value()), request, "installs.repair.plan",
+        installation::ReconciliationPlanIntent::repair);
+    if (!plan) return refused(
+        safety_refusal(
+            "installs.repair.plan",
             plan.error().code,
             "Desired installation state is not compatible with this runtime",
             plan.error().message,

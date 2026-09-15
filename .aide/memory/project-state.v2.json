@@ -692,9 +692,9 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "535183d19263892d224965cc1ca1ab6b73e8d2da969926f8af07b78d1c702f9d",
+    "catalog_digest": "f99f418bbaf1df4c8996a04960fa2edc7707cf2c16dc0f0054f9bdd5dfaa6419",
     "contracts": 131,
-    "refusal_codes": 250,
+    "refusal_codes": 251,
     "registered_routes": 129,
     "schemas": 419
   },
@@ -779,6 +779,7 @@
       "source_record": "release/index/plan.v1.toml",
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+        "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
         "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
       ]
     },
@@ -2697,15 +2698,16 @@
   "queue": {
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+      "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
       "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 1,
+      "active": 2,
       "active_automated": 1,
       "blocked": 2,
       "closed": 29,
-      "planned": 36,
+      "planned": 35,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
@@ -2715,6 +2717,12 @@
         "lifecycle_state": "active_automated",
         "queue": "active",
         "status": "active_automated"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
@@ -2946,12 +2954,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

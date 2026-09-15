@@ -285,11 +285,6 @@ ApplicationResult repair_install(ApplicationContext& context, const ServiceOpera
     return managed_install_policy(context, request, "installs.repair");
 }
 
-ApplicationResult plan_repair_install(ApplicationContext& context, const ServiceOperationRequest& request)
-{
-    return managed_install_policy(context, request, "installs.repair.plan");
-}
-
 ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest&)
 {
     return live_target_acceptance_required(context, "installs.repair.apply");
@@ -358,7 +353,6 @@ bool is_setup_command(CommandId command) noexcept
     case CommandId::installs_install_apply:
     case CommandId::installs_install_version:
     case CommandId::installs_verify:
-    case CommandId::installs_repair_plan:
     case CommandId::installs_repair_apply:
     case CommandId::installs_repair:
     case CommandId::installs_move_plan:
@@ -384,7 +378,6 @@ ApplicationResult dispatch_setup(ApplicationContext& context, const ApplicationR
     case CommandId::installs_install_apply: return apply_install(context, operation);
     case CommandId::installs_install_version: return install_version(context, operation);
     case CommandId::installs_verify: return verify_install(context, operation);
-    case CommandId::installs_repair_plan: return plan_repair_install(context, operation);
     case CommandId::installs_repair_apply: return apply_repair_install(context, operation);
     case CommandId::installs_repair: return repair_install(context, operation);
     case CommandId::installs_move_plan: return plan_move_install(context, operation);

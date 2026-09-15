@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.install_reconciliation_plan.v1",
+  "command": "installs.repair.plan",
+  "install_id": "managed-fixture",
+  "mode": "plan_only",
+  "mutation_executed": false,
+  "apply_available": false,
+  "summary": {
+    "status": "already_reconciled"
+  }
+}

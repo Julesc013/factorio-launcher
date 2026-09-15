@@ -6,7 +6,7 @@
   "required": ["schema", "command", "install_id", "canonicalization_version", "effect_vocabulary_version", "current_evidence_digest", "desired_state_digest", "plan_digest", "plan_id", "created_at", "mode", "mutation_executed", "apply_available", "current_evidence", "desired_state", "steps", "blockers", "risks", "provider_revisions", "policy_revision", "revalidation_requirements", "summary", "authority", "rollback", "no_write_guarantees"],
   "properties": {
     "schema": { "const": "factorio.install_reconciliation_plan.v1" },
-    "command": { "const": "installs.reconcile.plan" },
+    "command": { "enum": ["installs.reconcile.plan", "installs.repair.plan"] },
     "install_id": { "type": "string", "minLength": 1 },
     "canonicalization_version": { "const": "facman.sorted-json.v1" },
     "effect_vocabulary_version": { "const": "common.effects.v1" },
@@ -61,7 +61,7 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "enum": ["installation_record_revision", "installation_root_identity", "executable_identity", "verification_identity", "setup_state_identity", "integration_identity", "filesystem_volume_identity", "provider_revisions", "policy_revision", "source_evidence"] }
+      "items": { "enum": ["installation_record_revision", "lifecycle_status", "installation_root_identity", "executable_identity", "verification_identity", "setup_state_identity", "integration_identity", "filesystem_volume_identity", "provider_revisions", "policy_revision", "source_evidence"] }
     },
     "summary": {
       "type": "object",

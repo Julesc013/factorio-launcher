@@ -3,12 +3,13 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_current_evidence.v1.schema.json",
   "title": "Factorio Installation Current Evidence",
   "type": "object",
-  "required": ["schema", "install_id", "product_id", "version", "version_family", "source", "deployment", "ownership_and_authority", "data_policy", "integration", "health", "provenance", "filesystem", "dependencies"],
+  "required": ["schema", "install_id", "product_id", "version", "lifecycle_status", "version_family", "source", "deployment", "ownership_and_authority", "data_policy", "integration", "health", "provenance", "filesystem", "dependencies"],
   "properties": {
     "schema": { "const": "factorio.install_current_evidence.v1" },
     "install_id": { "type": "string", "minLength": 1 },
     "product_id": { "const": "factorio" },
     "version": { "type": "string" },
+    "lifecycle_status": { "type": "string", "minLength": 1 },
     "version_family": {
       "type": "object",
       "required": ["schema", "status", "id", "version_line", "normalized_version", "exact_patch", "product_target", "support_claim"],
@@ -34,9 +35,10 @@
     "filesystem": { "type": "object" },
     "dependencies": {
       "type": "object",
-      "required": ["installation_record_revision", "installation_root_identity", "executable_identity", "verification_identity", "setup_state_identity", "integration_identity", "filesystem_volume_identity", "provider_revision", "captured_at"],
+      "required": ["installation_record_revision", "lifecycle_status", "installation_root_identity", "executable_identity", "verification_identity", "setup_state_identity", "integration_identity", "filesystem_volume_identity", "provider_revision", "captured_at"],
       "properties": {
         "installation_record_revision": { "type": "string", "minLength": 1 },
+        "lifecycle_status": { "type": "string", "minLength": 1 },
         "installation_root_identity": { "type": "string", "minLength": 1 },
         "executable_identity": { "type": "string", "minLength": 1 },
         "verification_identity": { "type": "string", "minLength": 1 },
