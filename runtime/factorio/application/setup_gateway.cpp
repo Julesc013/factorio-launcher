@@ -5,8 +5,14 @@
 
 #include "fl_json.h"
 #include "fl_file_io.h"
+#include "fl_sha256.h"
 
+#include <algorithm>
+#include <array>
+#include <initializer_list>
+#include <set>
 #include <system_error>
+#include <tuple>
 
 #ifndef FACMAN_WITH_SETUP
 #define FACMAN_WITH_SETUP 0
@@ -42,6 +48,10 @@ public:
     facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest&) override
     {
         return facman::core::Result<InstallPlan>::failure(unavailable_error());
+    }
+    facman::core::Result<UninstallPlan> plan_uninstall(const UninstallPlanRequest&) override
+    {
+        return facman::core::Result<UninstallPlan>::failure(unavailable_error());
     }
     facman::core::Result<SetupRefusal> verify_install(const std::string&) override
     {
@@ -149,6 +159,348 @@ std::string string_field(const facman::core::json::Value& object, const char* ke
     if (value == nullptr) return {};
     auto text = value->string_value();
     return text ? text.take_value() : std::string();
+}
+
+bool sha256_field(const std::string& value)
+{
+    if (value.size() != 64) return false;
+    for (const char character : value) {
+        if (!((character >= '0' && character <= '9') ||
+              (character >= 'a' && character <= 'f'))) return false;
+    }
+    return true;
+}
+
+bool bounded_string(const facman::core::json::Value& object, const char* key, std::size_t maximum)
+{
+    const auto* value = object.find(key);
+    if (value == nullptr || !value->is_string()) return false;
+    auto text = value->string_value();
+    return text && !text.value().empty() && text.value().size() <= maximum;
+}
+
+bool bounded_value_string(const facman::core::json::Value& value, std::size_t maximum)
+{
+    if (!value.is_string()) return false;
+    auto text = value.string_value();
+    return text && !text.value().empty() && text.value().size() <= maximum;
+}
+
+bool exact_members(
+    const facman::core::json::Value& object,
+    std::initializer_list<const char*> expected)
+{
+    if (!object.is_object() || object.size() != expected.size()) return false;
+    std::set<std::string> expected_keys;
+    for (const char* key : expected) expected_keys.insert(key);
+    const std::vector<std::string> actual = object.object_keys();
+    return actual.size() == expected_keys.size() &&
+        std::set<std::string>(actual.begin(), actual.end()) == expected_keys;
+}
+
+bool normalized_absolute_path(
+    const std::string& value,
+    const std::filesystem::path& expected)
+{
+    if (value.empty() || value.size() > 32768) return false;
+    const std::filesystem::path path = facman::platform::path_from_utf8(value);
+    return path.is_absolute() && path == path.lexically_normal() &&
+        path == expected;
+}
+
+bool safe_relative_path(const std::string& value)
+{
+    if (value.empty() || value.size() > 4096 || value.front() == '/' ||
+        value.find('\\') != std::string::npos || value.find(':') != std::string::npos) return false;
+    std::size_t begin = 0;
+    while (begin < value.size()) {
+        const std::size_t end = value.find('/', begin);
+        const std::string component = value.substr(begin, end - begin);
+        if (component.empty() || component == "." || component == "..") return false;
+        if (end == std::string::npos) return true;
+        begin = end + 1;
+    }
+    return false;
+}
+
+bool response_envelope(
+    const facman::core::json::Value& document,
+    const facman::core::json::Value*& payload)
+{
+    if (!exact_members(document, {"error", "payload", "schema", "status"}) ||
+        string_field(document, "schema") != "usk.command_response.v1" ||
+        string_field(document, "status") != "ok") return false;
+    const auto* error = document.find("error");
+    payload = document.find("payload");
+    return error != nullptr && error->is_null() && payload != nullptr && payload->is_object();
+}
+
+struct InspectedInstallState {
+    std::filesystem::path target;
+    std::string installed_state_digest;
+    std::string ownership_manifest_digest;
+    std::string recipe_digest;
+    std::string source_digest;
+    std::string provider_revision;
+};
+
+facman::core::Result<std::string> installed_state_digest(
+    const facman::core::json::Value& state)
+{
+    facman::core::json::ObjectBuilder payload;
+    for (const char* key : {
+            "audit_chain_id", "component_selection", "created_at", "entrypoints",
+            "install_id", "lifecycle_status", "ownership_manifest_digest",
+            "ownership_manifest_ref", "product_id", "product_version", "recipe_digest",
+            "setup_abi", "source_archive_digest", "target_root", "target_scope",
+            "transaction_id"}) {
+        const auto* value = state.find(key);
+        if (value == nullptr || !payload.add_value(key, *value)) {
+            return facman::core::Result<std::string>::failure({
+                "setup_installed_state_response_invalid",
+                "Universal Setup returned an invalid installed-state response",
+                "installed-state digest input"});
+        }
+    }
+    auto document = facman::core::json::parse(payload.serialize());
+    if (!document) return facman::core::Result<std::string>::failure(document.error());
+    auto canonical = facman::core::json::canonical_integer_json(document.value());
+    if (!canonical) return facman::core::Result<std::string>::failure(canonical.error());
+    const std::string& bytes = canonical.value();
+    return facman::core::Result<std::string>::success(facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(bytes.data()), bytes.size()));
+}
+
+bool lifecycle_matches(const std::string& facman_lifecycle, const std::string& usk_lifecycle)
+{
+    if (facman_lifecycle == "active") {
+        return usk_lifecycle == "installed" || usk_lifecycle == "verified";
+    }
+    if (facman_lifecycle == "verification_failed") {
+        return usk_lifecycle == "repair_required" || usk_lifecycle == "uninstall_blocked";
+    }
+    return facman_lifecycle == "recovery_required" && usk_lifecycle == "recovery_required";
+}
+
+facman::core::Result<InspectedInstallState> decode_installed_state(
+    const std::string& response,
+    const UninstallPlanRequest& request,
+    const SetupConfiguration& configuration)
+{
+    const auto invalid = [](const char* detail) {
+        return facman::core::Result<InspectedInstallState>::failure({
+            "setup_installed_state_response_invalid",
+            "Universal Setup returned an invalid installed-state response",
+            detail});
+    };
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 4U * 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 100000;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(response, limits);
+    const facman::core::json::Value* state = nullptr;
+    if (!document || !response_envelope(document.value(), state) ||
+        !exact_members(*state, {"audit_chain_id", "component_selection", "created_at", "entrypoints",
+            "install_id", "last_verification", "lifecycle_status", "ownership_manifest_digest",
+            "ownership_manifest_ref", "product_id", "product_version", "recipe_digest", "schema",
+            "setup_abi", "source_archive_digest", "target_root", "target_scope", "transaction_id"}) ||
+        string_field(*state, "schema") != "usk.installed_state.v1" ||
+        string_field(*state, "target_scope") != "portable" ||
+        string_field(*state, "install_id") != request.install_id ||
+        !bounded_string(*state, "product_id", 256) || !bounded_string(*state, "product_version", 128) ||
+        !bounded_string(*state, "ownership_manifest_ref", 4096) ||
+        !bounded_string(*state, "transaction_id", 256) || !bounded_string(*state, "created_at", 64) ||
+        !bounded_string(*state, "audit_chain_id", 256) || !bounded_string(*state, "lifecycle_status", 64) ||
+        !sha256_field(string_field(*state, "ownership_manifest_digest")) ||
+        !sha256_field(string_field(*state, "recipe_digest")) ||
+        !sha256_field(string_field(*state, "source_archive_digest"))) return invalid("state envelope");
+
+    auto expected_target = absolute_normalized(request.target, "target");
+    auto setup_root = absolute_normalized(facman::platform::path_from_utf8(configuration.state_root), "setup state root");
+    if (!expected_target || !setup_root ||
+        !normalized_absolute_path(string_field(*state, "target_root"), expected_target.value())) {
+        return invalid("target binding");
+    }
+
+    const auto* verification = state->find("last_verification");
+    const auto* abi = state->find("setup_abi");
+    const auto* components = state->find("component_selection");
+    const auto* entrypoints = state->find("entrypoints");
+    if (verification == nullptr || abi == nullptr || components == nullptr || entrypoints == nullptr ||
+        !exact_members(*verification, {"report_digest", "report_id", "status", "verified_at"}) ||
+        !exact_members(*abi, {"major", "minor", "provider_revision"}) ||
+        !components->is_array() || components->size() == 0 || !entrypoints->is_array() || entrypoints->size() == 0 ||
+        !sha256_field(string_field(*verification, "report_digest")) ||
+        string_field(*verification, "report_digest") != request.last_verification_identity ||
+        !bounded_string(*verification, "report_id", 256) || !bounded_string(*verification, "status", 16) ||
+        !bounded_string(*verification, "verified_at", 64) ||
+        (string_field(*verification, "status") != "pass" && string_field(*verification, "status") != "warn" &&
+            string_field(*verification, "status") != "fail") ||
+        !bounded_string(*abi, "provider_revision", 256)) return invalid("state evidence");
+    const auto* major = abi->find("major");
+    const auto* minor = abi->find("minor");
+    if (major == nullptr || minor == nullptr) return invalid("setup ABI");
+    const auto major_value = major->unsigned_integer_value();
+    const auto minor_value = minor->unsigned_integer_value();
+    if (!major_value || !minor_value || major_value.value() == 0) return invalid("setup ABI");
+    for (std::size_t index = 0; index < components->size(); ++index) {
+        const auto* component = components->at(index);
+        if (component == nullptr || !component->is_string() || component->string_value().value().empty() ||
+            component->string_value().value().size() > 256) return invalid("component");
+    }
+    for (std::size_t index = 0; index < entrypoints->size(); ++index) {
+        const auto* entrypoint = entrypoints->at(index);
+        if (entrypoint == nullptr || !exact_members(*entrypoint, {"entrypoint_id", "kind", "relative_path"}) ||
+            !bounded_string(*entrypoint, "entrypoint_id", 256) ||
+            !safe_relative_path(string_field(*entrypoint, "relative_path")) ||
+            (string_field(*entrypoint, "kind") != "application" && string_field(*entrypoint, "kind") != "tool" &&
+                string_field(*entrypoint, "kind") != "server")) return invalid("entrypoint");
+    }
+    const std::filesystem::path expected_state_ref = setup_root.value() / "state" / "installed" /
+        (request.install_id + "." + string_field(*state, "transaction_id") + ".json");
+    auto supplied_state_ref = absolute_normalized(
+        facman::platform::path_from_utf8(request.setup_state_ref), "setup state reference");
+    if (!supplied_state_ref || supplied_state_ref.value() != expected_state_ref ||
+        request.state_revision != string_field(*state, "transaction_id") + ":" +
+            string_field(*state, "ownership_manifest_digest") ||
+        !lifecycle_matches(request.lifecycle_status, string_field(*state, "lifecycle_status"))) {
+        return invalid("retained record binding");
+    }
+
+    auto digest = installed_state_digest(*state);
+    if (!digest || !sha256_field(digest.value())) return invalid("installed-state digest");
+    InspectedInstallState result;
+    result.target = expected_target.take_value();
+    result.installed_state_digest = digest.take_value();
+    result.ownership_manifest_digest = string_field(*state, "ownership_manifest_digest");
+    result.recipe_digest = string_field(*state, "recipe_digest");
+    result.source_digest = string_field(*state, "source_archive_digest");
+    result.provider_revision = string_field(*abi, "provider_revision");
+    return facman::core::Result<InspectedInstallState>::success(std::move(result));
+}
+
+facman::core::Result<UninstallPlan> decode_uninstall_plan(
+    const std::string& response,
+    const UninstallPlanRequest& request,
+    const InspectedInstallState& installed,
+    const SetupConfiguration& configuration)
+{
+    const auto invalid = [](const char* detail) {
+        return facman::core::Result<UninstallPlan>::failure({
+            "setup_uninstall_plan_response_invalid",
+            "Universal Setup returned an invalid managed uninstall plan",
+            detail});
+    };
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 64U * 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 1000000;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(response, limits);
+    const facman::core::json::Value* payload = nullptr;
+    if (!document || !response_envelope(document.value(), payload) ||
+        !exact_members(*payload, {"created_at", "effects", "input_identity", "install_id", "operation",
+            "plan_digest", "plan_id", "revalidation", "roots", "schema", "status", "target_snapshots",
+            "unknown_file_policy"}) ||
+        string_field(*payload, "schema") != "usk.operation_plan.v1" ||
+        string_field(*payload, "operation") != "uninstall" || string_field(*payload, "status") != "planned" ||
+        string_field(*payload, "unknown_file_policy") != "retain_and_report" ||
+        string_field(*payload, "install_id") != request.install_id || string_field(*payload, "plan_id") != request.plan_id ||
+        string_field(*payload, "created_at") != request.created_at || !bounded_string(*payload, "plan_id", 256) ||
+        !bounded_string(*payload, "created_at", 64) || !sha256_field(string_field(*payload, "plan_digest"))) return invalid("envelope");
+
+    const auto* input_identity = payload->find("input_identity");
+    const auto* roots = payload->find("roots");
+    const auto* effects = payload->find("effects");
+    const auto* target_snapshots = payload->find("target_snapshots");
+    const auto* revalidation = payload->find("revalidation");
+    if (input_identity == nullptr || !exact_members(*input_identity, {"installed_state_digest", "ownership_manifest_digest",
+            "policy_digest", "provider_revision", "recipe_digest", "source_digest"}) ||
+        string_field(*input_identity, "installed_state_digest") != installed.installed_state_digest ||
+        string_field(*input_identity, "ownership_manifest_digest") != installed.ownership_manifest_digest ||
+        string_field(*input_identity, "recipe_digest") != installed.recipe_digest ||
+        string_field(*input_identity, "source_digest") != installed.source_digest ||
+        string_field(*input_identity, "provider_revision") != installed.provider_revision ||
+        !sha256_field(string_field(*input_identity, "policy_digest")) || !bounded_string(*input_identity, "provider_revision", 256) ||
+        roots == nullptr || !roots->is_array() || roots->size() != 4 || effects == nullptr || !effects->is_array() ||
+        effects->size() < 3 || target_snapshots == nullptr || !exact_members(*target_snapshots, {"pre_target_digest"}) ||
+        !sha256_field(string_field(*target_snapshots, "pre_target_digest")) || revalidation == nullptr ||
+        !exact_members(*revalidation, {"immediately_before_apply", "invalidate_on"})) return invalid("required evidence");
+
+    auto setup_root = absolute_normalized(facman::platform::path_from_utf8(configuration.state_root), "setup state root");
+    if (!setup_root) return invalid("setup root");
+    const std::array<std::tuple<const char*, const char*, std::filesystem::path>, 4> expected_roots {{
+        {"current", "managed_install", installed.target},
+        {"staging", "setup_owned", setup_root.value() / "staging"},
+        {"setup_state", "setup_owned", setup_root.value() / "state"},
+        {"audit", "audit_owned", setup_root.value() / "audit"},
+    }};
+    std::set<std::string> root_roles;
+    for (std::size_t index = 0; index < roots->size(); ++index) {
+        const auto* root = roots->at(index);
+        if (root == nullptr || !exact_members(*root, {"classification", "role", "root"}) ||
+            !bounded_string(*root, "role", 32) || !bounded_string(*root, "classification", 64)) return invalid("root entry");
+        const std::string role = string_field(*root, "role");
+        const auto expected = std::find_if(expected_roots.begin(), expected_roots.end(), [&](const auto& value) {
+            return role == std::get<0>(value);
+        });
+        if (expected == expected_roots.end() || !root_roles.insert(role).second ||
+            string_field(*root, "classification") != std::get<1>(*expected) ||
+            !normalized_absolute_path(string_field(*root, "root"), std::get<2>(*expected))) return invalid("root binding");
+    }
+
+    std::set<std::string> effect_ids;
+    std::set<std::string> write_kinds;
+    for (std::size_t index = 0; index < effects->size(); ++index) {
+        const auto* effect = effects->at(index);
+        if (effect == nullptr || !effect->is_object() || !bounded_string(*effect, "effect_id", 256) ||
+            !bounded_string(*effect, "kind", 32) || !bounded_string(*effect, "root_role", 32) ||
+            !safe_relative_path(string_field(*effect, "relative_path")) || !effect_ids.insert(string_field(*effect, "effect_id")).second) {
+            return invalid("effect entry");
+        }
+        const auto* ownership = effect->find("ownership_required");
+        if (ownership == nullptr || !ownership->is_bool() || !ownership->bool_value().value()) return invalid("effect ownership");
+        const std::string kind = string_field(*effect, "kind");
+        const std::string root_role = string_field(*effect, "root_role");
+        const auto* digest = effect->find("expected_sha256");
+        const bool has_digest = digest != nullptr;
+        if (has_digest && (!digest->is_string() || !sha256_field(string_field(*effect, "expected_sha256")))) return invalid("effect digest");
+        if (kind == "delete_owned_file") {
+            if (!has_digest || root_role != "current" || !exact_members(*effect, {"effect_id", "expected_sha256", "kind", "ownership_required", "relative_path", "root_role"})) return invalid("delete effect");
+        } else if (kind == "retain_path") {
+            if (root_role != "current" || !(exact_members(*effect, {"effect_id", "kind", "ownership_required", "relative_path", "root_role"}) ||
+                exact_members(*effect, {"effect_id", "expected_sha256", "kind", "ownership_required", "relative_path", "root_role"}))) return invalid("retain effect");
+        } else if (kind == "write_journal" || kind == "write_state" || kind == "write_audit") {
+            const char* expected_role = kind == "write_audit" ? "audit" : "setup_state";
+            const char* expected_path = kind == "write_journal" ? "transactions" : kind == "write_state" ? "installed" : "chains";
+            if (has_digest || root_role != expected_role || string_field(*effect, "relative_path") != expected_path ||
+                !exact_members(*effect, {"effect_id", "kind", "ownership_required", "relative_path", "root_role"}) ||
+                !write_kinds.insert(kind).second) return invalid("state effect");
+        } else return invalid("effect kind");
+    }
+    if (write_kinds.size() != 3) return invalid("required state effects");
+
+    const auto* immediate = revalidation->find("immediately_before_apply");
+    const auto* invalidators = revalidation->find("invalidate_on");
+    if (immediate == nullptr || !immediate->is_bool() || !immediate->bool_value().value() || invalidators == nullptr ||
+        !invalidators->is_array() || invalidators->size() != 5) return invalid("revalidation");
+    const std::set<std::string> expected_invalidators {"target", "installed_state", "ownership_manifest", "policy", "provider_revision"};
+    std::set<std::string> actual_invalidators;
+    for (std::size_t index = 0; index < invalidators->size(); ++index) {
+        const auto* value = invalidators->at(index);
+        if (value == nullptr || !bounded_value_string(*value, 32)) return invalid("revalidation item");
+        auto text = value->string_value();
+        if (!text) return invalid("revalidation item");
+        actual_invalidators.insert(text.value());
+    }
+    if (actual_invalidators != expected_invalidators) return invalid("revalidation set");
+
+    UninstallPlan result;
+    result.plan_id = string_field(*payload, "plan_id");
+    result.plan_digest = string_field(*payload, "plan_digest");
+    result.provider_response = payload->serialize();
+    return facman::core::Result<UninstallPlan>::success(std::move(result));
 }
 
 facman::core::Error provider_error(
@@ -479,6 +831,48 @@ public:
         plan.plan_digest = plan_digest;
         plan.provider_response = provider_plan->serialize();
         return facman::core::Result<InstallPlan>::success(std::move(plan));
+    }
+
+    facman::core::Result<UninstallPlan> plan_uninstall(
+        const UninstallPlanRequest& request) override
+    {
+        if (request.request_id.empty() || request.plan_id.empty() ||
+            request.install_id.empty() || request.created_at.empty() || request.target.empty() ||
+            request.setup_state_ref.empty() || request.last_verification_identity.empty() ||
+            request.state_revision.empty() || request.lifecycle_status.empty()) {
+            return facman::core::Result<UninstallPlan>::failure({
+                "setup_uninstall_plan_input_missing",
+                "Managed uninstall planning requires request, plan, record evidence, and target bindings",
+                ""});
+        }
+        facman::core::json::ObjectBuilder inspect_payload;
+        inspect_payload.add_string("schema", "usk.installed_inspect_request.v1");
+        inspect_payload.add_string("request_id", request.request_id + ".inspect");
+        inspect_payload.add_string("install_id", request.install_id);
+        auto inspected_response = execute_setup(
+            "installed.inspect", inspect_payload.serialize(), configuration_);
+        if (!inspected_response) {
+            return facman::core::Result<UninstallPlan>::failure(provider_error(
+                inspected_response.error(),
+                "setup_installed_state_inspection_refused",
+                "Universal Setup refused the managed installed-state inspection"));
+        }
+        auto inspected = decode_installed_state(inspected_response.value(), request, configuration_);
+        if (!inspected) return facman::core::Result<UninstallPlan>::failure(inspected.error());
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.uninstall_plan_request.v1");
+        payload.add_string("request_id", request.request_id);
+        payload.add_string("plan_id", request.plan_id);
+        payload.add_string("install_id", request.install_id);
+        payload.add_string("created_at", request.created_at);
+        auto response = execute_setup("uninstall.plan", payload.serialize(), configuration_);
+        if (!response) {
+            return facman::core::Result<UninstallPlan>::failure(provider_error(
+                response.error(),
+                "setup_uninstall_plan_refused",
+                "Universal Setup refused the managed uninstall plan"));
+        }
+        return decode_uninstall_plan(response.value(), request, inspected.value(), configuration_);
     }
 
     facman::core::Result<SetupRefusal> verify_install(const std::string&) override

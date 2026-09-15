@@ -164,6 +164,76 @@ ApplicationResult verify_install(ApplicationContext& context, const ServiceOpera
 }
 
 namespace {
+bool managed_plan_lifecycle_eligible(const std::string& lifecycle)
+{
+    return lifecycle == "active" || lifecycle == "verification_failed" ||
+        lifecycle == "recovery_required";
+}
+
+ApplicationResult managed_uninstall_plan(
+    ApplicationContext& context,
+    const ServiceOperationRequest& request)
+{
+#if FACMAN_WITH_SETUP
+    const std::string& install_id = request.install_id.empty() ? request.id : request.install_id;
+    auto parsed_id = facman::core::InstallId::parse_legacy(install_id);
+    if (!parsed_id) return refused(
+        safety_refusal("installs.uninstall.plan", parsed_id.error().code, "Install id is invalid", parsed_id.error().message, false),
+        parsed_id.error().code, parsed_id.error().message, parsed_id.error().kind);
+    auto install = context.installs().load(parsed_id.value());
+    if (!install) return refused(
+        safety_refusal("installs.uninstall.plan", "unknown_install", "Install reference is not registered", install_id, true),
+        "unknown_install", "Install reference is not registered");
+    const auto& record = install.value();
+    if (record.ownership != "managed") return refused(
+        safety_refusal("installs.uninstall.plan", "ownership_denied", "Uninstall planning is available only for registered managed installs", record.ownership, true),
+        "ownership_denied", "Uninstall planning is available only for registered managed installs");
+    if (record.provider_id != "universal-setup" || record.source != "universal-setup") return refused(
+        safety_refusal("installs.uninstall.plan", "managed_install_provider_mismatch", "Managed uninstall planning requires a Universal Setup managed record", record.provider_id + ":" + record.source, true),
+        "managed_install_provider_mismatch", "Managed uninstall planning requires a Universal Setup managed record");
+    if (!managed_plan_lifecycle_eligible(record.lifecycle_status)) {
+        const std::string lifecycle = record.lifecycle_status.empty()
+            ? "unknown"
+            : record.lifecycle_status;
+        constexpr const char* message =
+            "Uninstall planning requires an active, verification_failed, or "
+            "recovery_required managed install";
+        return refused(
+            safety_refusal(
+                "installs.uninstall.plan",
+                "uninstall_lifecycle_ineligible",
+                message,
+                lifecycle,
+                true),
+            "uninstall_lifecycle_ineligible",
+            message);
+    }
+    if (record.root.empty() || record.setup_state_ref.empty() ||
+        record.last_verification_identity.empty() || record.state_revision.empty()) return refused(
+        safety_refusal("installs.uninstall.plan", "managed_install_evidence_incomplete", "Managed uninstall planning requires target, setup, verification, and revision evidence", install_id, true),
+        "managed_install_evidence_incomplete", "Managed uninstall planning requires target, setup, verification, and revision evidence");
+    UninstallPlanRequest plan_request;
+    plan_request.request_id = context.ids().next("uninstall-plan-request");
+    plan_request.plan_id = context.ids().next("uninstall-plan");
+    plan_request.install_id = record.id.str();
+    plan_request.created_at = context.clock().now_utc();
+    plan_request.target = record.root;
+    plan_request.setup_state_ref = record.setup_state_ref;
+    plan_request.last_verification_identity = record.last_verification_identity;
+    plan_request.state_revision = record.state_revision;
+    plan_request.lifecycle_status = record.lifecycle_status;
+    auto plan = context.setup().plan_uninstall(plan_request);
+    if (!plan) return unavailable(
+        context, "installs.uninstall.plan", plan.error().code, plan.error().message);
+    ApplicationResult result;
+    result.output = plan.value().provider_response;
+    return result;
+#else
+    (void)request;
+    return unavailable(context, "installs.uninstall.plan", "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
+}
+
 ApplicationResult managed_install_policy(
     ApplicationContext& context,
     const ServiceOperationRequest& request,
@@ -285,11 +355,6 @@ ApplicationResult repair_install(ApplicationContext& context, const ServiceOpera
     return managed_install_policy(context, request, "installs.repair");
 }
 
-ApplicationResult plan_repair_install(ApplicationContext& context, const ServiceOperationRequest& request)
-{
-    return managed_install_policy(context, request, "installs.repair.plan");
-}
-
 ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest&)
 {
     return live_target_acceptance_required(context, "installs.repair.apply");
@@ -312,7 +377,7 @@ ApplicationResult uninstall_install(ApplicationContext& context, const ServiceOp
 
 ApplicationResult plan_uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    return managed_install_policy(context, request, "installs.uninstall.plan");
+    return managed_uninstall_plan(context, request);
 }
 
 ApplicationResult apply_uninstall_install(ApplicationContext& context, const ServiceOperationRequest&)
@@ -358,7 +423,6 @@ bool is_setup_command(CommandId command) noexcept
     case CommandId::installs_install_apply:
     case CommandId::installs_install_version:
     case CommandId::installs_verify:
-    case CommandId::installs_repair_plan:
     case CommandId::installs_repair_apply:
     case CommandId::installs_repair:
     case CommandId::installs_move_plan:
@@ -384,7 +448,6 @@ ApplicationResult dispatch_setup(ApplicationContext& context, const ApplicationR
     case CommandId::installs_install_apply: return apply_install(context, operation);
     case CommandId::installs_install_version: return install_version(context, operation);
     case CommandId::installs_verify: return verify_install(context, operation);
-    case CommandId::installs_repair_plan: return plan_repair_install(context, operation);
     case CommandId::installs_repair_apply: return apply_repair_install(context, operation);
     case CommandId::installs_repair: return repair_install(context, operation);
     case CommandId::installs_move_plan: return plan_move_install(context, operation);

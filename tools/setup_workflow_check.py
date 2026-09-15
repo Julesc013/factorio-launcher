@@ -47,7 +47,13 @@ def validate() -> list[str]:
     for command_id in sorted(expected & commands.keys()):
         command = commands[command_id]
         expected_availability = (
-            "implemented" if command_id == "installs.install.plan" else "unavailable_until_gateway"
+            "implemented"
+            if command_id in {
+                "installs.install.plan",
+                "installs.repair.plan",
+                "installs.uninstall.plan",
+            }
+            else "unavailable_until_gateway"
         )
         if command.get("availability") != expected_availability:
             problems.append(
@@ -56,7 +62,7 @@ def validate() -> list[str]:
         if command.get("executes_process"):
             problems.append(f"{command_id}: setup workflows must never execute Factorio")
         effects = set(command.get("effects", []))
-        if effects - {"setup_preview", "workspace_write"}:
+        if effects - {"workspace_read", "setup_preview", "workspace_write"}:
             problems.append(f"{command_id}: setup workflow declares an out-of-scope effect")
 
     for command_id in sorted(PLAN_COMMANDS & commands.keys()):
@@ -88,8 +94,12 @@ def validate() -> list[str]:
 
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
     handler = (ROOT / "runtime/factorio/application/handlers/setup.cpp").read_text(encoding="utf-8")
+    installation = (
+        (ROOT / "runtime/factorio/application/handlers/installs.cpp").read_text(encoding="utf-8")
+        + (ROOT / "runtime/factorio/application/modules/installation_module.cpp").read_text(encoding="utf-8")
+    )
     for command_id in sorted(expected):
-        if f'"{command_id}"' not in cli + handler:
+        if f'"{command_id}"' not in cli + handler + installation:
             problems.append(f"{command_id}: explicit CLI/application route is missing")
     if handler.count("live_target_acceptance_required") < 6:
         problems.append("M2 human-verdict guard is not uniform across setup apply routes")

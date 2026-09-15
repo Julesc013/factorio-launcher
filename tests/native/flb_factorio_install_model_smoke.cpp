@@ -269,6 +269,33 @@ int main()
     if (!reference_only_plan || array_contains(
             reference_only_plan.value(), "blockers", "source_candidate_required_for_materialisation")) return 19;
 
+    installation::DesiredInstallationState reconcile_source_only;
+    reconcile_source_only.install_id = "fixture";
+    reconcile_source_only.source_ref = "fixture-source:2.0.77";
+    auto reconcile_source_only_text =
+        installation::reconciliation_plan_json(install, reconcile_source_only);
+    if (!reconcile_source_only_text) return 20;
+    auto reconcile_source_only_plan = json::parse(reconcile_source_only_text.value());
+    const json::Value* reconcile_source = reconcile_source_only_plan
+        ? member(reconcile_source_only_plan.value(), "desired_state", "source") : nullptr;
+    if (!reconcile_source_only_plan ||
+        !string_is(member(reconcile_source_only_plan.value(), "summary", "status"), "already_reconciled") ||
+        array_contains(reconcile_source_only_plan.value(), "blockers", "source_inspection_required_for_materialisation") ||
+        !has_step(reconcile_source_only_plan.value(), "source.inspect", "not_required") ||
+        !string_is(reconcile_source == nullptr ? nullptr : reconcile_source->find("requirement"),
+            "not_required_for_selected_transition")) return 20;
+
+    auto changed_lifecycle = install;
+    changed_lifecycle.lifecycle_status = "retired";
+    auto changed_lifecycle_text = installation::reconciliation_plan_json(changed_lifecycle, preserve);
+    if (!changed_lifecycle_text) return 21;
+    auto changed_lifecycle_plan = json::parse(changed_lifecycle_text.value());
+    if (!changed_lifecycle_plan ||
+        !string_is(member(changed_lifecycle_plan.value(), "current_evidence", "lifecycle_status"), "retired") ||
+        !array_contains(changed_lifecycle_plan.value(), "revalidation_requirements", "lifecycle_status") ||
+        string_is(changed_lifecycle_plan.value().find("current_evidence_digest"),
+            unchanged.value().find("current_evidence_digest")->string_value().value())) return 21;
+
     desired.source_ref = "fixture-source:2.0.77";
     auto first_text = installation::reconciliation_plan_json(install, desired);
     auto second_text = installation::reconciliation_plan_json(install, desired);

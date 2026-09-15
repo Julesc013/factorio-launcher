@@ -458,6 +458,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
+- [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01** — Finish bounded managed install update repair and removal
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
+  - Outcome: Implement installation/reconciliation/update/repair/removal over promoted USK mechanisms for the admitted local source formats.
 - [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -547,10 +551,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none
   - Outcome: Back up selected worlds consistently with exact source identity, stable metadata and owned destination roots.
-- [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01** — Finish bounded managed install update repair and removal
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`; closure prerequisites: none
-  - Outcome: Implement installation/reconciliation/update/repair/removal over promoted USK mechanisms for the admitted local source formats.
 - [ ] **FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01** — Complete independent FacMan self-maintenance
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`

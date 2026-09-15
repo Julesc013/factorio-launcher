@@ -550,6 +550,9 @@ json::ObjectBuilder current_evidence_builder(const ProjectedModel& model)
         "installation_record_revision",
         model.install.state_revision.empty() ? "not_observed" : model.install.state_revision);
     dependencies.add_string(
+        "lifecycle_status",
+        model.install.lifecycle_status.empty() ? "unknown" : model.install.lifecycle_status);
+    dependencies.add_string(
         "installation_root_identity",
         model.install.root.empty()
             ? "not_observed"
@@ -577,6 +580,9 @@ json::ObjectBuilder current_evidence_builder(const ProjectedModel& model)
     evidence.add_string("install_id", model.install.install_id);
     evidence.add_string("product_id", "factorio");
     evidence.add_string("version", model.install.version);
+    evidence.add_string(
+        "lifecycle_status",
+        model.install.lifecycle_status.empty() ? "unknown" : model.install.lifecycle_status);
     evidence.add_object("version_family", version_family);
     evidence.add_object("source", source);
     evidence.add_object("deployment", deployment);
@@ -624,6 +630,7 @@ json::ArrayBuilder revalidation_requirements_builder()
     json::ArrayBuilder requirements;
     for (const char* value : {
              "installation_record_revision",
+             "lifecycle_status",
              "installation_root_identity",
              "executable_identity",
              "verification_identity",
@@ -734,7 +741,9 @@ std::string installation_model_json(const discovery::InstallRef& install)
 
 facman::core::Result<std::string> reconciliation_plan_json(
     const discovery::InstallRef& install,
-    const DesiredInstallationState& desired)
+    const DesiredInstallationState& desired,
+    const char* command,
+    ReconciliationPlanIntent intent)
 {
     const ProjectedModel model = project(install);
     auto decoded = decode_desired(desired);
@@ -763,7 +772,11 @@ facman::core::Result<std::string> reconciliation_plan_json(
         typed.management_mode == ManagementMode::managed;
     const bool application_change = managed_materialisation || deployment_change ||
         version_change || target_change;
-    const bool source_required = application_change;
+    // Repair planning treats an explicitly selected source as evidence that
+    // must be inspected before it can be presented as a repair candidate.
+    // Ordinary reconciliation retains its source-only comparison semantics.
+    const bool source_required = application_change ||
+        (intent == ReconciliationPlanIntent::repair && source_selected);
     const std::size_t change_count = static_cast<std::size_t>(management_change) +
         static_cast<std::size_t>(deployment_change) + static_cast<std::size_t>(data_change) +
         static_cast<std::size_t>(integration_change) + static_cast<std::size_t>(version_change) +
@@ -891,7 +904,7 @@ facman::core::Result<std::string> reconciliation_plan_json(
 
     json::ObjectBuilder output;
     output.add_string("schema", "factorio.install_reconciliation_plan.v1");
-    output.add_string("command", "installs.reconcile.plan");
+    output.add_string("command", command);
     output.add_string("install_id", typed.install_id);
     output.add_string("canonicalization_version", canonicalization_version);
     output.add_string("effect_vocabulary_version", effect_vocabulary_version);

@@ -83,9 +83,9 @@ Fixture::Fixture()
     root = fs::temp_directory_path() / ("facman-m1-system-" + std::to_string(nonce));
     if (!fs::create_directory(root)) throw std::runtime_error("cannot create M1 proof root");
     workspace = root / "facman-workspace";
-    setup_roots.staging_parent = root / "setup-staging";
-    setup_roots.state_root = root / "setup-state";
-    setup_roots.audit_root = root / "setup-audit";
+    setup_roots.staging_parent = root / "staging";
+    setup_roots.state_root = root / "state";
+    setup_roots.audit_root = root / "audit";
     fs::create_directories(setup_roots.staging_parent);
     fs::create_directories(setup_roots.state_root);
     fs::create_directories(setup_roots.audit_root);

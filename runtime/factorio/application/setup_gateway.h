@@ -47,6 +47,24 @@ struct InstallPlan {
     std::string provider_response;
 };
 
+struct UninstallPlanRequest {
+    std::string request_id;
+    std::string plan_id;
+    std::string install_id;
+    std::string created_at;
+    std::filesystem::path target;
+    std::string setup_state_ref;
+    std::string last_verification_identity;
+    std::string state_revision;
+    std::string lifecycle_status;
+};
+
+struct UninstallPlan {
+    std::string plan_id;
+    std::string plan_digest;
+    std::string provider_response;
+};
+
 struct FactorioArchiveInspectRequest {
     std::string version;
     std::filesystem::path archive;
@@ -64,6 +82,8 @@ public:
     virtual facman::core::Result<facman::factorio::setup::ArchiveAssessment> inspect_install_archive(
         const FactorioArchiveInspectRequest& request) = 0;
     virtual facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest& request) = 0;
+    virtual facman::core::Result<UninstallPlan> plan_uninstall(
+        const UninstallPlanRequest& request) = 0;
     virtual facman::core::Result<SetupRefusal> verify_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> repair_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> uninstall_install(const std::string& install_id) = 0;

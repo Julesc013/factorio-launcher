@@ -6,15 +6,19 @@
 
 #include "application_context.h"
 #include "command_admission.h"
+#include "fl_json.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_setup_recipe.h"
 #include "handlers/instances.h"
 #include "handlers/launch.h"
+#include "handlers/setup.h"
 #include "setup_gateway.h"
 #include "usk_audit_repository.h"
 #include "usk_transaction_session.h"
 
+#include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -27,6 +31,103 @@ namespace launch = facman::factorio::launch;
 namespace proof = facman::tests::m1;
 
 namespace {
+
+std::string json_string(const facman::core::json::Value& object, const char* key)
+{
+    const auto* value = object.find(key);
+    if (value == nullptr || !value->is_string()) return {};
+    auto text = value->string_value();
+    return text ? text.take_value() : std::string();
+}
+
+void set_environment(const char* name, const std::string& value)
+{
+#ifdef _WIN32
+    _putenv_s(name, value.c_str());
+#else
+    setenv(name, value.c_str(), 1);
+#endif
+}
+
+std::string tree_signature(const fs::path& root)
+{
+    std::vector<std::string> entries;
+    for (const fs::directory_entry& entry : fs::recursive_directory_iterator(root)) {
+        std::error_code error;
+        const fs::file_status status = entry.symlink_status(error);
+        if (error) throw std::runtime_error("cannot inspect fixture tree");
+        std::string item = entry.path().lexically_relative(root).generic_string();
+        if (fs::is_regular_file(status)) {
+            std::ifstream input(entry.path(), std::ios::binary);
+            const std::string bytes {
+                std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+            if (!input.good() && !input.eof()) throw std::runtime_error("cannot read fixture tree file");
+            item += ":" + std::to_string(bytes.size()) + ":" + bytes;
+        }
+        else if (fs::is_directory(status)) item += "/";
+        else throw std::runtime_error("fixture tree contains an unsupported entry");
+        entries.push_back(std::move(item));
+    }
+    std::sort(entries.begin(), entries.end());
+    std::string result;
+    for (const std::string& entry : entries) result += entry + "\n";
+    return result;
+}
+
+std::string read_text(const fs::path& path)
+{
+    std::ifstream input(path, std::ios::binary);
+    return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+void write_text_exact(const fs::path& path, const std::string& text)
+{
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    output << text;
+    if (!output) throw std::runtime_error("cannot update managed fixture record");
+}
+
+std::string replaced_once(std::string text, const std::string& from, const std::string& to, const char* label)
+{
+    const std::size_t position = text.find(from);
+    const std::size_t second = position == std::string::npos ? position : text.find(from, position + from.size());
+    if (position == std::string::npos || second != std::string::npos) {
+        throw std::runtime_error(std::string("managed fixture record is not uniquely replaceable: ") + label +
+            (position == std::string::npos ? " (missing)" : " (repeated)"));
+    }
+    text.replace(position, from.size(), to);
+    return text;
+}
+
+std::string replace_json_string_field(std::string text, const char* key, const std::string& value)
+{
+    const std::string prefix = std::string("\"") + key + "\":\"";
+    const std::size_t position = text.find(prefix);
+    if (position == std::string::npos || text.find(prefix, position + prefix.size()) != std::string::npos) {
+        throw std::runtime_error(std::string("managed fixture record does not have a unique ") + key + " field");
+    }
+    std::size_t end = position + prefix.size();
+    while (end < text.size()) {
+        if (text[end] == '\\') { end += 2; continue; }
+        if (text[end] == '\"') break;
+        ++end;
+    }
+    if (end == text.size()) throw std::runtime_error(std::string("managed fixture record has an unterminated ") + key + " field");
+    text.replace(position + prefix.size(), end - (position + prefix.size()), value);
+    return text;
+}
+
+void configure_public_setup(const proof::Fixture& fixture)
+{
+    const std::string acceptance = fixture.root.parent_path().generic_string();
+    std::ofstream marker(fixture.root / ".usk-owned-root.v1.json", std::ios::binary);
+    marker << "{\"acceptance_root\":\"" << acceptance
+        << "\",\"schema\":\"usk.setup_owned_root.v1\"}\n";
+    if (!marker) throw std::runtime_error("cannot write public setup ownership marker");
+    set_environment("FACMAN_SETUP_STATE_ROOT", fixture.root.generic_string());
+    set_environment("FACMAN_SETUP_ACCEPTANCE_ROOT", acceptance);
+    set_environment("FACMAN_SETUP_POLICY_ACTIVATION", "operator_acceptance_candidate");
+}
 
 proof::InstalledStateProjection project_state(
     const usk::state::InstalledState& state,
@@ -77,6 +178,7 @@ void prove_facman_consumption(
     const proof::LauncherReference& reference,
     const fs::path& target)
 {
+    configure_public_setup(fixture);
     application::ApplicationContext context(fixture.workspace);
     auto ready = context.workspace_repository().ensure();
     if (!ready) throw std::runtime_error("FacMan workspace initialization failed");
@@ -98,6 +200,74 @@ void prove_facman_consumption(
         loaded.value().last_verification_identity != reference.verification_identity ||
         loaded.value().state_revision != reference.state_revision) {
         throw std::runtime_error("FacMan did not retain exact setup-state identity");
+    }
+
+    const std::string target_before = tree_signature(target);
+    const std::string state_before = tree_signature(fixture.setup_roots.state_root);
+    const std::string audit_before = tree_signature(fixture.setup_roots.audit_root);
+    const std::string workspace_before = tree_signature(fixture.workspace);
+    const std::string public_setup_before = tree_signature(fixture.root);
+    application::ServiceOperationRequest uninstall_request;
+    uninstall_request.id = reference.install_id;
+    const auto uninstall = application::handlers::plan_uninstall_install(context, uninstall_request);
+    if (uninstall.status != ULK_STATUS_OK || !std::holds_alternative<std::string>(uninstall.output)) {
+        throw std::runtime_error("FacMan managed uninstall preview failed");
+    }
+    const auto uninstall_plan = facman::core::json::parse(std::get<std::string>(uninstall.output));
+    const auto* input = uninstall_plan && uninstall_plan.value().is_object()
+        ? uninstall_plan.value().find("input_identity")
+        : nullptr;
+    if (!uninstall_plan || input == nullptr || !input->is_object() ||
+        json_string(uninstall_plan.value(), "schema") != "usk.operation_plan.v1" ||
+        json_string(uninstall_plan.value(), "operation") != "uninstall" ||
+        json_string(uninstall_plan.value(), "status") != "planned" ||
+        json_string(uninstall_plan.value(), "install_id") != reference.install_id ||
+        json_string(*input, "ownership_manifest_digest") !=
+            reference.state_revision.substr(reference.state_revision.find(':') + 1) ||
+        tree_signature(target) != target_before ||
+        tree_signature(fixture.setup_roots.state_root) != state_before ||
+        tree_signature(fixture.setup_roots.audit_root) != audit_before ||
+        tree_signature(fixture.workspace) != workspace_before ||
+        tree_signature(fixture.root) != public_setup_before) {
+        throw std::runtime_error("FacMan uninstall preview did not retain exact provider bindings or no-write behavior");
+    }
+
+    const fs::path record_path = loaded.value().source_path;
+    const std::string record_before = read_text(record_path);
+    const auto expect_stale_refusal = [&]() {
+        const auto result = application::handlers::plan_uninstall_install(context, uninstall_request);
+        if (result.status == ULK_STATUS_OK || result.error_code != "setup_installed_state_response_invalid" ||
+            tree_signature(fixture.setup_roots.state_root) != state_before ||
+            tree_signature(target) != target_before) {
+            throw std::runtime_error("stale managed evidence did not fail closed without writes");
+        }
+    };
+    write_text_exact(record_path, replaced_once(
+        record_before, "\"last_verification_identity\":\"" + reference.verification_identity + "\"", "\"last_verification_identity\":\"" + std::string(64, '0') + "\"", "verification digest"));
+    expect_stale_refusal();
+    write_text_exact(record_path, replace_json_string_field(
+        record_before, "setup_state_ref",
+        (fixture.setup_roots.state_root / "installed/stale-managed-record.json").generic_string()));
+    expect_stale_refusal();
+    write_text_exact(record_path, replaced_once(
+        record_before, "\"state_revision\":\"" + reference.state_revision + "\"", "\"state_revision\":\"tx.m1.stale:" + std::string(64, '0') + "\"", "state revision"));
+    expect_stale_refusal();
+    write_text_exact(record_path, replaced_once(record_before, "\"lifecycle_status\":\"active\"",
+        "\"lifecycle_status\":\"verification_failed\"", "lifecycle"));
+    expect_stale_refusal();
+    write_text_exact(record_path, replaced_once(record_before, "\"source\":\"universal-setup\"",
+        "\"source\":\"untrusted-import\"", "provider source"));
+    const auto provider_mismatch = application::handlers::plan_uninstall_install(context, uninstall_request);
+    if (provider_mismatch.status == ULK_STATUS_OK ||
+        provider_mismatch.error_code != "managed_install_provider_mismatch" ||
+        tree_signature(fixture.setup_roots.state_root) != state_before ||
+        tree_signature(target) != target_before) {
+        throw std::runtime_error("managed record provider/source mismatch did not refuse without writes");
+    }
+    write_text_exact(record_path, record_before);
+    if (tree_signature(fixture.workspace) != workspace_before ||
+        tree_signature(fixture.root) != public_setup_before) {
+        throw std::runtime_error("stale managed evidence fixture did not restore its workspace record");
     }
 
     application::CreateInstanceRequest create;

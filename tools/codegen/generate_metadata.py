@@ -438,13 +438,20 @@ def cli_grammar(item: dict[str, Any]) -> dict[str, Any]:
     index = 0
     while index < len(tokens):
         token = tokens[index]
+        repair_archive_option = runtime_id == "installs.repair.plan" and token == "[--archive"
+        if repair_archive_option:
+            token = "--archive"
         if token.startswith("<") and token.endswith(">"):
             positionals.append({"name": token[1:-1], "required": True})
         elif token.startswith("--"):
             value = None
-            if index + 1 < len(tokens) and tokens[index + 1].startswith("<"):
-                value = tokens[index + 1][1:-1]
-                index += 1
+            if index + 1 < len(tokens) and (
+                tokens[index + 1].startswith("<") or repair_archive_option
+            ):
+                next_token = tokens[index + 1].removesuffix("]")
+                if next_token.startswith("<") and next_token.endswith(">"):
+                    value = next_token[1:-1]
+                    index += 1
             options.append({"name": token, "value": value, "repeatable": False})
         elif not positionals and not options:
             path.append(token)
