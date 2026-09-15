@@ -76,3 +76,26 @@ Beta.1 or stable release eligibility.
   packaged-product, genuine Factorio, hostile interruption, human experience,
   signing and publication gates remain open under their existing acceptance
   records.
+
+## Provider-backed managed repair plan/apply boundaries
+
+- A provider effect followed by interruption or an ambiguous provider error is
+  retained as `transaction_recovery_required`. Exact apply retry and generic
+  recovery are deliberately refused with `operation_specific_recovery_required`;
+  automated repair-specific inspection/projection recovery remains a successor.
+- FacMan does not yet hold one operation lease spanning different repair and
+  uninstall transaction identifiers. Universal Setup enforces its provider
+  transaction exclusion, managed-record replacement uses the shared repository
+  lock and exact preimage CAS, and this slice refuses ambiguous retry rather
+  than presenting the missing cross-operation coordinator lock as complete.
+- FacMan's outer digest binds the full decoded provider plan because the USK
+  provider digest also covers private roots, policy and replacement payload
+  evidence that cannot be reconstructed from the earlier read-only
+  reconciliation shape. Apply obtains the current provider plan again and
+  requires the exact outer identity before creating its coordinator.
+- Validation uses private synthetic owned fixtures on Windows Debug. Physical
+  Linux/macOS, packaged-product, genuine Factorio, hostile interruption, human
+  experience, signing and publication gates remain open.
+
+The WorkUnit remains active; this slice does not establish Alpha.6, Beta.1 or
+stable release eligibility.

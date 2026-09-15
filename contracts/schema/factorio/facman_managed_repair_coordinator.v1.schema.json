@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/facman_managed_repair_coordinator.v1.schema.json",
+  "title": "FacMan Managed Repair Coordinator Context",
+  "type": "object",
+  "required": ["schema", "plan_request", "provider_plan", "reviewed_plan_id", "reviewed_plan_digest",
+    "provider_plan_digest", "transaction_id", "applied_at", "target_root", "pre_record_sha256",
+    "pre_setup_state_ref", "pre_last_verification_identity", "pre_state_revision",
+    "pre_lifecycle_status", "phase"],
+  "properties": {
+    "schema": { "const": "facman.managed_repair_coordinator.v1" },
+    "plan_request": { "$ref": "factorio_managed_repair_plan.v1.schema.json#/properties/plan_request" },
+    "provider_plan": { "$ref": "usk_repair_plan.v1.schema.json" },
+    "reviewed_plan_id": { "$ref": "#/$defs/id" },
+    "reviewed_plan_digest": { "$ref": "#/$defs/sha256" },
+    "provider_plan_digest": { "$ref": "#/$defs/sha256" },
+    "transaction_id": { "$ref": "#/$defs/id" },
+    "applied_at": { "type": "string", "format": "date-time" },
+    "target_root": { "type": "string", "minLength": 1, "maxLength": 32768 },
+    "pre_record_sha256": { "$ref": "#/$defs/sha256" },
+    "pre_setup_state_ref": { "type": "string", "minLength": 1, "maxLength": 32768 },
+    "pre_last_verification_identity": { "$ref": "#/$defs/sha256" },
+    "pre_state_revision": { "type": "string", "minLength": 1, "maxLength": 385 },
+    "pre_lifecycle_status": { "enum": ["active", "verification_failed"] },
+    "phase": { "enum": ["provider_entry_pending", "provider_entry_started", "terminal_projection_prepared"] },
+    "provider_report_sha256": { "$ref": "#/$defs/sha256" },
+    "provider_installed_state_sha256": { "$ref": "#/$defs/sha256" },
+    "post_setup_state_ref": { "type": "string", "minLength": 1, "maxLength": 32768 },
+    "post_last_verification_identity": { "$ref": "#/$defs/sha256" },
+    "post_state_revision": { "type": "string", "minLength": 1, "maxLength": 385 },
+    "post_verification_status": { "enum": ["pass", "warn"] },
+    "projected_record_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false
+}

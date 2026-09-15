@@ -70,6 +70,25 @@ int main()
     const CommandAdmissionDecision uninstall_denied =
         admit_command(setup_missing, CommandId::installs_uninstall_apply);
     if (uninstall_denied.admitted || uninstall_denied.code != "setup_authority_required") return 14;
+    const CommandAdmissionDecision repair_plan_denied =
+        admit_command(setup_missing, CommandId::installs_repair_plan);
+    const CommandAdmissionDecision repair_apply_denied =
+        admit_command(setup_missing, CommandId::installs_repair_apply);
+    if (repair_plan_denied.admitted ||
+        repair_plan_denied.code != "setup_repair_plan_authority_required" ||
+        repair_apply_denied.admitted || repair_apply_denied.code != "setup_authority_required") return 21;
+    const CommandAdmissionPolicy repair_plan_policy =
+        command_admission_policy(CommandId::installs_repair_plan);
+    const CommandAdmissionPolicy repair_apply_policy =
+        command_admission_policy(CommandId::installs_repair_apply);
+    if (std::find(repair_plan_policy.effects.begin(), repair_plan_policy.effects.end(),
+            "setup_preview") == repair_plan_policy.effects.end() ||
+        std::find(repair_plan_policy.capabilities.begin(), repair_plan_policy.capabilities.end(),
+            "install.managed.repair.plan") == repair_plan_policy.capabilities.end() ||
+        std::find(repair_apply_policy.effects.begin(), repair_apply_policy.effects.end(),
+            "setup_mutation") == repair_apply_policy.effects.end() ||
+        std::find(repair_apply_policy.capabilities.begin(), repair_apply_policy.capabilities.end(),
+            "install.managed.repair.apply") == repair_apply_policy.capabilities.end()) return 22;
     for (const CommandId recovery_command : {
             CommandId::installs_recovery_inspect,
             CommandId::installs_recovery_apply}) {
@@ -101,6 +120,8 @@ int main()
     set_environment("FACMAN_SETUP_POLICY_ACTIVATION", "operator_acceptance_candidate");
     const ApplicationConfiguration setup_present = ApplicationConfiguration::load({});
     if (!admit_command(setup_present, CommandId::installs_uninstall_apply).admitted) return 18;
+    if (!admit_command(setup_present, CommandId::installs_repair_plan).admitted ||
+        !admit_command(setup_present, CommandId::installs_repair_apply).admitted) return 23;
     if (!admit_command(setup_present, CommandId::installs_recovery_inspect).admitted ||
         !admit_command(setup_present, CommandId::installs_recovery_apply).admitted) return 19;
     const CommandAdmissionPolicy uninstall_policy =

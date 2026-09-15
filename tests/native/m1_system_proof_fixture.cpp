@@ -22,6 +22,19 @@ struct ZipEntry {
     std::uint32_t local_offset = 0;
 };
 
+std::uint32_t crc32(const std::string& data)
+{
+    std::uint32_t result = 0xffffffffU;
+    for (const unsigned char byte : data) {
+        result ^= byte;
+        for (int bit = 0; bit < 8; ++bit) {
+            result = (result >> 1U) ^ (0xedb88320U &
+                (0U - (result & 1U)));
+        }
+    }
+    return result ^ 0xffffffffU;
+}
+
 void append16(std::vector<unsigned char>& output, std::uint16_t value)
 {
     output.push_back(static_cast<unsigned char>(value & 0xffu));
@@ -45,7 +58,7 @@ void append_local(std::vector<unsigned char>& bytes, ZipEntry& entry)
     append32(bytes, 0x04034b50u);
     append16(bytes, 20);
     for (int index = 0; index < 4; ++index) append16(bytes, 0);
-    append32(bytes, 0);
+    append32(bytes, crc32(entry.data));
     append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
     append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
     append16(bytes, static_cast<std::uint16_t>(entry.path.size()));
@@ -60,7 +73,7 @@ void append_central(std::vector<unsigned char>& bytes, const ZipEntry& entry)
     append16(bytes, static_cast<std::uint16_t>((3u << 8) | 20u));
     append16(bytes, 20);
     for (int index = 0; index < 4; ++index) append16(bytes, 0);
-    append32(bytes, 0);
+    append32(bytes, crc32(entry.data));
     append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
     append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
     append16(bytes, static_cast<std::uint16_t>(entry.path.size()));

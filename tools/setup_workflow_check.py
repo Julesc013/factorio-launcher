@@ -51,6 +51,7 @@ def validate() -> list[str]:
             if command_id in {
                 "installs.install.plan",
                 "installs.repair.plan",
+                "installs.repair.apply",
                 "installs.uninstall.plan",
                 "installs.uninstall.apply",
                 "installs.recovery.inspect",
@@ -74,7 +75,11 @@ def validate() -> list[str]:
 
     for command_id in sorted(APPLY_COMMANDS & commands.keys()):
         command = commands[command_id]
-        expected_risk = "setup_mutation" if command_id == "installs.uninstall.apply" else "persistent_local_write"
+        expected_risk = (
+            "setup_mutation"
+            if command_id in {"installs.repair.apply", "installs.uninstall.apply"}
+            else "persistent_local_write"
+        )
         if command.get("risk_tier") != expected_risk:
             problems.append(f"{command_id}: apply must be classified as {expected_risk}")
         fields = {field["name"]: field for field in command.get("request_fields", [])}
@@ -108,8 +113,10 @@ def validate() -> list[str]:
     for command_id in sorted(expected):
         if f'"{command_id}"' not in cli + handler + installation:
             problems.append(f"{command_id}: explicit CLI/application route is missing")
-    if handler.count("live_target_acceptance_required") < 6:
-        problems.append("M2 human-verdict guard is not uniform across setup apply routes")
+    for command_id in {"installs.install.apply", "installs.move.apply"}:
+        guard = f'live_target_acceptance_required(context, "{command_id}")'
+        if guard not in handler:
+            problems.append(f"{command_id}: M2 human-verdict guard is missing")
 
     run_execute = commands.get("run.execute")
     if run_execute is None or run_execute.get("availability_refusal_code") != "isolation_not_proven":

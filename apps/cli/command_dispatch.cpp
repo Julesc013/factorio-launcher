@@ -133,7 +133,7 @@ bool repair_plan_arguments_valid(const std::vector<std::string>& args)
         if (args[index] != "--archive" || ++archive_count > 1 || ++index >= args.size() ||
             args[index].compare(0, 2, "--") == 0) return false;
     }
-    return true;
+    return archive_count == 1;
 }
 CliResponse call(
     const Options& options,

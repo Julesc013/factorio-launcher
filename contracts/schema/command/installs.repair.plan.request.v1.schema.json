@@ -4,6 +4,7 @@
   "additionalProperties": false,
   "properties": {
     "archive": {
+      "minLength": 1,
       "type": "string"
     },
     "install_id": {
@@ -13,7 +14,8 @@
     }
   },
   "required": [
-    "install_id"
+    "install_id",
+    "archive"
   ],
   "title": "installs.repair.plan request",
   "type": "object"

@@ -16,8 +16,5 @@ ApplicationResult describe_install(ApplicationContext& context, const DescribeIn
 ApplicationResult plan_install_reconciliation(
     ApplicationContext& context,
     const ReconcileInstallRequest& request);
-ApplicationResult plan_managed_install_repair(
-    ApplicationContext& context,
-    const ReconcileInstallRequest& request);
 }
 #endif

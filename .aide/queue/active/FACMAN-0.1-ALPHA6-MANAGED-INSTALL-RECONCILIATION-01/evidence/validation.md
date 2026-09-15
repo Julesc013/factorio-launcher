@@ -188,3 +188,60 @@ source before integration.
   the rebuilt current `facman.exe` (1/1, 131 registered commands). Source format
   and `git diff --check` pass. Focused independent Luna review: PASS with no
   assertion weakening or residual issue.
+
+## Provider-backed managed repair plan/apply validation — 2026-09-15
+
+- Affected Windows Debug compile: PASS. `cmake --build
+  D:\Development\FacMan\repositories\factorio-launcher-5db2844e2f29\tasks\managed-install-repair-01\native-developer
+  --config Debug --target m1_three_repository_system_proof
+  facman_application_types_smoke facman_cli flb_setup_gateway_smoke -- /m:2`.
+- Native execution: PASS for `facman_application_types_smoke.exe`,
+  `flb_setup_gateway_smoke.exe`, and `m1_three_repository_system_proof.exe`.
+  The M1 proof covers read-only plan creation, reviewed record and plan drift,
+  strict report decoding, successful owned repair, preservation of unknown
+  content, terminal record CAS/journal closure, provider no-effect refusal,
+  interruption after provider effect, immutable retry refusal, and generic
+  recovery refusal.
+- Focused Python contract checks: PASS, 6 command/refusal tests, 13 generated
+  frontend/metadata tests, and the focused managed-repair CLI replay test.
+  `generate_metadata.py --check`, `source_format_check.py`,
+  `setup_workflow_check.py`, `capability_policy_check.py`, and
+  `alpha_vertical_slice_check.py` also pass.
+- The first strict run truthfully failed on stale project-state/Technical
+  Preview outputs, obsolete static M1 repair/guard anchors, and handler-local
+  raw JSON parsing. Regeneration, an explicit provider digest no-effect proof,
+  truthful implemented-route annotations, and moving repair document decoding
+  to `SetupGateway` closed those findings.
+- Final `py -3 -B tools/strict_check.py`: PASS, including 131 commands, 426
+  schemas, 285 refusal codes, source format, setup workflow, application
+  handler, M1 proof and Technical Preview census checks.
+- Pinned portable AIDE Lite `test`: PASS across all reported internal tiers.
+
+- Protected generated-report restoration: PASS (10 exact reports restored/verified and 2 required-absent reports verified absent). Final `git diff --check` and generated metadata identity check: PASS.
+
+## Repair terminal-inspection phase remediation validation — 2026-09-15
+
+- Affected Windows Debug rebuild: PASS for
+  `m1_three_repository_system_proof` and `flb_setup_gateway_smoke`.
+- Native execution: PASS for both affected executables. The direct regression
+  returns provider `unknown_install` after successful repair mutation and
+  proves the coordinator remains `recovery_required`, never `refused`.
+- Focused source-format, generated metadata, command/refusal/golden/frontend
+  contract checks: PASS (19 Python tests; 131 commands, 285 refusal codes).
+- Final `py -3 -B tools/strict_check.py`: PASS (426 schemas).
+
+- Pinned portable AIDE Lite suite: PASS across all reported tiers.
+- Protected generated-report restoration: PASS (10 exact, 2 absent).
+
+## Final repair apply review remediation validation — 2026-09-15
+
+- Windows Debug rebuild: PASS for `m1_three_repository_system_proof`,
+  `facman_cli` and `flb_setup_gateway_smoke`.
+- Native execution: PASS for the M1 system proof and setup gateway smoke.
+- Focused repair CLI test: PASS, including duplicate value option, unknown flag,
+  stray token, duplicate `--json`, missing value and omitted declared option.
+- Focused command/refusal/golden/generated/frontend contracts: PASS (19 tests;
+  131 commands and 285 refusal codes). Source format and metadata identity pass.
+- Full `py -3 -B tools/strict_check.py`: PASS (426 schemas).
+- Pinned portable AIDE Lite suite: PASS across all reported tiers.
+- Protected report restoration: PASS (10 exact, 2 absent).

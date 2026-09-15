@@ -950,8 +950,11 @@ def render_english_strings(commands: list[dict[str, Any]]) -> str:
         runtime_id = str(item["runtime_id"])
         base[f"command.{runtime_id}.title"] = humanize(str(item["command_id"]))
         command_line = str(item.get("cli", runtime_id))
-        if len(command_line) > 180 and " [--" in command_line:
-            command_line = command_line.split(" [--", 1)[0] + " [options] --json"
+        if len(command_line) > 180:
+            if " [--" in command_line:
+                command_line = command_line.split(" [--", 1)[0] + " [options] --json"
+            elif " --" in command_line:
+                command_line = command_line.split(" --", 1)[0] + " [options] --json"
         base[f"command.{runtime_id}.description"] = "Run " + command_line
     lines = ["schema = \"facman.ui.strings.v1\"", "locale = \"en-US\"", "", "[strings]"]
     lines.extend(f"{json.dumps(key)} = {json.dumps(value)}" for key, value in sorted(base.items()))

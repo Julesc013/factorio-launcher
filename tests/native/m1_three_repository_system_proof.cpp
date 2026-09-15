@@ -107,6 +107,153 @@ std::string recovery_provider_response(
     return response.serialize();
 }
 
+struct RepairReportOverrides {
+    std::string status = "completed";
+    std::string before_status = "fail";
+    std::string after_status = "warn";
+    std::string before_digest = std::string(64, '1');
+    std::string after_digest = std::string(64, '2');
+    std::string before_report_id;
+    std::string recipe_digest;
+    std::string source_digest;
+    std::string repaired_sha256;
+};
+
+std::string repair_provider_response(
+    const application::RepairApplyRequest& request,
+    const std::string& relative_path = {},
+    bool duplicate_repair = false,
+    bool extra_member = false,
+    bool changed_unknown = false,
+    const std::string& report_id = {},
+    const std::string& completed_at = {},
+    const RepairReportOverrides& overrides = {})
+{
+    const auto report_document = [&](const std::string& report_digest) {
+        facman::core::json::ObjectBuilder before;
+        before.add_string("report_digest", overrides.before_digest);
+        before.add_string("report_id", overrides.before_report_id.empty()
+            ? "verify." + request.transaction_id + ".before" : overrides.before_report_id);
+        before.add_string("status", overrides.before_status);
+        facman::core::json::ObjectBuilder after;
+        after.add_string("report_digest", overrides.after_digest);
+        after.add_string("report_id", "verify." + request.transaction_id + ".after");
+        after.add_string("status", overrides.after_status);
+        facman::core::json::ArrayBuilder repaired;
+        const auto add_repair = [&]() {
+            facman::core::json::ObjectBuilder item;
+            item.add_string("prior_status", request.reviewed_plan.repairs.front().reason);
+            item.add_string("relative_path", relative_path.empty()
+                ? request.reviewed_plan.repairs.front().relative_path : relative_path);
+            item.add_string("sha256", overrides.repaired_sha256.empty()
+                ? request.reviewed_plan.repairs.front().expected_sha256
+                : overrides.repaired_sha256);
+            repaired.add_object(item);
+        };
+        add_repair();
+        if (duplicate_repair) add_repair();
+        facman::core::json::ArrayBuilder unknown;
+        unknown.add_string(changed_unknown ? "changed-unknown.txt" :
+            request.reviewed_plan.retained_unknown_paths.front());
+        facman::core::json::ObjectBuilder report;
+        report.add_object("after_verification_ref", after);
+        report.add_object("before_verification_ref", before);
+        report.add_string("completed_at", completed_at.empty() ? request.applied_at : completed_at);
+        report.add_string("install_id", request.plan_request.install_id);
+        report.add_string("plan_id", request.reviewed_plan.plan_id);
+        report.add_string("recipe_digest", overrides.recipe_digest.empty()
+            ? request.reviewed_plan.recipe_digest : overrides.recipe_digest);
+        report.add_array("repaired_files", repaired);
+        report.add_string("report_digest", report_digest);
+        report.add_string("report_id", report_id.empty() ?
+            "repair." + request.transaction_id : report_id);
+        report.add_array("retained_unknown_paths", unknown);
+        report.add_string("schema", "usk.repair_report.v1");
+        report.add_string("source_digest", overrides.source_digest.empty()
+            ? request.reviewed_plan.source_digest : overrides.source_digest);
+        report.add_string("status", overrides.status);
+        report.add_string("transaction_id", request.transaction_id);
+        if (extra_member) report.add_string("unexpected", "member");
+        return report.serialize();
+    };
+    auto unsigned_report = facman::core::json::parse(report_document(std::string(64, '0')));
+    if (!unsigned_report) throw std::runtime_error("repair report fixture is invalid");
+    auto canonical = facman::core::json::canonical_integer_object_without(
+        unsigned_report.value(), "report_digest");
+    if (!canonical) throw std::runtime_error("repair report fixture cannot be canonicalized");
+    const std::string digest = facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(canonical.value().data()), canonical.value().size());
+    auto payload = facman::core::json::parse(report_document(digest));
+    if (!payload) throw std::runtime_error("repair report fixture payload is invalid");
+    facman::core::json::ObjectBuilder response;
+    response.add_string("schema", "usk.command_response.v1");
+    response.add_string("status", "ok");
+    response.add_null("error");
+    response.add_value("payload", payload.value());
+    return response.serialize();
+}
+
+void prove_repair_gateway_decoding()
+{
+    application::RepairApplyRequest request;
+    request.plan_request.install_id = "managed-repair-codec";
+    request.reviewed_plan.plan_id = "plan.repair.codec";
+    request.reviewed_plan.recipe_digest = std::string(64, '3');
+    request.reviewed_plan.source_digest = std::string(64, '4');
+    request.reviewed_plan.repairs.push_back({
+        "data/base/info.json", "modified", std::string(64, '5')});
+    request.reviewed_plan.retained_unknown_paths.push_back("operator-note.txt");
+    request.transaction_id = "tx-repair-codec";
+    request.applied_at = "2099-01-01T00:00:01Z";
+    const auto valid = application::decode_repair_provider_report(
+        repair_provider_response(request), request);
+    if (!valid || valid.value().verification_status != "warn") {
+        throw std::runtime_error("valid repair provider report was refused");
+    }
+    const auto malformed = [&](const std::string& response) {
+        const auto decoded = application::decode_repair_provider_report(response, request);
+        return !decoded && decoded.error().code == "setup_repair_report_response_invalid";
+    };
+    const auto overridden = [&](const RepairReportOverrides& overrides) {
+        return repair_provider_response(
+            request, {}, false, false, false, {}, {}, overrides);
+    };
+    RepairReportOverrides invalid_status;
+    invalid_status.status = "partial";
+    RepairReportOverrides invalid_before_status;
+    invalid_before_status.before_status = "invented";
+    RepairReportOverrides invalid_after_status;
+    invalid_after_status.after_status = "invented";
+    RepairReportOverrides invalid_reference_digest;
+    invalid_reference_digest.before_digest = "not-a-sha256";
+    RepairReportOverrides wrong_reference_id;
+    wrong_reference_id.before_report_id = "verify.wrong.before";
+    RepairReportOverrides wrong_recipe;
+    wrong_recipe.recipe_digest = std::string(64, '8');
+    RepairReportOverrides wrong_source;
+    wrong_source.source_digest = std::string(64, '9');
+    RepairReportOverrides wrong_repaired_digest;
+    wrong_repaired_digest.repaired_sha256 = std::string(64, 'a');
+    if (!malformed(repair_provider_response(request, "../escape")) ||
+        !malformed(repair_provider_response(request, {}, true)) ||
+        !malformed(repair_provider_response(request, {}, false, true)) ||
+        !malformed(repair_provider_response(request, {}, false, false, true)) ||
+        !malformed(repair_provider_response(
+            request, {}, false, false, false, "repair.wrong")) ||
+        !malformed(repair_provider_response(
+            request, {}, false, false, false, {}, "not-a-time")) ||
+        !malformed(overridden(invalid_status)) ||
+        !malformed(overridden(invalid_before_status)) ||
+        !malformed(overridden(invalid_after_status)) ||
+        !malformed(overridden(invalid_reference_digest)) ||
+        !malformed(overridden(wrong_reference_id)) ||
+        !malformed(overridden(wrong_recipe)) ||
+        !malformed(overridden(wrong_source)) ||
+        !malformed(overridden(wrong_repaired_digest))) {
+        throw std::runtime_error("malformed repair provider report was accepted");
+    }
+}
+
 void prove_uninstall_recovery_gateway_decoding()
 {
     application::UninstallRecoveryRequest request;
@@ -282,6 +429,17 @@ std::string replace_json_string_field(std::string text, const char* key, const s
     if (end == text.size()) throw std::runtime_error(std::string("managed fixture record has an unterminated ") + key + " field");
     text.replace(position + prefix.size(), end - (position + prefix.size()), value);
     return text;
+}
+
+std::string managed_repair_outer_digest(const std::string& document)
+{
+    auto parsed = facman::core::json::parse(document);
+    if (!parsed) throw std::runtime_error("managed repair outer plan cannot be parsed");
+    auto canonical = facman::core::json::canonical_integer_object_without(
+        parsed.value(), "plan_digest");
+    if (!canonical) throw std::runtime_error("managed repair outer plan cannot be canonicalized");
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(canonical.value().data()), canonical.value().size());
 }
 
 void configure_public_setup(const proof::Fixture& fixture)
@@ -542,24 +700,324 @@ proof::LauncherReference prove_move_and_repair(
     }
     current = refreshed.reference;
 
+    configure_public_setup(fixture);
+    const fs::path repair_workspace = fixture.root / "facman-repair-workspace";
+    application::ApplicationContext context(repair_workspace);
+    if (!context.workspace_repository().ensure()) {
+        throw std::runtime_error("managed repair workspace initialization failed");
+    }
+    auto install_id = facman::core::InstallId::parse(current.install_id);
+    if (!install_id) throw std::runtime_error("managed repair fixture id is invalid");
+    facman::workspace::InstallRecord new_record;
+    new_record.id = install_id.value();
+    if (!context.installs().create(new_record, discovery::install_ref_json(
+            managed_facman_reference(current, moved_target)))) {
+        throw std::runtime_error("managed repair fixture reference creation failed");
+    }
+
     proof::write_text(moved_target / "data/base/info.json", "deliberate drift");
-    const auto repair_plan = usk::lifecycle::plan_repair(
-        fixture.setup_roots, current.install_id, "plan.m1.repair",
-        "2026-07-14T01:00:05Z", archive.payload);
-    const auto repaired = usk::lifecycle::apply_repair(
-        repair_plan, repair_plan.plan_digest, "tx.m1.repair", "2026-07-14T01:00:06Z");
-    if (repaired.before.modified_files != 1 || repaired.after.status != "pass") {
-        throw std::runtime_error("managed repair did not restore exact owned drift");
+    proof::write_text(moved_target / "operator-note.txt", "retain unknown content");
+    application::ServiceOperationRequest plan_request;
+    plan_request.install_id = current.install_id;
+    plan_request.archive = archive.path.string();
+    const std::string target_before_plan = tree_signature(moved_target);
+    const std::string state_before_plan = tree_signature(fixture.setup_roots.state_root);
+    const std::string workspace_before_plan = tree_signature(repair_workspace);
+    const auto provider_guard_plan = usk::lifecycle::plan_repair(
+        fixture.setup_roots, current.install_id, "plan.m1.repair.no-effect-guard",
+        "2098-01-01T01:00:04Z", archive.payload);
+    bool provider_guard_refused = false;
+    try {
+        (void)usk::lifecycle::apply_repair(
+            provider_guard_plan, std::string(64, '0'), "tx.m1.repair.no-effect-guard",
+            "2098-01-01T01:00:05Z");
+    } catch (const std::runtime_error&) {
+        provider_guard_refused = true;
     }
-    auto repaired_state = project_state(repaired.installed_state, fixture);
-    const auto repair_refresh = proof::project_completed(
-        ULK_SETUP_OPERATION_REPAIR, repair_plan.plan_id, repair_plan.plan_digest,
-        repair_plan.installed_state_digest, current.install_id, &current, &repaired_state);
-    if (repair_refresh.reference.product_version != current.product_version ||
-        repair_refresh.transition != ULK_INSTALL_REFRESH_REFRESHED) {
-        throw std::runtime_error("repair changed version or failed to refresh reference");
+    if (!provider_guard_refused || ULK_SETUP_OPERATION_REPAIR != 3 ||
+        tree_signature(moved_target) != target_before_plan ||
+        tree_signature(fixture.setup_roots.state_root) != state_before_plan) {
+        throw std::runtime_error("provider repair digest guard did not refuse before effect");
     }
-    return repair_refresh.reference;
+    const auto planned = application::handlers::plan_repair_install(context, plan_request);
+    const std::string plan_document = std::holds_alternative<std::string>(planned.output)
+        ? std::get<std::string>(planned.output) : std::string();
+    const auto plan = std::holds_alternative<std::string>(planned.output)
+        ? facman::core::json::parse(plan_document)
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (planned.status != ULK_STATUS_OK || !plan ||
+        json_string(plan.value(), "schema") != "factorio.managed_repair_plan.v1" ||
+        json_string(plan.value(), "install_id") != current.install_id ||
+        json_string(plan.value(), "plan_digest").size() != 64U ||
+        json_string(plan.value(), "install_record_sha256").size() != 64U ||
+        tree_signature(moved_target) != target_before_plan ||
+        tree_signature(fixture.setup_roots.state_root) != state_before_plan ||
+        tree_signature(repair_workspace) != workspace_before_plan) {
+        throw std::runtime_error(
+            "FacMan repair planning did not produce a stable no-write envelope: status=" +
+            std::to_string(planned.status) + " code=" + planned.error_code +
+            " schema=" + (plan ? json_string(plan.value(), "schema") : std::string("parse")) +
+            " detail=" + (plan && plan.value().find("refusal") != nullptr
+                ? json_string(*plan.value().find("refusal"), "detail") : std::string()) +
+            " install=" + (plan ? json_string(plan.value(), "install_id") : std::string()) +
+            " digest=" + (plan ? std::to_string(json_string(plan.value(), "plan_digest").size()) : "0") +
+            " record=" + (plan ? std::to_string(json_string(plan.value(), "install_record_sha256").size()) : "0") +
+            " target_same=" + (tree_signature(moved_target) == target_before_plan ? "1" : "0") +
+            " state_same=" + (tree_signature(fixture.setup_roots.state_root) == state_before_plan ? "1" : "0") +
+            " workspace_same=" + (tree_signature(repair_workspace) == workspace_before_plan ? "1" : "0"));
+    }
+    const auto* provider_plan = plan.value().find("provider_plan");
+    if (provider_plan == nullptr || !provider_plan->is_object() ||
+        json_string(*provider_plan, "schema") != "usk.repair_plan.v1") {
+        throw std::runtime_error("FacMan repair plan omitted the reviewed provider evidence");
+    }
+    const auto* nested_plan_request = plan.value().find("plan_request");
+    const auto* nested_archive = nested_plan_request == nullptr
+        ? nullptr : nested_plan_request->find("archive");
+    const std::string provider_before_digest =
+        json_string(*provider_plan, "before_verification_digest");
+    const std::string archive_digest = nested_archive == nullptr
+        ? std::string() : json_string(*nested_archive, "expected_sha256");
+    const std::string record_preimage_digest =
+        json_string(plan.value(), "install_record_sha256");
+    if (nested_plan_request == nullptr || !nested_plan_request->is_object() ||
+        nested_archive == nullptr || !nested_archive->is_object() ||
+        provider_before_digest.empty() || archive_digest.empty() ||
+        managed_repair_outer_digest(plan_document) != json_string(plan.value(), "plan_digest")) {
+        throw std::runtime_error("managed repair outer digest fixture is incomplete");
+    }
+    const std::vector<std::string> perturbed_outer_digests {
+        managed_repair_outer_digest(replaced_once(
+            plan_document,
+            "\"before_verification_digest\":\"" + provider_before_digest + "\"",
+            "\"before_verification_digest\":\"" + std::string(64, 'a') + "\"",
+            "provider plan digest binding")),
+        managed_repair_outer_digest(replaced_once(
+            plan_document,
+            "\"expected_sha256\":\"" + archive_digest + "\"",
+            "\"expected_sha256\":\"" + std::string(64, 'b') + "\"",
+            "plan request archive binding")),
+        managed_repair_outer_digest(replaced_once(
+            plan_document,
+            "\"install_record_sha256\":\"" + record_preimage_digest + "\"",
+            "\"install_record_sha256\":\"" + std::string(64, 'c') + "\"",
+            "raw record preimage binding")),
+    };
+    if (std::any_of(perturbed_outer_digests.begin(), perturbed_outer_digests.end(),
+            [&](const std::string& digest) {
+                return digest == json_string(plan.value(), "plan_digest");
+            })) {
+        throw std::runtime_error("managed repair outer digest ignored a reviewed nested binding");
+    }
+
+    const auto loaded_before = context.installs().load(install_id.value());
+    if (!loaded_before) throw std::runtime_error("managed repair preimage is unavailable");
+    const std::string record_before = read_text(loaded_before.value().source_path);
+    application::ServiceOperationRequest apply_request;
+    apply_request.install_id = current.install_id;
+    apply_request.archive = archive.path.string();
+    apply_request.plan_id = json_string(plan.value(), "plan_id");
+    apply_request.plan_digest = json_string(plan.value(), "plan_digest");
+    apply_request.plan_created_at = json_string(plan.value(), "created_at");
+    apply_request.install_record_sha256 = json_string(plan.value(), "install_record_sha256");
+    apply_request.transaction_id = "tx-m1-facman-repair";
+    apply_request.applied_at = "2098-01-01T01:00:06Z";
+    apply_request.confirmation = "APPLY";
+
+    for (std::size_t index = 0; index < perturbed_outer_digests.size(); ++index) {
+        apply_request.transaction_id = "tx-m1-facman-repair-outer-drift-" + std::to_string(index);
+        apply_request.plan_digest = perturbed_outer_digests[index];
+        const auto perturbed = application::handlers::apply_repair_install(context, apply_request);
+        auto perturbed_id = facman::core::TransactionId::parse(apply_request.transaction_id);
+        if (perturbed.status == ULK_STATUS_OK || perturbed.error_code != "stale_plan" ||
+            !perturbed_id || context.transactions().load_journal(perturbed_id.value()) ||
+            tree_signature(moved_target) != target_before_plan ||
+            tree_signature(fixture.setup_roots.state_root) != state_before_plan ||
+            read_text(loaded_before.value().source_path) != record_before) {
+            throw std::runtime_error("perturbed managed repair outer digest reached provider entry");
+        }
+    }
+    apply_request.transaction_id = "tx-m1-facman-repair";
+    apply_request.plan_digest = json_string(plan.value(), "plan_digest");
+
+    write_text_exact(loaded_before.value().source_path, replace_json_string_field(
+        record_before, "source_ref", "concurrent-edit"));
+    const auto changed_preimage = application::handlers::apply_repair_install(context, apply_request);
+    auto changed_tx = facman::core::TransactionId::parse(apply_request.transaction_id);
+    if (changed_preimage.status == ULK_STATUS_OK ||
+        changed_preimage.error_code != "managed_install_record_preimage_changed" ||
+        !changed_tx || context.transactions().load_journal(changed_tx.value()) ||
+        tree_signature(moved_target) != target_before_plan) {
+        throw std::runtime_error("FacMan repair apply did not bind the reviewed record preimage");
+    }
+    write_text_exact(loaded_before.value().source_path, record_before);
+    apply_request.transaction_id = "tx-m1-facman-repair-stale";
+    apply_request.plan_digest = std::string(64, '0');
+    const auto stale = application::handlers::apply_repair_install(context, apply_request);
+    auto stale_tx = facman::core::TransactionId::parse(apply_request.transaction_id);
+    if (stale.status == ULK_STATUS_OK || stale.error_code != "stale_plan" ||
+        !stale_tx || context.transactions().load_journal(stale_tx.value()) ||
+        tree_signature(moved_target) != target_before_plan) {
+        throw std::runtime_error("FacMan stale repair plan reached the coordinator or provider");
+    }
+
+    apply_request.transaction_id = "tx-m1-facman-repair";
+    apply_request.plan_digest = json_string(plan.value(), "plan_digest");
+    const auto applied = application::handlers::apply_repair_install(context, apply_request);
+    const auto result = std::holds_alternative<std::string>(applied.output)
+        ? facman::core::json::parse(std::get<std::string>(applied.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    const auto terminal = context.installs().load(install_id.value());
+    auto transaction_id = facman::core::TransactionId::parse(apply_request.transaction_id);
+    const auto journal = transaction_id
+        ? context.transactions().load_journal(transaction_id.value())
+        : facman::core::Result<std::string>::failure({"invalid", "invalid", ""});
+    const auto verified = usk::lifecycle::verify_installed(
+        fixture.setup_roots, current.install_id, "verify.m1.facman.repair.proof",
+        "2098-01-01T01:00:07Z");
+    if (applied.status != ULK_STATUS_OK || !result || !terminal ||
+        json_string(result.value(), "schema") != "factorio.managed_repair_apply_result.v1" ||
+        terminal.value().lifecycle_status != "active" ||
+        terminal.value().verification_status != "warn" ||
+        terminal.value().state_revision.rfind(apply_request.transaction_id + ":", 0U) != 0U ||
+        verified.status != "warn" || !fs::is_regular_file(moved_target / "operator-note.txt") ||
+        read_text(moved_target / "operator-note.txt") != "retain unknown content" ||
+        !journal || journal.value().find("\"state\":\"complete\"") == std::string::npos ||
+        journal.value().find("terminal_projection_prepared") == std::string::npos) {
+        throw std::runtime_error(
+            "FacMan managed repair did not close provider and record projection: status=" +
+            std::to_string(applied.status) + " code=" + applied.error_code +
+            " schema=" + (result ? json_string(result.value(), "schema") : std::string("parse")) +
+            " terminal=" + (terminal ? terminal.value().lifecycle_status + ":" +
+                terminal.value().verification_status + ":" + terminal.value().state_revision :
+                terminal.error().code) + " verify=" + verified.status +
+            " unknown=" + (fs::is_regular_file(moved_target / "operator-note.txt") ? "1" : "0") +
+            " journal=" + (journal ? journal.value() : journal.error().code));
+    }
+    const auto repeated = application::handlers::apply_repair_install(context, apply_request);
+    if (repeated.status == ULK_STATUS_OK ||
+        repeated.error_code != "operation_specific_recovery_required" ||
+        context.transactions().load_journal(transaction_id.value()).value() != journal.value()) {
+        throw std::runtime_error("FacMan repeated repair apply was not idempotently refused");
+    }
+    current.setup_state_ref = terminal.value().setup_state_ref;
+    current.verification_identity = terminal.value().last_verification_identity;
+    current.state_revision = terminal.value().state_revision;
+    return current;
+}
+
+void prove_repair_interruption_requires_operation_specific_recovery(
+    proof::Fixture& fixture,
+    const proof::SyntheticArchive& archive)
+{
+    const fs::path target = fixture.root / "targets/repair-interrupted";
+    fs::create_directories(target.parent_path());
+    auto gateway = application::make_setup_gateway();
+    const auto assessment = gateway->inspect_install_archive({"2.0.77", archive.path});
+    if (!assessment) throw std::runtime_error("repair interruption archive inspection failed");
+    const auto install_plan = usk::lifecycle::plan_install(
+        "plan.m1.repair.interrupted.install", "managed-factorio-repair-interrupted",
+        "2026-07-14T01:10:00Z", target, fixture.setup_roots,
+        proof::factorio_recipe(std::string(64, '6'), assessment.value().archive_sha256),
+        archive.payload);
+    const auto installed = usk::lifecycle::apply_install(
+        install_plan, install_plan.plan_digest, "tx.m1.repair.interrupted.install",
+        "2026-07-14T01:10:01Z");
+    auto state = project_state(installed.installed_state, fixture);
+    const auto launcher = proof::project_completed(
+        ULK_SETUP_OPERATION_INSTALL, install_plan.plan_id, install_plan.plan_digest,
+        assessment.value().entry_set_digest, "", nullptr, &state).reference;
+    configure_public_setup(fixture);
+    const fs::path workspace = fixture.root / "facman-repair-interrupted-workspace";
+    application::ApplicationContext context(workspace);
+    if (!context.workspace_repository().ensure()) {
+        throw std::runtime_error("repair interruption workspace initialization failed");
+    }
+    auto install_id = facman::core::InstallId::parse(launcher.install_id);
+    facman::workspace::InstallRecord record;
+    if (!install_id) throw std::runtime_error("repair interruption install id is invalid");
+    record.id = install_id.value();
+    if (!context.installs().create(record, discovery::install_ref_json(
+            managed_facman_reference(launcher, target)))) {
+        throw std::runtime_error("repair interruption reference creation failed");
+    }
+    proof::write_text(target / "data/base/info.json", "interrupted repair drift");
+    application::ServiceOperationRequest plan_request;
+    plan_request.install_id = launcher.install_id;
+    plan_request.archive = archive.path.string();
+    const auto planned = application::handlers::plan_repair_install(context, plan_request);
+    auto plan = std::holds_alternative<std::string>(planned.output)
+        ? facman::core::json::parse(std::get<std::string>(planned.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    const auto before = context.installs().load(install_id.value());
+    if (planned.status != ULK_STATUS_OK || !plan || !before) {
+        throw std::runtime_error("repair interruption plan failed");
+    }
+    const std::string record_before = read_text(before.value().source_path);
+    application::ServiceOperationRequest apply;
+    apply.install_id = launcher.install_id;
+    apply.archive = archive.path.string();
+    apply.plan_id = json_string(plan.value(), "plan_id");
+    apply.plan_digest = json_string(plan.value(), "plan_digest");
+    apply.plan_created_at = json_string(plan.value(), "created_at");
+    apply.install_record_sha256 = json_string(plan.value(), "install_record_sha256");
+    apply.transaction_id = "tx-m1-facman-repair-no-effect";
+    apply.applied_at = "2098-01-01T01:10:02Z";
+    apply.confirmation = "APPLY";
+    const std::string target_before_no_effect = tree_signature(target);
+    const std::string provider_before_no_effect = tree_signature(fixture.setup_roots.state_root);
+    set_environment("FACMAN_TEST_REPAIR_PROVIDER_STALE_PLAN", "1");
+    const auto no_effect = application::handlers::apply_repair_install(context, apply);
+    clear_environment("FACMAN_TEST_REPAIR_PROVIDER_STALE_PLAN");
+    auto no_effect_id = facman::core::TransactionId::parse(apply.transaction_id);
+    const auto no_effect_journal = no_effect_id
+        ? context.transactions().load_journal(no_effect_id.value())
+        : facman::core::Result<std::string>::failure({"invalid", "invalid", ""});
+    if (no_effect.status == ULK_STATUS_OK || no_effect.error_code != "stale_plan" ||
+        !no_effect_journal ||
+        no_effect_journal.value().find("\"state\":\"refused\"") == std::string::npos ||
+        no_effect_journal.value().find("provider_entry_started") == std::string::npos ||
+        tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before) {
+        throw std::runtime_error("provable no-effect provider repair refusal did not close safely");
+    }
+
+    apply.transaction_id = "tx-m1-facman-repair-interrupted";
+    apply.applied_at = "2098-01-01T01:10:03Z";
+    set_environment("FACMAN_TEST_REPAIR_TERMINAL_UNKNOWN_INSTALL", "1");
+    const auto interrupted = application::handlers::apply_repair_install(context, apply);
+    clear_environment("FACMAN_TEST_REPAIR_TERMINAL_UNKNOWN_INSTALL");
+    auto transaction_id = facman::core::TransactionId::parse(apply.transaction_id);
+    const auto journal = transaction_id
+        ? context.transactions().load_journal(transaction_id.value())
+        : facman::core::Result<std::string>::failure({"invalid", "invalid", ""});
+    const auto verification = usk::lifecycle::verify_installed(
+        fixture.setup_roots, launcher.install_id, "verify.m1.repair.interrupted",
+        "2098-01-01T01:10:04Z");
+    if (interrupted.status == ULK_STATUS_OK ||
+        interrupted.error_code != "transaction_recovery_required" ||
+        verification.status != "pass" || read_text(before.value().source_path) != record_before ||
+        !journal || journal.value().find("\"state\":\"recovery_required\"") == std::string::npos ||
+        journal.value().find("setup_repair_terminal_state_inspection_refused") == std::string::npos ||
+        journal.value().find("\"state\":\"refused\"") != std::string::npos ||
+        journal.value().find("provider_entry_started") == std::string::npos ||
+        journal.value().find("terminal_projection_prepared") != std::string::npos) {
+        throw std::runtime_error("post-repair terminal unknown_install lost its recovery phase provenance");
+    }
+    const auto repeated = application::handlers::apply_repair_install(context, apply);
+    application::RecoveryRequest generic;
+    generic.transaction_id = apply.transaction_id;
+    const auto generic_result = application::handlers::recovery_apply(context, generic);
+    const auto journal_after = context.transactions().load_journal(transaction_id.value());
+    if (repeated.status == ULK_STATUS_OK ||
+        repeated.error_code != "operation_specific_recovery_required" ||
+        generic_result.status == ULK_STATUS_OK ||
+        generic_result.error_code != "operation_specific_recovery_required" ||
+        !journal_after || journal_after.value() != journal.value() ||
+        read_text(before.value().source_path) != record_before) {
+        throw std::runtime_error("repair recovery retry was not explicitly and idempotently refused");
+    }
 }
 
 void prove_uninstall(
@@ -687,7 +1145,12 @@ void prove_uninstall(
             !clean_checkpoint_valid ||
             clean_coordinator.provider_journal_snapshot_sha256.size() != 64U ||
             fs::exists(moved_target)) {
-            throw std::runtime_error("FacMan clean owned uninstall apply did not remove its synthetic target");
+            throw std::runtime_error(
+                "FacMan clean owned uninstall apply did not remove its synthetic target: status=" +
+                std::to_string(result.status) + " code=" + result.error_code +
+                " report=" + (report ? report.value().serialize() : report.error().code) +
+                " target=" + (fs::exists(moved_target) ? "1" : "0") +
+                " journal=" + (clean_journal ? clean_journal.value() : clean_journal.error().code));
         }
     }
     application::ApplicationContext restarted(workspace);
@@ -1328,9 +1791,11 @@ void prove_incomplete_provider_uninstall_is_indeterminate(
 
 int run()
 {
+    prove_repair_gateway_decoding();
     prove_uninstall_recovery_gateway_decoding();
     proof::Fixture fixture;
     const proof::SyntheticArchive archive = proof::make_factorio_archive(fixture.root);
+    prove_repair_interruption_requires_operation_specific_recovery(fixture, archive);
     const fs::path target = fixture.root / "targets/portable";
     fs::create_directories(target.parent_path());
     auto reference = prove_install(fixture, archive, target);

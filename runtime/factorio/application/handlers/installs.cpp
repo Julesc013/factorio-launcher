@@ -9,7 +9,6 @@
 #include "flb_factorio_install_model.h"
 
 #include <filesystem>
-#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -54,11 +53,6 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
     return true;
 }
 
-bool repair_plan_lifecycle_eligible(std::string_view lifecycle)
-{
-    return lifecycle == "active" || lifecycle == "verification_failed" ||
-        lifecycle == "recovery_required";
-}
 }
 
 ApplicationResult list_installs(ApplicationContext& context)
@@ -190,68 +184,6 @@ ApplicationResult plan_install_reconciliation(
     if (!plan) return refused(
         safety_refusal(
             "installs.reconcile.plan",
-            plan.error().code,
-            "Desired installation state is not compatible with this runtime",
-            plan.error().message,
-            false),
-        plan.error().code,
-        plan.error().message,
-        plan.error().kind);
-    ApplicationResult result;
-    result.output = plan.take_value();
-    return result;
-}
-
-ApplicationResult plan_managed_install_repair(
-    ApplicationContext& context,
-    const ReconcileInstallRequest& request)
-{
-    auto parsed_id = facman::core::InstallId::parse_legacy(request.install_id);
-    if (!parsed_id) return refused(
-        safety_refusal(
-            "installs.repair.plan",
-            parsed_id.error().code,
-            "Install id is invalid",
-            parsed_id.error().message,
-            false),
-        parsed_id.error().code,
-        parsed_id.error().message,
-        parsed_id.error().kind);
-    auto record = context.installs().load(parsed_id.value());
-    if (!record) return refused(
-        safety_refusal(
-            "installs.repair.plan",
-            "unknown_install",
-            "Install reference is not registered",
-            request.install_id,
-            true),
-        "unknown_install",
-        "Install reference is not registered");
-    if (record.value().ownership != "managed") return refused(
-        safety_refusal(
-            "installs.repair.plan",
-            "ownership_denied",
-            "Repair planning is available only for registered managed installs",
-            record.value().ownership,
-            true),
-        "ownership_denied",
-        "Repair planning is available only for registered managed installs");
-    if (!repair_plan_lifecycle_eligible(record.value().lifecycle_status)) return refused(
-        safety_refusal(
-            "installs.repair.plan",
-            "repair_lifecycle_ineligible",
-            "Repair planning requires an active, verification_failed, or recovery_required managed install",
-            record.value().lifecycle_status.empty() ? "unknown" : record.value().lifecycle_status,
-            true),
-        "repair_lifecycle_ineligible",
-        "Repair planning requires an active, verification_failed, or recovery_required managed install");
-
-    auto plan = installation::reconciliation_plan_json(
-        install_ref_from_record(record.value()), request, "installs.repair.plan",
-        installation::ReconciliationPlanIntent::repair);
-    if (!plan) return refused(
-        safety_refusal(
-            "installs.repair.plan",
             plan.error().code,
             "Desired installation state is not compatible with this runtime",
             plan.error().message,

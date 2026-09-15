@@ -88,8 +88,9 @@ struct ServiceOperationRequest {
     std::string install_id;
     std::string plan_id;
     std::string plan_digest;
-    std::string plan_created_at;
-    std::string confirmation;
+      std::string plan_created_at;
+      std::string install_record_sha256;
+      std::string confirmation;
     std::string transaction_id;
     std::string applied_at;
 };
