@@ -23,6 +23,7 @@ from tools import resource_package_cases as cases
 SCHEMA = ROOT / "contracts/schema/release/facman_resource_package_proof.v1.schema.json"
 LOG_LIMIT = 8 * 1024 * 1024
 COMMAND_TIMEOUT = 30
+EXPORT_COMMAND_TIMEOUT = 150
 PROOF_TIMEOUT = 600
 MAX_SOURCE = 4 * 1024 * 1024
 SOURCE_FILES = ("tools/resource_package_proof.py", "tools/resource_package_cases.py",
@@ -88,7 +89,8 @@ class Driver:
             stream.write(data)
         return self.artifact(path)
 
-    def raw(self, label: str, executable: Path, arguments: list[str], *, success: bool = True) -> bytes:
+    def raw(self, label: str, executable: Path, arguments: list[str], *, success: bool = True,
+            timeout: float | None = None) -> bytes:
         cases.require(len(self.receipt["commands"]) < 32 and
                       time.monotonic() - self.started < PROOF_TIMEOUT, "proof command/time budget")
         command = [str(executable), *arguments]
@@ -108,7 +110,9 @@ class Driver:
                 worker = threading.Thread(target=self._pump, args=(pipe, output, stopped, errors), daemon=True)
                 worker.start()
                 workers.append(worker)
-            deadline = time.monotonic() + min(COMMAND_TIMEOUT, PROOF_TIMEOUT - (time.monotonic() - self.started))
+            command_timeout = COMMAND_TIMEOUT if timeout is None else timeout
+            cases.require(command_timeout > 0, "command timeout must be positive")
+            deadline = time.monotonic() + min(command_timeout, PROOF_TIMEOUT - (time.monotonic() - self.started))
             while process.poll() is None:
                 if stopped.is_set() or time.monotonic() >= deadline:
                     record["timed_out"] = not stopped.is_set()
@@ -150,8 +154,9 @@ class Driver:
             errors.append(str(error))
             stopped.set()
 
-    def json(self, label: str, executable: Path, arguments: list[str]) -> dict:
-        value = json.loads(self.raw(label, executable, arguments))
+    def json(self, label: str, executable: Path, arguments: list[str], *,
+             timeout: float | None = None) -> dict:
+        value = json.loads(self.raw(label, executable, arguments, timeout=timeout))
         cases.require(value.get("schema") == "facman.transport_response.v2" and
                       isinstance(value.get("payload"), dict) and not value.get("error"),
                       "unexpected resource success envelope")
@@ -203,7 +208,10 @@ def prove(executable: Path, profile: str, package_mode: str, evidence: Path) -> 
         oracle = cases.zip_oracle(root / names[1])
         driver.document("resource-oracle.json", oracle)
         complete = lambda name: report["cases"].append({"id": name, "status": "pass"})
-        cases.run_cases(driver, root, names, profile, before, oracle, work, complete)
+        cases.run_cases(
+            driver, root, names, profile, before, oracle, work, complete,
+            export_timeout=EXPORT_COMMAND_TIMEOUT,
+        )
         driver.document("export-inventory.json", cases.snapshot(work / "Exported resources"))
     except Exception as error:
         report["failure"] = str(error)[:4096]

@@ -258,6 +258,16 @@ static facman::core::Result<Inspection> inspect_plan(
 }
 
 facman::archive::Limits detail::pack_limits() { return resource_limits(); }
+facman::archive::Limits detail::export_limits()
+{
+    auto limits = resource_limits();
+    // Retained export durably flushes every entry. The shipped pack contains
+    // hundreds of small files, so keep inspection at 30 seconds while giving
+    // only the complete retained extraction a bounded allowance for storage
+    // latency.
+    limits.maximum_read_milliseconds = 120000;
+    return limits;
+}
 facman::core::Result<Inspection> detail::inspect_open_pack(
     const std::filesystem::path& path, const facman::archive::Plan& plan)
 {

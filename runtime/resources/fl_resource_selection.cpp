@@ -57,7 +57,7 @@ facman::core::Result<void> detail::export_open_standalone_pack(
         };
     }
     const auto status = facman::archive::extract_verified_to_new_retained_staging(
-        inspection.plan, destination, pack_limits(), inspection.inspection.verified_entries,
+        inspection.plan, destination, export_limits(), inspection.inspection.verified_entries,
         guarded_checkpoint, observation);
     if (checkpoint_exception) std::rethrow_exception(checkpoint_exception);
     if (!status.ok()) {

@@ -68,7 +68,7 @@ facman::core::Result<void> export_product_resources(
     if (raw_digest != inspection.identity.sha256)
         return facman::core::Result<void>::failure(error("resource_package_changed", "Resource changed before export"));
     status = facman::archive::extract_verified_to_new_retained_staging(inspection.plan, destination,
-        detail::pack_limits(), inspection.inspection.verified_entries, extraction_checkpoint, observation);
+        detail::export_limits(), inspection.inspection.verified_entries, extraction_checkpoint, observation);
     if (!status.ok()) return facman::core::Result<void>::failure(error(status.code, status.detail));
     if (observation) observation->complete();
     // Retain the ownership marker as evidence. Removing it by pathname would
