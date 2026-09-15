@@ -173,3 +173,18 @@ source before integration.
 - Final portable `.aide/scripts/aide_lite.py test`: PASS. Generated Git and
   changelog reports are restored to their preserved byte and timestamp state
   after helper execution. Staged-source checks follow the explicit-path index.
+
+## PR #287 Linux schema/runtime fixture remediation
+
+- Hosted `linux-native` built and passed all 47 ordinary, Release and sanitizer
+  CTests before its final Python suite found four failures in
+  `tests.test_request_schema_runtime_conformance`. The generic fixture builder
+  emitted `"1"` for newly constrained transaction identifiers and timestamps;
+  the schemas correctly rejected those samples before runtime invocation.
+- The fixture now emits `tx-sample` for the exact transaction-ID regex and a
+  valid UTC-seconds value for the timestamp regex. It does not change schema
+  validation, runtime acceptance/refusal assertions or production code.
+- The complete request-schema/runtime conformance test passes locally against
+  the rebuilt current `facman.exe` (1/1, 131 registered commands). Source format
+  and `git diff --check` pass. Focused independent Luna review: PASS with no
+  assertion weakening or residual issue.
