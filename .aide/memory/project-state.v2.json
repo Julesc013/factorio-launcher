@@ -809,7 +809,8 @@
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
-        "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+        "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+        "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01"
       ]
     },
     "current_origin_observation": {
@@ -2728,15 +2729,16 @@
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
       "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+      "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
       "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 2,
+      "active": 3,
       "active_automated": 1,
       "blocked": 2,
       "closed": 29,
-      "planned": 35,
+      "planned": 34,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
@@ -2782,6 +2784,12 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
@@ -2983,12 +2991,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

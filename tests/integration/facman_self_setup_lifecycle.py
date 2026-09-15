@@ -439,8 +439,11 @@ def journal_observation(install: Path) -> list[dict[str, object]]:
         except (OSError, json.JSONDecodeError):
             continue
         if same_windows_path(value.get("install_root"), install):
+            provider = value.get("provider")
             observations.append({"path": str(path), "state": value.get("state"),
                                  "boundary": value.get("recovery_boundary"),
+                                 "provider_phase": provider.get("phase")
+                                 if isinstance(provider, dict) else None,
                                  "operation": value.get("operation")})
     return observations
 
@@ -518,8 +521,13 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         shortcut, registry = observe("packaged_argv0_install_completed")
         assert_owned_native(shortcut, registry, install, state_root, root, version,
                             "packaged argv0 install")
+        first_sources = list((state_root / "repair-sources").glob("*.zip"))
+        if len(first_sources) != 1:
+            raise AssertionError("packaged install did not retain one repair package")
+        withheld_first_source = root / "withheld-before-registered-uninstall.zip"
+        os.replace(first_sources[0], withheld_first_source)
         invoke_registered(registry_text(registry, "UninstallString"))
-        shortcut, registry = observe("registered_uninstall_completed")
+        shortcut, registry = observe("registered_uninstall_without_zip_completed")
         assert_absent_native(shortcut, registry, "registered uninstall")
         if install.exists():
             raise AssertionError("registered uninstall did not remove the managed install")
@@ -618,13 +626,60 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         assert_owned_native(shortcut, registry, install, state_root, root, version,
                             "install after uninstall recovery")
 
+        repair_source = next((state_root / "repair-sources").glob("*.zip"))
+        maintenance_launcher = repair_source.with_name(
+            f"{repair_source.stem}.FacManSetup.exe"
+        )
+        modify_path = registry_text(registry, "ModifyPath")
+        withheld_repair_source = root / "withheld-before-missing-repair.zip"
+        before_missing_repair = {
+            "inventory": file_inventory(install),
+            "shortcut": shortcut,
+            "registry": registry,
+            "journals": journal_observation(install),
+        }
+        os.replace(repair_source, withheld_repair_source)
+        missing_repair_result = invoke_registered(modify_path, "--json", expected=4)
+        missing_repair = json.loads(missing_repair_result.stdout)
+        after_missing_shortcut, after_missing_registry = observe(
+            "registered_repair_missing_payload_refused"
+        )
+        missing_error = missing_repair.get("error")
+        if missing_repair.get("status") != "error" or not isinstance(missing_error, dict) or \
+                missing_error.get("code") != "self_setup_package_missing" or \
+                file_inventory(install) != before_missing_repair["inventory"] or \
+                after_missing_shortcut != before_missing_repair["shortcut"] or \
+                after_missing_registry != before_missing_repair["registry"] or \
+                journal_observation(install) != before_missing_repair["journals"]:
+            raise AssertionError("fresh registered repair with missing payload was not a typed no-effect refusal")
+        os.replace(withheld_repair_source, repair_source)
+
         gui = install / "generations" / version / "FacMan.exe"
         gui.write_bytes(b"deliberate real-mode owned damage\n")
         damaged = invoke(executable, "verify", "--root", install, "--state-root", state_root,
                          "--acceptance-root", root, shell_integration=True, noninteractive=True)
         if damaged.get("provider", {}).get("payload", {}).get("status") != "fail":
             raise AssertionError("real-mode owned damage was not detected")
-        invoke_registered(registry_text(registry, "ModifyPath"))
+        repair_permit = qualification_permit(
+            root, "provider_plan_reviewed", "repair", version, install, state_root
+        )
+        interrupted_repair = invoke(
+            executable, "repair", "--package", payload, *common, expected=4,
+            shell_integration=True, noninteractive=True,
+            qualification=("provider_plan_reviewed", repair_permit),
+        )
+        assert_interrupted(interrupted_repair, "provider_plan_reviewed")
+        if not any(
+                item.get("provider_phase") == "plan_reviewed"
+                for item in journal_observation(install)):
+            raise AssertionError("repair plan-review interruption did not persist its provider phase")
+        missing_original = root / "missing-original-repair-input.zip"
+        resumed_repair = invoke(
+            maintenance_launcher, "repair", "--package", missing_original, *common,
+            shell_integration=True, noninteractive=True,
+        )
+        if resumed_repair.get("status") != "ok":
+            raise AssertionError("interrupted repair did not resume from its retained source")
         repaired_verify = invoke(executable, "verify", "--root", install,
                                  "--state-root", state_root,
                                  "--acceptance-root", root,

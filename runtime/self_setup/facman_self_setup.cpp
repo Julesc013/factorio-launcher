@@ -283,6 +283,7 @@ struct SetupJournal {
   std::string provider_transaction_id;
   std::string provider_created_at;
   std::string provider_plan_digest;
+  std::string provider_phase = "before_plan";
   std::string provider_receipt_identity;
   std::string recovery_plan_id;
   std::string recovery_plan_digest;
@@ -412,6 +413,7 @@ std::string journal_json(const SetupJournal &journal) {
   provider.add_string("transaction_id", journal.provider_transaction_id);
   provider.add_string("created_at", journal.provider_created_at);
   provider.add_string("plan_digest", journal.provider_plan_digest);
+  provider.add_string("phase", journal.provider_phase);
   provider.add_string("receipt_identity", journal.provider_receipt_identity);
   json::ObjectBuilder recovery;
   recovery.add_string("plan_id", journal.recovery_plan_id);
@@ -539,8 +541,10 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
   const auto *provider = document.value().find("provider");
   const auto *recovery = document.value().find("recovery");
   const auto *effects = document.value().find("effects");
-  if (provider == nullptr || recovery == nullptr || effects == nullptr ||
-      !exact_keys(*provider, {"revision", "state_root", "acceptance_root", "source_digest", "installed_source_digest", "request_id", "plan_id", "transaction_id", "created_at", "plan_digest", "receipt_identity"}) ||
+  const bool provider_fields_valid = provider != nullptr &&
+      (exact_keys(*provider, {"revision", "state_root", "acceptance_root", "source_digest", "installed_source_digest", "request_id", "plan_id", "transaction_id", "created_at", "plan_digest", "phase", "receipt_identity"}) ||
+       exact_keys(*provider, {"revision", "state_root", "acceptance_root", "source_digest", "installed_source_digest", "request_id", "plan_id", "transaction_id", "created_at", "plan_digest", "receipt_identity"}));
+  if (!provider_fields_valid || recovery == nullptr || effects == nullptr ||
       !exact_keys(*recovery, {"plan_id", "plan_digest", "created_at", "action"}) ||
       !exact_keys(*effects, {"files", "repair_source", "shortcut", "registration"}))
     return facman::core::Result<SetupJournal>::failure(
@@ -563,6 +567,9 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
   journal.provider_transaction_id = string_field(*provider, "transaction_id");
   journal.provider_created_at = string_field(*provider, "created_at");
   journal.provider_plan_digest = string_field(*provider, "plan_digest");
+  journal.provider_phase = provider->find("phase") == nullptr
+      ? (journal.provider_plan_digest.empty() ? "before_plan" : "apply_entered")
+      : string_field(*provider, "phase");
   journal.provider_receipt_identity = string_field(*provider, "receipt_identity");
   journal.recovery_plan_id = string_field(*recovery, "plan_id");
   journal.recovery_plan_digest = string_field(*recovery, "plan_digest");
@@ -591,6 +598,7 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
       (journal.operation == "uninstall" &&
        !journal.provider_plan_digest.empty() && journal.installed_source_digest.empty()) ||
       !digest_or_empty(journal.provider_plan_digest) ||
+      !one_of(journal.provider_phase, {"before_plan", "plan_reviewed", "apply_entered"}) ||
       !digest_or_empty(journal.provider_receipt_identity) ||
       !digest_or_empty(journal.recovery_plan_digest) ||
       (!journal.recovery_plan_id.empty() && !bounded_identifier(journal.recovery_plan_id)) ||
@@ -644,8 +652,12 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
         (source_required && journal.repair_source != "applied") ||
         (!portable && !native_complete))) ||
       (journal.files == "pending" &&
-       (journal.repair_source == "applied" || journal.shortcut == "applied" ||
-        journal.registration == "applied"))) {
+       (journal.shortcut == "applied" || journal.registration == "applied")) ||
+      (journal.provider_phase == "before_plan" &&
+       !journal.provider_plan_digest.empty()) ||
+      (journal.provider_phase != "before_plan" &&
+       journal.provider_plan_digest.empty()) ||
+      (journal.files == "applied" && journal.provider_phase != "apply_entered")) {
     return facman::core::Result<SetupJournal>::failure(error(
         "self_setup_recovery_required",
         "setup operation journal has incompatible phase and effect states",
@@ -664,6 +676,7 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
                                          journal.registration != "pending")) ||
        (journal.mode == "portable" && (journal.shortcut != "not_applicable" ||
                                          journal.registration != "not_applicable")) ||
+       journal.provider_phase != "before_plan" ||
        journal.recovery_boundary != "abandoned_before_provider_apply" || !recovery_empty)) {
     return facman::core::Result<SetupJournal>::failure(error(
         "self_setup_recovery_required", "abandoned setup journal has incompatible effects", facman::platform::path_to_utf8(path)));
@@ -894,7 +907,6 @@ install_plan(const Request &request, const fs::path &package,
 enum class ProviderProgress {
   before_plan,
   plan_reviewed,
-  cache_validated,
   apply_entered,
 };
 
@@ -996,13 +1008,26 @@ install_or_repair(const Request &request, const fs::path &package,
          reviewed.value().plan_id != identity->provider_request_id))
       return facman::core::Result<Response>::failure(error(
           "self_setup_recovery_required", "provider plan identity differs from durable intent"));
+    if (!identity->provider_plan_digest.empty() &&
+        identity->provider_plan_digest != reviewed.value().digest)
+      return facman::core::Result<Response>::failure(error(
+          "self_setup_recovery_required",
+          "provider plan changed after its durable review boundary"));
     identity->provider_plan_digest = reviewed.value().digest;
+    identity->provider_phase = "plan_reviewed";
     if (identity_path == nullptr)
       return facman::core::Result<Response>::failure(error(
           "self_setup_journal_write_failed", "provider plan has no durable journal path"));
     auto persisted = persist_journal(*identity_path, *identity);
     if (!persisted)
       return facman::core::Result<Response>::failure(persisted.error());
+    if (request.durable_boundary_hook != nullptr &&
+        !request.durable_boundary_hook->reached(
+            DurableBoundary::provider_plan_reviewed))
+      return facman::core::Result<Response>::failure(error(
+          "self_setup_interrupted",
+          "setup operation interrupted after its provider plan-review boundary",
+          facman::platform::path_to_utf8(*identity_path)));
   }
   if (provider_progress != nullptr)
     *provider_progress = ProviderProgress::plan_reviewed;
@@ -1010,6 +1035,12 @@ install_or_repair(const Request &request, const fs::path &package,
       apply_request(apply_schema, plan, reviewed.value().plan_id, reviewed.value().digest, created_at,
                     identity == nullptr ? identifier("tx.facman.self") : identity->provider_transaction_id);
   if (!apply) return facman::core::Result<Response>::failure(apply.error());
+  if (identity != nullptr) {
+    identity->provider_phase = "apply_entered";
+    auto persisted = persist_journal(*identity_path, *identity);
+    if (!persisted)
+      return facman::core::Result<Response>::failure(persisted.error());
+  }
   if (provider_progress != nullptr)
     *provider_progress = ProviderProgress::apply_entered;
   auto applied = command(apply_command, apply.value().serialize(), state_root,
@@ -1164,35 +1195,55 @@ facman::core::Result<Response> uninstall(const Request &request,
           "self_setup_recovery_required", "provider plan identity differs from durable intent"));
     if (provider_progress != nullptr)
       *provider_progress = ProviderProgress::plan_reviewed;
-    if (request.native_effects != nullptr) {
-      const fs::path repair_source = state_root / "repair-sources" /
-          facman::platform::path_from_utf8(installed_source + ".zip");
-      const NativeContext native_context{Operation::uninstall,
-          request.install_root, state_root, acceptance_root, repair_source,
-          request.product_version};
-      const auto retained = request.native_effects->validate_repair_source(
-          native_context, installed_source);
-      if (!retained.ok || retained.path != repair_source)
-        return facman::core::Result<Response>::failure(error(
-            "self_setup_recovery_required",
-            "offline maintenance identity is invalid before uninstall",
-            retained.detail));
-    }
-    if (provider_progress != nullptr)
-      *provider_progress = ProviderProgress::cache_validated;
+    if (!identity->provider_plan_digest.empty() &&
+        identity->provider_plan_digest != reviewed.value().digest)
+      return facman::core::Result<Response>::failure(error(
+          "self_setup_recovery_required",
+          "provider plan changed after its durable review boundary"));
     identity->provider_plan_digest = reviewed.value().digest;
+    identity->provider_phase = "plan_reviewed";
     if (identity_path == nullptr)
       return facman::core::Result<Response>::failure(error(
           "self_setup_journal_write_failed", "provider plan has no durable journal path"));
     auto persisted = persist_journal(*identity_path, *identity);
     if (!persisted)
       return facman::core::Result<Response>::failure(persisted.error());
+    if (request.durable_boundary_hook != nullptr &&
+        !request.durable_boundary_hook->reached(
+            DurableBoundary::provider_plan_reviewed))
+      return facman::core::Result<Response>::failure(error(
+          "self_setup_interrupted",
+          "setup operation interrupted after its provider plan-review boundary",
+          facman::platform::path_to_utf8(*identity_path)));
+    if (request.native_effects != nullptr) {
+      const fs::path repair_source = state_root / "repair-sources" /
+          facman::platform::path_from_utf8(installed_source + ".zip");
+      const NativeContext native_context{Operation::uninstall,
+          request.install_root, state_root, acceptance_root, repair_source,
+          request.product_version};
+      const auto retained = request.native_effects->validate_maintenance_launcher(
+          native_context, installed_source);
+      if (!retained.ok || retained.path !=
+              repair_source.parent_path() /
+                  facman::platform::path_from_utf8(
+                      installed_source + ".FacManSetup.exe"))
+        return facman::core::Result<Response>::failure(error(
+            "self_setup_recovery_required",
+            "offline maintenance identity is invalid before uninstall",
+            retained.detail));
+    }
   }
   auto apply =
       apply_request("usk.uninstall_apply_request.v1", plan, plan_id,
                     reviewed.value().digest, created_at,
                     identity == nullptr ? identifier("tx.facman.self") : identity->provider_transaction_id);
   if (!apply) return facman::core::Result<Response>::failure(apply.error());
+  if (identity != nullptr) {
+    identity->provider_phase = "apply_entered";
+    auto persisted = persist_journal(*identity_path, *identity);
+    if (!persisted)
+      return facman::core::Result<Response>::failure(persisted.error());
+  }
   if (provider_progress != nullptr)
     *provider_progress = ProviderProgress::apply_entered;
   auto applied = command("uninstall.apply", apply.value().serialize(), state_root,
@@ -1428,9 +1479,11 @@ facman::core::Result<Response> execute(const Request &request) {
           facman::platform::path_to_utf8(old_acceptance.value()) !=
               facman::platform::path_to_utf8(qualification->acceptance_root);
       const bool boundary_crossed =
-          qualification->boundary == DurableBoundary::files_applied
-              ? journal.files == "applied"
-              : journal.shortcut == "applied";
+          qualification->boundary == DurableBoundary::provider_plan_reviewed
+              ? journal.provider_phase != "before_plan"
+              : qualification->boundary == DurableBoundary::files_applied
+                    ? journal.files == "applied"
+                    : journal.shortcut == "applied";
       if (claim_mismatch || boundary_crossed)
         return facman::core::Result<Response>::failure(error(
             "self_setup_qualification_interrupt_invalid",
@@ -1456,20 +1509,9 @@ facman::core::Result<Response> execute(const Request &request) {
     if (journal.state == "recovery_required")
       return facman::core::Result<Response>::failure(error(
           "self_setup_recovery_required", "a prior setup operation requires manual recovery", record_path.string()));
-    if (journal.files != "applied") {
-      if (journal.provider_plan_digest.empty()) {
-        journal.state = "abandoned";
-        journal.recovery_boundary = "abandoned_before_provider_apply";
-        journal.last_error = "superseded_before_provider_apply";
-        auto abandoned = persist_journal(record_path, journal);
-        if (!abandoned) return facman::core::Result<Response>::failure(abandoned.error());
-        auto archived = archive_journal(record_path, journal);
-        if (!archived) return facman::core::Result<Response>::failure(archived.error());
-        return facman::core::Result<Response>::failure(error(
-            "self_setup_recovery_required",
-            "pre-apply setup intent was retired; submit a new setup operation",
-            record_path.string()));
-      } else if (!active.apply) {
+    if (journal.files != "applied" &&
+        journal.provider_phase == "apply_entered") {
+      if (!active.apply) {
         auto reviewed = review_provider_rollback(journal, active.install_root,
                                                   active.state_root, active.acceptance_root);
         if (!reviewed) return facman::core::Result<Response>::failure(reviewed.error());
@@ -1501,13 +1543,29 @@ facman::core::Result<Response> execute(const Request &request) {
         "self_setup_version_missing", "The FacMan product version is required"));
     active.install_root = install_target.value(); active.state_root = state.value(); active.acceptance_root = acceptance.value();
     if (active.operation != Operation::uninstall) {
+      if (active.package_materializer != nullptr) {
+        auto materialized = active.package_materializer->materialize(active.package);
+        if (!materialized)
+          return facman::core::Result<Response>::failure(materialized.error());
+        active.package = materialized.take_value();
+      }
       auto checked = absolute_path(active.package, "setup payload");
-      if (!checked) return facman::core::Result<Response>::failure(checked.error());
+      if (!checked)
+        return facman::core::Result<Response>::failure(checked.error());
       active.package = checked.take_value();
+      std::error_code package_status;
+      if (!fs::is_regular_file(active.package, package_status) || package_status)
+        return facman::core::Result<Response>::failure(error(
+            "self_setup_package_missing",
+            "The setup payload is not a regular file",
+            facman::platform::path_to_utf8(active.package)));
       auto digest = stable_file_digest(active.package);
-      if (!digest) return facman::core::Result<Response>::failure(digest.error());
+      if (!digest)
+        return facman::core::Result<Response>::failure(digest.error());
       source_digest = digest.take_value();
-    } else source_digest = digest_text("facman.setup.uninstall.v1\n" + root_text);
+    } else {
+      source_digest = digest_text("facman.setup.uninstall.v1\n" + root_text);
+    }
     operation = operation_name(active.operation);
     mode = active.native_effects == nullptr ? "portable" : "installed";
     SetupJournal intended;
@@ -1531,6 +1589,54 @@ facman::core::Result<Response> execute(const Request &request) {
       if (!archived) return facman::core::Result<Response>::failure(archived.error());
     } else if (exists_error) return facman::core::Result<Response>::failure(error(
         "self_setup_recovery_required", "setup operation journal could not be observed", record_path.string()));
+  }
+
+  if (record_exists && active.operation != Operation::uninstall &&
+      journal.files != "applied") {
+    const bool use_retained_source =
+        journal.mode == "installed" && journal.repair_source == "applied";
+    if (use_retained_source) {
+      active.package = active.state_root / "repair-sources" /
+          facman::platform::path_from_utf8(
+              journal.provider_source_digest + ".zip");
+    } else if (active.package_materializer != nullptr) {
+      auto materialized = active.package_materializer->materialize(active.package);
+      if (!materialized)
+        return facman::core::Result<Response>::failure(materialized.error());
+      active.package = materialized.take_value();
+    }
+    auto checked = absolute_path(active.package, "setup payload");
+    if (!checked)
+      return facman::core::Result<Response>::failure(checked.error());
+    active.package = checked.take_value();
+    std::error_code package_status;
+    if (!fs::is_regular_file(active.package, package_status) || package_status) {
+      const auto missing = error(
+          use_retained_source ? "self_setup_recovery_required"
+                              : "self_setup_package_missing",
+          use_retained_source
+              ? "The retained setup payload required by the unfinished operation is absent"
+              : "The setup payload is not a regular file",
+          facman::platform::path_to_utf8(active.package));
+      if (record_exists && use_retained_source) {
+        journal.state = "recovery_required";
+        journal.recovery_boundary = "retained_repair_source_missing";
+        journal.last_error = missing.code;
+        auto recorded = persist_journal(record_path, journal);
+        if (!recorded)
+          return facman::core::Result<Response>::failure(recorded.error());
+      }
+      return facman::core::Result<Response>::failure(missing);
+    }
+    auto digest = stable_file_digest(active.package);
+    if (!digest)
+      return facman::core::Result<Response>::failure(digest.error());
+    if (record_exists && digest.value() != journal.provider_source_digest)
+      return facman::core::Result<Response>::failure(error(
+          "self_setup_recovery_required",
+          "The setup payload does not match the unfinished operation",
+          facman::platform::path_to_utf8(active.package)));
+    source_digest = digest.take_value();
   }
   // A preview is admitted under the root lock.  If it discovers its own
   // incomplete provider transaction, return the exact provider inspection
@@ -1579,9 +1685,88 @@ facman::core::Result<Response> execute(const Request &request) {
       return facman::core::Result<Response>::failure(persisted.error());
   }
 
+  fs::path repair_source;
+  if (active.native_effects != nullptr &&
+      !journal.installed_source_digest.empty()) {
+    repair_source = active.state_root / "repair-sources" /
+        facman::platform::path_from_utf8(
+            journal.installed_source_digest + ".zip");
+  }
+  if (active.native_effects != nullptr &&
+      active.operation != Operation::uninstall) {
+    const NativeContext retention_context{
+        active.operation, active.install_root, active.state_root,
+        active.acceptance_root, repair_source, journal.product_version};
+    if (journal.repair_source == "applied") {
+      const auto retained = active.native_effects->validate_repair_source(
+          retention_context, journal.installed_source_digest);
+      if (!retained.ok || retained.path != repair_source) {
+        journal.state = "recovery_required";
+        journal.recovery_boundary = "repair_source_ownership_unproven";
+        journal.last_error = retained.detail.empty()
+            ? "repair source path differs from durable intent"
+            : retained.detail;
+        auto recorded = persist_journal(record_path, journal);
+        if (!recorded)
+          return facman::core::Result<Response>::failure(recorded.error());
+        return facman::core::Result<Response>::failure(error(
+            "self_setup_recovery_required",
+            "The retained repair source for the unfinished operation is invalid",
+            journal.last_error));
+      }
+      active.package = retained.path;
+    } else {
+      journal.repair_source = "applying";
+      journal.state = journal.files == "applied" ? "native_applying" : "intent";
+      journal.recovery_boundary = journal.files == "applied"
+          ? "repair_source_pending" : "repair_source_pending_before_provider";
+      auto pending = persist_journal(record_path, journal);
+      if (!pending)
+        return facman::core::Result<Response>::failure(pending.error());
+      const auto retained = active.native_effects->retain_repair_source(
+          retention_context, active.package, active.maintenance_launcher,
+          journal.installed_source_digest);
+      if (!retained.ok || retained.path != repair_source) {
+        journal.last_error = retained.detail.empty()
+            ? "repair source path differs from durable intent" : retained.detail;
+        if (retained.recovery_required) {
+          journal.state = "recovery_required";
+          journal.recovery_boundary = "repair_source_ownership_unproven";
+        } else {
+          journal.repair_source = "pending";
+          journal.state = journal.files == "applied" ? "files_applied" : "intent";
+          journal.recovery_boundary = journal.files == "applied"
+              ? "repair_source_pending" : "repair_source_pending_before_provider";
+        }
+        const auto retained_error = error(
+            retained.recovery_required ? "self_setup_recovery_required"
+                                       : "self_setup_windows_integration_failed",
+            journal.files == "applied"
+                ? "FacMan files changed, but the offline repair source was not retained"
+                : "The offline repair source was not retained before provider mutation",
+            journal.last_error);
+        auto recorded = persist_journal(record_path, journal);
+        if (!recorded)
+          return facman::core::Result<Response>::failure(journal_write_failure(
+              "offline repair source failure could not be recorded",
+              retained_error, recorded.error()));
+        return facman::core::Result<Response>::failure(retained_error);
+      }
+      journal.repair_source = "applied";
+      journal.state = journal.files == "applied" ? "native_applying" : "intent";
+      journal.recovery_boundary = journal.files == "applied"
+          ? "repair_source_applied" : "repair_source_applied_before_provider";
+      journal.last_error.clear();
+      auto retained_record = persist_journal(record_path, journal);
+      if (!retained_record)
+        return facman::core::Result<Response>::failure(retained_record.error());
+      active.package = retained.path;
+    }
+  }
+
   Response provider_response;
   if (journal.files != "applied") {
-    if (!journal.provider_plan_digest.empty()) {
+    if (journal.provider_phase == "apply_entered") {
       auto recovered = apply_reviewed_provider_rollback(journal, active.install_root,
                                                          active.state_root, active.acceptance_root);
       if (recovered) {
@@ -1626,6 +1811,7 @@ facman::core::Result<Response> execute(const Request &request) {
         // transaction identity or entering apply_uninstall. It is therefore a
         // reviewed pre-effect refusal, unlike every generic provider error.
         journal.provider_plan_digest.clear();
+        journal.provider_phase = "before_plan";
         journal.provider_receipt_identity.clear();
         journal.recovery_plan_id.clear();
         journal.recovery_plan_digest.clear();
@@ -1642,21 +1828,37 @@ facman::core::Result<Response> execute(const Request &request) {
                 applied.error(), retired.error()));
         return facman::core::Result<Response>::failure(applied.error());
       }
+      if (applied.error().code == "self_setup_interrupted" &&
+          journal.provider_phase == "plan_reviewed") {
+        journal.state = "files_applying";
+        journal.recovery_boundary = "provider_plan_reviewed_before_apply";
+        journal.last_error = applied.error().code;
+        auto recorded = persist_journal(record_path, journal);
+        if (!recorded)
+          return facman::core::Result<Response>::failure(journal_write_failure(
+              "provider plan-review interruption could not be recorded",
+              applied.error(), recorded.error()));
+        return facman::core::Result<Response>::failure(applied.error());
+      }
       if (provider_progress != ProviderProgress::apply_entered) {
-        journal.provider_plan_digest.clear();
-        journal.provider_receipt_identity.clear();
-        journal.recovery_plan_id.clear();
-        journal.recovery_plan_digest.clear();
-        journal.recovery_plan_created_at.clear();
-        journal.recovery_action.clear();
         journal.files = "pending";
         if (applied.error().code == "self_setup_recovery_required") {
           journal.state = "recovery_required";
           journal.recovery_boundary =
-              provider_progress == ProviderProgress::plan_reviewed
-                  ? "repair_source_ownership_unproven"
+              provider_progress == ProviderProgress::plan_reviewed &&
+                      active.operation == Operation::uninstall
+                  ? "maintenance_launcher_ownership_unproven"
+              : provider_progress == ProviderProgress::plan_reviewed
+                  ? "provider_plan_identity_unproven"
                   : "pre_provider_identity_ownership_unproven";
         } else {
+          journal.provider_plan_digest.clear();
+          journal.provider_phase = "before_plan";
+          journal.provider_receipt_identity.clear();
+          journal.recovery_plan_id.clear();
+          journal.recovery_plan_digest.clear();
+          journal.recovery_plan_created_at.clear();
+          journal.recovery_action.clear();
           journal.state = "abandoned";
           journal.recovery_boundary = "abandoned_before_provider_apply";
         }
@@ -1689,7 +1891,6 @@ facman::core::Result<Response> execute(const Request &request) {
           facman::platform::path_to_utf8(record_path)));
   }
 
-  fs::path repair_source;
   if (active.native_effects != nullptr && !journal.installed_source_digest.empty()) {
     repair_source = active.state_root / "repair-sources" /
         facman::platform::path_from_utf8(journal.installed_source_digest + ".zip");
@@ -1697,47 +1898,6 @@ facman::core::Result<Response> execute(const Request &request) {
   const NativeContext native_context{active.operation, active.install_root,
       active.state_root, active.acceptance_root, repair_source,
       journal.product_version};
-  if (active.native_effects != nullptr && active.operation != Operation::uninstall) {
-    if (journal.repair_source != "applied") {
-      journal.repair_source = "applying";
-      journal.state = "native_applying";
-      journal.recovery_boundary = "repair_source_pending";
-      auto pending = persist_journal(record_path, journal);
-      if (!pending)
-        return facman::core::Result<Response>::failure(pending.error());
-      const auto retained = active.native_effects->retain_repair_source(
-          native_context, active.package, journal.installed_source_digest);
-      if (!retained.ok || retained.path != repair_source) {
-        journal.last_error = retained.detail.empty()
-            ? "repair source path differs from durable intent" : retained.detail;
-        if (retained.recovery_required) {
-          journal.state = "recovery_required";
-          journal.recovery_boundary = "repair_source_ownership_unproven";
-        } else {
-          journal.state = "files_applied";
-          journal.recovery_boundary = "repair_source_pending";
-        }
-        const auto retained_error = error(
-            retained.recovery_required ? "self_setup_recovery_required"
-                                       : "self_setup_windows_integration_failed",
-            "FacMan files changed, but the offline repair source was not retained",
-            journal.last_error);
-        auto recorded = persist_journal(record_path, journal);
-        if (!recorded)
-          return facman::core::Result<Response>::failure(journal_write_failure(
-              "offline repair source failure could not be recorded",
-              retained_error, recorded.error()));
-        return facman::core::Result<Response>::failure(retained_error);
-      }
-      journal.repair_source = "applied";
-      journal.state = "native_applying";
-      journal.recovery_boundary = "repair_source_applied";
-      journal.last_error.clear();
-      auto retained_record = persist_journal(record_path, journal);
-      if (!retained_record)
-        return facman::core::Result<Response>::failure(retained_record.error());
-    }
-  }
 
   if (active.native_effects != nullptr) {
     for (const NativeEffect effect : {NativeEffect::shortcut, NativeEffect::registration}) {

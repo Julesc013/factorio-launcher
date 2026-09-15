@@ -57,8 +57,12 @@ public:
   virtual RetainedSourceResult retain_repair_source(
       const NativeContext &context,
       const std::filesystem::path &package,
+      const std::filesystem::path &maintenance_launcher,
       const std::string &expected_sha256) = 0;
   virtual RetainedSourceResult validate_repair_source(
+      const NativeContext &context,
+      const std::string &expected_sha256) = 0;
+  virtual RetainedSourceResult validate_maintenance_launcher(
       const NativeContext &context,
       const std::string &expected_sha256) = 0;
   virtual NativeOwnership inspect(const NativeContext &context,
@@ -70,7 +74,11 @@ public:
 // Called only after a named durable journal boundary is successfully
 // persisted. It is intentionally narrow so tests and embedders can model an
 // interruption without modifying a journal behind the coordinator's back.
-enum class DurableBoundary { files_applied, shortcut_applied };
+enum class DurableBoundary {
+  provider_plan_reviewed,
+  files_applied,
+  shortcut_applied,
+};
 
 class DurableBoundaryHook {
 public:
@@ -105,9 +113,20 @@ public:
   virtual std::filesystem::path test_coordinator_root() const { return {}; }
 };
 
+// Production uses this seam to defer ZIP-overlay extraction until durable
+// admission has checked for an unfinished operation. The returned path must
+// remain valid for the duration of execute().
+class PackageMaterializer {
+public:
+  virtual ~PackageMaterializer() = default;
+  virtual facman::core::Result<std::filesystem::path> materialize(
+      const std::filesystem::path &source) = 0;
+};
+
 struct Request {
   Operation operation = Operation::verify;
   std::filesystem::path package;
+  std::filesystem::path maintenance_launcher;
   std::filesystem::path install_root;
   std::filesystem::path state_root;
   std::filesystem::path acceptance_root;
@@ -117,6 +136,7 @@ struct Request {
   // records native effects as not_applicable in the composite journal.
   NativeEffects *native_effects = nullptr;
   ProviderEffects *provider_effects = nullptr;
+  PackageMaterializer *package_materializer = nullptr;
   DurableBoundaryHook *durable_boundary_hook = nullptr;
   std::optional<QualificationClaims> qualification_claims;
 };

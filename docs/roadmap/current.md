@@ -470,6 +470,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`
   - Outcome: Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback.
+- [ ] **FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01** — Complete independent FacMan self-maintenance
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none; closes after `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
+  - Outcome: Update, repair and remove FacMan independently of Factorio install/content authority.
 - [x] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -551,10 +555,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none
   - Outcome: Back up selected worlds consistently with exact source identity, stable metadata and owned destination roots.
-- [ ] **FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01** — Complete independent FacMan self-maintenance
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
-  - Outcome: Update, repair and remove FacMan independently of Factorio install/content authority.
 - [ ] **FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01** — Build matching Terminal and Desktop delivery profiles
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`

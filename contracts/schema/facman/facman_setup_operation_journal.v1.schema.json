@@ -123,6 +123,13 @@
           "type": "string",
           "pattern": "^$|^[a-f0-9]{64}$"
         },
+        "phase": {
+          "enum": [
+            "before_plan",
+            "plan_reviewed",
+            "apply_entered"
+          ]
+        },
         "receipt_identity": {
           "type": "string",
           "pattern": "^$|^[a-f0-9]{64}$"
@@ -224,6 +231,68 @@
     }
   },
   "allOf": [
+    {
+      "if": {
+        "properties": {
+          "provider": {
+            "required": ["phase"],
+            "properties": {
+              "phase": {"const": "before_plan"}
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provider": {
+            "properties": {
+              "plan_digest": {"const": ""}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provider": {
+            "required": ["phase"],
+            "properties": {
+              "phase": {"enum": ["plan_reviewed", "apply_entered"]}
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provider": {
+            "properties": {
+              "plan_digest": {"pattern": "^[a-f0-9]{64}$"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effects": {
+            "properties": {
+              "files": {"const": "applied"}
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provider": {
+            "properties": {
+              "phase": {"const": "apply_entered"}
+            }
+          }
+        }
+      }
+    },
     {
       "if": {
         "properties": {
@@ -530,11 +599,6 @@
               "files": {
                 "const": "pending"
               },
-              "repair_source": {
-                "not": {
-                  "const": "applied"
-                }
-              },
               "shortcut": {
                 "not": {
                   "const": "applied"
@@ -551,6 +615,9 @@
             "properties": {
               "plan_digest": {
                 "pattern": "^[a-f0-9]{64}$"
+              },
+              "phase": {
+                "const": "apply_entered"
               }
             }
           },
@@ -590,6 +657,9 @@
             "properties": {
               "plan_digest": {
                 "const": ""
+              },
+              "phase": {
+                "const": "before_plan"
               },
               "receipt_identity": {
                 "const": ""
@@ -694,11 +764,6 @@
           "effects": {
             "properties": {
               "shortcut": {
-                "not": {
-                  "const": "applied"
-                }
-              },
-              "repair_source": {
                 "not": {
                   "const": "applied"
                 }

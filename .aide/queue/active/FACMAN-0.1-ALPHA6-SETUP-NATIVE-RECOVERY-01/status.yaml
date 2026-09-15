@@ -7,3 +7,4 @@ result: PENDING
 created_at: 2026-09-06
 evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/
 active_at: 2026-09-13T11:36:17Z
+integration_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/integration-checkpoint.json
