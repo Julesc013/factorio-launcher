@@ -802,6 +802,61 @@ facman::core::Result<std::string> command(const std::string &name,
   return facman::core::Result<std::string>::success(std::move(output));
 }
 
+facman::core::Result<void> prepare_provider_parent(
+    const fs::path &state_root, const fs::path &acceptance_root) {
+  facman::platform::StableDirectoryObject acceptance;
+  auto opened = acceptance.open_no_follow(acceptance_root);
+  if (!opened.ok())
+    return facman::core::Result<void>::failure(error(
+        "self_setup_state_root_unsafe",
+        "setup acceptance root is not a stable plain directory",
+        opened.code + ": " + opened.detail));
+  auto admitted = acceptance.validate_descendant(state_root, true);
+  if (!admitted.ok())
+    return facman::core::Result<void>::failure(error(
+        "self_setup_state_root_unsafe",
+        "FacMan setup-state root is outside its stable acceptance authority",
+        admitted.code + ": " + admitted.detail));
+
+  facman::platform::PathIdentity observed;
+  auto inspected = facman::platform::inspect_path_no_follow(state_root, observed);
+  if (!inspected.ok())
+    return facman::core::Result<void>::failure(error(
+        "self_setup_state_root_unsafe",
+        "FacMan setup-state root could not be inspected",
+        inspected.code + ": " + inspected.detail));
+  if (!observed.exists) {
+    std::error_code status;
+    const bool created = fs::create_directory(state_root, status);
+    if (status || !created)
+      return facman::core::Result<void>::failure(error(
+          "self_setup_state_root_unsafe",
+          "FacMan setup-state root could not be created exclusively",
+          status ? status.message() : "the admitted absent path changed before creation"));
+  }
+
+  facman::platform::StableDirectoryObject state;
+  opened = state.open_no_follow(state_root);
+  if (!opened.ok())
+    return facman::core::Result<void>::failure(error(
+        "self_setup_state_root_unsafe",
+        "FacMan setup-state root is not a stable plain directory",
+        opened.code + ": " + opened.detail));
+  admitted = acceptance.validate_descendant(state_root);
+  if (!admitted.ok())
+    return facman::core::Result<void>::failure(error(
+        "self_setup_state_root_unsafe",
+        "FacMan setup-state root changed after creation",
+        admitted.code + ": " + admitted.detail));
+  auto stable = state.revalidate();
+  if (!stable.ok())
+    return facman::core::Result<void>::failure(error(
+        "self_setup_state_root_unsafe",
+        "FacMan setup-state root changed after it was opened",
+        stable.code + ": " + stable.detail));
+  return facman::core::Result<void>::success();
+}
+
 struct ProviderPlanIdentity {
   std::string plan_id;
   std::string digest;
@@ -1001,6 +1056,17 @@ install_or_repair(const Request &request, const fs::path &package,
     plan_command = "repair.plan";
     apply_command = "repair.apply";
     apply_schema = "usk.repair_apply_request.v1";
+  }
+
+  // Preview remains effect-free. During an applied first install FacMan
+  // creates only its outer state directory, after durable intent exists and
+  // before planning. Universal Setup still exclusively creates and marks its
+  // dedicated `usk` child, and both plan and apply observe the same parent.
+  if (identity != nullptr && injected_provider == nullptr &&
+      request.operation == Operation::install) {
+    auto prepared = prepare_provider_parent(state_root, acceptance_root);
+    if (!prepared)
+      return facman::core::Result<Response>::failure(prepared.error());
   }
 
   auto planned = command(plan_command, plan.serialize(), state_root,

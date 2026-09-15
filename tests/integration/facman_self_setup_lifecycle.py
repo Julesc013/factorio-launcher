@@ -859,8 +859,10 @@ def main() -> int:
             executable, "install", "--package", package, "--root", install,
             "--state-root", state, "--acceptance-root", root,
         )
-        if plan.get("phase") != "plan" or install.exists():
-            raise AssertionError("install preview changed the target or returned the wrong phase")
+        if plan.get("phase") != "plan" or install.exists() or state.exists():
+            raise AssertionError(
+                "install preview changed the target/state or returned the wrong phase"
+            )
 
         installed = invoke(
             executable, "install", "--package", package, "--root", install,
