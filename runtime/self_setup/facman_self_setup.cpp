@@ -759,7 +759,11 @@ facman::core::Result<std::string> command(const std::string &name,
                                           bool dry_run) {
   if (injected_provider != nullptr)
     return injected_provider->command(name, payload, state_root, acceptance_root, dry_run);
-  const std::string state = facman::platform::path_to_utf8(state_root);
+  // FacMan owns the outer setup-state root, including retained offline repair
+  // inputs. Universal Setup receives a dedicated child so its ownership marker
+  // and transaction records never compete with those FacMan-owned files.
+  const fs::path provider_state_root = (state_root / "usk").lexically_normal();
+  const std::string state = facman::platform::path_to_utf8(provider_state_root);
   const std::string acceptance =
       facman::platform::path_to_utf8(acceptance_root);
   usk_config_v1 config{};

@@ -3,6 +3,7 @@
 
 #include "windows_integration.h"
 #include "fl_json.h"
+#include "fl_path_safety.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -49,9 +50,31 @@ fs::path normalized(const fs::path &path) {
   return result;
 }
 
+fs::path expanded_long_path(const fs::path &path) {
+  const fs::path lexical = normalized(path);
+  std::vector<wchar_t> buffer(32768U, L'\0');
+  fs::path existing = lexical;
+  fs::path suffix;
+  while (!existing.empty()) {
+    const DWORD length = GetLongPathNameW(
+        existing.c_str(), buffer.data(), static_cast<DWORD>(buffer.size()));
+    if (length != 0U && length < buffer.size()) {
+      return normalized(fs::path(std::wstring(buffer.data(), length)) / suffix);
+    }
+    if (existing == existing.root_path()) break;
+    suffix = existing.filename() / suffix;
+    existing = existing.parent_path();
+  }
+  return lexical;
+}
+
 bool same_path(const fs::path &left, const fs::path &right) {
+  std::string detail;
   return left.is_absolute() && right.is_absolute() &&
-         equal(normalized(left).wstring(), normalized(right).wstring());
+         !facman::base::path_crosses_link_or_reparse_point(left, detail) &&
+         !facman::base::path_crosses_link_or_reparse_point(right, detail) &&
+         equal(expanded_long_path(left).wstring(),
+               expanded_long_path(right).wstring());
 }
 
 std::wstring quoted(const fs::path &path) {

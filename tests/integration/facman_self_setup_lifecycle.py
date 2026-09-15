@@ -343,8 +343,13 @@ def assert_absent_native(shortcut: dict[str, object], registry: dict[str, object
 
 
 def same_windows_path(left: object, right: Path) -> bool:
-    return isinstance(left, str) and os.path.normcase(os.path.normpath(left)) == \
-        os.path.normcase(os.path.normpath(str(right)))
+    if not isinstance(left, str):
+        return False
+    try:
+        return os.path.samefile(left, right)
+    except OSError:
+        return os.path.normcase(os.path.realpath(left)) == \
+            os.path.normcase(os.path.realpath(right))
 
 
 def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object],

@@ -26,7 +26,7 @@ no administrator rights and creates:
   state\current-generation.v1.json
 
 %LOCALAPPDATA%\FacMan\setup\
-  Universal Setup journals, manifests, and receipts
+  usk\                          Universal Setup journals, manifests, and receipts
   repair-sources\<payload-sha256>.zip
   repair-sources\<payload-sha256>.FacManSetup.exe
 

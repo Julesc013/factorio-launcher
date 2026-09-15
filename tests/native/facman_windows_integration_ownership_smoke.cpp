@@ -289,6 +289,29 @@ void identity_cases() {
   require(!integration::owns_shortcut(root, changed), "relative shortcut target refused");
   require(!integration::owns_shortcut("FacMan", shortcut), "relative owner root refused");
 
+  const fs::path alias_fixture = fs::path(FACMAN_TEST_TEMP_ROOT) /
+      ("path-alias-" + std::to_string(GetCurrentProcessId()));
+  std::error_code alias_error;
+  fs::remove_all(alias_fixture, alias_error);
+  fs::create_directories(alias_fixture / "generations" / "1.0.0", alias_error);
+  require(!alias_error, "path-alias fixture created");
+  std::ofstream(alias_fixture / "generations" / "1.0.0" / "FacMan.exe",
+                std::ios::binary) << "fixture";
+  std::array<wchar_t, 32768> short_buffer{};
+  const DWORD short_length = GetShortPathNameW(
+      alias_fixture.c_str(), short_buffer.data(),
+      static_cast<DWORD>(short_buffer.size()));
+  require(short_length != 0U && short_length < short_buffer.size(),
+          "Windows short spelling for owned fixture is available");
+  const fs::path alias_root(std::wstring(short_buffer.data(), short_length));
+  integration::ShortcutIdentity alias_shortcut{
+      alias_fixture / "generations" / "1.0.0" / "FacMan.exe",
+      alias_fixture / "generations" / "1.0.0", L""};
+  require(integration::owns_shortcut(alias_root, alias_shortcut),
+          "Windows short and long spellings bind the same owned shortcut");
+  fs::remove_all(alias_fixture, alias_error);
+  require(!alias_error, "path-alias fixture retired");
+
   const fs::path state = LR"(C:\Users\Tester\AppData\Local\FacMan\setup)";
   const fs::path acceptance = LR"(C:\Users\Tester\AppData\Local)";
   const fs::path source = state / "repair-sources" /

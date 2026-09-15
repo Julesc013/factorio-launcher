@@ -973,8 +973,7 @@ facman::self_setup::RetainedSourceResult retain_repair_source(
   facman::platform::StableDirectoryObject state;
   const auto state_opened = state.open_no_follow(state_root);
   if (!state_opened.ok() ||
-      !state.validate_descendant(directory, true).ok() ||
-      !state.validate_descendant(destination, true).ok())
+      !state.validate_descendant(directory, true).ok())
     return {false, {}, "repair source cache is outside the stable setup-state root", true};
 
   if (!fs::exists(directory, status)) {

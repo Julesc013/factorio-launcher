@@ -292,6 +292,42 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
             with self.subTest(runtime_token=token):
                 self.assertIn(token, runtime)
 
+    def test_first_repair_retention_creates_and_pins_cache_before_leaf_validation(self) -> None:
+        source = (ROOT / "apps/setup/main.cpp").read_text(encoding="utf-8")
+        start = source.index("facman::self_setup::RetainedSourceResult retain_repair_source(")
+        end = source.index("\nclass SetupNativeEffects final", start)
+        retention = source[start:end]
+
+        state_open = retention.index("state.open_no_follow(state_root)")
+        absent_cache = retention.index("state.validate_descendant(directory, true)")
+        create_cache = retention.index("fs::create_directory(directory, status)")
+        pin_cache = retention.index("cache.open_no_follow(directory)")
+        revalidate_state = retention.index("state.revalidate()", pin_cache)
+        absent_destination = retention.index(
+            "state.validate_descendant(destination, true)", pin_cache
+        )
+        self.assertLess(state_open, absent_cache)
+        self.assertLess(absent_cache, create_cache)
+        self.assertLess(create_cache, pin_cache)
+        self.assertLess(pin_cache, revalidate_state)
+        self.assertLess(revalidate_state, absent_destination)
+        self.assertNotIn(
+            "state.validate_descendant(destination, true)",
+            retention[absent_cache:create_cache],
+        )
+
+    def test_provider_state_is_isolated_below_facman_owned_setup_state(self) -> None:
+        source = (ROOT / "runtime/self_setup/facman_self_setup.cpp").read_text(
+            encoding="utf-8"
+        )
+        command = source[source.index("facman::core::Result<std::string> command(") :]
+        injected = command.index("injected_provider->command(")
+        provider_child = command.index('(state_root / "usk").lexically_normal()')
+        provider_config = command.index("config.state_root = state.c_str()")
+        self.assertLess(injected, provider_child)
+        self.assertLess(provider_child, provider_config)
+        self.assertIn('active.state_root / "repair-sources"', source)
+
 
 if __name__ == "__main__":
     unittest.main()
