@@ -89,7 +89,7 @@ Generate that fail-closed observation after checkout with
 ## Capability snapshot
 
 - available: `install.discover, install.model.inspect, install.reconciliation.plan, install.reference.register, launch.preflight, launch.preview`;
-- conditional: `install.managed.plan, install.managed.uninstall.apply, process.execute`;
+- conditional: `install.managed.plan, install.managed.uninstall.apply, install.managed.uninstall.recover, process.execute`;
 - backlog: `install.existing.adoption.plan, install.existing.inspect`;
 - unavailable: `credential.factorio.read, install.existing.adoption.apply, install.managed.apply, launch.execute.hermetic, launch.execute.instance_isolated, network.mod_portal.read, network.mod_portal.write, release.publish, release.sign`;
 
@@ -110,8 +110,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `131` / `129`;
-- schemas / refusal codes: `421` / `267`;
-- command catalog digest: `db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b`;
+- schemas / refusal codes: `426` / `285`;
+- command catalog digest: `5c578b2078163cfc7e4f376fc630c30b5ae64a32d92f778ee97b8712c3c95f4f`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 

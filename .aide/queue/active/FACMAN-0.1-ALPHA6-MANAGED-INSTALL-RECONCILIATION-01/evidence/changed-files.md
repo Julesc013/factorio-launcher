@@ -128,3 +128,212 @@ Linux/macOS qualification or release status is added by this source change.
   command surfaces, project state and WorkUnit records carry the resulting
   contract identities and evidence. The task allowlist names the one changed
   policy checker exactly.
+
+## Provider-backed managed repair plan/apply changed paths
+
+Exact uncommitted path set after generated-report restoration (64 paths):
+
+- `.aide/memory/project-state.md`
+- `.aide/memory/project-state.v2.json`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/changed-files.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/remaining-risks.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/validation.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/ExecPlan.md`
+- `apps/cli/command_dispatch.cpp`
+- `apps/cli/completions/_facman`
+- `apps/cli/completions/facman.bash`
+- `apps/cli/completions/facman.fish`
+- `apps/cli/completions/FacMan.ps1`
+- `apps/cli/generated/command_help.inc`
+- `apps/cli/setup_commands.cpp`
+- `apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h`
+- `apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m`
+- `apps/gui/windows/winforms/GeneratedCommandCatalog.cs`
+- `apps/tui/generated_command_catalog.hpp`
+- `content/factorio/strings/en-US.toml`
+- `contracts/command/factorio/installs.repair.apply.v1.toml`
+- `contracts/command/factorio/installs.repair.plan.v1.toml`
+- `contracts/command/frontend/frontend.required_commands.v1.toml`
+- `contracts/command/request_fields.v1.json`
+- `contracts/generated-index/command_catalog.v2.json`
+- `contracts/generated-index/command_cli_grammar.v2.json`
+- `contracts/generated-index/frontend_command_catalog.v1.json`
+- `contracts/refusal/refusal_codes.v1.toml`
+- `contracts/schema/command/installs.repair.apply.request.v1.schema.json`
+- `contracts/schema/command/installs.repair.plan.request.v1.schema.json`
+- `contracts/schema/factorio/facman_managed_repair_coordinator.v1.schema.json`
+- `contracts/schema/factorio/factorio_managed_repair_apply_result.v1.schema.json`
+- `contracts/schema/factorio/factorio_managed_repair_plan.v1.schema.json`
+- `contracts/schema/factorio/usk_repair_plan.v1.schema.json`
+- `docs/reference/generated-command-catalog.md`
+- `README.md`
+- `release/generated/technical_preview_command_api_conformance.v1.json`
+- `release/index/current_state.v1.toml`
+- `runtime/core/generated/command_catalog.h`
+- `runtime/core/generated/version.h`
+- `runtime/factorio/application/application_types.h`
+- `runtime/factorio/application/command_admission.cpp`
+- `runtime/factorio/application/command_dispatch.cpp`
+- `runtime/factorio/application/generated/command_ids.inc`
+- `runtime/factorio/application/generated/command_lookup.inc`
+- `runtime/factorio/application/generated/command_names.inc`
+- `runtime/factorio/application/generated/command_writes.inc`
+- `runtime/factorio/application/generated/request_contracts.inc`
+- `runtime/factorio/application/handlers/installs.cpp`
+- `runtime/factorio/application/handlers/installs.h`
+- `runtime/factorio/application/handlers/recovery.cpp`
+- `runtime/factorio/application/handlers/setup.cpp`
+- `runtime/factorio/application/handlers/setup.h`
+- `runtime/factorio/application/modules/installation_module.cpp`
+- `runtime/factorio/application/setup_gateway.cpp`
+- `runtime/factorio/application/setup_gateway.h`
+- `tests/golden/commands/installs.repair.apply.refusal.json`
+- `tests/golden/commands/installs.repair.apply.success.json`
+- `tests/golden/commands/installs.repair.plan.success.json`
+- `tests/native/facman_application_types_smoke.cpp`
+- `tests/native/m1_system_proof_fixture.cpp`
+- `tests/native/m1_three_repository_system_proof.cpp`
+- `tests/test_cli.py`
+- `tests/test_generated_metadata.py`
+- `tools/codegen/generate_metadata.py`
+- `tools/setup_workflow_check.py`
+
+## Corrected final managed repair postimage
+
+The earlier 64-path snapshot included `release/index/current_state.v1.toml` from a line-ending-only worktree status even though it had no content diff. Its exact index bytes were restored. This append-only correction supersedes that snapshot.
+
+Exact final uncommitted path set after remediation and report restoration (63 paths):
+
+- `.aide/memory/project-state.md`
+- `.aide/memory/project-state.v2.json`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/changed-files.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/remaining-risks.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/validation.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/ExecPlan.md`
+- `apps/cli/command_dispatch.cpp`
+- `apps/cli/completions/_facman`
+- `apps/cli/completions/facman.bash`
+- `apps/cli/completions/facman.fish`
+- `apps/cli/completions/FacMan.ps1`
+- `apps/cli/generated/command_help.inc`
+- `apps/cli/setup_commands.cpp`
+- `apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h`
+- `apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m`
+- `apps/gui/windows/winforms/GeneratedCommandCatalog.cs`
+- `apps/tui/generated_command_catalog.hpp`
+- `content/factorio/strings/en-US.toml`
+- `contracts/command/factorio/installs.repair.apply.v1.toml`
+- `contracts/command/factorio/installs.repair.plan.v1.toml`
+- `contracts/command/frontend/frontend.required_commands.v1.toml`
+- `contracts/command/request_fields.v1.json`
+- `contracts/generated-index/command_catalog.v2.json`
+- `contracts/generated-index/command_cli_grammar.v2.json`
+- `contracts/generated-index/frontend_command_catalog.v1.json`
+- `contracts/refusal/refusal_codes.v1.toml`
+- `contracts/schema/command/installs.repair.apply.request.v1.schema.json`
+- `contracts/schema/command/installs.repair.plan.request.v1.schema.json`
+- `contracts/schema/factorio/facman_managed_repair_coordinator.v1.schema.json`
+- `contracts/schema/factorio/factorio_managed_repair_apply_result.v1.schema.json`
+- `contracts/schema/factorio/factorio_managed_repair_plan.v1.schema.json`
+- `contracts/schema/factorio/usk_repair_plan.v1.schema.json`
+- `docs/reference/generated-command-catalog.md`
+- `README.md`
+- `release/generated/technical_preview_command_api_conformance.v1.json`
+- `runtime/core/generated/command_catalog.h`
+- `runtime/core/generated/version.h`
+- `runtime/factorio/application/application_types.h`
+- `runtime/factorio/application/command_admission.cpp`
+- `runtime/factorio/application/command_dispatch.cpp`
+- `runtime/factorio/application/generated/command_ids.inc`
+- `runtime/factorio/application/generated/command_lookup.inc`
+- `runtime/factorio/application/generated/command_names.inc`
+- `runtime/factorio/application/generated/command_writes.inc`
+- `runtime/factorio/application/generated/request_contracts.inc`
+- `runtime/factorio/application/handlers/installs.cpp`
+- `runtime/factorio/application/handlers/installs.h`
+- `runtime/factorio/application/handlers/recovery.cpp`
+- `runtime/factorio/application/handlers/setup.cpp`
+- `runtime/factorio/application/handlers/setup.h`
+- `runtime/factorio/application/modules/installation_module.cpp`
+- `runtime/factorio/application/setup_gateway.cpp`
+- `runtime/factorio/application/setup_gateway.h`
+- `tests/golden/commands/installs.repair.apply.refusal.json`
+- `tests/golden/commands/installs.repair.apply.success.json`
+- `tests/golden/commands/installs.repair.plan.success.json`
+- `tests/native/facman_application_types_smoke.cpp`
+- `tests/native/m1_system_proof_fixture.cpp`
+- `tests/native/m1_three_repository_system_proof.cpp`
+- `tests/test_cli.py`
+- `tests/test_generated_metadata.py`
+- `tools/codegen/generate_metadata.py`
+- `tools/setup_workflow_check.py`
+
+## Final exact post-restoration path reconciliation
+
+The reviewer-observed 64-path state included `release/index/current_state.v1.toml` as a line-ending-only worktree status. After protected-report restoration and exact byte restoration of that content-clean file, `git status --short` reports 63 paths and the release current-state file is clean. This final append-only snapshot supersedes the earlier counts.
+
+Exact final uncommitted path set (63 paths):
+
+- `.aide/memory/project-state.md`
+- `.aide/memory/project-state.v2.json`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/changed-files.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/remaining-risks.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/validation.md`
+- `.aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/ExecPlan.md`
+- `apps/cli/command_dispatch.cpp`
+- `apps/cli/completions/_facman`
+- `apps/cli/completions/facman.bash`
+- `apps/cli/completions/facman.fish`
+- `apps/cli/completions/FacMan.ps1`
+- `apps/cli/generated/command_help.inc`
+- `apps/cli/setup_commands.cpp`
+- `apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h`
+- `apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m`
+- `apps/gui/windows/winforms/GeneratedCommandCatalog.cs`
+- `apps/tui/generated_command_catalog.hpp`
+- `content/factorio/strings/en-US.toml`
+- `contracts/command/factorio/installs.repair.apply.v1.toml`
+- `contracts/command/factorio/installs.repair.plan.v1.toml`
+- `contracts/command/frontend/frontend.required_commands.v1.toml`
+- `contracts/command/request_fields.v1.json`
+- `contracts/generated-index/command_catalog.v2.json`
+- `contracts/generated-index/command_cli_grammar.v2.json`
+- `contracts/generated-index/frontend_command_catalog.v1.json`
+- `contracts/refusal/refusal_codes.v1.toml`
+- `contracts/schema/command/installs.repair.apply.request.v1.schema.json`
+- `contracts/schema/command/installs.repair.plan.request.v1.schema.json`
+- `contracts/schema/factorio/facman_managed_repair_coordinator.v1.schema.json`
+- `contracts/schema/factorio/factorio_managed_repair_apply_result.v1.schema.json`
+- `contracts/schema/factorio/factorio_managed_repair_plan.v1.schema.json`
+- `contracts/schema/factorio/usk_repair_plan.v1.schema.json`
+- `docs/reference/generated-command-catalog.md`
+- `README.md`
+- `release/generated/technical_preview_command_api_conformance.v1.json`
+- `runtime/core/generated/command_catalog.h`
+- `runtime/core/generated/version.h`
+- `runtime/factorio/application/application_types.h`
+- `runtime/factorio/application/command_admission.cpp`
+- `runtime/factorio/application/command_dispatch.cpp`
+- `runtime/factorio/application/generated/command_ids.inc`
+- `runtime/factorio/application/generated/command_lookup.inc`
+- `runtime/factorio/application/generated/command_names.inc`
+- `runtime/factorio/application/generated/command_writes.inc`
+- `runtime/factorio/application/generated/request_contracts.inc`
+- `runtime/factorio/application/handlers/installs.cpp`
+- `runtime/factorio/application/handlers/installs.h`
+- `runtime/factorio/application/handlers/recovery.cpp`
+- `runtime/factorio/application/handlers/setup.cpp`
+- `runtime/factorio/application/handlers/setup.h`
+- `runtime/factorio/application/modules/installation_module.cpp`
+- `runtime/factorio/application/setup_gateway.cpp`
+- `runtime/factorio/application/setup_gateway.h`
+- `tests/golden/commands/installs.repair.apply.refusal.json`
+- `tests/golden/commands/installs.repair.apply.success.json`
+- `tests/golden/commands/installs.repair.plan.success.json`
+- `tests/native/facman_application_types_smoke.cpp`
+- `tests/native/m1_system_proof_fixture.cpp`
+- `tests/native/m1_three_repository_system_proof.cpp`
+- `tests/test_cli.py`
+- `tests/test_generated_metadata.py`
+- `tools/codegen/generate_metadata.py`
+- `tools/setup_workflow_check.py`

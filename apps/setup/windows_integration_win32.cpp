@@ -54,9 +54,67 @@ bool same_path(const fs::path &left, const fs::path &right) {
          equal(normalized(left).wstring(), normalized(right).wstring());
 }
 
-std::wstring uninstall_command(const fs::path &root) {
-  return L"\"" + (root / "maintenance" / "FacManSetup.exe").wstring() +
-         L"\" uninstall --yes";
+std::wstring quoted(const fs::path &path) {
+  const std::wstring value = normalized(path).wstring();
+  std::wstring result(1, L'"');
+  std::size_t backslashes = 0;
+  for (const wchar_t character : value) {
+    if (character == L'\\') {
+      ++backslashes;
+      continue;
+    }
+    result.append(character == L'"' ? backslashes * 2U + 1U : backslashes,
+                  L'\\');
+    result.push_back(character);
+    backslashes = 0;
+  }
+  result.append(backslashes * 2U, L'\\');
+  result.push_back(L'"');
+  return result;
+}
+
+fs::path maintenance_launcher(const MaintenanceContext &context) {
+  if (context.repair_source.empty() ||
+      context.repair_source.extension() != ".zip") return {};
+  return context.repair_source.parent_path() /
+      fs::path(context.repair_source.stem().wstring() + L".FacManSetup.exe");
+}
+
+std::wstring uninstall_command(const MaintenanceContext &context) {
+  return quoted(maintenance_launcher(context)) + L" uninstall --root " +
+      quoted(context.install_root) + L" --state-root " +
+      quoted(context.state_root) + L" --acceptance-root " +
+      quoted(context.acceptance_root) +
+      L" --yes --noninteractive --shell-integration";
+}
+
+std::wstring modify_command(const MaintenanceContext &context) {
+  return quoted(maintenance_launcher(context)) + L" repair --package " +
+      quoted(context.repair_source) + L" --root " +
+      quoted(context.install_root) + L" --state-root " +
+      quoted(context.state_root) + L" --acceptance-root " +
+      quoted(context.acceptance_root) +
+      L" --yes --noninteractive --shell-integration";
+}
+
+std::wstring legacy_uninstall_command(const MaintenanceContext &context) {
+  const fs::path maintenance = normalized(context.install_root) /
+      "maintenance" / "FacManSetup.exe";
+  return quoted(maintenance) + L" uninstall --yes";
+}
+
+bool owns_current_registration(const MaintenanceContext &context,
+                               const RegistrationIdentity &identity) {
+  return !identity.unexpected_content && equal(identity.display_name, L"FacMan") &&
+         same_path(context.install_root, identity.install_location) &&
+         equal(identity.uninstall_command, uninstall_command(context));
+}
+
+bool owns_legacy_registration(const MaintenanceContext &context,
+                              const RegistrationIdentity &identity) {
+  return !identity.unexpected_content && equal(identity.display_name, L"FacMan") &&
+         same_path(context.install_root, identity.install_location) &&
+         equal(identity.uninstall_command, legacy_uninstall_command(context));
 }
 
 fs::path start_menu_link() {
@@ -151,7 +209,7 @@ bool registry_string(HKEY key, const wchar_t *name, std::wstring &value) {
   return value.find(L'\0') == std::wstring::npos;
 }
 
-Ownership registration_ownership(HKEY key, const fs::path &root) {
+Ownership registration_ownership(HKEY key, const MaintenanceContext &context) {
   RegistrationIdentity identity;
   std::wstring location;
   if (!registry_string(key, L"InstallLocation", location) ||
@@ -177,17 +235,20 @@ Ownership registration_ownership(HKEY key, const fs::path &root) {
     for (const auto *allowed : expected) recognized = recognized || equal(name.data(), allowed);
     identity.unexpected_content = !recognized;
   }
-  return owns_registration(root, identity) ? Ownership::owned : Ownership::foreign;
+  if (owns_current_registration(context, identity)) return Ownership::owned;
+  return owns_legacy_registration(context, identity)
+      ? Ownership::owned_stale : Ownership::foreign;
 }
 
-Ownership open_registration(const fs::path &root, Key &key, HANDLE transaction = nullptr) {
+Ownership open_registration(const MaintenanceContext &context, Key &key,
+                            HANDLE transaction = nullptr) {
   const LSTATUS result = transaction == nullptr
       ? RegOpenKeyExW(HKEY_CURRENT_USER, registry_path, 0, KEY_READ, &key.value)
       : RegOpenKeyTransactedW(HKEY_CURRENT_USER, registry_path, 0,
                              KEY_READ | DELETE, &key.value, transaction, nullptr);
   if (result == ERROR_FILE_NOT_FOUND || result == ERROR_PATH_NOT_FOUND) return Ownership::absent;
   if (result != ERROR_SUCCESS) return Ownership::unreadable;
-  return registration_ownership(key.value, root);
+  return registration_ownership(key.value, context);
 }
 
 std::string utf8(const std::wstring &value) {
@@ -230,12 +291,12 @@ bool registry_dword(HKEY key, const wchar_t *name, DWORD expected) {
       type == REG_DWORD && bytes == sizeof(DWORD) && value == expected;
 }
 
-bool desired_registration(HKEY key, const fs::path &root,
+bool desired_registration(HKEY key, const MaintenanceContext &context,
                           const std::string &product_version) {
+  const fs::path root = normalized(context.install_root);
   const fs::path generation = root / "generations" / wide(product_version);
   const fs::path gui = generation / "FacMan.exe";
-  const fs::path maintenance = root / "maintenance" / "FacManSetup.exe";
-  const std::wstring uninstall = L"\"" + maintenance.wstring() + L"\" uninstall --yes";
+  const std::wstring uninstall = uninstall_command(context);
   std::wstring display_name, display_version, publisher, install_location,
       display_icon, uninstall_string, quiet_uninstall, modify_path;
   return registry_string(key, L"DisplayName", display_name) && display_name == L"FacMan" &&
@@ -245,9 +306,9 @@ bool desired_registration(HKEY key, const fs::path &root,
       registry_string(key, L"DisplayIcon", display_icon) && display_icon == L"\"" + gui.wstring() + L"\"" &&
       registry_string(key, L"UninstallString", uninstall_string) && uninstall_string == uninstall &&
       registry_string(key, L"QuietUninstallString", quiet_uninstall) && quiet_uninstall == uninstall + L" --json" &&
-      registry_string(key, L"ModifyPath", modify_path) && modify_path == L"\"" + maintenance.wstring() + L"\" repair --yes" &&
+      registry_string(key, L"ModifyPath", modify_path) && modify_path == modify_command(context) &&
       registry_dword(key, L"NoModify", 1) && registry_dword(key, L"NoRepair", 0) &&
-      registration_ownership(key, root) == Ownership::owned;
+      registration_ownership(key, context) == Ownership::owned;
 }
 
 bool shortcut_bytes(const fs::path &target, const fs::path &working_directory,
@@ -382,9 +443,10 @@ Result replace_stale_shortcut(const fs::path &link, const fs::path &root,
   return {true, "owned shortcut updated"};
 }
 
-Result write_registration_transacted(const fs::path &root, const fs::path &gui,
-                                     const fs::path &maintenance,
+Result write_registration_transacted(const MaintenanceContext &context,
+                                     const fs::path &gui,
                                      const std::string &product_version) {
+  const fs::path root = normalized(context.install_root);
   Handle transaction;
   transaction.value = CreateTransaction(nullptr, nullptr, 0, 0, 0, 0, nullptr);
   if (transaction.value == INVALID_HANDLE_VALUE)
@@ -398,13 +460,13 @@ Result write_registration_transacted(const fs::path &root, const fs::path &gui,
   if (opened != ERROR_SUCCESS)
     return {false, "Windows could not open the per-user uninstall registration transaction", true};
   if (disposition != REG_CREATED_NEW_KEY) {
-    const Ownership current = registration_ownership(key.value, root);
-    if (current != Ownership::owned) {
+    const Ownership current = registration_ownership(key.value, context);
+    if (current != Ownership::owned && current != Ownership::owned_stale) {
       RollbackTransaction(transaction.value);
       return {false, "per-user uninstall registration changed to a foreign or unreadable object", true};
     }
   }
-  const std::wstring uninstall = L"\"" + maintenance.wstring() + L"\" uninstall --yes";
+  const std::wstring uninstall = uninstall_command(context);
   const bool written =
       set_registry_string(key.value, L"DisplayName", L"FacMan") &&
       set_registry_string(key.value, L"DisplayVersion", wide(product_version)) &&
@@ -413,7 +475,7 @@ Result write_registration_transacted(const fs::path &root, const fs::path &gui,
       set_registry_string(key.value, L"DisplayIcon", L"\"" + gui.wstring() + L"\"") &&
       set_registry_string(key.value, L"UninstallString", uninstall) &&
       set_registry_string(key.value, L"QuietUninstallString", uninstall + L" --json") &&
-      set_registry_string(key.value, L"ModifyPath", L"\"" + maintenance.wstring() + L"\" repair --yes") &&
+      set_registry_string(key.value, L"ModifyPath", modify_command(context)) &&
       set_registry_dword(key.value, L"NoModify", 1) && set_registry_dword(key.value, L"NoRepair", 0);
   if (!written || !CommitTransaction(transaction.value)) {
     RollbackTransaction(transaction.value);
@@ -424,8 +486,9 @@ Result write_registration_transacted(const fs::path &root, const fs::path &gui,
 
 class WindowsEffects final : public Effects {
 public:
-  WindowsEffects(fs::path root, fs::path state, fs::path link = {})
-      : root_(std::move(root)), state_(std::move(state)),
+  WindowsEffects(MaintenanceContext context, fs::path link = {})
+      : context_(std::move(context)), root_(normalized(context_.install_root)),
+        state_(context_.state_root),
         link_(link.empty() ? start_menu_link() : std::move(link)) {}
 
   Ownership inspect(Effect effect) override {
@@ -434,7 +497,7 @@ public:
       return open_shortcut(link_, root_, false, file);
     }
     Key key;
-    return open_registration(root_, key);
+    return open_registration(context_, key);
   }
 
   Ownership inspect_desired(Effect effect, const std::string &product_version) {
@@ -451,9 +514,9 @@ public:
               identity.arguments.empty() ? Ownership::owned : Ownership::owned_stale;
     }
     Key key;
-    const Ownership ownership = open_registration(root_, key);
+    const Ownership ownership = open_registration(context_, key);
     if (ownership != Ownership::owned) return ownership;
-    return desired_registration(key.value, root_, product_version)
+    return desired_registration(key.value, context_, product_version)
         ? Ownership::owned : Ownership::owned_stale;
   }
 
@@ -462,7 +525,7 @@ public:
       Handle file;
       const auto ownership = open_shortcut(link_, root_, true, file);
       if (ownership == Ownership::absent) return {true, "shortcut already absent"};
-      if (ownership != Ownership::owned)
+      if (ownership != Ownership::owned && ownership != Ownership::owned_stale)
         return {false, "Start Menu shortcut ownership changed or could not be read", true};
       FILE_DISPOSITION_INFO disposition{TRUE};
       if (!SetFileInformationByHandle(file.value, FileDispositionInfo,
@@ -478,9 +541,9 @@ public:
     if (transaction.value == INVALID_HANDLE_VALUE)
       return {false, "Windows could not begin an uninstall registration transaction"};
     Key key;
-    const auto ownership = open_registration(root_, key, transaction.value);
+    const auto ownership = open_registration(context_, key, transaction.value);
     if (ownership == Ownership::absent) return {true, "registration already absent"};
-    if (ownership != Ownership::owned)
+    if (ownership != Ownership::owned && ownership != Ownership::owned_stale)
       return {false, "Uninstall registration ownership changed or could not be read", true};
     const LSTATUS removed = RegDeleteKeyTransactedW(
         HKEY_CURRENT_USER, registry_path, 0, 0, transaction.value, nullptr);
@@ -511,6 +574,7 @@ public:
   }
 
 private:
+  MaintenanceContext context_;
   fs::path root_, state_, link_;
 };
 } // namespace
@@ -526,10 +590,10 @@ bool owns_shortcut(const fs::path &install_root, const ShortcutIdentity &identit
          same_path(generation, identity.working_directory);
 }
 
-bool owns_registration(const fs::path &install_root, const RegistrationIdentity &identity) {
-  return !identity.unexpected_content && equal(identity.display_name, L"FacMan") &&
-         same_path(install_root, identity.install_location) &&
-         equal(identity.uninstall_command, uninstall_command(identity.install_location));
+bool owns_registration(const MaintenanceContext &context,
+                       const RegistrationIdentity &identity) {
+  return owns_current_registration(context, identity) ||
+         owns_legacy_registration(context, identity);
 }
 
 Result publish_receipt(const fs::path &destination, const std::string &bytes,
@@ -575,44 +639,55 @@ Result publish_receipt(const fs::path &destination, const std::string &bytes,
   return {true, "integration receipt saved"};
 }
 
-Result inspect_existing_windows(const fs::path &install_root) {
+Result inspect_existing_windows(const MaintenanceContext &context) {
   std::error_code error;
-  const auto root = fs::absolute(install_root, error);
+  const auto root = fs::absolute(context.install_root, error);
   if (error) return {false, "install root could not be made absolute"};
-  WindowsEffects effects(normalized(root), {});
+  MaintenanceContext normalized_context = context;
+  normalized_context.install_root = normalized(root);
+  WindowsEffects effects(std::move(normalized_context));
   for (const auto effect : {Effect::shortcut, Effect::registration}) {
     const auto ownership = effects.inspect(effect);
-    if (ownership != Ownership::owned && ownership != Ownership::absent)
+    if (ownership != Ownership::owned && ownership != Ownership::owned_stale &&
+        ownership != Ownership::absent)
       return {false, "Existing Windows integration belongs to another install "
                      "or could not be read; it was preserved"};
   }
   return {true, "existing integration is absent or belongs to this install"};
 }
 
-Result remove_windows(const fs::path &install_root, const fs::path &state_root) {
+Result remove_windows(const MaintenanceContext &context) {
   std::error_code error;
-  const auto root = fs::absolute(install_root, error);
+  const auto root = fs::absolute(context.install_root, error);
   if (error) return {false, "install root could not be made absolute"};
-  WindowsEffects effects(normalized(root), state_root);
+  MaintenanceContext normalized_context = context;
+  normalized_context.install_root = normalized(root);
+  WindowsEffects effects(std::move(normalized_context));
   return remove(effects);
 }
 
-Ownership inspect_windows_effect(Effect effect, const fs::path &install_root,
-                                 const std::string &product_version) {
+Ownership inspect_windows_effect(Effect effect, const MaintenanceContext &context,
+                                 const std::string &product_version,
+                                 bool remove) {
   std::error_code error;
-  const auto root = fs::absolute(install_root, error);
+  const auto root = fs::absolute(context.install_root, error);
   if (error) return Ownership::unreadable;
-  WindowsEffects effects(normalized(root), {});
-  return effects.inspect_desired(effect, product_version);
+  MaintenanceContext normalized_context = context;
+  normalized_context.install_root = normalized(root);
+  WindowsEffects effects(std::move(normalized_context));
+  return remove ? effects.inspect(effect)
+                : effects.inspect_desired(effect, product_version);
 }
 
-Result apply_windows_effect(Effect effect, const fs::path &install_root,
+Result apply_windows_effect(Effect effect, const MaintenanceContext &context,
                             const std::string &product_version, bool remove) {
   std::error_code error;
-  const auto root = fs::absolute(install_root, error);
+  const auto root = fs::absolute(context.install_root, error);
   if (error) return {false, "install root could not be made absolute"};
   const fs::path normalized_root = normalized(root);
-  WindowsEffects effects(normalized_root, {});
+  MaintenanceContext normalized_context = context;
+  normalized_context.install_root = normalized_root;
+  WindowsEffects effects(normalized_context);
   if (remove) return effects.remove_owned(effect);
   const Ownership ownership = effects.inspect_desired(effect, product_version);
   if (ownership == Ownership::foreign || ownership == Ownership::unreadable)
@@ -620,8 +695,13 @@ Result apply_windows_effect(Effect effect, const fs::path &install_root,
   const fs::path generation = normalized_root / "generations" / wide(product_version);
   const fs::path gui = generation / "FacMan.exe";
   const fs::path maintenance = normalized_root / "maintenance" / "FacManSetup.exe";
-  if (!fs::is_regular_file(gui, error) || error || !fs::is_regular_file(maintenance, error) || error)
-    return {false, "installed FacMan or maintenance entrypoint is missing"};
+  const fs::path repair_source = normalized(context.repair_source);
+  const fs::path launcher = normalized(maintenance_launcher(context));
+  if (!fs::is_regular_file(gui, error) || error ||
+      !fs::is_regular_file(maintenance, error) || error ||
+      !fs::is_regular_file(repair_source, error) || error ||
+      !fs::is_regular_file(launcher, error) || error)
+    return {false, "installed FacMan or retained maintenance inputs are missing"};
   if (effect == Effect::shortcut) {
     const fs::path link = start_menu_link();
     if (link.empty()) return {false, "Windows could not resolve the current-user Start Menu"};
@@ -633,8 +713,7 @@ Result apply_windows_effect(Effect effect, const fs::path &install_root,
     return create_shortcut(gui, generation, link, detail) ? Result{true, "owned shortcut installed"}
                                                          : Result{false, detail, true};
   }
-  return write_registration_transacted(normalized_root, gui, maintenance,
-                                       product_version);
+  return write_registration_transacted(normalized_context, gui, product_version);
 }
 
 Ownership inspect_windows_shortcut_fixture(const fs::path &shortcut,
@@ -643,7 +722,7 @@ Ownership inspect_windows_shortcut_fixture(const fs::path &shortcut,
   std::error_code error;
   const auto root = fs::absolute(install_root, error);
   if (error || shortcut.empty()) return Ownership::unreadable;
-  WindowsEffects effects(normalized(root), {}, shortcut);
+  WindowsEffects effects({normalized(root), {}, {}, {}}, shortcut);
   return effects.inspect_desired(Effect::shortcut, product_version);
 }
 
@@ -655,7 +734,7 @@ Result apply_windows_shortcut_fixture(const fs::path &shortcut,
   const auto root = fs::absolute(install_root, error);
   if (error || shortcut.empty()) return {false, "shortcut fixture root could not be made absolute"};
   const fs::path normalized_root = normalized(root);
-  WindowsEffects effects(normalized_root, {}, shortcut);
+  WindowsEffects effects({normalized_root, {}, {}, {}}, shortcut);
   if (remove) return effects.remove_owned(Effect::shortcut);
   const Ownership ownership = effects.inspect_desired(Effect::shortcut, product_version);
   if (ownership == Ownership::foreign || ownership == Ownership::unreadable)

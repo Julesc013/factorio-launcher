@@ -86,6 +86,8 @@ optional = [
   "workspace.recovery.inspect",
   "workspace.recovery.plan",
   "workspace.recovery.apply",
+  "installs.recovery.inspect",
+  "installs.recovery.apply",
   "servers.create",
   "servers.list",
   "servers.inspect",
@@ -107,8 +109,6 @@ unavailable = [
   "installs.move.apply",
   "installs.uninstall.plan",
   "installs.uninstall.apply",
-  "installs.recovery.inspect",
-  "installs.recovery.apply",
   "installs.verify",
   "mods.install",
   "mods.search",
@@ -683,7 +683,7 @@ cli = "facman installs repair plan <install-id> --archive <path> --json"
 id = "installs.repair.apply"
 phase = "unavailable"
 backend_id = "repair.apply"
-cli = "facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+cli = "facman installs repair apply <install-id> <plan-id> --archive <path> --digest <sha256> --plan-created-at <UTC> --record-digest <sha256> --transaction-id <id> --applied-at <UTC> --confirm <APPLY> --json"
 
 [[commands]]
 id = "installs.move.plan"
@@ -711,15 +711,15 @@ cli = "facman installs uninstall apply <plan-id> --digest <sha256> --confirm <AP
 
 [[commands]]
 id = "installs.recovery.inspect"
-phase = "unavailable"
+phase = "optional"
 backend_id = "recovery.inspect"
 cli = "facman installs recovery inspect <transaction-id> --json"
 
 [[commands]]
 id = "installs.recovery.apply"
-phase = "unavailable"
+phase = "optional"
 backend_id = "recovery.apply"
-cli = "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+cli = "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json"
 
 [[commands]]
 id = "mods.search"
@@ -884,13 +884,13 @@ doctor = "implemented"
 "installs.install.plan" = "stubbed_with_refusal"
 "installs.install.apply" = "stubbed_with_refusal"
 "installs.repair.plan" = "implemented"
-"installs.repair.apply" = "stubbed_with_refusal"
+"installs.repair.apply" = "implemented"
 "installs.move.plan" = "stubbed_with_refusal"
 "installs.move.apply" = "stubbed_with_refusal"
 "installs.uninstall.plan" = "implemented"
 "installs.uninstall.apply" = "stubbed_with_refusal"
-"installs.recovery.inspect" = "stubbed_with_refusal"
-"installs.recovery.apply" = "stubbed_with_refusal"
+"installs.recovery.inspect" = "implemented"
+"installs.recovery.apply" = "implemented"
 "installs.verify" = "stubbed_with_refusal"
 "mods.install" = "stubbed_with_refusal"
 "mods.search" = "stubbed_with_refusal"
@@ -1246,8 +1246,8 @@ doctor = "implemented"
 "installs.move.apply" = "not_supported_with_reason"
 "installs.uninstall.plan" = "not_supported_with_reason"
 "installs.uninstall.apply" = "not_supported_with_reason"
-"installs.recovery.inspect" = "not_supported_with_reason"
-"installs.recovery.apply" = "not_supported_with_reason"
+"installs.recovery.inspect" = "implemented"
+"installs.recovery.apply" = "implemented"
 "installs.verify" = "not_supported_with_reason"
 "mods.install" = "not_supported_with_reason"
 "mods.search" = "not_supported_with_reason"
@@ -1484,8 +1484,8 @@ doctor = "implemented"
 "installs.move.apply" = "not_supported_with_reason"
 "installs.uninstall.plan" = "not_supported_with_reason"
 "installs.uninstall.apply" = "not_supported_with_reason"
-"installs.recovery.inspect" = "not_supported_with_reason"
-"installs.recovery.apply" = "not_supported_with_reason"
+"installs.recovery.inspect" = "implemented"
+"installs.recovery.apply" = "implemented"
 "installs.verify" = "not_supported_with_reason"
 "mods.install" = "not_supported_with_reason"
 "mods.search" = "not_supported_with_reason"

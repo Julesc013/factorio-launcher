@@ -314,6 +314,21 @@
     },
     {
       "commands": [
+        "installs.recovery.inspect",
+        "installs.recovery.apply"
+      ],
+      "description": "Inspect and safely project an interrupted managed uninstall from exact durable FacMan and Universal Setup evidence.",
+      "domain": "installs",
+      "id": "install.managed.uninstall.recover",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "setup_preview"
+      ],
+      "status": "conditional"
+    },
+    {
+      "commands": [
         "installs.describe"
       ],
       "description": "Project a registered installation into independent source, deployment, ownership, data, integration, provenance, verification, and filesystem capability axes.",
@@ -706,11 +721,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b",
+    "catalog_digest": "5c578b2078163cfc7e4f376fc630c30b5ae64a32d92f778ee97b8712c3c95f4f",
     "contracts": 131,
-    "refusal_codes": 267,
+    "refusal_codes": 285,
     "registered_routes": 129,
-    "schemas": 421
+    "schemas": 426
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",

@@ -95,13 +95,16 @@ public:
     StableInputFile& operator=(const StableInputFile&) = delete;
 
     IoStatus open_no_follow(const std::filesystem::path& path);
+    IoStatus open_no_follow_pinned(const std::filesystem::path& path);
     std::size_t read_at(std::uint64_t offset, void* buffer, std::size_t size) const;
     IoStatus revalidate() const;
+    IoStatus revalidate_path() const;
     const FileIdentity& identity() const noexcept;
     std::uint64_t size() const noexcept;
     bool open() const noexcept;
 
 private:
+    IoStatus open_no_follow_impl(const std::filesystem::path& path, bool pinned);
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
@@ -141,6 +144,8 @@ public:
     IoStatus create_exclusive(const std::filesystem::path& path, std::uint64_t maximum_size);
     std::size_t write_at(std::uint64_t offset, const void* buffer, std::size_t size);
     IoStatus flush_file_and_parent();
+    IoStatus publish_no_replace(const std::filesystem::path& destination);
+    IoStatus discard_open();
     void close_without_flush() noexcept;
     const std::filesystem::path& path() const noexcept;
 

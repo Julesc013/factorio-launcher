@@ -370,9 +370,12 @@ bool decode_service_request(
     case CommandId::installs_install_version: allowed = {"version", "archive"}; break;
     case CommandId::installs_install_plan: allowed = {"version", "archive", "target_root", "install_id"}; break;
     case CommandId::installs_install_apply:
-    case CommandId::installs_repair_apply:
-    case CommandId::installs_move_apply:
-    case CommandId::installs_recovery_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
+    case CommandId::installs_move_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
+    case CommandId::installs_repair_plan: allowed = {"install_id", "archive"}; break;
+    case CommandId::installs_repair_apply: allowed = {"install_id", "archive", "plan_id", "plan_digest",
+        "plan_created_at", "install_record_sha256", "transaction_id", "applied_at", "confirmation"}; break;
+    case CommandId::installs_recovery_apply: allowed = {
+        "transaction_id", "plan_id", "plan_digest", "confirmation"}; break;
     case CommandId::installs_uninstall_apply: allowed = {
         "install_id", "plan_id", "plan_digest", "plan_created_at", "transaction_id", "applied_at", "confirmation"}; break;
     case CommandId::installs_move_plan: allowed = {"install_id", "target_root"}; break;
@@ -409,6 +412,7 @@ bool decode_service_request(
         !optional_string(payload, "install_id", typed.install_id, detail) ||
         !optional_string(payload, "plan_id", typed.plan_id, detail) ||
         !optional_string(payload, "plan_digest", typed.plan_digest, detail) ||
+        !optional_string(payload, "install_record_sha256", typed.install_record_sha256, detail) ||
         !optional_string(payload, "confirmation", typed.confirmation, detail) ||
         !optional_string(payload, "transaction_id", typed.transaction_id, detail) ||
         !optional_string(payload, "applied_at", typed.applied_at, detail) ||
@@ -431,8 +435,14 @@ bool decode_service_request(
     if (command == CommandId::installs_move_plan && typed.target_root.empty()) {
         detail = "installs.move.plan requires a non-empty target_root"; return false;
     }
+    if (command == CommandId::installs_repair_plan && typed.archive.empty()) {
+        detail = "installs.repair.plan requires a non-empty archive"; return false;
+    }
     if (command == CommandId::installs_recovery_inspect && typed.transaction_id.empty()) {
         detail = "installs.recovery.inspect requires a non-empty transaction_id"; return false;
+    }
+    if (command == CommandId::installs_recovery_apply && typed.transaction_id.empty()) {
+        detail = "installs.recovery.apply requires a non-empty transaction_id"; return false;
     }
     if ((command == CommandId::installs_install_apply || command == CommandId::installs_repair_apply ||
          command == CommandId::installs_move_apply || command == CommandId::installs_uninstall_apply ||
@@ -444,6 +454,12 @@ bool decode_service_request(
         (typed.install_id.empty() || typed.plan_created_at.empty() || typed.transaction_id.empty() ||
             typed.applied_at.empty())) {
         detail = "installs.uninstall.apply requires install_id, reviewed plan identities, transaction_id, and applied_at";
+        return false;
+    }
+    if (command == CommandId::installs_repair_apply &&
+        (typed.install_id.empty() || typed.archive.empty() || typed.plan_created_at.empty() ||
+            typed.install_record_sha256.empty() || typed.transaction_id.empty() || typed.applied_at.empty())) {
+        detail = "installs.repair.apply requires install, archive, reviewed record, transaction, and timestamp identities";
         return false;
     }
     if (command == CommandId::servers_create && (typed.name.empty() || typed.instance_id.empty())) {
@@ -624,6 +640,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     case CommandId::installs_install_apply:
     case CommandId::installs_install_version:
     case CommandId::installs_verify:
+    case CommandId::installs_repair_plan:
     case CommandId::installs_repair_apply:
     case CommandId::installs_repair:
     case CommandId::installs_move_plan:
@@ -688,15 +705,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "install_id", typed.install_id, detail)) return false;
         request.payload = std::move(typed); return true;
     }
-    case CommandId::installs_reconcile_plan:
-    case CommandId::installs_repair_plan: {
-        if (command == CommandId::installs_repair_plan) {
-            if (!validate_fields(payload, {"install_id", "archive"}, detail)) return false;
-            ReconcileInstallRequest typed;
-            if (!required_string(payload, "install_id", typed.install_id, detail) ||
-                !optional_string(payload, "archive", typed.source_ref, detail)) return false;
-            request.payload = std::move(typed); return true;
-        }
+    case CommandId::installs_reconcile_plan: {
         if (!validate_fields(payload, {
                 "install_id", "version", "source_ref", "target_root", "management_mode",
                 "deployment_style", "data_policy", "integration_mode", "update_policy"}, detail)) return false;

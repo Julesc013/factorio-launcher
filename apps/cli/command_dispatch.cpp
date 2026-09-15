@@ -133,7 +133,7 @@ bool repair_plan_arguments_valid(const std::vector<std::string>& args)
         if (args[index] != "--archive" || ++archive_count > 1 || ++index >= args.size() ||
             args[index].compare(0, 2, "--") == 0) return false;
     }
-    return true;
+    return archive_count == 1;
 }
 CliResponse call(
     const Options& options,
@@ -714,15 +714,10 @@ int command_installs(const Options& options)
                 "Setup recovery state inspected.");
         }
         if (phase == "apply") {
-            const std::string digest = option(options.args, "--digest");
-            const std::string confirmation = option(options.args, "--confirm");
-            if (digest.empty() || confirmation != "APPLY") return 2;
-            return emit_basic(
-                call(options, "installs.recovery.apply", exact_fields_payload({
-                    {"plan_id", options.args[3]}, {"plan_digest", digest},
-                    {"confirmation", confirmation}}), false),
-                flag(options.args, "--json"),
-                "Setup recovery apply dispatched.");
+            auto apply = facman::cli::setup_apply_request(action, options.args);
+            if (!apply) return 2;
+            return emit_basic(call(options, apply->command, apply->payload, false),
+                flag(options.args, "--json"), apply->success_message);
         }
         return 2;
     }

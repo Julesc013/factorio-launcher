@@ -23,8 +23,11 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
         policy.capabilities.push_back("install.model.inspect");
         break;
     case CommandId::installs_reconcile_plan:
-    case CommandId::installs_repair_plan:
         policy.capabilities.push_back("install.reconciliation.plan");
+        break;
+    case CommandId::installs_repair_plan:
+        policy.effects.push_back("setup_preview");
+        policy.capabilities.push_back("install.managed.repair.plan");
         break;
     case CommandId::instances_describe:
         policy.capabilities.push_back("instance.model.inspect");
@@ -43,6 +46,15 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
     case CommandId::installs_uninstall_apply:
         policy.effects.push_back("setup_mutation");
         policy.capabilities.push_back("install.managed.uninstall.apply");
+        break;
+    case CommandId::installs_repair_apply:
+        policy.effects.push_back("setup_mutation");
+        policy.capabilities.push_back("install.managed.repair.apply");
+        break;
+    case CommandId::installs_recovery_inspect:
+    case CommandId::installs_recovery_apply:
+        policy.effects.push_back("setup_preview");
+        policy.capabilities.push_back("install.managed.uninstall.recover");
         break;
     case CommandId::launch_plan_build:
     case CommandId::run_preview:
@@ -99,10 +111,22 @@ CommandAdmissionDecision admit_command(
     CommandId command)
 {
     const CommandAdmissionPolicy policy = command_admission_policy(command);
-    if (command == CommandId::installs_uninstall_apply &&
+    if (command == CommandId::installs_repair_plan &&
+        !configuration.setup().mutation_configured()) {
+        return {false, "setup_repair_plan_authority_required",
+            "managed repair planning requires complete accepted Universal Setup configuration"};
+    }
+    if ((command == CommandId::installs_uninstall_apply ||
+         command == CommandId::installs_repair_apply) &&
         !configuration.setup().mutation_configured()) {
         return {false, "setup_authority_required",
-            "managed uninstall apply requires complete accepted Universal Setup mutation configuration"};
+            "managed setup apply requires complete accepted Universal Setup mutation configuration"};
+    }
+    if ((command == CommandId::installs_recovery_inspect ||
+         command == CommandId::installs_recovery_apply) &&
+        !configuration.setup().mutation_configured()) {
+        return {false, "setup_uninstall_recovery_authority_required",
+            "managed uninstall recovery requires complete accepted Universal Setup configuration"};
     }
     for (const std::string& effect : policy.effects) {
         if (effect == "process_execute" && !configuration.process_execution_authorized()) {

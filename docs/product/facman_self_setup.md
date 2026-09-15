@@ -27,12 +27,19 @@ no administrator rights and creates:
 
 %LOCALAPPDATA%\FacMan\setup\
   Universal Setup journals, manifests, and receipts
+  repair-sources\<payload-sha256>.zip
+  repair-sources\<payload-sha256>.FacManSetup.exe
 
 %APPDATA%\Microsoft\Windows\Start Menu\Programs\FacMan.lnk
 HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\FacMan
 ```
 
-The EXE embeds the exact portable payload; no sibling ZIP is needed.
+The EXE embeds the exact portable payload; no sibling ZIP is needed. Installed
+mode retains a digest-bound payload and a small maintenance launcher outside
+the managed install root. The registered repair command uses that pair, so it
+does not depend on the original download or on the files it is repairing. The
+registered uninstall command uses the same external launcher, so removal does
+not delete its running entrypoint.
 
 ```powershell
 .\FacMan-<version>-windows-x64-setup.exe
@@ -48,7 +55,10 @@ and `--acceptance-root` values are for reviewed test scenarios.
 `--no-shell-integration` is restricted to isolated qualification fixtures.
 
 Windows setup does not alter `PATH`. The Start Menu and HKCU registration are
-owned, repaired on repair, and removed only after a successful uninstall.
+owned, repaired on repair, and removed only after a successful uninstall. The
+registered commands bind the exact install, setup-state, acceptance, and
+retained-source paths; changed or foreign registrations are preserved for
+review.
 Unknown files inside the managed installation root cause uninstall refusal.
 Workspaces and retained setup receipts remain untouched.
 

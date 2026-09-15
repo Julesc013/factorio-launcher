@@ -127,7 +127,7 @@ Catalog-only CLI, TUI, toolkit, and earlier distribution records are not current
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 131 commands, 421 schemas, and 267 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 131 commands, 426 schemas, and 285 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `279ad4876dc325f8e1fcdc918c91b098a11bc616`.

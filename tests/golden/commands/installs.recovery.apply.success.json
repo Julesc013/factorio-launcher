@@ -1,0 +1,20 @@
+{
+  "schema": "facman.managed_uninstall_recovery.v1",
+  "status": "completed",
+  "transaction_id": "tx-managed-uninstall-recovery",
+  "install_id": "managed-factorio-2-0-77",
+  "plan_id": "uninstall-recovery.tx-managed-uninstall-recovery",
+  "plan_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "classification": "provider_retired",
+  "action": "project_terminal",
+  "facman_journal_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "pre_record_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "current_record_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+  "provider_journal_present": true,
+  "provider_observed_state": "completed",
+  "provider_journal_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+  "provider_journal_snapshot_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+  "provider_installed_state_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+  "target_exists": false,
+  "projected_record_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+}

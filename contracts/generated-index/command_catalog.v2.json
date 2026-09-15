@@ -1634,10 +1634,10 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
+      "cli": "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json",
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1664,11 +1664,15 @@
         ],
         "positionals": [
           {
+            "name": "transaction-id",
+            "required": true
+          },
+          {
             "name": "plan-id",
             "required": true
           }
         ],
-        "usage": "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+        "usage": "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json"
       },
       "command_id": "installs.recovery.apply",
       "contract_path": "contracts/command/factorio/installs.recovery.apply.v1.toml",
@@ -1676,12 +1680,15 @@
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "dry_run_default": false,
       "effects": [
+        "workspace_read",
         "workspace_write",
         "setup_preview"
       ],
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.recovery.apply.refusal.json",
+      "golden_success": "tests/golden/commands/installs.recovery.apply.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.recovery.apply.title",
         "command.installs.recovery.apply.description"
@@ -1689,10 +1696,35 @@
       "mutates_workspace": true,
       "native_id": "installs_recovery_apply",
       "owner": "facman",
+      "refusal_codes": [
+        "invalid_identifier",
+        "stale_plan",
+        "recovery_journal_invalid",
+        "recovery_lock_contended",
+        "recovery_write_refused",
+        "transaction_recovery_required",
+        "uninstall_recovery_indeterminate",
+        "uninstall_recovery_projection_conflict",
+        "setup_uninstall_recovery_authority_required",
+        "setup_uninstall_recovery_input_invalid",
+        "setup_uninstall_recovery_inspection_refused",
+        "setup_uninstall_recovery_response_invalid",
+        "setup_unavailable",
+        "workspace_record_read_failed"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_recovery_apply",
       "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        },
         {
           "choices": [],
           "default": null,
@@ -1725,10 +1757,11 @@
       ],
       "request_schema": "contracts/schema/command/installs.recovery.apply.request.v1.schema.json",
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
         "setup_preview"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/facman_managed_uninstall_recovery.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "persistent_local_write",
       "runtime_id": "installs.recovery.apply",
@@ -1738,8 +1771,8 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs recovery inspect <transaction-id> --json",
       "cli_grammar": {
@@ -1770,11 +1803,14 @@
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "dry_run_default": true,
       "effects": [
+        "workspace_read",
         "setup_preview"
       ],
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.recovery.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/installs.recovery.inspect.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.recovery.inspect.title",
         "command.installs.recovery.inspect.description"
@@ -1782,6 +1818,16 @@
       "mutates_workspace": false,
       "native_id": "installs_recovery_inspect",
       "owner": "facman",
+      "refusal_codes": [
+        "invalid_identifier",
+        "recovery_journal_invalid",
+        "setup_uninstall_recovery_authority_required",
+        "uninstall_recovery_projection_conflict",
+        "setup_uninstall_recovery_input_invalid",
+        "setup_uninstall_recovery_inspection_refused",
+        "setup_uninstall_recovery_response_invalid",
+        "setup_unavailable"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_recovery_inspect",
@@ -1798,9 +1844,10 @@
       ],
       "request_schema": "contracts/schema/command/installs.recovery.inspect.request.v1.schema.json",
       "required_capabilities": [
+        "workspace_read",
         "setup_preview"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/facman_managed_uninstall_recovery.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "installs.recovery.inspect",
@@ -1883,17 +1930,42 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
+      "cli": "facman installs repair apply <install-id> <plan-id> --archive <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json",
       "cli_grammar": {
         "internal": false,
         "options": [
           {
+            "name": "--archive",
+            "repeatable": false,
+            "value": "path"
+          },
+          {
             "name": "--digest",
             "repeatable": false,
             "value": "sha256"
+          },
+          {
+            "name": "--plan-created-at",
+            "repeatable": false,
+            "value": "utc"
+          },
+          {
+            "name": "--record-digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--transaction-id",
+            "repeatable": false,
+            "value": "id"
+          },
+          {
+            "name": "--applied-at",
+            "repeatable": false,
+            "value": "utc"
           },
           {
             "name": "--confirm",
@@ -1913,11 +1985,15 @@
         ],
         "positionals": [
           {
+            "name": "install-id",
+            "required": true
+          },
+          {
             "name": "plan-id",
             "required": true
           }
         ],
-        "usage": "facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+        "usage": "facman installs repair apply <install-id> <plan-id> --archive <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json"
       },
       "command_id": "installs.repair.apply",
       "contract_path": "contracts/command/factorio/installs.repair.apply.v1.toml",
@@ -1925,12 +2001,15 @@
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "dry_run_default": false,
       "effects": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.repair.apply.refusal.json",
+      "golden_success": "tests/golden/commands/installs.repair.apply.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.repair.apply.title",
         "command.installs.repair.apply.description"
@@ -1938,10 +2017,52 @@
       "mutates_workspace": true,
       "native_id": "installs_repair_apply",
       "owner": "facman",
+      "refusal_codes": [
+        "setup_authority_required",
+        "invalid_timestamp",
+        "invalid_identifier",
+        "invalid_legacy_identifier",
+        "unknown_install",
+        "managed_install_evidence_incomplete",
+        "managed_install_record_preimage_changed",
+        "workspace_record_read_failed",
+        "stale_plan",
+        "recovery_write_refused",
+        "invalid_argument",
+        "source_drift",
+        "setup_installed_state_inspection_refused",
+        "setup_installed_state_response_invalid",
+        "setup_repair_apply_input_invalid",
+        "setup_repair_apply_refused",
+        "setup_repair_report_response_invalid",
+        "setup_repair_terminal_state_inspection_refused",
+        "setup_repair_terminal_state_response_invalid",
+        "transaction_recovery_required",
+        "operation_specific_recovery_required",
+        "setup_unavailable"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_repair_apply",
       "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "archive",
+          "repeatable": false,
+          "request_field": "archive",
+          "required": true,
+          "type": "path"
+        },
         {
           "choices": [],
           "default": null,
@@ -1961,6 +2082,42 @@
           "type": "sha256"
         },
         {
+          "choices": [],
+          "default": null,
+          "name": "plan_created_at",
+          "repeatable": false,
+          "request_field": "plan_created_at",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_record_sha256",
+          "repeatable": false,
+          "request_field": "install_record_sha256",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "applied_at",
+          "repeatable": false,
+          "request_field": "applied_at",
+          "required": true,
+          "type": "string"
+        },
+        {
           "choices": [
             "APPLY"
           ],
@@ -1974,12 +2131,13 @@
       ],
       "request_schema": "contracts/schema/command/installs.repair.apply.request.v1.schema.json",
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_managed_repair_apply_result.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
-      "risk_tier": "persistent_local_write",
+      "risk_tier": "setup_mutation",
       "runtime_id": "installs.repair.apply",
       "schema": "facman.command.v2",
       "visibility": "public",
@@ -1990,7 +2148,7 @@
       "availability": "implemented",
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman installs repair plan <install-id> [--archive <path>] --json",
+      "cli": "facman installs repair plan <install-id> --archive <path> --json",
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2016,7 +2174,7 @@
             "required": true
           }
         ],
-        "usage": "facman installs repair plan <install-id> [--archive <path>] --json"
+        "usage": "facman installs repair plan <install-id> --archive <path> --json"
       },
       "command_id": "installs.repair.plan",
       "contract_path": "contracts/command/factorio/installs.repair.plan.v1.toml",
@@ -2024,7 +2182,8 @@
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "dry_run_default": true,
       "effects": [
-        "workspace_read"
+        "workspace_read",
+        "setup_preview"
       ],
       "executes_process": false,
       "frontend_category": "installs",
@@ -2038,8 +2197,23 @@
       "native_id": "installs_repair_plan",
       "owner": "facman",
       "refusal_codes": [
+        "setup_repair_plan_authority_required",
+        "invalid_legacy_identifier",
+        "unknown_install",
         "ownership_denied",
-        "repair_lifecycle_ineligible"
+        "managed_install_provider_mismatch",
+        "repair_lifecycle_ineligible",
+        "operation_specific_recovery_required",
+        "managed_install_evidence_incomplete",
+        "workspace_record_read_failed",
+        "setup_repair_plan_input_invalid",
+        "setup_installed_state_inspection_refused",
+        "setup_installed_state_response_invalid",
+        "setup_archive_inspection_refused",
+        "source_drift",
+        "setup_repair_plan_refused",
+        "setup_repair_plan_response_invalid",
+        "setup_unavailable"
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
@@ -2060,15 +2234,16 @@
           "name": "archive",
           "repeatable": false,
           "request_field": "archive",
-          "required": false,
+          "required": true,
           "type": "path"
         }
       ],
       "request_schema": "contracts/schema/command/installs.repair.plan.request.v1.schema.json",
       "required_capabilities": [
-        "workspace_read"
+        "workspace_read",
+        "setup_preview"
       ],
-      "response_schema": "contracts/schema/factorio/factorio_install_reconciliation_plan.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_managed_repair_plan.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "installs.repair.plan",
@@ -11904,6 +12079,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b",
+  "source_digest": "5c578b2078163cfc7e4f376fc630c30b5ae64a32d92f778ee97b8712c3c95f4f",
   "version": "facman-0.1.0-alpha.5"
 }

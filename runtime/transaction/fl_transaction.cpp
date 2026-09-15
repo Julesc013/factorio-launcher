@@ -523,6 +523,28 @@ bool advance(const fs::path& workspace, Record& record, const std::string& state
     return true;
 }
 
+bool checkpoint(
+    const fs::path& workspace,
+    Record& record,
+    const std::string& step,
+    std::string& detail)
+{
+    if (terminal(record.state)) {
+        detail = "terminal transaction cannot be checkpointed";
+        return false;
+    }
+    const std::string previous_updated_utc = record.updated_utc;
+    record.updated_utc = utc_now();
+    if (!step.empty()) record.completed_steps.push_back(step);
+    if (!ensure_staging_markers(record, detail) ||
+        !flush_replace(journal_path(workspace, record.transaction_id), record_json(record), detail)) {
+        record.updated_utc = previous_updated_utc;
+        if (!step.empty()) record.completed_steps.pop_back();
+        return false;
+    }
+    return true;
+}
+
 bool fail(const fs::path& workspace, Record& record, const std::string& state, const std::string& error, std::string& detail)
 {
     record.error = error;
@@ -603,6 +625,11 @@ bool TransactionSession::verified(const std::string& step) { return transition(S
 bool TransactionSession::committing(const std::string& step) { return transition(State::committing, step); }
 bool TransactionSession::committed(const std::string& step) { return transition(State::committed, step); }
 bool TransactionSession::commit_uncertain(const std::string& step) { return transition(State::commit_uncertain, step); }
+bool TransactionSession::checkpoint(const std::string& step)
+{
+    if (!active_) { detail_ = "transaction session is no longer active"; return false; }
+    return facman::transaction::checkpoint(workspace_, record_, step, detail_);
+}
 
 bool TransactionSession::refused(const std::string& error)
 {

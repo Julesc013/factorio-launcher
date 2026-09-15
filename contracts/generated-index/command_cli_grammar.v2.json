@@ -1246,7 +1246,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1274,11 +1274,15 @@
         ],
         "positionals": [
           {
+            "name": "transaction-id",
+            "required": true
+          },
+          {
             "name": "plan-id",
             "required": true
           }
         ],
-        "usage": "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+        "usage": "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json"
       },
       "command_id": "installs.recovery.apply",
       "deprecation": "active",
@@ -1290,6 +1294,15 @@
       "owner": "facman",
       "renderer": "installs_recovery_apply",
       "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        },
         {
           "choices": [],
           "default": null,
@@ -1321,6 +1334,7 @@
         }
       ],
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
         "setup_preview"
       ],
@@ -1331,7 +1345,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1376,6 +1390,7 @@
         }
       ],
       "required_capabilities": [
+        "workspace_read",
         "setup_preview"
       ],
       "risk_tier": "read_only",
@@ -1439,15 +1454,40 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
         "options": [
           {
+            "name": "--archive",
+            "repeatable": false,
+            "value": "path"
+          },
+          {
             "name": "--digest",
             "repeatable": false,
             "value": "sha256"
+          },
+          {
+            "name": "--plan-created-at",
+            "repeatable": false,
+            "value": "utc"
+          },
+          {
+            "name": "--record-digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--transaction-id",
+            "repeatable": false,
+            "value": "id"
+          },
+          {
+            "name": "--applied-at",
+            "repeatable": false,
+            "value": "utc"
           },
           {
             "name": "--confirm",
@@ -1467,11 +1507,15 @@
         ],
         "positionals": [
           {
+            "name": "install-id",
+            "required": true
+          },
+          {
             "name": "plan-id",
             "required": true
           }
         ],
-        "usage": "facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+        "usage": "facman installs repair apply <install-id> <plan-id> --archive <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json"
       },
       "command_id": "installs.repair.apply",
       "deprecation": "active",
@@ -1483,6 +1527,24 @@
       "owner": "facman",
       "renderer": "installs_repair_apply",
       "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "archive",
+          "repeatable": false,
+          "request_field": "archive",
+          "required": true,
+          "type": "path"
+        },
         {
           "choices": [],
           "default": null,
@@ -1502,6 +1564,42 @@
           "type": "sha256"
         },
         {
+          "choices": [],
+          "default": null,
+          "name": "plan_created_at",
+          "repeatable": false,
+          "request_field": "plan_created_at",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_record_sha256",
+          "repeatable": false,
+          "request_field": "install_record_sha256",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "applied_at",
+          "repeatable": false,
+          "request_field": "applied_at",
+          "required": true,
+          "type": "string"
+        },
+        {
           "choices": [
             "APPLY"
           ],
@@ -1514,10 +1612,11 @@
         }
       ],
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
-      "risk_tier": "persistent_local_write",
+      "risk_tier": "setup_mutation",
       "runtime_id": "installs.repair.apply",
       "schema": "facman.command.v2",
       "visibility": "public"
@@ -1551,7 +1650,7 @@
             "required": true
           }
         ],
-        "usage": "facman installs repair plan <install-id> [--archive <path>] --json"
+        "usage": "facman installs repair plan <install-id> --archive <path> --json"
       },
       "command_id": "installs.repair.plan",
       "deprecation": "active",
@@ -1578,12 +1677,13 @@
           "name": "archive",
           "repeatable": false,
           "request_field": "archive",
-          "required": false,
+          "required": true,
           "type": "path"
         }
       ],
       "required_capabilities": [
-        "workspace_read"
+        "workspace_read",
+        "setup_preview"
       ],
       "risk_tier": "read_only",
       "runtime_id": "installs.repair.plan",
@@ -9394,5 +9494,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "db472a8edcfbd09a86a716286e0952838002dfa2c762f8d68bf3f44fac421f3b"
+  "source_digest": "5c578b2078163cfc7e4f376fc630c30b5ae64a32d92f778ee97b8712c3c95f4f"
 }

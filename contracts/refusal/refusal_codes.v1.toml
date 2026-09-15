@@ -19,6 +19,13 @@ required_codes = [
   "credential_required",
   "credential_redacted",
   "setup_authority_required",
+  "setup_uninstall_recovery_authority_required",
+  "setup_uninstall_recovery_input_invalid",
+  "setup_uninstall_recovery_inspection_refused",
+  "setup_uninstall_recovery_response_invalid",
+  "uninstall_recovery_indeterminate",
+  "uninstall_recovery_projection_conflict",
+  "recovery_lock_contended",
   "launch_preflight_failed",
   "run_lock_contended",
   "run_lock_malformed",
@@ -746,9 +753,93 @@ suggested_next_command = "facman installs scan --json"
 [[code]]
 id = "repair_lifecycle_ineligible"
 severity = "blocked"
-effect = "workspace_read"
+effect = "setup_preview"
 retryable = true
-message = "Repair planning requires an active, verification_failed, or recovery_required managed install."
+message = "Repair planning requires an active or verification_failed managed install."
+
+[[code]]
+id = "setup_repair_plan_authority_required"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Managed repair planning requires complete accepted Universal Setup configuration."
+
+[[code]]
+id = "setup_repair_plan_input_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Managed repair planning input does not bind an exact archive and managed installation."
+
+[[code]]
+id = "setup_archive_inspection_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup refused inspection of the selected archive."
+
+[[code]]
+id = "source_drift"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "The selected repair source no longer matches installed state."
+
+[[code]]
+id = "setup_repair_plan_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup refused the ownership-bounded repair plan."
+
+[[code]]
+id = "setup_repair_plan_response_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup returned an invalid managed repair plan."
+
+[[code]]
+id = "managed_install_record_preimage_changed"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = true
+message = "The managed install record changed after repair planning."
+
+[[code]]
+id = "setup_repair_apply_input_invalid"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Managed repair apply input does not bind the exact reviewed provider plan."
+
+[[code]]
+id = "setup_repair_apply_refused"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = true
+message = "Universal Setup repair apply returned a refusal requiring recovery inspection."
+
+[[code]]
+id = "setup_repair_report_response_invalid"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Universal Setup returned an invalid managed repair report."
+
+[[code]]
+id = "setup_repair_terminal_state_inspection_refused"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = true
+message = "Universal Setup refused terminal installed-state inspection after repair."
+
+[[code]]
+id = "setup_repair_terminal_state_response_invalid"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Universal Setup returned invalid terminal installed-state evidence after repair."
 
 [[code]]
 id = "uninstall_lifecycle_ineligible"
@@ -973,6 +1064,48 @@ severity = "blocked"
 effect = "setup_mutation"
 retryable = false
 message = "Universal Setup refused uninstall apply without a strictly valid refusal envelope."
+
+[[code]]
+id = "setup_uninstall_recovery_authority_required"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Managed uninstall recovery requires complete accepted Universal Setup configuration."
+
+[[code]]
+id = "setup_uninstall_recovery_input_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed uninstall recovery input does not bind an exact durable coordinator identity."
+
+[[code]]
+id = "setup_uninstall_recovery_inspection_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup refused inspection of the exact managed uninstall transaction."
+
+[[code]]
+id = "setup_uninstall_recovery_response_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup recovery evidence failed exact identity or integrity validation."
+
+[[code]]
+id = "uninstall_recovery_indeterminate"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The interrupted uninstall has no safely projectable terminal provider state."
+
+[[code]]
+id = "uninstall_recovery_projection_conflict"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The managed install reference no longer matches the recovery preimage or prepared postimage."
 
 [[code]]
 id = "setup_uninstall_report_response_invalid"

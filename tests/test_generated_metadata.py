@@ -92,7 +92,7 @@ class GeneratedMetadataTests(unittest.TestCase):
         self.assertTrue(migration_apply["public_rollback_available"])
         self.assertIn("workspace_migration_recovery_required", migration_apply["refusal_codes"])
 
-    def test_optional_cli_options_preserve_their_value_contract(self) -> None:
+    def test_required_cli_options_preserve_their_value_contract(self) -> None:
         grammar = json.loads(generate_metadata.OUTPUTS["grammar_json"].read_text(encoding="utf-8"))
         repair_plan = next(
             item for item in grammar["commands"] if item["command_id"] == "installs.repair.plan"
@@ -105,7 +105,7 @@ class GeneratedMetadataTests(unittest.TestCase):
             {
                 "name": "archive",
                 "type": "path",
-                "required": False,
+                "required": True,
                 "default": None,
                 "repeatable": False,
                 "request_field": "archive",

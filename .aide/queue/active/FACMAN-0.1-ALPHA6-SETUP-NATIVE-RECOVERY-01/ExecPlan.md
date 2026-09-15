@@ -67,3 +67,86 @@ and terminal-state invariants.
 The WorkUnit remains active. Current-source packaged execution against real
 Start Menu and registry effects, the full hosted matrix, and provider recovery
 actions other than an admitted rollback still need their recorded qualification.
+
+## 2026-09-15 managed uninstall recovery checkpoint
+
+On combined exact base `57a1745bac987a79658cfa825789ff48ec393329`, add only
+the operation-specific FacMan recovery path for an interrupted managed
+uninstall. Inspection reconstructs the exact persisted uninstall request,
+reviewed digest, FacMan preimage, Universal Setup transaction, historical
+installed state, terminal installed state, and target presence. It classifies
+only no provider effect, completed retirement, completed `uninstall_blocked`,
+or indeterminate state.
+
+Apply requires the transaction ID plus the exact inspected plan ID and digest.
+It holds an OS-backed transaction lease, persists a
+`terminal_projection_prepared` postimage checkpoint, uses the install
+repository CAS for both terminal projection and no-effect closure, and closes
+the coordinator only after that check succeeds. Completed provider identities
+are projected without calling Universal Setup recovery apply, finalize, or
+rollback; incomplete provider journals stay indeterminate.
+
+Qualification for this checkpoint is the owned M1 synthetic lifecycle proof,
+focused command/schema/policy checks, generated metadata parity, native CLI
+build/help, and strict/AIDE checks. It does not qualify live installation roots
+or broaden Universal Setup's install-only public finalization authority.
+The managed-install reconciliation WorkUnit remains active and is not closed or
+superseded by this operation-specific checkpoint.
+
+## 2026-09-15 independent review remediation
+
+Recovery inspect and apply now advertise the setup-preview effect and the
+managed-uninstall recovery capability through command admission, and both
+require complete accepted Universal Setup configuration. Provider refusals from
+each recovery inspection boundary retain their original envelope beneath one
+stable FacMan recovery-inspection refusal. The provider recovery report decoder
+also enforces the pinned report's exact state, action, effect, timestamp, and
+report-identity contract before any terminal classification.
+
+## 2026-09-15 external maintenance and packaged recovery successor
+
+Continue from integrated `dev` at
+`0129f7ec6fa5864c40c6c6f4a3d3aab98b41f7ba`. The earlier source checkpoint
+installed `maintenance/FacManSetup.exe` and registered that in-tree image for
+repair and uninstall. A registered repair had no durable payload argument, and
+an uninstall could remove the entrypoint executing it. The current successor
+retains the provider-bound raw ZIP and the installed maintenance launcher under
+the setup-state root using digest-derived, no-replace names. Registry commands
+bind the external launcher, retained ZIP, install root, state root and acceptance
+root. The exact earlier FacMan registration remains a narrowly recognized stale
+owner for forward migration; other commands or registry content remain foreign.
+
+The setup journal records the installed source digest and the repair-source
+effect. Install and repair retain both inputs after the provider file receipt and
+before native integration. Retryable cache failure resumes without replaying the
+provider transaction; changed cache identity enters recovery-required. Uninstall
+does not create cache content: it obtains the installed source identity from the
+reviewed provider plan and uses the corresponding retained launcher while the
+managed tree is removed.
+
+The current real-current-user candidate route now starts with the produced
+self-contained setup, invokes the exact registered repair and uninstall command
+lines, and exercises uninstall interruptions after provider files and after
+shortcut removal. Source, schema, package metadata and focused native tests are
+implemented. The WorkUnit remains active until the resulting current-source
+Windows package and global Start Menu/HKCU effects pass hosted qualification and
+the integrated identity is recorded.
+
+The post-review successor binds the retained ZIP and external launcher through
+an exact no-follow, single-link receipt and revalidates that receipt before
+native inspection or mutation. Uninstall obtains its source digest from strict
+`installed.inspect` output, admits only healthy `installed` or `verified`
+provider states, and requires the uninstall plan to repeat that digest and the
+pinned provider revision. A definitive foreign-content refusal is durably
+abandoned before effects and no longer blocks a clean successor request; other
+provider uncertainty still enters the recorded recovery path.
+
+Final cache-custody remediation adds a pinned stable-input mode that denies
+Windows write/delete sharing, confirms each pathname still names its open
+object, and holds the marker, receipt, ZIP and launcher pins through native
+inspection and registry mutation. New durable-output operations publish or
+discard the still-open object, so neither a replacement temporary nor foreign
+destination can be renamed or removed. Provider progress is recorded separately
+through plan review, cache validation and apply entry: proven no-effect failures
+are retired, cache-ownership failures remain recovery-required, and an uncertain
+provider receipt is recorded only after the apply boundary may have been entered.

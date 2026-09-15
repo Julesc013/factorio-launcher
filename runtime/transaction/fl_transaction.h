@@ -103,6 +103,7 @@ public:
     bool committing(const std::string& step = "commit_started");
     bool committed(const std::string& step = "target_committed");
     bool commit_uncertain(const std::string& step = "commit_result_uncertain");
+    bool checkpoint(const std::string& step);
     bool refused(const std::string& error);
     bool complete();
     void failed(const std::string& error);
@@ -155,6 +156,11 @@ bool advance(
     const std::filesystem::path& workspace,
     Record& record,
     const std::string& state,
+    const std::string& completed_step,
+    std::string& detail);
+bool checkpoint(
+    const std::filesystem::path& workspace,
+    Record& record,
     const std::string& completed_step,
     std::string& detail);
 bool fail(
