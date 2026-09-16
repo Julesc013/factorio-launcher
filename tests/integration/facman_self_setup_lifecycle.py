@@ -149,6 +149,11 @@ def registry_text(registry: dict[str, object], name: str) -> str:
 
 
 def stored_payload(path: Path, executable: Path, version: str, compression: int = zipfile.ZIP_STORED) -> None:
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools.self_setup_package import source_revision, universal_setup_revision
+    facman_revision = source_revision()
+    provider_revision = universal_setup_revision()
     files = {
         f"facman/generations/{version}/bin/facman.exe": b"synthetic-cli-v1\n",
         f"facman/generations/{version}/FacMan.exe": b"synthetic-gui-v1\n",
@@ -157,8 +162,15 @@ def stored_payload(path: Path, executable: Path, version: str, compression: int 
             json.dumps(
                 {
                     "schema": "facman.current_generation.v1",
+                    "product_id": "facman",
                     "version": version,
+                    "generation": f"generations/{version}",
+                    "portable_package": "synthetic-portable.zip",
+                    "portable_sha256": "a" * 64,
+                    "facman_source_revision": facman_revision,
+                    "universal_setup_revision": provider_revision,
                     "workspace_preserved": True,
+                    "automatic_update": False,
                 },
                 sort_keys=True,
                 separators=(",", ":"),
@@ -170,6 +182,56 @@ def stored_payload(path: Path, executable: Path, version: str, compression: int 
         for name, data in sorted(files.items()):
             info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
             info.compress_type = compression
+            info.create_system = 3
+            info.external_attr = 0o100644 << 16
+            archive.writestr(info, data)
+
+
+def stored_maintenance_payload(path: Path, executable: Path, version: str) -> None:
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools.self_setup_package import (
+        maintenance_descriptor,
+        source_revision,
+        universal_setup_revision,
+    )
+    facman_revision = source_revision()
+    provider_revision = universal_setup_revision()
+    current = {
+        "schema": "facman.current_generation.v1",
+        "product_id": "facman",
+        "version": version,
+        "generation": f"generations/{version}",
+        "portable_package": "synthetic-portable.zip",
+        "portable_sha256": "b" * 64,
+        "facman_source_revision": facman_revision,
+        "universal_setup_revision": provider_revision,
+        "workspace_preserved": True,
+        "automatic_update": False,
+    }
+    files = {
+        f"facman/generations/{version}/bin/facman.exe": b"synthetic-cli-v2\n",
+        f"facman/generations/{version}/FacMan.exe": b"synthetic-gui-v2\n",
+        "facman/maintenance/FacManSetup.exe": executable.read_bytes(),
+        "facman/state/current-generation.v1.json": (
+            json.dumps(current, sort_keys=True, separators=(",", ":")) + "\n"
+        ).encode("utf-8"),
+        "facman/state/self-maintenance-package.v1.json": (
+            json.dumps(
+                maintenance_descriptor(
+                    version=version,
+                    facman_revision=facman_revision,
+                    usk_revision=provider_revision,
+                ),
+                sort_keys=True,
+                separators=(",", ":"),
+            ) + "\n"
+        ).encode("utf-8"),
+    }
+    with zipfile.ZipFile(path, "w", allowZip64=True) as archive:
+        for name, data in sorted(files.items()):
+            info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_STORED
             info.create_system = 3
             info.external_attr = 0o100644 << 16
             archive.writestr(info, data)
@@ -427,6 +489,30 @@ def qualification_permit(root: Path, boundary: str, operation: str, version: str
         "issued_at_unix_seconds": now,
         "expires_at_unix_seconds": now + 60,
     }, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    return permit
+
+
+def maintenance_qualification_permit(
+        root: Path, operation: str, apply: bool, version: str,
+        install: Path, state: Path) -> Path:
+    marker = root / ".facman-self-maintenance-qualification-root.v1"
+    marker.write_bytes(b"facman-self-maintenance-qualification-root-v1\n")
+    nonce = secrets.token_hex(32)
+    now = int(time.time())
+    permit = root / f"{nonce}.maintenance-fixture.v1.json"
+    permit.write_text(json.dumps({
+        "schema": "facman.self_maintenance_qualification_fixture.v1",
+        "nonce": nonce,
+        "operation": operation,
+        "apply": apply,
+        "product_version": version,
+        "install_root": str(install),
+        "state_root": str(state),
+        "acceptance_root": str(root),
+        "fixture_marker_sha256": hashlib.sha256(marker.read_bytes()).hexdigest(),
+        "issued_at_unix_seconds": now,
+        "expires_at_unix_seconds": now + 120,
+    }, sort_keys=True, separators=(",", ":")), encoding="utf-8")
     return permit
 
 
@@ -855,6 +941,20 @@ def main() -> int:
         if args.fixture_root is not None and args.payload is None:
             damaged_archive_controls(root, executable, package)
 
+        if args.payload is None:
+            maintenance_refusal = invoke(
+                executable, "update", "--package", package, "--root", install,
+                "--state-root", state, "--acceptance-root", root,
+                shell_integration=True, expected=4,
+            )
+            if (maintenance_refusal.get("error", {}).get("code") !=
+                    "self_maintenance_package_incompatible" or
+                    install.exists() or state.exists()):
+                raise AssertionError(
+                    "public update did not reject a package without strict "
+                    "maintenance metadata before effects"
+                )
+
         plan = invoke(
             executable, "install", "--package", package, "--root", install,
             "--state-root", state, "--acceptance-root", root,
@@ -936,6 +1036,106 @@ def main() -> int:
         if restored["provider"]["payload"]["status"] != "pass":
             raise AssertionError("repair did not restore the exact closure")
 
+        maintenance_chain_active = False
+        if args.payload is None:
+            legacy_digest = hashlib.sha256(package.read_bytes()).hexdigest()
+            repair_cache = state / "repair-sources"
+            repair_cache.mkdir(exist_ok=True)
+            (repair_cache / ".facman-repair-sources.v1").write_bytes(
+                b"facman-repair-sources-v1\n"
+            )
+            legacy_source = repair_cache / f"{legacy_digest}.zip"
+            legacy_helper = repair_cache / f"{legacy_digest}.FacManSetup.exe"
+            legacy_source.write_bytes(package.read_bytes())
+            legacy_helper.write_bytes(executable.read_bytes())
+            helper_digest = hashlib.sha256(
+                legacy_helper.read_bytes()
+            ).hexdigest()
+            (repair_cache / f"{legacy_digest}.maintenance.v1").write_bytes((
+                "facman-repair-source-receipt-v1\n"
+                f"source_sha256={legacy_digest}\n"
+                f"launcher_sha256={helper_digest}\n"
+            ).encode("utf-8"))
+            version_prefix, version_number = version.rsplit(".", 1)
+            target_version = f"{version_prefix}.{int(version_number) + 1}"
+            maintenance_package = root / "maintenance-update.zip"
+            stored_maintenance_payload(
+                maintenance_package, executable, target_version
+            )
+            coordinator = root / "setup-coordinator.v1"
+            unqualified = invoke(
+                executable, "update", "--package", maintenance_package,
+                "--root", install, "--state-root", state,
+                "--acceptance-root", root, expected=4,
+            )
+            if (unqualified.get("error", {}).get("code") !=
+                    "self_maintenance_qualification_invalid" or coordinator.exists()):
+                raise AssertionError(
+                    "production-root no-shell maintenance was not refused before writes"
+                )
+            preview_permit = maintenance_qualification_permit(
+                root, "update", False, version, install, state
+            )
+            preview = invoke(
+                executable, "update", "--package", maintenance_package,
+                "--root", install, "--state-root", state,
+                "--acceptance-root", root,
+                "--qualification-fixture-permit", preview_permit,
+            )
+            if preview.get("phase") != "plan" or coordinator.exists():
+                raise AssertionError(
+                    "public maintenance preview did not remain read-only"
+                )
+            update_permit = maintenance_qualification_permit(
+                root, "update", True, version, install, state
+            )
+            updated = invoke(
+                executable, "update", "--package", maintenance_package,
+                "--root", install, "--state-root", state,
+                "--acceptance-root", root, "--yes",
+                "--qualification-fixture-permit", update_permit,
+            )
+            if updated.get("phase") != "completed":
+                raise AssertionError("public maintenance update did not complete")
+            rollback_preview_permit = maintenance_qualification_permit(
+                root, "rollback", False, version, install, state
+            )
+            discovered = invoke(
+                executable, "rollback", "--root", install,
+                "--state-root", state, "--acceptance-root", root,
+                "--qualification-fixture-permit", rollback_preview_permit,
+            )
+            if (discovered.get("phase") != "plan" or
+                    discovered.get("generation_id") ==
+                    updated.get("generation_id")):
+                raise AssertionError(
+                    "public rollback preview did not discover the predecessor"
+                )
+            rollback_permit = maintenance_qualification_permit(
+                root, "rollback", True, version, install, state
+            )
+            rolled_back = invoke(
+                executable, "rollback", "--root", install,
+                "--state-root", state, "--acceptance-root", root, "--yes",
+                "--qualification-fixture-permit", rollback_permit,
+            )
+            if (rolled_back.get("phase") != "completed" or
+                    rolled_back.get("generation_id") !=
+                    discovered.get("generation_id")):
+                raise AssertionError("public rollback did not reactivate legacy")
+            migrated_uninstall = invoke(
+                executable, "uninstall", "--root", install,
+                "--state-root", state, "--acceptance-root", root, "--yes",
+                expected=4,
+            )
+            if (migrated_uninstall.get("error", {}).get("code") !=
+                    "self_maintenance_active_generation_unsupported" or
+                    not install.is_dir()):
+                raise AssertionError(
+                    "migrated legacy uninstall was not safely refused"
+                )
+            maintenance_chain_active = True
+
         workspace = root / "FacManWorkspace"
         workspace.mkdir()
         keep = workspace / "keep.txt"
@@ -948,6 +1148,11 @@ def main() -> int:
         )
         if refusal.get("status") != "error" or not unknown.is_file() or not keep.is_file():
             raise AssertionError("foreign-content uninstall refusal did not preserve data")
+        if maintenance_chain_active:
+            if refusal.get("error", {}).get("code") != \
+                    "self_maintenance_active_generation_unsupported":
+                raise AssertionError("activation-chain uninstall refusal changed")
+            return 0
         unknown.rename(root / "operator-note-preserved.txt")
 
         removed = invoke(

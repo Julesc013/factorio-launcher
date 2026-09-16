@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <chrono>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
@@ -36,6 +37,9 @@ struct FakeEffects final : facman::self_maintenance::Effects {
   ShellState shortcut = ShellState::old_exact;
   ShellState registration = ShellState::old_exact;
   bool fail_install = false;
+  bool fail_prepare = false;
+  unsigned review_calls = 0;
+  unsigned prepare_calls = 0;
   bool fail_verify = false;
   unsigned install_calls = 0;
   unsigned inspect_calls = 0;
@@ -43,8 +47,19 @@ struct FakeEffects final : facman::self_maintenance::Effects {
   unsigned shortcut_calls = 0;
   unsigned registration_calls = 0;
   std::string provider_operation;
+  std::function<void()> after_review;
 
   CandidateState inspect_candidate(const Plan &) override { return candidate; }
+  EffectResult review_install_local(const Plan &) override {
+    ++review_calls;
+    if (after_review) after_review();
+    return {!fail_prepare, false, sha("review"),
+            fail_prepare ? "plan refused" : ""};
+  }
+  EffectResult prepare_install_local(const Plan &) override {
+    ++prepare_calls;
+    return {true, false, sha("prepare"), ""};
+  }
   EffectResult install_local(const Plan &plan) override {
     ++install_calls;
     provider_operation = plan.provider_operation;
@@ -79,7 +94,9 @@ Generation generation(const fs::path &root, const std::string &version,
   const std::string digest(64, fill);
   return {digest, version, digest, std::string(40, fill),
           std::string(40, fill), "facman.self.generation." + digest,
-          root, root / "generations" / version / "FacMan.exe",
+          root, root.parent_path() / "FacMan",
+          root.parent_path() / "state", root.parent_path(),
+          root / "generations" / version / "FacMan.exe",
           root / "maintenance" / "FacManSetup.exe"};
 }
 
@@ -92,6 +109,8 @@ Request request(const fs::path &root, Operation operation,
                                           : "maintenance.rollback.one";
   value.coordinator_root = root / "coordinator";
   value.logical_root = root / "FacMan";
+  value.state_root = root / "state";
+  value.acceptance_root = root;
   value.package = root / "FacManSetup.zip";
   value.package_sha256 = sha("package");
   value.package_descriptor = {
@@ -102,13 +121,14 @@ Request request(const fs::path &root, Operation operation,
       "FacMan.exe", "bin/facman.exe", "maintenance/FacManSetup.exe", false};
   value.active = generation(root / "legacy", "0.1.0-alpha.5", 'a');
   value.rollback_target = generation(root / "older", "0.1.0-alpha.4", 'b');
-  value.previous_activation_name = "activation.previous.v1.json";
+  value.previous_activation_name =
+      "activation.migration.genesis.v1.json";
   const std::string previous =
-      "{\"operation\":\"update\",\"operation_id\":\"migration.genesis\","
+      "{\"operation\":\"migration\",\"operation_id\":\"migration.genesis\","
       "\"previous\":{\"name\":\"\",\"sha256\":\"\"},"
-      "\"product_id\":\"facman\",\"schema\":\"facman.self_activation.v1\","
-      "\"source_generation_id\":\"" + std::string(64, 'a') +
-      "\",\"target_generation_id\":\"" + std::string(64, 'a') + "\"}\n";
+      "\"generation_id\":\"" + std::string(64, 'a') +
+      "\",\"product_id\":\"facman\",\"schema\":"
+      "\"facman.self_activation.v1\"}\n";
   value.previous_activation_sha256 = sha(previous);
   std::string detail;
   if (!facman::base::write_text_new_atomic(
@@ -174,12 +194,63 @@ int main() {
   fs::create_directories(root);
   bool ok = true;
 
+  const facman::self_maintenance::PackageDescriptor legacy_descriptor{
+      "facman", "0.1.0-alpha.5", "generations/0.1.0-alpha.5",
+      std::string(40, '9'), std::string(40, '8'),
+      "facman.self_maintenance.v1",
+      "versioned_generation_with_maintenance_v1", "FacMan.exe",
+      "bin/facman.exe", "maintenance/FacManSetup.exe", false};
+  auto legacy_result = facman::self_maintenance::make_generation(
+      legacy_descriptor, std::string(64, '7'), "facman.self",
+      root / "legacy-adoption" / "FacMan",
+      root / "legacy-adoption" / "FacMan",
+      root / "legacy-adoption" / "state",
+      root / "legacy-adoption");
+  if (!legacy_result) throw std::runtime_error(legacy_result.error().message);
+  auto legacy = legacy_result.take_value();
+  const fs::path legacy_coordinator =
+      root / "legacy-adoption" / "coordinator";
+  auto legacy_preview = facman::self_maintenance::adopt_legacy(
+      legacy_coordinator, legacy, false);
+  ok &= require(legacy_preview &&
+                    !fs::exists(legacy_coordinator / "activations"),
+                "legacy migration preview wrote coordinator state");
+  fs::create_directories(legacy_coordinator / "activations");
+  fs::create_directories(legacy_coordinator / "generations");
+  std::string partial_detail;
+  if (!facman::base::write_text_new_atomic(
+          legacy_coordinator / "generations" /
+              ("generation." + legacy.generation_id + ".v1.json"),
+          facman::self_maintenance::generation_record_bytes(legacy),
+          partial_detail))
+    throw std::runtime_error(partial_detail);
+  auto legacy_adopted = facman::self_maintenance::adopt_legacy(
+      legacy_coordinator, legacy, true);
+  auto legacy_repeated = facman::self_maintenance::adopt_legacy(
+      legacy_coordinator, legacy, true);
+  auto legacy_discovered = facman::self_maintenance::discover_active(
+      legacy_coordinator);
+  ok &= require(legacy_adopted && legacy_repeated && legacy_discovered &&
+                    legacy_discovered.value().has_value() &&
+                    legacy_discovered.value()->active.install_id ==
+                        "facman.self" &&
+                    !legacy_discovered.value()->previous.has_value() &&
+                    bytes(legacy_adopted.value().activation_name.empty()
+                        ? fs::path()
+                        : legacy_coordinator / "activations" /
+                            legacy_adopted.value().activation_name)
+                            .find("\"operation\":\"migration\"") !=
+                        std::string::npos,
+                "legacy genesis adoption was not deterministic and idempotent");
+
   auto update = request(root / "update", Operation::update);
   FakeEffects update_effects;
   auto updated = facman::self_maintenance::execute(update, update_effects);
   ok &= require(updated && updated.value().phase == "plan",
                 "preview did not remain effect-free");
   ok &= require(update_effects.install_calls == 0 &&
+                    update_effects.review_calls == 1 &&
+                    update_effects.prepare_calls == 0 &&
                     !fs::exists(update.coordinator_root / "maintenance"),
                 "preview produced an effect");
   update.apply = true;
@@ -216,10 +287,76 @@ int main() {
                     fs::is_regular_file(updated.value().activation_record),
                 "update did not append generation and activation records");
   const unsigned completed_install_calls = update_effects.install_calls;
+  const std::string completed_activation = bytes(updated.value().activation_record);
+  const std::string completed_generation = bytes(updated.value().generation_record);
+  update_effects.fail_verify = true;
+  auto refused_completed = facman::self_maintenance::execute(update,
+                                                              update_effects);
+  ok &= require(!refused_completed &&
+                    refused_completed.error().code ==
+                        "self_maintenance_verify_failed" &&
+                    bytes(updated.value().activation_record) ==
+                        completed_activation &&
+                    bytes(updated.value().generation_record) ==
+                        completed_generation &&
+                    update_effects.install_calls == completed_install_calls &&
+                    update_effects.shortcut_calls == 1U &&
+                    update_effects.registration_calls == 1U,
+                "completed retry accepted failed provider verification or wrote state");
+  update_effects.fail_verify = false;
   auto repeated_update = facman::self_maintenance::execute(update, update_effects);
   ok &= require(repeated_update &&
                     update_effects.install_calls == completed_install_calls,
                 "completed update retry was not idempotent");
+
+  auto outside_authority = request(root / "outside-authority",
+                                   Operation::update);
+  outside_authority.apply = true;
+  const fs::path outside_coordinator =
+      root.parent_path() / (root.filename().string() + "-outside-coordinator");
+  fs::remove_all(outside_coordinator, ignored);
+  outside_authority.coordinator_root = outside_coordinator;
+  FakeEffects outside_authority_effects;
+  auto outside_authority_result = facman::self_maintenance::execute(
+      outside_authority, outside_authority_effects);
+  ok &= require(!outside_authority_result &&
+                    outside_authority_result.error().code ==
+                        "self_maintenance_lock_unsafe" &&
+                    outside_authority_effects.review_calls == 0U &&
+                    !fs::exists(outside_coordinator),
+                "out-of-authority coordinator admission produced a write");
+
+  auto substituted_coordinator = request(root / "coordinator-substitution",
+                                         Operation::update);
+  substituted_coordinator.apply = true;
+  const fs::path original_coordinator =
+      substituted_coordinator.coordinator_root;
+  const fs::path moved_coordinator =
+      original_coordinator.parent_path() / "moved-coordinator";
+  bool coordinator_substituted = false;
+  FakeEffects substituted_coordinator_effects;
+  substituted_coordinator_effects.after_review = [&] {
+    std::error_code move_error;
+    fs::rename(original_coordinator, moved_coordinator, move_error);
+    if (!move_error) {
+      coordinator_substituted = true;
+      std::error_code create_error;
+      fs::create_directory(original_coordinator, create_error);
+      if (create_error)
+        throw std::runtime_error("could not create coordinator substitute");
+    }
+  };
+  auto substituted_coordinator_result = facman::self_maintenance::execute(
+      substituted_coordinator, substituted_coordinator_effects);
+  ok &= require(coordinator_substituted
+          ? (!substituted_coordinator_result &&
+             substituted_coordinator_result.error().code ==
+                 "self_maintenance_lock_unsafe" &&
+             !fs::exists(original_coordinator / "setup-operations") &&
+             !fs::exists(moved_coordinator / "setup-operations"))
+          : (substituted_coordinator_result &&
+             !fs::exists(moved_coordinator)),
+      "coordinator substitution was neither pinned nor refused before writes");
 
   auto inactive = request(root / "inactive", Operation::update);
   inactive.apply = true;
@@ -317,6 +454,7 @@ int main() {
   rollback_success.package.clear();
   rollback_success.package_sha256.clear();
   FakeEffects rollback_success_effects;
+  rollback_success_effects.candidate = CandidateState::exact;
   auto rolled_back = facman::self_maintenance::execute(
       rollback_success, rollback_success_effects);
   ok &= require(rolled_back && rollback_success_effects.install_calls == 0 &&
@@ -340,6 +478,32 @@ int main() {
                                                      interrupted_effects);
   ok &= require(recovered && interrupted_effects.install_calls == 1,
                 "exact candidate was not recovered without provider replay");
+
+  auto plan_refused = request(root / "plan-refused", Operation::update);
+  plan_refused.apply = true;
+  fs::remove_all(plan_refused.coordinator_root, ignored);
+  FakeEffects plan_refused_effects;
+  plan_refused_effects.fail_prepare = true;
+  auto refused_plan = facman::self_maintenance::execute(
+      plan_refused, plan_refused_effects);
+  ok &= require(!refused_plan &&
+                    refused_plan.error().code ==
+                        "self_maintenance_plan_failed" &&
+                    plan_refused_effects.install_calls == 0 &&
+                    plan_refused_effects.prepare_calls == 0 &&
+                    !fs::exists(plan_refused.coordinator_root),
+                "provider plan refusal created coordinator state or recorded provider entry");
+
+  auto wrong_authority = request(root / "wrong-authority", Operation::update);
+  wrong_authority.apply = true;
+  wrong_authority.state_root = root / "unreviewed-state";
+  FakeEffects authority_effects;
+  auto authority_result = facman::self_maintenance::execute(
+      wrong_authority, authority_effects);
+  ok &= require(!authority_result && authority_effects.review_calls == 0 &&
+                    !fs::exists(wrong_authority.coordinator_root /
+                                "maintenance"),
+                "mismatched lineage authority produced durable writes");
 
   auto failed_verify = request(root / "failed-verify", Operation::update);
   failed_verify.apply = true;

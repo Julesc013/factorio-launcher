@@ -92,3 +92,63 @@ After deterministic project-state and metadata regeneration, the full strict
 check passed with 131 commands, 432 schemas, and 290 refusal codes. The
 checkpoint remains source qualification only: public verb/provider wiring,
 two-package Windows lifecycle effects, and WorkUnit acceptance remain pending.
+
+## Public setup and pinned-provider checkpoint
+
+Source base: `f7779eaf71f0304a1b15c0eff2d866ce228ddade`
+
+Passed on 2026-09-16 in the existing marker-owned external native developer
+root:
+
+- `cmake --build . --config Debug --target facman_setup facman_self_maintenance_smoke facman_self_maintenance_package_smoke facman_self_maintenance_provider_smoke`
+- `ctest -C Debug --output-on-failure -R "facman_self_maintenance_(smoke|package_smoke|provider_smoke)"`: 3/3 passed
+- `cmake --build . --config Debug --target ALL_BUILD -- /m` followed by
+  `ctest --test-dir . -C Debug --output-on-failure`: 49/49 passed with no
+  skipped or unrun tests in 51.66 seconds
+- `py -3 -m unittest tests.test_self_setup_recovery_contract tests.test_self_setup_package`: 16/16 passed
+- `py -3 -m unittest tests.test_generated_metadata tests.test_generated_frontend_catalogs`: 12/12 passed
+- `py -3 -m py_compile tests/integration/facman_self_setup_lifecycle.py`
+- `py -3 tests/integration/facman_self_setup_lifecycle.py --setup-exe <external-native-root>/Debug/FacManSetup.exe`: passed the isolated public update preview/apply, rollback preview/apply, and migrated-uninstall refusal journey
+- `py -3 tools/codegen/generate_metadata.py --write`: passed
+- `py -3 tools/source_format_check.py`: passed
+- `py -3 .aide/scripts/aide_lite.py test`: passed
+- `py -3 .aide/scripts/aide_lite.py task inspect --task-id FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01` and `task noop-check`: active/partial, continue from status and evidence, no mutation
+- `py -3 tools/strict_check.py`: passed, including 432 schemas, 131 commands, 290 refusal codes, source formatting, security, package/profile/layout/skeleton, queue, and generated-view checks
+- `git diff --check`: passed at closeout
+
+The focused native provider smoke includes direct refusals for out-of-authority
+roots before any provider call, replayed plan identity, empty apply payload,
+mismatched apply transaction, report replay, stale verification time, changed
+ownership, changed summary, and changed report digest. The core smoke proves
+preview calls provider planning without retention and that plan refusal leaves
+no coordinator maintenance directory.
+
+This is local source validation. It is not the pending complete native and
+Python matrices, product candidate qualification, real current-user shell run,
+or two source-distinct produced-package receipt required for WorkUnit closure.
+
+## Final remediation of the public-provider review
+
+The final review corrections retain full generation install identities through
+the provider's derived-record limit, move absent-coordinator refusal after the
+read-only provider plan, revalidate held coordinator authority on the only
+creation path, require completed retries to inspect and verify without writes,
+and bind the no-shell route to a marked, expiring, root-specific fixture permit.
+
+The first isolated lifecycle replay exposed a real provider limit: a full
+generation install ID plus the prior transaction label made Universal Setup's
+derived ownership identifier exceed its 128-character limit. The fix keeps the
+full generation ID and shortens only the opaque transaction label. The replay
+then passed.
+
+After that remediation, the existing external Debug root passed the three
+self-maintenance native CTests (3/3), 28 focused Python
+contract/generated-metadata tests, metadata regeneration, source formatting,
+portable AIDE Lite validation, `git diff --check`, and the isolated public
+update-preview/apply, rollback-preview/apply, and migrated-uninstall-refusal
+lifecycle. A fresh single Debug CTest matrix then recorded all 49 tests as
+passed. The earlier overlapping duplicate CTest attempt left a stale
+`LastTestsFailed.log` entry for the otherwise-passing maintenance smoke; it is
+not used as qualification evidence. The historical 49/49 receipt above remains
+an earlier-source observation, while the fresh matrix is the final-remediation
+source evidence.
