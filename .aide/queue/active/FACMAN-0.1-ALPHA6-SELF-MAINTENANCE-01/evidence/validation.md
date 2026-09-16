@@ -152,3 +152,29 @@ passed. The earlier overlapping duplicate CTest attempt left a stale
 not used as qualification evidence. The historical 49/49 receipt above remains
 an earlier-source observation, while the fresh matrix is the final-remediation
 source evidence.
+
+## PR #299 Windows path-capacity remediation
+
+The hosted Windows lifecycle on `dc927ee5` refused the update plan before
+effects because the former physical root embedded two 256-bit digests and a
+payload file exceeded the 259 UTF-16-code-unit limit. The source now derives
+one domain-separated 256-bit physical-root commitment from the normalized
+logical-root identity and the full generation identity. It does not shorten the
+generation ID or `install_id`.
+
+The exact immediately preceding sibling form,
+`FacMan.generation.<logical-root-sha256>.<generation-sha256>`, remains
+read-compatible only for immutable retained records. The native regression
+discovers that record, updates it into the current one-digest mapping, rolls
+back to it, and separately refuses arbitrary absolute siblings and legacy
+alternate roots.
+
+The external Debug root rebuilt `facman_self_maintenance_smoke` and
+`FacManSetup`; the focused native smoke passed. The real synthetic public
+lifecycle then passed with `--ci-length-root`. Its controlled temporary root
+measured 72 UTF-16 units against the hosted failing root's 63; the hosted
+predecessor payload reference measured 261 units, while the exercised compact
+provider payload measured 205, below the 259-unit limit. The core regression
+also checks deterministic same-input mapping, distinct-generation mapping,
+full install IDs, exact side-by-side record mapping, legacy-root equivalence,
+and the resulting CI-length GUI path budget.

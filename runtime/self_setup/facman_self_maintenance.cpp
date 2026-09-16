@@ -197,6 +197,31 @@ std::string generation_install_id(const std::string &generation_id) {
   return "facman.self.generation." + generation_id;
 }
 
+std::string logical_root_identity(const fs::path &logical_root) {
+  return hash("facman.self.logical-root.v1\n" +
+      facman::platform::path_to_utf8(logical_root.lexically_normal()) + "\n");
+}
+
+std::string physical_generation_root_identity(const fs::path &logical_root,
+                                              const std::string &generation_id) {
+  return hash("facman.self.physical-generation-root.v1\n" +
+      logical_root_identity(logical_root) + "\n" + generation_id + "\n");
+}
+
+fs::path generation_install_root(const fs::path &logical_root,
+                                 const std::string &generation_id) {
+  return logical_root.parent_path() / facman::platform::path_from_utf8(
+      "FacMan.generation." +
+      physical_generation_root_identity(logical_root, generation_id));
+}
+
+fs::path predecessor_generation_install_root(const fs::path &logical_root,
+                                             const std::string &generation_id) {
+  return logical_root.parent_path() / facman::platform::path_from_utf8(
+      "FacMan.generation." + logical_root_identity(logical_root) + "." +
+      generation_id);
+}
+
 PackageDescriptor generation_descriptor(const Generation &generation) {
   return {"facman", generation.product_version,
           "generations/" + generation.product_version,
@@ -629,7 +654,15 @@ bool exact_generation_paths(const Generation &generation) {
       facman::platform::path_from_utf8(generation.product_version) / "FacMan.exe";
   const fs::path expected_maintenance = generation.install_root /
       "maintenance" / "FacManSetup.exe";
-  return same_path(generation.gui, expected_gui) &&
+  const bool exact_install_root = generation.install_id == "facman.self"
+      ? same_path(generation.install_root, generation.logical_root)
+      : same_path(generation.install_root,
+                  generation_install_root(generation.logical_root,
+                                          generation.generation_id)) ||
+            same_path(generation.install_root,
+                      predecessor_generation_install_root(
+                          generation.logical_root, generation.generation_id));
+  return exact_install_root && same_path(generation.gui, expected_gui) &&
       same_path(generation.maintenance_launcher, expected_maintenance);
 }
 
@@ -1009,7 +1042,11 @@ facman::core::Result<Generation> make_generation(
       facman::platform::path_from_utf8(descriptor.gui_relative_path);
   result.maintenance_launcher = result.install_root /
       facman::platform::path_from_utf8(descriptor.maintenance_relative_path);
-  if (!exact_generation_paths(result))
+  if (!exact_generation_paths(result) ||
+      (result.install_id != "facman.self" &&
+       !same_path(result.install_root,
+                  generation_install_root(result.logical_root,
+                                          result.generation_id))))
     return facman::core::Result<Generation>::failure(failure(
         "self_maintenance_input_invalid", "generation paths are invalid"));
   return facman::core::Result<Generation>::success(std::move(result));
@@ -1249,12 +1286,7 @@ facman::core::Result<Plan> plan(const Request &request) {
 
   const std::string id = generation_identity(descriptor,
                                              request.package_sha256);
-  const std::string logical_identity = hash(
-      "facman.self.logical-root.v1\n" +
-      facman::platform::path_to_utf8(request.logical_root.lexically_normal()) + "\n");
-  const fs::path target_root = request.logical_root.parent_path() /
-      facman::platform::path_from_utf8("FacMan.generation." +
-          logical_identity + "." + id);
+  const fs::path target_root = generation_install_root(request.logical_root, id);
   const fs::path generation = target_root /
       facman::platform::path_from_utf8(descriptor.generation_relative_path);
   result.target.generation_id = id;

@@ -3,6 +3,7 @@
 
 #include "facman_self_maintenance.h"
 
+#include "fl_file_io.h"
 #include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
@@ -30,6 +31,38 @@ namespace {
 std::string sha(const std::string &value) {
   return facman::base::sha256_hex_bytes(
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
+}
+
+fs::path physical_generation_root(const fs::path &logical_root,
+                                  const std::string &generation_id) {
+  const std::string logical_identity = sha("facman.self.logical-root.v1\n" +
+      facman::platform::path_to_utf8(logical_root.lexically_normal()) + "\n");
+  const std::string physical_identity = sha(
+      "facman.self.physical-generation-root.v1\n" + logical_identity + "\n" +
+      generation_id + "\n");
+  return logical_root.parent_path() /
+      facman::platform::path_from_utf8("FacMan.generation." +
+                                        physical_identity);
+}
+
+fs::path predecessor_physical_generation_root(
+    const fs::path &logical_root, const std::string &generation_id) {
+  const std::string logical_identity = sha("facman.self.logical-root.v1\n" +
+      facman::platform::path_to_utf8(logical_root.lexically_normal()) + "\n");
+  return logical_root.parent_path() / facman::platform::path_from_utf8(
+      "FacMan.generation." + logical_identity + "." + generation_id);
+}
+
+std::string generation_identity(const std::string &version,
+                                const std::string &package_sha256,
+                                char fill) {
+  const std::string revision(40, fill);
+  return sha("facman.self.generation.v1\nfacman\n" + version + "\n" +
+      package_sha256 + "\n" + revision + "\n" + revision + "\n" +
+      "facman.self_maintenance.v1\n"
+      "versioned_generation_with_maintenance_v1\n" +
+      "generations/" + version + "\nFacMan.exe\nbin/facman.exe\n"
+      "maintenance/FacManSetup.exe\n");
 }
 
 struct FakeEffects final : facman::self_maintenance::Effects {
@@ -91,13 +124,16 @@ struct FakeEffects final : facman::self_maintenance::Effects {
 
 Generation generation(const fs::path &root, const std::string &version,
                       char fill) {
-  const std::string digest(64, fill);
-  return {digest, version, digest, std::string(40, fill),
+  const std::string package_sha256(64, fill);
+  const std::string digest = generation_identity(version, package_sha256, fill);
+  const fs::path logical_root = root.parent_path() / "FacMan";
+  const fs::path install_root = physical_generation_root(logical_root, digest);
+  return {digest, version, package_sha256, std::string(40, fill),
           std::string(40, fill), "facman.self.generation." + digest,
-          root, root.parent_path() / "FacMan",
+          install_root, logical_root,
           root.parent_path() / "state", root.parent_path(),
-          root / "generations" / version / "FacMan.exe",
-          root / "maintenance" / "FacManSetup.exe"};
+          install_root / "generations" / version / "FacMan.exe",
+          install_root / "maintenance" / "FacManSetup.exe"};
 }
 
 Request request(const fs::path &root, Operation operation,
@@ -126,7 +162,7 @@ Request request(const fs::path &root, Operation operation,
   const std::string previous =
       "{\"operation\":\"migration\",\"operation_id\":\"migration.genesis\","
       "\"previous\":{\"name\":\"\",\"sha256\":\"\"},"
-      "\"generation_id\":\"" + std::string(64, 'a') +
+      "\"generation_id\":\"" + value.active.generation_id +
       "\",\"product_id\":\"facman\",\"schema\":"
       "\"facman.self_activation.v1\"}\n";
   value.previous_activation_sha256 = sha(previous);
@@ -263,12 +299,57 @@ int main() {
                             reviewed_update.value().target.generation_id &&
                     reviewed_update.value().target.install_root.filename()
                             .string().size() ==
-                        std::string("FacMan.generation.").size() + 64U + 1U + 64U &&
+                        std::string("FacMan.generation.").size() + 64U &&
                     reviewed_update.value().target.install_root.filename()
                             .string().find(
-                                reviewed_update.value().target.generation_id) !=
-                        std::string::npos,
+                                reviewed_update.value().target.generation_id) ==
+                        std::string::npos &&
+                    reviewed_update.value().target.install_root.filename()
+                            .string() == "FacMan.generation." +
+                                sha("facman.self.physical-generation-root.v1\n" +
+                                    sha("facman.self.logical-root.v1\n" +
+                                        facman::platform::path_to_utf8(
+                                            update.logical_root.lexically_normal()) +
+                                        "\n") + "\n" +
+                                    reviewed_update.value().target.generation_id +
+                                    "\n"),
                 "update did not derive a distinct root and install id");
+  auto repeated_physical_plan = facman::self_maintenance::plan(update);
+  auto different_generation = update;
+  different_generation.package_sha256 = sha("different package");
+  const auto different_physical_plan =
+      facman::self_maintenance::plan(different_generation);
+  ok &= require(repeated_physical_plan && different_physical_plan &&
+                    repeated_physical_plan.value().target.install_root ==
+                        reviewed_update.value().target.install_root &&
+                    different_physical_plan.value().target.generation_id !=
+                        reviewed_update.value().target.generation_id &&
+                    different_physical_plan.value().target.install_root !=
+                        reviewed_update.value().target.install_root,
+                "physical generation root was not deterministic and collision-resistant");
+
+  auto ci_length = update;
+  const fs::path ci_root = fs::path(
+      "C:/Users/RUNNER~1/AppData/Local/Temp/facman-self-setup-oq9k_8n0");
+  ci_length.logical_root = ci_root / "Programs" / "FacMan";
+  ci_length.state_root = ci_root / "SetupState";
+  ci_length.acceptance_root = ci_root;
+  ci_length.active.logical_root = ci_length.logical_root;
+  ci_length.active.state_root = ci_length.state_root;
+  ci_length.active.acceptance_root = ci_length.acceptance_root;
+  ci_length.active.install_root = physical_generation_root(
+      ci_length.logical_root, ci_length.active.generation_id);
+  ci_length.active.gui = ci_length.active.install_root / "generations" /
+      ci_length.active.product_version / "FacMan.exe";
+  ci_length.active.maintenance_launcher = ci_length.active.install_root /
+      "maintenance" / "FacManSetup.exe";
+  const auto ci_plan = facman::self_maintenance::plan(ci_length);
+  ok &= require(ci_plan &&
+                    ci_plan.value().target.install_root.filename().string().size() ==
+                        std::string("FacMan.generation.").size() + 64U &&
+                    ci_plan.value().target.install_root.native().size() < 259U &&
+                    ci_plan.value().target.gui.native().size() < 259U,
+                "CI-length logical root did not produce a provider-admissible target");
   updated = facman::self_maintenance::execute(update, update_effects);
   if (!updated) std::cerr << "update error: " << updated.error().code << ": "
                           << updated.error().message << ": "
@@ -286,6 +367,16 @@ int main() {
   ok &= require(fs::is_regular_file(updated.value().generation_record) &&
                     fs::is_regular_file(updated.value().activation_record),
                 "update did not append generation and activation records");
+  const auto discovered_after_update =
+      facman::self_maintenance::discover_active(update.coordinator_root);
+  ok &= require(discovered_after_update &&
+                    discovered_after_update.value().has_value() &&
+                    discovered_after_update.value()->active.install_root ==
+                        reviewed_update.value().target.install_root &&
+                    discovered_after_update.value()->previous.has_value() &&
+                    discovered_after_update.value()->previous->install_root ==
+                        update.active.install_root,
+                "update discovery did not retain the exact physical root mapping");
   const unsigned completed_install_calls = update_effects.install_calls;
   const std::string completed_activation = bytes(updated.value().activation_record);
   const std::string completed_generation = bytes(updated.value().generation_record);
@@ -459,8 +550,63 @@ int main() {
       rollback_success, rollback_success_effects);
   ok &= require(rolled_back && rollback_success_effects.install_calls == 0 &&
                     rolled_back.value().active.generation_id ==
-                        update.active.generation_id,
+                        update.active.generation_id &&
+                    updated.value().active.install_root ==
+                        reviewed_update.value().target.install_root &&
+                    rolled_back.value().active.install_root ==
+                        update.active.install_root,
                 "rollback did not activate a retained generation without provider mutation");
+
+  auto predecessor_compat = request(root / "predecessor-compat",
+                                    Operation::update);
+  predecessor_compat.apply = true;
+  Generation predecessor = predecessor_compat.active;
+  predecessor.install_root = predecessor_physical_generation_root(
+      predecessor.logical_root, predecessor.generation_id);
+  predecessor.gui = predecessor.install_root / "generations" /
+      predecessor.product_version / "FacMan.exe";
+  predecessor.maintenance_launcher = predecessor.install_root /
+      "maintenance" / "FacManSetup.exe";
+  replace_file(predecessor_compat.coordinator_root / "generations" /
+                   ("generation." + predecessor.generation_id + ".v1.json"),
+               facman::self_maintenance::generation_record_bytes(predecessor));
+  predecessor_compat.active = predecessor;
+  const auto predecessor_discovered = facman::self_maintenance::discover_active(
+      predecessor_compat.coordinator_root);
+  ok &= require(predecessor_discovered &&
+                    predecessor_discovered.value().has_value() &&
+                    predecessor_discovered.value()->active.install_root ==
+                        predecessor.install_root,
+                "exact predecessor generation root was not discovered");
+  FakeEffects predecessor_effects;
+  const auto predecessor_updated = facman::self_maintenance::execute(
+      predecessor_compat, predecessor_effects);
+  ok &= require(predecessor_updated &&
+                    predecessor_updated.value().active.install_root !=
+                        predecessor.install_root &&
+                    predecessor_updated.value().active.install_root.filename()
+                        .string().size() ==
+                        std::string("FacMan.generation.").size() + 64U,
+                "predecessor generation did not update into the current root mapping");
+  Request predecessor_rollback = predecessor_compat;
+  predecessor_rollback.operation = Operation::rollback;
+  predecessor_rollback.operation_id = "maintenance.rollback.predecessor";
+  predecessor_rollback.active = predecessor_updated.value().active;
+  predecessor_rollback.rollback_target = predecessor;
+  predecessor_rollback.previous_activation_name =
+      predecessor_updated.value().activation_record.filename().string();
+  predecessor_rollback.previous_activation_sha256 =
+      sha(bytes(predecessor_updated.value().activation_record));
+  predecessor_rollback.package.clear();
+  predecessor_rollback.package_sha256.clear();
+  FakeEffects predecessor_rollback_effects;
+  predecessor_rollback_effects.candidate = CandidateState::exact;
+  const auto predecessor_rolled_back = facman::self_maintenance::execute(
+      predecessor_rollback, predecessor_rollback_effects);
+  ok &= require(predecessor_rolled_back &&
+                    predecessor_rolled_back.value().active.install_root ==
+                        predecessor.install_root,
+                "rollback did not retain the exact predecessor physical root");
 
   auto interrupted = request(root / "interrupted", Operation::update);
   interrupted.apply = true;
@@ -531,10 +677,41 @@ int main() {
   }
 
   auto same_root = request(root / "same-root", Operation::rollback);
-  same_root.rollback_target = generation(same_root.active.install_root,
+  same_root.rollback_target = generation(root / "same-root" / "older",
                                          "0.1.0-alpha.4", 'b');
+  same_root.rollback_target.install_root = same_root.active.install_root;
+  same_root.rollback_target.gui = same_root.active.install_root /
+      "generations" / same_root.rollback_target.product_version / "FacMan.exe";
+  same_root.rollback_target.maintenance_launcher =
+      same_root.active.install_root / "maintenance" / "FacManSetup.exe";
   ok &= require(!facman::self_maintenance::plan(same_root),
                 "rollback accepted identical source and target roots");
+  auto inconsistent_side_by_side = request(
+      root / "inconsistent-side-by-side", Operation::rollback);
+  inconsistent_side_by_side.active.install_root =
+      inconsistent_side_by_side.active.install_root.parent_path() /
+      "FacMan.generation.unrelated";
+  inconsistent_side_by_side.active.gui =
+      inconsistent_side_by_side.active.install_root / "generations" /
+      inconsistent_side_by_side.active.product_version / "FacMan.exe";
+  inconsistent_side_by_side.active.maintenance_launcher =
+      inconsistent_side_by_side.active.install_root / "maintenance" /
+      "FacManSetup.exe";
+  ok &= require(!facman::self_maintenance::plan(inconsistent_side_by_side),
+                "rollback accepted an inconsistent absolute side-by-side root");
+  auto legacy_alternate_root = request(root / "legacy-alternate",
+                                       Operation::rollback);
+  legacy_alternate_root.active.install_id = "facman.self";
+  legacy_alternate_root.active.install_root =
+      root / "legacy-alternate" / "alternate";
+  legacy_alternate_root.active.gui =
+      legacy_alternate_root.active.install_root / "generations" /
+      legacy_alternate_root.active.product_version / "FacMan.exe";
+  legacy_alternate_root.active.maintenance_launcher =
+      legacy_alternate_root.active.install_root / "maintenance" /
+      "FacManSetup.exe";
+  ok &= require(!facman::self_maintenance::plan(legacy_alternate_root),
+                "rollback accepted a legacy record rooted away from its logical root");
   auto relative_rollback = request(root / "relative-rollback",
                                    Operation::rollback);
   relative_rollback.rollback_target = generation(fs::path("relative-root"),

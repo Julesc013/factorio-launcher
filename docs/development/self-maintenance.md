@@ -21,6 +21,17 @@ while their records retain the user-facing logical root and the normalized
 provider state and acceptance roots. The state root must remain an existing
 stable descendant of the recorded acceptance root.
 
+The physical side-by-side root is `FacMan.generation.<sha256>`. Its single
+256-bit component is a domain-separated SHA-256 commitment to the normalized
+logical-root identity and full generation identity. This bounds Windows
+provider payload paths without truncating either durable identity.
+
+Immutable side-by-side records written by the immediately preceding source
+format, `FacMan.generation.<logical-root-sha256>.<generation-sha256>`, remain
+read-compatible for discovery, update, and rollback only. New plans and newly
+created generations always use the single-digest form; any other sibling root
+is refused.
+
 FacMan asks the pinned Universal Setup provider only for
 `install_local.plan`, `install_local.apply`, `installed.inspect`, and
 `installed.verify`. Provider planning is read-only. Local source retention

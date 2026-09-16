@@ -93,6 +93,15 @@ identity, empty apply payloads, stale verification reports, and evidence that
 does not bind the requested installation, ownership manifest, report ID, and
 timestamp.
 
+The physical sibling directory is `FacMan.generation.<sha256>`. That one
+domain-separated SHA-256 binds the normalized logical root and the full
+generation ID, retaining a deterministic collision-resistant mapping while
+keeping provider payload paths inside the Windows native limit.
+
+Existing immutable records from the preceding two-digest sibling format remain
+read-compatible for discovery, update, and rollback. FacMan never creates that
+format again, and it refuses unrelated sibling directories.
+
 Generation and activation records are immutable. Each activation binds the
 name and digest of the unique previous chain head. The scanner requires one
 genesis and one connected linear chain, and it binds each child's source

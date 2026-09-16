@@ -136,3 +136,20 @@ is related evidence only.
 - The no-shell public route is accepted only with the marked, root-bound,
   expiring fixture permit. The lifecycle regression exercises production-root
   refusal as well as isolated update and rollback application.
+
+## PR #299 Windows path-capacity remediation
+
+- `runtime/self_setup/facman_self_maintenance.cpp` replaces the former
+  two-digest physical directory name with one domain-separated full SHA-256
+  mapping of logical-root and generation identities. It accepts only the exact
+  preceding two-digest mapping when reading an immutable existing record;
+  plans and new generations use the one-digest mapping. Legacy `facman.self`
+  records must remain at their logical root.
+- `tests/native/facman_self_maintenance_smoke.cpp` covers deterministic and
+  distinct mappings, retained predecessor discovery/update/rollback,
+  inconsistent physical records, legacy alternate roots, full install IDs, and
+  CI-length paths.
+- `tests/integration/facman_self_setup_lifecycle.py` adds the disposable
+  `--ci-length-root` lifecycle mode, which controls the disposable root length,
+  records the hosted and exercised UTF-16 lengths, and requires the compact
+  provider payload path to remain below the Windows limit.

@@ -30,6 +30,27 @@ CANARY_TIMEOUT: float | None = None
 REAL_COMMANDS: list[dict[str, object]] = []
 REAL_CHILD_ROOT: Path | None = None
 PROCESS_CALL_COUNT = 0
+HOSTED_WINDOWS_FAILURE_ROOT = (
+    r"C:\Users\RUNNER~1\AppData\Local\Temp\facman-self-setup-oq9k_8n0"
+)
+
+
+def utf16_units(path: Path | str) -> int:
+    return len(str(path).encode("utf-16-le")) // 2
+
+
+def provider_payload_path(root: Path, version: str, *, predecessor: bool) -> Path:
+    physical = "FacMan.generation." + "0" * 64
+    if predecessor:
+        physical += "." + "0" * 64
+    return root / "Programs" / physical / "generations" / version / "bin" / "facman.exe"
+
+
+def ci_length_child_root(parent: Path) -> tuple[Path, int]:
+    required_units = utf16_units(Path(HOSTED_WINDOWS_FAILURE_ROOT))
+    candidate = parent / "ci"
+    deficit = max(0, required_units - utf16_units(candidate))
+    return parent / ("ci-" + "x" * deficit), required_units
 
 
 def run_command(command: list[str]):
@@ -859,6 +880,8 @@ def main() -> int:
         help="Qualify the exact installed CLI resources before damage and uninstall.",
     )
     parser.add_argument("--compression", choices=("stored", "deflate"), default="stored")
+    parser.add_argument("--ci-length-root", action="store_true",
+                        help="Use a synthetic temporary root at the hosted-Windows path length.")
     parser.add_argument("--fixture-root", type=Path,
                         help="New disposable fixture path; retain all effects including failed runs.")
     parser.add_argument("--real-current-user-integration", action="store_true",
@@ -912,6 +935,10 @@ def main() -> int:
         args.fixture_root.mkdir(parents=False)
         CALL_EVIDENCE = args.fixture_root / "calls"
         CALL_EVIDENCE.mkdir()
+    if args.ci_length_root and (args.fixture_root is not None or args.payload is not None):
+        parser.error("--ci-length-root is limited to the disposable synthetic lifecycle")
+    if args.ci_length_root and os.name != "nt":
+        parser.error("--ci-length-root is Windows-only")
 
     if args.resource_package_evidence is not None and args.payload is None:
         parser.error("--resource-package-evidence requires --payload")
@@ -924,9 +951,49 @@ def main() -> int:
         raise AssertionError(f"unexpected setup version: {version}")
 
     fixture = (contextlib.nullcontext(str(args.fixture_root)) if args.fixture_root is not None
-               else tempfile.TemporaryDirectory(prefix="facman-self-setup-"))
+               else tempfile.TemporaryDirectory(prefix=(
+                   "facman-self-setup-ci-long-" if args.ci_length_root
+                   else "facman-self-setup-")))
     with fixture as temporary:
         root = Path(temporary)
+        version_prefix, version_number = version.rsplit(".", 1)
+        maintenance_version = f"{version_prefix}.{int(version_number) + 1}"
+        if args.ci_length_root:
+            root, hosted_root_units = ci_length_child_root(root)
+            root.mkdir()
+            hosted_predecessor_payload_units = utf16_units(
+                provider_payload_path(
+                    Path(HOSTED_WINDOWS_FAILURE_ROOT), maintenance_version,
+                    predecessor=True
+                )
+            )
+            exercised_payload = provider_payload_path(
+                root, maintenance_version, predecessor=False
+            )
+            exercised_payload_units = utf16_units(exercised_payload)
+            exercised_root_units = utf16_units(root)
+            if exercised_root_units < hosted_root_units:
+                raise AssertionError(
+                    "CI-length root did not reach the hosted failing root length"
+                )
+            if exercised_payload_units >= 259:
+                raise AssertionError(
+                    "compact physical generation root still exceeds the "
+                    "Windows provider payload limit"
+                )
+            if hosted_predecessor_payload_units < 259:
+                raise AssertionError(
+                    "hosted predecessor reference no longer models the "
+                    "recorded native path-limit failure"
+                )
+            print(
+                "ci-length-root: "
+                f"hosted_root_utf16={hosted_root_units} "
+                f"exercised_root_utf16={exercised_root_units} "
+                "hosted_predecessor_payload_utf16="
+                f"{hosted_predecessor_payload_units} "
+                f"exercised_payload_utf16={exercised_payload_units}"
+            )
         programs = root / "Programs"
         programs.mkdir()
         install = programs / "FacMan"
@@ -1056,8 +1123,7 @@ def main() -> int:
                 f"source_sha256={legacy_digest}\n"
                 f"launcher_sha256={helper_digest}\n"
             ).encode("utf-8"))
-            version_prefix, version_number = version.rsplit(".", 1)
-            target_version = f"{version_prefix}.{int(version_number) + 1}"
+            target_version = maintenance_version
             maintenance_package = root / "maintenance-update.zip"
             stored_maintenance_payload(
                 maintenance_package, executable, target_version
