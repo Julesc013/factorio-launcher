@@ -1,8 +1,9 @@
 # FacMan 0.1 Windows reference and preview contract
 
 Status: the original Windows-only Technical Preview is retained as the
-reference-platform contract, but its sequencing is superseded by the active
-alpha.5 beta-readiness programme. No human verdict, execution, release,
+reference-platform contract, but its sequencing is superseded by the allocated,
+unqualified alpha.6 beta-readiness programme. Alpha.5 qualification is
+historical evidence only. No human verdict, execution, release,
 signing, publication, or support authority is granted.
 
 Canonical milestone: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` in
@@ -19,7 +20,7 @@ recovery. The TUI is the required task-oriented projection invoked as
 `facman tui`; its Advanced surface is generated from the same command
 specification as the CLI. No package requires a separate TUI executable.
 
-The active alpha.5 programme also produces explicitly unsupported semantic
+The historical alpha.5 programme produced explicitly unsupported semantic
 previews for GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel. Each
 platform has one portable and one setup candidate. These previews do not turn
 the Windows reference contract into a three-platform support promise.
@@ -66,7 +67,8 @@ revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
 `c07938618bc0f533fd12756cba123f54b8592048`. Four workflow artifacts culminated
 in a download-back-verified 14-file internal unsigned, unpublished evidence
 bundle. It is not the final public eight-asset matrix. The non-authorizing
-receipt is `release/index/alpha5_promotion_candidate_closeout.v1.toml`.
+final-run receipt is `release/index/alpha5_final_candidate_closeout.v1.toml`;
+the promotion receipt is separate predecessor history.
 
 The run machine-qualified WinForms as the reference product and GTK3/AppKit as
 semantic previews. It did not supply human install, accessibility, packaged

@@ -414,7 +414,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 - [x] **FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01** — Close final Alpha.5 candidate truth
   - State: `complete`; priority/size: `P0/M`
   - Owner: `Codex`; dependencies: `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`
-  - Outcome: Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history.
+  - Outcome: Record the historical Alpha.5 exact successful final candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history.
 - [x] **FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01** — Consolidate active release and support views
   - State: `complete`; priority/size: `P0/M`
   - Owner: `Codex`; dependencies: `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`

@@ -18,10 +18,11 @@ if str(ROOT) not in sys.path:
 from tools import architecture_fitness
 
 
-VERSION = "0.1.0-alpha.5"
+VERSION = "0.1.0-alpha.6"
 CANONICAL_VERSION = f"facman-{VERSION}"
 TAG = f"v{VERSION}"
 CHANNEL = "alpha"
+ALPHA5_VERSION = "0.1.0-alpha.5"
 ALPHA3_VERSION = "0.1.0-alpha.3"
 ALPHA3_CANONICAL_VERSION = f"facman-{ALPHA3_VERSION}"
 SOURCE_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
@@ -207,6 +208,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
             ALPHA2_CANONICAL_VERSION,
             ALPHA3_CANONICAL_VERSION,
             "facman-0.1.0-alpha.4",
+            "facman-0.1.0-alpha.5",
             CANONICAL_VERSION,
         ],
     )
@@ -268,6 +270,35 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         ("release_source_is_dev_sync_revision", False),
     ):
         _expect(violations, f"train.{field}", train.get(field), expected)
+    _expect(
+        violations,
+        "train.current_allocation",
+        train.get("current_allocation"),
+        {
+            "work_item": "FACMAN-0.1.0-ALPHA.6",
+            "version": VERSION,
+            "status": "allocated_unqualified_unsigned_untagged_unpublished",
+            "candidate_receipt": "",
+            "tag": "",
+            "signing": False,
+            "publication": False,
+        },
+    )
+    _expect(
+        violations,
+        "train.historical_alpha5_candidate",
+        train.get("historical_alpha5_candidate"),
+        {
+            "version": ALPHA5_VERSION,
+            "source_workunit": CURRENT_SOURCE_WORK_UNIT,
+            "source_status": "final_candidate_machine_qualified_unpublished",
+            "source_revision": MAIN_REVISION,
+            "source_tree": SOURCE_TREE,
+            "candidate_run": CANDIDATE_RUN,
+            "candidate_attempt": CANDIDATE_ATTEMPT,
+            "receipt": CANDIDATE_RECEIPT,
+        },
+    )
     for field, expected in (
         ("version_allocation", True),
         ("tag_creation", True),
@@ -456,11 +487,12 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     plan = records["plan"]
     _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.6")
     plan_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.5")
-    _expect(violations, "plan.release.version", plan_release.get("version"), VERSION)
+    _expect(violations, "plan.release.version", plan_release.get("version"), ALPHA5_VERSION)
     _expect(violations, "plan.release.status", plan_release.get("status"), "complete")
     alpha6_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.6")
     _expect(violations, "plan.alpha6_release.status", alpha6_release.get("status"), "active")
-    _expect(violations, "plan.alpha6_release.version_allocated", alpha6_release.get("version_allocated"), False)
+    _expect(violations, "plan.alpha6_release.version_allocated", alpha6_release.get("version_allocated"), True)
+    _expect(violations, "plan.alpha6_release.planning_label", alpha6_release.get("planning_label"), False)
     alpha3_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.3")
     _expect(violations, "plan.alpha3_release.status", alpha3_release.get("status"), "complete")
     alpha1_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.1")

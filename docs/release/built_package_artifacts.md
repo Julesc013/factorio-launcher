@@ -1,8 +1,8 @@
 # Built Package Artifacts
 
-## Current candidate lanes and immutable alpha.3 bytes
+## Current allocated product lanes and immutable alpha.3 bytes
 
-The current unified product profiles are `windows_product_x64`,
+The current allocated Alpha.6 product profiles are `windows_product_x64`,
 `macos_product_x64`, and `linux_product_x64`. Each defines one canonical stage
 containing both `FacMan` and `facman`; portable and setup are adapters over that
 stage. The exact `0.1.0-alpha.5` candidate from revision
@@ -28,8 +28,8 @@ SBOM, licence, and qualification outputs remain package contents or are folded
 into `FacMan-0.1.0-alpha.3-evidence.zip`; they are not separate downloads.
 
 The sections below document earlier built-artifact milestones and their
-continuing role as regression evidence. They do not define the active alpha.5
-candidate or public release shape.
+continuing role as regression evidence. They do not define an Alpha.6 candidate
+receipt or public release shape.
 
 `FACMAN-BUILT-PACKAGE-ARTIFACT-01` moves package proof from generated
 skeletons to unsigned local package roots that contain built FacMan binaries.
@@ -40,10 +40,10 @@ an OS-neutral promise and not a collection of nominally replaceable DLLs.
 
 That historical milestone did not create signed packages, notarized apps,
 AppImages, DMGs, package-manager repositories, auto-update metadata, or
-published release artifacts. The current product profiles do create portable
-and self-setup candidates for all three declared platforms without changing
-the signing, notarization, auto-update, publication, or public-support
-boundary.
+published release artifacts. The current Alpha.6 product profiles define
+portable and self-setup package lanes for all three declared platforms without
+creating a candidate receipt or changing the signing, notarization, auto-update,
+publication, or public-support boundary.
 
 ## Tools
 

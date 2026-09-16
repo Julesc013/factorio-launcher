@@ -21,7 +21,7 @@ SCHEMA = ROOT / "contracts/schema/release/provider_adoption_successor.v1.schema.
 RELEASE_INDEX = ROOT / "release/index/release_index.v1.toml"
 PROJECT_STATUS = ROOT / "release/index/project_status.v2.toml"
 
-CURRENT_INPUTS = {
+ADOPTION_INPUTS = {
     "workspace_lock": "a43e20c51e6f67a0972f205e55061ed8d67128a19d403f51585e67b6118a7476",
     "dependency_lock": "453dcc0173548a8e9af5a19846954509d8b2bab6dabccc1a446228df4971bbfb",
     "providers_lock": "0f1eaa2d83854f0edfc7e13cff1816fd7a91202fa50c38f4131518297aa51b5f",
@@ -35,12 +35,29 @@ PRIOR_INPUTS = {
     "build_manifest": "92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be",
     "sbom": "cff10ca2e7ead40c889100078c89c79fdedb71c9d9f7ab9446ce1029a3cd8c79",
 }
-INPUT_PATHS = {
+PROVIDER_LOCKED_INPUT_PATHS = {
     "workspace_lock": "release/index/workspace_lock.v1.toml",
-    "dependency_lock": "release/index/dependency_lock.v1.toml",
     "providers_lock": "release/index/providers.lock.v2.toml",
+}
+PRODUCT_VERSION_INPUT_PATHS = {
+    "dependency_lock": "release/index/dependency_lock.v1.toml",
     "build_manifest": "release/index/build_manifest.v1.toml",
     "sbom": "release/index/sbom.components.v1.json",
+}
+PRODUCT_VERSION_OCCURRENCES = {
+    "dependency_lock": 1,
+    "build_manifest": 4,
+    "sbom": 1,
+}
+PRODUCT_VERSION_SUCCESSOR = {
+    "version": "0.1.0-alpha.6",
+    "scope": "first_party_product_version_only",
+    "changed_inputs": [
+        "release/index/dependency_lock.v1.toml",
+        "release/index/build_manifest.v1.toml",
+        "release/index/sbom.components.v1.json",
+    ],
+    "qualification": "unqualified",
 }
 PROJECTION_SOURCE = {
     "workflow_run": 35003750747,
@@ -132,6 +149,88 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _normalise_product_version_successor(data: bytes) -> bytes:
+    """Return an alpha5-adoption byte view of an authorized alpha6 rebind."""
+
+    return data.replace(b"0.1.0-alpha.6", b"0.1.0-alpha.5")
+
+
+def _components(rows: Any) -> dict[str, dict[str, Any]]:
+    if not isinstance(rows, list):
+        return {}
+    return {
+        str(item.get("id")): item
+        for item in rows
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+
+
+def _product_version_successor_problems(root: Path) -> list[str]:
+    """Allow only the current product version rebinding after provider adoption.
+
+    The successor record preserves the provider-adoption byte closure.  These
+    three product manifests necessarily change with the allocated FacMan
+    version, so this verifies their provider projections and product bindings
+    rather than relabelling the historical closure as current provider input.
+    """
+
+    problems: list[str] = []
+    try:
+        version = _load_toml(root / "release/index/version.v2.toml")
+        dependency = _load_toml(root / "release/index/dependency_lock.v1.toml")
+        manifest = _load_toml(root / "release/index/build_manifest.v1.toml")
+        sbom = _load_json(root / "release/index/sbom.components.v1.json")
+    except (OSError, tomllib.TOMLDecodeError, ValueError, json.JSONDecodeError) as exc:
+        return [f"product-version successor inputs cannot be read: {exc}"]
+
+    current_version = version.get("semver")
+    if current_version != PRODUCT_VERSION_SUCCESSOR["version"]:
+        problems.append("product-version successor does not bind the allocated alpha6 version")
+
+    dependency_components = _components(dependency.get("component"))
+    manifest_components = _components(manifest.get("component"))
+    sbom_components = _components(sbom.get("components"))
+    for name, components in (
+        ("dependency", dependency_components),
+        ("build manifest", manifest_components),
+        ("sbom", sbom_components),
+    ):
+        for component_id in ("factorio_binding", "universal_launcher", "universal_setup"):
+            if component_id not in components:
+                problems.append(f"product-version successor {name} omits {component_id}")
+
+    for name, components in (
+        ("dependency", dependency_components),
+        ("build manifest", manifest_components),
+        ("sbom", sbom_components),
+    ):
+        for component_id in ("factorio_binding", "universal_launcher", "universal_setup"):
+            component = components.get(component_id, {})
+            expected_version = (
+                current_version if component_id == "factorio_binding"
+                else next(item["package_version"] for item in EXPECTED_PROVIDERS if item["id"] == component_id)
+            )
+            if component.get("version") != expected_version:
+                problems.append(
+                    f"product-version successor {name} {component_id} version differs"
+                )
+
+    for provider in EXPECTED_PROVIDERS:
+        provider_id = provider["id"]
+        dependency_component = dependency_components.get(provider_id, {})
+        sbom_component = sbom_components.get(provider_id, {})
+        if dependency_component.get("pin") != provider["revision"] or dependency_component.get("tree") != provider["tree"]:
+            problems.append(f"product-version successor dependency provider differs: {provider_id}")
+        if sbom_component.get("commit") != provider["revision"] or sbom_component.get("tree") != provider["tree"]:
+            problems.append(f"product-version successor SBOM provider differs: {provider_id}")
+
+    if manifest.get("canonical_version") != f"facman-{current_version}":
+        problems.append("product-version successor build manifest canonical version differs")
+    if manifest.get("filename_version") != f"facman-{current_version}":
+        problems.append("product-version successor build manifest filename version differs")
+    return problems
+
+
 def _invalidations(record: dict[str, Any]) -> tuple[dict[str, dict[str, Any]], list[str]]:
     rows: dict[str, dict[str, Any]] = {}
     problems: list[str] = []
@@ -193,8 +292,10 @@ def validate(root: Path = ROOT, record: dict[str, Any] | None = None) -> list[st
         problems.append("provider adoption successor has the wrong hosted projection source")
     if value.get("prior_inputs") != PRIOR_INPUTS:
         problems.append("provider adoption successor prior input closure differs")
-    if value.get("current_inputs") != CURRENT_INPUTS:
+    if value.get("current_inputs") != ADOPTION_INPUTS:
         problems.append("provider adoption successor current input closure differs")
+    if value.get("product_version_successor") != PRODUCT_VERSION_SUCCESSOR:
+        problems.append("provider adoption successor product version successor differs")
     if value.get("providers") != EXPECTED_PROVIDERS:
         problems.append("provider adoption successor provider identities differ")
 
@@ -214,15 +315,31 @@ def validate(root: Path = ROOT, record: dict[str, Any] | None = None) -> list[st
         if rows.get(identity) != expected:
             problems.append(f"provider adoption successor invalidation differs: {identity}")
 
-    for name, relative in INPUT_PATHS.items():
+    for name, relative in PROVIDER_LOCKED_INPUT_PATHS.items():
         path = root / relative
         try:
             actual = _sha256(path)
         except OSError as exc:
             problems.append(f"current provider input cannot be hashed: {relative}: {exc}")
         else:
-            if actual != CURRENT_INPUTS[name]:
+            if actual != ADOPTION_INPUTS[name]:
                 problems.append(f"current provider input differs: {relative}")
+
+    for name, relative in PRODUCT_VERSION_INPUT_PATHS.items():
+        path = root / relative
+        try:
+            data = path.read_bytes()
+        except OSError as exc:
+            problems.append(f"product-version successor input cannot be read: {relative}: {exc}")
+            continue
+        if data.count(b"0.1.0-alpha.6") != PRODUCT_VERSION_OCCURRENCES[name]:
+            problems.append(f"product-version successor version occurrence count differs: {relative}")
+        if _sha256(Path(path)) == ADOPTION_INPUTS[name]:
+            problems.append(f"product-version successor did not rebind the product version: {relative}")
+        if hashlib.sha256(_normalise_product_version_successor(data)).hexdigest() != ADOPTION_INPUTS[name]:
+            problems.append(f"product-version successor changes more than product version: {relative}")
+
+    problems.extend(_product_version_successor_problems(root))
 
     try:
         release_index = _load_toml(root / RELEASE_INDEX.relative_to(ROOT))

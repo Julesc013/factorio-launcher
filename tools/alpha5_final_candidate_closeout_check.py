@@ -136,7 +136,8 @@ def validate_receipt(receipt: dict[str, Any]) -> list[str]:
     ]
     exact_top = {
         "work_unit": WORK_UNIT,
-        "record_role": "current_alpha5_candidate",
+        "record_role": "historical_alpha5_final_candidate",
+        "current_candidate": False,
         "candidate_artifact_name": FINAL_ARTIFACT_NAME,
         "candidate_artifact_digest": FINAL_ARTIFACT_DIGEST,
     }

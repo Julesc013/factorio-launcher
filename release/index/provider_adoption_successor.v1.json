@@ -116,6 +116,16 @@
       "tree": "d0e4eef8cd6303079f1b25688d29a636a2e4c558"
     }
   ],
+  "product_version_successor": {
+    "changed_inputs": [
+      "release/index/dependency_lock.v1.toml",
+      "release/index/build_manifest.v1.toml",
+      "release/index/sbom.components.v1.json"
+    ],
+    "qualification": "unqualified",
+    "scope": "first_party_product_version_only",
+    "version": "0.1.0-alpha.6"
+  },
   "schema": "facman.provider_adoption_successor.v1",
   "status": "candidate_applied_pending_protected_dev_integration",
   "work_unit": "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01"

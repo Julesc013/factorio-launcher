@@ -11,8 +11,9 @@ branding assets.
 
 ## Current alpha direction
 
-`0.1.0-alpha.5` remains the exact machine-qualified product candidate while the
-engineering programme has advanced to the unallocated Alpha.6 planning label.
+`0.1.0-alpha.6` is the current allocated development identity. It is
+unqualified, unsigned, untagged, and unpublished. `0.1.0-alpha.5` remains
+historical exact machine-qualified candidate evidence only.
 Final exact workflow run `33603385303`, attempt 1 machine-qualified source revision
 `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
 `c07938618bc0f533fd12756cba123f54b8592048` across Windows, macOS Intel, and

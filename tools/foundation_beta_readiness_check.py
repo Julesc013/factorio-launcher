@@ -70,56 +70,56 @@ AUTHORITY_STATES = {"not_applicable", "blocked_external"}
 PLATFORM_STATES = {
     "windows_x64": {
         "implemented_baseline_exact_candidate_pending",
-        "exact_candidate_machine_qualified",
+        "historical_alpha5_exact_candidate_machine_qualified_current_alpha6_unqualified",
     },
     "macos_intel_x64": {
         "compatibility_shell_and_prototype_delivery",
-        "exact_candidate_machine_qualified_semantic_preview_pending",
+        "historical_alpha5_exact_candidate_machine_qualified_semantic_preview_current_alpha6_unqualified",
     },
     "linux_x64": {
         "compatibility_shell_and_prototype_delivery",
-        "exact_candidate_machine_qualified_semantic_preview_pending",
+        "historical_alpha5_exact_candidate_machine_qualified_semantic_preview_current_alpha6_unqualified",
     },
 }
 PLATFORM_BETA_CLAIMS = {
-    "windows_x64": "reference_candidate_machine_qualified_human_support_pending",
+    "windows_x64": "historical_alpha5_reference_machine_qualified_current_alpha6_human_support_pending",
     "macos_intel_x64": (
-        "experimental_preview_machine_qualified_semantic_human_support_pending"
+        "historical_alpha5_experimental_preview_machine_qualified_semantic_current_alpha6_human_support_pending"
     ),
     "linux_x64": (
-        "experimental_preview_machine_qualified_semantic_human_support_pending"
+        "historical_alpha5_experimental_preview_machine_qualified_semantic_current_alpha6_human_support_pending"
     ),
 }
 FRONTEND_LANES = {
     "winforms": (
         "beta_reference",
-        "exact_candidate_machine_qualified_human_accessibility_visual_localization_support_pending",
+        "historical_alpha5_exact_candidate_machine_qualified_current_alpha6_human_accessibility_visual_localization_support_pending",
     ),
     "gtk3": (
         "beta_preview",
-        "exact_candidate_machine_qualified_transport_hardened_semantic_human_support_pending",
+        "historical_alpha5_exact_candidate_machine_qualified_transport_hardened_semantic_current_alpha6_human_support_pending",
     ),
     "appkit": (
         "beta_preview",
-        "exact_candidate_machine_qualified_semantic_human_support_pending",
+        "historical_alpha5_exact_candidate_machine_qualified_semantic_current_alpha6_human_support_pending",
     ),
     "qt6": ("post_beta_admission", "placeholder"),
     "winui": ("post_beta_admission", "placeholder"),
     "swiftui": ("post_beta_admission", "placeholder"),
 }
 GATE_STATES = {
-    "canonical_truth": {"implemented_validation_pending", "machine_qualified"},
+    "canonical_truth": {"implemented_validation_pending", "allocated_alpha6_unqualified_historical_alpha5_machine_evidence"},
     "workspace_migration": {"known_actions_implemented_explicit_recovery_pending"},
     "canonical_stage_equivalence": {
         "contract_and_exact_workflow_implemented_candidate_pending",
-        "exact_candidate_passed",
+        "historical_alpha5_exact_candidate_passed_current_alpha6_pending",
     },
     "gtk_appkit_semantic_parity": {
         "gtk_transport_hardened_semantic_convergence_pending"
     },
     "exact_platform_machine_qualification": {
         "workflow_ready_not_run",
-        "exact_candidate_qualified",
+        "historical_alpha5_exact_candidate_qualified_current_alpha6_pending",
     },
     "final_release_asset_finalization": {
         "deferred_exact_candidate_pending",
@@ -130,17 +130,17 @@ GATE_STATES = {
     },
     "performance_regression_baselines": {"budgets_defined_measurement_pending"},
     "native_ux_visual_localization_acceptance": {
-        "blocked_exact_candidate_human_review_pending"
+        "blocked_current_alpha6_exact_candidate_human_review_pending"
     },
     "repository_promotion_and_cleanup": {
-        "candidate_promoted_synchronized_closeout_cleanup_pending"
+        "historical_alpha5_candidate_promoted_current_alpha6_integration_pending"
     },
     "human_play_install_accessibility": {"blocked_external"},
     "sign_notarize_publish_support": {"blocked_no_authority"},
 }
 NATIVE_UX_GATE = {
     "id": "native_ux_visual_localization_acceptance",
-    "state": "blocked_exact_candidate_human_review_pending",
+    "state": "blocked_current_alpha6_exact_candidate_human_review_pending",
     "owner": "Jules",
     "frontends": ["winforms", "gtk3", "appkit"],
     "standards": [
@@ -238,6 +238,13 @@ def validate(
         problems.append("beta readiness has the wrong schema")
     if readiness.get("current_candidate") != version.get("semver"):
         problems.append("beta readiness current_candidate must match canonical version")
+    if readiness.get("status") != (
+        "not_ready_current_alpha6_unqualified_historical_alpha5_machine_evidence"
+    ):
+        problems.append(
+            "beta readiness must distinguish the unqualified current alpha6 "
+            "from historical alpha5 evidence"
+        )
     if readiness.get("target_candidate") != "0.1.0-beta.1":
         problems.append("beta readiness must target 0.1.0-beta.1")
     if readiness.get("beta_ready") is not False:

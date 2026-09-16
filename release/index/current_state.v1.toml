@@ -1,6 +1,6 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
-product_version = "0.1.0-alpha.5"
+product_version = "0.1.0-alpha.6"
 phase = "facman_0_1_alpha6_workspace_migration_recovery"
 phase_status = "alpha6_workspace_migration_recovery_active_beta_gates_pending"
 checkpoint = "facman-0-1-alpha6-workspace-migration-recovery"
@@ -12,8 +12,8 @@ next_authority_gate = "alpha6_workspace_migration_and_managed_install_then_alpha
 [active_release_view]
 authority = "release/index/active_release_view.v1.toml"
 view_role = "sole_current_release_obligation_selector"
-product_version = "0.1.0-alpha.5"
-candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
+product_version = "0.1.0-alpha.6"
+candidate_receipt = ""
 active_profiles = ["windows_product_x64", "macos_product_x64", "linux_product_x64"]
 reference_profiles = ["windows_product_x64"]
 selected_preview_profiles = ["macos_product_x64", "linux_product_x64"]

@@ -33,10 +33,10 @@ historical evidence. They all declare
 retain their complete profile-path arrays for backward-compatible construction,
 but label those arrays as catalogs and publish separate active selections.
 
-The earlier Alpha.5 candidate receipt is
-`historical_alpha5_candidate`; the Alpha.3 distribution is
-`historical_alpha3_draft`. Both point to the final Alpha.5 candidate receipt
-as their current successor and neither may be selected by a current view.
+The earlier Alpha.5 candidate receipts are historical, as is the Alpha.3
+distribution. They may name the final Alpha.5 receipt as a historical
+successor, but neither receipt may be selected by a current view. The current
+Alpha.6 allocation has no candidate receipt.
 
 Only `platform_product_bundle` and `platform_self_setup` are current
 producers. Legacy exceptions remain historical compatibility producers.

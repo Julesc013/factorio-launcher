@@ -286,7 +286,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(
             self.records["version_train"]["allocated_version"],
-            "0.1.0-alpha.5",
+            "0.1.0-alpha.6",
         )
         self.assertEqual(
             self.records["version_train"]["release_source_workunit"],
@@ -332,6 +332,19 @@ class ReleaseProgrammeTests(unittest.TestCase):
             "version train release_source_is_dev_sync_revision must be False",
             errors,
         )
+
+    def test_version_train_keeps_current_alpha6_and_historical_alpha5_separate(self) -> None:
+        train = self.records["version_train"]
+        self.assertEqual(train["current_allocation"]["version"], "0.1.0-alpha.6")
+        self.assertEqual(train["current_allocation"]["candidate_receipt"], "")
+        self.assertFalse(train["current_allocation"]["signing"])
+        self.assertEqual(train["historical_alpha5_candidate"]["version"], "0.1.0-alpha.5")
+        invalid = copy.deepcopy(self.records)
+        invalid["version_train"]["current_allocation"]["publication"] = True
+        invalid["version_train"]["historical_alpha5_candidate"]["source_tree"] = "0" * 40
+        errors = self.validate(invalid)
+        self.assertIn("version train current alpha6 allocation has drifted", errors)
+        self.assertIn("version train historical alpha5 candidate record has drifted", errors)
 
     def test_release_index_schema_rejects_unbound_closeout_receipt(self) -> None:
         invalid_schemas = copy.deepcopy(self.index_schemas)
@@ -458,8 +471,12 @@ class ReleaseProgrammeTests(unittest.TestCase):
                 releases[release_id]["status"],
                 "active" if alpha6_release else "planned",
             )
-            self.assertTrue(releases[release_id]["planning_label"])
-            self.assertFalse(releases[release_id]["version_allocated"])
+            if alpha6_release:
+                self.assertFalse(releases[release_id]["planning_label"])
+                self.assertTrue(releases[release_id]["version_allocated"])
+            else:
+                self.assertTrue(releases[release_id]["planning_label"])
+                self.assertFalse(releases[release_id]["version_allocated"])
             self.assertEqual(epics[epic_id]["release"], release_id)
             self.assertEqual(
                 epics[epic_id]["status"],

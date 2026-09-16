@@ -237,7 +237,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
             "phase0_governance_integrated_alpha6_workspace_migration_recovery_"
-            "active_alpha5_candidate_revision_exact_all_human_execution_and_"
+            "historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_all_human_execution_and_"
             "release_authority_closed",
             data["product"]["truth_scope"],
         )

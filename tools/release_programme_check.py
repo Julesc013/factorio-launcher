@@ -372,12 +372,12 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
     problems: list[str] = []
     if record.get("current_product_target") != "0.1.0":
         problems.append("version train current target must be 0.1.0")
-    if record.get("development_base_version") != "0.1.0-alpha.5":
-        problems.append("current distribution source must use the allocated 0.1.0-alpha.5 identity")
+    if record.get("development_base_version") != "0.1.0-alpha.6":
+        problems.append("current distribution source must use the allocated 0.1.0-alpha.6 identity")
     if record.get("tracked_contract_identity") != (
-        "facman-0.1.0-alpha.5"
+        "facman-0.1.0-alpha.6"
     ):
-        problems.append("tracked 0.1.0-alpha.5 release identity has drifted")
+        problems.append("tracked 0.1.0-alpha.6 release identity has drifted")
     if record.get("tracked_contract_identity_is_publishable") is not True:
         problems.append("tracked alpha identity must be structurally publishable after its gates")
     if record.get("dynamic_snapshot_identity_projected_at_build_time") is not False:
@@ -393,11 +393,32 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
         "release_source_is_closeout_revision": False,
         "release_source_is_dev_sync_revision": False,
         "allocated_release_class": "alpha",
-        "allocated_version": "0.1.0-alpha.5",
+        "allocated_version": "0.1.0-alpha.6",
     }
     for field, expected in allocation.items():
         if record.get(field) != expected:
             problems.append(f"version train {field} must be {expected!r}")
+    if record.get("current_allocation") != {
+        "work_item": "FACMAN-0.1.0-ALPHA.6",
+        "version": "0.1.0-alpha.6",
+        "status": "allocated_unqualified_unsigned_untagged_unpublished",
+        "candidate_receipt": "",
+        "tag": "",
+        "signing": False,
+        "publication": False,
+    }:
+        problems.append("version train current alpha6 allocation has drifted")
+    if record.get("historical_alpha5_candidate") != {
+        "version": "0.1.0-alpha.5",
+        "source_workunit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+        "source_status": "final_candidate_machine_qualified_unpublished",
+        "source_revision": ALPHA5_CANDIDATE_SOURCE_REVISION,
+        "source_tree": ALPHA5_CANDIDATE_SOURCE_TREE,
+        "candidate_run": ALPHA5_CANDIDATE_RUN,
+        "candidate_attempt": ALPHA5_CANDIDATE_ATTEMPT,
+        "receipt": ALPHA5_CANDIDATE_RECEIPT,
+    }:
+        problems.append("version train historical alpha5 candidate record has drifted")
     if not record.get("published_tags_are_immutable"):
         problems.append("version train must keep published tags immutable")
     if record.get("tag_every_commit") is not False:
@@ -757,12 +778,14 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     for release_id, (identity_field, identity_value, projections) in future_specs.items():
         release = by_id[release_id]
         expected_status = "active" if release_id == "FACMAN-0.1.0-ALPHA.6" else "planned"
-        if release.get("status") != expected_status or release.get("planning_label") is not True:
+        expected_planning_label = release_id != "FACMAN-0.1.0-ALPHA.6"
+        if release.get("status") != expected_status or release.get("planning_label") is not expected_planning_label:
             problems.append(
-                f"{release_id} must remain an {expected_status} non-allocating label"
+                f"{release_id} has the wrong allocation/planning state"
             )
-        if release.get("version_allocated") is not False:
-            problems.append(f"{release_id} must not allocate a version")
+        expected_allocated = release_id == "FACMAN-0.1.0-ALPHA.6"
+        if release.get("version_allocated") is not expected_allocated:
+            problems.append(f"{release_id} has the wrong version allocation state")
         if release.get(identity_field) != identity_value:
             problems.append(f"{release_id} {identity_field} has drifted")
         if release_id == "FACMAN-0.1-FEATURE-FREEZE" and "version" in release:

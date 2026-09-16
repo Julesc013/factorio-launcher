@@ -10,10 +10,11 @@ authority.
 It converts the ratified interaction architecture into an implementation,
 qualification, compatibility, and de-scope programme.
 
-## Alpha.5 reconciliation
+## Alpha.6 allocation and Alpha.5 reconciliation
 
-The architecture is deliberately 1.0-shaped, but current maturity is alpha.5,
-not near-1.0 release readiness. Exact workflow run `33603385303`, attempt 1,
+The architecture is deliberately 1.0-shaped, but current maturity is allocated,
+unqualified alpha.6, not near-1.0 release readiness. Historical Alpha.5 workflow run
+`33603385303`, attempt 1,
 passed five jobs from source revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e`
 and tree `c07938618bc0f533fd12756cba123f54b8592048`. Its four workflow artifacts
 culminated in a verified 14-file internal unsigned, unpublished evidence
@@ -35,7 +36,8 @@ does have one implemented backend Last Run authority: the adopted ULK session
 journal projected through `presentation.query`. A frontend may hold a
 transient rendered view copy, but it may never persist or consult that copy as
 authority or fallback, and no frontend may reconstruct terminal outcomes. The candidate
-receipt is `release/index/alpha5_promotion_candidate_closeout.v1.toml` and
+final-run receipt is `release/index/alpha5_final_candidate_closeout.v1.toml`.
+The promotion receipt is separate predecessor history. The final-run receipt
 qualifies only the recorded source revision/tree; later revisions require a
 fresh run. It grants no human verdict or authority.
 

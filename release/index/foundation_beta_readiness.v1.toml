@@ -4,10 +4,10 @@
 schema = "facman.foundation_beta_readiness.v1"
 id = "FACMAN-0.1-FOUNDATION-BETA-READINESS"
 product_id = "facman"
-current_candidate = "0.1.0-alpha.5"
+current_candidate = "0.1.0-alpha.6"
 target_candidate = "0.1.0-beta.1"
 assessment_date = "2026-09-02"
-status = "not_ready_exact_candidate_qualified_human_authority_pending"
+status = "not_ready_current_alpha6_unqualified_historical_alpha5_machine_evidence"
 beta_ready = false
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 scope = "architecture_complete_breadth_bounded_local_first"
@@ -231,8 +231,8 @@ tier = "reference_candidate"
 gui = "winforms_net_framework_4_8"
 portable = true
 setup = true
-current_state = "exact_candidate_machine_qualified"
-beta_claim = "reference_candidate_machine_qualified_human_support_pending"
+current_state = "historical_alpha5_exact_candidate_machine_qualified_current_alpha6_unqualified"
+beta_claim = "historical_alpha5_reference_machine_qualified_current_alpha6_human_support_pending"
 
 [[platform]]
 id = "macos_intel_x64"
@@ -240,8 +240,8 @@ tier = "experimental_preview"
 gui = "appkit"
 portable = true
 setup = true
-current_state = "exact_candidate_machine_qualified_semantic_preview_pending"
-beta_claim = "experimental_preview_machine_qualified_semantic_human_support_pending"
+current_state = "historical_alpha5_exact_candidate_machine_qualified_semantic_preview_current_alpha6_unqualified"
+beta_claim = "historical_alpha5_experimental_preview_machine_qualified_semantic_current_alpha6_human_support_pending"
 
 [[platform]]
 id = "linux_x64"
@@ -249,26 +249,26 @@ tier = "experimental_preview"
 gui = "gtk3_x11"
 portable = true
 setup = true
-current_state = "exact_candidate_machine_qualified_semantic_preview_pending"
-beta_claim = "experimental_preview_machine_qualified_semantic_human_support_pending"
+current_state = "historical_alpha5_exact_candidate_machine_qualified_semantic_preview_current_alpha6_unqualified"
+beta_claim = "historical_alpha5_experimental_preview_machine_qualified_semantic_current_alpha6_human_support_pending"
 
 [[frontend_lane]]
 order = 1
 id = "winforms"
 release_lane = "beta_reference"
-state = "exact_candidate_machine_qualified_human_accessibility_visual_localization_support_pending"
+state = "historical_alpha5_exact_candidate_machine_qualified_current_alpha6_human_accessibility_visual_localization_support_pending"
 
 [[frontend_lane]]
 order = 2
 id = "gtk3"
 release_lane = "beta_preview"
-state = "exact_candidate_machine_qualified_transport_hardened_semantic_human_support_pending"
+state = "historical_alpha5_exact_candidate_machine_qualified_transport_hardened_semantic_current_alpha6_human_support_pending"
 
 [[frontend_lane]]
 order = 3
 id = "appkit"
 release_lane = "beta_preview"
-state = "exact_candidate_machine_qualified_semantic_human_support_pending"
+state = "historical_alpha5_exact_candidate_machine_qualified_semantic_current_alpha6_human_support_pending"
 
 [[frontend_lane]]
 order = 4
@@ -336,7 +336,7 @@ outcomes = ["exact source and provider reconstruction", "exact six product bytes
 
 [[gate]]
 id = "canonical_truth"
-state = "machine_qualified"
+state = "allocated_alpha6_unqualified_historical_alpha5_machine_evidence"
 owner = "release_maintainer"
 
 [[gate]]
@@ -346,7 +346,7 @@ owner = "runtime_maintainer"
 
 [[gate]]
 id = "canonical_stage_equivalence"
-state = "exact_candidate_passed"
+state = "historical_alpha5_exact_candidate_passed_current_alpha6_pending"
 owner = "package_maintainer"
 
 [[gate]]
@@ -356,7 +356,7 @@ owner = "frontend_maintainer"
 
 [[gate]]
 id = "exact_platform_machine_qualification"
-state = "exact_candidate_qualified"
+state = "historical_alpha5_exact_candidate_qualified_current_alpha6_pending"
 owner = "release_maintainer"
 
 [[gate]]
@@ -376,7 +376,7 @@ owner = "quality_maintainer"
 
 [[gate]]
 id = "native_ux_visual_localization_acceptance"
-state = "blocked_exact_candidate_human_review_pending"
+state = "blocked_current_alpha6_exact_candidate_human_review_pending"
 owner = "Jules"
 frontends = ["winforms", "gtk3", "appkit"]
 standards = ["windows_system_native_oem_plus", "gnome_hig_gtk3", "apple_hig_appkit"]
@@ -398,7 +398,7 @@ automation_cannot_satisfy = true
 
 [[gate]]
 id = "repository_promotion_and_cleanup"
-state = "candidate_promoted_synchronized_closeout_cleanup_pending"
+state = "historical_alpha5_candidate_promoted_current_alpha6_integration_pending"
 owner = "release_maintainer"
 
 [[gate]]

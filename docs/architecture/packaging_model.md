@@ -17,7 +17,9 @@ Every current 0.1 platform stage contains:
 The components remain replaceable internally. WinForms, AppKit, and GTK are
 implementation details and must not appear in primary asset names.
 
-The exact alpha.5 package candidate passed as an internal, unsigned,
+Alpha.6 is the current allocated development identity and remains unqualified.
+
+The historical Alpha.5 package candidate passed as an internal, unsigned,
 unpublished machine qualification in run `33603385303`, attempt 1, from source
 revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
 `c07938618bc0f533fd12756cba123f54b8592048`. The reference Windows shell is
@@ -123,9 +125,10 @@ six platform/equivalence records, `SHA256SUMS`, and a candidate manifest. That
 bundle is evidence transport, not the final eight-asset public release factory.
 Exact-byte human and authority receipts remain separate gates.
 
-The binding receipt is
-`release/index/alpha5_promotion_candidate_closeout.v1.toml`. It qualifies only
-the recorded source revision and tree; the closeout revision and every future
+The final-run binding receipt is
+`release/index/alpha5_final_candidate_closeout.v1.toml`. The promotion receipt
+is separate predecessor history. The final-run receipt qualifies only the
+recorded source revision and tree; the closeout revision and every future
 revision require a fresh candidate run.
 
 Historical CLI-only, TUI-preview, and toolkit-specific profiles remain

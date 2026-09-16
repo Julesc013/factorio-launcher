@@ -13,6 +13,7 @@
     "prior_inputs",
     "current_inputs",
     "providers",
+    "product_version_successor",
     "invalidated_evidence",
     "authority"
   ],
@@ -52,6 +53,23 @@
       "minItems": 2,
       "maxItems": 2,
       "items": { "$ref": "#/$defs/provider" }
+    },
+    "product_version_successor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "scope", "changed_inputs", "qualification"],
+      "properties": {
+        "version": { "const": "0.1.0-alpha.6" },
+        "scope": { "const": "first_party_product_version_only" },
+        "changed_inputs": {
+          "const": [
+            "release/index/dependency_lock.v1.toml",
+            "release/index/build_manifest.v1.toml",
+            "release/index/sbom.components.v1.json"
+          ]
+        },
+        "qualification": { "const": "unqualified" }
+      }
     },
     "invalidated_evidence": {
       "type": "array",

@@ -1,6 +1,7 @@
 # FacMan 0.1 beta grand master plan
 
-Status: alpha.5 exact hosted candidate machine qualification passed;
+Status: alpha.6 is allocated but unqualified, unsigned, untagged, and unpublished.
+The historical alpha.5 exact hosted candidate machine qualification passed;
 `0.1.0-beta.1` remains not ready and is not yet allocated, tagged, signed,
 published, or support-promoted.
 
@@ -15,8 +16,8 @@ linear TUI on declared Windows/Linux/macOS targets, followed by WinForms and
 GTK3 reference completion. AppKit stays a tested preview until 0.4 graduation.
 Acquisition/credentials/Mod Portal are functional 0.2 scope; local hosting is
 0.3. The Alpha.5 qualification, preview statuses, source identities and
-three-profile/eight-asset selector below remain historical/current evidence,
-not qualification of these stronger prospective requirements. The admission
+three-profile/eight-asset selector below remain historical evidence, not
+qualification of the alpha.6 product or these stronger prospective requirements. The admission
 WorkUnit is in progress pending protected integration; no authority is granted.
 
 ## Executive judgment
@@ -90,14 +91,16 @@ download-back-verified internal bundle contains 14 files: six products, three
 platform evidence records, three payload-equivalence records, one internal
 checksum file, and one candidate manifest.
 
-The receipt is `release/index/alpha5_promotion_candidate_closeout.v1.toml`; the
+The final-run receipt is `release/index/alpha5_final_candidate_closeout.v1.toml`;
+the separate promotion receipt is predecessor history at
+`release/index/alpha5_promotion_candidate_closeout.v1.toml`; the
 two foundation WorkUnits are archived at
 `.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
 The receipt qualifies only that source revision and tree. It does not qualify
 the closeout revision, a synchronization merge, or any future revision; those
 need a fresh candidate run.
 
-This is machine qualification, not a beta-candidate human or platform support
+This historical alpha.5 result is machine qualification, not an alpha.6 or beta-candidate human or platform support
 receipt. The 14-file internal bundle is not the final public eight-asset
 matrix. Exact human install/Play/accessibility/native-UX/localization/performance
 receipts, signing, notarization, tagging, publication, and support activation
@@ -116,11 +119,12 @@ remain pending.
 | Qt6 | Scaffold only | Separate post-beta admission and implementation required |
 | WinUI | Placeholder boundary only | Separate post-beta admission and implementation required |
 | SwiftUI | Placeholder boundary only | Separate post-beta admission and implementation required |
-| Windows delivery | Portable ZIP and self-contained setup are exact-candidate machine-qualified | Human install, damage/repair/uninstall/preservation, upgrade/rollback, performance, and support remain |
-| Linux delivery | tar.zst + per-user `.run` are machine-qualified on Ubuntu 24.04 x64/X11 | Semantic parity, human lifecycle/accessibility/performance, prerequisites, wider Linux/Wayland, and support remain |
-| macOS delivery | App ZIP + unsigned pkg are machine-qualified on macOS 13+ Intel | Semantic parity, human lifecycle/accessibility/performance, maintenance, Apple Silicon, signing/notarization, and support remain |
+| Release identity | Alpha.6 is the current allocated, unqualified product identity with no candidate receipt | Fresh current-source qualification and all beta gates remain |
+| Windows delivery | Historical Alpha.5 portable ZIP and self-contained setup were exact-candidate machine-qualified | Human install, damage/repair/uninstall/preservation, upgrade/rollback, performance, and support remain |
+| Linux delivery | Historical Alpha.5 tar.zst + per-user `.run` were machine-qualified on Ubuntu 24.04 x64/X11 | Semantic parity, human lifecycle/accessibility/performance, prerequisites, wider Linux/Wayland, and support remain |
+| macOS delivery | Historical Alpha.5 App ZIP + unsigned pkg were machine-qualified on macOS 13+ Intel | Semantic parity, human lifecycle/accessibility/performance, maintenance, Apple Silicon, signing/notarization, and support remain |
 | Local content/worlds | Existing behavior plus internal portable records and verified local CAS | Workspace identity, user routes, offline reconstruction, and public recovery remain |
-| Play/sessions | Backend launch/session/Last Run machinery exists | No current accepted real Play route or exact candidate human verdict exists |
+| Play/sessions | Backend launch/session/Last Run machinery exists | No current accepted real Play route or Alpha.6 candidate human verdict exists |
 | Managed install | Fresh-owned-target policy and provider foundations exist | Complete local-source lifecycle and human live-target acceptance remain |
 
 ## Decisions
@@ -233,7 +237,7 @@ Required closure:
 - rollback is idempotent and never silently discards user state;
 - unknown versions and unknown actions continue to refuse.
 
-Current alpha.5 result: two exact, non-destructive canonicalizations now apply
+Historical alpha.5 result: two exact, non-destructive canonicalizations apply
 through a durable journal, preserve their sources, and roll forward interrupted
 `planned` or `applying` work. Unknown actions, identities, paths, ownership, and
 divergent targets refuse. This is a real migration engine, but it is not the
@@ -249,7 +253,7 @@ portable adapter and setup adapter contained the same canonical payload. Each
 platform needs one stage inventory, adapter-specific normalization, extracted
 payload comparison, relocation tests, and lifecycle proof.
 
-Current alpha.5 result: the package TCK now has platform normalization adapters,
+Historical alpha.5 result: the package TCK has platform normalization adapters,
 safe archive inventory, no-clobber evidence receipts, and a hosted workflow path
 that compares Windows setup, expanded macOS pkg, and installed Linux `.run`
 payloads with their canonical stages. Exact run `33603385303` passed all three
@@ -264,7 +268,7 @@ non-publishing candidate workflow must derive the current version, use runner
 temporary/external roots, consume exact providers, create the six products,
 produce checksums/evidence, and never create a tag or release.
 
-Current alpha.5 result: `product-candidate.yml` and its bounded evidence helper
+Historical alpha.5 result: `product-candidate.yml` and its bounded evidence helper
 implement that non-authorizing route. They keep tag, signing, notarization,
 publication, support, and release authority false. Run `33603385303`, attempt 1
 qualified the exact integrated alpha.5 source/tree on all three hosted
@@ -285,7 +289,7 @@ malformed/oversized/mismatched replies, and pass the same ordinary-journey
 conformance fixtures. GTK3 also needs streaming output enforcement and process
 group termination rather than post-hoc truncation.
 
-Current alpha.5 result: GTK3 transport hardening is complete and adversarially
+Historical alpha.5 result: GTK3 transport hardening is complete and adversarially
 tested, including byte caps before append, strict UTF-8/JSON/correlation rules,
 timeout, cancellation, and process-group termination. GTK3 semantic convergence
 and all AppKit transport/presentation convergence remain open.
@@ -299,7 +303,7 @@ projectors, action handlers, page controls, view binders, lifecycle adapters, an
 renderers behind unchanged contracts. Add no-growth line and complexity budgets
 before splitting.
 
-Current alpha.5 result: no-growth budgets now cover the existing hotspots and
+Historical alpha.5 result: no-growth budgets cover the existing hotspots and
 the newly extracted package equivalence, candidate evidence, migration,
 workspace I/O, content record, and content-cache modules. Migration and package
 proof responsibilities were extracted without changing public commands. The
@@ -323,7 +327,7 @@ for:
 Budgets are regression thresholds, not support claims. Baselines must be taken on
 declared hardware and exact packaged bytes.
 
-Current alpha.5 result: thresholds and bounded process-reply policy are recorded,
+Historical alpha.5 result: thresholds and bounded process-reply policy are recorded,
 but exact-package startup, latency, UI-stall, memory, large-list, and declared
 hardware baselines have not been measured. Performance is therefore still a
 beta gate.
@@ -336,7 +340,7 @@ architecture spellings differed. Canonical generated metadata must own public
 version and product identity, while legacy internal target renames are bounded,
 mapped, and performed only when they do not break consumers.
 
-Current alpha.5 result: WinForms, GTK3, and AppKit public product/version
+Historical alpha.5 result: WinForms, GTK3, and AppKit public product/version
 metadata now comes from the canonical version model; GTK uses the canonical
 `io.github.julesc013.facman` desktop and icon identity. Remaining internal target
 names are compatibility details, not extra public products.
@@ -354,7 +358,7 @@ Profiles need explicit lifecycle classes:
 
 Profile classification does not itself grant support or publication authority.
 
-Current alpha.5 result: every authored profile now has an explicit lifecycle
+Historical alpha.5 result: every authored profile has an explicit lifecycle
 classification and install-mode truth. Temporary producer exceptions remain
 enumerated and cannot grant product or support authority.
 
@@ -415,7 +419,7 @@ for the recorded source revision/tree.
 - add the non-publishing, version-current six-product candidate workflow;
 - add no-growth source budgets and repair obvious metadata/naming drift.
 
-Current exit evidence: the complete local alpha.5 promotion obligation profile
+Historical Alpha.5 exit evidence: the complete local alpha.5 promotion obligation profile
 passes from external outputs, the candidate source was protected-branch
 promoted/synchronized, and exact hosted platform run `33603385303` passed for
 the recorded source revision/tree. Human packaged-byte receipts and every

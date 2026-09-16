@@ -7,9 +7,9 @@
       "linux_product_x64"
     ],
     "authority": "release/index/active_release_view.v1.toml",
-    "candidate_receipt": "release/index/alpha5_final_candidate_closeout.v1.toml",
+    "candidate_receipt": "",
     "primary_product_asset_count": 6,
-    "product_version": "0.1.0-alpha.5",
+    "product_version": "0.1.0-alpha.6",
     "publication": false,
     "reference_profiles": [
       "windows_product_x64"
@@ -721,7 +721,7 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "38d30b116fc5b2402823010e070511e412dcc04bcbaed16ff4d38f8c2feed788",
+    "catalog_digest": "26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428",
     "contracts": 131,
     "refusal_codes": 290,
     "registered_routes": 129,
@@ -2625,9 +2625,9 @@
     "platform_scope": "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "phase0_governance_integrated_alpha6_workspace_migration_recovery_active_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed"
+    "truth_scope": "phase0_governance_integrated_alpha6_workspace_migration_recovery_historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_all_human_execution_and_release_authority_closed"
   },
-  "product_version": "0.1.0-alpha.5",
+  "product_version": "0.1.0-alpha.6",
   "provider_convergence": {
     "accepted_play_routes": 0,
     "active_route_contract": "release/index/successor_play_route.v2.toml",

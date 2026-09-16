@@ -14,11 +14,11 @@ FacMan, Universal Launcher, and Universal Setup use one evolution law:
 
 This law completes the architectural direction without adding a repository,
 merging provider and product histories, replacing the product-owned compiler,
-or widening the historical C1 route or active alpha.5 authority. It prepares
+or widening the historical C1 route or granting alpha.6 authority. It prepares
 later contracts and validators; it does not implement or authorize their
 effects.
 
-## Historical C1 boundary and active alpha.5 state
+## Historical C1 boundary and current alpha.6 allocation
 
 The following C1 sequence is retained as historical foundation context:
 
@@ -38,14 +38,16 @@ source/static/shared/relocated/private-runtime conformance
 The evolution spine is not a dependency of those historical steps. C1 is the
 internal alpha foundation, not public `0.1.0`.
 
-The active programme is now alpha.5 beta-readiness closure. Exact workflow run
+The active programme is now the unqualified alpha.6 beta-readiness allocation.
+Exact workflow run
 `33603385303`, attempt 1 machine-qualified source revision
 `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
 `c07938618bc0f533fd12756cba123f54b8592048` with five successful jobs, four
 workflow artifacts, and a verified 14-file internal unsigned, unpublished
 evidence bundle. That bundle
-is not the final eight-asset public matrix. Its receipt is
-`release/index/alpha5_promotion_candidate_closeout.v1.toml`; the foundation
+is not the final eight-asset public matrix. Its final-run receipt is
+`release/index/alpha5_final_candidate_closeout.v1.toml`; the separate promotion
+receipt is predecessor history at `release/index/alpha5_promotion_candidate_closeout.v1.toml`; the foundation
 checkpoint is archived at
 `.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
 

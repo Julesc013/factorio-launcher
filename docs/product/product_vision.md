@@ -83,23 +83,25 @@ WinForms journey, package and recovery evidence. It does not equal the first
 public version.
 
 The original Windows-only `0.1.0` Technical Preview sequence is historical.
-The active compressed 0.1 beta programme keeps Windows 10/11 x64 as the
+The active compressed 0.1 beta programme has allocated unqualified Alpha.6 and
+keeps Windows 10/11 x64 as the
 reference lane with WinForms on .NET Framework 4.8, same-binary TUI, normative
 CLI JSON, and bounded human CLI. It also brings forward unsupported semantic
 previews for GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel, with
 one portable and one setup candidate per platform. Managed local-source
 installation is an open beta journey, not deferred beyond beta.
 
-Exact alpha.5 run `33603385303`, attempt 1 machine-qualified those three
+Historical Alpha.5 run `33603385303`, attempt 1 machine-qualified those three
 product lanes from source revision
 `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
 `c07938618bc0f533fd12756cba123f54b8592048`. Its five
 jobs and four workflow artifacts produced a verified 14-file internal unsigned,
 unpublished evidence bundle. That bundle is not the final public eight-asset
 matrix and grants no human verdict, Play/install authority, signing,
-notarization, publication, or support. The receipt is
-`release/index/alpha5_promotion_candidate_closeout.v1.toml`; later revisions
-require a fresh candidate run.
+notarization, publication, or support. The final-run receipt is
+`release/index/alpha5_final_candidate_closeout.v1.toml`; the promotion receipt
+is separate predecessor history, and later revisions require a fresh candidate
+run.
 
 `1.0.0` is the measurable full supported release. Every admitted ordinary
 capability must be complete through CLI JSON, bounded human CLI, same-binary
