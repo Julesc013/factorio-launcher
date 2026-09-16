@@ -54,6 +54,11 @@ class PackageManifestTests(unittest.TestCase):
         self.assertIn("registry_uninstall", manifest["installer_features"])
         self.assertNotIn("start_menu", manifest["excluded_features"])
         self.assertNotIn("registry_uninstall", manifest["excluded_features"])
+        self.assertEqual(
+            ["install", "verify", "repair", "uninstall"],
+            manifest["operations"],
+        )
+        self.assertIn("automatic_update", manifest["excluded_features"])
 
     def test_packaging_schema_namespace_exists(self) -> None:
         self.assertTrue(

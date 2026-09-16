@@ -98,6 +98,76 @@ class CommandContractTests(unittest.TestCase):
             with self.subTest(document=document):
                 self.assertTrue(list(validator.iter_errors(document)))
 
+    def test_managed_install_recovery_schema_rejects_impossible_effect_states(self) -> None:
+        schema_root = command_contract_check.ROOT / "contracts/schema/factorio"
+        shared = json.loads((
+            schema_root / "facman_managed_install_recovery.v1.schema.json"
+        ).read_text(encoding="utf-8"))
+        repair = json.loads((
+            schema_root / "facman_managed_repair_recovery.v1.schema.json"
+        ).read_text(encoding="utf-8"))
+        uninstall = json.loads((
+            schema_root / "facman_managed_uninstall_recovery.v1.schema.json"
+        ).read_text(encoding="utf-8"))
+        terminal_uninstall = json.loads((
+            command_contract_check.ROOT
+            / "tests/golden/commands/installs.recovery.inspect.success.json"
+        ).read_text(encoding="utf-8"))
+        shared_validator = jsonschema.Draft202012Validator(shared)
+        repair_validator = jsonschema.Draft202012Validator(repair)
+        uninstall_validator = jsonschema.Draft202012Validator(uninstall)
+        shared_validator.validate(terminal_uninstall)
+        uninstall_validator.validate(terminal_uninstall)
+
+        terminal_repair = copy.deepcopy(terminal_uninstall)
+        terminal_repair.update({
+            "schema": "facman.managed_repair_recovery.v1",
+            "operation": "repair",
+            "classification": "provider_repaired",
+            "target_exists": True,
+        })
+        shared_validator.validate(terminal_repair)
+        repair_validator.validate(terminal_repair)
+
+        for source, operation_validator in (
+            (terminal_uninstall, uninstall_validator),
+            (terminal_repair, repair_validator),
+        ):
+            no_effect = copy.deepcopy(source)
+            no_effect.update({
+                "classification": "no_provider_effect",
+                "action": "close_no_provider_effect",
+                "provider_journal_present": False,
+                "provider_observed_state": "",
+                "provider_journal_digest": "",
+                "provider_journal_snapshot_sha256": "",
+                "target_exists": True,
+            })
+            shared_validator.validate(no_effect)
+            operation_validator.validate(no_effect)
+            for field, invalid_value in (
+                ("provider_journal_present", True),
+                ("provider_observed_state", "completed"),
+                ("target_exists", False),
+            ):
+                invalid = copy.deepcopy(no_effect)
+                invalid[field] = invalid_value
+                with self.subTest(schema=source["schema"], field=field):
+                    self.assertTrue(list(shared_validator.iter_errors(invalid)))
+                    self.assertTrue(list(operation_validator.iter_errors(invalid)))
+
+        terminal_cases = (
+            (terminal_repair, "target_exists", False),
+            (terminal_repair, "provider_journal_present", False),
+            (terminal_uninstall, "target_exists", True),
+            (terminal_uninstall, "provider_journal_present", False),
+        )
+        for source, field, invalid_value in terminal_cases:
+            invalid = copy.deepcopy(source)
+            invalid[field] = invalid_value
+            with self.subTest(classification=source["classification"], field=field):
+                self.assertTrue(list(shared_validator.iter_errors(invalid)))
+
     def test_uninstall_transaction_identity_matches_request_and_journal_contracts(self) -> None:
         request_schema = json.loads((
             command_contract_check.ROOT

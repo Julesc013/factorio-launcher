@@ -1,7 +1,10 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-add_library(facman_self_setup_static STATIC facman_self_setup.cpp)
+add_library(facman_self_setup_static STATIC
+  facman_self_setup.cpp
+  facman_self_maintenance.cpp
+  facman_self_maintenance_package.cpp)
 target_include_directories(facman_self_setup_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(facman_self_setup_static PUBLIC cxx_std_17)
 target_compile_definitions(facman_self_setup_static PRIVATE
@@ -9,7 +12,8 @@ target_compile_definitions(facman_self_setup_static PRIVATE
 target_link_libraries(facman_self_setup_static PUBLIC
   facman_base_static
   facman_core_static
+  facman_archive_static
   facman_platform_static
-  FacManProvider::Setup)
+  FacManProvider::SetupBootstrap)
 add_library(facman::self_setup ALIAS facman_self_setup_static)
 facman_apply_policies(facman_self_setup_static)

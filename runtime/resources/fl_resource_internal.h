@@ -5,6 +5,7 @@
 #include "fl_resource_pack.h"
 namespace facman::resources::detail {
 facman::archive::Limits pack_limits();
+facman::archive::Limits export_limits();
 facman::core::Result<Inspection> inspect_open_pack(
     const std::filesystem::path& path, const facman::archive::Plan& plan);
 facman::core::Result<StandaloneInspection> inspect_open_standalone_pack(

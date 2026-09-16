@@ -81,7 +81,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.current_active_workunits]
-value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01", "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"]
+value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01", "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01", "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01"]
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-06"
 freshness = "current_plan_projection"
@@ -115,7 +115,7 @@ qualification_evidence = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_integration = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
 truth_closeout = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
-universal_setup = "279ad4876dc325f8e1fcdc918c91b098a11bc616"
+universal_setup = "4c766b342e68656a2d4e26a14cfe51ab2209ad41"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 
 [alpha5_exact_candidate]
@@ -212,9 +212,9 @@ facman_dev_revision = "b745ca094a6701b4aa98c999f8913dab02a307ae"
 universal_launcher_main_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_launcher_dev_revision = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
 universal_launcher_consumed_pin = "5479939ca5cbc9ee0f901608a92012778b4752ae"
-universal_setup_main_revision = "279ad4876dc325f8e1fcdc918c91b098a11bc616"
-universal_setup_dev_revision = "f28e543dcc2220ade10d645d4298daba28f88ec3"
-universal_setup_consumed_pin = "279ad4876dc325f8e1fcdc918c91b098a11bc616"
+universal_setup_main_revision = "4c766b342e68656a2d4e26a14cfe51ab2209ad41"
+universal_setup_dev_revision = "a7dc307fe9c2e2c7b783223edd1bc6da8dafef17"
+universal_setup_consumed_pin = "4c766b342e68656a2d4e26a14cfe51ab2209ad41"
 provider_promotions_complete = true
 provider_pins_reconciled = true
 factorio_execution = false
@@ -339,11 +339,13 @@ primary_workunit = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
 active_workunits = [
   "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
   "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+  "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
   "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
 ]
 active_automated = [
   "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
   "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+  "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
   "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
 ]
 awaiting_operator = [
@@ -358,7 +360,6 @@ planned = [
   "FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01",
   "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
   "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
-  "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
   "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
   "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
   "FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01",

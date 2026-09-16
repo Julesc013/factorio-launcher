@@ -126,7 +126,7 @@ CommandAdmissionDecision admit_command(
          command == CommandId::installs_recovery_apply) &&
         !configuration.setup().mutation_configured()) {
         return {false, "setup_uninstall_recovery_authority_required",
-            "managed uninstall recovery requires complete accepted Universal Setup configuration"};
+            "managed install recovery requires complete accepted Universal Setup configuration"};
     }
     for (const std::string& effect : policy.effects) {
         if (effect == "process_execute" && !configuration.process_execution_authorized()) {

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/facman_managed_repair_recovery.v1.schema.json",
+  "title": "FacMan managed repair recovery plan and result",
+  "type": "object",
+  "required": [
+    "schema", "operation", "status", "transaction_id", "install_id", "plan_id",
+    "plan_digest", "classification", "action", "facman_journal_sha256",
+    "pre_record_sha256", "current_record_sha256", "provider_journal_present",
+    "provider_observed_state", "provider_journal_digest",
+    "provider_journal_snapshot_sha256", "provider_installed_state_sha256",
+    "target_exists", "projected_record_sha256"
+  ],
+  "properties": {
+    "schema": { "const": "facman.managed_repair_recovery.v1" },
+    "operation": { "const": "repair" },
+    "status": { "enum": ["planned", "blocked", "completed"] },
+    "transaction_id": { "$ref": "#/$defs/transaction_id" },
+    "install_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "plan_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "plan_digest": { "$ref": "#/$defs/sha256" },
+    "classification": { "enum": ["no_provider_effect", "provider_repaired", "indeterminate"] },
+    "action": { "enum": ["close_no_provider_effect", "project_terminal", "none"] },
+    "facman_journal_sha256": { "$ref": "#/$defs/sha256" },
+    "pre_record_sha256": { "$ref": "#/$defs/sha256" },
+    "current_record_sha256": { "$ref": "#/$defs/sha256" },
+    "provider_journal_present": { "type": "boolean" },
+    "provider_observed_state": { "type": "string", "maxLength": 64 },
+    "provider_journal_digest": { "$ref": "#/$defs/optional_sha256" },
+    "provider_journal_snapshot_sha256": { "$ref": "#/$defs/optional_sha256" },
+    "provider_installed_state_sha256": { "$ref": "#/$defs/optional_sha256" },
+    "target_exists": { "type": "boolean" },
+    "projected_record_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "classification": { "const": "indeterminate" } }, "required": ["classification"] },
+      "then": { "properties": { "status": { "const": "blocked" }, "action": { "const": "none" } } }
+    },
+    {
+      "if": { "properties": { "classification": { "const": "no_provider_effect" } }, "required": ["classification"] },
+      "then": {
+        "properties": {
+          "action": { "const": "close_no_provider_effect" },
+          "provider_journal_present": { "const": false },
+          "provider_observed_state": { "const": "" },
+          "provider_journal_digest": { "const": "" },
+          "provider_journal_snapshot_sha256": { "const": "" },
+          "provider_installed_state_sha256": { "$ref": "#/$defs/sha256" },
+          "target_exists": { "const": true }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "classification": { "const": "provider_repaired" } }, "required": ["classification"] },
+      "then": {
+        "properties": {
+          "action": { "const": "project_terminal" },
+          "provider_journal_present": { "const": true },
+          "provider_observed_state": { "const": "completed" },
+          "provider_journal_digest": { "$ref": "#/$defs/sha256" },
+          "provider_journal_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+          "provider_installed_state_sha256": { "$ref": "#/$defs/sha256" },
+          "target_exists": { "const": true }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "optional_sha256": { "type": "string", "pattern": "^(?:[a-f0-9]{64})?$" },
+    "transaction_id": {
+      "type": "string", "minLength": 4, "maxLength": 64,
+      "pattern": "^tx-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    }
+  },
+  "additionalProperties": false
+}

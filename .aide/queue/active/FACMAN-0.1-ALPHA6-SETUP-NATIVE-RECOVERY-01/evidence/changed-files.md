@@ -73,3 +73,11 @@ Base: `0129f7ec6fa5864c40c6c6f4a3d3aab98b41f7ba`
 - Product documentation and generated command/version catalogs reflect the
   current contract identity. Hosted current-user package qualification remains
   required before this active WorkUnit can close.
+
+## 2026-09-16 integrated source
+
+PR #292 source `6ef1a9d3c95523b4e2b36aa5277ef498f555d523` and source/merge
+tree `6fdbda15fd22db01c4de0794efed790a22b837ff` integrated to dev as
+`c65c66ade1d4ca2c0c03b6b9aa78bfea2b977ae6`. The durable partial integration
+receipt is `evidence/integration-checkpoint.json`; prior evidence remains
+preserved and the WorkUnit remains active for update recovery.

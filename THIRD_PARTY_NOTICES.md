@@ -14,7 +14,7 @@ This repository does not bundle Factorio binaries or Wube assets.
 ## Universal Setup
 
 - Source: https://github.com/Julesc013/universal-setup
-- Pinned commit: `279ad4876dc325f8e1fcdc918c91b098a11bc616`
+- Pinned commit: `4c766b342e68656a2d4e26a14cfe51ab2209ad41`
 - Package license: MIT AND Zlib
 - License notice: `LICENSES/UniversalSetup.txt`
 - Use: linked setup runtime and installed public C headers for managed-setup contracts

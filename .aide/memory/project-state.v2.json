@@ -721,11 +721,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "5c578b2078163cfc7e4f376fc630c30b5ae64a32d92f778ee97b8712c3c95f4f",
+    "catalog_digest": "38d30b116fc5b2402823010e070511e412dcc04bcbaed16ff4d38f8c2feed788",
     "contracts": 131,
-    "refusal_codes": 285,
+    "refusal_codes": 290,
     "registered_routes": 129,
-    "schemas": 426
+    "schemas": 432
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
@@ -749,7 +749,7 @@
     "runtime_candidate": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "truth_closeout": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
-    "universal_setup": "279ad4876dc325f8e1fcdc918c91b098a11bc616"
+    "universal_setup": "4c766b342e68656a2d4e26a14cfe51ab2209ad41"
   },
   "execution": {
     "current_gate_status": "alpha6_workspace_migration_recovery_active",
@@ -809,7 +809,8 @@
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
-        "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+        "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+        "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01"
       ]
     },
     "current_origin_observation": {
@@ -2682,9 +2683,9 @@
     "universal_launcher_consumed_pin": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
     "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
-    "universal_setup_consumed_pin": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
-    "universal_setup_dev_revision": "f28e543dcc2220ade10d645d4298daba28f88ec3",
-    "universal_setup_main_revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616"
+    "universal_setup_consumed_pin": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
+    "universal_setup_dev_revision": "a7dc307fe9c2e2c7b783223edd1bc6da8dafef17",
+    "universal_setup_main_revision": "4c766b342e68656a2d4e26a14cfe51ab2209ad41"
   },
   "provider_pins": {
     "factorio_binding": {
@@ -2708,7 +2709,7 @@
       "reachability": "required_for_source_closure",
       "remote": "https://github.com/Julesc013/universal-setup.git",
       "required_ref": "refs/heads/main",
-      "revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+      "revision": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
       "source": "universal-setup"
     }
   },
@@ -2728,15 +2729,16 @@
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
       "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+      "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
       "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 2,
+      "active": 3,
       "active_automated": 1,
       "blocked": 2,
       "closed": 29,
-      "planned": 35,
+      "planned": 34,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
@@ -2782,6 +2784,12 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
@@ -2983,12 +2991,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

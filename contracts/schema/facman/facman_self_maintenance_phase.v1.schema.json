@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_self_maintenance_phase.v1.schema.json",
+  "title": "FacMan immutable self-maintenance phase record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "product_id", "operation", "operation_id", "phase", "source_generation_id", "target_generation_id", "package_sha256", "provider_operation", "state_root", "acceptance_root", "receipt_sha256"],
+  "properties": {
+    "schema": {"const": "facman.self_maintenance_phase.v1"},
+    "product_id": {"const": "facman"},
+    "operation": {"enum": ["update", "downgrade", "rollback"]},
+    "operation_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,160}$"},
+    "phase": {"enum": ["00-intent", "10-provider-entered", "20-provider-receipt", "30-candidate-verified", "40-generation-recorded", "50-shortcut-cutover", "60-registration-cutover", "70-activation-recorded"]},
+    "source_generation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "target_generation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "package_sha256": {"type": "string", "pattern": "^$|^[a-f0-9]{64}$"},
+    "provider_operation": {"enum": ["install_local", "none"]},
+    "state_root": {"type": "string", "minLength": 1, "maxLength": 8192},
+    "acceptance_root": {"type": "string", "minLength": 1, "maxLength": 8192},
+    "receipt_sha256": {"type": "string", "pattern": "^$|^[a-f0-9]{64}$"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"operation": {"const": "rollback"}}, "required": ["operation"]},
+      "then": {
+        "properties": {
+          "package_sha256": {"const": ""},
+          "provider_operation": {"const": "none"},
+          "phase": {"enum": ["00-intent", "40-generation-recorded", "50-shortcut-cutover", "60-registration-cutover", "70-activation-recorded"]}
+        }
+      },
+      "else": {
+        "properties": {
+          "operation": {"enum": ["update", "downgrade"]},
+          "package_sha256": {"pattern": "^[a-f0-9]{64}$"},
+          "provider_operation": {"const": "install_local"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"phase": {"enum": ["20-provider-receipt", "30-candidate-verified", "70-activation-recorded"]}}, "required": ["phase"]},
+      "then": {"properties": {"receipt_sha256": {"pattern": "^[a-f0-9]{64}$"}}},
+      "else": {"properties": {"receipt_sha256": {"const": ""}}}
+    }
+  ]
+}

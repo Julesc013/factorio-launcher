@@ -43,3 +43,4 @@ retained_boundaries:
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
 active_at: 2026-09-13T11:36:17Z
+integration_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/integration-checkpoint.json

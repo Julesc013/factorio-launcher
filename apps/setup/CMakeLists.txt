@@ -2,11 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 add_library(facman_windows_integration_static STATIC
-  windows_integration.cpp windows_integration_win32.cpp)
+  windows_integration.cpp windows_integration_win32.cpp
+  windows_maintenance_handoff.cpp)
 target_compile_features(facman_windows_integration_static PUBLIC cxx_std_17)
 target_include_directories(facman_windows_integration_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(facman_windows_integration_static PUBLIC
-  facman_core_static Advapi32 KtmW32 Ole32 Shell32)
+  facman_base_static facman_core_static facman_platform_static
+  Advapi32 KtmW32 Ole32 Shell32)
 facman_apply_policies(facman_windows_integration_static)
 
 add_executable(facman_setup main.cpp facman_setup.manifest)

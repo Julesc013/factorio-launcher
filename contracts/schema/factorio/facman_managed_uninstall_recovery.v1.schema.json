@@ -52,7 +52,45 @@
     },
     {
       "if": { "properties": { "classification": { "const": "no_provider_effect" } }, "required": ["classification"] },
-      "then": { "properties": { "action": { "const": "close_no_provider_effect" }, "provider_journal_present": { "const": false } } }
+      "then": {
+        "properties": {
+          "action": { "const": "close_no_provider_effect" },
+          "provider_journal_present": { "const": false },
+          "provider_observed_state": { "const": "" },
+          "provider_journal_digest": { "const": "" },
+          "provider_journal_snapshot_sha256": { "const": "" },
+          "provider_installed_state_sha256": { "$ref": "#/$defs/sha256" },
+          "target_exists": { "const": true }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "classification": { "const": "provider_retired" } }, "required": ["classification"] },
+      "then": {
+        "properties": {
+          "action": { "const": "project_terminal" },
+          "provider_journal_present": { "const": true },
+          "provider_observed_state": { "const": "completed" },
+          "provider_journal_digest": { "$ref": "#/$defs/sha256" },
+          "provider_journal_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+          "provider_installed_state_sha256": { "$ref": "#/$defs/sha256" },
+          "target_exists": { "const": false }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "classification": { "const": "provider_uninstall_blocked" } }, "required": ["classification"] },
+      "then": {
+        "properties": {
+          "action": { "const": "project_terminal" },
+          "provider_journal_present": { "const": true },
+          "provider_observed_state": { "const": "completed" },
+          "provider_journal_digest": { "$ref": "#/$defs/sha256" },
+          "provider_journal_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+          "provider_installed_state_sha256": { "$ref": "#/$defs/sha256" },
+          "target_exists": { "const": true }
+        }
+      }
     }
   ],
   "$defs": {

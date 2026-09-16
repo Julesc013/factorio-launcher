@@ -197,6 +197,81 @@ class ResourcePackageProofTests(unittest.TestCase):
             self.assertTrue(receipt["commands"][0]["timed_out"])
             self.assertTrue(all((root / row["path"]).is_file() for row in receipt["artifacts"]))
 
+    def test_json_timeout_override_exceeds_default_without_changing_it(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            driver, receipt = self.driver(root)
+            envelope = {
+                "schema": "facman.transport_response.v2",
+                "payload": {"status": "pass"},
+                "error": None,
+            }
+            code = "import json,time;time.sleep(.2);print(json.dumps(" + repr(envelope) + "))"
+            with mock.patch.object(proof, "COMMAND_TIMEOUT", 0.05):
+                payload = driver.json(
+                    "extended", Path(sys.executable), ["-c", code], timeout=1.0
+                )
+            self.assertEqual(payload, {"status": "pass"})
+            self.assertFalse(receipt["commands"][0]["timed_out"])
+
+    def test_run_cases_extends_only_export_command(self):
+        class RecordingDriver:
+            def __init__(self, resource):
+                self.resource = resource
+                self.calls = []
+
+            def raw(self, label, _executable, _arguments, *, timeout=None):
+                self.calls.append(("raw", label, timeout))
+                return b""
+
+            def json(self, label, _executable, arguments, *, timeout=None):
+                self.calls.append(("json", label, timeout))
+                if label != "export":
+                    return {}
+                destination = Path(arguments[2])
+                destination.mkdir()
+                (destination / cases.MARKER).write_bytes(
+                    b"schema=facman.archive_staging.v1\n"
+                )
+                return {
+                    "schema": "facman.runtime_resource_pack_export.v1",
+                    "status": "pass",
+                    "entry_count": 0,
+                    "source": str(self.resource),
+                    "destination": str(destination),
+                }
+
+            def refusal(self, label, _executable, _arguments, *, prefixes=("resource_",)):
+                self.calls.append(("refusal", label, None))
+
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary) / "work"
+            root = Path(temporary) / "package"
+            (root / "bin").mkdir(parents=True)
+            (root / "manifest").mkdir()
+            (root / "bin/facman.exe").write_bytes(b"executable")
+            resource = root / "facman.resources"
+            resource.write_bytes(b"resource")
+            (root / "manifest/package.v1.toml").write_bytes(b"manifest")
+            work.mkdir()
+            driver = RecordingDriver(work / "Relocated package \u00e9 \u03b2/facman.resources")
+            completed = []
+            with mock.patch.object(cases, "identity_cases"):
+                cases.run_cases(
+                    driver,
+                    root,
+                    ("bin/facman.exe", "facman.resources", "manifest/package.v1.toml"),
+                    "windows_product_x64",
+                    cases.snapshot(root),
+                    {"entries": [], "members": {}},
+                    work,
+                    completed.append,
+                    export_timeout=proof.EXPORT_COMMAND_TIMEOUT,
+                )
+            timed = [(kind, label, timeout) for kind, label, timeout in driver.calls if timeout]
+            self.assertEqual(timed, [("json", "export", proof.EXPORT_COMMAND_TIMEOUT)])
+            self.assertTrue(all(timeout is None for kind, label, timeout in driver.calls if label != "export"))
+
     def test_output_limit_retains_bounded_prefix_and_fails_even_zero_exit(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

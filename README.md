@@ -114,7 +114,7 @@ FacMan ships as the first serious Factorio product binding.
 ## Current Status
 
 **Phase:** `facman_0_1_alpha6_workspace_migration_recovery`. **Primary active WorkUnit:** `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`. **Next:** `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
-Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`.
+Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`.
 
 Current release obligations come only from
 `release/index/active_release_view.v1.toml`.
@@ -127,13 +127,13 @@ Catalog-only CLI, TUI, toolkit, and earlier distribution records are not current
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 131 commands, 426 schemas, and 285 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 131 commands, 432 schemas, and 290 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
-- USK `279ad4876dc325f8e1fcdc918c91b098a11bc616`.
+- USK `4c766b342e68656a2d4e26a14cfe51ab2209ad41`.
 FacMan's exact consumed providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
-- USK `279ad4876dc325f8e1fcdc918c91b098a11bc616`.
+- USK `4c766b342e68656a2d4e26a14cfe51ab2209ad41`.
 Repository identity is sourced from `release/index/repository_identity.v1.toml`.
 Its FacMan row binds stable role `facman` and numeric ID `1293124404`.
 The canonical slug is `Julesc013/factorio-launcher`; the non-current future slug candidate is `Julesc013/facman`.

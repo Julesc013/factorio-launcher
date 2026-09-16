@@ -33,3 +33,13 @@ This checkpoint does not close the WorkUnit or qualify an Alpha release.
   release candidate.
 - `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01` remains active; this
   operation-specific recovery checkpoint does not close or supersede it.
+
+## 2026-09-16 integration boundary
+
+PR #292 and its protected promotion integrate the qualified install, repair,
+uninstall, cache-custody and native-effect recovery slice. The WorkUnit remains
+active because its canonical acceptance also includes update recovery.
+Independent FacMan update/downgrade, locked-file replacement, and restart
+handoff are being advanced by active
+`FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01` without transferring or narrowing this
+WorkUnit's acceptance.

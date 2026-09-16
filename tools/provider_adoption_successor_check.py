@@ -22,18 +22,18 @@ RELEASE_INDEX = ROOT / "release/index/release_index.v1.toml"
 PROJECT_STATUS = ROOT / "release/index/project_status.v2.toml"
 
 CURRENT_INPUTS = {
+    "workspace_lock": "a43e20c51e6f67a0972f205e55061ed8d67128a19d403f51585e67b6118a7476",
+    "dependency_lock": "453dcc0173548a8e9af5a19846954509d8b2bab6dabccc1a446228df4971bbfb",
+    "providers_lock": "0f1eaa2d83854f0edfc7e13cff1816fd7a91202fa50c38f4131518297aa51b5f",
+    "build_manifest": "92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be",
+    "sbom": "06798f5385ea0908202f7af000d7504fbea10fccc938bd0570b0fa5809f24c07",
+}
+PRIOR_INPUTS = {
     "workspace_lock": "83a000bbc6ed1f8585f97d4462b41860dd50c19b7b85c35a38daa8b3e0ce7395",
     "dependency_lock": "9c28173442fdaf497bf6da2dc24b746f9abd6254374c8b0351e78884b042e420",
     "providers_lock": "732c675ae982e940c5662bb9d2487f32e6c1fe3d7b9bdd854a2972963cf4f4a9",
     "build_manifest": "92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be",
     "sbom": "cff10ca2e7ead40c889100078c89c79fdedb71c9d9f7ab9446ce1029a3cd8c79",
-}
-PRIOR_INPUTS = {
-    "workspace_lock": "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf",
-    "dependency_lock": "d2e131e300f9b20bea0aa2a4169f86a95e48740c4cda35b424f5f8ae942060a3",
-    "providers_lock": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
-    "build_manifest": "92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be",
-    "sbom": "c1be8ed61893107e335de4cbbef32d7449ca72d26670b4735ac1a6cba88880c2",
 }
 INPUT_PATHS = {
     "workspace_lock": "release/index/workspace_lock.v1.toml",
@@ -43,10 +43,18 @@ INPUT_PATHS = {
     "sbom": "release/index/sbom.components.v1.json",
 }
 PROJECTION_SOURCE = {
-    "workflow_run": 34793208025,
-    "aggregate_job": 103821556004,
-    "head_revision": "e6b1a3439bee3f6cdceaffa0f303cf26cada7cae",
-    "evidence_revision": "8bbe5051339d828ad7d39aae880be0d293ef2a89",
+    "workflow_run": 35003750747,
+    "aggregate_job": None,
+    "artifact_jobs": {
+        "linux/static": 104498238663,
+        "linux/shared": 104498238745,
+        "macos/static": 104498238799,
+        "macos/shared": 104498238957,
+        "windows/static": 104498238997,
+        "windows/shared": 104498238991,
+    },
+    "head_revision": "f04488ebdae880ba234f74f8cee602917736d40e",
+    "evidence_revision": "fa08d4e88e1a98881b95f69e12ddae367d469cdb",
 }
 EXPECTED_PROVIDERS = [
     {
@@ -62,34 +70,49 @@ EXPECTED_PROVIDERS = [
     },
     {
         "id": "universal_setup",
-        "prior_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
-        "revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
-        "tree": "499013a2099f872c998932505a51489343606382",
+        "prior_revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+        "revision": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
+        "tree": "d0e4eef8cd6303079f1b25688d29a636a2e4c558",
         "package_version": "1.0.0",
         "abi_version": "1.0",
         "contract_digest": "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56",
-        "package_set_digest": "a47cb9b409c365d4639cc4879941321f0bbfe6d4dbccb9910dcf0bccf550f09f",
+        "package_set_digest": "581db919e18adabbbc61c9b288d5f0381f710f190241ca1ac466a06abf667f78",
         "license": "MIT AND Zlib",
     },
 ]
 EXPECTED_INVALIDATIONS = {
     "alpha5_promotion_candidate_closeout.v1": (
-        PRIOR_INPUTS["providers_lock"], PRIOR_INPUTS["workspace_lock"]
+        "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+        "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf",
     ),
     "alpha5_final_candidate_closeout.v1": (
-        PRIOR_INPUTS["providers_lock"], PRIOR_INPUTS["workspace_lock"]
+        "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+        "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf",
     ),
     "facman_accessibility_human_test_packet.alpha1": (
-        PRIOR_INPUTS["providers_lock"], None
+        "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+        None,
     ),
     "successor_play_route.v2": (
         "59376482126a8226bb28c5b5d73e980d21d3081b76bdf10bd5c10297f2462249",
         "510511d597ef4ff1ce58f198b7d45796d7723411d09ca15f0e87d539445408e3",
     ),
-    "factorio_2_1_14_release_route.v3": (PRIOR_INPUTS["providers_lock"], None),
-    "factorio_2_1_14_release_route.v4": (PRIOR_INPUTS["providers_lock"], None),
-    "factorio_2_1_14_release_route.v5": (PRIOR_INPUTS["providers_lock"], None),
-    "factorio_2_1_14_route_packet.v1": (PRIOR_INPUTS["providers_lock"], None),
+    "factorio_2_1_14_release_route.v3": (
+        "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+        None,
+    ),
+    "factorio_2_1_14_release_route.v4": (
+        "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+        None,
+    ),
+    "factorio_2_1_14_release_route.v5": (
+        "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+        None,
+    ),
+    "factorio_2_1_14_route_packet.v1": (
+        "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+        None,
+    ),
 }
 
 
@@ -164,7 +187,7 @@ def validate(root: Path = ROOT, record: dict[str, Any] | None = None) -> list[st
     except (OSError, ValueError, json.JSONDecodeError, jsonschema.SchemaError) as exc:
         return [f"provider adoption successor cannot be validated: {exc}"]
 
-    if value.get("facman_base_revision") != "77c37e4cd9278c42307cf6b752e1ff2225bc914a":
+    if value.get("facman_base_revision") != "2287e36670ed5577697a1cdcf9fe551a94e85442":
         problems.append("provider adoption successor has the wrong FacMan base")
     if value.get("projection_source") != PROJECTION_SOURCE:
         problems.append("provider adoption successor has the wrong hosted projection source")

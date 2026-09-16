@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01
 title: Complete independent FacMan self-maintenance
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -17,7 +17,25 @@ allowed_paths:
   - "tools/**"
   - "tests/**"
   - "docs/**"
+  - "contracts/schema/facman/facman_setup_operation_journal.v1.schema.json"
+  - "contracts/schema/facman/facman_self_activation.v1.schema.json"
+  - "contracts/schema/facman/facman_self_generation.v1.schema.json"
+  - "contracts/schema/facman/facman_self_maintenance_package.v1.schema.json"
+  - "contracts/schema/facman/facman_self_maintenance_phase.v1.schema.json"
+  - "release/index/plan.v1.toml"
+  - "release/index/current_state.v1.toml"
+  - ".aide/queue/index.yaml"
+  - ".aide/memory/project-state.md"
+  - ".aide/memory/project-state.v2.json"
+  - "README.md"
+  - "todo.md"
+  - "docs/roadmap.md"
+  - "docs/roadmap/current.md"
+  - "runtime/core/generated/version.h"
+  - "apps/gui/windows/winforms/GeneratedCommandCatalog.cs"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/**"
   - ".aide/queue/next/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
@@ -34,3 +52,4 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+active_at: 2026-09-15T14:46:35Z

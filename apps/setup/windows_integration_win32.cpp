@@ -3,6 +3,7 @@
 
 #include "windows_integration.h"
 #include "fl_json.h"
+#include "fl_path_safety.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -49,9 +50,31 @@ fs::path normalized(const fs::path &path) {
   return result;
 }
 
+fs::path expanded_long_path(const fs::path &path) {
+  const fs::path lexical = normalized(path);
+  std::vector<wchar_t> buffer(32768U, L'\0');
+  fs::path existing = lexical;
+  fs::path suffix;
+  while (!existing.empty()) {
+    const DWORD length = GetLongPathNameW(
+        existing.c_str(), buffer.data(), static_cast<DWORD>(buffer.size()));
+    if (length != 0U && length < buffer.size()) {
+      return normalized(fs::path(std::wstring(buffer.data(), length)) / suffix);
+    }
+    if (existing == existing.root_path()) break;
+    suffix = existing.filename() / suffix;
+    existing = existing.parent_path();
+  }
+  return lexical;
+}
+
 bool same_path(const fs::path &left, const fs::path &right) {
+  std::string detail;
   return left.is_absolute() && right.is_absolute() &&
-         equal(normalized(left).wstring(), normalized(right).wstring());
+         !facman::base::path_crosses_link_or_reparse_point(left, detail) &&
+         !facman::base::path_crosses_link_or_reparse_point(right, detail) &&
+         equal(expanded_long_path(left).wstring(),
+               expanded_long_path(right).wstring());
 }
 
 std::wstring quoted(const fs::path &path) {
@@ -311,6 +334,70 @@ bool desired_registration(HKEY key, const MaintenanceContext &context,
       registration_ownership(key, context) == Ownership::owned;
 }
 
+CutoverOwnership shortcut_cutover_ownership(
+    HANDLE file, const CutoverContext &context) {
+  ShortcutIdentity identity;
+  if (!read_shortcut(file, identity)) return CutoverOwnership::unreadable;
+  const fs::path old_generation = normalized(context.source.install_root) /
+      "generations" / wide(context.source_version);
+  const fs::path new_generation = normalized(context.target.install_root) /
+      "generations" / wide(context.target_version);
+  if (same_path(identity.target, old_generation / "FacMan.exe") &&
+      same_path(identity.working_directory, old_generation) &&
+      identity.arguments.empty()) return CutoverOwnership::old_exact;
+  if (same_path(identity.target, new_generation / "FacMan.exe") &&
+      same_path(identity.working_directory, new_generation) &&
+      identity.arguments.empty()) return CutoverOwnership::new_exact;
+  if (owns_shortcut(context.source.install_root, identity) ||
+      owns_shortcut(context.target.install_root, identity))
+    return CutoverOwnership::facman_owned_other;
+  return CutoverOwnership::foreign;
+}
+
+CutoverOwnership open_cutover_shortcut(const fs::path &path,
+                                       const CutoverContext &context,
+                                       bool removing, Handle &file) {
+  file.value = CreateFileW(path.c_str(), GENERIC_READ | (removing ? DELETE : 0),
+      FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT,
+      nullptr);
+  if (file.value == INVALID_HANDLE_VALUE) {
+    const DWORD problem = GetLastError();
+    return problem == ERROR_FILE_NOT_FOUND || problem == ERROR_PATH_NOT_FOUND
+        ? CutoverOwnership::absent : CutoverOwnership::unreadable;
+  }
+  return shortcut_cutover_ownership(file.value, context);
+}
+
+CutoverOwnership registration_cutover_ownership(
+    HKEY key, const CutoverContext &context) {
+  if (desired_registration(key, context.source, context.source_version))
+    return CutoverOwnership::old_exact;
+  if (desired_registration(key, context.target, context.target_version))
+    return CutoverOwnership::new_exact;
+  const Ownership old = registration_ownership(key, context.source);
+  const Ownership target = registration_ownership(key, context.target);
+  if (old == Ownership::unreadable || target == Ownership::unreadable)
+    return CutoverOwnership::unreadable;
+  if (old == Ownership::owned || old == Ownership::owned_stale ||
+      target == Ownership::owned || target == Ownership::owned_stale)
+    return CutoverOwnership::facman_owned_other;
+  return CutoverOwnership::foreign;
+}
+
+CutoverOwnership open_cutover_registration(const CutoverContext &context,
+                                            Key &key,
+                                            HANDLE transaction = nullptr) {
+  const LSTATUS result = transaction == nullptr
+      ? RegOpenKeyExW(HKEY_CURRENT_USER, registry_path, 0, KEY_READ, &key.value)
+      : RegOpenKeyTransactedW(HKEY_CURRENT_USER, registry_path, 0,
+                             KEY_READ | KEY_WRITE, &key.value, transaction,
+                             nullptr);
+  if (result == ERROR_FILE_NOT_FOUND || result == ERROR_PATH_NOT_FOUND)
+    return CutoverOwnership::absent;
+  if (result != ERROR_SUCCESS) return CutoverOwnership::unreadable;
+  return registration_cutover_ownership(key.value, context);
+}
+
 bool shortcut_bytes(const fs::path &target, const fs::path &working_directory,
                     std::vector<unsigned char> &bytes, std::string &detail) {
   Apartment apartment;
@@ -441,6 +528,99 @@ Result replace_stale_shortcut(const fs::path &link, const fs::path &root,
                                   &disposition, sizeof(disposition)))
     return {false, "new shortcut was published but stale shortcut backup could not be retired", true};
   return {true, "owned shortcut updated"};
+}
+
+fs::path cutover_backup(const fs::path &link, const std::string &operation_id) {
+  return link.parent_path() /
+      fs::path(link.filename().wstring() + L".facman-backup." +
+               wide(operation_id));
+}
+
+Result cutover_shortcut(const fs::path &link,
+                        const CutoverContext &context) {
+  std::string identifier_detail;
+  if (!facman::base::validate_identifier(context.operation_id,
+                                         identifier_detail))
+    return {false, "shortcut cutover operation id is invalid", true};
+  const fs::path backup = cutover_backup(link, context.operation_id);
+  Handle backup_file;
+  const CutoverOwnership backup_state = open_cutover_shortcut(
+      backup, context, true, backup_file);
+  Handle current;
+  CutoverOwnership current_state = open_cutover_shortcut(
+      link, context, true, current);
+  if (backup_state != CutoverOwnership::absent &&
+      backup_state != CutoverOwnership::old_exact)
+    return {false, "operation-bound shortcut backup is foreign or unreadable", true};
+  if (current_state == CutoverOwnership::new_exact) {
+    // Retain the deterministic backup until the activation record is durable.
+    return {true, "exact target shortcut is already active"};
+  }
+  if (current_state != CutoverOwnership::old_exact &&
+      !(current_state == CutoverOwnership::absent &&
+        backup_state == CutoverOwnership::old_exact))
+    return {false, "Start Menu shortcut is not the exact reviewed source", true};
+
+  const fs::path generation = normalized(context.target.install_root) /
+      "generations" / wide(context.target_version);
+  PreparedShortcut prepared;
+  std::string detail;
+  if (!prepare_shortcut(generation / "FacMan.exe", generation, link,
+                        prepared, detail))
+    return {false, detail, true};
+  if (backup_state == CutoverOwnership::absent) {
+    if (!rename_open_file_no_replace(current.value, backup))
+      return {false, "source shortcut could not be bound to its durable backup", true};
+    CloseHandle(current.value);
+    current.value = INVALID_HANDLE_VALUE;
+  }
+  if (!publish_prepared_shortcut(prepared, link))
+    return {false, "target shortcut could not be published; source backup was retained", true};
+  Handle observed;
+  if (open_cutover_shortcut(link, context, false, observed) !=
+      CutoverOwnership::new_exact)
+    return {false, "published target shortcut could not be verified", true};
+  return {true, "exact Start Menu shortcut cutover completed"};
+}
+
+Result cutover_registration(const CutoverContext &context) {
+  Handle transaction;
+  transaction.value = CreateTransaction(nullptr, nullptr, 0, 0, 0, 0, nullptr);
+  if (transaction.value == INVALID_HANDLE_VALUE)
+    return {false, "Windows could not begin registration cutover", true};
+  Key key;
+  const CutoverOwnership current = open_cutover_registration(
+      context, key, transaction.value);
+  if (current == CutoverOwnership::new_exact)
+    return {true, "exact target registration is already active"};
+  if (current != CutoverOwnership::old_exact) {
+    RollbackTransaction(transaction.value);
+    return {false, "uninstall registration is not the exact reviewed source", true};
+  }
+  const fs::path root = normalized(context.target.install_root);
+  const fs::path gui = root / "generations" /
+      wide(context.target_version) / "FacMan.exe";
+  const std::wstring uninstall = uninstall_command(context.target);
+  const bool written =
+      set_registry_string(key.value, L"DisplayName", L"FacMan") &&
+      set_registry_string(key.value, L"DisplayVersion", wide(context.target_version)) &&
+      set_registry_string(key.value, L"Publisher", L"Jules C") &&
+      set_registry_string(key.value, L"InstallLocation", root.wstring()) &&
+      set_registry_string(key.value, L"DisplayIcon", L"\"" + gui.wstring() + L"\"") &&
+      set_registry_string(key.value, L"UninstallString", uninstall) &&
+      set_registry_string(key.value, L"QuietUninstallString", uninstall + L" --json") &&
+      set_registry_string(key.value, L"ModifyPath", modify_command(context.target)) &&
+      set_registry_dword(key.value, L"NoModify", 1) &&
+      set_registry_dword(key.value, L"NoRepair", 0);
+  if (!written || !CommitTransaction(transaction.value)) {
+    RollbackTransaction(transaction.value);
+    return {false, "Windows could not commit exact registration cutover", true};
+  }
+  Key observed;
+  if (open_cutover_registration(context, observed) !=
+      CutoverOwnership::new_exact)
+    return {false, "committed target registration could not be verified", true};
+  return {true, "exact per-user registration cutover completed"};
 }
 
 Result write_registration_transacted(const MaintenanceContext &context,
@@ -716,6 +896,55 @@ Result apply_windows_effect(Effect effect, const MaintenanceContext &context,
   return write_registration_transacted(normalized_context, gui, product_version);
 }
 
+CutoverOwnership inspect_windows_cutover_effect(
+    Effect effect, const CutoverContext &context) {
+  std::error_code status;
+  CutoverContext normalized_context = context;
+  normalized_context.source.install_root =
+      fs::absolute(context.source.install_root, status).lexically_normal();
+  if (status) return CutoverOwnership::unreadable;
+  normalized_context.target.install_root =
+      fs::absolute(context.target.install_root, status).lexically_normal();
+  if (status) return CutoverOwnership::unreadable;
+  if (effect == Effect::shortcut) {
+    Handle file;
+    return open_cutover_shortcut(start_menu_link(), normalized_context, false,
+                                 file);
+  }
+  Key key;
+  return open_cutover_registration(normalized_context, key);
+}
+
+Result apply_windows_cutover_effect(Effect effect,
+                                    const CutoverContext &context) {
+  std::error_code status;
+  CutoverContext normalized_context = context;
+  normalized_context.source.install_root =
+      fs::absolute(context.source.install_root, status).lexically_normal();
+  if (status) return {false, "source install root could not be made absolute", true};
+  normalized_context.target.install_root =
+      fs::absolute(context.target.install_root, status).lexically_normal();
+  if (status) return {false, "target install root could not be made absolute", true};
+  const fs::path target_generation = normalized_context.target.install_root /
+      "generations" / wide(context.target_version);
+  const fs::path target_gui = target_generation / "FacMan.exe";
+  const fs::path target_maintenance = normalized_context.target.install_root /
+      "maintenance" / "FacManSetup.exe";
+  const fs::path retained_source = normalized(context.target.repair_source);
+  const fs::path external_helper = normalized(maintenance_launcher(context.target));
+  if (!fs::is_regular_file(target_gui, status) || status ||
+      !fs::is_regular_file(target_maintenance, status) || status ||
+      !fs::is_regular_file(retained_source, status) || status ||
+      !fs::is_regular_file(external_helper, status) || status)
+    return {false, "target generation or retained maintenance identity is missing", true};
+  if (effect == Effect::shortcut) {
+    const fs::path link = start_menu_link();
+    if (link.empty()) return {false, "Windows could not resolve the current-user Start Menu", true};
+    return cutover_shortcut(link, normalized_context);
+  }
+  return cutover_registration(normalized_context);
+}
+
 Ownership inspect_windows_shortcut_fixture(const fs::path &shortcut,
                                            const fs::path &install_root,
                                            const std::string &product_version) {
@@ -749,5 +978,18 @@ Result apply_windows_shortcut_fixture(const fs::path &shortcut,
   std::string detail;
   if (!create_shortcut(gui, generation, shortcut, detail)) return {false, detail, true};
   return {true, "owned shortcut installed"};
+}
+
+CutoverOwnership inspect_windows_shortcut_cutover_fixture(
+    const fs::path &shortcut, const CutoverContext &context) {
+  if (shortcut.empty()) return CutoverOwnership::unreadable;
+  Handle file;
+  return open_cutover_shortcut(shortcut, context, false, file);
+}
+
+Result apply_windows_shortcut_cutover_fixture(
+    const fs::path &shortcut, const CutoverContext &context) {
+  if (shortcut.empty()) return {false, "shortcut fixture path is empty", true};
+  return cutover_shortcut(shortcut, context);
 }
 } // namespace facman::setup::integration

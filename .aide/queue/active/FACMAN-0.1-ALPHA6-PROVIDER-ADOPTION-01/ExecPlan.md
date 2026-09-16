@@ -337,3 +337,37 @@ provider-mode tests passed, as did the complete strict check over 419 schemas
 and `git diff --check`. Hosted package-lifecycle requalification remains tied
 to the successor commit and must not be inferred from the failed predecessor
 run.
+
+## 2026-09-16 protected Universal Setup package adoption
+
+Universal Setup PR #55 integrated the reviewed setup-recovery source into
+protected `dev` as `a7dc307fe9c2e2c7b783223edd1bc6da8dafef17`; PR #56 then
+integrated it into protected `main` as
+`4c766b342e68656a2d4e26a14cfe51ab2209ad41`, tree
+`d0e4eef8cd6303079f1b25688d29a636a2e4c558`. FacMan workflow run
+`35003750747` built all twelve provider package cells at its exact workflow
+head. All twelve jobs passed. The six Universal Setup jobs were
+`104498238663`, `104498238745`, `104498238799`, `104498238957`,
+`104498238991` and `104498238997`.
+
+The reviewed package-import policy at FacMan revision
+`fa08d4e88e1a98881b95f69e12ddae367d469cdb` binds the six downloaded
+manifests, archive payloads, contracts, header, ABI and selected-contract
+digests. The atomic importer applied those packages and its immediate no-op
+check passed. Both receipts have SHA-256
+`8bff8455fd84483a58711738dc7009cf08aeacb846298559286b1b123512f5d3`.
+The resulting workspace, dependency, providers, build and SBOM projection
+digests are respectively
+`a43e20c51e6f67a0972f205e55061ed8d67128a19d403f51585e67b6118a7476`,
+`453dcc0173548a8e9af5a19846954509d8b2bab6dabccc1a446228df4971bbfb`,
+`0f1eaa2d83854f0edfc7e13cff1816fd7a91202fa50c38f4131518297aa51b5f`,
+`92044fdc925243e813852050fa87590d2467adf2f5c954249620c87c404443be`
+and `06798f5385ea0908202f7af000d7504fbea10fccc938bd0570b0fa5809f24c07`.
+
+The active successor and current-truth surfaces now distinguish this package
+set from the preserved earlier invalidation history and bind the current
+Universal Setup `main`, `dev` and consumed revisions to the protected commits
+above. Fresh validation and exact committed-source native/package
+qualification remain pending at this checkpoint. The WorkUnit's prior closure
+remains preserved; this successor update grants no release, publication,
+signing, real-game, route or live Setup authority.

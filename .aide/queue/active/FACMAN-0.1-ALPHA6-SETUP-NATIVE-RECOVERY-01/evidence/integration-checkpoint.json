@@ -1,0 +1,25 @@
+{
+  "schema": "facman.setup-native-recovery-integration-checkpoint.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+  "result": "PARTIAL",
+  "source": "6ef1a9d3c95523b4e2b36aa5277ef498f555d523",
+  "source_tree": "6fdbda15fd22db01c4de0794efed790a22b837ff",
+  "pull_request": 292,
+  "merge_tree": "6fdbda15fd22db01c4de0794efed790a22b837ff",
+  "integration": "c65c66ade1d4ca2c0c03b6b9aa78bfea2b977ae6",
+  "target": "dev",
+  "checks": {
+    "pull_request_run": 34976666277,
+    "pull_request_result": "passed",
+    "windows_package_job": 104406007552,
+    "windows_package_result": "passed",
+    "windows_package_step": "Build and exercise deterministic per-user self-setup package",
+    "protected_promotion_run": 34976666335,
+    "protected_promotion_result": "passed"
+  },
+  "scope": "Composite setup/native recovery, external maintenance-source custody, and produced Windows package lifecycle qualification.",
+  "workunit_closed": false,
+  "self_maintenance_closure": false,
+  "update_qualified": false,
+  "locked_file_restart_handoff_qualified": false
+}

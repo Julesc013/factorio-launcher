@@ -245,3 +245,25 @@ source before integration.
 - Full `py -3 -B tools/strict_check.py`: PASS (426 schemas).
 - Pinned portable AIDE Lite suite: PASS across all reported tiers.
 - Protected report restoration: PASS (10 exact, 2 absent).
+
+## Managed repair recovery validation — 2026-09-16
+
+- Initial independent Sol postimage review: FAIL with two release-blocking
+  findings. The first implementation did not bind recovered terminal product,
+  version, ABI, provider revision, component and entrypoint identity to the
+  canonical pre-repair state. The shared response schema also admitted
+  impossible classification/journal/target combinations.
+- Corrected Windows Debug build: PASS for the complete configured native tree.
+  Full CTest: PASS, 45/45 in 47.71 seconds. The focused M1 proof exercises six
+  independent terminal identity drifts and requires
+  `setup_repair_recovery_response_invalid` without FacMan record projection.
+- Focused command contract suite: PASS, 5 tests. It validates the shared,
+  repair-specific and uninstall-specific schemas and rejects false no-effect,
+  repaired and retired journal/target combinations.
+- Final independent Sol postimage review: PASS on diff snapshot
+  `fd86a798a35d9bc1b552ad69fa118311d96bf519`, with no remaining blocker and no
+  authority expansion.
+- Final pre-document `tools/strict_check.py`: PASS, including 131 commands, 428
+  schemas, 290 refusal codes, generated state, source format, setup workflow,
+  contract, frontend and engineering-quality checks. The final gate is rerun
+  after this append-only evidence update and staged-source reconciliation.
