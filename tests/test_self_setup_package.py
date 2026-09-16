@@ -111,6 +111,8 @@ class SelfSetupPackageTests(unittest.TestCase):
                 "target_generation_id": "b" * 64,
                 "package_sha256": "c" * 64,
                 "provider_operation": "install_local",
+                "state_root": "C:/State/FacMan/setup",
+                "acceptance_root": "C:/State",
                 "receipt_sha256": "d" * 64,
             }
             validator.validate(provider_phase)
@@ -162,10 +164,44 @@ class SelfSetupPackageTests(unittest.TestCase):
                 "universal_setup_revision": "d" * 40,
                 "install_id": "facman.self.generation." + "a" * 64,
                 "install_root": "C:/FacMan",
+                "logical_root": "C:/FacMan",
+                "state_root": "C:/State/FacMan/setup",
+                "acceptance_root": "C:/State",
                 "gui": "C:/FacMan/generations/1.2.3-alpha.1+build.01/FacMan.exe",
                 "maintenance_launcher": "C:/FacMan/maintenance/FacManSetup.exe",
             }
             generation_validator.validate(generation)
+            generation_validator.validate(
+                {**generation, "install_id": "facman.self"}
+            )
+            activation_schema = json.loads(
+                (ROOT / "contracts/schema/facman/"
+                 "facman_self_activation.v1.schema.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            activation_validator = jsonschema.Draft202012Validator(
+                activation_schema
+            )
+            migration = {
+                "schema": "facman.self_activation.v1",
+                "product_id": "facman",
+                "operation": "migration",
+                "operation_id": "migration.schema-test",
+                "generation_id": "a" * 64,
+                "previous": {"name": "", "sha256": ""},
+            }
+            activation_validator.validate(migration)
+            with self.assertRaises(jsonschema.ValidationError):
+                activation_validator.validate(
+                    {**migration, "operation": "update"}
+                )
+            with self.assertRaises(jsonschema.ValidationError):
+                activation_validator.validate({
+                    **migration,
+                    "source_generation_id": "a" * 64,
+                    "target_generation_id": "b" * 64,
+                })
             for invalid_version in (
                 "01.2.3",
                 "1.2.3-alpha.01",

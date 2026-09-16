@@ -181,16 +181,56 @@ bool safe_version_component(const std::string &value) {
       path != "..";
 }
 
-std::string generation_identity(const Request &request) {
-  const PackageDescriptor &descriptor = request.package_descriptor;
+std::string generation_identity(const PackageDescriptor &descriptor,
+                                const std::string &package_sha256) {
   return hash("facman.self.generation.v1\n" + descriptor.product_id + "\n" +
-      descriptor.product_version + "\n" + request.package_sha256 + "\n" +
+      descriptor.product_version + "\n" + package_sha256 + "\n" +
       descriptor.facman_source_revision + "\n" +
       descriptor.universal_setup_revision + "\n" +
       descriptor.setup_protocol + "\n" + descriptor.package_layout + "\n" +
       descriptor.generation_relative_path + "\n" +
       descriptor.gui_relative_path + "\n" + descriptor.cli_relative_path +
       "\n" + descriptor.maintenance_relative_path + "\n");
+}
+
+std::string generation_install_id(const std::string &generation_id) {
+  return "facman.self.generation." + generation_id;
+}
+
+std::string logical_root_identity(const fs::path &logical_root) {
+  return hash("facman.self.logical-root.v1\n" +
+      facman::platform::path_to_utf8(logical_root.lexically_normal()) + "\n");
+}
+
+std::string physical_generation_root_identity(const fs::path &logical_root,
+                                              const std::string &generation_id) {
+  return hash("facman.self.physical-generation-root.v1\n" +
+      logical_root_identity(logical_root) + "\n" + generation_id + "\n");
+}
+
+fs::path generation_install_root(const fs::path &logical_root,
+                                 const std::string &generation_id) {
+  return logical_root.parent_path() / facman::platform::path_from_utf8(
+      "FacMan.generation." +
+      physical_generation_root_identity(logical_root, generation_id));
+}
+
+fs::path predecessor_generation_install_root(const fs::path &logical_root,
+                                             const std::string &generation_id) {
+  return logical_root.parent_path() / facman::platform::path_from_utf8(
+      "FacMan.generation." + logical_root_identity(logical_root) + "." +
+      generation_id);
+}
+
+PackageDescriptor generation_descriptor(const Generation &generation) {
+  return {"facman", generation.product_version,
+          "generations/" + generation.product_version,
+          generation.facman_source_revision,
+          generation.universal_setup_revision,
+          "facman.self_maintenance.v1",
+          "versioned_generation_with_maintenance_v1",
+          "FacMan.exe", "bin/facman.exe", "maintenance/FacManSetup.exe",
+          false};
 }
 
 std::string serialize_generation(const Generation &generation) {
@@ -204,6 +244,9 @@ std::string serialize_generation(const Generation &generation) {
   object.add_string("universal_setup_revision", generation.universal_setup_revision);
   object.add_string("install_id", generation.install_id);
   object.add_string("install_root", facman::platform::path_to_utf8(generation.install_root));
+  object.add_string("logical_root", facman::platform::path_to_utf8(generation.logical_root));
+  object.add_string("state_root", facman::platform::path_to_utf8(generation.state_root));
+  object.add_string("acceptance_root", facman::platform::path_to_utf8(generation.acceptance_root));
   object.add_string("gui", facman::platform::path_to_utf8(generation.gui));
   object.add_string("maintenance_launcher",
                     facman::platform::path_to_utf8(generation.maintenance_launcher));
@@ -219,8 +262,12 @@ std::string activation_json(const Plan &plan) {
   object.add_string("product_id", "facman");
   object.add_string("operation", plan.operation);
   object.add_string("operation_id", plan.operation_id);
-  object.add_string("source_generation_id", plan.source.generation_id);
-  object.add_string("target_generation_id", plan.target.generation_id);
+  if (plan.operation == "migration") {
+    object.add_string("generation_id", plan.target.generation_id);
+  } else {
+    object.add_string("source_generation_id", plan.source.generation_id);
+    object.add_string("target_generation_id", plan.target.generation_id);
+  }
   object.add_object("previous", previous);
   return object.serialize() + "\n";
 }
@@ -237,6 +284,8 @@ std::string phase_json(const Plan &plan, const std::string &phase,
   object.add_string("target_generation_id", plan.target.generation_id);
   object.add_string("package_sha256", plan.package_sha256);
   object.add_string("provider_operation", plan.provider_operation);
+  object.add_string("state_root", facman::platform::path_to_utf8(plan.target.state_root));
+  object.add_string("acceptance_root", facman::platform::path_to_utf8(plan.target.acceptance_root));
   object.add_string("receipt_sha256", receipt);
   return object.serialize() + "\n";
 }
@@ -302,14 +351,20 @@ bool exact_keys(const json::Value &value,
 }
 
 bool activation_operation(const std::string &value) {
-  return value == "update" || value == "downgrade" || value == "rollback";
+  return value == "migration" || value == "update" ||
+      value == "downgrade" || value == "rollback";
 }
 
 struct ActivationHead {
   std::string name;
   std::string digest;
+  std::string source_generation_id;
   std::string target_generation_id;
+  std::string previous_name;
+  std::string previous_digest;
 };
+
+bool exact_generation_paths(const Generation &generation);
 
 facman::core::Result<ActivationHead> validate_activation_head(
     const fs::path &coordinator_root, const std::string &expected_name,
@@ -358,10 +413,16 @@ facman::core::Result<ActivationHead> validate_activation_head(
         ? string_field(document.value(), "operation") : std::string();
     const std::string operation_id = document
         ? string_field(document.value(), "operation_id") : std::string();
-    const std::string source_generation_id = document
+    std::string source_generation_id = document
         ? string_field(document.value(), "source_generation_id") : std::string();
-    const std::string target_generation_id = document
+    std::string target_generation_id = document
         ? string_field(document.value(), "target_generation_id") : std::string();
+    const std::string migration_generation_id = document
+        ? string_field(document.value(), "generation_id") : std::string();
+    if (operation == "migration") {
+      source_generation_id = migration_generation_id;
+      target_generation_id = migration_generation_id;
+    }
     const std::string previous_name = previous != nullptr
         ? string_field(*previous, "name") : std::string();
     const std::string previous_digest = previous != nullptr
@@ -371,21 +432,27 @@ facman::core::Result<ActivationHead> validate_activation_head(
     const json::Value *previous_digest_value = previous != nullptr
         ? previous->find("sha256") : nullptr;
     std::string operation_detail;
-    if (!document ||
-        !exact_keys(document.value(), {"schema", "product_id", "operation",
-                                      "operation_id", "source_generation_id",
-                                      "target_generation_id", "previous"}) ||
+    const bool exact_shape = document && (operation == "migration"
+        ? exact_keys(document.value(), {"schema", "product_id", "operation",
+                                       "operation_id", "generation_id", "previous"})
+        : exact_keys(document.value(), {"schema", "product_id", "operation",
+                                       "operation_id", "source_generation_id",
+                                       "target_generation_id", "previous"}));
+    if (!document || !exact_shape ||
         string_field(document.value(), "schema") !=
             "facman.self_activation.v1" ||
         string_field(document.value(), "product_id") != "facman" ||
         !activation_operation(operation) ||
         !facman::base::validate_identifier(operation_id, operation_detail) ||
+        name != "activation." + operation_id + ".v1.json" ||
         !digest(source_generation_id) || !digest(target_generation_id) ||
         previous == nullptr ||
         !exact_keys(*previous, {"name", "sha256"}) ||
         previous_name_value == nullptr || !previous_name_value->is_string() ||
         previous_digest_value == nullptr || !previous_digest_value->is_string() ||
         (previous_name.empty() != previous_digest.empty()) ||
+        (operation == "migration" && !previous_name.empty()) ||
+        (operation != "migration" && previous_name.empty()) ||
         (!previous_name.empty() &&
          (!facman::base::validate_identifier(previous_name, operation_detail) ||
           !digest(previous_digest))))
@@ -455,13 +522,77 @@ facman::core::Result<ActivationHead> validate_activation_head(
     head = &*child;
     ++visited;
   }
-  if (visited != nodes.size() || head->name != expected_name ||
-      head->digest != expected_digest)
+  if (visited != nodes.size() ||
+      (!expected_name.empty() && head->name != expected_name) ||
+      (!expected_digest.empty() && head->digest != expected_digest))
     return facman::core::Result<ActivationHead>::failure(failure(
         "self_maintenance_activation_changed",
         "reviewed activation is not the unique current chain head"));
   return facman::core::Result<ActivationHead>::success(
-      {head->name, head->digest, head->target_generation_id});
+      {head->name, head->digest, head->source_generation_id,
+       head->target_generation_id, head->previous_name,
+       head->previous_digest});
+}
+
+facman::core::Result<Generation> parse_generation_record(
+    const fs::path &coordinator_root, const std::string &generation_id) {
+  if (!digest(generation_id))
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_record_unreadable", "generation identity is invalid"));
+  auto bytes = read_exact(coordinator_root / "generations" /
+      ("generation." + generation_id + ".v1.json"));
+  auto document = bytes ? json::parse(bytes.value())
+                        : facman::core::Result<json::Value>::failure(bytes.error());
+  if (!document || !exact_keys(document.value(),
+          {"schema", "product_id", "generation_id", "product_version",
+           "package_sha256", "facman_source_revision",
+           "universal_setup_revision", "install_id", "install_root",
+           "logical_root", "state_root", "acceptance_root", "gui",
+           "maintenance_launcher"}) ||
+      string_field(document.value(), "schema") != "facman.self_generation.v1" ||
+      string_field(document.value(), "product_id") != "facman" ||
+      string_field(document.value(), "generation_id") != generation_id)
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_record_unreadable",
+        "generation record has an incompatible exact schema"));
+  Generation result;
+  result.generation_id = generation_id;
+  result.product_version = string_field(document.value(), "product_version");
+  result.package_sha256 = string_field(document.value(), "package_sha256");
+  result.facman_source_revision =
+      string_field(document.value(), "facman_source_revision");
+  result.universal_setup_revision =
+      string_field(document.value(), "universal_setup_revision");
+  result.install_id = string_field(document.value(), "install_id");
+  result.install_root = facman::platform::path_from_utf8(
+      string_field(document.value(), "install_root"));
+  result.logical_root = facman::platform::path_from_utf8(
+      string_field(document.value(), "logical_root"));
+  result.state_root = facman::platform::path_from_utf8(
+      string_field(document.value(), "state_root"));
+  result.acceptance_root = facman::platform::path_from_utf8(
+      string_field(document.value(), "acceptance_root"));
+  result.gui = facman::platform::path_from_utf8(
+      string_field(document.value(), "gui"));
+  result.maintenance_launcher = facman::platform::path_from_utf8(
+      string_field(document.value(), "maintenance_launcher"));
+  Semver parsed_version;
+  if (!digest(result.package_sha256) ||
+      !revision(result.facman_source_revision) ||
+      !revision(result.universal_setup_revision) ||
+      (result.install_id != "facman.self" &&
+       result.install_id != generation_install_id(result.generation_id)) ||
+      generation_identity(generation_descriptor(result),
+                          result.package_sha256) != result.generation_id ||
+      !semver(result.product_version, parsed_version) ||
+      !safe_version_component(result.product_version) ||
+      !result.logical_root.is_absolute() || !result.state_root.is_absolute() ||
+      !result.acceptance_root.is_absolute() || !exact_generation_paths(result) ||
+      bytes.value() != serialize_generation(result))
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_record_unreadable",
+        "generation record identity is invalid"));
+  return facman::core::Result<Generation>::success(std::move(result));
 }
 
 facman::core::Result<void> ensure_immutable(const fs::path &path,
@@ -515,17 +646,156 @@ bool same_path(const fs::path &left, const fs::path &right) {
 
 bool exact_generation_paths(const Generation &generation) {
   if (!generation.install_root.is_absolute() || !generation.gui.is_absolute() ||
+      !generation.logical_root.is_absolute() ||
+      !generation.state_root.is_absolute() ||
+      !generation.acceptance_root.is_absolute() ||
       !generation.maintenance_launcher.is_absolute()) return false;
   const fs::path expected_gui = generation.install_root / "generations" /
       facman::platform::path_from_utf8(generation.product_version) / "FacMan.exe";
   const fs::path expected_maintenance = generation.install_root /
       "maintenance" / "FacManSetup.exe";
-  return same_path(generation.gui, expected_gui) &&
+  const bool exact_install_root = generation.install_id == "facman.self"
+      ? same_path(generation.install_root, generation.logical_root)
+      : same_path(generation.install_root,
+                  generation_install_root(generation.logical_root,
+                                          generation.generation_id)) ||
+            same_path(generation.install_root,
+                      predecessor_generation_install_root(
+                          generation.logical_root, generation.generation_id));
+  return exact_install_root && same_path(generation.gui, expected_gui) &&
       same_path(generation.maintenance_launcher, expected_maintenance);
+}
+
+struct CoordinatorAdmission {
+  fs::path root;
+  fs::path acceptance_root;
+  facman::platform::StableDirectoryObject acceptance;
+  facman::platform::StableDirectoryObject parent;
+  facman::platform::StableDirectoryObject coordinator;
+  bool coordinator_exists = false;
+
+  bool revalidate(std::string &detail, bool allow_absent_root = false) const {
+    const auto accepted = acceptance.revalidate();
+    const auto parent_stable = parent.revalidate();
+    const auto descendant = acceptance.validate_descendant(
+        root, allow_absent_root && !coordinator_exists);
+    if (!accepted.ok() || !parent_stable.ok() || !descendant.ok()) {
+      detail = !accepted.ok() ? accepted.detail
+          : !parent_stable.ok() ? parent_stable.detail : descendant.detail;
+      return false;
+    }
+    if (coordinator_exists) {
+      const auto stable = coordinator.revalidate();
+      if (!stable.ok()) {
+        detail = stable.detail;
+        return false;
+      }
+    }
+    if (facman::base::path_crosses_link_or_reparse_point(root, detail))
+      return false;
+    detail.clear();
+    return true;
+  }
+};
+
+facman::core::Result<CoordinatorAdmission> admit_coordinator(
+    const fs::path &root, const fs::path &acceptance_root,
+    bool allow_absent_root) {
+  if (!root.is_absolute() || !acceptance_root.is_absolute() ||
+      root.lexically_normal() == acceptance_root.lexically_normal())
+    return facman::core::Result<CoordinatorAdmission>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator root must be a strict absolute acceptance descendant"));
+  CoordinatorAdmission result;
+  result.root = root.lexically_normal();
+  result.acceptance_root = acceptance_root.lexically_normal();
+  auto opened = result.acceptance.open_no_follow(result.acceptance_root);
+  if (!opened.ok())
+    return facman::core::Result<CoordinatorAdmission>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator acceptance root is unavailable", opened.detail));
+  opened = result.acceptance.validate_descendant(result.root.parent_path(),
+                                                  false);
+  if (!opened.ok())
+    return facman::core::Result<CoordinatorAdmission>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator parent is outside stable acceptance authority",
+        opened.detail));
+  opened = result.parent.open_no_follow(result.root.parent_path());
+  if (!opened.ok())
+    return facman::core::Result<CoordinatorAdmission>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator parent is not a stable plain directory", opened.detail));
+  std::string unsafe_detail;
+  if (!result.revalidate(unsafe_detail, true))
+    return facman::core::Result<CoordinatorAdmission>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator ancestry is unsafe", unsafe_detail));
+  facman::platform::PathIdentity identity;
+  const auto observed = facman::platform::inspect_path_no_follow(result.root,
+                                                                  identity);
+  if (!observed.ok())
+    return facman::core::Result<CoordinatorAdmission>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator root could not be observed", observed.detail));
+  if (!identity.exists) {
+    if (!allow_absent_root)
+      return facman::core::Result<CoordinatorAdmission>::failure(failure(
+          "self_maintenance_lock_unsafe",
+          "coordinator root is absent after active-state discovery"));
+    return facman::core::Result<CoordinatorAdmission>::success(
+        std::move(result));
+  }
+  opened = result.coordinator.open_no_follow(result.root);
+  if (!opened.ok() ||
+      !result.acceptance.validate_descendant(result.root, false).ok() ||
+      !result.parent.validate_descendant(result.root, false).ok())
+    return facman::core::Result<CoordinatorAdmission>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator root is not a stable admitted directory", opened.detail));
+  result.coordinator_exists = true;
+  if (!result.revalidate(unsafe_detail))
+    return facman::core::Result<CoordinatorAdmission>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator identity changed during admission", unsafe_detail));
+  return facman::core::Result<CoordinatorAdmission>::success(std::move(result));
+}
+
+facman::core::Result<void> create_admitted_coordinator(
+    CoordinatorAdmission &admission) {
+  if (admission.coordinator_exists)
+    return facman::core::Result<void>::success();
+  std::string detail;
+  if (!admission.revalidate(detail, true))
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator ancestry changed before creation", detail));
+  std::error_code status;
+  if (!fs::create_directory(admission.root, status) || status)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator root could not be created under admitted authority",
+        status.message()));
+  auto opened = admission.coordinator.open_no_follow(admission.root);
+  if (!opened.ok() ||
+      !admission.acceptance.validate_descendant(admission.root, false).ok() ||
+      !admission.parent.validate_descendant(admission.root, false).ok())
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "created coordinator root did not retain admitted authority",
+        opened.detail));
+  admission.coordinator_exists = true;
+  if (!admission.revalidate(detail))
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "created coordinator identity could not be retained", detail));
+  return facman::core::Result<void>::success();
 }
 
 struct Lock {
   facman::base::StableLocalLock value;
+  CoordinatorAdmission admission;
+  facman::platform::StableDirectoryObject operations;
   Lock() = default;
   Lock(const Lock &) = delete;
   Lock &operator=(const Lock &) = delete;
@@ -537,22 +807,50 @@ struct Lock {
   }
 };
 
-facman::core::Result<Lock> acquire(const fs::path &root,
+facman::core::Result<Lock> acquire(CoordinatorAdmission admission,
                                    const std::string &operation_id) {
+  if (!admission.coordinator_exists)
+    return facman::core::Result<Lock>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator root was not admitted before lock acquisition"));
+  std::string unsafe_detail;
+  if (!admission.revalidate(unsafe_detail))
+    return facman::core::Result<Lock>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator identity changed before lock acquisition",
+        unsafe_detail));
+  const fs::path operations = admission.root / "setup-operations";
+  const auto admitted = admission.coordinator.validate_descendant(operations,
+                                                                   true);
+  if (!admitted.ok() ||
+      facman::base::path_crosses_link_or_reparse_point(operations,
+                                                       unsafe_detail))
+    return facman::core::Result<Lock>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "global coordinator directory is outside stable authority",
+        admitted.ok() ? unsafe_detail : admitted.detail));
   std::error_code status;
-  fs::create_directories(root / "setup-operations", status);
-  if (status)
+  if (!fs::exists(operations, status)) {
+    if (status || !fs::create_directory(operations, status) || status)
+      return facman::core::Result<Lock>::failure(failure(
+          "self_maintenance_lock_unsafe",
+          "global coordinator directory is unavailable", status.message()));
+  } else if (status) {
     return facman::core::Result<Lock>::failure(failure(
         "self_maintenance_lock_unsafe", "global coordinator directory is unavailable",
         status.message()));
-  std::string unsafe_detail;
-  if (facman::base::path_crosses_link_or_reparse_point(root, unsafe_detail))
+  }
+  Lock lock;
+  auto opened = lock.operations.open_no_follow(operations);
+  if (!opened.ok() ||
+      !admission.coordinator.validate_descendant(operations, false).ok() ||
+      !admission.revalidate(unsafe_detail))
     return facman::core::Result<Lock>::failure(failure(
         "self_maintenance_lock_unsafe",
-        "global coordinator path crosses a link or reparse point",
-        unsafe_detail));
-  Lock lock;
-  const fs::path path = global_lock_path(root);
+        "global coordinator directory identity changed after creation",
+        opened.ok() ? unsafe_detail : opened.detail));
+  lock.admission = std::move(admission);
+  const fs::path path = global_lock_path(lock.admission.root);
   auto result = lock.value.create(path);
   if (result.code == facman::base::StableLockCode::exists) {
     std::string existing;
@@ -662,7 +960,8 @@ facman::core::Result<void> validate_operation_records(
         !exact_keys(document.value(),
                     {"schema", "product_id", "operation", "operation_id",
                      "phase", "source_generation_id", "target_generation_id",
-                     "package_sha256", "provider_operation", "receipt_sha256"}) ||
+                     "package_sha256", "provider_operation", "state_root",
+                     "acceptance_root", "receipt_sha256"}) ||
         !phase_semantics(plan, *match, receipt) ||
         bytes.value() != phase_json(plan, *match, receipt))
       return facman::core::Result<void>::failure(failure(
@@ -694,6 +993,208 @@ std::string generation_record_bytes(const Generation &generation) {
   return serialize_generation(generation);
 }
 
+facman::core::Result<Generation> make_generation(
+    const PackageDescriptor &descriptor, const std::string &package_sha256,
+    const std::string &install_id, const fs::path &install_root,
+    const fs::path &logical_root, const fs::path &state_root,
+    const fs::path &acceptance_root) {
+  Semver version;
+  if (descriptor.product_id != "facman" || descriptor.automatic_update ||
+      descriptor.setup_protocol != "facman.self_maintenance.v1" ||
+      descriptor.package_layout !=
+          "versioned_generation_with_maintenance_v1" ||
+      descriptor.generation_relative_path !=
+          "generations/" + descriptor.product_version ||
+      descriptor.gui_relative_path != "FacMan.exe" ||
+      descriptor.cli_relative_path != "bin/facman.exe" ||
+      descriptor.maintenance_relative_path != "maintenance/FacManSetup.exe" ||
+      !revision(descriptor.facman_source_revision) ||
+      !revision(descriptor.universal_setup_revision) ||
+      !semver(descriptor.product_version, version) ||
+      !safe_version_component(descriptor.product_version) ||
+      !safe_relative(descriptor.generation_relative_path) ||
+      !digest(package_sha256) || !install_root.is_absolute() ||
+      !logical_root.is_absolute() || !state_root.is_absolute() ||
+      !acceptance_root.is_absolute())
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_package_incompatible",
+        "generation inputs are incomplete or incompatible"));
+  Generation result;
+  result.generation_id = generation_identity(descriptor, package_sha256);
+  result.product_version = descriptor.product_version;
+  result.package_sha256 = package_sha256;
+  result.facman_source_revision = descriptor.facman_source_revision;
+  result.universal_setup_revision = descriptor.universal_setup_revision;
+  result.install_id = install_id;
+  if (result.install_id.empty())
+    result.install_id = generation_install_id(result.generation_id);
+  if (result.install_id != "facman.self" &&
+      result.install_id != generation_install_id(result.generation_id))
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_input_invalid", "generation install id is invalid"));
+  result.install_root = install_root.lexically_normal();
+  result.logical_root = logical_root.lexically_normal();
+  result.state_root = state_root.lexically_normal();
+  result.acceptance_root = acceptance_root.lexically_normal();
+  const fs::path generation = result.install_root /
+      facman::platform::path_from_utf8(descriptor.generation_relative_path);
+  result.gui = generation /
+      facman::platform::path_from_utf8(descriptor.gui_relative_path);
+  result.maintenance_launcher = result.install_root /
+      facman::platform::path_from_utf8(descriptor.maintenance_relative_path);
+  if (!exact_generation_paths(result) ||
+      (result.install_id != "facman.self" &&
+       !same_path(result.install_root,
+                  generation_install_root(result.logical_root,
+                                          result.generation_id))))
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_input_invalid", "generation paths are invalid"));
+  return facman::core::Result<Generation>::success(std::move(result));
+}
+
+facman::core::Result<std::optional<ActiveState>> discover_active(
+    const fs::path &coordinator_root) {
+  if (!coordinator_root.is_absolute())
+    return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+        "self_maintenance_input_invalid", "coordinator root must be absolute"));
+  const fs::path directory = coordinator_root / "activations";
+  std::error_code status;
+  if (!fs::exists(directory, status)) {
+    if (status)
+      return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+          "self_maintenance_activation_changed",
+          "activation directory could not be observed", status.message()));
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  }
+  if (!fs::is_directory(directory, status) || status)
+    return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+        "self_maintenance_activation_changed",
+        "activation path is not a directory"));
+  auto first = fs::directory_iterator(directory, status);
+  if (status)
+    return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+        "self_maintenance_activation_changed",
+        "activation directory could not be enumerated", status.message()));
+  if (first == fs::directory_iterator())
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  auto head = validate_activation_head(coordinator_root, {}, {});
+  if (!head)
+    return facman::core::Result<std::optional<ActiveState>>::failure(
+        head.error());
+  auto active = parse_generation_record(coordinator_root,
+                                        head.value().target_generation_id);
+  if (!active)
+    return facman::core::Result<std::optional<ActiveState>>::failure(
+        active.error());
+  ActiveState result;
+  result.active = active.take_value();
+  result.activation_name = head.value().name;
+  result.activation_sha256 = head.value().digest;
+  if (head.value().source_generation_id !=
+      head.value().target_generation_id) {
+    auto previous = parse_generation_record(
+        coordinator_root, head.value().source_generation_id);
+    if (!previous)
+      return facman::core::Result<std::optional<ActiveState>>::failure(
+          previous.error());
+    result.previous = previous.take_value();
+  }
+  return facman::core::Result<std::optional<ActiveState>>::success(
+      std::optional<ActiveState>(std::move(result)));
+}
+
+facman::core::Result<ActiveState> adopt_legacy(
+    const fs::path &coordinator_root, const Generation &legacy, bool apply) {
+  if (!coordinator_root.is_absolute() || legacy.install_id != "facman.self" ||
+      !digest(legacy.generation_id) || !digest(legacy.package_sha256) ||
+      !revision(legacy.facman_source_revision) ||
+      !revision(legacy.universal_setup_revision) ||
+      generation_identity(generation_descriptor(legacy),
+                          legacy.package_sha256) != legacy.generation_id ||
+      !exact_generation_paths(legacy))
+    return facman::core::Result<ActiveState>::failure(failure(
+        "self_maintenance_legacy_invalid",
+        "legacy generation identity is incomplete"));
+  const std::string operation_id =
+      "migration." + legacy.generation_id.substr(0, 32);
+  Plan migration;
+  migration.operation = "migration";
+  migration.operation_id = operation_id;
+  migration.source = legacy;
+  migration.target = legacy;
+  const std::string activation = activation_json(migration);
+  const std::string activation_name =
+      "activation." + operation_id + ".v1.json";
+  ActiveState result{legacy, {}, activation_name, hash(activation)};
+  if (!apply)
+    return facman::core::Result<ActiveState>::success(std::move(result));
+
+  auto authority = admit_coordinator(coordinator_root, legacy.acceptance_root,
+                                     true);
+  if (!authority)
+    return facman::core::Result<ActiveState>::failure(authority.error());
+  auto created = create_admitted_coordinator(authority.value());
+  if (!created)
+    return facman::core::Result<ActiveState>::failure(created.error());
+  auto held = acquire(authority.take_value(), operation_id);
+  if (!held) return facman::core::Result<ActiveState>::failure(held.error());
+  const fs::path activation_directory = coordinator_root / "activations";
+  std::error_code status;
+  bool has_activation = false;
+  if (fs::exists(activation_directory, status)) {
+    if (status || !fs::is_directory(activation_directory, status) || status)
+      return facman::core::Result<ActiveState>::failure(failure(
+          "self_maintenance_activation_changed",
+          "activation directory is not a plain directory"));
+    auto iterator = fs::directory_iterator(activation_directory, status);
+    if (status)
+      return facman::core::Result<ActiveState>::failure(failure(
+          "self_maintenance_activation_changed",
+          "activation directory could not be enumerated", status.message()));
+    has_activation = iterator != fs::directory_iterator();
+  } else if (status) {
+    return facman::core::Result<ActiveState>::failure(failure(
+        "self_maintenance_activation_changed",
+        "activation directory could not be observed", status.message()));
+  }
+  if (has_activation) {
+    auto current = discover_active(coordinator_root);
+    if (!current || !current.value().has_value() ||
+        current.value()->activation_name != activation_name ||
+        current.value()->activation_sha256 != result.activation_sha256 ||
+        current.value()->active.generation_id != legacy.generation_id)
+      return facman::core::Result<ActiveState>::failure(failure(
+          "self_maintenance_activation_changed",
+          "a different active generation already exists"));
+    return facman::core::Result<ActiveState>::success(*current.value());
+  }
+  fs::create_directories(coordinator_root / "generations", status);
+  if (!status) fs::create_directories(activation_directory, status);
+  if (status)
+    return facman::core::Result<ActiveState>::failure(failure(
+        "self_maintenance_record_write_failed",
+        "legacy generation directories could not be created",
+        status.message()));
+  auto recorded = ensure_immutable(
+      coordinator_root / "generations" /
+          ("generation." + legacy.generation_id + ".v1.json"),
+      serialize_generation(legacy));
+  if (!recorded)
+    return facman::core::Result<ActiveState>::failure(recorded.error());
+  recorded = ensure_immutable(activation_directory / activation_name,
+                              activation);
+  if (!recorded)
+    return facman::core::Result<ActiveState>::failure(recorded.error());
+  auto observed = discover_active(coordinator_root);
+  if (!observed || !observed.value().has_value() ||
+      observed.value()->activation_name != activation_name ||
+      observed.value()->activation_sha256 != result.activation_sha256)
+    return facman::core::Result<ActiveState>::failure(failure(
+        "self_maintenance_activation_changed",
+        "legacy generation genesis could not be verified"));
+  return facman::core::Result<ActiveState>::success(*observed.value());
+}
+
 facman::core::Result<Plan> plan(const Request &request) {
   std::string identifier_detail;
   Semver current_version;
@@ -701,16 +1202,20 @@ facman::core::Result<Plan> plan(const Request &request) {
     return facman::core::Result<Plan>::failure(failure(
         "self_maintenance_input_invalid", "operation id is invalid", identifier_detail));
   if (!request.coordinator_root.is_absolute() || !request.logical_root.is_absolute() ||
+      !request.state_root.is_absolute() || !request.acceptance_root.is_absolute() ||
       request.active.install_root.empty() || request.active.generation_id.empty() ||
       !digest(request.active.generation_id) || !digest(request.active.package_sha256) ||
       !revision(request.active.facman_source_revision) ||
       !revision(request.active.universal_setup_revision) ||
       (request.active.install_id != "facman.self" &&
        request.active.install_id !=
-            "facman.self.generation." + request.active.generation_id) ||
+            generation_install_id(request.active.generation_id)) ||
       !semver(request.active.product_version, current_version) ||
       !safe_version_component(request.active.product_version) ||
       !exact_generation_paths(request.active) ||
+      !same_path(request.active.logical_root, request.logical_root) ||
+      !same_path(request.active.state_root, request.state_root) ||
+      !same_path(request.active.acceptance_root, request.acceptance_root) ||
       !digest(request.previous_activation_sha256) ||
       !facman::base::validate_identifier(request.previous_activation_name,
                                          identifier_detail))
@@ -734,8 +1239,13 @@ facman::core::Result<Plan> plan(const Request &request) {
         !revision(result.target.universal_setup_revision) ||
         !exact_generation_paths(result.target) ||
         same_path(result.target.install_root, result.source.install_root) ||
-        result.target.install_id !=
-            "facman.self.generation." + result.target.generation_id ||
+        (result.target.install_id != "facman.self" &&
+         result.target.install_id !=
+             generation_install_id(result.target.generation_id)) ||
+        !same_path(result.target.logical_root, result.source.logical_root) ||
+        !same_path(result.target.state_root, result.source.state_root) ||
+        !same_path(result.target.acceptance_root,
+                   result.source.acceptance_root) ||
         !semver(result.target.product_version, rollback_version) ||
         !safe_version_component(result.target.product_version))
       return facman::core::Result<Plan>::failure(failure(
@@ -774,13 +1284,9 @@ facman::core::Result<Plan> plan(const Request &request) {
             ? "update requires a newer target version"
             : "downgrade requires an older target version"));
 
-  const std::string id = generation_identity(request);
-  const std::string logical_identity = hash(
-      "facman.self.logical-root.v1\n" +
-      facman::platform::path_to_utf8(request.logical_root.lexically_normal()) + "\n");
-  const fs::path target_root = request.logical_root.parent_path() /
-      facman::platform::path_from_utf8("FacMan.generation." +
-          logical_identity + "." + id);
+  const std::string id = generation_identity(descriptor,
+                                             request.package_sha256);
+  const fs::path target_root = generation_install_root(request.logical_root, id);
   const fs::path generation = target_root /
       facman::platform::path_from_utf8(descriptor.generation_relative_path);
   result.target.generation_id = id;
@@ -788,8 +1294,11 @@ facman::core::Result<Plan> plan(const Request &request) {
   result.target.package_sha256 = request.package_sha256;
   result.target.facman_source_revision = descriptor.facman_source_revision;
   result.target.universal_setup_revision = descriptor.universal_setup_revision;
-  result.target.install_id = "facman.self.generation." + id;
+  result.target.install_id = generation_install_id(id);
   result.target.install_root = target_root;
+  result.target.logical_root = request.logical_root.lexically_normal();
+  result.target.state_root = request.state_root.lexically_normal();
+  result.target.acceptance_root = request.acceptance_root.lexically_normal();
   result.target.gui = generation /
       facman::platform::path_from_utf8(descriptor.gui_relative_path);
   result.target.maintenance_launcher = target_root /
@@ -808,11 +1317,12 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
   auto prepared = plan(request);
   if (!prepared) return facman::core::Result<Response>::failure(prepared.error());
   Plan transition = prepared.take_value();
-  if (!request.apply)
-    return facman::core::Result<Response>::success(
-        {transition.operation, "plan", transition.operation_id,
-         transition.source, {}, {}});
-
+  auto authority = admit_coordinator(request.coordinator_root,
+                                     request.acceptance_root,
+                                     true);
+  if (!authority)
+    return facman::core::Result<Response>::failure(authority.error());
+  CandidateState reviewed_candidate = CandidateState::absent;
   if (request.operation != Operation::rollback) {
     auto source = stable_digest(request.package);
     if (!source || source.value() != request.package_sha256)
@@ -820,9 +1330,34 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
           "self_maintenance_package_changed",
           "maintenance package does not match its reviewed identity",
           source ? source.value() : source.error().detail));
+    reviewed_candidate = effects.inspect_candidate(transition);
+    if (reviewed_candidate == CandidateState::foreign ||
+        reviewed_candidate == CandidateState::unreadable)
+      return facman::core::Result<Response>::failure(failure(
+          "self_maintenance_candidate_unsafe",
+          "candidate root is foreign or unreadable"));
+    if (reviewed_candidate == CandidateState::absent) {
+      const auto reviewed_provider = effects.review_install_local(transition);
+      if (!reviewed_provider.ok)
+        return facman::core::Result<Response>::failure(effect_error(
+            "self_maintenance_plan_failed",
+            "candidate installation plan was refused", reviewed_provider).error());
+    }
   }
 
-  auto held = acquire(request.coordinator_root, request.operation_id);
+  if (!request.apply)
+    return facman::core::Result<Response>::success(
+        {transition.operation, "plan", transition.operation_id,
+         transition.source, {}, {}});
+
+  // Plan review must remain effect-free.  A non-legacy transition needs the
+  // immutable active chain already present; legacy adoption owns the only
+  // coordinator-creation path and revalidates its held authority there.
+  if (!authority.value().coordinator_exists)
+    return facman::core::Result<Response>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator root remains absent after plan admission"));
+  auto held = acquire(authority.take_value(), request.operation_id);
   if (!held) return facman::core::Result<Response>::failure(held.error());
   const std::string activation = activation_json(transition);
   const fs::path activation_record = request.coordinator_root / "activations" /
@@ -852,15 +1387,32 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
         !exact_generation_record(request.coordinator_root,
                                  transition.source) ||
         !exact_generation_record(request.coordinator_root,
-                                 transition.target) ||
-        effects.inspect_shortcut(transition) != ShellState::new_exact ||
-        effects.inspect_registration(transition) != ShellState::new_exact)
+                                 transition.target))
       return facman::core::Result<Response>::failure(failure(
           "self_maintenance_activation_changed",
-          "completed activation no longer matches the chain or shell state"));
+          "completed activation no longer matches the immutable chain"));
     auto completed_records = validate_operation_records(request, transition);
     if (!completed_records)
       return facman::core::Result<Response>::failure(completed_records.error());
+    const auto completed_inspection = effects.inspect_installed(transition);
+    if (!completed_inspection.ok ||
+        !digest(completed_inspection.receipt_sha256))
+      return facman::core::Result<Response>::failure(effect_error(
+          "self_maintenance_inspect_failed",
+          "completed target installed state is not exact",
+          completed_inspection).error());
+    const auto completed_verification = effects.verify_installed(transition);
+    if (!completed_verification.ok ||
+        !digest(completed_verification.receipt_sha256))
+      return facman::core::Result<Response>::failure(effect_error(
+          "self_maintenance_verify_failed",
+          "completed target verification failed",
+          completed_verification).error());
+    if (effects.inspect_shortcut(transition) != ShellState::new_exact ||
+        effects.inspect_registration(transition) != ShellState::new_exact)
+      return facman::core::Result<Response>::failure(failure(
+          "self_maintenance_activation_changed",
+          "completed activation shell state is no longer exact"));
     auto final_phase = record_phase(request, transition,
                                     "70-activation-recorded", hash(activation));
     if (!final_phase)
@@ -894,7 +1446,7 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
   if (!recorded) return facman::core::Result<Response>::failure(recorded.error());
 
   if (request.operation != Operation::rollback) {
-    CandidateState candidate = effects.inspect_candidate(transition);
+    CandidateState candidate = reviewed_candidate;
     if (candidate == CandidateState::foreign || candidate == CandidateState::unreadable)
       return facman::core::Result<Response>::failure(failure(
           "self_maintenance_candidate_unsafe", "candidate root is foreign or unreadable"));
@@ -908,6 +1460,12 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
             "self_maintenance_provider_recovery_required",
             "provider entry was recorded without an exact installed candidate"));
       }
+      const auto prepared_provider = effects.prepare_install_local(transition);
+      if (!prepared_provider.ok)
+        return facman::core::Result<Response>::failure(effect_error(
+            "self_maintenance_source_retention_failed",
+            "candidate installation inputs could not be retained",
+            prepared_provider).error());
       recorded = record_phase(request, transition, "10-provider-entered");
       if (!recorded) return facman::core::Result<Response>::failure(recorded.error());
       const auto installed = effects.install_local(transition);
@@ -956,6 +1514,16 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
           "self_maintenance_rollback_invalid",
           "rollback target does not match an immutable retained generation"));
     recorded = facman::core::Result<void>::success();
+    const auto inspected = effects.inspect_installed(transition);
+    if (!inspected.ok || !digest(inspected.receipt_sha256))
+      return facman::core::Result<Response>::failure(effect_error(
+          "self_maintenance_inspect_failed",
+          "rollback target installed state is not exact", inspected).error());
+    const auto verified = effects.verify_installed(transition);
+    if (!verified.ok || !digest(verified.receipt_sha256))
+      return facman::core::Result<Response>::failure(effect_error(
+          "self_maintenance_verify_failed",
+          "rollback target verification failed", verified).error());
   } else {
     recorded = ensure_immutable(generation_record,
                                 serialize_generation(transition.target));
@@ -982,6 +1550,15 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_candidate_unverified",
         "candidate identity changed before shell cutover"));
+  if (request.operation == Operation::rollback) {
+    const auto inspected = effects.inspect_installed(transition);
+    const auto verified = effects.verify_installed(transition);
+    if (!inspected.ok || !digest(inspected.receipt_sha256) ||
+        !verified.ok || !digest(verified.receipt_sha256))
+      return facman::core::Result<Response>::failure(failure(
+          "self_maintenance_rollback_invalid",
+          "rollback target identity changed before shell cutover"));
+  }
 
   ShellState shortcut = effects.inspect_shortcut(transition);
   if (shortcut == ShellState::foreign || shortcut == ShellState::unreadable ||
@@ -1035,8 +1612,10 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
   auto committed_chain = validate_activation_head(
       request.coordinator_root, activation_record.filename().string(),
       hash(activation));
-  if (!committed_chain || committed_chain.value().target_generation_id !=
-                              transition.target.generation_id)
+  if (!committed_chain)
+    return facman::core::Result<Response>::failure(committed_chain.error());
+  if (committed_chain.value().target_generation_id !=
+      transition.target.generation_id)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_activation_changed",
         "committed activation is not the unique current generation head"));

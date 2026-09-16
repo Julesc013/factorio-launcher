@@ -4,7 +4,7 @@
   "title": "FacMan immutable self-maintenance phase record",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "product_id", "operation", "operation_id", "phase", "source_generation_id", "target_generation_id", "package_sha256", "provider_operation", "receipt_sha256"],
+  "required": ["schema", "product_id", "operation", "operation_id", "phase", "source_generation_id", "target_generation_id", "package_sha256", "provider_operation", "state_root", "acceptance_root", "receipt_sha256"],
   "properties": {
     "schema": {"const": "facman.self_maintenance_phase.v1"},
     "product_id": {"const": "facman"},
@@ -15,6 +15,8 @@
     "target_generation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "package_sha256": {"type": "string", "pattern": "^$|^[a-f0-9]{64}$"},
     "provider_operation": {"enum": ["install_local", "none"]},
+    "state_root": {"type": "string", "minLength": 1, "maxLength": 8192},
+    "acceptance_root": {"type": "string", "minLength": 1, "maxLength": 8192},
     "receipt_sha256": {"type": "string", "pattern": "^$|^[a-f0-9]{64}$"}
   },
   "allOf": [
