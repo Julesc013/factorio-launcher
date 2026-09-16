@@ -1990,6 +1990,8 @@ int run_maintenance(Options &options, const fs::path &,
   request.active = state.active;
   request.previous_activation_name = state.activation_name;
   request.previous_activation_sha256 = state.activation_sha256;
+  if (state.previous.has_value())
+    request.rollback_target = *state.previous;
   const std::string target_identity = operation ==
           facman::self_maintenance::Operation::rollback
       ? state.previous->generation_id
@@ -1998,9 +2000,7 @@ int run_maintenance(Options &options, const fs::path &,
       maintenance_operation_text(operation) + "." +
       state.active.generation_id.substr(0, 8) + "." +
       target_identity.substr(0, 20);
-  if (operation == facman::self_maintenance::Operation::rollback) {
-    request.rollback_target = *state.previous;
-  } else {
+  if (operation != facman::self_maintenance::Operation::rollback) {
     request.package = package->package;
     request.package_sha256 = package->package_sha256;
     request.package_descriptor = package->descriptor;

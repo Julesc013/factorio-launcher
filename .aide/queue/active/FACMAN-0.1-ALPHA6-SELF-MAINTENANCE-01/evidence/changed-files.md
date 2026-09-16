@@ -157,3 +157,48 @@ is related evidence only.
   path-budget assertion only on Windows. Mapping, predecessor compatibility,
   arbitrary-root refusal, identity, discovery and rollback regressions remain
   enabled on every native target.
+
+## Gated product-candidate transition preparation
+
+- `.github/workflows/product-candidate.yml` adds an optional, manually supplied
+  baseline revision gate for the Windows candidate. Its inclusion is shared
+  with `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`; it does not alter the
+  ordinary one-package candidate path.
+- `tools/self_maintenance_candidate.py` creates a clean exact ancestor outside
+  the checkout, builds its setup package with the verified provider roots, and
+  binds package source/lock/version identities before invoking the real host
+  harness. It validates marker/no-follow custody, uses strict SemVer, retains
+  exact baseline packages and provenance, and writes a bounded attempt receipt
+  for both success and failure.
+- `runtime/self_setup/facman_self_maintenance.cpp` and `apps/setup/main.cpp`
+  allow a package operation to select only the exact immediate retained
+  predecessor when its full package generation identity matches. This closes
+  the legacy logical-root A / physical-root A record collision without granting
+  arbitrary history selection. `tests/native/facman_self_maintenance_smoke.cpp`
+  proves legacy A -> update B -> downgrade A -> rollback B.
+- `tests/integration/facman_self_setup_lifecycle.py` adds the real A-to-B
+  install/update/downgrade/rollback harness, exact immutable-chain parsing,
+  total/child deadlines, physical-root shell assertions and durable Start
+  Menu/HKCU observations. `tests/test_product_candidate_workflow.py` and
+  `tests/test_self_maintenance_candidate.py` guard its explicit workflow,
+  package-identity, and source-distinctness constraints.
+- `docs/development/self-maintenance.md` documents the manual gate and its
+  unqualified limits. No generated report or release input is changed.
+
+## Candidate evidence-admission review corrections
+
+- `tests/integration/facman_self_setup_lifecycle.py` independently derives the
+  domain-separated generation identity, side-by-side install identity and
+  physical root. Legacy logical-root reuse requires the complete retained A
+  record from the exact migration genesis. Retained repair ZIP, launcher and
+  receipt reads now use no-follow ancestry checks and stable single-link file
+  observations.
+- `tools/self_maintenance_candidate.py` reads and validates the task ownership
+  marker from one bounded stable file snapshot. It stages checkout/source
+  provenance, portable package and setup executable immediately after each is
+  produced, preserving a `produced_unqualified` manifest if later package
+  equivalence fails.
+- `tests/test_self_maintenance_candidate.py` adds negative identity/root,
+  linked-file, marker-custody and failure-retention coverage.
+- `docs/development/self-maintenance.md` and this WorkUnit describe the exact
+  admission behavior without claiming that the optional real-host gate ran.

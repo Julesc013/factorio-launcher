@@ -233,6 +233,21 @@ PackageDescriptor generation_descriptor(const Generation &generation) {
           false};
 }
 
+bool same_descriptor(const PackageDescriptor &left,
+                     const PackageDescriptor &right) {
+  return left.product_id == right.product_id &&
+      left.product_version == right.product_version &&
+      left.generation_relative_path == right.generation_relative_path &&
+      left.facman_source_revision == right.facman_source_revision &&
+      left.universal_setup_revision == right.universal_setup_revision &&
+      left.setup_protocol == right.setup_protocol &&
+      left.package_layout == right.package_layout &&
+      left.gui_relative_path == right.gui_relative_path &&
+      left.cli_relative_path == right.cli_relative_path &&
+      left.maintenance_relative_path == right.maintenance_relative_path &&
+      left.automatic_update == right.automatic_update;
+}
+
 std::string serialize_generation(const Generation &generation) {
   json::ObjectBuilder object;
   object.add_string("schema", "facman.self_generation.v1");
@@ -1286,6 +1301,30 @@ facman::core::Result<Plan> plan(const Request &request) {
 
   const std::string id = generation_identity(descriptor,
                                              request.package_sha256);
+  if (request.rollback_target.generation_id == id) {
+    auto retained = discover_active(request.coordinator_root);
+    if (!retained || !retained.value().has_value() ||
+        !retained.value()->previous.has_value() ||
+        serialize_generation(retained.value()->active) !=
+            serialize_generation(request.active) ||
+        serialize_generation(*retained.value()->previous) !=
+            serialize_generation(request.rollback_target) ||
+        !exact_generation_record(request.coordinator_root,
+                                 request.rollback_target) ||
+        request.rollback_target.generation_id ==
+            request.active.generation_id ||
+        request.rollback_target.package_sha256 != request.package_sha256 ||
+        !same_descriptor(descriptor,
+                         generation_descriptor(request.rollback_target)))
+      return facman::core::Result<Plan>::failure(failure(
+          "self_maintenance_retained_target_invalid",
+          "package target does not match the immediate retained predecessor"));
+    result.target = request.rollback_target;
+    result.package = request.package;
+    result.package_sha256 = request.package_sha256;
+    result.provider_operation = "install_local";
+    return facman::core::Result<Plan>::success(std::move(result));
+  }
   const fs::path target_root = generation_install_root(request.logical_root, id);
   const fs::path generation = target_root /
       facman::platform::path_from_utf8(descriptor.generation_relative_path);

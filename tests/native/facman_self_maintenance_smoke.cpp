@@ -279,6 +279,143 @@ int main() {
                         std::string::npos,
                 "legacy genesis adoption was not deterministic and idempotent");
 
+  const fs::path legacy_sequence = root / "legacy-sequence";
+  const fs::path legacy_sequence_coordinator =
+      legacy_sequence / "coordinator";
+  fs::create_directories(legacy_sequence_coordinator / "activations");
+  fs::create_directories(legacy_sequence_coordinator / "generations");
+  const fs::path legacy_sequence_package = legacy_sequence / "baseline.zip";
+  fs::create_directories(legacy_sequence_package.parent_path());
+  std::ofstream(legacy_sequence_package, std::ios::binary)
+      << "legacy sequence baseline";
+  const std::string legacy_sequence_package_sha =
+      sha("legacy sequence baseline");
+  const facman::self_maintenance::PackageDescriptor
+      legacy_sequence_descriptor{
+          "facman", "0.1.0-alpha.5", "generations/0.1.0-alpha.5",
+          std::string(40, '5'), std::string(40, '6'),
+          "facman.self_maintenance.v1",
+          "versioned_generation_with_maintenance_v1", "FacMan.exe",
+          "bin/facman.exe", "maintenance/FacManSetup.exe", false};
+  auto legacy_sequence_generation = facman::self_maintenance::make_generation(
+      legacy_sequence_descriptor, legacy_sequence_package_sha, "facman.self",
+      legacy_sequence / "FacMan", legacy_sequence / "FacMan",
+      legacy_sequence / "state", legacy_sequence);
+  if (!legacy_sequence_generation)
+    throw std::runtime_error(legacy_sequence_generation.error().message);
+  auto legacy_sequence_adopted = facman::self_maintenance::adopt_legacy(
+      legacy_sequence_coordinator, legacy_sequence_generation.value(), true);
+  if (!legacy_sequence_adopted)
+    throw std::runtime_error(legacy_sequence_adopted.error().message);
+
+  auto legacy_sequence_update = request(
+      root / "legacy-sequence-update-input", Operation::update,
+      "0.1.0-alpha.6");
+  legacy_sequence_update.operation_id = "maintenance.legacy.update";
+  legacy_sequence_update.coordinator_root = legacy_sequence_coordinator;
+  legacy_sequence_update.logical_root = legacy_sequence / "FacMan";
+  legacy_sequence_update.state_root = legacy_sequence / "state";
+  legacy_sequence_update.acceptance_root = legacy_sequence;
+  legacy_sequence_update.active = legacy_sequence_adopted.value().active;
+  legacy_sequence_update.previous_activation_name =
+      legacy_sequence_adopted.value().activation_name;
+  legacy_sequence_update.previous_activation_sha256 =
+      legacy_sequence_adopted.value().activation_sha256;
+  legacy_sequence_update.rollback_target = {};
+  legacy_sequence_update.apply = true;
+  FakeEffects legacy_sequence_update_effects;
+  auto legacy_sequence_updated = facman::self_maintenance::execute(
+      legacy_sequence_update, legacy_sequence_update_effects);
+  auto legacy_sequence_after_update = facman::self_maintenance::discover_active(
+      legacy_sequence_coordinator);
+  ok &= require(legacy_sequence_updated && legacy_sequence_after_update &&
+                    legacy_sequence_after_update.value().has_value() &&
+                    legacy_sequence_after_update.value()->previous.has_value() &&
+                    legacy_sequence_after_update.value()->previous->install_id ==
+                        "facman.self",
+                "legacy A to side-by-side B update did not retain exact A");
+
+  auto legacy_sequence_downgrade = request(
+      root / "legacy-sequence-downgrade-input", Operation::downgrade,
+      "0.1.0-alpha.5");
+  legacy_sequence_downgrade.operation_id = "maintenance.legacy.downgrade";
+  legacy_sequence_downgrade.coordinator_root = legacy_sequence_coordinator;
+  legacy_sequence_downgrade.logical_root = legacy_sequence / "FacMan";
+  legacy_sequence_downgrade.state_root = legacy_sequence / "state";
+  legacy_sequence_downgrade.acceptance_root = legacy_sequence;
+  legacy_sequence_downgrade.package = legacy_sequence_package;
+  legacy_sequence_downgrade.package_sha256 = legacy_sequence_package_sha;
+  legacy_sequence_downgrade.package_descriptor = legacy_sequence_descriptor;
+  legacy_sequence_downgrade.active =
+      legacy_sequence_after_update.value()->active;
+  legacy_sequence_downgrade.rollback_target =
+      *legacy_sequence_after_update.value()->previous;
+  legacy_sequence_downgrade.previous_activation_name =
+      legacy_sequence_after_update.value()->activation_name;
+  legacy_sequence_downgrade.previous_activation_sha256 =
+      legacy_sequence_after_update.value()->activation_sha256;
+  legacy_sequence_downgrade.apply = true;
+  FakeEffects legacy_sequence_downgrade_effects;
+  legacy_sequence_downgrade_effects.candidate = CandidateState::exact;
+  auto retained_downgrade_plan = facman::self_maintenance::plan(
+      legacy_sequence_downgrade);
+  auto substituted_retained_downgrade = legacy_sequence_downgrade;
+  substituted_retained_downgrade.rollback_target.install_root =
+      legacy_sequence / "substituted-retained-root";
+  substituted_retained_downgrade.rollback_target.gui =
+      substituted_retained_downgrade.rollback_target.install_root /
+      "generations" / "0.1.0-alpha.5" / "FacMan.exe";
+  substituted_retained_downgrade.rollback_target.maintenance_launcher =
+      substituted_retained_downgrade.rollback_target.install_root /
+      "maintenance" / "FacManSetup.exe";
+  const auto substituted_retained_plan = facman::self_maintenance::plan(
+      substituted_retained_downgrade);
+  auto legacy_sequence_downgraded = facman::self_maintenance::execute(
+      legacy_sequence_downgrade, legacy_sequence_downgrade_effects);
+  auto legacy_sequence_after_downgrade =
+      facman::self_maintenance::discover_active(legacy_sequence_coordinator);
+  ok &= require(retained_downgrade_plan && legacy_sequence_downgraded &&
+                    retained_downgrade_plan.value().target.install_id ==
+                        "facman.self" &&
+                    retained_downgrade_plan.value().target.install_root ==
+                        legacy_sequence / "FacMan" &&
+                    legacy_sequence_downgrade_effects.review_calls == 0U &&
+                    legacy_sequence_downgrade_effects.install_calls == 0U &&
+                    legacy_sequence_downgrade_effects.inspect_calls == 1U &&
+                    legacy_sequence_downgrade_effects.verify_calls == 1U &&
+                    !substituted_retained_plan &&
+                    substituted_retained_plan.error().code ==
+                        "self_maintenance_retained_target_invalid" &&
+                    legacy_sequence_after_downgrade &&
+                    legacy_sequence_after_downgrade.value().has_value() &&
+                    legacy_sequence_after_downgrade.value()->previous.has_value(),
+                "downgrade did not reuse and verify the immediate retained legacy A");
+
+  auto legacy_sequence_rollback = request(
+      root / "legacy-sequence-rollback-input", Operation::rollback);
+  legacy_sequence_rollback.operation_id = "maintenance.legacy.rollback";
+  legacy_sequence_rollback.coordinator_root = legacy_sequence_coordinator;
+  legacy_sequence_rollback.logical_root = legacy_sequence / "FacMan";
+  legacy_sequence_rollback.state_root = legacy_sequence / "state";
+  legacy_sequence_rollback.acceptance_root = legacy_sequence;
+  legacy_sequence_rollback.active =
+      legacy_sequence_after_downgrade.value()->active;
+  legacy_sequence_rollback.rollback_target =
+      *legacy_sequence_after_downgrade.value()->previous;
+  legacy_sequence_rollback.previous_activation_name =
+      legacy_sequence_after_downgrade.value()->activation_name;
+  legacy_sequence_rollback.previous_activation_sha256 =
+      legacy_sequence_after_downgrade.value()->activation_sha256;
+  legacy_sequence_rollback.apply = true;
+  FakeEffects legacy_sequence_rollback_effects;
+  legacy_sequence_rollback_effects.candidate = CandidateState::exact;
+  auto legacy_sequence_rolled_back = facman::self_maintenance::execute(
+      legacy_sequence_rollback, legacy_sequence_rollback_effects);
+  ok &= require(legacy_sequence_rolled_back &&
+                    legacy_sequence_rolled_back.value().active.generation_id ==
+                        legacy_sequence_updated.value().active.generation_id,
+                "retained legacy downgrade did not roll back from A to B");
+
   auto update = request(root / "update", Operation::update);
   FakeEffects update_effects;
   auto updated = facman::self_maintenance::execute(update, update_effects);

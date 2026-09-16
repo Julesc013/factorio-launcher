@@ -73,3 +73,40 @@ final-remediation bytes. The WorkUnit remains active for its recorded
 produced-package, real Start Menu/HKCU, retained-helper restart, chain-aware
 repair/removal, and human/product acceptance leaves; the completed native
 matrix is no longer an outstanding exit.
+
+## 2026-09-16 gated two-package candidate preparation
+
+Prepared from exact `203321188f88cc5587bd95ff6b4da4a602c745d2`, the optional
+Windows product-candidate gate now accepts an exact ancestor
+baseline ref. It creates a clean external baseline clone, requires identical
+provider-lock bytes, exact package source identities, and strict A < B SemVer
+ordering before the disposable current-user lifecycle can start. The lifecycle
+will install A, update to B, downgrade to A, then rollback to B while requiring
+durable generation/activation receipts and observing the real Start Menu and
+64-bit HKCU cutover after every effect. The current `0.1.0-alpha.5` source
+cannot self-qualify this gate: the intended next candidate is a real
+`0.1.0-alpha.6` successor using `203321188f88cc5587bd95ff6b4da4a602c745d2`
+as the lower source-distinct baseline. This records candidate preparation only;
+no real host result, helper parent-exit proof, or chain-aware removal claim is
+made.
+
+Independent source review found that the first prepared harness would have
+collided with the immutable legacy-A generation record and still asserted shell
+paths under the logical root. The corrective successor now permits package
+selection of only the exact immediate retained predecessor, parses the complete
+generation/activation chain, asserts the returned physical root, validates all
+retained A/B repair sources, transfers the manual ref through the environment,
+and retains baseline inputs plus a bounded attempt record. The native
+legacy-A/B/A/B regression passes; real current-user execution remains pending.
+
+A subsequent independent source review found four evidence-admission gaps in
+the prepared host verifier. The corrective successor independently derives
+generation IDs, install IDs and physical roots; admits the logical-root
+`facman.self` target only as the exact retained migration generation; reads
+repair ZIPs, launchers, receipts and the task ownership marker through bounded
+stable no-follow observations; and stages each produced baseline input before
+the payload-equivalence gate. Failed equivalence retains those inputs with a
+`produced_unqualified` status. Negative tests cover substituted generation,
+install and logical-root identities, linked retained inputs, marker ownership,
+and failed-gate retention. This remains source validation; no real current-user
+effect or hosted candidate result is claimed.

@@ -43,3 +43,10 @@ Independent FacMan update/downgrade, locked-file replacement, and restart
 handoff are being advanced by active
 `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01` without transferring or narrowing this
 WorkUnit's acceptance.
+
+## Shared candidate-workflow risk
+
+The optional two-package self-maintenance job is source preparation only until
+it runs against an exact alpha.6 candidate and lower source-distinct alpha.5
+baseline on the declared Windows host. It does not qualify the existing native
+recovery interruption/restart cases, and it does not claim chain-aware removal.
