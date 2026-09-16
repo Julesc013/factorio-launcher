@@ -193,3 +193,61 @@ The existing external Debug root rebuilt
 `facman_self_maintenance_smoke`, and its focused CTest passed 1/1. Source
 formatting and `git diff --check` passed. Fresh hosted requalification of the
 successor commit remains pending.
+
+## 2026-09-16 gated candidate preparation validation
+
+The source-level workflow guard and lifecycle/package contract regressions pass
+for the new optional transition route. This is not a produced-package or host
+qualification: alpha.5 is intentionally not eligible to supply both package
+identities, and no alpha.6 package pair has been built. The required later run
+must retain its exact A/B source revisions, provider lock, package hashes,
+native command receipts, Start Menu/HKCU observations, and durable generation
+and activation records.
+
+`C:\Users\Jules\AppData\Local\FacMan\Development\repositories\factorio-launcher-5db2844e2f29\tasks\beta1-admissi-68051e628e\python\Scripts\python.exe -B -m unittest tests.test_product_candidate tests.test_product_candidate_workflow tests.test_self_maintenance_candidate tests.test_self_setup_package tests.test_self_setup_recovery_contract`
+passed 51 tests on the preparation source. `py_compile` of the candidate tool,
+lifecycle harness, and its focused test, plus `git diff --check`, passed. The
+suite's intentional negative package-contract and provenance messages were
+observed inside passing tests.
+
+## 2026-09-16 candidate-review remediation validation
+
+The retained-generation correction was built in the existing external Debug
+root. All eight setup-labelled native tests passed, including the new exact
+legacy A -> physical B -> retained A -> B regression and the complete fixture
+lifecycle. `FacManSetup.exe` also rebuilt from the corrected application entry.
+The focused Python matrix passed 55 tests covering candidate/package contracts,
+workflow handoff, strict setup identities, canonical SemVer, exact generation
+and activation records, physical-root shell assertions, and recovery contracts.
+Pinned-Python `py_compile`, `tools/source_format_check.py`, and
+`git diff --check` passed. The complete strict check passed with 432 schemas,
+131 commands and 290 refusal codes; its engineering-quality and generated-view
+checks remained current. No real current-user effect path was executed; the
+optional alpha.6 hosted qualification and its retained evidence remain pending.
+
+## 2026-09-16 candidate evidence-admission review corrections
+
+Pinned-Python `py_compile` passed for the candidate tool, real transition
+harness, candidate tests, and workflow tests. The focused candidate/workflow
+set passed 28/28. The broader candidate, workflow, setup-package, and recovery
+matrix passed 57/57; its package-contract and GitHub-provenance diagnostics are
+intentional negative cases inside passing tests.
+The same candidate/workflow set passed under WSL Python with 28 tests run and
+one existing platform-conditioned case skipped; this is cross-platform source
+validation, not physical-Linux product qualification.
+
+`tools/source_format_check.py` and `git diff --check` passed. The product
+candidate workflow remains exactly 516 lines. The tests include fixed generation
+and physical-root derivation vectors, substituted generation/install/logical
+root refusals, exact retained-legacy admission, hard-linked and symlinked repair
+input refusals, stable ownership-marker validation, and preservation of staged
+baseline artifacts with `produced_unqualified` status after a failed
+payload-equivalence gate. No C++ changed in this review pass, so the already
+passing native legacy A/B/A/B regression was not rebuilt or relabelled. No real
+current-user effect path was executed.
+
+The final focused review correction derives legacy-target mode solely from the
+caller's retained-predecessor contract. The 9 candidate-tool tests pass with a
+negative proving that an otherwise coherent physical side-by-side A response
+and record cannot replace the required retained `facman.self` logical-root A.
+Pinned-Python compilation, source formatting, and `git diff --check` pass.

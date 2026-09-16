@@ -258,6 +258,7 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             "--fixture-root \"$root/evidence/real current-user integration\"",
             "--evidence \"$root/evidence/real current-user integration/windows-real-current-user-integration.v1.json\"",
             "--real-command-timeout 300",
+            "--real-total-timeout 1800",
             "evidence/real current-user integration/windows-real-current-user-integration.v1.json",
             "Preserve failed platform receipts and visible proof artifacts",
             "${{ env.FACMAN_TASK_ROOT }}/evidence/**/${{ matrix.platform }}-*",
@@ -303,11 +304,73 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         self.assertNotIn("--no-shell-integration", real_commands.split("def main", 1)[0])
         self.assertIn("bounded_process_receipt", lifecycle)
 
+    def test_windows_source_distinct_self_maintenance_transition_is_explicitly_gated(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        transition = ROOT / "tools/self_maintenance_candidate.py"
+        lifecycle = (ROOT / "tests/integration/facman_self_setup_lifecycle.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertTrue(transition.is_file())
+        for token in (
+            "self_maintenance_baseline_ref:",
+            "FACMAN_SELF_MAINTENANCE_BASELINE_REF: ${{ inputs.self_maintenance_baseline_ref }}",
+            "if ($env:FACMAN_SELF_MAINTENANCE_BASELINE_REF -ne '')",
+            "python tools/self_maintenance_candidate.py --workflow-environment",
+        ):
+            self.assertIn(token, workflow)
+        for token in (
+            'argv == ["--workflow-environment"]',
+            '"FACMAN_SELF_MAINTENANCE_BASELINE_REF", "GITHUB_SHA"',
+            "--candidate-setup",
+            "--candidate-portable",
+            "--universal-launcher-root",
+            "--universal-setup-root",
+            '"--command-timeout", "300"',
+            '"--transition-timeout", "1800"',
+            '"--outer-timeout", "6600"',
+        ):
+            self.assertIn(token, transition.read_text(encoding="utf-8"))
+        for token in (
+            '"git", "clone"',
+            "--no-checkout",
+            "--no-local",
+            "baseline source must be an ancestor of the candidate source",
+            "baseline provider lock differs from the candidate provider lock",
+            "current_checkout_observation.py",
+            "facman_release.py",
+            "--source-observation",
+            "package_contract_tck.py",
+            "source-distinct strict maintenance inputs",
+            "--real-self-maintenance-transition",
+            "real_self_maintenance_transition_evidence.v1",
+            "retained_final_state",
+            "windows-self-maintenance-baseline-setup.exe",
+            "windows-self-maintenance-transition-attempt.v1.json",
+            "development_layout.validate_marker_payload",
+            "stable_regular_bytes",
+            "path_cases.plain_path",
+        ):
+            self.assertIn(token, transition.read_text(encoding="utf-8") + lifecycle)
+        self.assertNotIn("--allow-dirty", transition.read_text(encoding="utf-8"))
+        self.assertNotIn(
+            '--baseline-ref "${{ inputs.self_maintenance_baseline_ref }}"', workflow
+        )
+        for token in (
+            "baseline_install_completed",
+            "candidate_update_completed",
+            "baseline_downgrade_completed",
+            "candidate_rollback_completed",
+            "require_transition_receipt",
+            "source-distinct, strictly ",
+            "version-ordered produced setup packages",
+        ):
+            self.assertIn(token, lifecycle)
+
     def test_workflow_binds_exact_run_attempt_and_verifies_before_upload(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn(
             "python -m unittest tests.test_product_candidate "
-            "tests.test_product_candidate_workflow",
+            "tests.test_product_candidate_workflow tests.test_self_maintenance_candidate",
             workflow,
         )
         self.assertIn(
@@ -360,7 +423,7 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
                 self.assertNotIn("FACMAN-UNREACHABLE-SUCCESS", result.stdout)
 
     def test_workflow_stays_within_its_reviewability_ratchet(self) -> None:
-        self.assertLessEqual(len(WORKFLOW.read_text(encoding="utf-8").splitlines()), 527)
+        self.assertLessEqual(len(WORKFLOW.read_text(encoding="utf-8").splitlines()), 516)
 
     def test_all_external_actions_remain_immutably_pinned(self) -> None:
         problems = ci_proof_check.validate_immutable_action_pins(

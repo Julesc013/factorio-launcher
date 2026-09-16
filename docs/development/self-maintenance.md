@@ -54,3 +54,41 @@ is admitted only for a disposable qualification root that contains the exact
 root marker and an unexpired, root-bound fixture permit for the requested
 operation and apply mode. A production root or an unpermitted fixture is
 refused before coordinator, provider, or shell effects.
+
+## Gated source-distinct candidate transition
+
+The manually dispatched Windows product-candidate workflow can receive an exact
+40-character lowercase `self_maintenance_baseline_ref`. The workflow transfers
+that value through the process environment rather than interpolating it into a
+shell program. It builds that clean ancestor outside the
+checkout and accepts it only when its provider lock is byte-identical to the
+candidate's, its produced package records its own exact source revision, and
+its SemVer is strictly lower than the candidate package. The gated lifecycle
+then uses package A for install, package B for update, A for downgrade, and
+rollback for the final B cutover. It records the two package identities,
+exact generation and activation record contents, and actual current-user Start
+Menu and 64-bit HKCU observations against each activated physical root. The
+baseline setup, portable package, source/provider observations and payload
+equivalence receipt are copied into the uploaded evidence scope. Each produced
+baseline artifact is staged immediately, before the later payload-equivalence
+gate, and the staging receipt labels it `produced_unqualified` until that gate
+passes. A bounded attempt receipt remains available when build or transition
+qualification fails.
+
+The host verifier independently recomputes each domain-separated generation
+identity, the full side-by-side install ID, and the physical generation root
+from the logical root. It accepts `facman.self` only when the complete record is
+the exact retained legacy A record established by the migration genesis.
+Retained package, launcher, custody-receipt, and task-root marker reads reject
+links/reparse points, multiple hard links, unstable metadata, and paths outside
+their admitted roots before their bytes are trusted.
+
+When a package operation names the exact generation identity of the immediate
+retained predecessor, FacMan reuses that already validated generation. This is
+what permits a legacy logical-root A to be selected after side-by-side B was
+activated without creating a conflicting second record for A. Other retained
+generations cannot be selected through update or downgrade.
+
+This is evidence only after that optional job runs successfully on the declared
+Windows host; its disposable account retains the final chain state because
+chain-aware uninstall is not implemented.

@@ -150,3 +150,22 @@ destination can be renamed or removed. Provider progress is recorded separately
 through plan review, cache validation and apply entry: proven no-effect failures
 are retired, cache-ownership failures remain recovery-required, and an uncertain
 provider receipt is recorded only after the apply boundary may have been entered.
+
+## 2026-09-16 shared candidate workflow preparation
+
+The explicitly allowed Windows product-candidate workflow now has an optional
+source-distinct A-to-B self-maintenance route. It does not reclassify a fixture
+or existing one-package run as real qualification. When manually enabled with
+an exact alpha.5 ancestor and alpha.6 candidate, it will record packaged
+update/downgrade/rollback cutover, durable activation records, and actual
+current-user shell observations. No current-host result is recorded by this
+source checkpoint. Interrupted maintenance and retained-helper parent-exit
+qualification remain active acceptance work under their respective WorkUnits.
+
+Source remediation now proves the legacy A -> update B -> downgrade A ->
+rollback B chain using the exact immediate retained predecessor. The shared
+candidate harness parses immutable generation/activation content, asserts the
+activated physical root and all retained repair-source receipts, and shares a
+bounded total deadline across child processes. Eight setup-labelled native
+tests pass. Hosted real-current-user qualification remains pending and this
+WorkUnit stays active.

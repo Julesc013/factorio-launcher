@@ -61,3 +61,21 @@ transitions, but it does not qualify supported package profiles or real shell
 effects. The previously rejected cleanup of marker-owned task root
 `D:\Development\FacMan\repositories\factorio-launcher-5db2844e2f29\tasks\task-facman-s-469a894f69`
 was not retried; cleanup remains an operator/root-agent action.
+
+## Gated candidate transition preparation
+
+The workflow and lifecycle now have a manually enabled source-distinct package
+transition path. It has not run on a current alpha.6 source or a declared
+Windows host. The present alpha.5 source is deliberately refused as both A and
+B because the package ordering must be strict. A successful later run will not
+close the WorkUnit: retained-helper parent-exit/restart proof and chain-aware
+repair/removal/uninstall remain separate requirements. The disposable runner
+also intentionally retains its final chain state rather than using an
+out-of-band deletion helper.
+
+The source harness now independently verifies generation/root identities,
+stable retained-source custody and task-root ownership, and it preserves
+unqualified baseline outputs when a later equivalence gate fails. These checks
+still require execution in the optional disposable Windows current-user job.
+No local real-shell effect was run during this correction, so current Start
+Menu/HKCU behavior and the produced A/B package chain remain pending evidence.
