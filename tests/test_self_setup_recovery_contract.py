@@ -320,13 +320,40 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         source = (ROOT / "runtime/self_setup/facman_self_setup.cpp").read_text(
             encoding="utf-8"
         )
-        command = source[source.index("facman::core::Result<std::string> command(") :]
-        injected = command.index("injected_provider->command(")
+        command = source[source.index(
+            "facman::core::Result<std::string> command_with("
+        ) :]
+        injected = command.index("provider->command(")
         provider_child = command.index('(state_root / "usk").lexically_normal()')
         provider_config = command.index("config.state_root = state.c_str()")
         self.assertLess(injected, provider_child)
         self.assertLess(provider_child, provider_config)
+        self.assertIn(
+            "return command_with(injected_provider", command
+        )
         self.assertIn('active.state_root / "repair-sources"', source)
+
+    def test_maintenance_cutover_holds_and_revalidates_native_edge_pins(self) -> None:
+        source = (ROOT / "apps/setup/main.cpp").read_text(encoding="utf-8")
+        maintenance = source[source.index(
+            "class MaintenanceEffects final"
+        ):source.index("class QualificationInterruptHook final")]
+        for token in (
+            "PinnedRepairSource target_pins_",
+            "StableInputFile target_gui_",
+            "StableInputFile target_maintenance_",
+            "installed maintenance launcher differs from the retained helper",
+            "target_gui_.revalidate_path()",
+            "target_maintenance_.revalidate_path()",
+            "return {false, true, {}, detail}",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token, maintenance)
+        apply = maintenance.index("apply_windows_cutover_effect")
+        post_apply = maintenance.index("revalidate_target_pins()", apply)
+        unknown = maintenance.index("return {false, true, {}, detail}", post_apply)
+        self.assertLess(apply, post_apply)
+        self.assertLess(post_apply, unknown)
 
 
 if __name__ == "__main__":

@@ -31,3 +31,45 @@ The WorkUnit remains active. The next checkpoint must connect the reviewed
 core to public setup verbs and the pinned production provider, migrate the
 legacy single-root state, resolve repair/removal through the active generation,
 and qualify two source-distinct packages on the disposable Windows lifecycle.
+
+## 2026-09-16 public-provider checkpoint
+
+The next bounded checkpoint is implemented from exact dev base
+`f7779eaf71f0304a1b15c0eff2d866ce228ddade`. It connects the reviewed
+side-by-side core to public `FacManSetup update`, `downgrade`, and `rollback`
+verbs and to the pinned Universal Setup `install_local.plan`,
+`install_local.apply`, `installed.inspect`, and `installed.verify` surface.
+Universal Setup receives no `update.*` authority.
+
+Preview validates the exact provider plan before coordinator or repair-cache
+writes. Apply retains and pins the package, helper, candidate GUI, candidate
+maintenance launcher, provider state root, and acceptance root; exact provider
+responses and verification evidence are bound before Windows cutover. A
+verified legacy `facman.self` installation is adopted through one deterministic
+immutable genesis only after provider plan admission. Active-chain generic
+verify and uninstall are refused, and repair is limited to the verified active
+migrated legacy generation. Multi-generation repair/removal and chain
+retirement remain outside this checkpoint.
+
+The WorkUnit stays active. The synthetic isolated CLI lifecycle is source
+evidence only; full native/product qualification, a packaged parent-exit/helper
+resume, real Start Menu and HKCU effects, and two source-distinct produced
+packages are still required.
+
+## Final remediation checkpoint
+
+The provider bridge now preserves full 256-bit generation install IDs while
+using a bounded opaque transaction label for the provider's derived ownership
+record. Coordinator admission reviews a plan without creating a missing root;
+legacy adoption alone may create it after held-identity revalidation. Completed
+retries re-inspect and re-verify before reporting success. The no-shell route
+requires the marked root-bound qualification permit. Focused native, Python,
+and isolated public lifecycle validation passed after the correction; the
+WorkUnit remains active pending a fresh complete native matrix and the recorded
+product acceptance leaves.
+
+The fresh complete Debug native matrix subsequently passed 49/49 on these
+final-remediation bytes. The WorkUnit remains active for its recorded
+produced-package, real Start Menu/HKCU, retained-helper restart, chain-aware
+repair/removal, and human/product acceptance leaves; the completed native
+matrix is no longer an outstanding exit.

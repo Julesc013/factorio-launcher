@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_self_setup.h"
+#include "facman_self_maintenance_provider.h"
 
 #include "fl_file_io.h"
 #include "fl_json.h"
@@ -18,6 +19,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <optional>
+#include <set>
 #include <sstream>
 #include <system_error>
 #include <thread>
@@ -754,13 +756,13 @@ facman::core::Result<std::optional<DiscoveredJournal>> discover_root_journal(
 }
 
 
-facman::core::Result<std::string> command(const std::string &name,
-                                          const std::string &payload,
-                                          const fs::path &state_root,
-                                          const fs::path &acceptance_root,
-                                          bool dry_run) {
-  if (injected_provider != nullptr)
-    return injected_provider->command(name, payload, state_root, acceptance_root, dry_run);
+facman::core::Result<std::string> command_with(
+    ProviderEffects *provider, const std::string &name,
+    const std::string &payload, const fs::path &state_root,
+    const fs::path &acceptance_root, bool dry_run) {
+  if (provider != nullptr)
+    return provider->command(name, payload, state_root, acceptance_root,
+                             dry_run);
   // FacMan owns the outer setup-state root, including retained offline repair
   // inputs. Universal Setup receives a dedicated child so its ownership marker
   // and transaction records never compete with those FacMan-owned files.
@@ -802,6 +804,15 @@ facman::core::Result<std::string> command(const std::string &name,
               "Universal Setup refused the operation", output));
   }
   return facman::core::Result<std::string>::success(std::move(output));
+}
+
+facman::core::Result<std::string> command(const std::string &name,
+                                          const std::string &payload,
+                                          const fs::path &state_root,
+                                          const fs::path &acceptance_root,
+                                          bool dry_run) {
+  return command_with(injected_provider, name, payload, state_root,
+                      acceptance_root, dry_run);
 }
 
 facman::core::Result<void> prepare_provider_parent(
@@ -2090,3 +2101,859 @@ facman::core::Result<Response> execute(const Request &request) {
 std::string provider_revision() { return FACMAN_SELF_SETUP_PROVIDER_REVISION; }
 
 } // namespace facman::self_setup
+
+namespace facman::self_maintenance {
+namespace {
+
+std::string provider_hash(const std::string &value) {
+  return facman::base::sha256_hex_bytes(
+      reinterpret_cast<const unsigned char *>(value.data()), value.size());
+}
+
+std::string provider_string(const json::Value &value, const char *key) {
+  const json::Value *field = value.find(key);
+  return field != nullptr && field->string_value()
+      ? field->string_value().value() : std::string();
+}
+
+bool provider_exact_keys(const json::Value &value,
+                         std::initializer_list<const char *> keys) {
+  if (!value.is_object() || value.size() != keys.size()) return false;
+  return std::all_of(keys.begin(), keys.end(),
+      [&](const char *key) { return value.find(key) != nullptr; });
+}
+
+bool provider_digest(const std::string &value) {
+  return value.size() == 64U &&
+      std::all_of(value.begin(), value.end(), [](unsigned char character) {
+        return (character >= '0' && character <= '9') ||
+            (character >= 'a' && character <= 'f');
+      });
+}
+
+bool provider_same_path(const fs::path &left, const fs::path &right) {
+#ifdef _WIN32
+  return _wcsicmp(left.lexically_normal().native().c_str(),
+                  right.lexically_normal().native().c_str()) == 0;
+#else
+  return left.lexically_normal() == right.lexically_normal();
+#endif
+}
+
+bool provider_bool(const json::Value &object, const char *key, bool expected) {
+  const json::Value *field = object.find(key);
+  if (field == nullptr) return false;
+  auto value = field->bool_value();
+  return value && value.value() == expected;
+}
+
+bool provider_uint(const json::Value &object, const char *key,
+                   std::uint64_t *output = nullptr) {
+  const json::Value *field = object.find(key);
+  if (field == nullptr) return false;
+  auto value = field->unsigned_integer_value();
+  if (!value) return false;
+  if (output != nullptr) *output = value.value();
+  return true;
+}
+
+bool provider_exact_string_array(const json::Value &value,
+                                 std::initializer_list<const char *> expected) {
+  if (!value.is_array() || value.size() != expected.size()) return false;
+  std::size_t index = 0;
+  for (const char *item : expected) {
+    const json::Value *entry = value.at(index++);
+    if (entry == nullptr || !entry->string_value() ||
+        entry->string_value().value() != item) return false;
+  }
+  return true;
+}
+
+bool provider_safe_relative(const std::string &value) {
+  if (value.empty() || value.size() > 4096U) return false;
+  const fs::path path = facman::platform::path_from_utf8(value);
+  if (path.is_absolute()) return false;
+  for (const auto &component : path)
+    if (component == "." || component == "..") return false;
+  return true;
+}
+
+facman::core::Error provider_error(std::string code, std::string message,
+                                   std::string detail = {}) {
+  facman::core::Error result{std::move(code), std::move(message), ""};
+  result.detail = std::move(detail);
+  return result;
+}
+
+std::string provider_installed_state_digest(const json::Value &payload) {
+  json::ObjectBuilder projection;
+  for (const char *key : {
+           "audit_chain_id", "component_selection", "created_at",
+           "entrypoints", "install_id", "lifecycle_status",
+           "ownership_manifest_digest", "ownership_manifest_ref",
+           "product_id", "product_version", "recipe_digest", "setup_abi",
+           "source_archive_digest", "target_root", "target_scope",
+           "transaction_id"}) {
+    const json::Value *field = payload.find(key);
+    if (field == nullptr || !projection.add_value(key, *field)) return {};
+  }
+  auto parsed = json::parse(projection.serialize());
+  auto canonical = parsed
+      ? json::canonical_integer_json(parsed.value())
+      : facman::core::Result<std::string>::failure(provider_error(
+            "self_maintenance_provider_response_invalid",
+            "installed-state digest projection could not be parsed"));
+  return canonical ? provider_hash(canonical.value()) : std::string();
+}
+
+facman::core::Result<InstalledIdentity> decode_installed_identity(
+    const std::string &response) {
+  auto envelope = json::parse(response);
+  const json::Value *response_error = envelope && envelope.value().is_object()
+      ? envelope.value().find("error") : nullptr;
+  const json::Value *payload = envelope && envelope.value().is_object()
+      ? envelope.value().find("payload") : nullptr;
+  const json::Value *setup_abi = payload != nullptr && payload->is_object()
+      ? payload->find("setup_abi") : nullptr;
+  const json::Value *entrypoints = payload != nullptr && payload->is_object()
+      ? payload->find("entrypoints") : nullptr;
+  const json::Value *components = payload != nullptr && payload->is_object()
+      ? payload->find("component_selection") : nullptr;
+  const json::Value *last_verification = payload != nullptr && payload->is_object()
+      ? payload->find("last_verification") : nullptr;
+  if (!envelope ||
+      !provider_exact_keys(envelope.value(),
+          {"error", "payload", "schema", "status"}) ||
+      provider_string(envelope.value(), "schema") !=
+          "usk.command_response.v1" ||
+      provider_string(envelope.value(), "status") != "ok" ||
+      response_error == nullptr || !response_error->is_null() ||
+      payload == nullptr || !payload->is_object() ||
+      !provider_exact_keys(*payload,
+          {"audit_chain_id", "component_selection", "created_at",
+           "entrypoints", "install_id", "last_verification",
+           "lifecycle_status", "ownership_manifest_digest",
+           "ownership_manifest_ref", "product_id", "product_version",
+           "recipe_digest", "schema", "setup_abi",
+           "source_archive_digest", "target_root", "target_scope",
+           "transaction_id"}) ||
+      setup_abi == nullptr ||
+      !provider_exact_keys(*setup_abi,
+          {"major", "minor", "provider_revision"}) ||
+      !provider_uint(*setup_abi, "major") ||
+      !provider_uint(*setup_abi, "minor") ||
+      components == nullptr ||
+      !provider_exact_string_array(*components,
+          {"facman.product", "facman.maintenance"}) ||
+      entrypoints == nullptr || !entrypoints->is_array() ||
+      entrypoints->size() != 3U ||
+      last_verification == nullptr ||
+      !provider_exact_keys(*last_verification,
+          {"report_digest", "report_id", "status", "verified_at"}) ||
+      !provider_digest(provider_string(*last_verification, "report_digest")) ||
+      provider_string(*last_verification, "report_id").empty() ||
+      (provider_string(*last_verification, "status") != "pass" &&
+       provider_string(*last_verification, "status") != "warn" &&
+       provider_string(*last_verification, "status") != "fail") ||
+      !self_setup::valid_timestamp(
+          provider_string(*last_verification, "verified_at")) ||
+      provider_string(*payload, "schema") != "usk.installed_state.v1" ||
+      provider_string(*payload, "product_id") != "facman" ||
+      provider_string(*payload, "target_scope") != "portable" ||
+      (provider_string(*payload, "lifecycle_status") != "installed" &&
+       provider_string(*payload, "lifecycle_status") != "verified") ||
+      !provider_digest(provider_string(*payload, "recipe_digest")) ||
+      !provider_digest(provider_string(*payload, "source_archive_digest")) ||
+      !provider_digest(provider_string(*payload,
+                                       "ownership_manifest_digest")) ||
+      provider_string(*payload, "ownership_manifest_ref").empty() ||
+      provider_string(*payload, "audit_chain_id").empty() ||
+      provider_string(*payload, "transaction_id").empty() ||
+      !self_setup::valid_timestamp(provider_string(*payload, "created_at")) ||
+      provider_string(*setup_abi, "provider_revision") !=
+          self_setup::provider_revision())
+    return facman::core::Result<InstalledIdentity>::failure(provider_error(
+        "self_maintenance_provider_response_invalid",
+        "Universal Setup installed-state response is incompatible",
+        response));
+  InstalledIdentity result;
+  result.install_id = provider_string(*payload, "install_id");
+  result.product_version = provider_string(*payload, "product_version");
+  result.source_archive_sha256 =
+      provider_string(*payload, "source_archive_digest");
+  result.recipe_digest = provider_string(*payload, "recipe_digest");
+  result.provider_revision = provider_string(*setup_abi, "provider_revision");
+  result.transaction_id = provider_string(*payload, "transaction_id");
+  result.ownership_manifest_digest =
+      provider_string(*payload, "ownership_manifest_digest");
+  result.installed_state_digest = provider_installed_state_digest(*payload);
+  if (!provider_digest(result.installed_state_digest))
+    return facman::core::Result<InstalledIdentity>::failure(provider_error(
+        "self_maintenance_provider_response_invalid",
+        "Universal Setup installed-state digest projection is incompatible"));
+  result.install_root = facman::platform::path_from_utf8(
+      provider_string(*payload, "target_root"));
+  for (std::size_t index = 0; index < entrypoints->size(); ++index) {
+    const json::Value *entrypoint = entrypoints->at(index);
+    if (entrypoint == nullptr ||
+        !provider_exact_keys(*entrypoint,
+            {"entrypoint_id", "kind", "relative_path"}))
+      return facman::core::Result<InstalledIdentity>::failure(provider_error(
+          "self_maintenance_provider_response_invalid",
+          "Universal Setup installed entrypoints are incompatible", response));
+    const std::string id = provider_string(*entrypoint, "entrypoint_id");
+    const std::string kind = provider_string(*entrypoint, "kind");
+    const std::string path = provider_string(*entrypoint, "relative_path");
+    if (id == "facman.gui" && kind == "application" &&
+        result.gui_relative_path.empty())
+      result.gui_relative_path = path;
+    else if (id == "facman.cli" && kind == "tool" &&
+             result.cli_relative_path.empty())
+      result.cli_relative_path = path;
+    else if (id == "facman.setup" && kind == "tool" &&
+             result.maintenance_relative_path.empty())
+      result.maintenance_relative_path = path;
+    else
+      return facman::core::Result<InstalledIdentity>::failure(provider_error(
+          "self_maintenance_provider_response_invalid",
+          "Universal Setup installed entrypoints are duplicated or unknown",
+          response));
+  }
+  const std::string generation =
+      "generations/" + result.product_version + "/";
+  if (result.install_id.empty() || result.product_version.empty() ||
+      !result.install_root.is_absolute() ||
+      result.gui_relative_path != generation + "FacMan.exe" ||
+      result.cli_relative_path != generation + "bin/facman.exe" ||
+      result.maintenance_relative_path != "maintenance/FacManSetup.exe")
+    return facman::core::Result<InstalledIdentity>::failure(provider_error(
+        "self_maintenance_provider_response_invalid",
+        "Universal Setup installed-state identity is incomplete", response));
+  return facman::core::Result<InstalledIdentity>::success(std::move(result));
+}
+
+std::string bridge_key(const Plan &plan) {
+  return provider_hash(plan.operation + "\n" + plan.operation_id + "\n" +
+      generation_record_bytes(plan.target) + plan.package_sha256 + "\n");
+}
+
+std::string maintenance_recipe_digest(const Plan &transition) {
+  json::ObjectBuilder recipe_identity;
+  recipe_identity.add_string("schema", "facman.self_setup_recipe.v1");
+  recipe_identity.add_string("product_id", "facman");
+  recipe_identity.add_string("product_version",
+                             transition.target.product_version);
+  recipe_identity.add_string("provider_revision",
+                             self_setup::provider_revision());
+  recipe_identity.add_string("source_sha256", transition.target.package_sha256);
+  recipe_identity.add_string("target_layout",
+                             "versioned_generation_with_maintenance_v1");
+  return provider_hash(recipe_identity.serialize());
+}
+
+json::ObjectBuilder maintenance_install_plan(
+    const Plan &transition, const std::string &created_at,
+    const std::string &request_id) {
+  json::ArrayBuilder components;
+  components.add_string("facman.product");
+  components.add_string("facman.maintenance");
+  const std::string generation =
+      "generations/" + transition.target.product_version + "/";
+  json::ObjectBuilder gui;
+  gui.add_string("entrypoint_id", "facman.gui");
+  gui.add_string("kind", "application");
+  gui.add_string("relative_path", generation + "FacMan.exe");
+  json::ObjectBuilder cli;
+  cli.add_string("entrypoint_id", "facman.cli");
+  cli.add_string("kind", "tool");
+  cli.add_string("relative_path", generation + "bin/facman.exe");
+  json::ObjectBuilder maintenance;
+  maintenance.add_string("entrypoint_id", "facman.setup");
+  maintenance.add_string("kind", "tool");
+  maintenance.add_string("relative_path", "maintenance/FacManSetup.exe");
+  json::ArrayBuilder entrypoints;
+  entrypoints.add_object(gui);
+  entrypoints.add_object(cli);
+  entrypoints.add_object(maintenance);
+  json::ObjectBuilder recipe;
+  recipe.add_string("product_id", "facman");
+  recipe.add_string("product_version", transition.target.product_version);
+  recipe.add_string("recipe_digest", maintenance_recipe_digest(transition));
+  recipe.add_string("provider_revision", self_setup::provider_revision());
+  recipe.add_array("components", components);
+  recipe.add_array("entrypoints", entrypoints);
+  json::ObjectBuilder target;
+  target.add_string("root",
+      facman::platform::path_to_utf8(transition.target.install_root));
+  target.add_string("class", "operator_acceptance");
+  json::ObjectBuilder plan;
+  plan.add_string("schema", "usk.install_local_plan_request.v1");
+  plan.add_string("request_id", request_id);
+  plan.add_string("created_at", created_at);
+  plan.add_string("install_id", transition.target.install_id);
+  plan.add_object("archive", self_setup::archive(
+      transition.package, transition.package_sha256, true));
+  plan.add_object("target", target);
+  plan.add_object("recipe", recipe);
+  return plan;
+}
+
+struct MaintenancePlanReview {
+  std::string plan_id;
+  std::string digest;
+};
+
+facman::core::Result<MaintenancePlanReview> decode_maintenance_plan(
+    const std::string &response, const Plan &transition,
+    const std::string &created_at, const std::string &request_id,
+    const std::string &recipe_digest) {
+  auto envelope = json::parse(response);
+  const json::Value *error_value = envelope && envelope.value().is_object()
+      ? envelope.value().find("error") : nullptr;
+  const json::Value *payload = envelope && envelope.value().is_object()
+      ? envelope.value().find("payload") : nullptr;
+  if (!envelope ||
+      !provider_exact_keys(envelope.value(),
+          {"error", "payload", "schema", "status"}) ||
+      provider_string(envelope.value(), "schema") !=
+          "usk.command_response.v1" ||
+      provider_string(envelope.value(), "status") != "ok" ||
+      error_value == nullptr || !error_value->is_null() ||
+      payload == nullptr || !payload->is_object())
+    return facman::core::Result<MaintenancePlanReview>::failure(provider_error(
+        "self_maintenance_provider_response_invalid",
+        "Universal Setup plan response envelope is incompatible"));
+  const bool authority = payload->find("required_commit_authority") != nullptr ||
+      payload->find("commit_authority_available") != nullptr;
+  const bool exact = authority
+      ? provider_exact_keys(*payload,
+          {"commit_authority_available", "component_selection", "created_at",
+           "effects", "input_identity", "operation", "plan_digest",
+           "plan_id", "planned_entries", "refusal_policy",
+           "required_commit_authority", "revalidation", "schema", "source",
+           "status", "target", "totals"})
+      : provider_exact_keys(*payload,
+          {"component_selection", "created_at", "effects", "input_identity",
+           "operation", "plan_digest", "plan_id", "planned_entries",
+           "refusal_policy", "revalidation", "schema", "source", "status",
+           "target", "totals"});
+  const json::Value *input = payload->find("input_identity");
+  const json::Value *source = payload->find("source");
+  const json::Value *target = payload->find("target");
+  const json::Value *filesystem = target != nullptr ? target->find("filesystem") : nullptr;
+  const json::Value *capabilities = filesystem != nullptr
+      ? filesystem->find("capabilities") : nullptr;
+  const json::Value *components = payload->find("component_selection");
+  const json::Value *entries = payload->find("planned_entries");
+  const json::Value *effects = payload->find("effects");
+  const json::Value *totals = payload->find("totals");
+  const json::Value *revalidation = payload->find("revalidation");
+  const json::Value *invalidations = revalidation != nullptr
+      ? revalidation->find("invalidate_on") : nullptr;
+  const json::Value *refusal = payload->find("refusal_policy");
+  if (!exact || provider_string(*payload, "schema") != "usk.install_plan.v1" ||
+      provider_string(*payload, "plan_id") != request_id ||
+      !provider_digest(provider_string(*payload, "plan_digest")) ||
+      provider_string(*payload, "operation") != "install_local" ||
+      provider_string(*payload, "status") != "planned" ||
+      provider_string(*payload, "created_at") != created_at ||
+      (authority &&
+       (provider_string(*payload, "required_commit_authority") !=
+            "staged_child_bound_v1" ||
+        !provider_bool(*payload, "commit_authority_available", false))) ||
+      input == nullptr || !provider_exact_keys(*input,
+          {"policy_digest", "provider_revision", "recipe_digest",
+           "source_digest"}) ||
+      !provider_digest(provider_string(*input, "policy_digest")) ||
+      provider_string(*input, "provider_revision") !=
+          self_setup::provider_revision() ||
+      provider_string(*input, "recipe_digest") != recipe_digest ||
+      provider_string(*input, "source_digest") != transition.package_sha256 ||
+      source == nullptr || !provider_exact_keys(*source,
+          {"filesystem_identity_digest", "path", "path_identity_digest",
+           "sha256", "size_bytes", "source_id"}) ||
+      provider_string(*source, "source_id") !=
+          "source." + transition.target.install_id ||
+      !provider_same_path(facman::platform::path_from_utf8(
+                              provider_string(*source, "path")),
+                          transition.package) ||
+      provider_string(*source, "sha256") != transition.package_sha256 ||
+      !provider_uint(*source, "size_bytes") ||
+      !provider_digest(provider_string(*source, "filesystem_identity_digest")) ||
+      !provider_digest(provider_string(*source, "path_identity_digest")) ||
+      target == nullptr || !provider_exact_keys(*target,
+          {"classification", "filesystem", "identity_digest",
+           "must_not_exist", "path_identity_digest", "pre_snapshot_digest",
+           "root", "scope", "volume_id"}) ||
+      !provider_same_path(facman::platform::path_from_utf8(
+                              provider_string(*target, "root")),
+                          transition.target.install_root) ||
+      provider_string(*target, "scope") != "portable" ||
+      provider_string(*target, "classification") !=
+          "operator_selected_owned_target" ||
+      !provider_bool(*target, "must_not_exist", true) ||
+      provider_string(*target, "volume_id").empty() ||
+      !provider_digest(provider_string(*target, "identity_digest")) ||
+      !provider_digest(provider_string(*target, "path_identity_digest")) ||
+      !provider_digest(provider_string(*target, "pre_snapshot_digest")) ||
+      filesystem == nullptr || !provider_exact_keys(*filesystem,
+          {"capabilities", "identity_digest", "kind"}) ||
+      !provider_digest(provider_string(*filesystem, "identity_digest")) ||
+      provider_string(*filesystem, "kind").empty() ||
+      capabilities == nullptr || !provider_exact_keys(*capabilities,
+          {"local", "no_mount_redirection", "no_replace_commit",
+           "stable_ancestors"}) ||
+      !provider_bool(*capabilities, "local", true) ||
+      !provider_bool(*capabilities, "no_mount_redirection", true) ||
+      !provider_bool(*capabilities, "no_replace_commit", true) ||
+      !provider_bool(*capabilities, "stable_ancestors", true) ||
+      components == nullptr || !provider_exact_string_array(*components,
+          {"facman.product", "facman.maintenance"}) ||
+      entries == nullptr || !entries->is_array() ||
+      effects == nullptr || !effects->is_array() || effects->size() == 0U ||
+      totals == nullptr || !provider_exact_keys(*totals,
+          {"directory_count", "file_count", "uncompressed_bytes"}) ||
+      !provider_uint(*totals, "directory_count") ||
+      !provider_uint(*totals, "file_count") ||
+      !provider_uint(*totals, "uncompressed_bytes") ||
+      revalidation == nullptr || !provider_exact_keys(*revalidation,
+          {"immediately_before_apply", "invalidate_on"}) ||
+      !provider_bool(*revalidation, "immediately_before_apply", true) ||
+      invalidations == nullptr || !provider_exact_string_array(*invalidations,
+          {"source", "recipe", "target", "policy", "provider_revision"}) ||
+      refusal == nullptr || !provider_exact_keys(*refusal,
+          {"refuse_elevation", "refuse_existing_target",
+           "refuse_installer_execution", "refuse_network",
+           "refuse_package_manager", "refuse_registry"}) ||
+      !provider_bool(*refusal, "refuse_elevation", true) ||
+      !provider_bool(*refusal, "refuse_existing_target", true) ||
+      !provider_bool(*refusal, "refuse_installer_execution", true) ||
+      !provider_bool(*refusal, "refuse_network", true) ||
+      !provider_bool(*refusal, "refuse_package_manager", true) ||
+      !provider_bool(*refusal, "refuse_registry", true))
+    return facman::core::Result<MaintenancePlanReview>::failure(provider_error(
+        "self_maintenance_provider_response_invalid",
+        "Universal Setup plan response does not bind the reviewed input"));
+  std::uint64_t observed_files = 0;
+  std::uint64_t observed_directories = 0;
+  for (std::size_t index = 0; index < entries->size(); ++index) {
+    const json::Value *entry = entries->at(index);
+    const std::string type = entry != nullptr
+        ? provider_string(*entry, "entry_type") : std::string();
+    if (entry == nullptr ||
+        !(type == "directory"
+              ? provider_exact_keys(*entry,
+                    {"entry_type", "relative_path", "size_bytes"})
+              : type == "file" && provider_exact_keys(*entry,
+                    {"entry_type", "relative_path", "sha256", "size_bytes"})) ||
+        !provider_safe_relative(provider_string(*entry, "relative_path")) ||
+        !provider_uint(*entry, "size_bytes") ||
+        (type == "file" && !provider_digest(provider_string(*entry, "sha256"))))
+      return facman::core::Result<MaintenancePlanReview>::failure(provider_error(
+          "self_maintenance_provider_response_invalid",
+          "Universal Setup plan entries are incompatible"));
+    if (type == "file") ++observed_files;
+    else ++observed_directories;
+  }
+  std::uint64_t declared_files = 0;
+  std::uint64_t declared_directories = 0;
+  if (!provider_uint(*totals, "file_count", &declared_files) ||
+      !provider_uint(*totals, "directory_count", &declared_directories) ||
+      declared_files != observed_files ||
+      declared_directories != observed_directories)
+    return facman::core::Result<MaintenancePlanReview>::failure(provider_error(
+        "self_maintenance_provider_response_invalid",
+        "Universal Setup plan totals do not bind its entries"));
+  for (std::size_t index = 0; index < effects->size(); ++index) {
+    const json::Value *effect = effects->at(index);
+    const std::string kind = effect != nullptr
+        ? provider_string(*effect, "kind") : std::string();
+    const std::string root_class = effect != nullptr
+        ? provider_string(*effect, "root_class") : std::string();
+    if (effect == nullptr || !provider_exact_keys(*effect,
+            {"effect_id", "kind", "relative_path", "root_class"}) ||
+        provider_string(*effect, "effect_id").empty() ||
+        (kind != "create_directory" && kind != "write_file" &&
+         kind != "write_installed_state" && kind != "write_journal" &&
+         kind != "write_audit") ||
+        (root_class != "owned_target" && root_class != "setup_state" &&
+         root_class != "staging" && root_class != "audit") ||
+        !provider_safe_relative(provider_string(*effect, "relative_path")))
+      return facman::core::Result<MaintenancePlanReview>::failure(provider_error(
+          "self_maintenance_provider_response_invalid",
+          "Universal Setup plan effects are incompatible"));
+  }
+  return facman::core::Result<MaintenancePlanReview>::success(
+      {request_id, provider_string(*payload, "plan_digest")});
+}
+
+} // namespace
+
+struct ProviderBridge::Impl {
+  fs::path state_root;
+  fs::path acceptance_root;
+  self_setup::ProviderEffects *effects = nullptr;
+  self_setup::Clock *clock = nullptr;
+  std::string reviewed_key;
+  std::string reviewed_transaction_id;
+  std::string reviewed_recipe_digest;
+  std::string apply_payload;
+  std::string inspected_key;
+  std::string inspected_state_digest;
+  std::string inspected_ownership_digest;
+  std::string inspected_recipe_digest;
+  facman::platform::StableDirectoryObject acceptance_pin;
+  facman::platform::StableDirectoryObject state_pin;
+};
+
+ProviderBridge::ProviderBridge(fs::path state_root, fs::path acceptance_root,
+                               self_setup::ProviderEffects *effects,
+                               self_setup::Clock *clock)
+    : impl_(std::make_unique<Impl>()) {
+  impl_->state_root = std::move(state_root).lexically_normal();
+  impl_->acceptance_root = std::move(acceptance_root).lexically_normal();
+  impl_->effects = effects;
+  impl_->clock = clock;
+}
+
+ProviderBridge::~ProviderBridge() = default;
+ProviderBridge::ProviderBridge(ProviderBridge &&) noexcept = default;
+ProviderBridge &ProviderBridge::operator=(ProviderBridge &&) noexcept = default;
+
+facman::core::Result<InstalledIdentity> ProviderBridge::inspect_identity(
+    const std::string &install_id) {
+  facman::platform::StableDirectoryObject acceptance;
+  auto opened = acceptance.open_no_follow(impl_->acceptance_root);
+  if (!opened.ok() ||
+      !acceptance.validate_descendant(impl_->state_root, false).ok())
+    return facman::core::Result<InstalledIdentity>::failure(provider_error(
+        "self_maintenance_provider_root_unsafe",
+        "provider state root is outside stable acceptance authority"));
+  facman::platform::StableDirectoryObject state;
+  opened = state.open_no_follow(impl_->state_root);
+  if (!opened.ok() || !acceptance.revalidate().ok() ||
+      !state.revalidate().ok())
+    return facman::core::Result<InstalledIdentity>::failure(provider_error(
+        "self_maintenance_provider_root_unsafe",
+        "provider roots are not stable existing directories"));
+  json::ObjectBuilder request;
+  request.add_string("schema", "usk.installed_inspect_request.v1");
+  request.add_string("request_id",
+      "request.maintenance.inspect." + provider_hash(install_id).substr(0, 32));
+  request.add_string("install_id", install_id);
+  auto response = self_setup::command_with(
+      impl_->effects, "installed.inspect", request.serialize(),
+      impl_->state_root, impl_->acceptance_root, true);
+  if (!response)
+    return facman::core::Result<InstalledIdentity>::failure(provider_error(
+        "self_maintenance_inspect_failed",
+        "Universal Setup could not inspect the installation",
+        response.error().detail.empty() ? response.error().message
+                                        : response.error().detail));
+  auto decoded = decode_installed_identity(response.value());
+  if (!decoded || decoded.value().install_id != install_id)
+    return facman::core::Result<InstalledIdentity>::failure(
+        decoded ? provider_error(
+            "self_maintenance_provider_response_invalid",
+            "Universal Setup inspected a different installation")
+                : decoded.error());
+  return decoded;
+}
+
+CandidateState ProviderBridge::inspect_candidate(const Plan &transition) {
+  facman::platform::PathIdentity identity;
+  const auto inspected = facman::platform::inspect_path_no_follow(
+      transition.target.install_root, identity);
+  if (!inspected.ok()) return CandidateState::unreadable;
+  if (!identity.exists) return CandidateState::absent;
+  if (identity.reparse_or_link ||
+      identity.kind != facman::platform::PathObjectKind::directory)
+    return CandidateState::foreign;
+  auto installed = inspect_identity(transition.target.install_id);
+  return installed &&
+      installed.value().product_version == transition.target.product_version &&
+      installed.value().source_archive_sha256 == transition.package_sha256 &&
+      installed.value().recipe_digest == maintenance_recipe_digest(transition) &&
+      provider_same_path(installed.value().install_root,
+                         transition.target.install_root)
+      ? CandidateState::exact : CandidateState::foreign;
+}
+
+EffectResult ProviderBridge::review_install_local(const Plan &transition) {
+  if (transition.provider_operation != "install_local")
+    return {false, false, {}, "provider operation is not install_local"};
+  if (transition.target.universal_setup_revision !=
+      self_setup::provider_revision())
+    return {false, false, {},
+            "package Universal Setup revision differs from the pinned provider"};
+  if (!provider_same_path(transition.target.state_root, impl_->state_root) ||
+      !provider_same_path(transition.target.acceptance_root,
+                          impl_->acceptance_root))
+    return {false, false, {},
+            "generation provider roots differ from the configured authority"};
+  facman::platform::StableDirectoryObject acceptance;
+  auto admitted = acceptance.open_no_follow(impl_->acceptance_root);
+  if (!admitted.ok())
+    return {false, false, {},
+            "acceptance root is not a stable plain directory: " +
+                admitted.code + ": " + admitted.detail};
+  admitted = acceptance.validate_descendant(impl_->state_root, false);
+  if (!admitted.ok())
+    return {false, false, {},
+            "provider state root is outside stable acceptance authority: " +
+                admitted.code + ": " + admitted.detail};
+  facman::platform::StableDirectoryObject state;
+  admitted = state.open_no_follow(impl_->state_root);
+  if (!admitted.ok() || !acceptance.revalidate().ok() ||
+      !state.revalidate().ok())
+    return {false, false, {},
+            "provider roots are not stable existing directories"};
+  impl_->acceptance_pin = std::move(acceptance);
+  impl_->state_pin = std::move(state);
+  const std::string key = bridge_key(transition);
+  if (impl_->reviewed_key == key && !impl_->apply_payload.empty())
+    return impl_->reviewed_recipe_digest == maintenance_recipe_digest(transition)
+        ? EffectResult{true, false, provider_hash(impl_->apply_payload), {}}
+        : EffectResult{false, false, {},
+              "cached provider plan has a different recipe identity"};
+  impl_->reviewed_key.clear();
+  impl_->reviewed_transaction_id.clear();
+  impl_->reviewed_recipe_digest.clear();
+  impl_->apply_payload.clear();
+  const std::string created_at = self_setup::timestamp();
+  const std::string request_id =
+      "request.maintenance." + key.substr(0, 32);
+  const auto plan = maintenance_install_plan(
+      transition, created_at, request_id);
+  auto planned = self_setup::command_with(
+      impl_->effects, "install_local.plan", plan.serialize(),
+      impl_->state_root, impl_->acceptance_root, true);
+  if (!planned)
+    return {false, false, {}, planned.error().message + ": " +
+        planned.error().detail};
+  auto plan_document = json::parse(plan.serialize());
+  const json::Value *recipe = plan_document
+      ? plan_document.value().find("recipe") : nullptr;
+  const std::string recipe_digest = recipe != nullptr
+      ? provider_string(*recipe, "recipe_digest") : std::string();
+  auto reviewed = decode_maintenance_plan(
+      planned.value(), transition, created_at, request_id, recipe_digest);
+  if (!reviewed)
+    return {false, false, {}, reviewed.error().message + ": " +
+        reviewed.error().detail};
+  // Universal Setup derives its ownership-record identifier from both the
+  // install and transaction identities.  Keep the install identifier's full
+  // 256-bit generation suffix and bound only this opaque transaction label to
+  // the provider's 128-character durable-record limit.
+  const std::string transaction_id = "tx.m." + key.substr(0, 24);
+  auto apply = self_setup::apply_request(
+      "usk.install_local_apply_request.v1", plan,
+      reviewed.value().plan_id, reviewed.value().digest, created_at,
+      transaction_id, impl_->clock);
+  if (!apply)
+    return {false, false, {}, apply.error().message + ": " +
+        apply.error().detail};
+  impl_->reviewed_key = key;
+  impl_->reviewed_transaction_id = transaction_id;
+  impl_->reviewed_recipe_digest = recipe_digest;
+  impl_->apply_payload = apply.value().serialize();
+  return {true, false, provider_hash(planned.value()), {}};
+}
+
+EffectResult ProviderBridge::install_local(const Plan &transition) {
+  if (impl_->reviewed_key != bridge_key(transition) ||
+      impl_->apply_payload.empty() || impl_->reviewed_transaction_id.empty() ||
+      impl_->reviewed_recipe_digest != maintenance_recipe_digest(transition))
+    return {false, false, {}, "no exact reviewed install_local plan is cached"};
+  const auto acceptance_stable = impl_->acceptance_pin.revalidate();
+  const auto state_stable = impl_->state_pin.revalidate();
+  const auto admitted = impl_->acceptance_pin.validate_descendant(
+      impl_->state_root, false);
+  if (!acceptance_stable.ok() || !state_stable.ok() || !admitted.ok())
+    return {false, false, {},
+            "provider root authority changed after plan admission"};
+  auto response = self_setup::command_with(
+      impl_->effects, "install_local.apply", impl_->apply_payload,
+      impl_->state_root, impl_->acceptance_root, false);
+  if (!response)
+    return {false, true, {}, response.error().message + ": " +
+        response.error().detail};
+  auto installed = decode_installed_identity(response.value());
+  if (!installed ||
+      installed.value().install_id != transition.target.install_id ||
+      installed.value().product_version != transition.target.product_version ||
+      installed.value().source_archive_sha256 != transition.package_sha256 ||
+      installed.value().recipe_digest != impl_->reviewed_recipe_digest ||
+      installed.value().provider_revision !=
+          transition.target.universal_setup_revision ||
+      installed.value().transaction_id != impl_->reviewed_transaction_id ||
+      !provider_same_path(installed.value().install_root,
+                          transition.target.install_root))
+    return {false, true, {}, installed
+        ? "provider apply receipt does not bind the reviewed generation"
+        : installed.error().message + ": " + installed.error().detail};
+  impl_->apply_payload.clear();
+  return {true, false, provider_hash(response.value()), {}};
+}
+
+EffectResult ProviderBridge::inspect_installed(const Plan &transition) {
+  auto installed = inspect_identity(transition.target.install_id);
+  if (!installed ||
+      installed.value().product_version != transition.target.product_version ||
+      installed.value().source_archive_sha256 != transition.target.package_sha256 ||
+      installed.value().recipe_digest != maintenance_recipe_digest(transition) ||
+      installed.value().provider_revision !=
+          transition.target.universal_setup_revision ||
+      !provider_same_path(installed.value().install_root,
+                          transition.target.install_root))
+    return {false, false, {}, installed ?
+        "installed state does not bind the retained generation" :
+        installed.error().message + ": " + installed.error().detail};
+  const std::string identity = installed.value().install_id + "\n" +
+      installed.value().product_version + "\n" +
+      installed.value().source_archive_sha256 + "\n" +
+      facman::platform::path_to_utf8(installed.value().install_root) + "\n";
+  impl_->inspected_key = bridge_key(transition);
+  impl_->inspected_state_digest = installed.value().installed_state_digest;
+  impl_->inspected_ownership_digest =
+      installed.value().ownership_manifest_digest;
+  impl_->inspected_recipe_digest = installed.value().recipe_digest;
+  return {true, false, provider_hash(identity), {}};
+}
+
+EffectResult ProviderBridge::verify_installed(const Plan &transition) {
+  const std::string identity = bridge_key(transition);
+  if (impl_->inspected_key != identity ||
+      !provider_digest(impl_->inspected_state_digest) ||
+      !provider_digest(impl_->inspected_ownership_digest) ||
+      impl_->inspected_recipe_digest != maintenance_recipe_digest(transition))
+    return {false, false, {},
+            "verification requires the exact inspected installed state"};
+  json::ObjectBuilder request;
+  const std::string report_id =
+      "report.maintenance." + identity.substr(0, 32);
+  const std::string verified_at = self_setup::timestamp();
+  request.add_string("schema", "usk.installed_verify_request.v1");
+  request.add_string("request_id",
+      "request.maintenance.verify." + identity.substr(0, 24));
+  request.add_string("install_id", transition.target.install_id);
+  request.add_string("report_id", report_id);
+  request.add_string("verified_at", verified_at);
+  auto response = self_setup::command_with(
+      impl_->effects, "installed.verify", request.serialize(),
+      impl_->state_root, impl_->acceptance_root, true);
+  if (!response)
+    return {false, false, {}, response.error().message + ": " +
+        response.error().detail};
+  auto envelope = json::parse(response.value());
+  const json::Value *response_error = envelope && envelope.value().is_object()
+      ? envelope.value().find("error") : nullptr;
+  const json::Value *payload = envelope && envelope.value().is_object()
+      ? envelope.value().find("payload") : nullptr;
+  if (!envelope ||
+      !provider_exact_keys(envelope.value(),
+          {"error", "payload", "schema", "status"}) ||
+      provider_string(envelope.value(), "schema") !=
+          "usk.command_response.v1" ||
+      provider_string(envelope.value(), "status") != "ok" ||
+      response_error == nullptr || !response_error->is_null() ||
+      payload == nullptr || !payload->is_object() ||
+      !provider_exact_keys(*payload,
+          {"directories", "files", "install_id", "installed_state_digest",
+           "ownership_manifest_digest", "report_digest", "report_id",
+           "schema", "status", "summary", "unknown_paths", "verified_at"}) ||
+      provider_string(*payload, "schema") != "usk.verification_report.v1" ||
+      provider_string(*payload, "install_id") != transition.target.install_id ||
+      provider_string(*payload, "report_id") != report_id ||
+      provider_string(*payload, "verified_at") != verified_at ||
+      provider_string(*payload, "status") != "pass" ||
+      !provider_digest(provider_string(*payload, "report_digest")) ||
+      provider_string(*payload, "installed_state_digest") !=
+          impl_->inspected_state_digest ||
+      provider_string(*payload, "ownership_manifest_digest") !=
+          impl_->inspected_ownership_digest)
+    return {false, false, {},
+            "Universal Setup verification response did not bind the requested "
+            "installed state, ownership, report, timestamp, and evidence"};
+  const json::Value *files = payload->find("files");
+  const json::Value *directories = payload->find("directories");
+  const json::Value *unknown = payload->find("unknown_paths");
+  const json::Value *summary = payload->find("summary");
+  std::uint64_t owned_files = 0;
+  std::uint64_t missing_files = 0;
+  std::uint64_t modified_files = 0;
+  std::uint64_t unknown_count = 0;
+  if (files == nullptr || !files->is_array() ||
+      directories == nullptr || !directories->is_array() ||
+      unknown == nullptr || !unknown->is_array() || unknown->size() != 0U ||
+      summary == nullptr || !provider_exact_keys(*summary,
+          {"missing_files", "modified_files", "owned_files",
+           "unknown_paths"}) ||
+      !provider_uint(*summary, "owned_files", &owned_files) ||
+      !provider_uint(*summary, "missing_files", &missing_files) ||
+      !provider_uint(*summary, "modified_files", &modified_files) ||
+      !provider_uint(*summary, "unknown_paths", &unknown_count) ||
+      owned_files != files->size() || missing_files != 0U ||
+      modified_files != 0U || unknown_count != 0U)
+    return {false, false, {},
+            "Universal Setup verification evidence summary is incompatible"};
+  std::set<std::string> observed_paths;
+  for (std::size_t index = 0; index < files->size(); ++index) {
+    const json::Value *file = files->at(index);
+    const bool has_actual = file != nullptr &&
+        file->find("actual_sha256") != nullptr;
+    const std::string path = file != nullptr
+        ? provider_string(*file, "relative_path") : std::string();
+    const std::string expected = file != nullptr
+        ? provider_string(*file, "expected_sha256") : std::string();
+    if (file == nullptr ||
+        !(has_actual
+              ? provider_exact_keys(*file,
+                    {"actual_sha256", "expected_sha256", "relative_path",
+                     "status"})
+              : provider_exact_keys(*file,
+                    {"expected_sha256", "relative_path", "status"})) ||
+        !provider_safe_relative(path) ||
+        !observed_paths.insert(path).second ||
+        provider_string(*file, "status") != "present" ||
+        !provider_digest(expected) ||
+        (has_actual && provider_string(*file, "actual_sha256") != expected))
+      return {false, false, {},
+              "Universal Setup verification file evidence is incompatible"};
+  }
+  for (std::size_t index = 0; index < directories->size(); ++index) {
+    const json::Value *directory = directories->at(index);
+    const std::string path = directory != nullptr
+        ? provider_string(*directory, "relative_path") : std::string();
+    if (directory == nullptr || !provider_exact_keys(*directory,
+            {"relative_path", "status"}) ||
+        !provider_safe_relative(path) ||
+        !observed_paths.insert(path).second ||
+        provider_string(*directory, "status") != "present")
+      return {false, false, {},
+              "Universal Setup verification directory evidence is incompatible"};
+  }
+  json::ObjectBuilder report_projection;
+  for (const char *key : {
+           "directories", "files", "install_id", "installed_state_digest",
+           "ownership_manifest_digest", "report_id", "status", "summary",
+           "unknown_paths", "verified_at"}) {
+    const json::Value *field = payload->find(key);
+    if (field == nullptr || !report_projection.add_value(key, *field))
+      return {false, false, {},
+              "Universal Setup verification digest projection is incompatible"};
+  }
+  auto projected = json::parse(report_projection.serialize());
+  auto canonical = projected
+      ? json::canonical_integer_json(projected.value())
+      : facman::core::Result<std::string>::failure(provider_error(
+            "self_maintenance_provider_response_invalid",
+            "verification digest projection could not be parsed"));
+  if (!canonical || provider_hash(canonical.value()) !=
+          provider_string(*payload, "report_digest"))
+    return {false, false, {},
+            "Universal Setup verification report digest is incompatible"};
+  return {true, false, provider_string(*payload, "report_digest"), {}};
+}
+
+} // namespace facman::self_maintenance

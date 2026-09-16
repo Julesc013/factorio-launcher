@@ -4,12 +4,13 @@
   "title": "FacMan immutable self-maintenance activation",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "product_id", "operation", "operation_id", "source_generation_id", "target_generation_id", "previous"],
+  "required": ["schema", "product_id", "operation", "operation_id", "previous"],
   "properties": {
     "schema": {"const": "facman.self_activation.v1"},
     "product_id": {"const": "facman"},
-    "operation": {"enum": ["update", "downgrade", "rollback"]},
+    "operation": {"enum": ["migration", "update", "downgrade", "rollback"]},
     "operation_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,160}$"},
+    "generation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "source_generation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "target_generation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "previous": {
@@ -27,6 +28,33 @@
       "if": {"properties": {"previous": {"properties": {"name": {"const": ""}}}}},
       "then": {"properties": {"previous": {"properties": {"sha256": {"const": ""}}}}},
       "else": {"properties": {"previous": {"properties": {"sha256": {"pattern": "^[a-f0-9]{64}$"}}}}}
+    },
+    {
+      "if": {"properties": {"operation": {"const": "migration"}}, "required": ["operation"]},
+      "then": {
+        "required": ["generation_id"],
+        "not": {"anyOf": [
+          {"required": ["source_generation_id"]},
+          {"required": ["target_generation_id"]}
+        ]},
+        "properties": {
+          "previous": {
+            "properties": {"name": {"const": ""}, "sha256": {"const": ""}}
+          }
+        }
+      },
+      "else": {
+        "required": ["source_generation_id", "target_generation_id"],
+        "not": {"required": ["generation_id"]},
+        "properties": {
+          "previous": {
+            "properties": {
+              "name": {"pattern": "^[A-Za-z0-9._-]{1,160}$"},
+              "sha256": {"pattern": "^[a-f0-9]{64}$"}
+            }
+          }
+        }
+      }
     }
   ]
 }
