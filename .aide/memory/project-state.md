@@ -20,7 +20,7 @@ Generate that fail-closed observation after checkout with
 - all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`;
 - next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
 - next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
-- truth scope: `phase0_governance_integrated_alpha6_workspace_migration_recovery_active_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
+- truth scope: `phase0_governance_integrated_alpha6_workspace_migration_recovery_historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
 - alpha.5 exact candidate: source `4683ecd9a1b9ead5eb84be152760d12583da0f0e` (tree `c07938618bc0f533fd12756cba123f54b8592048`), run `33603385303` attempt `1`;
 - alpha.5 candidate boundary: closeout qualified `false`; future revision requires a new run `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
@@ -111,7 +111,7 @@ work or promote execution, network, credential, signing, or publication authorit
 
 - commands / registered routes: `131` / `129`;
 - schemas / refusal codes: `432` / `290`;
-- command catalog digest: `38d30b116fc5b2402823010e070511e412dcc04bcbaed16ff4d38f8c2feed788`;
+- command catalog digest: `26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 

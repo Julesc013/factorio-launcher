@@ -2,12 +2,15 @@
 
 ## Unreleased
 
+- Allocated `0.1.0-alpha.6` as the current development product identity for
+  managed-install and lifecycle work. It is unqualified, unsigned, untagged,
+  unpublished, and carries no candidate, support, or release claim.
 - Closed the report-only Beta ruleset and tag-protection assessment with an
   exact live GitHub observation, a durable Phase 0 cleanup receipt, and an
   operator-facing hardening proposal; no GitHub setting or release authority
   changed.
 
-## 0.1.0-alpha.5 - In development (2026-09-01)
+## 0.1.0-alpha.5 - Historical candidate (2026-09-01)
 
 - Establishes one machine-readable twelve-journey route from alpha.5 to an exact `0.1.0-beta.1` candidate.
 - Adds known-action journaled migration apply, resumable roll-forward, and invocation-local exact-target rollback; public recovery/rollback remains pending and unknown migrations fail closed.

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 schema = "facman.engineering_quality_budget.v1"
-release = "0.1.0-alpha.5"
+release = "0.1.0-alpha.6"
 policy = "ratchet_existing_hotspots_and_keep_new_modules_bounded"
 
 [complexity]

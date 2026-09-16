@@ -5,7 +5,7 @@
   "source_refs": {
     "journeys": {
       "path": "release/index/foundation_beta_readiness.v1.toml",
-      "semantic_sha256": "ed8b6a1c5f052d221ec756bcecd7d6003f49d59f1e7f31b0d8f71c463148ca49"
+      "semantic_sha256": "481fa02a41493874eb6e7576b158a1521c80ca2b5d792aa9f36297c01270eb86"
     },
     "corpus": {
       "path": "tests/fixtures/cross-frontend-journeys/corpus.v1.json",

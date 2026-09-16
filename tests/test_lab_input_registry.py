@@ -86,6 +86,7 @@ class LabRegistryTests(unittest.TestCase):
             lambda d: d["inputs"]["approved_game"]["linux_x64"].update(digest="a" * 64),
             lambda d: d["run_requirements"].remove("reset_and_export"),
             lambda d: d["source_refs"]["corpus"].update(path="../outside.json"),
+            lambda d: d["source_refs"]["journeys"].update(semantic_sha256="0" * 64),
             lambda d: d["source_refs"]["hosts"].update(semantic_sha256="0" * 64),
         ]
         for index, mutate in enumerate(mutations):

@@ -138,7 +138,7 @@ REPOSITORY_IDENTITY_PHASE_CONTRACT = {
     ),
     "truth_scope": (
         "phase0_integrations_verified_one_active_release_selector_repository_"
-        "identity_freeze_active_alpha5_candidate_revision_exact_all_human_"
+        "identity_freeze_historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_all_human_"
         "execution_and_release_authority_closed"
     ),
     "user_workflow": (
@@ -168,7 +168,7 @@ REPOSITORY_IDENTITY_FROZEN_PHASE_CONTRACT = {
     ),
     "truth_scope": (
         "phase0_integrations_verified_one_active_release_selector_repository_"
-        "identity_frozen_alpha5_candidate_revision_exact_ruleset_report_"
+        "identity_frozen_historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_ruleset_report_"
         "pending_all_human_execution_and_release_authority_closed"
     ),
     "user_workflow": (
@@ -200,7 +200,7 @@ RULESET_REPORT_COMPLETE_PHASE_CONTRACT = {
     "truth_scope": (
         "phase0_integrations_verified_one_active_release_selector_repository_"
         "identity_frozen_ruleset_report_complete_github_settings_unchanged_"
-        "alpha5_candidate_revision_exact_all_human_execution_and_release_"
+        "historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_all_human_execution_and_release_"
         "authority_closed"
     ),
     "user_workflow": (
@@ -225,7 +225,7 @@ ALPHA6_WORKSPACE_ACTIVE_PHASE_CONTRACT = {
     ),
     "truth_scope": (
         "phase0_governance_integrated_alpha6_workspace_migration_recovery_"
-        "active_alpha5_candidate_revision_exact_all_human_execution_and_"
+        "historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_all_human_execution_and_"
         "release_authority_closed"
     ),
     "user_workflow": (

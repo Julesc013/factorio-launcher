@@ -57,12 +57,12 @@ product graph consumed by frontends and package producers. Convergence is
 additive and reversible; there is no fourth common repository, mass relocation
 or language rewrite.
 
-## Current transition: exact alpha.5 candidate to beta closure
+## Current transition: allocated alpha.6 to beta closure
 
 The corrected 2026-09-05 delivery amendment is being implemented in
 `FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01`, pending protected integration.
 Its prospective authority is `release/index/plan.v1.toml`'s `delivery_train`;
-it does not promote the following historical source qualification, current
+it does not promote the following historical source qualification, active
 asset selector, support tier, or any execution/release authority.
 
 The broad architecture, provider adoption, and alpha.5 package foundation are
@@ -179,8 +179,9 @@ authority; blocked external gates do not freeze unrelated ready engineering.
 
 Terminal and Desktop are prospective component profiles: Desktop includes the
 same terminal bytes plus a native GUI overlay, while Terminal excludes GUI
-payload. Both need portable and installed-use paths. The current Alpha.5
-three-profile/eight-asset selector is retained until producers, manifests,
+payload. Both need portable and installed-use paths. The current Alpha.6
+allocation has no candidate receipt; the historical Alpha.5
+three-profile/eight-asset selector remains only until producers, manifests,
 selectors and exact qualification admit the new profiles coherently.
 
 The governing planning records are:

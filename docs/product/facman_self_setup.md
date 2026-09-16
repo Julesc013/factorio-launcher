@@ -2,8 +2,9 @@
 
 The current FacMan 0.1 contract defines one self-contained offline setup
 package per admitted platform. Setup installs FacMan itself; it never installs,
-updates, launches, repairs, or removes Factorio. Exact `0.1.0-alpha.5` products
-remain candidate-workflow outputs until their platform evidence is recorded.
+updates, launches, repairs, or removes Factorio. Historical exact
+`0.1.0-alpha.5` products remain candidate-workflow evidence; current
+`0.1.0-alpha.6` products remain unqualified until their platform evidence is recorded.
 
 ## Windows x64
 
@@ -190,7 +191,8 @@ installed-state and receipts, and preserves workspaces and Factorio data.
 
 ## Current limits
 
-- `0.1.0-alpha.5` is an implementation candidate, not a published release.
+- `0.1.0-alpha.5` is historical implementation-candidate evidence, not a
+  published release; `0.1.0-alpha.6` is allocated but unqualified.
 - Canonical-stage equivalence is contract-tested; exact six-asset candidate
   lifecycle receipts remain pending.
 - All packages are unsigned; macOS is not notarized.

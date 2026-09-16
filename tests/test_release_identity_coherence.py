@@ -73,6 +73,22 @@ class ReleaseIdentityCoherenceTests(unittest.TestCase):
             receipt["guards"]["future_product_revision_requires_new_candidate_run"]
         )
 
+    def test_current_alpha6_allocation_and_historical_alpha5_receipt_are_closed(self) -> None:
+        train = self.records["train"]
+        self.assertEqual(train["current_allocation"]["version"], "0.1.0-alpha.6")
+        self.assertEqual(train["current_allocation"]["candidate_receipt"], "")
+        self.assertFalse(train["current_allocation"]["publication"])
+        self.assertEqual(
+            train["historical_alpha5_candidate"]["source_revision"],
+            release_identity_coherence_check.MAIN_REVISION,
+        )
+        changed = copy.deepcopy(self.records)
+        changed["train"]["current_allocation"]["tag"] = "facman-0.1.0-alpha.6"
+        changed["train"]["historical_alpha5_candidate"]["candidate_run"] = 1
+        problems = release_identity_coherence_check.validate_records(changed)
+        self.assertTrue(any(problem.startswith("train.current_allocation") for problem in problems))
+        self.assertTrue(any(problem.startswith("train.historical_alpha5_candidate") for problem in problems))
+
     def test_tree_equality_cannot_requalify_the_synchronized_revision(self) -> None:
         changed = copy.deepcopy(self.records)
         changed["candidate_closeout"]["guards"][

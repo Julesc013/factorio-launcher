@@ -12088,6 +12088,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "38d30b116fc5b2402823010e070511e412dcc04bcbaed16ff4d38f8c2feed788",
-  "version": "facman-0.1.0-alpha.5"
+  "source_digest": "26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428",
+  "version": "facman-0.1.0-alpha.6"
 }

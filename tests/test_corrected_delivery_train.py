@@ -117,7 +117,7 @@ class CorrectedDeliveryTrainTests(unittest.TestCase):
             with (root / "release/index" / name).open("rb") as stream:
                 return tomllib.load(stream)
         train = read("version_train.v1.toml")
-        self.assertEqual(train["allocated_version"], "0.1.0-alpha.5")
+        self.assertEqual(train["allocated_version"], "0.1.0-alpha.6")
         self.assertEqual(train["release_source_revision"], "4683ecd9a1b9ead5eb84be152760d12583da0f0e")
         self.assertEqual(train["release_source_tree"], "c07938618bc0f533fd12756cba123f54b8592048")
         active = read("active_release_view.v1.toml")

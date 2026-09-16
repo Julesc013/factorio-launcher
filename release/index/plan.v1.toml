@@ -1734,8 +1734,8 @@ exit = [
 [[release]]
 id = "FACMAN-0.1.0-ALPHA.6"
 version = "0.1.0-alpha.6"
-version_allocated = false
-planning_label = true
+version_allocated = true
+planning_label = false
 title = "FacMan 0.1 managed-install and product-lifecycle closure"
 status = "active"
 owner = "release-maintainer"
@@ -4602,9 +4602,9 @@ base_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
 depends_on = ["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
 decision_blockers = []
 blockers = []
-outcome = "Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history."
+outcome = "Record the historical Alpha.5 exact successful final candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history."
 acceptance = [
-  "Current state, project status, version train, plan, README, roadmap, support, package, and AIDE projections bind main 4683ecd9, dev 488994a8, shared tree c0793861, and run 33603385303 attempt 1.",
+  "Historical state, project status, version train, plan, README, roadmap, support, package, and AIDE projections retain main 4683ecd9, dev 488994a8, shared tree c0793861, and run 33603385303 attempt 1.",
   "The final receipt binds five successful jobs, four workflow artifacts, all fourteen durable files, the three stage digests, resource identity, provider locks, and custody hashes.",
   "Completed predecessor WorkUnits are no longer active, current views cannot select the older candidate, expired producer exceptions cannot become release-active, and the Alpha.3 distribution record is explicitly historical.",
   "Engineering and protected integration axes are true while human desktop, real Play, managed install, Linux/macOS human, signing, notarization, tagging, publication, and support axes remain false.",
@@ -4972,7 +4972,7 @@ lane = "verification_release"
 integration_status = "integrated"
 outcome = "Encode prospective local-first 0.1 terminal and WinForms/GTK3 completion, 0.2 acquisition, 0.3 local hosting and 0.4 AppKit graduation without changing current qualification or authority."
 acceptance = [
-  "Existing canonical scope, journey census, plan and generated views distinguish future obligations from current Alpha.5 qualification and the active workspace implementation.",
+  "Existing canonical scope, journey census, plan and generated views distinguish future obligations from historical Alpha.5 qualification, the current unqualified Alpha.6 allocation, and the active workspace implementation.",
   "Terminal-before-desktop checkpoints are explicit; plain 0.1.0 still requires WinForms and GTK3, while macOS terminal is required now and AppKit graduation is 0.4.",
   "Regression tests reject scope drift, scaffold-as-completion, missing cross-platform terminal requirements and implicit authority or package-selector activation.",
   "No source/package identity, historical evidence, protected merge delegation, provider promotion, laboratory effect, signing, publication or support claim is inherited or activated.",
