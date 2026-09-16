@@ -153,3 +153,7 @@ is related evidence only.
   `--ci-length-root` lifecycle mode, which controls the disposable root length,
   records the hosted and exercised UTF-16 lengths, and requires the compact
   provider payload path to remain below the Windows limit.
+- `tests/native/facman_self_maintenance_smoke.cpp` compiles the Windows
+  path-budget assertion only on Windows. Mapping, predecessor compatibility,
+  arbitrary-root refusal, identity, discovery and rollback regressions remain
+  enabled on every native target.

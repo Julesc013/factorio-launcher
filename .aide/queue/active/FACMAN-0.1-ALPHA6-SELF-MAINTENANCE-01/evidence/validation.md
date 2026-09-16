@@ -178,3 +178,18 @@ provider payload measured 205, below the 259-unit limit. The core regression
 also checks deterministic same-input mapping, distinct-generation mapping,
 full install IDs, exact side-by-side record mapping, legacy-root equivalence,
 and the resulting CI-length GUI path budget.
+
+## PR #299 hosted portability follow-up
+
+The compact-root successor initially supplied a Windows `C:/...` runner path
+to its native path-budget assertion on every platform. On Linux that path is
+relative, so `plan()` correctly refused it and the hosted Linux native and
+coverage jobs failed before product behavior ran. The Windows path-budget
+assertion is now compiled only on Windows; deterministic mapping, predecessor
+compatibility, arbitrary-root refusal, identity, discovery and rollback checks
+remain cross-platform.
+
+The existing external Debug root rebuilt
+`facman_self_maintenance_smoke`, and its focused CTest passed 1/1. Source
+formatting and `git diff --check` passed. Fresh hosted requalification of the
+successor commit remains pending.

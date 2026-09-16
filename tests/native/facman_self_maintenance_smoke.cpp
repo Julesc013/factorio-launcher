@@ -328,6 +328,7 @@ int main() {
                         reviewed_update.value().target.install_root,
                 "physical generation root was not deterministic and collision-resistant");
 
+#ifdef _WIN32
   auto ci_length = update;
   const fs::path ci_root = fs::path(
       "C:/Users/RUNNER~1/AppData/Local/Temp/facman-self-setup-oq9k_8n0");
@@ -350,6 +351,7 @@ int main() {
                     ci_plan.value().target.install_root.native().size() < 259U &&
                     ci_plan.value().target.gui.native().size() < 259U,
                 "CI-length logical root did not produce a provider-admissible target");
+#endif
   updated = facman::self_maintenance::execute(update, update_effects);
   if (!updated) std::cerr << "update error: " << updated.error().code << ": "
                           << updated.error().message << ": "
