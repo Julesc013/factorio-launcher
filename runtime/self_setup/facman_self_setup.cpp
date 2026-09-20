@@ -277,9 +277,13 @@ bool digest_or_empty(const std::string &value) {
 }
 
 struct SetupJournal {
+  // v1 journals predate install-scoped self setup. They remain readable as
+  // the historical facman.self identity and retain their original digest.
+  bool legacy_v1 = false;
   std::string operation_id;
   std::string intent_digest;
   std::string operation;
+  std::string install_id = "facman.self";
   std::string install_root;
   std::string install_root_identity;
   std::string product_version;
@@ -350,11 +354,11 @@ facman::core::Result<std::string> stable_file_digest(const fs::path &path) {
 
 fs::path journal_path(const fs::path &state_root, const std::string &operation,
                       const std::string &root_identity,
-                      const std::string &intent_digest) {
+                      const std::string &intent_digest, bool legacy_v1 = false) {
   return state_root / "setup-operations" /
       ("facman." + operation + "." + root_identity.substr(0, 32) +
        "." + intent_digest.substr(0, 32) +
-       ".setup-operation.v1.json");
+       ".setup-operation.v" + (legacy_v1 ? "1" : "2") + ".json");
 }
 
 struct ScopedSetupLock {
@@ -439,10 +443,14 @@ std::string journal_json(const SetupJournal &journal) {
   effects.add_string("shortcut", journal.shortcut);
   effects.add_string("registration", journal.registration);
   json::ObjectBuilder document;
-  document.add_string("schema", "facman.setup_operation_journal.v1");
+  document.add_string("schema", journal.legacy_v1
+      ? "facman.setup_operation_journal.v1"
+      : "facman.setup_operation_journal.v2");
   document.add_string("operation_id", journal.operation_id);
   document.add_string("intent_digest", journal.intent_digest);
   document.add_string("operation", journal.operation);
+  if (!journal.legacy_v1)
+    document.add_string("install_id", journal.install_id);
   document.add_string("install_root", journal.install_root);
   document.add_string("install_root_identity", journal.install_root_identity);
   document.add_string("product", "facman");
@@ -489,7 +497,13 @@ facman::core::Result<void> persist_journal(const fs::path &path,
 }
 
 std::string journal_intent_digest(const SetupJournal &journal) {
-  return digest_text(journal.operation + "\n" + journal.install_root_identity + "\n" +
+  if (journal.legacy_v1)
+    return digest_text(journal.operation + "\n" + journal.install_root_identity + "\n" +
+        journal.product_version + "\n" + journal.mode + "\n" +
+        journal.provider_source_digest + "\n" + journal.provider_state_root + "\n" +
+        journal.provider_acceptance_root);
+  return digest_text("facman.setup.intent.v2\n" + journal.install_id + "\n" +
+      journal.operation + "\n" + journal.install_root_identity + "\n" +
       journal.product_version + "\n" + journal.mode + "\n" +
       journal.provider_source_digest + "\n" + journal.provider_state_root + "\n" +
       journal.provider_acceptance_root);
@@ -500,7 +514,8 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path);
 std::string history_filename(const SetupJournal &journal) {
   const std::string identity = "facman.setup.history.v1\n" + journal.operation_id + "\n" +
       journal.intent_digest + "\n" + journal.install_root_identity + "\n" + journal.operation;
-  return "facman." + digest_text(identity) + ".setup-history.v1.json";
+  return "facman." + digest_text(identity) + ".setup-history.v" +
+      (journal.legacy_v1 ? "1" : "2") + ".json";
 }
 
 facman::core::Result<void> archive_journal(const fs::path &active_path,
@@ -541,13 +556,22 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
     return facman::core::Result<SetupJournal>::failure(
         error("self_setup_recovery_required", "setup operation journal changed while being read"));
   auto document = json::parse(bytes);
+  const bool v1 = document && document.value().is_object() &&
+      string_field(document.value(), "schema") == "facman.setup_operation_journal.v1";
+  const bool v2 = document && document.value().is_object() &&
+      string_field(document.value(), "schema") == "facman.setup_operation_journal.v2";
   if (!document ||
-      !exact_keys(document.value(),
-                  {"schema", "operation_id", "intent_digest", "operation",
-                   "install_root", "install_root_identity", "product",
-                   "product_version", "mode", "provider", "recovery", "effects", "state",
-                   "recovery_boundary", "last_error"}) ||
-      string_field(document.value(), "schema") != "facman.setup_operation_journal.v1" ||
+      !(v1
+            ? exact_keys(document.value(),
+                {"schema", "operation_id", "intent_digest", "operation",
+                 "install_root", "install_root_identity", "product",
+                 "product_version", "mode", "provider", "recovery", "effects", "state",
+                 "recovery_boundary", "last_error"})
+            : v2 && exact_keys(document.value(),
+                {"schema", "operation_id", "intent_digest", "operation", "install_id",
+                 "install_root", "install_root_identity", "product",
+                 "product_version", "mode", "provider", "recovery", "effects", "state",
+                 "recovery_boundary", "last_error"})) ||
       string_field(document.value(), "product") != "facman")
     return facman::core::Result<SetupJournal>::failure(
         error("self_setup_recovery_required", "setup operation journal has an invalid schema", facman::platform::path_to_utf8(path)));
@@ -563,9 +587,11 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
     return facman::core::Result<SetupJournal>::failure(
         error("self_setup_recovery_required", "setup operation journal has invalid nested fields", facman::platform::path_to_utf8(path)));
   SetupJournal journal;
+  journal.legacy_v1 = v1;
   journal.operation_id = string_field(document.value(), "operation_id");
   journal.intent_digest = string_field(document.value(), "intent_digest");
   journal.operation = string_field(document.value(), "operation");
+  journal.install_id = v1 ? "facman.self" : string_field(document.value(), "install_id");
   journal.install_root = string_field(document.value(), "install_root");
   journal.install_root_identity = string_field(document.value(), "install_root_identity");
   journal.product_version = string_field(document.value(), "product_version");
@@ -595,7 +621,8 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
   journal.state = string_field(document.value(), "state");
   journal.recovery_boundary = string_field(document.value(), "recovery_boundary");
   journal.last_error = string_field(document.value(), "last_error");
-  if (!bounded_identifier(journal.operation_id) || !digest_or_empty(journal.intent_digest) ||
+  if (!bounded_identifier(journal.operation_id) || !bounded_identifier(journal.install_id) ||
+      !digest_or_empty(journal.intent_digest) ||
       journal.intent_digest.empty() || !bounded_identifier(journal.provider_request_id) ||
       !bounded_identifier(journal.provider_plan_id) || !bounded_identifier(journal.provider_transaction_id) ||
       journal.install_root_identity.size() != 64U ||
@@ -719,12 +746,16 @@ facman::core::Result<std::optional<DiscoveredJournal>> discover_root_journal(
        iterator.increment(status)) {
     const fs::path candidate = iterator->path();
     const std::string name = candidate.filename().string();
-    if (name.find("facman.") != 0 ||
-        name.find(marker) == std::string::npos ||
-        name.size() < std::string(".setup-operation.v1.json").size() ||
+    const bool v1_name = name.size() >= std::string(".setup-operation.v1.json").size() &&
         name.compare(name.size() - std::string(".setup-operation.v1.json").size(),
                      std::string(".setup-operation.v1.json").size(),
-                      ".setup-operation.v1.json") != 0)
+                     ".setup-operation.v1.json") == 0;
+    const bool v2_name = name.size() >= std::string(".setup-operation.v2.json").size() &&
+        name.compare(name.size() - std::string(".setup-operation.v2.json").size(),
+                     std::string(".setup-operation.v2.json").size(),
+                     ".setup-operation.v2.json") == 0;
+    if (name.find("facman.") != 0 || name.find(marker) == std::string::npos ||
+        (!v1_name && !v2_name))
       continue;
     if (++entries > maximum_entries)
       return facman::core::Result<std::optional<DiscoveredJournal>>::failure(error(
@@ -734,7 +765,8 @@ facman::core::Result<std::optional<DiscoveredJournal>> discover_root_journal(
     if (journal.value().install_root_identity != root_identity)
       continue;
     const fs::path expected = journal_path(coordinator_root, journal.value().operation,
-                                           root_identity, journal.value().intent_digest);
+                                           root_identity, journal.value().intent_digest,
+                                           journal.value().legacy_v1);
     if (candidate.filename() != expected.filename())
       return facman::core::Result<std::optional<DiscoveredJournal>>::failure(error(
           "self_setup_recovery_required", "setup coordinator journal filename does not bind its intent",
@@ -875,7 +907,8 @@ struct ProviderPlanIdentity {
   std::string digest;
 };
 
-facman::core::Result<ProviderPlanIdentity> plan_identity(const std::string &response) {
+facman::core::Result<ProviderPlanIdentity> plan_identity(
+    const std::string &response, const std::string *expected_install_id = nullptr) {
   auto document = json::parse(response);
   if (!document || !document.value().is_object() ||
       string_field(document.value(), "status") != "ok") {
@@ -888,7 +921,19 @@ facman::core::Result<ProviderPlanIdentity> plan_identity(const std::string &resp
       ? string_field(*payload, "plan_digest") : std::string();
   const std::string plan_id = payload != nullptr && payload->is_object()
       ? string_field(*payload, "plan_id") : std::string();
-  if (digest.size() != 64 || !digest_or_empty(digest) || !bounded_identifier(plan_id)) {
+  bool install_identity_matches = expected_install_id == nullptr;
+  if (expected_install_id != nullptr && payload != nullptr && payload->is_object()) {
+    if (string_field(*payload, "schema") == "usk.install_plan.v1") {
+      const json::Value *source = payload->find("source");
+      install_identity_matches = source != nullptr && source->is_object() &&
+          string_field(*source, "source_id") == "source." + *expected_install_id;
+    } else {
+      install_identity_matches =
+          string_field(*payload, "install_id") == *expected_install_id;
+    }
+  }
+  if (digest.size() != 64 || !digest_or_empty(digest) || !bounded_identifier(plan_id) ||
+      !install_identity_matches) {
     return facman::core::Result<ProviderPlanIdentity>::failure(
         error("self_setup_response_invalid",
               "Universal Setup plan has no valid identity", response));
@@ -977,7 +1022,7 @@ install_plan(const Request &request, const fs::path &package,
   plan.add_string("schema", "usk.install_local_plan_request.v1");
   plan.add_string("request_id", request_id);
   plan.add_string("created_at", created_at);
-  plan.add_string("install_id", "facman.self");
+  plan.add_string("install_id", request.install_id);
   plan.add_object("archive", archive(package, source_digest, true));
   plan.add_object("target", target);
   plan.add_object("recipe", recipe);
@@ -1063,7 +1108,7 @@ install_or_repair(const Request &request, const fs::path &package,
     plan.add_string("schema", "usk.repair_plan_request.v1");
     plan.add_string("request_id", request_id);
     plan.add_string("plan_id", plan_id);
-    plan.add_string("install_id", "facman.self");
+    plan.add_string("install_id", request.install_id);
     plan.add_string("created_at", created_at);
     plan.add_object("archive", archive(package, source_digest, false));
     plan_command = "repair.plan";
@@ -1091,7 +1136,7 @@ install_or_repair(const Request &request, const fs::path &package,
         {request.operation == Operation::install ? "install" : "repair", "plan",
          planned.take_value(), {}});
   }
-  auto reviewed = plan_identity(planned.value());
+  auto reviewed = plan_identity(planned.value(), &request.install_id);
   if (!reviewed)
     return facman::core::Result<Response>::failure(reviewed.error());
   if (identity != nullptr) {
@@ -1147,12 +1192,13 @@ install_or_repair(const Request &request, const fs::path &package,
        "receipt", applied.take_value(), {}});
 }
 
-facman::core::Result<Response> verify(const fs::path &state_root,
+facman::core::Result<Response> verify(const Request &request,
+                                      const fs::path &state_root,
                                       const fs::path &acceptance_root) {
   json::ObjectBuilder payload;
   payload.add_string("schema", "usk.installed_verify_request.v1");
   payload.add_string("request_id", identifier("request.facman.verify"));
-  payload.add_string("install_id", "facman.self");
+  payload.add_string("install_id", request.install_id);
   payload.add_string("report_id", identifier("report.facman.verify"));
   payload.add_string("verified_at", timestamp());
   auto response = command("installed.verify", payload.serialize(), state_root,
@@ -1169,7 +1215,7 @@ facman::core::Result<std::string> inspect_installed_source(
   json::ObjectBuilder inspection;
   inspection.add_string("schema", "usk.installed_inspect_request.v1");
   inspection.add_string("request_id", request_id + ".installed");
-  inspection.add_string("install_id", "facman.self");
+  inspection.add_string("install_id", request.install_id);
   auto response = command("installed.inspect", inspection.serialize(),
                           state_root, acceptance_root, true);
   if (!response) return facman::core::Result<std::string>::failure(response.error());
@@ -1194,7 +1240,7 @@ facman::core::Result<std::string> inspect_installed_source(
       setup_abi == nullptr || !setup_abi->is_object() ||
       !exact_keys(*setup_abi, {"major", "minor", "provider_revision"}) ||
       string_field(*payload, "schema") != "usk.installed_state.v1" ||
-      string_field(*payload, "install_id") != "facman.self" ||
+      string_field(*payload, "install_id") != request.install_id ||
       string_field(*payload, "product_id") != "facman" ||
       string_field(*payload, "product_version") != request.product_version ||
       !one_of(string_field(*payload, "lifecycle_status"), {"installed", "verified"}) ||
@@ -1236,7 +1282,7 @@ facman::core::Result<Response> uninstall(const Request &request,
   plan.add_string("schema", "usk.uninstall_plan_request.v1");
   plan.add_string("request_id", identity == nullptr ? identifier("request.facman.uninstall") : identity->provider_request_id);
   plan.add_string("plan_id", plan_id);
-  plan.add_string("install_id", "facman.self");
+  plan.add_string("install_id", request.install_id);
   plan.add_string("created_at", created_at);
   auto inspected_source = inspect_installed_source(
       request, state_root, acceptance_root,
@@ -1262,7 +1308,7 @@ facman::core::Result<Response> uninstall(const Request &request,
     return facman::core::Result<Response>::success(
         {"uninstall", "plan", planned.take_value(), {}});
   }
-  auto reviewed = plan_identity(planned.value());
+  auto reviewed = plan_identity(planned.value(), &request.install_id);
   if (!reviewed)
     return facman::core::Result<Response>::failure(reviewed.error());
   if (identity != nullptr) {
@@ -1277,7 +1323,7 @@ facman::core::Result<Response> uninstall(const Request &request,
         string_field(*payload, "schema") != "usk.operation_plan.v1" ||
         string_field(*payload, "operation") != "uninstall" ||
         string_field(*payload, "status") != "planned" ||
-        string_field(*payload, "install_id") != "facman.self" ||
+        string_field(*payload, "install_id") != request.install_id ||
         input_identity == nullptr || !input_identity->is_object() ||
         string_field(*input_identity, "provider_revision") != provider_revision() ||
         installed_source.size() != 64U || !digest_or_empty(installed_source) ||
@@ -1381,7 +1427,7 @@ facman::core::Result<Response> review_provider_rollback(
   json::ObjectBuilder inspection;
   inspection.add_string("schema", "usk.recovery_inspect_request.v1");
   inspection.add_string("request_id", "recovery.inspect." + journal.operation_id);
-  inspection.add_string("install_id", "facman.self");
+  inspection.add_string("install_id", journal.install_id);
   inspection.add_string("transaction_id", journal.provider_transaction_id);
   inspection.add_string("plan_id", journal.provider_plan_id);
   inspection.add_string("plan_digest", journal.provider_plan_digest);
@@ -1438,7 +1484,7 @@ facman::core::Result<void> apply_reviewed_provider_rollback(
   json::ObjectBuilder inspection;
   inspection.add_string("schema", "usk.recovery_inspect_request.v1");
   inspection.add_string("request_id", "recovery.inspect." + journal.operation_id);
-  inspection.add_string("install_id", "facman.self");
+  inspection.add_string("install_id", journal.install_id);
   inspection.add_string("transaction_id", journal.provider_transaction_id);
   inspection.add_string("plan_id", journal.provider_plan_id);
   inspection.add_string("plan_digest", journal.provider_plan_digest);
@@ -1491,12 +1537,15 @@ facman::core::Result<void> apply_reviewed_provider_rollback(
 
 facman::core::Result<Response> execute(const Request &request) {
   ScopedProviderEffects provider_scope(request.provider_effects);
+  if (!bounded_identifier(request.install_id))
+    return facman::core::Result<Response>::failure(error(
+        "self_setup_install_id_invalid", "The setup install identity is invalid"));
   if (request.operation == Operation::verify) {
     auto state = absolute_path(request.state_root, "state root");
     auto acceptance = absolute_path(request.acceptance_root, "acceptance root");
     if (!state || !acceptance)
       return facman::core::Result<Response>::failure(!state ? state.error() : acceptance.error());
-    return verify(state.value(), acceptance.value());
+    return verify(request, state.value(), acceptance.value());
   }
   auto install = canonical_install_root(request.install_root);
   auto install_target = absolute_path(request.install_root, "install root");
@@ -1594,6 +1643,7 @@ facman::core::Result<Response> execute(const Request &request) {
     active.state_root = old_state.take_value();
     active.acceptance_root = old_acceptance.take_value();
     active.product_version = journal.product_version;
+    active.install_id = journal.install_id;
     active.operation = journal.operation == "install" ? Operation::install :
                        journal.operation == "repair" ? Operation::repair : Operation::uninstall;
     // Native authority is part of the durable intent. A later caller cannot
@@ -1669,7 +1719,8 @@ facman::core::Result<Response> execute(const Request &request) {
     operation = operation_name(active.operation);
     mode = active.native_effects == nullptr ? "portable" : "installed";
     SetupJournal intended;
-    intended.operation = operation; intended.install_root_identity = root_identity;
+    intended.operation = operation; intended.install_id = active.install_id;
+    intended.install_root_identity = root_identity;
     intended.product_version = active.product_version; intended.mode = mode;
     intended.provider_source_digest = source_digest;
     intended.provider_state_root = facman::platform::path_to_utf8(active.state_root);
@@ -1756,6 +1807,7 @@ facman::core::Result<Response> execute(const Request &request) {
     journal.operation_id = operation_id;
     journal.intent_digest = intent_digest;
     journal.operation = operation;
+    journal.install_id = active.install_id;
     journal.install_root = root_text;
     journal.install_root_identity = root_identity;
     journal.product_version = active.product_version;

@@ -133,6 +133,10 @@ public:
 
 struct Request {
   Operation operation = Operation::verify;
+  // Identifies the exact Universal Setup installation this operation owns.
+  // The historical FacMan self-install remains the default for callers that
+  // do not yet select a generation-specific identity.
+  std::string install_id = "facman.self";
   std::filesystem::path package;
   std::filesystem::path maintenance_launcher;
   std::filesystem::path install_root;

@@ -44,6 +44,18 @@ std::string nested_string_member(const std::string &payload,
       ? value->string_value().value() : std::string();
 }
 
+std::string payload_install_id(const std::string &payload) {
+  auto document = json::parse(payload);
+  if (!document || !document.value().is_object()) return {};
+  const std::string direct = string_member(payload, "install_id");
+  if (!direct.empty()) return direct;
+  const json::Value *plan = document.value().find("plan_request");
+  const json::Value *install_id = plan != nullptr && plan->is_object()
+      ? plan->find("install_id") : nullptr;
+  return install_id != nullptr && install_id->string_value()
+      ? install_id->string_value().value() : std::string();
+}
+
 std::string sha256_text(const std::string &value) {
   return facman::base::sha256_hex_bytes(
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
@@ -71,6 +83,8 @@ struct Provider final : setup::ProviderEffects {
   bool apply_entered = false;
   bool release_apply = false;
   bool installed_envelope_valid = true;
+  bool installed_identity_mismatch = false;
+  bool plan_identity_mismatch = false;
   std::string installed_lifecycle_status = "installed";
   std::string installed_source_digest = std::string(64, 'd');
   std::string plan_source_digest = std::string(64, 'd');
@@ -79,10 +93,14 @@ struct Provider final : setup::ProviderEffects {
   std::string last_transaction_id;
   fs::path recovery_state_root;
   std::vector<std::string> apply_transaction_ids;
+  std::vector<std::pair<std::string, std::string>> command_install_ids;
   std::vector<std::string> *events = nullptr;
   fs::path test_coordinator_root() const override { return coordinator_root; }
   facman::core::Result<std::string> command(const std::string &name,
       const std::string &payload, const fs::path &state_root, const fs::path &, bool) override {
+    const std::string requested_install_id = payload_install_id(payload);
+    if (!requested_install_id.empty())
+      command_install_ids.emplace_back(name, requested_install_id);
     if (name == "installed.inspect") {
       json::ArrayBuilder components;
       components.add_string("facman.product");
@@ -101,7 +119,8 @@ struct Provider final : setup::ProviderEffects {
       installed.add_array("component_selection", components);
       installed.add_string("created_at", "2026-09-15T00:00:00Z");
       installed.add_array("entrypoints", entrypoints);
-      installed.add_string("install_id", "facman.self");
+      installed.add_string("install_id", installed_identity_mismatch
+          ? "facman.self.mismatched" : requested_install_id);
       installed.add_object("last_verification", verification);
       installed.add_string("lifecycle_status", installed_lifecycle_status);
       installed.add_string("ownership_manifest_digest", std::string(64, '2'));
@@ -129,12 +148,21 @@ struct Provider final : setup::ProviderEffects {
       if (fail_plan) return facman::core::Result<std::string>::failure({"plan_refused", "injected pre-apply refusal", ""});
       const std::string id = name == "install_local.plan" ? string_member(payload, "request_id") :
           string_member(payload, "plan_id");
+      const std::string response_install_id = plan_identity_mismatch
+          ? std::string("facman.self.mismatched") : requested_install_id;
+      if (name == "install_local.plan")
+        return facman::core::Result<std::string>::success(
+            "{\"status\":\"ok\",\"payload\":{\"schema\":\"usk.install_plan.v1\","
+            "\"status\":\"planned\",\"source\":{\"source_id\":\"source." +
+            response_install_id + "\"},\"plan_id\":\"" + id +
+            "\",\"plan_digest\":\"" + std::string(64, 'a') + "\"}}");
       return facman::core::Result<std::string>::success(
           "{\"status\":\"ok\",\"payload\":{\"schema\":\"usk.operation_plan.v1\","
           "\"operation\":\"" +
           (name == "uninstall.plan" ? std::string("uninstall") :
            name == "repair.plan" ? std::string("repair") : std::string("install")) +
-          "\",\"status\":\"planned\",\"install_id\":\"facman.self\",\"plan_id\":\"" + id +
+          "\",\"status\":\"planned\",\"install_id\":\"" +
+          response_install_id + "\",\"plan_id\":\"" + id +
           "\",\"plan_digest\":\"" + std::string(64, 'a') +
           "\",\"input_identity\":{\"source_digest\":\"" +
           plan_source_digest + "\",\"provider_revision\":\"" +
@@ -162,6 +190,7 @@ struct Provider final : setup::ProviderEffects {
     if (name == "recovery.inspect") {
       recovery_state_root = state_root;
       recovery_identity_valid = string_member(payload, "schema") == "usk.recovery_inspect_request.v1" &&
+          !string_member(payload, "install_id").empty() &&
           !string_member(payload, "transaction_id").empty() &&
           !string_member(payload, "plan_id").empty() && string_member(payload, "plan_digest").size() == 64;
       return facman::core::Result<std::string>::success(
@@ -274,7 +303,16 @@ struct InterruptAt final : setup::DurableBoundaryHook {
 
 struct Tree { fs::path root; ~Tree() { std::error_code ignored; fs::remove_all(root, ignored); } };
 
+fs::path active_journal_path(const Tree &tree);
+
 std::string active_journal(const Tree &tree) {
+  const fs::path path = active_journal_path(tree);
+  if (path.empty()) return {};
+  std::ifstream input(path, std::ios::binary);
+  return {std::istreambuf_iterator<char>(input), {}};
+}
+
+fs::path active_journal_path(const Tree &tree) {
   const fs::path directory = tree.root / "coordinator" / "setup-operations";
   std::vector<fs::path> candidates;
   std::error_code status;
@@ -283,9 +321,7 @@ std::string active_journal(const Tree &tree) {
     if (iterator->is_regular_file(status) && !status)
       candidates.push_back(iterator->path());
   }
-  if (status || candidates.size() != 1U) return {};
-  std::ifstream input(candidates.front(), std::ios::binary);
-  return {std::istreambuf_iterator<char>(input), {}};
+  return status || candidates.size() != 1U ? fs::path{} : candidates.front();
 }
 
 setup::Request request_for(const Tree &tree, Provider &provider, Native *native,
@@ -535,7 +571,7 @@ void cases() {
   const std::string hosted_operation = string_member(hosted_archive_json, "operation");
   const std::string expected_hosted_history = "facman." + sha256_text(
       "facman.setup.history.v1\n" + hosted_operation_id + "\n" + hosted_intent_digest + "\n" +
-      hosted_root_identity + "\n" + hosted_operation) + ".setup-history.v1.json";
+      hosted_root_identity + "\n" + hosted_operation) + ".setup-history.v2.json";
   require(hosted_operation == "install" && string_member(hosted_archive_json, "state") == "completed" &&
               hosted_archives.front().filename().string() == expected_hosted_history &&
               expected_hosted_history.size() <= 96U,
@@ -662,6 +698,76 @@ void cases() {
   auto substituted_result = setup::execute(request_for(adapter, adapter_provider, &substituted));
   require(!substituted_result && substituted_result.error().code == "self_setup_recovery_required",
           "adapter mutation-edge substitution propagates recovery_required");
+  Tree dynamic_uninstall{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-dynamic-id"};
+  fs::remove_all(dynamic_uninstall.root, ignored); fs::create_directories(dynamic_uninstall.root);
+  Provider dynamic_provider; Native dynamic_native;
+  dynamic_native.state = {setup::NativeOwnership::owned, setup::NativeOwnership::owned};
+  auto dynamic_request = request_for(
+      dynamic_uninstall, dynamic_provider, &dynamic_native, setup::Operation::uninstall);
+  dynamic_request.install_id = "facman.self.generation.dynamic";
+  require(setup::execute(dynamic_request) &&
+              string_member(active_journal(dynamic_uninstall), "schema") ==
+                  "facman.setup_operation_journal.v2" &&
+              string_member(active_journal(dynamic_uninstall), "install_id") ==
+                  dynamic_request.install_id &&
+              dynamic_provider.command_install_ids ==
+                  std::vector<std::pair<std::string, std::string>>{
+                      {"installed.inspect", dynamic_request.install_id},
+                      {"uninstall.plan", dynamic_request.install_id},
+                      {"uninstall.apply", dynamic_request.install_id}},
+          "dynamic install identity reaches inspection, uninstall planning and apply");
+  Tree identity_mismatch{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-identity-mismatch"};
+  fs::remove_all(identity_mismatch.root, ignored); fs::create_directories(identity_mismatch.root);
+  Provider identity_mismatch_provider; Native identity_mismatch_native;
+  identity_mismatch_provider.installed_identity_mismatch = true;
+  auto identity_mismatch_request = request_for(
+      identity_mismatch, identity_mismatch_provider, &identity_mismatch_native,
+      setup::Operation::uninstall);
+  identity_mismatch_request.install_id = "facman.self.generation.expected";
+  auto identity_mismatch_result = setup::execute(identity_mismatch_request);
+  require(!identity_mismatch_result &&
+              identity_mismatch_result.error().code == "self_setup_response_invalid" &&
+              identity_mismatch_provider.apply_calls == 0 &&
+              string_member(active_journal(identity_mismatch), "state") == "abandoned",
+          "installed inspection response identity must match the exact request install id");
+  Tree plan_identity_mismatch{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-plan-identity-mismatch"};
+  fs::remove_all(plan_identity_mismatch.root, ignored); fs::create_directories(plan_identity_mismatch.root);
+  std::ofstream(plan_identity_mismatch.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider plan_identity_mismatch_provider; Native plan_identity_mismatch_native;
+  plan_identity_mismatch_provider.plan_identity_mismatch = true;
+  auto plan_identity_mismatch_request = request_for(
+      plan_identity_mismatch, plan_identity_mismatch_provider, &plan_identity_mismatch_native);
+  plan_identity_mismatch_request.install_id = "facman.self.generation.plan-expected";
+  auto plan_identity_mismatch_result = setup::execute(plan_identity_mismatch_request);
+  require(!plan_identity_mismatch_result &&
+              plan_identity_mismatch_result.error().code == "self_setup_response_invalid" &&
+              plan_identity_mismatch_provider.apply_calls == 0 &&
+              string_member(active_journal(plan_identity_mismatch), "state") == "abandoned",
+          "provider plan response identity must match the exact request install id");
+  Tree dynamic_recovery{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-dynamic-recovery-id"};
+  fs::remove_all(dynamic_recovery.root, ignored); fs::create_directories(dynamic_recovery.root);
+  std::ofstream(dynamic_recovery.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider dynamic_recovery_provider; Native dynamic_recovery_native;
+  dynamic_recovery_provider.lose_apply_receipt = true;
+  dynamic_recovery_provider.rollback_available = true;
+  auto dynamic_recovery_request = request_for(
+      dynamic_recovery, dynamic_recovery_provider, &dynamic_recovery_native);
+  dynamic_recovery_request.install_id = "facman.self.generation.recovery";
+  require(!setup::execute(dynamic_recovery_request),
+          "dynamic install receipt loss leaves a recoverable journal");
+  dynamic_recovery_provider.lose_apply_receipt = false;
+  auto dynamic_recovery_preview = request_for(
+      dynamic_recovery, dynamic_recovery_provider, &dynamic_recovery_native,
+      setup::Operation::repair);
+  dynamic_recovery_preview.install_id = "facman.self.generation.wrong-caller";
+  dynamic_recovery_preview.apply = false;
+  auto dynamic_recovery_result = setup::execute(dynamic_recovery_preview);
+  require(dynamic_recovery_result && dynamic_recovery_result.value().phase == "recovery_plan" &&
+              !dynamic_recovery_provider.command_install_ids.empty() &&
+              dynamic_recovery_provider.command_install_ids.back() ==
+                  std::pair<std::string, std::string>{
+                      "recovery.inspect", dynamic_recovery_request.install_id},
+          "recovery restores the journal-bound dynamic install identity");
   Tree removal{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-uninstall"};
   fs::remove_all(removal.root, ignored); fs::create_directories(removal.root);
   Provider removal_provider;
@@ -753,6 +859,53 @@ void cases() {
   auto generic_retry = setup::execute(generic_request);
   require(!generic_retry && generic_retry.error().code == "self_setup_recovery_preview_required",
           "generic refusal cannot bypass reviewed recovery");
+  Tree legacy_journal{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-legacy-journal"};
+  fs::remove_all(legacy_journal.root, ignored); fs::create_directories(legacy_journal.root);
+  std::ofstream(legacy_journal.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider legacy_provider; Native legacy_native;
+  InterruptAt legacy_after_plan(setup::DurableBoundary::provider_plan_reviewed);
+  auto legacy_request = request_for(legacy_journal, legacy_provider, &legacy_native);
+  legacy_request.durable_boundary_hook = &legacy_after_plan;
+  require(!setup::execute(legacy_request), "v2 fixture journal reaches provider plan boundary");
+  const fs::path v2_legacy_path = active_journal_path(legacy_journal);
+  const std::string v2_legacy_json = active_journal(legacy_journal);
+  const std::string legacy_intent = sha256_text(
+      string_member(v2_legacy_json, "operation") + "\n" +
+      string_member(v2_legacy_json, "install_root_identity") + "\n" +
+      string_member(v2_legacy_json, "product_version") + "\n" +
+      string_member(v2_legacy_json, "mode") + "\n" +
+      nested_string_member(v2_legacy_json, "provider", "source_digest") + "\n" +
+      nested_string_member(v2_legacy_json, "provider", "state_root") + "\n" +
+      nested_string_member(v2_legacy_json, "provider", "acceptance_root"));
+  std::string v1_legacy_json = v2_legacy_json;
+  const auto replace_once = [](std::string &value, const std::string &from,
+                               const std::string &to) {
+    const std::size_t offset = value.find(from);
+    if (offset == std::string::npos) return false;
+    value.replace(offset, from.size(), to);
+    return true;
+  };
+  const std::string v2_intent = string_member(v2_legacy_json, "intent_digest");
+  require(replace_once(v1_legacy_json, "facman.setup_operation_journal.v2",
+                       "facman.setup_operation_journal.v1") &&
+              replace_once(v1_legacy_json,
+                           "\"intent_digest\":\"" + v2_intent + "\"",
+                           "\"intent_digest\":\"" + legacy_intent + "\"") &&
+              replace_once(v1_legacy_json, ",\"install_id\":\"facman.self\"", ""),
+          "legacy fixture conversion preserves the v1 journal shape");
+  const std::string legacy_root_identity =
+      string_member(v2_legacy_json, "install_root_identity");
+  const fs::path v1_legacy_path = v2_legacy_path.parent_path() /
+      ("facman.install." + legacy_root_identity.substr(0, 32) + "." +
+       legacy_intent.substr(0, 32) + ".setup-operation.v1.json");
+  { std::ofstream output(v2_legacy_path, std::ios::binary | std::ios::trunc); output << v1_legacy_json; }
+  fs::rename(v2_legacy_path, v1_legacy_path, ignored);
+  require(!ignored && setup::execute(request_for(legacy_journal, legacy_provider, &legacy_native)) &&
+              string_member(active_journal(legacy_journal), "schema") ==
+                  "facman.setup_operation_journal.v1" &&
+              legacy_provider.command_install_ids.back() ==
+                  std::pair<std::string, std::string>{"install_local.apply", "facman.self"},
+          "legacy v1 journals resume with the implicit facman.self identity and old digest");
   Tree portable{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-portable"};
   fs::remove_all(portable.root, ignored); fs::create_directories(portable.root);
   std::ofstream(portable.root / "payload.zip", std::ios::binary) << "fixture";
