@@ -5,6 +5,7 @@
 #include "fl_system_services.h"
 #include "fl_user_paths.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -67,6 +68,19 @@ int main()
         fs::current_path(original_cwd, error);
         if (error) return 49;
         if (!bounded_status.ok()) return 33;
+        std::vector<fs::path> bounded_names;
+        const auto enumerated = bounded.list_child_names_bounded(8U, bounded_names);
+        if (!enumerated.ok() || std::find(bounded_names.begin(), bounded_names.end(), fs::path("published.txt")) ==
+                bounded_names.end()) {
+            std::cerr << "bounded enumeration: " << enumerated.code << ' ';
+            for (const auto& name : bounded_names) std::cerr << name.string() << ',';
+            std::cerr << '\n';
+            return 58;
+        }
+        std::vector<fs::path> bounded_names_again;
+        if (!bounded.list_child_names_bounded(8U, bounded_names_again).ok() ||
+            bounded_names_again != bounded_names) return 58;
+        if (reopened_bounded.list_child_names_bounded(0U, bounded_names).ok() || !bounded_names.empty()) return 58;
         bounded_status = bounded.flush_metadata();
         if (!bounded_status.ok()) return 33;
         std::ifstream decoy_input(decoy_cwd / "published.txt", std::ios::binary);

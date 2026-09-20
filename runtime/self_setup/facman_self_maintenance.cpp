@@ -1298,6 +1298,340 @@ facman::core::Result<LifecycleEpoch> parse_lifecycle_manifest(
   return facman::core::Result<LifecycleEpoch>::success(std::move(epoch));
 }
 
+constexpr std::size_t kMaximumEpochGenesisRecordBytes = 64U * 1024U;
+
+std::string epoch_physical_generation_root_identity(const fs::path &logical_root,
+                                                     const std::string &epoch_id,
+                                                     const std::string &generation_id) {
+  return hash("facman.self.physical-generation-root.v2\n" +
+      logical_root_identity(logical_root) + "\n" + epoch_id + "\n" + generation_id + "\n");
+}
+
+fs::path epoch_generation_install_root(const fs::path &logical_root,
+                                       const std::string &epoch_id,
+                                       const std::string &generation_id) {
+  return logical_root.parent_path() / facman::platform::path_from_utf8(
+      "FacMan.generation." + epoch_physical_generation_root_identity(
+          logical_root, epoch_id, generation_id));
+}
+
+std::string epoch_generation_bytes(const LifecycleEpoch &epoch,
+                                   const Generation &generation) {
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_generation.v2");
+  object.add_string("product_id", "facman");
+  object.add_string("epoch_id", epoch.epoch_id);
+  object.add_string("generation_id", generation.generation_id);
+  object.add_string("product_version", generation.product_version);
+  object.add_string("package_sha256", generation.package_sha256);
+  object.add_string("facman_source_revision", generation.facman_source_revision);
+  object.add_string("universal_setup_revision", generation.universal_setup_revision);
+  object.add_string("install_id", generation.install_id);
+  object.add_string("install_root", facman::platform::path_to_utf8(generation.install_root));
+  object.add_string("logical_root", facman::platform::path_to_utf8(generation.logical_root));
+  object.add_string("state_root", facman::platform::path_to_utf8(generation.state_root));
+  object.add_string("acceptance_root", facman::platform::path_to_utf8(generation.acceptance_root));
+  object.add_string("gui", facman::platform::path_to_utf8(generation.gui));
+  object.add_string("maintenance_launcher", facman::platform::path_to_utf8(generation.maintenance_launcher));
+  return object.serialize() + "\n";
+}
+
+std::string epoch_activation_bytes(const LifecycleEpoch &epoch,
+                                   const Generation &generation,
+                                   const std::string &generation_sha256) {
+  json::ObjectBuilder previous;
+  previous.add_string("name", "");
+  previous.add_string("sha256", "");
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_activation.v2");
+  object.add_string("product_id", "facman");
+  object.add_string("epoch_id", epoch.epoch_id);
+  object.add_string("operation", "genesis");
+  object.add_string("operation_id", "epoch.genesis." + generation.generation_id);
+  object.add_string("generation_id", generation.generation_id);
+  object.add_string("generation_record_sha256", generation_sha256);
+  object.add_object("previous", previous);
+  return object.serialize() + "\n";
+}
+
+std::string epoch_generation_name(const std::string &generation_id) {
+  return "generation." + generation_id + ".v2.json";
+}
+
+std::string epoch_activation_name(const std::string &generation_id) {
+  return "activation.epoch.genesis." + generation_id + ".v2.json";
+}
+
+facman::core::Result<std::string> read_epoch_relative_bounded(
+    const facman::platform::StableDirectoryObject &parent,
+    const fs::path &leaf, std::size_t maximum_size) {
+  facman::platform::StableInputFile first;
+  const auto opened = parent.open_child_file_no_follow_pinned(leaf, first);
+  if (!opened.ok() || first.size() == 0 || first.size() > maximum_size)
+    return facman::core::Result<std::string>::failure(epoch_recovery(
+        "epoch record is missing, unsafe, or over its byte limit", opened.detail));
+  std::string bytes(static_cast<std::size_t>(first.size()), '\0');
+  if (first.read_at(0, bytes.data(), bytes.size()) != bytes.size() || !first.revalidate().ok())
+    return facman::core::Result<std::string>::failure(epoch_recovery(
+        "epoch record changed while it was read"));
+  facman::platform::StableInputFile reopened;
+  if (!parent.open_child_file_no_follow_pinned(leaf, reopened).ok() ||
+      !first.identity().unchanged(reopened.identity()) || !reopened.revalidate().ok() ||
+      !parent.revalidate().ok())
+    return facman::core::Result<std::string>::failure(epoch_recovery(
+        "epoch record named identity changed while it was read"));
+  return facman::core::Result<std::string>::success(std::move(bytes));
+}
+
+struct PinnedLifecycleEpochScope {
+  facman::platform::StableDirectoryObject coordinator;
+  facman::platform::StableDirectoryObject epochs;
+  facman::platform::StableDirectoryObject epoch;
+
+  facman::core::Result<void> open(const fs::path &root, const std::string &epoch_id,
+                                  bool write_capable = false) {
+    auto opened_root = write_capable ? coordinator.open_no_follow_for_relative_writes(root)
+                                     : coordinator.open_no_follow(root);
+    if (!opened_root.ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch directory could not be opened from its held ancestors", opened_root.detail));
+    auto opened_epochs = write_capable
+        ? coordinator.open_child_directory_no_follow_for_relative_writes("epochs", epochs)
+        : coordinator.open_child_directory_no_follow("epochs", epochs);
+    if (!opened_epochs.ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch directory could not be opened from its held ancestors", opened_epochs.detail));
+    auto opened_epoch = write_capable
+        ? epochs.open_child_directory_no_follow_for_relative_writes(epoch_id, epoch)
+        : epochs.open_child_directory_no_follow(epoch_id, epoch);
+    if (!opened_epoch.ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch directory could not be opened from its held ancestors", opened_epoch.detail));
+    auto bytes = read("epoch.v1.json");
+    auto parsed = bytes ? parse_lifecycle_manifest(bytes.value(), epoch_id)
+                        : facman::core::Result<LifecycleEpoch>::failure(bytes.error());
+    if (!parsed) return facman::core::Result<void>::failure(parsed.error());
+    return facman::core::Result<void>::success();
+  }
+
+  facman::core::Result<std::string> read(const fs::path &leaf) const {
+    auto bytes = read_epoch_relative_bounded(epoch, leaf, kMaximumEpochGenesisRecordBytes);
+    if (!bytes || !epoch.revalidate().ok() || !epochs.revalidate().ok() || !coordinator.revalidate().ok())
+      return facman::core::Result<std::string>::failure(epoch_recovery(
+          "epoch record named identity changed while it was read"));
+    return bytes;
+  }
+};
+
+bool exact_epoch_generation_paths(const LifecycleEpoch &epoch,
+                                  const Generation &generation) {
+  const fs::path root = epoch_generation_install_root(
+      epoch.logical_root, epoch.epoch_id, generation.generation_id);
+  return generation.install_id == "facman.self.epoch." + epoch.epoch_id +
+          ".generation." + generation.generation_id &&
+      same_path(generation.install_root, root) &&
+      same_path(generation.gui, root / "generations" / generation.product_version / "FacMan.exe") &&
+      same_path(generation.maintenance_launcher, root / "maintenance" / "FacManSetup.exe") &&
+      same_path(generation.logical_root, epoch.logical_root) &&
+      same_path(generation.state_root, epoch.state_root) &&
+      same_path(generation.acceptance_root, epoch.acceptance_root);
+}
+
+facman::core::Result<Generation> parse_epoch_generation(
+    const LifecycleEpoch &epoch, const PinnedLifecycleEpochScope &scope,
+    const std::string &generation_id, std::string *bytes_out = nullptr) {
+  if (!digest(generation_id)) return facman::core::Result<Generation>::failure(
+      epoch_recovery("epoch generation id is invalid"));
+  facman::platform::StableDirectoryObject generations;
+  if (!scope.epoch.open_child_directory_no_follow("generations", generations).ok())
+    return facman::core::Result<Generation>::failure(epoch_recovery(
+        "epoch generations directory is unavailable"));
+  auto read = read_epoch_relative_bounded(generations, epoch_generation_name(generation_id),
+                                          kMaximumEpochGenesisRecordBytes);
+  if (!read || !generations.revalidate().ok() || !scope.epoch.revalidate().ok() ||
+      !scope.epochs.revalidate().ok() || !scope.coordinator.revalidate().ok())
+    return facman::core::Result<Generation>::failure(read ? epoch_recovery(
+        "epoch generation record changed while read") : read.error());
+  std::string bytes = read.take_value();
+  auto document = json::parse(bytes);
+  const std::initializer_list<const char *> keys = {"schema", "product_id", "epoch_id",
+      "generation_id", "product_version", "package_sha256", "facman_source_revision",
+      "universal_setup_revision", "install_id", "install_root", "logical_root", "state_root",
+      "acceptance_root", "gui", "maintenance_launcher"};
+  if (!document || !exact_keys(document.value(), keys) ||
+      !lifecycle_string_fields(document.value(), keys) ||
+      string_field(document.value(), "schema") != "facman.self_generation.v2" ||
+      string_field(document.value(), "product_id") != "facman" ||
+      string_field(document.value(), "epoch_id") != epoch.epoch_id ||
+      string_field(document.value(), "generation_id") != generation_id)
+    return facman::core::Result<Generation>::failure(epoch_recovery(
+        "epoch generation record has an incompatible exact schema"));
+  Generation result;
+  result.generation_id = generation_id;
+  result.product_version = string_field(document.value(), "product_version");
+  result.package_sha256 = string_field(document.value(), "package_sha256");
+  result.facman_source_revision = string_field(document.value(), "facman_source_revision");
+  result.universal_setup_revision = string_field(document.value(), "universal_setup_revision");
+  result.install_id = string_field(document.value(), "install_id");
+  result.install_root = facman::platform::path_from_utf8(string_field(document.value(), "install_root"));
+  result.logical_root = facman::platform::path_from_utf8(string_field(document.value(), "logical_root"));
+  result.state_root = facman::platform::path_from_utf8(string_field(document.value(), "state_root"));
+  result.acceptance_root = facman::platform::path_from_utf8(string_field(document.value(), "acceptance_root"));
+  result.gui = facman::platform::path_from_utf8(string_field(document.value(), "gui"));
+  result.maintenance_launcher = facman::platform::path_from_utf8(string_field(document.value(), "maintenance_launcher"));
+  Semver version;
+  if (!digest(result.package_sha256) || !revision(result.facman_source_revision) ||
+      !revision(result.universal_setup_revision) || !semver(result.product_version, version) ||
+      generation_identity(generation_descriptor(result), result.package_sha256) != generation_id ||
+      !exact_epoch_generation_paths(epoch, result) || bytes != epoch_generation_bytes(epoch, result))
+    return facman::core::Result<Generation>::failure(epoch_recovery(
+        "epoch generation identity or paths are invalid"));
+  if (bytes_out != nullptr) *bytes_out = std::move(bytes);
+  return facman::core::Result<Generation>::success(std::move(result));
+}
+
+facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
+    const LifecycleEpoch &epoch, const PinnedLifecycleEpochScope &scope,
+    const Generation *expected = nullptr, bool allow_incomplete = false) {
+  std::vector<fs::path> children;
+  if (!scope.epoch.list_child_names_bounded(4U, children).ok())
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch directory could not be enumerated through its held handle"));
+  const auto has = [&](const char *name) {
+    return std::find(children.begin(), children.end(), fs::path(name)) != children.end();
+  };
+  if (!has("epoch.v1.json")) return facman::core::Result<std::optional<ActiveState>>::failure(
+      epoch_recovery("epoch is missing its immutable manifest"));
+  for (const auto &child : children)
+    if (child != "epoch.v1.json" && child != "generations" && child != "activations")
+      return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+          "epoch contains a foreign or unsupported entry"));
+  if (!has("generations") && !has("activations"))
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  if (!has("generations") || !has("activations")) {
+    if (!allow_incomplete || !has("generations"))
+      return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+          "epoch contains partial genesis directories"));
+    facman::platform::StableDirectoryObject generations;
+    std::vector<fs::path> names;
+    if (!scope.epoch.open_child_directory_no_follow("generations", generations).ok() ||
+        !generations.list_child_names_bounded(2U, names).ok())
+      return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+          "epoch generation-only state is foreign or mismatched"));
+    if (names.empty()) return facman::core::Result<std::optional<ActiveState>>::success({});
+    if (names.size() != 1U || names.front() != epoch_generation_name(epoch.genesis_generation_id))
+      return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+          "epoch generation-only state is foreign or mismatched"));
+    std::string bytes;
+    auto generation = parse_epoch_generation(epoch, scope, epoch.genesis_generation_id, &bytes);
+    if (!generation || (expected != nullptr && bytes != epoch_generation_bytes(epoch, *expected)))
+      return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+          "epoch generation-only state does not match the requested genesis"));
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  }
+  facman::platform::StableDirectoryObject generations, activations;
+  if (!scope.epoch.open_child_directory_no_follow("generations", generations).ok() ||
+      !scope.epoch.open_child_directory_no_follow("activations", activations).ok())
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch genesis directories are not plain directories"));
+  std::vector<fs::path> generation_names, activation_names;
+  if (!generations.list_child_names_bounded(2U, generation_names).ok() ||
+      !activations.list_child_names_bounded(2U, activation_names).ok())
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch genesis directories could not be enumerated"));
+  if (generation_names.empty() && activation_names.empty() && allow_incomplete)
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  if (generation_names.size() != 1U || generation_names.front() !=
+          epoch_generation_name(epoch.genesis_generation_id))
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch generation state is partial, foreign, or mismatched"));
+  std::string generation_bytes;
+  auto generation = parse_epoch_generation(epoch, scope, epoch.genesis_generation_id,
+                                           &generation_bytes);
+  if (!generation) return facman::core::Result<std::optional<ActiveState>>::failure(generation.error());
+  if (expected != nullptr && generation_bytes != epoch_generation_bytes(epoch, *expected))
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch generation does not match the requested genesis"));
+  if (activation_names.empty() && allow_incomplete)
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  if (activation_names.size() != 1U || activation_names.front() !=
+          epoch_activation_name(epoch.genesis_generation_id))
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch activation state is partial, foreign, or mismatched"));
+  auto read_activation = read_epoch_relative_bounded(activations, activation_names.front(),
+      kMaximumEpochGenesisRecordBytes);
+  if (!read_activation || !activations.revalidate().ok() || !scope.epoch.revalidate().ok() ||
+      !scope.epochs.revalidate().ok() || !scope.coordinator.revalidate().ok())
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch activation record changed while read"));
+  std::string activation = read_activation.take_value();
+  auto document = json::parse(activation);
+  const json::Value *previous = document && document.value().is_object()
+      ? document.value().find("previous") : nullptr;
+  const std::initializer_list<const char *> keys = {"schema", "product_id", "epoch_id",
+      "operation", "operation_id", "generation_id", "generation_record_sha256", "previous"};
+  if (!document || !exact_keys(document.value(), keys) || previous == nullptr ||
+      !exact_keys(*previous, {"name", "sha256"}) ||
+      string_field(document.value(), "schema") != "facman.self_activation.v2" ||
+      string_field(document.value(), "product_id") != "facman" ||
+      string_field(document.value(), "epoch_id") != epoch.epoch_id ||
+      string_field(document.value(), "operation") != "genesis" ||
+      string_field(document.value(), "operation_id") != "epoch.genesis." + generation.value().generation_id ||
+      string_field(document.value(), "generation_id") != generation.value().generation_id ||
+      string_field(document.value(), "generation_record_sha256") != hash(generation_bytes) ||
+      string_field(*previous, "name") != "" || string_field(*previous, "sha256") != "" ||
+      activation != epoch_activation_bytes(epoch, generation.value(), hash(generation_bytes)))
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch activation record has an incompatible exact schema"));
+  ActiveState state{generation.take_value(), {}, activation_names.front().string(), hash(activation)};
+  return facman::core::Result<std::optional<ActiveState>>::success(
+      std::optional<ActiveState>(std::move(state)));
+}
+
+facman::core::Result<facman::platform::StableDirectoryObject> open_or_create_epoch_child(
+    const facman::platform::StableDirectoryObject &parent, const char *name) {
+  facman::platform::StableDirectoryObject child;
+  auto opened = parent.open_child_directory_no_follow_for_relative_writes(name, child);
+  if (!opened.ok()) opened = parent.create_child_directory_exclusive(name, child);
+  if (!opened.ok()) return facman::core::Result<facman::platform::StableDirectoryObject>::failure(
+      epoch_recovery("epoch child directory could not be opened or created", opened.detail));
+  return facman::core::Result<facman::platform::StableDirectoryObject>::success(std::move(child));
+}
+
+facman::core::Result<void> publish_epoch_record(
+    const facman::platform::StableDirectoryObject &directory,
+    const std::string &staging_name, const std::string &final_name,
+    const std::string &bytes) {
+  facman::platform::StableInputFile existing;
+  const auto opened = directory.open_child_file_no_follow_pinned(final_name, existing);
+  if (opened.ok()) {
+    auto current = read_epoch_relative_bounded(directory, final_name,
+                                               kMaximumEpochGenesisRecordBytes);
+    if (!current || current.value() != bytes || !directory.flush_metadata().ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch immutable record already exists with different bytes"));
+    return facman::core::Result<void>::success();
+  }
+  facman::platform::DurableOutputFile output;
+  const auto staged = directory.create_child_file_exclusive(staging_name,
+      kMaximumEpochGenesisRecordBytes, output);
+  if (!staged.ok() || output.write_at(0, bytes.data(), bytes.size()) != bytes.size())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "epoch record staging could not be completed", staged.detail));
+  const auto published = output.publish_sibling_no_replace(final_name);
+  if (!published.ok()) {
+    auto observed = read_epoch_relative_bounded(directory, final_name,
+                                                kMaximumEpochGenesisRecordBytes);
+    if (observed && observed.value() == bytes && directory.flush_metadata().ok())
+        return facman::core::Result<void>::success();
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "epoch record publication did not reach a verified state", published.detail));
+  }
+  if (!directory.flush_metadata().ok()) return facman::core::Result<void>::failure(
+      epoch_recovery("epoch record directory could not be flushed"));
+  return facman::core::Result<void>::success();
+}
+
 facman::core::Result<void> validate_epoch_history(LifecycleEpoch &epoch,
                                                    const fs::path &root,
                                                    bool compatibility) {
@@ -1355,7 +1689,8 @@ bool lifecycle_roots_equal(const LifecycleEpoch &left, const LifecycleEpoch &rig
 }
 
 facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
-    const fs::path &coordinator_root) {
+    const fs::path &coordinator_root, const std::string &recovery_epoch_id = {},
+    const Generation *recovery_generation = nullptr) {
   if (!coordinator_root.is_absolute())
     return facman::core::Result<LifecycleEpochChain>::failure(failure(
         "self_maintenance_input_invalid", "coordinator root must be absolute"));
@@ -1408,50 +1743,38 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
   if (!coordinator.open_child_directory_no_follow( "epochs", epochs).ok())
     return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
         "epoch root is not a plain directory"));
-  std::size_t count = 0U;
-  for (fs::directory_iterator it(epochs.path(), status), end; !status && it != end;
-       it.increment(status)) {
-    if (++count > kMaximumLifecycleEpochs)
-      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
-          "epoch root exceeds its entry limit"));
-    const auto type = it->symlink_status(status);
-    const std::string name = it->path().filename().string();
-    if (status || type.type() != fs::file_type::directory || !digest(name) ||
-        name == kCompatibilityEpochId)
+  std::vector<fs::path> epoch_names;
+  if (!epochs.list_child_names_bounded(kMaximumLifecycleEpochs, epoch_names).ok())
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch root exceeds its entry limit or changed during enumeration"));
+  for (const fs::path &entry : epoch_names) {
+    const std::string name = entry.string();
+    if (!digest(name) || name == kCompatibilityEpochId)
       return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
           "epoch root contains a non-epoch or linked entry"));
     facman::platform::StableDirectoryObject epoch_directory;
     if (!epochs.open_child_directory_no_follow(name, epoch_directory).ok())
       return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
           "epoch directory could not be pinned"));
-    auto bytes = read_epoch_manifest(epoch_directory, "epoch.v1.json");
+    PinnedLifecycleEpochScope scope;
+    auto pinned = scope.open(coordinator_root, name);
+    if (!pinned) return facman::core::Result<LifecycleEpochChain>::failure(pinned.error());
+    auto bytes = scope.read("epoch.v1.json");
     if (!bytes) return facman::core::Result<LifecycleEpochChain>::failure(bytes.error());
     auto epoch = parse_lifecycle_manifest(bytes.value(), name);
     if (!epoch) return facman::core::Result<LifecycleEpochChain>::failure(epoch.error());
-    std::error_code inner_status;
-    for (fs::directory_iterator files(epoch_directory.path(), inner_status), finish;
-         !inner_status && files != finish; files.increment(inner_status)) {
-      const std::string leaf = files->path().filename().string();
-      const auto kind = files->symlink_status(inner_status);
-      if (inner_status || leaf != "epoch.v1.json")
-        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
-            "real epoch contains state before epoch routing is admitted"));
-      if (kind.type() != fs::file_type::regular)
-        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
-            "epoch manifest is not a regular file"));
-    }
-    if (inner_status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
-        "epoch directory changed during enumeration", inner_status.message()));
-    auto history = validate_epoch_history(epoch.value(), epoch_directory.path(), false);
-    if (!history) return facman::core::Result<LifecycleEpochChain>::failure(history.error());
+    const bool recovery_tail = !recovery_epoch_id.empty() && name == recovery_epoch_id;
+    auto genesis = discover_epoch_genesis_state(epoch.value(), scope,
+        recovery_tail ? recovery_generation : nullptr, recovery_tail);
+    if (!genesis) return facman::core::Result<LifecycleEpochChain>::failure(genesis.error());
     if (!epoch_directory.revalidate().ok())
       return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
           "epoch state changed while its pinned children were validated"));
     result.epochs.push_back(epoch.take_value());
   }
-  if (status || !epochs.revalidate().ok() || !coordinator.revalidate().ok())
+  if (!epochs.revalidate().ok() || !coordinator.revalidate().ok())
     return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
-        "epoch directories changed during discovery", status.message()));
+        "epoch directories changed during discovery"));
 
   std::vector<const LifecycleEpoch *> real;
   for (const LifecycleEpoch &epoch : result.epochs)
@@ -1527,6 +1850,11 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
     if (child == nullptr) break;
     cursor = child;
   }
+  if (!recovery_epoch_id.empty() &&
+      (ordered.epochs.empty() || ordered.epochs.back().compatibility_epoch ||
+       ordered.epochs.back().epoch_id != recovery_epoch_id))
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "genesis recovery is permitted only for the unique current real epoch tail"));
   return facman::core::Result<LifecycleEpochChain>::success(std::move(ordered));
 }
 
@@ -1597,6 +1925,134 @@ facman::core::Result<Generation> make_generation(
     return facman::core::Result<Generation>::failure(failure(
         "self_maintenance_input_invalid", "generation paths are invalid"));
   return facman::core::Result<Generation>::success(std::move(result));
+}
+
+facman::core::Result<Generation> make_epoch_genesis_generation(
+    const LifecycleEpoch &epoch, const PackageDescriptor &descriptor,
+    const std::string &package_sha256) {
+  if (epoch.compatibility_epoch || !digest(epoch.epoch_id) ||
+      epoch.epoch_id == kCompatibilityEpochId || !digest(epoch.genesis_generation_id) ||
+      !epoch.logical_root.is_absolute() || !epoch.state_root.is_absolute() ||
+      !epoch.acceptance_root.is_absolute() ||
+      hash(lifecycle_identity_bytes(epoch)) != epoch.epoch_id)
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_input_invalid", "epoch genesis inputs are incomplete"));
+  auto base = make_generation(descriptor, package_sha256, "facman.self",
+      epoch.logical_root, epoch.logical_root, epoch.state_root, epoch.acceptance_root);
+  if (!base) return base;
+  Generation result = base.take_value();
+  if (result.generation_id != epoch.genesis_generation_id)
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_input_invalid", "epoch genesis generation id is not reserved by its manifest"));
+  result.install_id = "facman.self.epoch." + epoch.epoch_id + ".generation." +
+      result.generation_id;
+  result.install_root = epoch_generation_install_root(
+      epoch.logical_root, epoch.epoch_id, result.generation_id);
+  result.gui = result.install_root / "generations" / result.product_version / "FacMan.exe";
+  result.maintenance_launcher = result.install_root / "maintenance" / "FacManSetup.exe";
+  if (!exact_epoch_generation_paths(epoch, result))
+    return facman::core::Result<Generation>::failure(failure(
+        "self_maintenance_input_invalid", "epoch genesis generation paths are not exact"));
+  return facman::core::Result<Generation>::success(std::move(result));
+}
+
+facman::core::Result<ActiveState> activate_lifecycle_epoch_genesis(
+    const EpochGenesisRequest &request) {
+  if (!request.coordinator_root.is_absolute() || !digest(request.epoch_id))
+    return facman::core::Result<ActiveState>::failure(failure(
+        "self_maintenance_input_invalid", "epoch genesis request is incomplete"));
+  PinnedLifecycleEpochScope review_scope;
+  auto opened = review_scope.open(request.coordinator_root, request.epoch_id);
+  if (!opened) return facman::core::Result<ActiveState>::failure(opened.error());
+  auto manifest = review_scope.read("epoch.v1.json");
+  auto epoch = manifest ? parse_lifecycle_manifest(manifest.value(), request.epoch_id)
+                        : facman::core::Result<LifecycleEpoch>::failure(manifest.error());
+  if (!epoch) return facman::core::Result<ActiveState>::failure(epoch.error());
+  const std::string reviewed_manifest = manifest.value();
+  auto expected = make_epoch_genesis_generation(epoch.value(),
+      generation_descriptor(request.generation), request.generation.package_sha256);
+  if (!expected || epoch_generation_bytes(epoch.value(), expected.value()) !=
+                       epoch_generation_bytes(epoch.value(), request.generation))
+    return facman::core::Result<ActiveState>::failure(failure(
+        "self_maintenance_input_invalid", "requested epoch genesis generation is not exact"));
+  auto reviewed_chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root,
+      request.apply ? request.epoch_id : std::string(),
+      request.apply ? &request.generation : nullptr);
+  if (!reviewed_chain || reviewed_chain.value().epochs.empty() ||
+      reviewed_chain.value().epochs.back().compatibility_epoch ||
+      reviewed_chain.value().epochs.back().epoch_id != request.epoch_id ||
+      reviewed_chain.value().epochs.back().manifest_sha256 != hash(reviewed_manifest))
+    return facman::core::Result<ActiveState>::failure(!reviewed_chain ? reviewed_chain.error() :
+        epoch_recovery("requested epoch is not the exact current lifecycle tail"));
+  auto progress = discover_epoch_genesis_state(epoch.value(), review_scope,
+                                               &request.generation, true);
+  if (!progress) return facman::core::Result<ActiveState>::failure(progress.error());
+  if (!request.apply) {
+    if (progress.value().has_value()) return facman::core::Result<ActiveState>::success(
+        *progress.value());
+    return facman::core::Result<ActiveState>::success(
+        {request.generation, {}, epoch_activation_name(request.generation.generation_id),
+         hash(epoch_activation_bytes(epoch.value(), request.generation,
+             hash(epoch_generation_bytes(epoch.value(), request.generation))))});
+  }
+  auto admission = admit_coordinator(request.coordinator_root,
+                                     epoch.value().acceptance_root, false);
+  if (!admission) return facman::core::Result<ActiveState>::failure(admission.error());
+  auto lock = acquire(admission.take_value(), "epoch.genesis." + request.generation.generation_id);
+  if (!lock) return facman::core::Result<ActiveState>::failure(lock.error());
+  PinnedLifecycleEpochScope scope;
+  opened = scope.open(request.coordinator_root, request.epoch_id, true);
+  if (!opened) return facman::core::Result<ActiveState>::failure(opened.error());
+  manifest = scope.read("epoch.v1.json");
+  epoch = manifest ? parse_lifecycle_manifest(manifest.value(), request.epoch_id)
+                   : facman::core::Result<LifecycleEpoch>::failure(manifest.error());
+  if (!epoch || manifest.value() != reviewed_manifest)
+    return facman::core::Result<ActiveState>::failure(epoch_recovery(
+        "epoch manifest changed before genesis publication"));
+  auto locked_chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root,
+      request.epoch_id, &request.generation);
+  if (!locked_chain || locked_chain.value().epochs.empty() ||
+      locked_chain.value().epochs.back().compatibility_epoch ||
+      locked_chain.value().epochs.back().epoch_id != request.epoch_id ||
+      locked_chain.value().epochs.back().manifest_sha256 != hash(reviewed_manifest))
+    return facman::core::Result<ActiveState>::failure(!locked_chain ? locked_chain.error() :
+        epoch_recovery("lifecycle epoch chain changed before genesis publication"));
+  progress = discover_epoch_genesis_state(epoch.value(), scope, &request.generation, true);
+  if (!progress) return facman::core::Result<ActiveState>::failure(progress.error());
+  if (!progress.value().has_value()) {
+    auto generations = open_or_create_epoch_child(scope.epoch, "generations");
+    auto activations = open_or_create_epoch_child(scope.epoch, "activations");
+    if (!generations || !activations) return facman::core::Result<ActiveState>::failure(
+        !generations ? generations.error() : activations.error());
+    const std::string generation_bytes = epoch_generation_bytes(epoch.value(), request.generation);
+    auto written = publish_epoch_record(generations.value(),
+        "generation.staging." + request.generation.generation_id + ".v2.json",
+        epoch_generation_name(request.generation.generation_id), generation_bytes);
+    if (!written) return facman::core::Result<ActiveState>::failure(written.error());
+    written = publish_epoch_record(activations.value(),
+        "activation.staging.epoch.genesis." + request.generation.generation_id + ".v2.json",
+        epoch_activation_name(request.generation.generation_id),
+        epoch_activation_bytes(epoch.value(), request.generation, hash(generation_bytes)));
+    if (!written) return facman::core::Result<ActiveState>::failure(written.error());
+  }
+  PinnedLifecycleEpochScope final_scope;
+  opened = final_scope.open(request.coordinator_root, request.epoch_id);
+  if (!opened) return facman::core::Result<ActiveState>::failure(opened.error());
+  auto final_manifest = final_scope.read("epoch.v1.json");
+  auto final_epoch = final_manifest ? parse_lifecycle_manifest(final_manifest.value(), request.epoch_id)
+                                    : facman::core::Result<LifecycleEpoch>::failure(final_manifest.error());
+  auto active = final_epoch ? discover_epoch_genesis_state(final_epoch.value(), final_scope,
+      &request.generation, false) : facman::core::Result<std::optional<ActiveState>>::failure(final_epoch.error());
+  if (!active || !active.value().has_value()) return facman::core::Result<ActiveState>::failure(
+      !active ? active.error() : epoch_recovery("epoch genesis is not committed"));
+  facman::platform::StableDirectoryObject final_generations, final_activations;
+  if (!final_scope.epoch.open_child_directory_no_follow("generations", final_generations).ok() ||
+      !final_scope.epoch.open_child_directory_no_follow("activations", final_activations).ok() ||
+      !final_generations.flush_metadata().ok() || !final_activations.flush_metadata().ok() ||
+      !final_scope.epoch.flush_metadata().ok() || !final_scope.epochs.flush_metadata().ok() ||
+      !final_scope.coordinator.flush_metadata().ok()) return facman::core::Result<ActiveState>::failure(
+          epoch_recovery("epoch genesis directory hierarchy could not be flushed"));
+  return facman::core::Result<ActiveState>::success(*active.value());
 }
 
 facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(

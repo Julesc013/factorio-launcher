@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace facman::platform {
 
@@ -139,6 +140,12 @@ public:
         const std::filesystem::path& leaf, StableDirectoryObject& child) const;
     IoStatus open_child_file_no_follow_pinned(
         const std::filesystem::path& leaf, StableInputFile& child) const;
+    // Returns the conservative leaf names currently visible through this held
+    // directory object.  The result is cleared before every attempt and on
+    // failure, is sorted bytewise, and never follows a child.
+    IoStatus list_child_names_bounded(
+        std::size_t maximum_entries,
+        std::vector<std::filesystem::path>& names) const;
     IoStatus create_child_file_exclusive(
         const std::filesystem::path& leaf,
         std::uint64_t maximum_size,

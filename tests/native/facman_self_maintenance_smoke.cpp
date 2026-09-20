@@ -1174,6 +1174,76 @@ int main() {
                     epoch_retry.value().epochs.size() == 1U,
                 "epoch manifest publication was not canonical, durable, or idempotent");
 
+  // A real epoch has one v2 genesis activation.  Its content id deliberately
+  // remains the v1 package identity while its install root includes the epoch.
+  const fs::path genesis_root = root / "epoch-genesis";
+  facman::self_maintenance::PackageDescriptor genesis_descriptor{
+      "facman", "9.8.7", "generations/9.8.7", std::string(40, 'c'),
+      std::string(40, 'c'), "facman.self_maintenance.v1",
+      "versioned_generation_with_maintenance_v1", "FacMan.exe", "bin/facman.exe",
+      "maintenance/FacManSetup.exe", false};
+  const std::string genesis_package(64, 'd');
+  facman::self_maintenance::LifecycleEpoch genesis_epoch;
+  genesis_epoch.acceptance_root = genesis_root;
+  genesis_epoch.logical_root = genesis_root / "FacMan";
+  genesis_epoch.state_root = genesis_root / "state";
+  genesis_epoch.genesis_generation_id = generation_identity("9.8.7", genesis_package, 'c');
+  fs::create_directories(genesis_root);
+  const fs::path genesis_coordinator = genesis_root / "coordinator";
+  auto genesis_manifest = facman::self_maintenance::publish_lifecycle_epoch(
+      genesis_coordinator, genesis_epoch, true);
+  Generation epoch_generation;
+  if (genesis_manifest && genesis_manifest.value().epochs.size() == 1U) {
+    auto made = facman::self_maintenance::make_epoch_genesis_generation(
+        genesis_manifest.value().epochs.front(), genesis_descriptor, genesis_package);
+    if (made) epoch_generation = made.take_value();
+  }
+  facman::self_maintenance::EpochGenesisRequest genesis_request{
+      genesis_coordinator,
+      genesis_manifest && !genesis_manifest.value().epochs.empty()
+          ? genesis_manifest.value().epochs.front().epoch_id : std::string(),
+      epoch_generation, false};
+  auto genesis_preview = facman::self_maintenance::activate_lifecycle_epoch_genesis(genesis_request);
+  auto mismatched_generation = epoch_generation;
+  mismatched_generation.install_id = "facman.self.epoch.mismatch";
+  auto mismatch_request = genesis_request;
+  mismatch_request.generation = mismatched_generation;
+  auto genesis_mismatch = facman::self_maintenance::activate_lifecycle_epoch_genesis(mismatch_request);
+  auto peer_epoch = genesis_epoch;
+  peer_epoch.logical_root = genesis_root / "PeerFacMan";
+  auto peer_preview = facman::self_maintenance::publish_lifecycle_epoch(
+      genesis_root / "peer-coordinator", peer_epoch, false);
+  auto peer_generation = peer_preview && !peer_preview.value().epochs.empty()
+      ? facman::self_maintenance::make_epoch_genesis_generation(
+            peer_preview.value().epochs.front(), genesis_descriptor, genesis_package)
+      : facman::core::Result<Generation>::failure({"test", "peer epoch was not canonical", ""});
+  fs::create_directories(genesis_coordinator / "epochs" / genesis_request.epoch_id / "generations");
+  genesis_request.apply = true;
+  facman::platform::testing::set_relative_publish_post_rename_fault(true);
+  auto genesis_apply = facman::self_maintenance::activate_lifecycle_epoch_genesis(genesis_request);
+  facman::platform::testing::set_relative_publish_post_rename_fault(false);
+  auto genesis_retry = facman::self_maintenance::activate_lifecycle_epoch_genesis(genesis_request);
+  auto genesis_discovery = facman::self_maintenance::discover_lifecycle_epoch_chain(genesis_coordinator);
+  const std::string genesis_epoch_id = genesis_request.epoch_id;
+  const std::string logical_identity = sha("facman.self.logical-root.v1\n" +
+      facman::platform::path_to_utf8((genesis_root / "FacMan").lexically_normal()) + "\n");
+  const fs::path expected_epoch_root = genesis_root /
+      facman::platform::path_from_utf8("FacMan.generation." + sha(
+          "facman.self.physical-generation-root.v2\n" + logical_identity + "\n" +
+          genesis_epoch_id + "\n" + epoch_generation.generation_id + "\n"));
+  ok &= require(genesis_manifest && !epoch_generation.generation_id.empty() &&
+                    genesis_preview && !genesis_mismatch && peer_generation && genesis_apply && genesis_retry && genesis_discovery &&
+                    genesis_apply.value().active.install_id == "facman.self.epoch." +
+                        genesis_epoch_id + ".generation." + epoch_generation.generation_id &&
+                    genesis_apply.value().active.install_root == expected_epoch_root &&
+                    peer_generation.value().generation_id == epoch_generation.generation_id &&
+                    peer_generation.value().install_root != epoch_generation.install_root &&
+                    fs::exists(genesis_coordinator / "epochs" / genesis_epoch_id /
+                        "generations" / ("generation." + epoch_generation.generation_id + ".v2.json")) &&
+                    fs::exists(genesis_coordinator / "epochs" / genesis_epoch_id /
+                        "activations" / ("activation.epoch.genesis." + epoch_generation.generation_id + ".v2.json")),
+                "epoch genesis preview, activation, retry, or v2 identity was not exact");
+
   auto invalid_epoch = first_epoch;
   invalid_epoch.epoch_id = std::string(64, '0');
   auto invalid_epoch_result = facman::self_maintenance::publish_lifecycle_epoch(
