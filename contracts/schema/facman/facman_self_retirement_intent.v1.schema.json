@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_self_retirement_intent.v1.schema.json",
+  "title": "FacMan immutable activation-chain retirement intent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "head_name", "head_sha256", "chain_digest", "steps"],
+  "properties": {
+    "schema": {"const": "facman.self_retirement_intent.v1"},
+    "head_name": {"type": "string", "pattern": "^activation\\.[A-Za-z0-9._-]{1,160}\\.v1\\.json$"},
+    "head_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "chain_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["generation_id", "install_root", "install_id", "active"],
+        "properties": {
+          "generation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "install_root": {"type": "string", "minLength": 1, "maxLength": 8192},
+          "install_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,160}$"},
+          "active": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

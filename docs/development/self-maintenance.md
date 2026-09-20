@@ -45,9 +45,20 @@ registration cutover.
 
 This checkpoint keeps completed generations for rollback. Repair is allowed
 only for a verified active migrated `facman.self` and refuses an active
-side-by-side generation. Uninstall refuses whenever an activation chain exists,
-including a migrated legacy genesis. Multi-generation repair/removal, chain
-retirement, retention policy, and garbage collection are not implemented here.
+side-by-side generation. Uninstall of an activation chain writes an immutable
+retirement intent under `setup-coordinator.v1/retirements`, bound to the exact
+head name/digest, complete activation sequence, and ordered unique generation
+identities. It removes retained generations without shell integration and the
+active generation last with the normal native adapter. Each invocation completes
+at most one retained step; an entered but uncompleted provider/native edge,
+foreign marker, changed chain, unresolved nested setup journal, or ambiguous
+identity is recovery-required. Once the retirement intent exists, ordinary
+update, downgrade, rollback, verify, and repair discovery is blocked until the
+same retirement is resumed. Nested setup skips its own lock only when given the
+coordinator's call-scoped proof for that exact lock root; isolated fixtures with
+a different setup coordinator acquire both locks. Completed retirement hides
+the active chain but preserves activation and generation history. Retention policy, garbage
+collection, and multi-generation repair remain outside this slice.
 
 Normal maintenance requires the Windows shell integration. `--no-shell-integration`
 is admitted only for a disposable qualification root that contains the exact
@@ -90,5 +101,5 @@ activated without creating a conflicting second record for A. Other retained
 generations cannot be selected through update or downgrade.
 
 This is evidence only after that optional job runs successfully on the declared
-Windows host; its disposable account retains the final chain state because
-chain-aware uninstall is not implemented.
+Windows host. Its disposable account may retire the final chain through the
+same recovery-aware coordinator, but that is not yet full native qualification.

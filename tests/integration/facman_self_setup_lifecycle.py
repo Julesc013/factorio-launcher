@@ -968,9 +968,9 @@ def require_transition_receipt(
 def run_real_self_maintenance_transition(args: argparse.Namespace, executable: Path) -> int:
     """Exercise a real current-user A -> B -> A -> B package transition.
 
-    The runner account is intentionally disposable. Chain-aware uninstall is not
-    implemented, so this qualification preserves the final exact shell state
-    rather than deleting it with an out-of-band test helper.
+    The runner account is intentionally disposable.  It retires the final
+    chain through the public uninstaller and observes retained then active
+    completion; no out-of-band deletion is allowed.
     """
     if os.name != "nt":
         raise AssertionError("--real-self-maintenance-transition is Windows-only")
@@ -1079,6 +1079,24 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256})
+        retained_retirement = invoke(executable, "uninstall", *common,
+                                     shell_integration=True, noninteractive=True)
+        if retained_retirement.get("phase") != "step_completed":
+            raise AssertionError("chain retirement did not complete only its retained step")
+        shortcut, registry = observe("chain_retirement_retained_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root,
+                            candidate_identity["version"], "retained retirement",
+                            active_root=rollback_receipt["install_root"],
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={candidate_package_sha256})
+        active_retirement = invoke(executable, "uninstall", *common,
+                                   shell_integration=True, noninteractive=True)
+        if active_retirement.get("phase") != "completed":
+            raise AssertionError("chain retirement did not complete its active step")
+        shortcut, registry = observe("chain_retirement_active_completed")
+        assert_absent_native(shortcut, registry, "chain retirement")
+        if install.exists():
+            raise AssertionError("chain retirement retained the logical install root")
         outcome = "passed"
         return 0
     except BaseException as exc:
@@ -1110,10 +1128,7 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                 "commands": REAL_COMMANDS,
                 "observations": observations,
                 "registry_view": "64-bit",
-                "retained_final_state": (
-                    "chain-aware uninstall is unimplemented; the disposable runner "
-                    "profile owns final candidate shell effects"
-                ),
+                "retained_final_state": "chain retirement completed through public setup",
             }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         except BaseException as persistence_error:
             note = f"NOTE: real self-maintenance evidence persistence failed: {persistence_error!r}"
@@ -1769,23 +1784,19 @@ def main() -> int:
                     rolled_back.get("generation_id") !=
                     discovered.get("generation_id")):
                 raise AssertionError("public rollback did not reactivate legacy")
-            migrated_uninstall = invoke(
-                executable, "uninstall", "--root", install,
-                "--state-root", state, "--acceptance-root", root, "--yes",
-                expected=4,
-            )
-            if (migrated_uninstall.get("error", {}).get("code") !=
-                    "self_maintenance_active_generation_unsupported" or
-                    not install.is_dir()):
-                raise AssertionError(
-                    "migrated legacy uninstall was not safely refused"
-                )
             maintenance_chain_active = True
 
         workspace = root / "FacManWorkspace"
         workspace.mkdir()
         keep = workspace / "keep.txt"
         keep.write_text("preserve\n", encoding="utf-8")
+        if maintenance_chain_active:
+            retained = invoke(
+                executable, "uninstall", "--root", install,
+                "--state-root", state, "--acceptance-root", root, "--yes",
+            )
+            if retained.get("phase") != "step_completed":
+                raise AssertionError("activation-chain retained uninstall did not complete")
         unknown = install / "operator-note.txt"
         unknown.write_text("retain\n", encoding="utf-8")
         refusal = invoke(
@@ -1796,8 +1807,8 @@ def main() -> int:
             raise AssertionError("foreign-content uninstall refusal did not preserve data")
         if maintenance_chain_active:
             if refusal.get("error", {}).get("code") != \
-                    "self_maintenance_active_generation_unsupported":
-                raise AssertionError("activation-chain uninstall refusal changed")
+                    "self_maintenance_retirement_recovery_required":
+                raise AssertionError("activation-chain foreign refusal lost its recovery boundary")
             return 0
         unknown.rename(root / "operator-note-preserved.txt")
 

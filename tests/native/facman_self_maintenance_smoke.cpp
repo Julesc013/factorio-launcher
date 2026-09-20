@@ -16,6 +16,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 using facman::self_maintenance::CandidateState;
@@ -119,6 +120,32 @@ struct FakeEffects final : facman::self_maintenance::Effects {
     ++registration_calls;
     registration = ShellState::new_exact;
     return {true, false, sha("registration"), {}};
+  }
+};
+
+struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects {
+  std::vector<std::string> inspected;
+  std::vector<std::string> removed;
+  bool reject_identity = false;
+  bool interrupt_active = false;
+
+  facman::core::Result<void> inspect_retirement_generation(
+      const Generation &generation, bool) override {
+    inspected.push_back(generation.install_id);
+    if (reject_identity)
+      return facman::core::Result<void>::failure(
+          {"provider_identity_mismatch", "different install identity", {}});
+    return facman::core::Result<void>::success();
+  }
+
+  facman::core::Result<void> uninstall_generation(
+      const Generation &generation, bool active,
+      const facman::self_maintenance::CoordinatorLockToken &) override {
+    removed.push_back(generation.install_id);
+    if (active && interrupt_active)
+      return facman::core::Result<void>::failure(
+          {"self_setup_interrupted", "active native boundary interrupted", {}});
+    return facman::core::Result<void>::success();
   }
 };
 
@@ -914,6 +941,145 @@ int main() {
   ok &= require(!invalid_phase_result && invalid_phase_result.error().code ==
                     "self_maintenance_record_changed",
                 "rollback accepted a provider phase record");
+
+  // Retiring A -> B -> A must retain the immutable activation history while
+  // deduplicating effects to B, then the active A.  A durable completed
+  // retained step is the only resume point; an entered active native step is
+  // deliberately recovery-required instead of being replayed.
+  auto retirement_chain = request(root / "retirement-chain", Operation::update);
+  const Generation retired_b = generation(root / "retirement-chain" / "b",
+                                          "0.1.0-alpha.4", 'b');
+  std::string retirement_detail;
+  if (!facman::base::write_text_new_atomic(
+          retirement_chain.coordinator_root / "generations" /
+              ("generation." + retired_b.generation_id + ".v1.json"),
+          facman::self_maintenance::generation_record_bytes(retired_b),
+          retirement_detail))
+    throw std::runtime_error(retirement_detail);
+  const fs::path first_activation = retirement_chain.coordinator_root /
+      "activations" / "activation.update.one.v1.json";
+  const std::string first_activation_bytes = activation_bytes(
+      "update.one", retirement_chain.active.generation_id,
+      retired_b.generation_id, retirement_chain.previous_activation_name,
+      retirement_chain.previous_activation_sha256);
+  if (!facman::base::write_text_new_atomic(first_activation,
+                                            first_activation_bytes,
+                                            retirement_detail))
+    throw std::runtime_error(retirement_detail);
+  const fs::path second_activation = retirement_chain.coordinator_root /
+      "activations" / "activation.update.two.v1.json";
+  const std::string second_activation_bytes = activation_bytes(
+      "update.two", retired_b.generation_id,
+      retirement_chain.active.generation_id,
+      first_activation.filename().string(), sha(first_activation_bytes));
+  if (!facman::base::write_text_new_atomic(second_activation,
+                                            second_activation_bytes,
+                                            retirement_detail))
+    throw std::runtime_error(retirement_detail);
+  auto full_chain = facman::self_maintenance::discover_activation_chain(
+      retirement_chain.coordinator_root);
+  ok &= require(full_chain && full_chain.value().has_value() &&
+                    full_chain.value()->generations.size() == 3U &&
+                    full_chain.value()->generations.front().generation_id ==
+                        retirement_chain.active.generation_id &&
+                    full_chain.value()->generations[1].generation_id ==
+                        retired_b.generation_id &&
+                    full_chain.value()->generations.back().generation_id ==
+                        retirement_chain.active.generation_id,
+                "full A-to-B-to-A activation chain was not exposed exactly");
+  facman::self_maintenance::RetirementRequest retirement_request;
+  retirement_request.coordinator_root = retirement_chain.coordinator_root;
+  retirement_request.apply = false;
+  RetirementFakeEffects retirement_preview_effects;
+  auto retirement_preview = facman::self_maintenance::retire_active(
+      retirement_request, retirement_preview_effects);
+  ok &= require(retirement_preview && retirement_preview.value().phase == "planned" &&
+                    retirement_preview.value().steps.size() == 2U &&
+                    retirement_preview.value().steps[0].generation.install_id ==
+                        retired_b.install_id &&
+                    !retirement_preview.value().steps[0].active &&
+                    retirement_preview.value().steps[1].generation.install_id ==
+                        retirement_chain.active.install_id &&
+                    retirement_preview.value().steps[1].active,
+                "retirement order did not deduplicate retained B before active A");
+  retirement_request.apply = true;
+  RetirementFakeEffects retained_effects;
+  auto retained_result = facman::self_maintenance::retire_active(
+      retirement_request, retained_effects);
+  ok &= require(retained_result && retained_result.value().phase == "step_completed" &&
+                    retained_effects.removed.size() == 1U &&
+                    retained_effects.removed[0] == retired_b.install_id,
+                "retirement did not complete only the retained generation step");
+  auto blocked_transition = facman::self_maintenance::discover_active(
+      retirement_chain.coordinator_root);
+  ok &= require(!blocked_transition &&
+                    blocked_transition.error().code ==
+                        "self_maintenance_retirement_recovery_required",
+                "incomplete retirement remained eligible for another transition");
+  RetirementFakeEffects interrupted_active;
+  interrupted_active.interrupt_active = true;
+  auto interrupted_result = facman::self_maintenance::retire_active(
+      retirement_request, interrupted_active);
+  ok &= require(!interrupted_result &&
+                    interrupted_result.error().code ==
+                        "self_maintenance_retirement_recovery_required" &&
+                    interrupted_active.removed.size() == 1U &&
+                    interrupted_active.removed[0] ==
+                        retirement_chain.active.install_id,
+                "active retirement interruption was not recovery-required");
+  RetirementFakeEffects blocked_active_retry;
+  auto blocked_active_retry_result = facman::self_maintenance::retire_active(
+      retirement_request, blocked_active_retry);
+  ok &= require(!blocked_active_retry_result &&
+                    blocked_active_retry.removed.empty(),
+                "entered active retirement step was retried blindly");
+
+  auto identity_chain = request(root / "retirement-identity", Operation::update);
+  RetirementFakeEffects identity_effects;
+  identity_effects.reject_identity = true;
+  facman::self_maintenance::RetirementRequest identity_request;
+  identity_request.coordinator_root = identity_chain.coordinator_root;
+  identity_request.apply = true;
+  auto identity_result = facman::self_maintenance::retire_active(
+      identity_request, identity_effects);
+  ok &= require(!identity_result &&
+                    identity_result.error().code ==
+                        "self_maintenance_retirement_recovery_required" &&
+                    identity_effects.removed.empty(),
+                "retirement accepted a mismatched provider identity");
+
+  auto foreign_chain = request(root / "retirement-foreign", Operation::update);
+  fs::create_directories(foreign_chain.coordinator_root / "retirements" /
+                         "retirement.foreign.v1");
+  RetirementFakeEffects foreign_effects;
+  facman::self_maintenance::RetirementRequest foreign_request;
+  foreign_request.coordinator_root = foreign_chain.coordinator_root;
+  foreign_request.apply = true;
+  auto foreign_result = facman::self_maintenance::retire_active(
+      foreign_request, foreign_effects);
+  ok &= require(!foreign_result &&
+                    foreign_result.error().code ==
+                        "self_maintenance_retirement_recovery_required" &&
+                    foreign_effects.removed.empty(),
+                "stale or foreign retirement journal was accepted");
+
+  auto completed_chain = request(root / "retirement-completed", Operation::update);
+  RetirementFakeEffects completed_effects;
+  facman::self_maintenance::RetirementRequest completed_request;
+  completed_request.coordinator_root = completed_chain.coordinator_root;
+  completed_request.apply = true;
+  auto completed_result = facman::self_maintenance::retire_active(
+      completed_request, completed_effects);
+  auto no_active_after_retirement = facman::self_maintenance::discover_active(
+      completed_chain.coordinator_root);
+  auto retained_history = facman::self_maintenance::discover_activation_chain(
+      completed_chain.coordinator_root);
+  ok &= require(completed_result && completed_result.value().phase == "completed" &&
+                    no_active_after_retirement &&
+                    !no_active_after_retirement.value().has_value() &&
+                    retained_history && retained_history.value().has_value() &&
+                    retained_history.value()->generations.size() == 1U,
+                "completed retirement did not hide active state while retaining history");
 
   auto contended = request(root / "contended", Operation::update);
   contended.apply = true;

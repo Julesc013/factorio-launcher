@@ -377,6 +377,7 @@ struct ActivationHead {
   std::string target_generation_id;
   std::string previous_name;
   std::string previous_digest;
+  std::vector<std::string> generation_ids;
 };
 
 bool exact_generation_paths(const Generation &generation);
@@ -527,6 +528,7 @@ facman::core::Result<ActivationHead> validate_activation_head(
         "activation chain must contain exactly one genesis"));
 
   const Node *head = genesis;
+  std::vector<const Node *> ordered{genesis};
   std::size_t visited = 1U;
   for (;;) {
     const auto child = std::find_if(nodes.begin(), nodes.end(),
@@ -535,6 +537,7 @@ facman::core::Result<ActivationHead> validate_activation_head(
         });
     if (child == nodes.end()) break;
     head = &*child;
+    ordered.push_back(head);
     ++visited;
   }
   if (visited != nodes.size() ||
@@ -543,10 +546,14 @@ facman::core::Result<ActivationHead> validate_activation_head(
     return facman::core::Result<ActivationHead>::failure(failure(
         "self_maintenance_activation_changed",
         "reviewed activation is not the unique current chain head"));
+  std::vector<std::string> generation_ids;
+  generation_ids.reserve(ordered.size());
+  for (const Node *node : ordered)
+    generation_ids.push_back(node->target_generation_id);
   return facman::core::Result<ActivationHead>::success(
       {head->name, head->digest, head->source_generation_id,
        head->target_generation_id, head->previous_name,
-       head->previous_digest});
+       head->previous_digest, std::move(generation_ids)});
 }
 
 facman::core::Result<Generation> parse_generation_record(
@@ -998,6 +1005,174 @@ facman::core::Result<void> effect_error(const char *code, const char *message,
       message, effect.detail));
 }
 
+std::string retirement_chain_digest(const ActivationChain &chain) {
+  std::string value = "facman.self.retirement-chain.v1\n" +
+      chain.activation_name + "\n" + chain.activation_sha256 + "\n";
+  for (const auto &generation : chain.generations)
+    value += generation.generation_id + "\n" + serialize_generation(generation);
+  return hash(value);
+}
+
+std::vector<RetirementStep> retirement_steps(const ActivationChain &chain) {
+  std::vector<RetirementStep> result;
+  if (chain.generations.empty()) return result;
+  const std::string active = chain.generations.back().generation_id;
+  for (const auto &generation : chain.generations) {
+    if (generation.generation_id == active) continue;
+    const auto duplicate = std::find_if(result.begin(), result.end(),
+        [&](const RetirementStep &step) {
+          return step.generation.generation_id == generation.generation_id;
+        });
+    if (duplicate == result.end()) result.push_back({generation, false});
+  }
+  result.push_back({chain.generations.back(), true});
+  return result;
+}
+
+fs::path retirement_directory(const fs::path &coordinator_root,
+                              const ActivationChain &chain) {
+  return coordinator_root / "retirements" /
+      ("retirement." + chain.activation_sha256.substr(0, 32) + ".v1");
+}
+
+std::string retirement_intent_json(const ActivationChain &chain,
+                                   const std::vector<RetirementStep> &steps) {
+  json::ArrayBuilder ordered;
+  for (const auto &step : steps) {
+    json::ObjectBuilder item;
+    item.add_string("generation_id", step.generation.generation_id);
+    item.add_string("install_root",
+                    facman::platform::path_to_utf8(step.generation.install_root));
+    item.add_string("install_id", step.generation.install_id);
+    item.add_bool("active", step.active);
+    ordered.add_object(item);
+  }
+  json::ObjectBuilder document;
+  document.add_string("schema", "facman.self_retirement_intent.v1");
+  document.add_string("head_name", chain.activation_name);
+  document.add_string("head_sha256", chain.activation_sha256);
+  document.add_string("chain_digest", retirement_chain_digest(chain));
+  document.add_array("steps", ordered);
+  return document.serialize() + "\n";
+}
+
+std::string retirement_step_json(const RetirementStep &step,
+                                 std::size_t sequence,
+                                 const char *phase) {
+  json::ObjectBuilder document;
+  document.add_string("schema", "facman.self_retirement_step.v1");
+  document.add_string("phase", phase);
+  // ObjectBuilder has no anonymous values; use a stable numeric string to
+  // avoid widening this durable format with a compatibility alias.
+  document.add_string("sequence", std::to_string(sequence));
+  document.add_string("generation_id", step.generation.generation_id);
+  document.add_string("install_root",
+                      facman::platform::path_to_utf8(step.generation.install_root));
+  document.add_string("install_id", step.generation.install_id);
+  document.add_bool("active", step.active);
+  return document.serialize() + "\n";
+}
+
+std::string retirement_completed_json(const ActivationChain &chain,
+                                      std::size_t count) {
+  json::ObjectBuilder document;
+  document.add_string("schema", "facman.self_retirement_completed.v1");
+  document.add_string("head_name", chain.activation_name);
+  document.add_string("head_sha256", chain.activation_sha256);
+  document.add_string("chain_digest", retirement_chain_digest(chain));
+  document.add_string("completed_steps", std::to_string(count));
+  return document.serialize() + "\n";
+}
+
+fs::path retirement_step_path(const fs::path &directory, std::size_t sequence,
+                              const char *phase) {
+  return directory / ("step." + std::to_string(sequence) + "." + phase +
+                      ".v1.json");
+}
+
+facman::core::Result<bool> exact_retirement_file(const fs::path &path,
+                                                  const std::string &expected) {
+  std::error_code status;
+  if (!fs::exists(path, status)) {
+    if (status) return facman::core::Result<bool>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement marker could not be observed", status.message()));
+    return facman::core::Result<bool>::success(false);
+  }
+  auto current = read_exact(path);
+  if (!current || current.value() != expected)
+    return facman::core::Result<bool>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement marker is foreign, malformed, or changed",
+        facman::platform::path_to_utf8(path)));
+  return facman::core::Result<bool>::success(true);
+}
+
+facman::core::Result<void> validate_retirement_directory(
+    const fs::path &directory, const ActivationChain &chain,
+    const std::vector<RetirementStep> &steps, bool *completed) {
+  *completed = false;
+  std::error_code status;
+  if (!fs::exists(directory, status)) {
+    if (status) return facman::core::Result<void>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal could not be observed", status.message()));
+    return facman::core::Result<void>::success();
+  }
+  if (!fs::is_directory(directory, status) || status)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal path is not a directory"));
+  const std::string intent = retirement_intent_json(chain, steps);
+  auto exists = exact_retirement_file(directory / "00-intent.v1.json", intent);
+  if (!exists) return facman::core::Result<void>::failure(exists.error());
+  if (!exists.value()) return facman::core::Result<void>::failure(failure(
+      "self_maintenance_retirement_recovery_required",
+      "retirement journal is missing its immutable intent"));
+  std::vector<std::string> allowed{"00-intent.v1.json",
+      "99-completed.v1.json"};
+  for (std::size_t index = 0; index < steps.size(); ++index) {
+    allowed.push_back(retirement_step_path(directory, index, "entered").filename().string());
+    allowed.push_back(retirement_step_path(directory, index, "completed").filename().string());
+    auto entered = exact_retirement_file(retirement_step_path(directory, index, "entered"),
+        retirement_step_json(steps[index], index, "entered"));
+    auto done = exact_retirement_file(retirement_step_path(directory, index, "completed"),
+        retirement_step_json(steps[index], index, "completed"));
+    if (!entered || !done) return facman::core::Result<void>::failure(
+        !entered ? entered.error() : done.error());
+    if (done.value() && !entered.value()) return facman::core::Result<void>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement step completed without an entered marker"));
+  }
+  for (fs::directory_iterator it(directory, status), end; !status && it != end;
+       it.increment(status)) {
+    const auto entry = it->symlink_status(status);
+    if (status || entry.type() != fs::file_type::regular ||
+        std::find(allowed.begin(), allowed.end(), it->path().filename().string()) ==
+            allowed.end())
+      return facman::core::Result<void>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "retirement journal contains a foreign or unknown record"));
+  }
+  if (status) return facman::core::Result<void>::failure(failure(
+      "self_maintenance_retirement_recovery_required",
+      "retirement journal changed during enumeration", status.message()));
+  auto final = exact_retirement_file(directory / "99-completed.v1.json",
+      retirement_completed_json(chain, steps.size()));
+  if (!final) return facman::core::Result<void>::failure(final.error());
+  if (final.value()) {
+    for (std::size_t index = 0; index < steps.size(); ++index) {
+      auto done = exact_retirement_file(retirement_step_path(directory, index, "completed"),
+          retirement_step_json(steps[index], index, "completed"));
+      if (!done || !done.value()) return facman::core::Result<void>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "retirement completion marker does not bind every step"));
+    }
+    *completed = true;
+  }
+  return facman::core::Result<void>::success();
+}
+
 } // namespace
 
 fs::path global_lock_path(const fs::path &coordinator_root) {
@@ -1067,55 +1242,254 @@ facman::core::Result<Generation> make_generation(
   return facman::core::Result<Generation>::success(std::move(result));
 }
 
-facman::core::Result<std::optional<ActiveState>> discover_active(
+facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(
     const fs::path &coordinator_root) {
   if (!coordinator_root.is_absolute())
-    return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+    return facman::core::Result<std::optional<ActivationChain>>::failure(failure(
         "self_maintenance_input_invalid", "coordinator root must be absolute"));
   const fs::path directory = coordinator_root / "activations";
   std::error_code status;
   if (!fs::exists(directory, status)) {
     if (status)
-      return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+      return facman::core::Result<std::optional<ActivationChain>>::failure(failure(
           "self_maintenance_activation_changed",
           "activation directory could not be observed", status.message()));
-    return facman::core::Result<std::optional<ActiveState>>::success({});
+    return facman::core::Result<std::optional<ActivationChain>>::success({});
   }
   if (!fs::is_directory(directory, status) || status)
-    return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+    return facman::core::Result<std::optional<ActivationChain>>::failure(failure(
         "self_maintenance_activation_changed",
         "activation path is not a directory"));
   auto first = fs::directory_iterator(directory, status);
   if (status)
-    return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+    return facman::core::Result<std::optional<ActivationChain>>::failure(failure(
         "self_maintenance_activation_changed",
         "activation directory could not be enumerated", status.message()));
   if (first == fs::directory_iterator())
-    return facman::core::Result<std::optional<ActiveState>>::success({});
+    return facman::core::Result<std::optional<ActivationChain>>::success({});
   auto head = validate_activation_head(coordinator_root, {}, {});
   if (!head)
-    return facman::core::Result<std::optional<ActiveState>>::failure(
+    return facman::core::Result<std::optional<ActivationChain>>::failure(
         head.error());
-  auto active = parse_generation_record(coordinator_root,
-                                        head.value().target_generation_id);
-  if (!active)
-    return facman::core::Result<std::optional<ActiveState>>::failure(
-        active.error());
-  ActiveState result;
-  result.active = active.take_value();
+  ActivationChain result;
   result.activation_name = head.value().name;
   result.activation_sha256 = head.value().digest;
-  if (head.value().source_generation_id !=
-      head.value().target_generation_id) {
-    auto previous = parse_generation_record(
-        coordinator_root, head.value().source_generation_id);
-    if (!previous)
-      return facman::core::Result<std::optional<ActiveState>>::failure(
-          previous.error());
-    result.previous = previous.take_value();
+  result.generations.reserve(head.value().generation_ids.size());
+  for (const auto &generation_id : head.value().generation_ids) {
+    auto generation = parse_generation_record(coordinator_root, generation_id);
+    if (!generation)
+      return facman::core::Result<std::optional<ActivationChain>>::failure(
+          generation.error());
+    result.generations.push_back(generation.take_value());
   }
+  if (result.generations.empty())
+    return facman::core::Result<std::optional<ActivationChain>>::failure(failure(
+        "self_maintenance_activation_changed", "activation chain has no generation"));
+  return facman::core::Result<std::optional<ActivationChain>>::success(
+      std::optional<ActivationChain>(std::move(result)));
+}
+
+facman::core::Result<std::optional<ActiveState>> discover_active(
+    const fs::path &coordinator_root) {
+  auto chain = discover_activation_chain(coordinator_root);
+  if (!chain)
+    return facman::core::Result<std::optional<ActiveState>>::failure(chain.error());
+  if (!chain.value().has_value())
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  const auto steps = retirement_steps(*chain.value());
+  bool retired = false;
+  auto journal = validate_retirement_directory(
+      retirement_directory(coordinator_root, *chain.value()), *chain.value(),
+      steps, &retired);
+  if (!journal)
+    return facman::core::Result<std::optional<ActiveState>>::failure(journal.error());
+  if (retired)
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  std::error_code retirement_status;
+  if (fs::exists(retirement_directory(coordinator_root, *chain.value()),
+                 retirement_status))
+    return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "activation-chain retirement is incomplete and must be resumed"));
+  if (retirement_status)
+    return facman::core::Result<std::optional<ActiveState>>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal could not be observed",
+        retirement_status.message()));
+  ActiveState result;
+  result.active = chain.value()->generations.back();
+  result.activation_name = chain.value()->activation_name;
+  result.activation_sha256 = chain.value()->activation_sha256;
+  if (chain.value()->generations.size() > 1U)
+    result.previous = chain.value()->generations[
+        chain.value()->generations.size() - 2U];
   return facman::core::Result<std::optional<ActiveState>>::success(
       std::optional<ActiveState>(std::move(result)));
+}
+
+facman::core::Result<RetirementResponse> retire_active(
+    const RetirementRequest &request, RetirementEffects &effects) {
+  auto reviewed = discover_activation_chain(request.coordinator_root);
+  if (!reviewed)
+    return facman::core::Result<RetirementResponse>::failure(reviewed.error());
+  if (!reviewed.value().has_value())
+    return facman::core::Result<RetirementResponse>::success(
+        {"completed", {}, {}});
+  const ActivationChain review = *reviewed.value();
+  const auto reviewed_steps = retirement_steps(review);
+  if (reviewed_steps.empty())
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement has no validated generation steps"));
+  const Generation &active = reviewed_steps.back().generation;
+  for (const auto &step : reviewed_steps) {
+    if (!same_path(step.generation.logical_root, active.logical_root) ||
+        !same_path(step.generation.state_root, active.state_root) ||
+        !same_path(step.generation.acceptance_root, active.acceptance_root))
+      return facman::core::Result<RetirementResponse>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "activation chain generations do not share one exact authority"));
+  }
+  const fs::path directory = retirement_directory(request.coordinator_root,
+                                                   review);
+  if (!request.apply)
+    return facman::core::Result<RetirementResponse>::success(
+        {"planned", directory, reviewed_steps});
+
+  auto authority = admit_coordinator(request.coordinator_root,
+                                     active.acceptance_root, false);
+  if (!authority)
+    return facman::core::Result<RetirementResponse>::failure(authority.error());
+  const std::string lock_operation =
+      "retirement." + review.activation_sha256.substr(0, 32);
+  auto held = acquire(authority.take_value(), lock_operation);
+  if (!held)
+    return facman::core::Result<RetirementResponse>::failure(held.error());
+  const CoordinatorLockToken coordinator_lock(
+      request.coordinator_root.lexically_normal(), lock_operation);
+
+  // Re-read the complete chain under the global coordinator lock.  The
+  // journal is intentionally bound to this exact head and all ordered
+  // generation records, never to an inferred current install root.
+  auto current = discover_activation_chain(request.coordinator_root);
+  if (!current || !current.value().has_value() ||
+      retirement_chain_digest(*current.value()) != retirement_chain_digest(review))
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "activation chain changed before retirement could begin"));
+  const ActivationChain chain = *current.value();
+  const auto steps = retirement_steps(chain);
+  const fs::path retirement_root = request.coordinator_root / "retirements";
+  std::error_code status;
+  if (fs::exists(retirement_root, status)) {
+    if (status || !fs::is_directory(retirement_root, status) || status)
+      return facman::core::Result<RetirementResponse>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "retirement journal root is unavailable"));
+    for (fs::directory_iterator it(retirement_root, status), end;
+         !status && it != end; it.increment(status)) {
+      if (it->symlink_status(status).type() != fs::file_type::directory || status ||
+          it->path().lexically_normal() != directory.lexically_normal())
+        return facman::core::Result<RetirementResponse>::failure(failure(
+            "self_maintenance_retirement_recovery_required",
+            "retirement journal root contains a stale, foreign, or unknown chain"));
+    }
+    if (status) return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal root changed during enumeration", status.message()));
+  } else if (status || !fs::create_directories(retirement_root, status) || status) {
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal root could not be created", status.message()));
+  }
+  if (!fs::exists(directory, status) &&
+      (!fs::create_directory(directory, status) || status))
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal could not be created", status.message()));
+  if (status || !fs::is_directory(directory, status) || status)
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal path is unsafe"));
+  auto intent = ensure_immutable(directory / "00-intent.v1.json",
+                                 retirement_intent_json(chain, steps));
+  if (!intent)
+    return facman::core::Result<RetirementResponse>::failure(intent.error());
+  bool completed = false;
+  auto validated = validate_retirement_directory(directory, chain, steps,
+                                                 &completed);
+  if (!validated)
+    return facman::core::Result<RetirementResponse>::failure(validated.error());
+  if (completed)
+    return facman::core::Result<RetirementResponse>::success(
+        {"completed", directory, steps});
+
+  for (std::size_t index = 0; index < steps.size(); ++index) {
+    auto entered = exact_retirement_file(retirement_step_path(directory, index,
+                                                               "entered"),
+        retirement_step_json(steps[index], index, "entered"));
+    auto done = exact_retirement_file(retirement_step_path(directory, index,
+                                                            "completed"),
+        retirement_step_json(steps[index], index, "completed"));
+    if (!entered || !done)
+      return facman::core::Result<RetirementResponse>::failure(
+          !entered ? entered.error() : done.error());
+    if (done.value()) continue;
+    if (entered.value())
+      return facman::core::Result<RetirementResponse>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "a retirement step entered its provider/native boundary without a completion receipt",
+          steps[index].generation.install_id));
+    current = discover_activation_chain(request.coordinator_root);
+    if (!current || !current.value().has_value() ||
+        retirement_chain_digest(*current.value()) != retirement_chain_digest(chain))
+      return facman::core::Result<RetirementResponse>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "activation chain changed before a retirement effect"));
+    auto inspected = effects.inspect_retirement_generation(
+        steps[index].generation, steps[index].active);
+    if (!inspected)
+      return facman::core::Result<RetirementResponse>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "provider or native identity is ambiguous before retirement",
+          inspected.error().code + ": " + inspected.error().message));
+    auto marked = ensure_immutable(retirement_step_path(directory, index,
+                                                         "entered"),
+        retirement_step_json(steps[index], index, "entered"));
+    if (!marked)
+      return facman::core::Result<RetirementResponse>::failure(marked.error());
+    auto removed = effects.uninstall_generation(
+        steps[index].generation, steps[index].active, coordinator_lock);
+    if (!removed)
+      return facman::core::Result<RetirementResponse>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "retirement crossed a provider/native boundary without a completion receipt",
+          removed.error().code + ": " + removed.error().message));
+    marked = ensure_immutable(retirement_step_path(directory, index,
+                                                    "completed"),
+        retirement_step_json(steps[index], index, "completed"));
+    if (!marked)
+      return facman::core::Result<RetirementResponse>::failure(marked.error());
+    if (index + 1U == steps.size()) {
+      auto final = ensure_immutable(directory / "99-completed.v1.json",
+          retirement_completed_json(chain, steps.size()));
+      if (!final)
+        return facman::core::Result<RetirementResponse>::failure(final.error());
+      return facman::core::Result<RetirementResponse>::success(
+          {"completed", directory, steps});
+    }
+    // Exactly one non-terminal step is entered per invocation.  A later call
+    // resumes the first durable incomplete step after revalidating the same
+    // chain.
+    return facman::core::Result<RetirementResponse>::success(
+        {"step_completed", directory, steps});
+  }
+  auto final = ensure_immutable(directory / "99-completed.v1.json",
+      retirement_completed_json(chain, steps.size()));
+  if (!final)
+    return facman::core::Result<RetirementResponse>::failure(final.error());
+  return facman::core::Result<RetirementResponse>::success(
+      {"completed", directory, steps});
 }
 
 facman::core::Result<ActiveState> adopt_legacy(

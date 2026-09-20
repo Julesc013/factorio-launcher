@@ -134,6 +134,7 @@ class TestArchitectureTests(unittest.TestCase):
             with mock.patch.dict(
                 os.environ,
                 {
+                    "FACMAN_DEV_ROOT": "",
                     "FACMAN_TASK_ROOT": "",
                     "LOCALAPPDATA": str(local_app_data),
                 },
