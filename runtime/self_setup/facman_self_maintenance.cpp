@@ -1173,6 +1173,363 @@ facman::core::Result<void> validate_retirement_directory(
   return facman::core::Result<void>::success();
 }
 
+constexpr std::size_t kMaximumLifecycleEpochs = 256U;
+constexpr std::size_t kMaximumLifecycleManifestBytes = 64U * 1024U;
+const std::string kCompatibilityEpochId(64U, '0');
+
+facman::core::Error epoch_recovery(std::string message,
+                                   std::string detail = {}) {
+  return failure("self_maintenance_epoch_recovery_required", std::move(message),
+                 std::move(detail));
+}
+
+std::string lifecycle_identity_bytes(const LifecycleEpoch &epoch) {
+  json::ObjectBuilder object;
+  object.add_string("acceptance_root", facman::platform::path_to_utf8(
+      epoch.acceptance_root.lexically_normal()));
+  object.add_string("genesis_generation_id", epoch.genesis_generation_id);
+  object.add_string("logical_root", facman::platform::path_to_utf8(
+      epoch.logical_root.lexically_normal()));
+  object.add_string("predecessor_epoch_id", epoch.predecessor_epoch_id);
+  object.add_string("predecessor_manifest_sha256", epoch.predecessor_manifest_sha256);
+  object.add_string("predecessor_retirement_sha256", epoch.predecessor_retirement_sha256);
+  object.add_string("product_id", "facman");
+  object.add_string("schema", "facman.self_lifecycle_epoch_identity.v1");
+  object.add_string("state_root", facman::platform::path_to_utf8(
+      epoch.state_root.lexically_normal()));
+  return object.serialize() + "\n";
+}
+
+std::string lifecycle_manifest_bytes(const LifecycleEpoch &epoch) {
+  json::ObjectBuilder object;
+  object.add_string("acceptance_root", facman::platform::path_to_utf8(
+      epoch.acceptance_root.lexically_normal()));
+  object.add_string("genesis_generation_id", epoch.genesis_generation_id);
+  object.add_string("logical_root", facman::platform::path_to_utf8(
+      epoch.logical_root.lexically_normal()));
+  object.add_string("predecessor_epoch_id", epoch.predecessor_epoch_id);
+  object.add_string("predecessor_manifest_sha256", epoch.predecessor_manifest_sha256);
+  object.add_string("predecessor_retirement_sha256", epoch.predecessor_retirement_sha256);
+  object.add_string("product_id", "facman");
+  object.add_string("schema", "facman.self_lifecycle_epoch.v1");
+  object.add_string("state_root", facman::platform::path_to_utf8(
+      epoch.state_root.lexically_normal()));
+  object.add_string("epoch_id", epoch.epoch_id);
+  return object.serialize() + "\n";
+}
+
+std::string compatibility_manifest_bytes(const ActivationChain &chain) {
+  json::ObjectBuilder object;
+  object.add_string("activation_name", chain.activation_name);
+  object.add_string("activation_sha256", chain.activation_sha256);
+  object.add_string("chain_digest", retirement_chain_digest(chain));
+  object.add_string("epoch_id", kCompatibilityEpochId);
+  object.add_string("product_id", "facman");
+  object.add_string("schema", "facman.self_lifecycle_epoch_v1_compat.v1");
+  return object.serialize() + "\n";
+}
+
+bool lifecycle_string_fields(const json::Value &value,
+                             std::initializer_list<const char *> names) {
+  return std::all_of(names.begin(), names.end(), [&](const char *name) {
+    const json::Value *field = value.find(name);
+    return field != nullptr && field->is_string();
+  });
+}
+
+facman::core::Result<std::string> read_epoch_manifest(
+    const facman::platform::StableDirectoryObject &directory,
+    const fs::path &leaf) {
+  facman::platform::StableInputFile file;
+  const auto opened = directory.open_child_file_no_follow_pinned(leaf, file);
+  if (!opened.ok() || file.size() == 0 || file.size() > kMaximumLifecycleManifestBytes)
+    return facman::core::Result<std::string>::failure(epoch_recovery(
+        "epoch manifest is missing, unsafe, or over its byte limit", opened.detail));
+  std::string bytes(static_cast<std::size_t>(file.size()), '\0');
+  if (file.read_at(0, bytes.data(), bytes.size()) != bytes.size() ||
+      !file.revalidate().ok() || !file.revalidate_path().ok() ||
+      !directory.revalidate().ok())
+    return facman::core::Result<std::string>::failure(epoch_recovery(
+        "epoch manifest changed while it was read"));
+  return facman::core::Result<std::string>::success(std::move(bytes));
+}
+
+facman::core::Result<LifecycleEpoch> parse_lifecycle_manifest(
+    const std::string &bytes, const std::string &directory_name) {
+  auto document = json::parse(bytes);
+  const std::initializer_list<const char *> keys = {
+      "acceptance_root", "genesis_generation_id", "logical_root",
+      "predecessor_epoch_id", "predecessor_manifest_sha256",
+      "predecessor_retirement_sha256", "product_id", "schema", "state_root",
+      "epoch_id"};
+  if (!document || !exact_keys(document.value(), keys) ||
+      !lifecycle_string_fields(document.value(), keys) ||
+      string_field(document.value(), "product_id") != "facman" ||
+      string_field(document.value(), "schema") != "facman.self_lifecycle_epoch.v1")
+    return facman::core::Result<LifecycleEpoch>::failure(epoch_recovery(
+        "epoch manifest does not have the exact lifecycle schema"));
+  LifecycleEpoch epoch;
+  epoch.epoch_id = string_field(document.value(), "epoch_id");
+  epoch.acceptance_root = facman::platform::path_from_utf8(
+      string_field(document.value(), "acceptance_root"));
+  epoch.genesis_generation_id = string_field(document.value(), "genesis_generation_id");
+  epoch.logical_root = facman::platform::path_from_utf8(
+      string_field(document.value(), "logical_root"));
+  epoch.predecessor_epoch_id = string_field(document.value(), "predecessor_epoch_id");
+  epoch.predecessor_manifest_sha256 = string_field(document.value(), "predecessor_manifest_sha256");
+  epoch.predecessor_retirement_sha256 = string_field(document.value(), "predecessor_retirement_sha256");
+  epoch.state_root = facman::platform::path_from_utf8(
+      string_field(document.value(), "state_root"));
+  if (!digest(epoch.epoch_id) || epoch.epoch_id == kCompatibilityEpochId ||
+      epoch.epoch_id != directory_name ||
+      !digest(epoch.genesis_generation_id) ||
+      (epoch.predecessor_epoch_id.empty() != epoch.predecessor_manifest_sha256.empty()) ||
+      (epoch.predecessor_epoch_id.empty() != epoch.predecessor_retirement_sha256.empty()) ||
+      (!epoch.predecessor_epoch_id.empty() &&
+       (!digest(epoch.predecessor_epoch_id) || !digest(epoch.predecessor_manifest_sha256) ||
+        !digest(epoch.predecessor_retirement_sha256))) ||
+      !epoch.acceptance_root.is_absolute() || !epoch.logical_root.is_absolute() ||
+      !epoch.state_root.is_absolute() ||
+      hash(lifecycle_identity_bytes(epoch)) != epoch.epoch_id ||
+      bytes != lifecycle_manifest_bytes(epoch))
+    return facman::core::Result<LifecycleEpoch>::failure(epoch_recovery(
+        "epoch manifest identity, name, or canonical bytes are invalid"));
+  epoch.manifest_sha256 = hash(bytes);
+  return facman::core::Result<LifecycleEpoch>::success(std::move(epoch));
+}
+
+facman::core::Result<void> validate_epoch_history(LifecycleEpoch &epoch,
+                                                   const fs::path &root,
+                                                   bool compatibility) {
+  if (!compatibility)
+    return digest(epoch.genesis_generation_id)
+        ? facman::core::Result<void>::success()
+        : facman::core::Result<void>::failure(epoch_recovery(
+            "an initialized epoch must reserve one exact genesis generation"));
+  auto chain = discover_activation_chain(root);
+  if (!chain) return facman::core::Result<void>::failure(
+      compatibility ? chain.error() : epoch_recovery("epoch activation history is invalid",
+                                                       chain.error().message));
+  if (!chain.value().has_value()) {
+    for (const char *name : {"generations", "retirements", "maintenance"}) {
+      std::error_code status;
+      if (fs::exists(root / name, status) && !status)
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "epoch has generation or retirement state without an activation history"));
+      if (status) return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch state could not be observed", status.message()));
+    }
+    return facman::core::Result<void>::success();
+  }
+  const ActivationChain &history = *chain.value();
+  if (epoch.genesis_generation_id != history.generations.front().generation_id)
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "epoch genesis generation does not bind the activation genesis"));
+  for (const Generation &generation : history.generations) {
+    if (!same_path(generation.logical_root, epoch.logical_root) ||
+        !same_path(generation.state_root, epoch.state_root) ||
+        !same_path(generation.acceptance_root, epoch.acceptance_root))
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch activation generations do not share the epoch authority"));
+  }
+  auto active = discover_active(root);
+  if (!active) return facman::core::Result<void>::failure(
+      compatibility ? active.error() : epoch_recovery("epoch retirement is incomplete",
+                                                       active.error().message));
+  if (active.value().has_value()) return facman::core::Result<void>::success();
+  const auto steps = retirement_steps(history);
+  const fs::path complete = retirement_directory(root, history) / "99-completed.v1.json";
+  auto marker = read_exact(complete);
+  const std::string expected = retirement_completed_json(history, steps.size());
+  if (!marker || marker.value() != expected)
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "completed epoch retirement marker is unavailable or changed"));
+  epoch.retirement_sha256 = hash(marker.value());
+  return facman::core::Result<void>::success();
+}
+
+bool lifecycle_roots_equal(const LifecycleEpoch &left, const LifecycleEpoch &right) {
+  return same_path(left.acceptance_root, right.acceptance_root) &&
+      same_path(left.logical_root, right.logical_root) &&
+      same_path(left.state_root, right.state_root);
+}
+
+facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
+    const fs::path &coordinator_root) {
+  if (!coordinator_root.is_absolute())
+    return facman::core::Result<LifecycleEpochChain>::failure(failure(
+        "self_maintenance_input_invalid", "coordinator root must be absolute"));
+  LifecycleEpochChain result;
+  std::error_code status;
+  if (!fs::exists(coordinator_root, status)) {
+    if (status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "coordinator root could not be observed", status.message()));
+    return facman::core::Result<LifecycleEpochChain>::success(std::move(result));
+  }
+  facman::platform::StableDirectoryObject coordinator;
+  if (!coordinator.open_no_follow(coordinator_root).ok())
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "coordinator root is not a plain directory"));
+
+  // A real v1 activation chain becomes the non-persisted compatibility
+  // predecessor only after the existing generation and retirement validators
+  // have accepted the whole flat layout.
+  auto flat = discover_activation_chain(coordinator_root);
+  if (!flat) return facman::core::Result<LifecycleEpochChain>::failure(flat.error());
+  if (flat.value().has_value()) {
+    LifecycleEpoch sentinel;
+    sentinel.epoch_id = kCompatibilityEpochId;
+    sentinel.compatibility_epoch = true;
+    sentinel.genesis_generation_id = flat.value()->generations.front().generation_id;
+    sentinel.acceptance_root = flat.value()->generations.front().acceptance_root;
+    sentinel.logical_root = flat.value()->generations.front().logical_root;
+    sentinel.state_root = flat.value()->generations.front().state_root;
+    auto validated = validate_epoch_history(sentinel, coordinator_root, true);
+    if (!validated) return facman::core::Result<LifecycleEpochChain>::failure(validated.error());
+    sentinel.manifest_sha256 = hash(compatibility_manifest_bytes(*flat.value()));
+    result.epochs.push_back(std::move(sentinel));
+  } else {
+    for (const char *name : {"generations", "retirements", "maintenance"}) {
+      if (fs::exists(coordinator_root / name, status) && !status)
+        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+            "flat coordinator has state without a valid activation history"));
+      if (status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "flat coordinator state could not be observed", status.message()));
+    }
+  }
+
+  const fs::path epochs_path = coordinator_root / "epochs";
+  if (!fs::exists(epochs_path, status)) {
+    if (status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch root could not be observed", status.message()));
+    return facman::core::Result<LifecycleEpochChain>::success(std::move(result));
+  }
+  facman::platform::StableDirectoryObject epochs;
+  if (!coordinator.open_child_directory_no_follow( "epochs", epochs).ok())
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch root is not a plain directory"));
+  std::size_t count = 0U;
+  for (fs::directory_iterator it(epochs.path(), status), end; !status && it != end;
+       it.increment(status)) {
+    if (++count > kMaximumLifecycleEpochs)
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "epoch root exceeds its entry limit"));
+    const auto type = it->symlink_status(status);
+    const std::string name = it->path().filename().string();
+    if (status || type.type() != fs::file_type::directory || !digest(name) ||
+        name == kCompatibilityEpochId)
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "epoch root contains a non-epoch or linked entry"));
+    facman::platform::StableDirectoryObject epoch_directory;
+    if (!epochs.open_child_directory_no_follow(name, epoch_directory).ok())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "epoch directory could not be pinned"));
+    auto bytes = read_epoch_manifest(epoch_directory, "epoch.v1.json");
+    if (!bytes) return facman::core::Result<LifecycleEpochChain>::failure(bytes.error());
+    auto epoch = parse_lifecycle_manifest(bytes.value(), name);
+    if (!epoch) return facman::core::Result<LifecycleEpochChain>::failure(epoch.error());
+    std::error_code inner_status;
+    for (fs::directory_iterator files(epoch_directory.path(), inner_status), finish;
+         !inner_status && files != finish; files.increment(inner_status)) {
+      const std::string leaf = files->path().filename().string();
+      const auto kind = files->symlink_status(inner_status);
+      if (inner_status || leaf != "epoch.v1.json")
+        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+            "real epoch contains state before epoch routing is admitted"));
+      if (kind.type() != fs::file_type::regular)
+        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+            "epoch manifest is not a regular file"));
+    }
+    if (inner_status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch directory changed during enumeration", inner_status.message()));
+    auto history = validate_epoch_history(epoch.value(), epoch_directory.path(), false);
+    if (!history) return facman::core::Result<LifecycleEpochChain>::failure(history.error());
+    if (!epoch_directory.revalidate().ok())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "epoch state changed while its pinned children were validated"));
+    result.epochs.push_back(epoch.take_value());
+  }
+  if (status || !epochs.revalidate().ok() || !coordinator.revalidate().ok())
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch directories changed during discovery", status.message()));
+
+  std::vector<const LifecycleEpoch *> real;
+  for (const LifecycleEpoch &epoch : result.epochs)
+    if (!epoch.compatibility_epoch) real.push_back(&epoch);
+  if (real.empty()) return facman::core::Result<LifecycleEpochChain>::success(std::move(result));
+  const LifecycleEpoch *root = nullptr;
+  const bool has_sentinel = !result.epochs.empty() &&
+      result.epochs.front().compatibility_epoch;
+  std::vector<const LifecycleEpoch *> referenced;
+  for (const LifecycleEpoch *epoch : real) {
+    if (epoch->predecessor_epoch_id.empty() ||
+        (has_sentinel && epoch->predecessor_epoch_id == kCompatibilityEpochId)) {
+      if (root != nullptr) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "lifecycle epoch graph has more than one genesis"));
+      if (epoch->predecessor_epoch_id == kCompatibilityEpochId) {
+        const LifecycleEpoch &sentinel = result.epochs.front();
+        if (sentinel.retirement_sha256.empty() ||
+            epoch->predecessor_manifest_sha256 != sentinel.manifest_sha256 ||
+            epoch->predecessor_retirement_sha256 != sentinel.retirement_sha256)
+          return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+              "compatibility predecessor digest or completed retirement is invalid"));
+      }
+      root = epoch;
+      continue;
+    }
+    const LifecycleEpoch *parent = nullptr;
+    for (const LifecycleEpoch &candidate : result.epochs)
+      if (candidate.epoch_id == epoch->predecessor_epoch_id) parent = &candidate;
+    if (parent == nullptr || parent->manifest_sha256 != epoch->predecessor_manifest_sha256 ||
+        parent->retirement_sha256.empty() ||
+        parent->retirement_sha256 != epoch->predecessor_retirement_sha256 ||
+        std::find(referenced.begin(), referenced.end(), parent) != referenced.end())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "lifecycle epoch predecessor is missing, active, changed, or forked"));
+    referenced.push_back(parent);
+  }
+  if (root == nullptr) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+      "lifecycle epoch graph has no genesis or contains a cycle"));
+  if (has_sentinel) {
+    if (root->predecessor_epoch_id != kCompatibilityEpochId) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "the compatibility epoch must be the direct predecessor of the first real epoch"));
+  } else if (!root->predecessor_epoch_id.empty()) {
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "a real lifecycle epoch genesis must not name a predecessor"));
+  }
+  const LifecycleEpoch *cursor = root;
+  std::size_t visited = 1U;
+  while (true) {
+    const LifecycleEpoch *child = nullptr;
+    for (const LifecycleEpoch *candidate : real)
+      if (candidate->predecessor_epoch_id == cursor->epoch_id) child = candidate;
+    if (child == nullptr) break;
+    if (++visited > real.size()) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "lifecycle epoch graph contains a cycle"));
+    cursor = child;
+  }
+  if (visited != real.size()) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+      "lifecycle epoch graph contains an orphan"));
+  const LifecycleEpoch &authority = result.epochs.front().compatibility_epoch
+      ? result.epochs.front() : *root;
+  for (const LifecycleEpoch &epoch : result.epochs)
+    if (!lifecycle_roots_equal(authority, epoch))
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "lifecycle epochs do not share one exact authority"));
+  LifecycleEpochChain ordered;
+  if (has_sentinel) ordered.epochs.push_back(result.epochs.front());
+  cursor = root;
+  for (;;) {
+    ordered.epochs.push_back(*cursor);
+    const LifecycleEpoch *child = nullptr;
+    for (const LifecycleEpoch *candidate : real)
+      if (candidate->predecessor_epoch_id == cursor->epoch_id) child = candidate;
+    if (child == nullptr) break;
+    cursor = child;
+  }
+  return facman::core::Result<LifecycleEpochChain>::success(std::move(ordered));
+}
+
 } // namespace
 
 fs::path global_lock_path(const fs::path &coordinator_root) {
@@ -1325,6 +1682,163 @@ facman::core::Result<std::optional<ActiveState>> discover_active(
         chain.value()->generations.size() - 2U];
   return facman::core::Result<std::optional<ActiveState>>::success(
       std::optional<ActiveState>(std::move(result)));
+}
+
+facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
+    const fs::path &coordinator_root) {
+  return discover_lifecycle_epoch_chain_impl(coordinator_root);
+}
+
+facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
+    const fs::path &coordinator_root, const LifecycleEpoch &proposed,
+    bool apply) {
+  if (!coordinator_root.is_absolute() || !proposed.acceptance_root.is_absolute() ||
+      !proposed.logical_root.is_absolute() || !proposed.state_root.is_absolute() ||
+      (!proposed.genesis_generation_id.empty() && !digest(proposed.genesis_generation_id)))
+    return facman::core::Result<LifecycleEpochChain>::failure(failure(
+        "self_maintenance_input_invalid", "lifecycle epoch inputs are incomplete"));
+  auto observed = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  if (!observed) return facman::core::Result<LifecycleEpochChain>::failure(observed.error());
+
+  LifecycleEpoch next = proposed;
+  next.compatibility_epoch = false;
+  next.manifest_sha256.clear();
+  next.retirement_sha256.clear();
+  const std::string submitted_id = hash(lifecycle_identity_bytes(next));
+  if (!next.epoch_id.empty() && next.epoch_id != submitted_id)
+    return facman::core::Result<LifecycleEpochChain>::failure(failure(
+        "self_maintenance_input_invalid", "proposed lifecycle epoch id is not canonical"));
+  next.epoch_id = submitted_id;
+  const std::string submitted_manifest = lifecycle_manifest_bytes(next);
+  bool exact_existing = false;
+  for (const LifecycleEpoch &existing : observed.value().epochs) {
+    if (existing.epoch_id != next.epoch_id) continue;
+    if (existing.compatibility_epoch || existing.manifest_sha256 != hash(submitted_manifest))
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "an existing lifecycle epoch id has different immutable bytes"));
+    exact_existing = true;
+  }
+  if (exact_existing && !apply) return observed;
+  if (exact_existing && apply) {
+    auto admission = admit_coordinator(coordinator_root, next.acceptance_root, false);
+    if (!admission) return facman::core::Result<LifecycleEpochChain>::failure(admission.error());
+    auto lock = acquire(admission.take_value(), "lifecycle.epoch.publish");
+    if (!lock) return facman::core::Result<LifecycleEpochChain>::failure(lock.error());
+    auto rechecked = discover_lifecycle_epoch_chain_impl(coordinator_root);
+    if (!rechecked) return facman::core::Result<LifecycleEpochChain>::failure(rechecked.error());
+    facman::platform::StableDirectoryObject epochs, epoch_directory;
+    if (!lock.value().admission.coordinator.open_child_directory_no_follow_for_relative_writes(
+            "epochs", epochs).ok() ||
+        !epochs.open_child_directory_no_follow_for_relative_writes(next.epoch_id,
+            epoch_directory).ok() || !epoch_directory.flush_metadata().ok() ||
+        !epochs.flush_metadata().ok() ||
+        !lock.value().admission.coordinator.flush_metadata().ok())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "exact epoch retry could not revalidate and flush its directory hierarchy"));
+    return discover_lifecycle_epoch_chain_impl(coordinator_root);
+  }
+  const LifecycleEpoch *predecessor = observed.value().epochs.empty()
+      ? nullptr : &observed.value().epochs.back();
+  if (predecessor == nullptr) {
+    if (!next.predecessor_epoch_id.empty() ||
+        !next.predecessor_manifest_sha256.empty() ||
+        !next.predecessor_retirement_sha256.empty())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "the first lifecycle epoch must have empty predecessor bindings"));
+  } else {
+    if (!lifecycle_roots_equal(*predecessor, next) ||
+        predecessor->retirement_sha256.empty())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "a lifecycle epoch predecessor is active, incomplete, or has different roots"));
+    if (next.predecessor_epoch_id != predecessor->epoch_id ||
+        next.predecessor_manifest_sha256 != predecessor->manifest_sha256 ||
+        next.predecessor_retirement_sha256 != predecessor->retirement_sha256)
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "lifecycle epoch predecessor bindings do not match the current head"));
+  }
+  // This layer only publishes the immutable boundary.  It does not route a
+  // provider operation into the epoch yet, so a new epoch is initialized with
+  // no activation history and consequently no genesis generation.
+  if (!digest(next.genesis_generation_id))
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "manifest-only publication must reserve one exact genesis generation"));
+  if (next.epoch_id == kCompatibilityEpochId)
+    return facman::core::Result<LifecycleEpochChain>::failure(failure(
+        "self_maintenance_input_invalid", "the compatibility epoch id cannot be persisted"));
+  const std::string bytes = lifecycle_manifest_bytes(next);
+  if (bytes.empty() || bytes.size() > kMaximumLifecycleManifestBytes)
+    return facman::core::Result<LifecycleEpochChain>::failure(failure(
+        "self_maintenance_input_invalid", "lifecycle epoch manifest exceeds its byte limit"));
+  next.manifest_sha256 = hash(bytes);
+  LifecycleEpochChain preview = observed.value();
+  preview.epochs.push_back(next);
+  if (!apply) return facman::core::Result<LifecycleEpochChain>::success(std::move(preview));
+
+  auto admission = admit_coordinator(coordinator_root, next.acceptance_root, true);
+  if (!admission) return facman::core::Result<LifecycleEpochChain>::failure(admission.error());
+  auto created = create_admitted_coordinator(admission.value());
+  if (!created) return facman::core::Result<LifecycleEpochChain>::failure(created.error());
+  auto lock = acquire(admission.take_value(), "lifecycle.epoch.publish");
+  if (!lock) return facman::core::Result<LifecycleEpochChain>::failure(lock.error());
+  auto rechecked = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  if (!rechecked) return facman::core::Result<LifecycleEpochChain>::failure(rechecked.error());
+  if (rechecked.value().epochs.size() != observed.value().epochs.size())
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "lifecycle epoch chain changed before publication"));
+  for (std::size_t index = 0; index < observed.value().epochs.size(); ++index) {
+    const LifecycleEpoch &before = observed.value().epochs[index];
+    const LifecycleEpoch &after = rechecked.value().epochs[index];
+    if (before.epoch_id != after.epoch_id ||
+        before.manifest_sha256 != after.manifest_sha256 ||
+        before.retirement_sha256 != after.retirement_sha256)
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "lifecycle epoch predecessor chain changed before publication"));
+  }
+
+  facman::platform::StableDirectoryObject epochs;
+  auto opened = lock.value().admission.coordinator.open_child_directory_no_follow_for_relative_writes(
+      "epochs", epochs);
+  if (!opened.ok()) {
+    facman::platform::PathIdentity identity;
+    const auto inspected = facman::platform::inspect_path_no_follow(
+        coordinator_root / "epochs", identity);
+    if (inspected.ok() && !identity.exists)
+      opened = lock.value().admission.coordinator.create_child_directory_exclusive(
+          "epochs", epochs);
+  }
+  if (!opened.ok()) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+      "epoch root could not be opened or created under the held coordinator", opened.detail));
+  facman::platform::StableDirectoryObject epoch_directory;
+  opened = epochs.create_child_directory_exclusive(next.epoch_id, epoch_directory);
+  if (!opened.ok()) {
+    opened = epochs.open_child_directory_no_follow_for_relative_writes(next.epoch_id,
+                                                                         epoch_directory);
+    if (!opened.ok()) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch directory could not be created or pinned", opened.detail));
+    auto existing = read_epoch_manifest(epoch_directory, "epoch.v1.json");
+    if (!existing || existing.value() != bytes)
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "existing epoch directory is missing its exact immutable manifest"));
+    if (!epoch_directory.flush_metadata().ok() || !epochs.flush_metadata().ok() ||
+        !lock.value().admission.coordinator.flush_metadata().ok())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "existing epoch retry could not flush the directory hierarchy"));
+    return discover_lifecycle_epoch_chain_impl(coordinator_root);
+  }
+  facman::platform::DurableOutputFile output;
+  const auto staged = epoch_directory.create_child_file_exclusive(
+      "epoch.staging.v1.json", kMaximumLifecycleManifestBytes, output);
+  if (!staged.ok() || output.write_at(0, bytes.data(), bytes.size()) != bytes.size())
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch manifest staging could not be completed", staged.detail));
+  const auto published = output.publish_sibling_no_replace("epoch.v1.json");
+  if (!published.ok()) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+      "epoch manifest publication did not reach a verified durable state", published.detail));
+  if (!epoch_directory.flush_metadata().ok() || !epochs.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch directory hierarchy could not be flushed"));
+  return discover_lifecycle_epoch_chain_impl(coordinator_root);
 }
 
 facman::core::Result<RetirementResponse> retire_active(

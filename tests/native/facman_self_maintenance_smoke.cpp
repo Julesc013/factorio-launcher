@@ -1099,6 +1099,129 @@ int main() {
                 "global coordinator lock did not serialize roots");
   external.remove_exact(lock_detail);
 
+  // Epoch manifests are a separate immutable chain.  The initial publication
+  // intentionally has no activation history; the next lifecycle operation
+  // will own routing an activation into this epoch.
+  const fs::path epoch_root = root / "epoch-manifest";
+  facman::self_maintenance::LifecycleEpoch first_epoch;
+  first_epoch.acceptance_root = epoch_root;
+  first_epoch.genesis_generation_id = std::string(64, 'a');
+  first_epoch.logical_root = epoch_root / "FacMan";
+  first_epoch.state_root = epoch_root / "state";
+  const fs::path epoch_coordinator = epoch_root / "coordinator";
+  fs::create_directories(epoch_root);
+  auto epoch_preview = facman::self_maintenance::publish_lifecycle_epoch(
+      epoch_coordinator, first_epoch, false);
+  const bool preview_left_coordinator_absent = !fs::exists(epoch_coordinator);
+  auto epoch_published = facman::self_maintenance::publish_lifecycle_epoch(
+      epoch_coordinator, first_epoch, true);
+  auto epoch_chain = facman::self_maintenance::discover_lifecycle_epoch_chain(
+      epoch_coordinator);
+  auto epoch_retry = facman::self_maintenance::publish_lifecycle_epoch(
+      epoch_coordinator, first_epoch, true);
+  const auto json_path = [](std::string value) {
+    std::string escaped;
+    for (const char character : value) {
+      if (character == '\\') escaped += "\\\\";
+      else if (character == '/') escaped += "\\/";
+      else escaped += character;
+    }
+    return escaped;
+  };
+  const std::string expected_epoch_identity =
+      "{\"acceptance_root\":\"" +
+      json_path(facman::platform::path_to_utf8(epoch_root.lexically_normal())) +
+      "\",\"genesis_generation_id\":\"" + std::string(64, 'a') +
+      "\",\"logical_root\":\"" +
+      json_path(facman::platform::path_to_utf8((epoch_root / "FacMan").lexically_normal())) +
+      "\",\"predecessor_epoch_id\":\"\",\"predecessor_manifest_sha256\":\"\","
+      "\"predecessor_retirement_sha256\":\"\",\"product_id\":\"facman\","
+      "\"schema\":\"facman.self_lifecycle_epoch_identity.v1\",\"state_root\":\"" +
+      json_path(facman::platform::path_to_utf8((epoch_root / "state").lexically_normal())) +
+      "\"}\n";
+  if (!epoch_preview)
+    std::cerr << "epoch preview error: " << epoch_preview.error().code << ": "
+              << epoch_preview.error().message << '\n';
+  if (!epoch_published)
+    std::cerr << "epoch publish error: " << epoch_published.error().code << ": "
+              << epoch_published.error().message << " ("
+              << epoch_published.error().detail << ")\n";
+  if (!epoch_chain)
+    std::cerr << "epoch discovery error: " << epoch_chain.error().code << ": "
+              << epoch_chain.error().message << '\n';
+  if (!epoch_retry)
+    std::cerr << "epoch retry error: " << epoch_retry.error().code << ": "
+              << epoch_retry.error().message << '\n';
+  if (epoch_chain && (!preview_left_coordinator_absent ||
+                      epoch_chain.value().epochs.size() != 1U ||
+                      epoch_chain.value().epochs.front().epoch_id !=
+                          sha(expected_epoch_identity))) {
+    std::cerr << "epoch canonical mismatch: preview_absent="
+              << preview_left_coordinator_absent << " count="
+              << epoch_chain.value().epochs.size();
+    if (!epoch_chain.value().epochs.empty())
+      std::cerr << " actual_id=" << epoch_chain.value().epochs.front().epoch_id
+                << " expected_id=" << sha(expected_epoch_identity);
+    std::cerr << '\n';
+  }
+  if (epoch_retry && epoch_retry.value().epochs.size() != 1U)
+    std::cerr << "epoch retry count=" << epoch_retry.value().epochs.size() << '\n';
+  ok &= require(epoch_preview && preview_left_coordinator_absent &&
+                    epoch_published && epoch_chain && epoch_retry &&
+                    epoch_chain.value().epochs.size() == 1U &&
+                    epoch_chain.value().epochs.front().epoch_id ==
+                        sha(expected_epoch_identity) &&
+                    epoch_retry.value().epochs.size() == 1U,
+                "epoch manifest publication was not canonical, durable, or idempotent");
+
+  auto invalid_epoch = first_epoch;
+  invalid_epoch.epoch_id = std::string(64, '0');
+  auto invalid_epoch_result = facman::self_maintenance::publish_lifecycle_epoch(
+      epoch_coordinator, invalid_epoch, false);
+  const fs::path incomplete_epoch_root = root / "epoch-incomplete" / "coordinator" /
+      "epochs" / std::string(64, 'a');
+  fs::create_directories(incomplete_epoch_root);
+  auto incomplete_epoch = facman::self_maintenance::discover_lifecycle_epoch_chain(
+      root / "epoch-incomplete" / "coordinator");
+  ok &= require(!invalid_epoch_result && !incomplete_epoch &&
+                    incomplete_epoch.error().code ==
+                        "self_maintenance_epoch_recovery_required",
+                "epoch id refusal or incomplete manifest recovery was not enforced");
+
+  const fs::path forbidden_epoch_state = epoch_coordinator / "epochs" /
+      epoch_chain.value().epochs.front().epoch_id / "maintenance";
+  fs::create_directories(forbidden_epoch_state);
+  auto state_before_routing = facman::self_maintenance::discover_lifecycle_epoch_chain(
+      epoch_coordinator);
+  fs::remove_all(forbidden_epoch_state, ignored);
+  ok &= require(!state_before_routing &&
+                    state_before_routing.error().code ==
+                        "self_maintenance_epoch_recovery_required",
+                "real epoch state was admitted before epoch routing exists");
+
+  // A completed flat v1 retirement is represented by the synthesized all-zero
+  // predecessor and can seed the first real epoch without changing routing.
+  auto v1_chain = facman::self_maintenance::discover_lifecycle_epoch_chain(
+      completed_chain.coordinator_root);
+  facman::self_maintenance::LifecycleEpoch successor_epoch;
+  if (v1_chain && !v1_chain.value().epochs.empty()) {
+    const auto &compatibility = v1_chain.value().epochs.back();
+    successor_epoch.acceptance_root = compatibility.acceptance_root;
+    successor_epoch.genesis_generation_id = std::string(64, 'b');
+    successor_epoch.logical_root = compatibility.logical_root;
+    successor_epoch.state_root = compatibility.state_root;
+    successor_epoch.predecessor_epoch_id = compatibility.epoch_id;
+    successor_epoch.predecessor_manifest_sha256 = compatibility.manifest_sha256;
+    successor_epoch.predecessor_retirement_sha256 = compatibility.retirement_sha256;
+  }
+  auto v1_successor = facman::self_maintenance::publish_lifecycle_epoch(
+      completed_chain.coordinator_root, successor_epoch, true);
+  ok &= require(v1_chain && v1_chain.value().epochs.size() == 1U &&
+                    v1_chain.value().epochs.front().compatibility_epoch &&
+                    !v1_chain.value().epochs.front().retirement_sha256.empty() &&
+                    v1_successor && v1_successor.value().epochs.size() == 2U,
+                "completed flat v1 history did not seed its first epoch");
+
   fs::remove_all(root, ignored);
   return ok ? 0 : 1;
 }
