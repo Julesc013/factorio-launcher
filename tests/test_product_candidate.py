@@ -317,6 +317,10 @@ class ProductCandidateTests(unittest.TestCase):
                 archive.writestr(f"facman/generations/{VERSION}/FacMan.exe", b"tampered")
                 archive.writestr("facman/maintenance/FacManSetup.exe", b"setup")
                 archive.writestr("facman/state/current-generation.v1.json", b"state")
+                archive.writestr(
+                    "facman/state/self-maintenance-package.v1.json",
+                    b"maintenance",
+                )
             receipt = root / "receipt.json"
             result = package_contract_tck.main([
                 "--profile", "windows_product_x64", "--canonical-stage", str(stage),
@@ -339,6 +343,10 @@ class ProductCandidateTests(unittest.TestCase):
                 archive.writestr(f"facman/generations/{VERSION}/FacMan.exe", b"canonical")
                 archive.writestr("facman/maintenance/FacManSetup.exe", b"setup")
                 archive.writestr("facman/state/current-generation.v1.json", b"state")
+                archive.writestr(
+                    "facman/state/self-maintenance-package.v1.json",
+                    b"maintenance",
+                )
             receipt = root / "evidence/receipt.json"
             arguments = [
                 "--profile", "windows_product_x64", "--canonical-stage", str(stage),

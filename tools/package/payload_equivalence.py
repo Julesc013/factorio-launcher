@@ -53,6 +53,7 @@ PAYLOAD_ADAPTERS = {
         required_adapter_files=(
             "facman/maintenance/FacManSetup.exe",
             "facman/state/current-generation.v1.json",
+            "facman/state/self-maintenance-package.v1.json",
         ),
         exact_adapter_file_sha256=(),
         executable_adapter_files=(),
