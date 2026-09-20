@@ -70,6 +70,31 @@ struct ActivationChain {
   std::string activation_sha256;
 };
 
+// A lifecycle epoch is an immutable, content-addressed boundary around a
+// self-maintenance activation history.  The all-zero epoch id is reserved for
+// the synthesized compatibility view of the pre-epoch (v1) layout and is
+// never persisted beneath coordinator/epochs.
+struct LifecycleEpoch {
+  std::string epoch_id;
+  std::filesystem::path acceptance_root;
+  std::string genesis_generation_id;
+  std::filesystem::path logical_root;
+  std::string predecessor_epoch_id;
+  std::string predecessor_manifest_sha256;
+  std::string predecessor_retirement_sha256;
+  std::filesystem::path state_root;
+
+  // Observed immutable bytes, populated by discovery.  They are not members
+  // of the persisted epoch identity document.
+  std::string manifest_sha256;
+  std::string retirement_sha256;
+  bool compatibility_epoch = false;
+};
+
+struct LifecycleEpochChain {
+  std::vector<LifecycleEpoch> epochs;
+};
+
 struct RetirementStep {
   Generation generation;
   bool active = false;
@@ -213,6 +238,11 @@ facman::core::Result<std::optional<ActiveState>> discover_active(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(
     const std::filesystem::path &coordinator_root);
+facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
+    const std::filesystem::path &coordinator_root);
+facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
+    const std::filesystem::path &coordinator_root,
+    const LifecycleEpoch &proposed, bool apply);
 facman::core::Result<RetirementResponse> retire_active(
     const RetirementRequest &request, RetirementEffects &effects);
 facman::core::Result<ActiveState> adopt_legacy(
