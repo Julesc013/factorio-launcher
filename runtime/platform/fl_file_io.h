@@ -12,6 +12,8 @@
 
 namespace facman::platform {
 
+class DurableOutputFile;
+
 enum class DurabilityLevel {
     none,
     file_flushed,
@@ -104,6 +106,7 @@ public:
     bool open() const noexcept;
 
 private:
+    friend class StableDirectoryObject;
     IoStatus open_no_follow_impl(const std::filesystem::path& path, bool pinned);
     struct Impl;
     std::unique_ptr<Impl> impl_;
@@ -119,15 +122,39 @@ public:
     StableDirectoryObject& operator=(const StableDirectoryObject&) = delete;
 
     IoStatus open_no_follow(const std::filesystem::path& path);
+    IoStatus open_no_follow_for_relative_writes(const std::filesystem::path& path);
     IoStatus revalidate() const;
     IoStatus validate_descendant(
         const std::filesystem::path& path,
         bool allow_absent_leaf = false) const;
+    // These operations accept one conservative portable filename component and
+    // resolve it from the held directory object, never from a reconstructed path.
+    IoStatus open_child_directory_no_follow(
+        const std::filesystem::path& leaf, StableDirectoryObject& child) const;
+    // Opens an existing plain child directory with the capability required for
+    // handle-relative exclusive child creation.
+    IoStatus open_child_directory_no_follow_for_relative_writes(
+        const std::filesystem::path& leaf, StableDirectoryObject& child) const;
+    IoStatus create_child_directory_exclusive(
+        const std::filesystem::path& leaf, StableDirectoryObject& child) const;
+    IoStatus open_child_file_no_follow_pinned(
+        const std::filesystem::path& leaf, StableInputFile& child) const;
+    IoStatus create_child_file_exclusive(
+        const std::filesystem::path& leaf,
+        std::uint64_t maximum_size,
+        DurableOutputFile& child) const;
+    IoStatus flush_metadata() const;
     const PathIdentity& identity() const noexcept;
     const std::filesystem::path& path() const noexcept;
     bool open() const noexcept;
 
 private:
+    friend class DurableOutputFile;
+    IoStatus open_no_follow_impl(const std::filesystem::path& path, bool relative_writes);
+    IoStatus open_child_directory_no_follow_impl(
+        const std::filesystem::path& leaf,
+        StableDirectoryObject& child,
+        bool relative_writes) const;
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
@@ -145,11 +172,13 @@ public:
     std::size_t write_at(std::uint64_t offset, const void* buffer, std::size_t size);
     IoStatus flush_file_and_parent();
     IoStatus publish_no_replace(const std::filesystem::path& destination);
+    IoStatus publish_sibling_no_replace(const std::filesystem::path& destination_leaf);
     IoStatus discard_open();
     void close_without_flush() noexcept;
     const std::filesystem::path& path() const noexcept;
 
 private:
+    friend class StableDirectoryObject;
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
@@ -168,6 +197,13 @@ IoStatus inspect_path_no_follow(
     PathIdentity& identity);
 std::filesystem::path path_from_utf8(const std::string& value);
 std::string path_to_utf8(const std::filesystem::path& value);
+
+namespace testing {
+
+// Test-only, thread-local fault seam for the post-rename recovery boundary.
+void set_relative_publish_post_rename_fault(bool enabled) noexcept;
+
+} // namespace testing
 
 } // namespace facman::platform
 
