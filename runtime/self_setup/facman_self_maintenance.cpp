@@ -1362,6 +1362,14 @@ std::string epoch_activation_name(const std::string &generation_id) {
   return "activation.epoch.genesis." + generation_id + ".v2.json";
 }
 
+std::string epoch_generation_staging_name(const std::string &generation_id) {
+  return "generation.staging." + generation_id + ".v2.json";
+}
+
+std::string epoch_activation_staging_name(const std::string &generation_id) {
+  return "activation.staging.epoch.genesis." + generation_id + ".v2.json";
+}
+
 facman::core::Result<std::string> read_epoch_relative_bounded(
     const facman::platform::StableDirectoryObject &parent,
     const fs::path &leaf, std::size_t maximum_size) {
@@ -1519,6 +1527,9 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
       return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
           "epoch generation-only state is foreign or mismatched"));
     if (names.empty()) return facman::core::Result<std::optional<ActiveState>>::success({});
+    if (expected != nullptr && names.size() == 1U &&
+        names.front() == epoch_generation_staging_name(expected->generation_id))
+      return facman::core::Result<std::optional<ActiveState>>::success({});
     if (names.size() != 1U || names.front() != epoch_generation_name(epoch.genesis_generation_id))
       return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
           "epoch generation-only state is foreign or mismatched"));
@@ -1541,6 +1552,10 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
         "epoch genesis directories could not be enumerated"));
   if (generation_names.empty() && activation_names.empty() && allow_incomplete)
     return facman::core::Result<std::optional<ActiveState>>::success({});
+  if (allow_incomplete && expected != nullptr && generation_names.size() == 1U &&
+      generation_names.front() == epoch_generation_staging_name(expected->generation_id) &&
+      activation_names.empty())
+    return facman::core::Result<std::optional<ActiveState>>::success({});
   if (generation_names.size() != 1U || generation_names.front() !=
           epoch_generation_name(epoch.genesis_generation_id))
     return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
@@ -1553,6 +1568,9 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
     return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
         "epoch generation does not match the requested genesis"));
   if (activation_names.empty() && allow_incomplete)
+    return facman::core::Result<std::optional<ActiveState>>::success({});
+  if (allow_incomplete && expected != nullptr && activation_names.size() == 1U &&
+      activation_names.front() == epoch_activation_staging_name(expected->generation_id))
     return facman::core::Result<std::optional<ActiveState>>::success({});
   if (activation_names.size() != 1U || activation_names.front() !=
           epoch_activation_name(epoch.genesis_generation_id))
@@ -1612,12 +1630,44 @@ facman::core::Result<void> publish_epoch_record(
           "epoch immutable record already exists with different bytes"));
     return facman::core::Result<void>::success();
   }
-  facman::platform::DurableOutputFile output;
-  const auto staged = directory.create_child_file_exclusive(staging_name,
-      kMaximumEpochGenesisRecordBytes, output);
-  if (!staged.ok() || output.write_at(0, bytes.data(), bytes.size()) != bytes.size())
+  std::vector<fs::path> names;
+  if (!directory.list_child_names_bounded(4U, names).ok())
     return facman::core::Result<void>::failure(epoch_recovery(
-        "epoch record staging could not be completed", staged.detail));
+        "epoch record directory could not be enumerated for recovery"));
+  const auto present = [&](const std::string &name) {
+    return std::find(names.begin(), names.end(), fs::path(name)) != names.end();
+  };
+  if (present(final_name)) return facman::core::Result<void>::failure(epoch_recovery(
+      "epoch final record is unsafe or changed"));
+  facman::platform::DurableOutputFile output;
+  if (present(staging_name)) {
+    facman::platform::FileIdentity staging_identity;
+    std::string staged_bytes;
+    bool staged_ok = false;
+    {
+      facman::platform::StableInputFile staging;
+      const auto pinned = directory.open_child_file_no_follow_pinned(staging_name, staging);
+      if (pinned.ok() && staging.size() != 0 &&
+          staging.size() <= kMaximumEpochGenesisRecordBytes) {
+        staged_bytes.resize(static_cast<std::size_t>(staging.size()));
+        staged_ok = staging.read_at(0, staged_bytes.data(), staged_bytes.size()) ==
+                staged_bytes.size() && staging.revalidate().ok() &&
+            staging.revalidate_path().ok() && directory.revalidate().ok();
+        if (staged_ok) staging_identity = staging.identity();
+      }
+    }
+    if (!staged_ok || staged_bytes != bytes || !staging_identity.regular_file ||
+        !directory.reopen_child_file_no_follow_for_relative_publish(staging_name,
+            staging_identity, kMaximumEpochGenesisRecordBytes, output).ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch staging record is partial, foreign, or substituted"));
+  } else {
+    const auto staged = directory.create_child_file_exclusive(staging_name,
+        kMaximumEpochGenesisRecordBytes, output);
+    if (!staged.ok() || output.write_at(0, bytes.data(), bytes.size()) != bytes.size())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch record staging could not be completed", staged.detail));
+  }
   const auto published = output.publish_sibling_no_replace(final_name);
   if (!published.ok()) {
     auto observed = read_epoch_relative_bounded(directory, final_name,
@@ -2026,11 +2076,11 @@ facman::core::Result<ActiveState> activate_lifecycle_epoch_genesis(
         !generations ? generations.error() : activations.error());
     const std::string generation_bytes = epoch_generation_bytes(epoch.value(), request.generation);
     auto written = publish_epoch_record(generations.value(),
-        "generation.staging." + request.generation.generation_id + ".v2.json",
+        epoch_generation_staging_name(request.generation.generation_id),
         epoch_generation_name(request.generation.generation_id), generation_bytes);
     if (!written) return facman::core::Result<ActiveState>::failure(written.error());
     written = publish_epoch_record(activations.value(),
-        "activation.staging.epoch.genesis." + request.generation.generation_id + ".v2.json",
+        epoch_activation_staging_name(request.generation.generation_id),
         epoch_activation_name(request.generation.generation_id),
         epoch_activation_bytes(epoch.value(), request.generation, hash(generation_bytes)));
     if (!written) return facman::core::Result<ActiveState>::failure(written.error());

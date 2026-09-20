@@ -29,6 +29,17 @@ using facman::self_maintenance::ShellState;
 
 namespace {
 
+fs::path before_reopen_source;
+fs::path before_reopen_moved;
+
+void substitute_before_reopen(const fs::path &path) {
+  if (path != before_reopen_source) return;
+  std::error_code error;
+  fs::rename(path, before_reopen_moved, error);
+  if (error) return;
+  std::ofstream(path, std::ios::binary | std::ios::trunc) << "foreign staging bytes";
+}
+
 std::string sha(const std::string &value) {
   return facman::base::sha256_hex_bytes(
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
@@ -1219,9 +1230,13 @@ int main() {
       : facman::core::Result<Generation>::failure({"test", "peer epoch was not canonical", ""});
   fs::create_directories(genesis_coordinator / "epochs" / genesis_request.epoch_id / "generations");
   genesis_request.apply = true;
-  facman::platform::testing::set_relative_publish_post_rename_fault(true);
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(1U);
+  auto genesis_staging = facman::self_maintenance::activate_lifecycle_epoch_genesis(genesis_request);
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(0U);
+  const bool generation_staging_present = fs::exists(genesis_coordinator / "epochs" /
+      genesis_request.epoch_id / "generations" /
+      ("generation.staging." + epoch_generation.generation_id + ".v2.json"));
   auto genesis_apply = facman::self_maintenance::activate_lifecycle_epoch_genesis(genesis_request);
-  facman::platform::testing::set_relative_publish_post_rename_fault(false);
   auto genesis_retry = facman::self_maintenance::activate_lifecycle_epoch_genesis(genesis_request);
   auto genesis_discovery = facman::self_maintenance::discover_lifecycle_epoch_chain(genesis_coordinator);
   const std::string genesis_epoch_id = genesis_request.epoch_id;
@@ -1232,7 +1247,7 @@ int main() {
           "facman.self.physical-generation-root.v2\n" + logical_identity + "\n" +
           genesis_epoch_id + "\n" + epoch_generation.generation_id + "\n"));
   ok &= require(genesis_manifest && !epoch_generation.generation_id.empty() &&
-                    genesis_preview && !genesis_mismatch && peer_generation && genesis_apply && genesis_retry && genesis_discovery &&
+                    genesis_preview && !genesis_mismatch && peer_generation && !genesis_staging && generation_staging_present && genesis_apply && genesis_retry && genesis_discovery &&
                     genesis_apply.value().active.install_id == "facman.self.epoch." +
                         genesis_epoch_id + ".generation." + epoch_generation.generation_id &&
                     genesis_apply.value().active.install_root == expected_epoch_root &&
@@ -1243,6 +1258,108 @@ int main() {
                     fs::exists(genesis_coordinator / "epochs" / genesis_epoch_id /
                         "activations" / ("activation.epoch.genesis." + epoch_generation.generation_id + ".v2.json")),
                 "epoch genesis preview, activation, retry, or v2 identity was not exact");
+
+  const fs::path activation_staging_root = root / "epoch-activation-staging";
+  facman::self_maintenance::LifecycleEpoch activation_staging_epoch;
+  activation_staging_epoch.acceptance_root = activation_staging_root;
+  activation_staging_epoch.logical_root = activation_staging_root / "FacMan";
+  activation_staging_epoch.state_root = activation_staging_root / "state";
+  activation_staging_epoch.genesis_generation_id = generation_identity("9.8.7", genesis_package, 'c');
+  fs::create_directories(activation_staging_root);
+  const fs::path activation_staging_coordinator = activation_staging_root / "coordinator";
+  auto activation_staging_manifest = facman::self_maintenance::publish_lifecycle_epoch(
+      activation_staging_coordinator, activation_staging_epoch, true);
+  Generation activation_staging_generation;
+  if (activation_staging_manifest && !activation_staging_manifest.value().epochs.empty()) {
+    auto made = facman::self_maintenance::make_epoch_genesis_generation(
+        activation_staging_manifest.value().epochs.front(), genesis_descriptor, genesis_package);
+    if (made) activation_staging_generation = made.take_value();
+  }
+  facman::self_maintenance::EpochGenesisRequest activation_staging_request{
+      activation_staging_coordinator,
+      activation_staging_manifest && !activation_staging_manifest.value().epochs.empty()
+          ? activation_staging_manifest.value().epochs.front().epoch_id : std::string(),
+      activation_staging_generation, true};
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(2U);
+  auto activation_staging_fault = facman::self_maintenance::activate_lifecycle_epoch_genesis(
+      activation_staging_request);
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(0U);
+  const bool activation_staging_present = fs::exists(activation_staging_coordinator / "epochs" /
+      activation_staging_request.epoch_id / "activations" /
+      ("activation.staging.epoch.genesis." + activation_staging_generation.generation_id + ".v2.json"));
+  auto activation_staging_retry = facman::self_maintenance::activate_lifecycle_epoch_genesis(
+      activation_staging_request);
+  ok &= require(activation_staging_manifest && !activation_staging_fault &&
+                    activation_staging_present && activation_staging_retry,
+                "activation staging recovery was not exact and resumable");
+
+  struct GenesisFixture {
+    fs::path coordinator;
+    facman::self_maintenance::EpochGenesisRequest request;
+    bool valid = false;
+  };
+  const auto make_genesis_fixture = [&](const fs::path &fixture_root) {
+    GenesisFixture fixture;
+    facman::self_maintenance::LifecycleEpoch fixture_epoch;
+    fixture_epoch.acceptance_root = fixture_root;
+    fixture_epoch.logical_root = fixture_root / "FacMan";
+    fixture_epoch.state_root = fixture_root / "state";
+    fixture_epoch.genesis_generation_id = generation_identity("9.8.7", genesis_package, 'c');
+    fs::create_directories(fixture_root);
+    fixture.coordinator = fixture_root / "coordinator";
+    auto manifest = facman::self_maintenance::publish_lifecycle_epoch(
+        fixture.coordinator, fixture_epoch, true);
+    if (!manifest || manifest.value().epochs.empty()) return fixture;
+    auto generation = facman::self_maintenance::make_epoch_genesis_generation(
+        manifest.value().epochs.front(), genesis_descriptor, genesis_package);
+    if (!generation) return fixture;
+    fixture.request = {fixture.coordinator, manifest.value().epochs.front().epoch_id,
+                       generation.take_value(), true};
+    fixture.valid = true;
+    return fixture;
+  };
+  auto partial_fixture = make_genesis_fixture(root / "epoch-partial-staging");
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(1U);
+  auto partial_fault = partial_fixture.valid
+      ? facman::self_maintenance::activate_lifecycle_epoch_genesis(partial_fixture.request)
+      : facman::core::Result<facman::self_maintenance::ActiveState>::failure(
+          {"test", "partial fixture unavailable", ""});
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(0U);
+  const fs::path partial_staging = partial_fixture.coordinator / "epochs" /
+      partial_fixture.request.epoch_id / "generations" /
+      ("generation.staging." + partial_fixture.request.generation.generation_id + ".v2.json");
+  std::ofstream(partial_staging, std::ios::binary | std::ios::trunc) << "partial staging bytes";
+  auto partial_retry = facman::self_maintenance::activate_lifecycle_epoch_genesis(
+      partial_fixture.request);
+  std::ifstream partial_staging_input(partial_staging, std::ios::binary);
+  const std::string partial_staging_bytes{std::istreambuf_iterator<char>(partial_staging_input), {}};
+
+  auto substitution_fixture = make_genesis_fixture(root / "epoch-substitution-staging");
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(1U);
+  auto substitution_fault = substitution_fixture.valid
+      ? facman::self_maintenance::activate_lifecycle_epoch_genesis(substitution_fixture.request)
+      : facman::core::Result<facman::self_maintenance::ActiveState>::failure(
+          {"test", "substitution fixture unavailable", ""});
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(0U);
+  before_reopen_source = substitution_fixture.coordinator / "epochs" /
+      substitution_fixture.request.epoch_id / "generations" /
+      ("generation.staging." + substitution_fixture.request.generation.generation_id + ".v2.json");
+  before_reopen_moved = before_reopen_source.parent_path() / "generation.validated-moved.v2.json";
+  facman::platform::testing::set_relative_publish_before_reopen_hook(substitute_before_reopen);
+  auto substitution_retry = facman::self_maintenance::activate_lifecycle_epoch_genesis(
+      substitution_fixture.request);
+  facman::platform::testing::set_relative_publish_before_reopen_hook(nullptr);
+  std::ifstream substitution_input(before_reopen_source, std::ios::binary);
+  const std::string substitution_bytes{std::istreambuf_iterator<char>(substitution_input), {}};
+  const bool substitution_preserved = fs::exists(before_reopen_source) &&
+      fs::exists(before_reopen_moved) && substitution_bytes == "foreign staging bytes";
+  before_reopen_source.clear();
+  before_reopen_moved.clear();
+  ok &= require(partial_fixture.valid && !partial_fault && !partial_retry &&
+                    partial_staging_bytes == "partial staging bytes" &&
+                    substitution_fixture.valid && !substitution_fault &&
+                    !substitution_retry && substitution_preserved,
+                "partial or substituted genesis staging was not refused and preserved");
 
   auto invalid_epoch = first_epoch;
   invalid_epoch.epoch_id = std::string(64, '0');

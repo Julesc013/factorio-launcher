@@ -34,6 +34,9 @@ namespace facman::platform {
 namespace {
 
 thread_local bool relative_publish_post_rename_fault_for_testing = false;
+thread_local unsigned relative_publish_pre_rename_fault_countdown_for_testing = 0U;
+thread_local testing::RelativePublishBeforeReopenHook
+    relative_publish_before_reopen_hook_for_testing = nullptr;
 
 IoStatus published_unverified_failure(const IoStatus& underlying)
 {
@@ -298,6 +301,16 @@ namespace testing {
 void set_relative_publish_post_rename_fault(bool enabled) noexcept
 {
     relative_publish_post_rename_fault_for_testing = enabled;
+}
+
+void set_relative_publish_pre_rename_fault_countdown(unsigned count) noexcept
+{
+    relative_publish_pre_rename_fault_countdown_for_testing = count;
+}
+
+void set_relative_publish_before_reopen_hook(RelativePublishBeforeReopenHook hook) noexcept
+{
+    relative_publish_before_reopen_hook_for_testing = hook;
 }
 
 } // namespace testing
@@ -936,6 +949,27 @@ DurableOutputFile::DurableOutputFile(DurableOutputFile&&) noexcept = default;
 DurableOutputFile& DurableOutputFile::operator=(DurableOutputFile&&) noexcept = default;
 DurableOutputFile::~DurableOutputFile() = default;
 
+IoStatus testing_close_relative_staging_for_recovery(DurableOutputFile& output)
+{
+    auto& state = *output.impl_;
+    if (state.handle == kInvalidHandle || state.parent_handle == kInvalidHandle ||
+        !state.relative_created ||
+        state.relative_state != DurableOutputFile::Impl::RelativeNamespaceState::staging)
+        return IoStatus::failure("relative_recovery_not_staging", "");
+#ifdef _WIN32
+    if (!FlushFileBuffers(state.handle))
+        return IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
+#else
+    if (::fsync(state.handle) != 0)
+        return IoStatus::failure("output_flush_failed", std::strerror(errno));
+    const IoStatus flushed = flush_directory_handle(state.parent_handle);
+    if (!flushed.ok()) return flushed;
+#endif
+    const IoStatus file_closed = close_native_handle(state.handle, "output_close_failed");
+    if (!file_closed.ok()) return file_closed;
+    return close_native_handle(state.parent_handle, "output_parent_close_failed");
+}
+
 IoStatus DurableOutputFile::create_exclusive(const std::filesystem::path& path, std::uint64_t maximum_size)
 {
     if (impl_->handle != kInvalidHandle || impl_->parent_handle != kInvalidHandle ||
@@ -1025,6 +1059,74 @@ IoStatus StableDirectoryObject::create_child_file_exclusive(
     child.impl_->path = impl_->path / leaf;
     child.impl_->staging_leaf = name;
     child.impl_->next_offset = 0;
+    child.impl_->maximum_size = maximum_size;
+    child.impl_->relative_created = true;
+    child.impl_->relative_state = DurableOutputFile::Impl::RelativeNamespaceState::staging;
+    return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::reopen_child_file_no_follow_for_relative_publish(
+    const std::filesystem::path& leaf, const FileIdentity& expected,
+    std::uint64_t maximum_size, DurableOutputFile& child) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name)) return IoStatus::failure("relative_leaf_invalid", path_to_utf8(leaf));
+    if (!expected.regular_file || expected.link_count != 1U || expected.size > maximum_size)
+        return IoStatus::failure("relative_publish_identity_invalid", name);
+    if (!child.impl_ || child.impl_->handle != kInvalidHandle ||
+        child.impl_->parent_handle != kInvalidHandle ||
+        child.impl_->relative_state != DurableOutputFile::Impl::RelativeNamespaceState::none)
+        return IoStatus::failure("output_already_open", name);
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
+    if (relative_publish_before_reopen_hook_for_testing != nullptr)
+        relative_publish_before_reopen_hook_for_testing(impl_->path / leaf);
+    NativeHandle parent = kInvalidHandle;
+    if (!duplicate_handle(impl_->handle, parent)) {
+#ifdef _WIN32
+        return IoStatus::failure("relative_parent_duplicate_failed", windows_error("DuplicateHandle"));
+#else
+        return IoStatus::failure("relative_parent_duplicate_failed", std::strerror(errno));
+#endif
+    }
+    NativeHandle file = kInvalidHandle;
+    FileIdentity actual;
+#ifdef _WIN32
+    IoStatus opened = open_relative_windows(parent, name,
+        GENERIC_WRITE | DELETE | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+        1, 0x00200040, file, 0);
+    if (!opened.ok()) { CloseHandle(parent); return IoStatus::failure("relative_publish_reopen_failed", opened.detail); }
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(file, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(file); CloseHandle(parent);
+        return IoStatus::failure("relative_publish_identity_failed", detail);
+    }
+    actual = identity_from_info(info);
+#else
+    file = ::openat(parent, name.c_str(), O_WRONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (file < 0) { const std::string detail = std::strerror(errno); ::close(parent);
+        return IoStatus::failure("relative_publish_reopen_failed", detail); }
+    struct stat info {};
+    if (::fstat(file, &info) != 0) { const std::string detail = std::strerror(errno);
+        ::close(file); ::close(parent); return IoStatus::failure("relative_publish_identity_failed", detail); }
+    actual = identity_from_stat(info);
+#endif
+    if (!expected.unchanged(actual) || !actual.regular_file || actual.link_count != 1U ||
+        actual.size > maximum_size) {
+#ifdef _WIN32
+        CloseHandle(file); CloseHandle(parent);
+#else
+        ::close(file); ::close(parent);
+#endif
+        return IoStatus::failure("relative_publish_identity_changed", name);
+    }
+    child.impl_->handle = file;
+    child.impl_->parent_handle = parent;
+    child.impl_->path = impl_->path / leaf;
+    child.impl_->staging_leaf = name;
+    child.impl_->identity = actual;
+    child.impl_->next_offset = actual.size;
     child.impl_->maximum_size = maximum_size;
     child.impl_->relative_created = true;
     child.impl_->relative_state = DurableOutputFile::Impl::RelativeNamespaceState::staging;
@@ -1179,6 +1281,9 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
 #ifdef _WIN32
     if (!FlushFileBuffers(impl_->handle))
         return IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
+    if (relative_publish_pre_rename_fault_countdown_for_testing != 0U &&
+        --relative_publish_pre_rename_fault_countdown_for_testing == 0U)
+        return IoStatus::failure("output_pre_rename_fault_injected", "test seam");
     BY_HANDLE_FILE_INFORMATION source_info {};
     if (!GetFileInformationByHandle(impl_->handle, &source_info) ||
         !impl_->identity.same_object(identity_from_info(source_info)) ||
@@ -1242,6 +1347,9 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
 #else
     if (::fsync(impl_->handle) != 0)
         return IoStatus::failure("output_flush_failed", std::strerror(errno));
+    if (relative_publish_pre_rename_fault_countdown_for_testing != 0U &&
+        --relative_publish_pre_rename_fault_countdown_for_testing == 0U)
+        return IoStatus::failure("output_pre_rename_fault_injected", "test seam");
     struct stat held {};
     struct stat named {};
     if (::fstat(impl_->handle, &held) != 0 ||

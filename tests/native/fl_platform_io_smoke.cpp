@@ -81,6 +81,38 @@ int main()
         if (!bounded.list_child_names_bounded(8U, bounded_names_again).ok() ||
             bounded_names_again != bounded_names) return 58;
         if (reopened_bounded.list_child_names_bounded(0U, bounded_names).ok() || !bounded_names.empty()) return 58;
+        facman::platform::DurableOutputFile recovery_staging;
+        if (!bounded.create_child_file_exclusive("recovery-staging.tmp", 1024, recovery_staging).ok() ||
+            recovery_staging.write_at(0, bounded_payload.data(), bounded_payload.size()) != bounded_payload.size() ||
+            !facman::platform::testing_close_relative_staging_for_recovery(recovery_staging).ok()) return 59;
+        facman::platform::FileIdentity recovery_identity;
+        { facman::platform::StableInputFile recovery_input;
+          if (!bounded.open_child_file_no_follow_pinned("recovery-staging.tmp", recovery_input).ok()) return 59;
+          recovery_identity = recovery_input.identity(); }
+        facman::platform::DurableOutputFile recovered_output;
+        if (!bounded.reopen_child_file_no_follow_for_relative_publish("recovery-staging.tmp",
+                recovery_identity, 1024, recovered_output).ok() ||
+            !recovered_output.publish_sibling_no_replace("recovery-published.txt").ok() ||
+            !fs::exists(bounded.path() / "recovery-published.txt")) return 59;
+        facman::platform::DurableOutputFile substituted_staging;
+        if (!bounded.create_child_file_exclusive("substitute-staging.tmp", 1024, substituted_staging).ok() ||
+            substituted_staging.write_at(0, bounded_payload.data(), bounded_payload.size()) != bounded_payload.size() ||
+            !facman::platform::testing_close_relative_staging_for_recovery(substituted_staging).ok()) return 60;
+        facman::platform::FileIdentity substituted_identity;
+        { facman::platform::StableInputFile substituted_input;
+          if (!bounded.open_child_file_no_follow_pinned("substitute-staging.tmp", substituted_input).ok()) return 60;
+          substituted_identity = substituted_input.identity(); }
+        error.clear();
+        fs::rename(bounded.path() / "substitute-staging.tmp", bounded.path() / "substitute-moved.tmp", error);
+        if (error) return 60;
+        std::ofstream(bounded.path() / "substitute-staging.tmp", std::ios::binary) << bounded_payload;
+        facman::platform::DurableOutputFile substitution_attempt;
+        if (bounded.reopen_child_file_no_follow_for_relative_publish("substitute-staging.tmp",
+                substituted_identity, 1024, substitution_attempt).ok() ||
+            !fs::exists(bounded.path() / "substitute-staging.tmp")) return 60;
+        fs::remove(bounded.path() / "substitute-staging.tmp", error);
+        fs::remove(bounded.path() / "substitute-moved.tmp", error);
+        if (error) return 60;
         bounded_status = bounded.flush_metadata();
         if (!bounded_status.ok()) return 33;
         std::ifstream decoy_input(decoy_cwd / "published.txt", std::ios::binary);

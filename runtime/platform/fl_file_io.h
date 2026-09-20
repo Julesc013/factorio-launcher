@@ -140,6 +140,13 @@ public:
         const std::filesystem::path& leaf, StableDirectoryObject& child) const;
     IoStatus open_child_file_no_follow_pinned(
         const std::filesystem::path& leaf, StableInputFile& child) const;
+    // Re-adopts an already pinned, exact staging sibling for a no-replace
+    // handle-relative publication after process-loss recovery.
+    IoStatus reopen_child_file_no_follow_for_relative_publish(
+        const std::filesystem::path& leaf,
+        const FileIdentity& expected,
+        std::uint64_t maximum_size,
+        DurableOutputFile& child) const;
     // Returns the conservative leaf names currently visible through this held
     // directory object.  The result is cleared before every attempt and on
     // failure, is sorted bytewise, and never follows a child.
@@ -186,9 +193,14 @@ public:
 
 private:
     friend class StableDirectoryObject;
+    friend IoStatus testing_close_relative_staging_for_recovery(DurableOutputFile& output);
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
+
+// Test seam: durably closes a relative staging file without namespace cleanup,
+// simulating a process that exits between staging and publication.
+IoStatus testing_close_relative_staging_for_recovery(DurableOutputFile& output);
 
 IoStatus commit_no_replace(
     const std::filesystem::path& source,
@@ -209,6 +221,11 @@ namespace testing {
 
 // Test-only, thread-local fault seam for the post-rename recovery boundary.
 void set_relative_publish_post_rename_fault(bool enabled) noexcept;
+// Test-only one-shot countdown fault before namespace rename.  A value of one
+// faults the next relative publication and leaves its staging leaf in place.
+void set_relative_publish_pre_rename_fault_countdown(unsigned count) noexcept;
+using RelativePublishBeforeReopenHook = void (*)(const std::filesystem::path&);
+void set_relative_publish_before_reopen_hook(RelativePublishBeforeReopenHook hook) noexcept;
 
 } // namespace testing
 
