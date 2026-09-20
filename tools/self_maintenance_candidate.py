@@ -368,15 +368,32 @@ def write_baseline_staging(
     return path
 
 
+def predecessor_roots(task_root: Path, baseline_revision: str) -> tuple[Path, Path]:
+    """Return disjoint owned-output and external detached-checkout roots."""
+
+    output_root = require_external_new(
+        task_root / "self-maintenance-baseline-source", "baseline build root"
+    )
+    checkout_root = require_external_new(
+        task_root.parent / ("." + task_root.name + ".predecessor." + baseline_revision[:12]),
+        "baseline source checkout",
+    )
+    if checkout_root.is_relative_to(output_root) or output_root.is_relative_to(checkout_root):
+        raise ValueError("baseline checkout and owned output roots must be disjoint")
+    return checkout_root, output_root
+
+
 def build_predecessor(
-    args: argparse.Namespace, baseline_root: Path, baseline_revision: str,
+    args: argparse.Namespace, checkout_root: Path, output_root: Path, baseline_revision: str,
     *, deadline: float, evidence_root: Path,
 ) -> dict[str, object]:
-    source = baseline_root / "source"
-    build = baseline_root / "native-product"
-    packages = baseline_root / "packages"
-    dist = baseline_root / "dist"
-    setup = baseline_root / "setup"
+    if checkout_root.is_relative_to(output_root) or output_root.is_relative_to(checkout_root):
+        raise ValueError("baseline checkout and owned output roots must be disjoint")
+    source = checkout_root
+    build = output_root / "native-product"
+    packages = output_root / "packages"
+    dist = output_root / "dist"
+    setup = output_root / "setup"
     clone_clean_detached(ROOT, source, baseline_revision, deadline=deadline)
     if provider_lock_bytes(source) != provider_lock_bytes(ROOT):
         raise ValueError("baseline provider lock differs from the candidate provider lock")
@@ -385,9 +402,9 @@ def build_predecessor(
     environment = dict(os.environ)
     environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(args.universal_launcher_root)
     environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(args.universal_setup_root)
-    checkout_observation_root = baseline_root / "source-observation"
+    checkout_observation_root = output_root / "source-observation"
     checkout_observation = checkout_observation_root / "current-checkout-observation.v2.json"
-    source_observation = baseline_root / "release-source-observation.v1.json"
+    source_observation = output_root / "release-source-observation.v1.json"
     staged: dict[str, dict[str, object]] = {}
     gates = {"payload_equivalence": "not_started"}
     candidate_origin = capture(
@@ -457,7 +474,7 @@ def build_predecessor(
     )
     gates["payload_equivalence"] = "pending"
     write_baseline_staging(evidence_root, staged, gates)
-    equivalence = baseline_root / "evidence/windows-payload-equivalence.v1.json"
+    equivalence = output_root / "evidence/windows-payload-equivalence.v1.json"
     try:
         run([
             sys.executable, str(source / "tools/package_contract_tck.py"),
@@ -563,15 +580,13 @@ def execute(args: argparse.Namespace) -> int:
             raise ValueError("baseline source must be an ancestor of the candidate source")
         attempt["phase"] = "baseline-build"
         write_attempt(attempt_path, attempt)
-        baseline_root = require_external_new(
-            task_root / "self-maintenance-baseline-source", "baseline build root"
-        )
+        checkout_root, baseline_root = predecessor_roots(task_root, baseline_revision)
         fixture_root = require_external_new(
             evidence_root / "real self-maintenance transition", "transition fixture root"
         )
         evidence = fixture_root / "windows-real-self-maintenance-transition.v1.json"
         baseline = build_predecessor(
-            args, baseline_root, baseline_revision,
+            args, checkout_root, baseline_root, baseline_revision,
             deadline=outer_deadline, evidence_root=evidence_root,
         )
         staged = baseline["staged"]
