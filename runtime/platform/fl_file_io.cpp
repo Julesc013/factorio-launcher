@@ -21,6 +21,7 @@
 #include <windows.h>
 #include <winternl.h>
 #else
+#include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -800,6 +801,96 @@ IoStatus StableDirectoryObject::open_child_file_no_follow_pinned(
     child.impl_->handle = handle;
     child.impl_->path = impl_->path / leaf;
     return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::list_child_names_bounded(
+    std::size_t maximum_entries,
+    std::vector<std::filesystem::path>& names) const
+{
+    names.clear();
+    const IoStatus before = revalidate();
+    if (!before.ok()) return before;
+#ifdef _WIN32
+    HANDLE duplicate = kInvalidHandle;
+    if (!duplicate_handle(impl_->handle, duplicate))
+        return IoStatus::failure("directory_enumerate_failed", windows_error("DuplicateHandle"));
+    std::vector<unsigned char> buffer(64U * 1024U);
+    bool more = true;
+    bool restart = true;
+    while (more) {
+        if (!GetFileInformationByHandleEx(duplicate,
+                restart ? FileIdBothDirectoryRestartInfo : FileIdBothDirectoryInfo,
+                buffer.data(), static_cast<DWORD>(buffer.size()))) {
+            const DWORD error = GetLastError();
+            if (error == ERROR_NO_MORE_FILES) break;
+            CloseHandle(duplicate);
+            names.clear();
+            return IoStatus::failure("directory_enumerate_failed", windows_error("GetFileInformationByHandleEx"));
+        }
+        restart = false;
+        std::size_t offset = 0U;
+        for (;;) {
+            const auto* entry = reinterpret_cast<const FILE_ID_BOTH_DIR_INFO*>(buffer.data() + offset);
+            const std::size_t chars = entry->FileNameLength / sizeof(wchar_t);
+            const std::wstring value(entry->FileName, chars);
+            if (value != L"." && value != L"..") {
+                const std::filesystem::path leaf(value);
+                std::string portable;
+                if (!portable_leaf(leaf, portable) || names.size() >= maximum_entries) {
+                    CloseHandle(duplicate);
+                    names.clear();
+                    return IoStatus::failure("directory_enumerate_invalid", "directory contains an invalid or excessive leaf");
+                }
+                names.push_back(leaf);
+            }
+            if (entry->NextEntryOffset == 0U) break;
+            offset += entry->NextEntryOffset;
+            if (offset >= buffer.size()) {
+                CloseHandle(duplicate);
+                names.clear();
+                return IoStatus::failure("directory_enumerate_failed", "directory entry offset is invalid");
+            }
+        }
+    }
+    CloseHandle(duplicate);
+#else
+    const int duplicate = ::openat(impl_->handle, ".", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (duplicate < 0) return IoStatus::failure("directory_enumerate_failed", std::strerror(errno));
+    DIR* directory = ::fdopendir(duplicate);
+    if (directory == nullptr) {
+        const std::string detail = std::strerror(errno);
+        ::close(duplicate);
+        return IoStatus::failure("directory_enumerate_failed", detail);
+    }
+    errno = 0;
+    while (dirent* entry = ::readdir(directory)) {
+        const std::string value(entry->d_name);
+        if (value == "." || value == "..") continue;
+        std::string portable;
+        if (!portable_leaf(std::filesystem::path(value), portable) ||
+            names.size() >= maximum_entries) {
+            ::closedir(directory);
+            names.clear();
+            return IoStatus::failure("directory_enumerate_invalid", "directory contains an invalid or excessive leaf");
+        }
+        names.emplace_back(value);
+    }
+    const int enumeration_error = errno;
+    if (::closedir(directory) != 0 && enumeration_error == 0) {
+        names.clear();
+        return IoStatus::failure("directory_enumerate_failed", std::strerror(errno));
+    }
+    if (enumeration_error != 0) {
+        names.clear();
+        return IoStatus::failure("directory_enumerate_failed", std::strerror(enumeration_error));
+    }
+#endif
+    std::sort(names.begin(), names.end(), [](const auto& left, const auto& right) {
+        return left.generic_u8string() < right.generic_u8string();
+    });
+    const IoStatus after = revalidate();
+    if (!after.ok()) names.clear();
+    return after;
 }
 
 struct DurableOutputFile::Impl {

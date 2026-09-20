@@ -95,6 +95,13 @@ struct LifecycleEpochChain {
   std::vector<LifecycleEpoch> epochs;
 };
 
+struct EpochGenesisRequest {
+  std::filesystem::path coordinator_root;
+  std::string epoch_id;
+  Generation generation;
+  bool apply = false;
+};
+
 struct RetirementStep {
   Generation generation;
   bool active = false;
@@ -243,6 +250,11 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
 facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
     const std::filesystem::path &coordinator_root,
     const LifecycleEpoch &proposed, bool apply);
+facman::core::Result<Generation> make_epoch_genesis_generation(
+    const LifecycleEpoch &epoch, const PackageDescriptor &descriptor,
+    const std::string &package_sha256);
+facman::core::Result<ActiveState> activate_lifecycle_epoch_genesis(
+    const EpochGenesisRequest &request);
 facman::core::Result<RetirementResponse> retire_active(
     const RetirementRequest &request, RetirementEffects &effects);
 facman::core::Result<ActiveState> adopt_legacy(
