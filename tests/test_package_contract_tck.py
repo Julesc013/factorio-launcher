@@ -187,6 +187,10 @@ class PackageContractTckTests(unittest.TestCase):
                     self.identity("facman/generations/0.1.0-alpha.4/bin/facman.exe", b"cli"),
                     self.identity("facman/maintenance/FacManSetup.exe", b"setup"),
                     self.identity("facman/state/current-generation.v1.json", b"state"),
+                    self.identity(
+                        "facman/state/self-maintenance-package.v1.json",
+                        b"maintenance",
+                    ),
                 ],
             },
             "macos_pkg_root_v1": {
@@ -294,6 +298,10 @@ class PackageContractTckTests(unittest.TestCase):
             self.identity("../escape", b"bad"),
             self.identity("facman/maintenance/FacManSetup.exe", b"setup"),
             self.identity("facman/state/current-generation.v1.json", b"state"),
+            self.identity(
+                "facman/state/self-maintenance-package.v1.json",
+                b"maintenance",
+            ),
         ]
         receipt = package_contract_tck.payload_equivalence_receipt(
             stage,
