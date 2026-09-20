@@ -25,6 +25,53 @@ SPEC.loader.exec_module(MODULE)
 
 
 class SelfSetupPackageTests(unittest.TestCase):
+    def test_retirement_records_have_closed_schemas(self) -> None:
+        schema_root = ROOT / "contracts/schema/facman"
+        generation_id = "a" * 64
+        common_step = {
+            "generation_id": generation_id,
+            "install_root": "C:/Programs/FacMan/generations/a",
+            "install_id": "facman.self.generation." + generation_id,
+            "active": True,
+        }
+        records = (
+            (
+                "facman_self_retirement_intent.v1.schema.json",
+                {
+                    "schema": "facman.self_retirement_intent.v1",
+                    "head_name": "activation.maint.update.one.v1.json",
+                    "head_sha256": "b" * 64,
+                    "chain_digest": "c" * 64,
+                    "steps": [common_step],
+                },
+            ),
+            (
+                "facman_self_retirement_step.v1.schema.json",
+                {
+                    "schema": "facman.self_retirement_step.v1",
+                    "phase": "entered",
+                    "sequence": "0",
+                    **common_step,
+                },
+            ),
+            (
+                "facman_self_retirement_completed.v1.schema.json",
+                {
+                    "schema": "facman.self_retirement_completed.v1",
+                    "head_name": "activation.maint.update.one.v1.json",
+                    "head_sha256": "b" * 64,
+                    "chain_digest": "c" * 64,
+                    "completed_steps": "1",
+                },
+            ),
+        )
+        for name, record in records:
+            schema = json.loads((schema_root / name).read_text(encoding="utf-8"))
+            validator = jsonschema.Draft202012Validator(schema)
+            validator.validate(record)
+            with self.assertRaises(jsonschema.ValidationError):
+                validator.validate({**record, "foreign": True})
+
     def test_windows_ci_requires_exactly_one_portable_and_payload(self) -> None:
         workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
         self.assertNotIn("Select-Object -Single", workflow)

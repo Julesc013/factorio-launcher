@@ -9,6 +9,8 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace facman::self_maintenance {
 
@@ -56,6 +58,73 @@ struct ActiveState {
   std::optional<Generation> previous;
   std::string activation_name;
   std::string activation_sha256;
+};
+
+// The activation records are immutable history.  This view exposes their
+// complete, validated generation sequence (including repeated generations)
+// so a coordinator can make a bounded retirement decision without inferring
+// lineage from only the current head.
+struct ActivationChain {
+  std::vector<Generation> generations;
+  std::string activation_name;
+  std::string activation_sha256;
+};
+
+struct RetirementStep {
+  Generation generation;
+  bool active = false;
+};
+
+struct RetirementRequest {
+  std::filesystem::path coordinator_root;
+  bool apply = false;
+};
+
+struct RetirementResponse {
+  std::string phase;
+  std::filesystem::path journal_directory;
+  std::vector<RetirementStep> steps;
+};
+
+class RetirementEffects;
+
+// An unforgeable, call-scoped proof that retire_active owns the exact global
+// coordinator lock.  The setup runtime accepts this proof only for the same
+// coordinator, avoiding a recursive acquisition without trusting a caller-set
+// boolean.
+class CoordinatorLockToken {
+public:
+  CoordinatorLockToken(const CoordinatorLockToken &) = delete;
+  CoordinatorLockToken &operator=(const CoordinatorLockToken &) = delete;
+  const std::filesystem::path &coordinator_root() const {
+    return coordinator_root_;
+  }
+  const std::string &operation_id() const { return operation_id_; }
+
+private:
+  CoordinatorLockToken(std::filesystem::path coordinator_root,
+                       std::string operation_id)
+      : coordinator_root_(std::move(coordinator_root)),
+        operation_id_(std::move(operation_id)) {}
+  friend facman::core::Result<RetirementResponse> retire_active(
+      const RetirementRequest &request, RetirementEffects &effects);
+
+  std::filesystem::path coordinator_root_;
+  std::string operation_id_;
+};
+
+// The application supplies the provider/native edge.  It must reject any
+// foreign or ambiguous installed identity before uninstalling a step.  The
+// coordinator persists an entered marker before calling uninstall_generation,
+// which makes an interrupted edge recovery-required rather than replayable.
+class RetirementEffects {
+public:
+  virtual ~RetirementEffects() = default;
+  virtual facman::core::Result<void> inspect_retirement_generation(
+      const Generation &generation, bool active) = 0;
+  virtual facman::core::Result<void> uninstall_generation(
+      const Generation &generation, bool active,
+      const CoordinatorLockToken &coordinator_lock) = 0;
 };
 
 struct Request {
@@ -142,6 +211,10 @@ facman::core::Result<Generation> make_generation(
     const std::filesystem::path &acceptance_root);
 facman::core::Result<std::optional<ActiveState>> discover_active(
     const std::filesystem::path &coordinator_root);
+facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(
+    const std::filesystem::path &coordinator_root);
+facman::core::Result<RetirementResponse> retire_active(
+    const RetirementRequest &request, RetirementEffects &effects);
 facman::core::Result<ActiveState> adopt_legacy(
     const std::filesystem::path &coordinator_root,
     const Generation &legacy, bool apply);

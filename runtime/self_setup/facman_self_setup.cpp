@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_self_setup.h"
+#include "facman_self_maintenance.h"
 #include "facman_self_maintenance_provider.h"
 
 #include "fl_file_io.h"
@@ -1584,8 +1585,22 @@ facman::core::Result<Response> execute(const Request &request) {
   const std::string root_text = facman::platform::path_to_utf8(install_target.value());
   const std::string root_identity = digest_text("facman.setup.root.v1\n" + install.value());
   const std::string provisional_operation_id = "setup.admission." + identifier("attempt");
-  auto held_lock = acquire_setup_lock(coordinator.value(), root_identity, provisional_operation_id);
-  if (!held_lock) return facman::core::Result<Response>::failure(held_lock.error());
+  std::optional<ScopedSetupLock> held_lock;
+  if (request.coordinator_lock != nullptr &&
+      request.coordinator_lock->operation_id().empty())
+    return facman::core::Result<Response>::failure(error(
+        "self_setup_lock_unsafe", "retirement coordinator lock proof is invalid"));
+  const bool coordinator_lock_already_held =
+      request.coordinator_lock != nullptr &&
+      request.coordinator_lock->coordinator_root().lexically_normal() ==
+          coordinator.value().lexically_normal();
+  if (!coordinator_lock_already_held) {
+    auto acquired = acquire_setup_lock(coordinator.value(), root_identity,
+                                       provisional_operation_id);
+    if (!acquired)
+      return facman::core::Result<Response>::failure(acquired.error());
+    held_lock.emplace(acquired.take_value());
+  }
 
   // Admission runs before reading or hashing a new payload. A caller changing
   // source/version/mode/provider roots therefore cannot bypass an unfinished
@@ -2148,6 +2163,21 @@ facman::core::Result<Response> execute(const Request &request) {
     provider_response = {operation, "receipt", "", journal.operation_id};
   provider_response.setup_operation_id = journal.operation_id;
   return facman::core::Result<Response>::success(std::move(provider_response));
+}
+
+facman::core::Result<bool> has_pending_operation(
+    const fs::path &install_root, const fs::path &coordinator_root) {
+  auto install = canonical_install_root(install_root);
+  auto coordinator = absolute_path(coordinator_root, "setup coordinator root");
+  if (!install || !coordinator)
+    return facman::core::Result<bool>::failure(
+        !install ? install.error() : coordinator.error());
+  const std::string root_identity = digest_text(
+      "facman.setup.root.v1\n" + install.value());
+  auto discovered = discover_root_journal(coordinator.value(), root_identity);
+  if (!discovered)
+    return facman::core::Result<bool>::failure(discovered.error());
+  return facman::core::Result<bool>::success(discovered.value().has_value());
 }
 
 std::string provider_revision() { return FACMAN_SELF_SETUP_PROVIDER_REVISION; }

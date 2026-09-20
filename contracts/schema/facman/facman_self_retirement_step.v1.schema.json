@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_self_retirement_step.v1.schema.json",
+  "title": "FacMan immutable activation-chain retirement step",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "phase", "sequence", "generation_id", "install_root", "install_id", "active"],
+  "properties": {
+    "schema": {"const": "facman.self_retirement_step.v1"},
+    "phase": {"enum": ["entered", "completed"]},
+    "sequence": {"type": "string", "pattern": "^(0|[1-9][0-9]{0,2})$"},
+    "generation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "install_root": {"type": "string", "minLength": 1, "maxLength": 8192},
+    "install_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,160}$"},
+    "active": {"type": "boolean"}
+  }
+}
