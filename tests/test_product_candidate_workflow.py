@@ -331,7 +331,8 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         ):
             self.assertIn(token, transition.read_text(encoding="utf-8"))
         for token in (
-            '"git", "clone"',
+            'GIT_COMMAND = ("git", "-c", "core.longpaths=true")',
+            "git_command(",
             "--no-checkout",
             "--no-local",
             "baseline source must be an ancestor of the candidate source",

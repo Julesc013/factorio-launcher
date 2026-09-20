@@ -6,7 +6,9 @@ from __future__ import annotations
 import json
 import hashlib
 import os
+import subprocess
 import tempfile
+import time
 import unittest
 import zipfile
 from pathlib import Path
@@ -17,6 +19,72 @@ from tests.integration import facman_self_setup_lifecycle as lifecycle
 
 
 class SelfMaintenanceCandidateTests(unittest.TestCase):
+    def test_clone_clean_detached_materializes_long_path_and_persists_setting(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            bare = root / "source.git"
+            subprocess.run(["git", "init", "--bare", str(bare)], check=True)
+            payload = b"long path checkout \x00payload\n"
+            blob = subprocess.run(
+                ["git", "hash-object", "-w", "--stdin"], cwd=bare,
+                input=payload, check=True, capture_output=True,
+            ).stdout.decode("ascii").strip()
+            target_relative = Path(*(["segment" + str(index).zfill(2) + "x" * 24
+                                       for index in range(10)] + ["payload.bin"]))
+            self.assertGreater(len(str(root / "checkout" / target_relative)), 260)
+            tree = subprocess.run(
+                ["git", "mktree"], cwd=bare,
+                input=f"100644 blob {blob}\tpayload.bin\n".encode("ascii"),
+                check=True, capture_output=True,
+            ).stdout.decode("ascii").strip()
+            for segment in reversed(target_relative.parts[:-1]):
+                tree = subprocess.run(
+                    ["git", "mktree"], cwd=bare,
+                    input=f"040000 tree {tree}\t{segment}\n".encode("ascii"),
+                    check=True, capture_output=True,
+                ).stdout.decode("ascii").strip()
+            environment = {
+                **os.environ,
+                "GIT_AUTHOR_NAME": "FacMan Test",
+                "GIT_AUTHOR_EMAIL": "test@example.invalid",
+                "GIT_COMMITTER_NAME": "FacMan Test",
+                "GIT_COMMITTER_EMAIL": "test@example.invalid",
+            }
+            revision = subprocess.run(
+                ["git", "commit-tree", tree, "-m", "long path fixture"], cwd=bare,
+                env=environment, check=True, capture_output=True,
+            ).stdout.decode("ascii").strip()
+            subprocess.run(
+                ["git", "update-ref", "refs/heads/main", revision], cwd=bare,
+                check=True,
+            )
+
+            checkout = root / "checkout"
+            candidate.clone_clean_detached(
+                bare, checkout, revision, deadline=time.monotonic() + 30,
+            )
+
+            self.assertEqual(revision, candidate.head_revision(
+                cwd=checkout, deadline=time.monotonic() + 30,
+            ))
+            self.assertNotEqual(0, subprocess.run(
+                ["git", "symbolic-ref", "--quiet", "HEAD"], cwd=checkout,
+                check=False,
+            ).returncode)
+            self.assertEqual("", candidate.capture(
+                candidate.git_command("status", "--porcelain=v1", "--untracked-files=all"),
+                cwd=checkout, deadline=time.monotonic() + 30,
+            ))
+            self.assertEqual(payload, (checkout / target_relative).read_bytes())
+            self.assertEqual("", subprocess.run(
+                ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+                cwd=checkout, check=True, text=True, capture_output=True,
+            ).stdout)
+            self.assertEqual("true", subprocess.run(
+                ["git", "config", "--get", "core.longpaths"], cwd=checkout,
+                check=True, text=True, capture_output=True,
+            ).stdout.strip())
+
     def overlay(
         self, root: Path, *, version: str, source: str,
         current_source: str | None = None, current_provider: str | None = None,

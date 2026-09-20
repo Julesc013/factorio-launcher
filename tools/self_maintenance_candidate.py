@@ -46,6 +46,13 @@ CURRENT_KEYS = {
     "workspace_preserved", "automatic_update",
 }
 MAX_IDENTITY_BYTES = 64 * 1024
+GIT_COMMAND = ("git", "-c", "core.longpaths=true")
+
+
+def git_command(*arguments: str) -> list[str]:
+    """Return a Git invocation safe for long Windows checkout paths."""
+
+    return [*GIT_COMMAND, *arguments]
 
 
 def sha256_file(path: Path) -> str:
@@ -84,7 +91,7 @@ def revision(value: str, *, cwd: Path, deadline: float) -> str:
     if not HEX_REVISION.fullmatch(value):
         raise ValueError(f"revision must be exact lowercase 40-hex: {value!r}")
     resolved = capture(
-        ["git", "rev-parse", "--verify", f"{value}^{{commit}}"],
+        git_command("rev-parse", "--verify", f"{value}^{{commit}}"),
         cwd=cwd, deadline=deadline,
     )
     if resolved != value:
@@ -94,7 +101,7 @@ def revision(value: str, *, cwd: Path, deadline: float) -> str:
 
 def head_revision(*, cwd: Path, deadline: float) -> str:
     resolved = capture(
-        ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+        git_command("rev-parse", "--verify", "HEAD^{commit}"),
         cwd=cwd, deadline=deadline,
     )
     if not HEX_REVISION.fullmatch(resolved):
@@ -106,10 +113,31 @@ def clean_source(root: Path, expected_revision: str, *, deadline: float) -> None
     if head_revision(cwd=root, deadline=deadline) != expected_revision:
         raise ValueError("baseline checkout does not retain its requested revision")
     if capture(
-        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        git_command("status", "--porcelain=v1", "--untracked-files=all"),
         cwd=root, deadline=deadline,
     ):
         raise ValueError("baseline checkout is not clean")
+
+
+def clone_clean_detached(
+    source_root: Path, destination: Path, expected_revision: str, *, deadline: float,
+) -> None:
+    """Clone an exact detached revision with long-path support persisted locally."""
+
+    run(
+        git_command(
+            "clone", "--no-checkout", "--no-local", "-c", "core.longpaths=true",
+            str(source_root), str(destination),
+        ),
+        cwd=source_root,
+        deadline=deadline,
+    )
+    run(
+        git_command("checkout", "--detach", expected_revision),
+        cwd=destination,
+        deadline=deadline,
+    )
+    clean_source(destination, expected_revision, deadline=deadline)
 
 
 def version_at(root: Path) -> str:
@@ -349,10 +377,7 @@ def build_predecessor(
     packages = baseline_root / "packages"
     dist = baseline_root / "dist"
     setup = baseline_root / "setup"
-    run(["git", "clone", "--no-checkout", "--no-local", str(ROOT), str(source)],
-        cwd=ROOT, deadline=deadline)
-    run(["git", "checkout", "--detach", baseline_revision], cwd=source, deadline=deadline)
-    clean_source(source, baseline_revision, deadline=deadline)
+    clone_clean_detached(ROOT, source, baseline_revision, deadline=deadline)
     if provider_lock_bytes(source) != provider_lock_bytes(ROOT):
         raise ValueError("baseline provider lock differs from the candidate provider lock")
     if not (source / "runtime/self_setup/facman_self_maintenance_package.cpp").is_file():
@@ -365,10 +390,16 @@ def build_predecessor(
     source_observation = baseline_root / "release-source-observation.v1.json"
     staged: dict[str, dict[str, object]] = {}
     gates = {"payload_equivalence": "not_started"}
-    candidate_origin = capture(["git", "remote", "get-url", "origin"], cwd=ROOT, deadline=deadline)
+    candidate_origin = capture(
+        git_command("remote", "get-url", "origin"), cwd=ROOT, deadline=deadline,
+    )
     if not candidate_origin:
         raise ValueError("candidate source has no origin remote for baseline custody")
-    run(["git", "remote", "set-url", "origin", candidate_origin], cwd=source, deadline=deadline)
+    run(
+        git_command("remote", "set-url", "origin", candidate_origin),
+        cwd=source,
+        deadline=deadline,
+    )
     run([
         sys.executable, str(source / "tools/current_checkout_observation.py"),
         "--provider-root", "universal_launcher=" + str(args.universal_launcher_root),
@@ -516,7 +547,7 @@ def execute(args: argparse.Namespace) -> int:
         if candidate_revision != args.candidate_revision:
             raise ValueError("candidate revision does not match the clean checked-out source")
         if capture(
-            ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+            git_command("status", "--porcelain=v1", "--untracked-files=all"),
             cwd=ROOT, deadline=outer_deadline,
         ):
             raise ValueError("candidate source must be clean before package transition qualification")
@@ -524,7 +555,9 @@ def execute(args: argparse.Namespace) -> int:
         if baseline_revision == candidate_revision:
             raise ValueError("baseline and candidate source revisions must differ")
         if subprocess.run(
-            ["git", "merge-base", "--is-ancestor", baseline_revision, candidate_revision],
+            git_command(
+                "merge-base", "--is-ancestor", baseline_revision, candidate_revision,
+            ),
             cwd=ROOT, check=False, timeout=remaining(outer_deadline, "ancestor check"),
         ).returncode:
             raise ValueError("baseline source must be an ancestor of the candidate source")
