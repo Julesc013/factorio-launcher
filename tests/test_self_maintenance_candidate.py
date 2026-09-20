@@ -19,6 +19,18 @@ from tests.integration import facman_self_setup_lifecycle as lifecycle
 
 
 class SelfMaintenanceCandidateTests(unittest.TestCase):
+    def test_predecessor_checkout_is_a_disjoint_task_root_sibling(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            task_root = parent / "owned-task"
+            task_root.mkdir()
+            checkout, output = candidate.predecessor_roots(task_root, "a" * 40)
+            self.assertEqual(task_root / "self-maintenance-baseline-source", output)
+            self.assertEqual(parent, checkout.parent)
+            self.assertFalse(checkout.is_relative_to(task_root))
+            self.assertFalse(task_root.is_relative_to(checkout))
+            self.assertIn(".owned-task.predecessor.aaaaaaaaaaaa", checkout.name)
+
     def test_clone_clean_detached_materializes_long_path_and_persists_setting(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
