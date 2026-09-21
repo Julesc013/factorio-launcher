@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-09-06"
+last_reviewed = "2026-09-22"
 active_release = "FACMAN-0.1.0-ALPHA.6"
 wip_limit = 4
 ready_limit = 10
@@ -47,7 +47,7 @@ human_acceptance_may_be_synthesized = false
 advisory_source = "docs/reviews/2026-09-06-completion-synthesis/BACKLOG.json"
 provider_owned_bundles = ["F03", "F04"]
 provider_queue = "AIDE-EXECUTE-FACMAN-BETA1-PROGRAMME-01"
-later_scope = ["RC/stable 0.1 publication and servicing activation", "acquisition 0.2", "hosting 0.3", "AppKit graduation 0.4"]
+later_scope = ["planned Beta convergence, RC delivery, stable 0.1 publication, and servicing activation", "acquisition 0.2", "hosting 0.3", "AppKit graduation 0.4"]
 completion_rule = "Every required leaf and existing umbrella closes against actual evidence; repairs invalidate affected candidate receipts."
 
 [delivery_train]
@@ -1863,7 +1863,7 @@ title = "FacMan 0.1 exact public-beta candidate"
 status = "planned"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
-objective = "Build and human-test one exact six-product stabilization candidate, then perform only separately authorized release operations."
+objective = "Build and human-test one exact profile-derived Terminal/Desktop stabilization candidate, then perform only separately authorized release operations."
 platform_cut = """Accept exact terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets plus WinForms and GTK3 reference desktops, \
 retaining an evidence-bounded AppKit preview until 0.4. Current qualification, support tiers and the portable/setup selector remain unchanged until separately qualified admission."""
 frontend_cut = "FacMan and facman expose the frozen CLI JSON, human CLI, same-binary TUI, WinForms, AppKit, and GTK subset; deferred toolkits remain absent."
@@ -1872,7 +1872,7 @@ required_factorio_families = ["F100", "F110", "F200", "F210"]
 journeys = ["exact-byte human acceptance for J01 through J12"]
 claim_seed = ["FACMAN-0.1.0-BETA.1-EXACT-CANDIDATE"]
 cut_line = [
-  "Build all six products from one human-tested stabilization commit, exact provider locks, and external clean roots.",
+  "Build every product selected by the admitted Terminal/Desktop delivery profiles from one human-tested stabilization commit, exact provider locks, and external clean roots.",
   "Bind source, tree, toolchains, stages, products, checksums, SBOM, provenance, tests, and distinct human receipts.",
   "Keep beta allocation, tag, signing, notarization, publication, and support activation as separate explicit authorities.",
   "Retire only validated owned worktrees, merged task refs, and marker-owned build residue while preserving durable candidate and recovery evidence.",
@@ -1889,9 +1889,125 @@ non_goals = [
   "Admitting Qt6, WinUI, SwiftUI, Apple Silicon, Wayland-native, general Linux, daemon, remote, network, server, or public-plugin scope.",
 ]
 exit = [
-  "The exact six product downloads plus checksum/evidence companions bind one accepted source tree and complete evidence set.",
+  "The exact profile-derived product downloads plus checksum/evidence companions bind one accepted source tree and complete evidence set.",
   "Every required machine and human gate passes for those exact bytes with no stale, inherited, or ambiguous receipt.",
   "Any tag, signing, notarization, publication, or support action has its own explicit authority and durable receipt.",
+]
+
+[[release]]
+id = "FACMAN-0.1-BETA-CONVERGENCE"
+planning_label = true
+version_slot = "beta_n_after_0.1.0-beta.1"
+version_allocated = false
+title = "FacMan 0.1 beta findings and compatibility convergence"
+status = "planned"
+owner = "release-maintainer"
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+objective = "Converge within the admitted local-product scope by repairing beta findings and freezing explicit compatibility, migration, and rollback promises."
+platform_cut = "Retain the Beta.1 Windows x64, Linux x64, and macOS Intel terminal targets, WinForms and GTK3 references, and evidence-bounded AppKit preview without adding a platform."
+frontend_cut = "Repair the frozen CLI, JSON/RPC, TUI, WinForms, GTK3, AppKit-preview, and self-setup behaviors only where beta evidence requires it."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = ["J01 through J12 beta regression closure", "compatibility and migration freeze"]
+claim_seed = ["FACMAN-0.1-BETA-CONVERGENCE"]
+cut_line = [
+  "Classify every beta finding and either repair it with a regression or document an accepted release limitation.",
+  "Refresh every affected exact-byte receipt after a repair; unrelated evidence remains bound to its original source and products.",
+  "Declare the finite supported source versions, workspace formats, installer states, migration paths, and rollback domains.",
+  "Provide an understandable refusal or documented export/reconstruction path for unsupported internal states.",
+]
+release_sequence = [
+  "reproduce and classify each finding against exact candidate bytes",
+  "add a regression, repair the cause, and rerun affected qualification",
+  "issue replacement beta candidates as needed without fixing a predetermined beta count",
+  "freeze compatibility and migration only after the convergence record is complete",
+]
+non_goals = [
+  "Adding connected acquisition, credentials, hosting, AppKit graduation, or another public product domain.",
+  "Promising upgrade support for every abandoned internal alpha fixture or experimental state.",
+  "Treating a safely refused required operation as successful feature completion.",
+]
+exit = [
+  "Every beta finding is classified; every release blocker is repaired with a regression and refreshed affected evidence.",
+  "Accepted limitations are explicit and do not contradict the supported local-product contract.",
+  "Supported versions, workspace formats, installer states, migrations, and rollback limits are declared and tested.",
+]
+
+[[release]]
+id = "FACMAN-0.1-RC"
+planning_label = true
+version_slot = "first_rc_after_beta_convergence"
+version_allocated = false
+title = "FacMan 0.1 final delivery and lifecycle rehearsal"
+status = "planned"
+owner = "release-maintainer"
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+objective = "Construct the final delivery path, rehearse the complete installed and portable lifecycle with exact RC files, and make support and withdrawal operational."
+platform_cut = "Use only the converged supported 0.1 targets and delivery profiles; signing and notarization claims remain exact-platform and exact-file evidence."
+frontend_cut = "Rehearse the accepted application, terminal, native desktop, and maintenance entry points from final delivery files without adding interface scope."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = ["final delivery construction", "RC clean install and retained-state lifecycle", "support and withdrawal readiness"]
+claim_seed = ["FACMAN-0.1-RC-DELIVERY"]
+cut_line = [
+  "Select exact release source and dependencies before constructing reproducible unsigned payloads.",
+  "Sign, notarize, staple, and assemble final delivery files where required before accepting those exact files.",
+  "Rehearse clean install, retained-state upgrade, interruption, repair, rollback, reapply, and removal with the RC delivery files.",
+  "Retain independently usable repair material, withdrawal procedures, user guidance, and named support ownership.",
+]
+release_sequence = [
+  "select and bind exact release source, providers, dependencies, and toolchains",
+  "construct reproducible unsigned payloads and then perform required signing/notarization steps",
+  "assemble exact RC delivery files and execute the full lifecycle rehearsal",
+  "close support intake, repair-material retention, and withdrawal readiness",
+]
+non_goals = [
+  "Accepting an earlier unsigned package receipt for later signed or rebuilt files.",
+  "Publishing files before their exact final-delivery identities pass lifecycle acceptance.",
+  "Adding a new target, package family, connected service, or product feature during RC rehearsal.",
+]
+exit = [
+  "The final-delivery pipeline produces bound exact files from selected source and dependencies with required signing/notarization evidence.",
+  "Clean install, retained-state upgrade, interruption, repair, rollback, reapply, and removal pass using those RC files.",
+  "Support intake, retained repair material, withdrawal procedure, user guidance, and ownership are operational.",
+]
+
+[[release]]
+id = "FACMAN-0.1.0-STABLE"
+planning_label = true
+version_intent = "0.1.0"
+version_allocated = false
+title = "FacMan 0.1.0 — supported local-first release"
+status = "planned"
+owner = "release-maintainer"
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+objective = "Publish the exact accepted local-first product and activate its declared support and compatible servicing process."
+platform_cut = "Publish only the exact targets, profiles, support tiers, and preview limits accepted by the RC lifecycle rehearsal."
+frontend_cut = "Expose the accepted terminal, native desktop, and maintenance surfaces with their frozen persisted-state and terminal compatibility guarantees."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = ["exact final publication", "download-back verification", "0.1.x servicing activation"]
+claim_seed = ["FACMAN-0.1.0-SUPPORTED-LOCAL-FIRST"]
+cut_line = [
+  "Publish only the accepted final bytes and verify their release, tag, asset, checksum, signature, and provenance identities after download.",
+  "Activate the maintenance branch and forward-port process without rewriting immutable release history.",
+  "State the supported local-first scope, maturity, compatibility guarantees, support tiers, and accepted limitations plainly.",
+]
+release_sequence = [
+  "grant each remaining allocation, tag, signing, publication, and support effect through its recorded release gate",
+  "publish the complete accepted asset set and make the release immutable",
+  "download and verify the exact published files",
+  "activate the 0.1.x maintenance and forward-port process",
+]
+non_goals = [
+  "Publishing any file that differs from the accepted RC delivery files.",
+  "Promising a stable public ABI beyond the explicit terminal and persisted-state guarantees.",
+  "Importing acquisition 0.2, hosting 0.3, or AppKit graduation 0.4 into 0.1.0.",
+]
+exit = [
+  "The exact accepted final bytes are published and independently downloaded back with every identity and integrity check passing.",
+  "The declared support intake and 0.1.x maintenance branch are active with a tested forward-port process.",
+  "Release notes, compatibility limits, support claims, withdrawal guidance, changelog, roadmap, and documentation describe the same shipped product.",
 ]
 
 [[gate]]
@@ -4921,7 +5037,7 @@ title = "Exact beta.1 candidate and separately authorized release"
 status = "planned"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
-outcome = "Bind one accepted exact six-product candidate and perform only explicitly authorized release operations."
+outcome = "Bind one accepted exact profile-derived Terminal/Desktop candidate and perform only explicitly authorized release operations."
 exit = [
   "The exact candidate has complete machine and human receipts.",
   "Every release action has a distinct authority and durable receipt.",
@@ -4938,9 +5054,9 @@ owner = "release-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-0.1-FEATURE-FREEZE-01"]
 decision_blockers = []
-outcome = "Build six exact products from one human-tested stabilization commit and exact providers, then condition every release effect on its own authority."
+outcome = "Build the exact products selected by admitted Terminal/Desktop delivery profiles from one human-tested stabilization commit and exact providers, then condition every release effect on its own authority."
 acceptance = [
-  "One human-tested stabilization commit and exact provider locks produce the six products plus checksum and evidence companions.",
+  "One human-tested stabilization commit and exact provider locks produce the profile-derived Terminal/Desktop products plus checksum and evidence companions.",
   "Source, tree, toolchains, stage and product hashes, SBOM, provenance, tests, and distinct exact-byte human receipts are bound and independently verified.",
   "Distinct current human native-UX, visual, localization, text-expansion, Play, managed-install, and accessibility receipts bind the exact bytes; no historical packet is reused.",
   "Beta allocation, immutable tagging, signing, Apple notarization, publication, and support activation occur only under separate explicit authorities.",
@@ -4953,6 +5069,165 @@ close_after = [
   "FACMAN-0.1-BETA1-CANDIDATE-RECONSTRUCTION-01",
   "FACMAN-0.1-BETA1-EXPERIENCE-ACCEPTANCE-01",
   "FACMAN-0.1-BETA1-READY-CLOSEOUT-01",
+]
+
+[[epic]]
+id = "EPIC-0.1-BETA-CONVERGENCE"
+release = "FACMAN-0.1-BETA-CONVERGENCE"
+title = "Beta findings and compatibility convergence"
+status = "planned"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Convert every beta finding into a disposition and freeze the finite compatibility, migration, and rollback contract for 0.1."
+exit = [
+  "Every beta finding is repaired with refreshed evidence or accepted as an explicit release limitation.",
+  "The supported and unsupported state matrix is finite, documented, and tested.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01"
+epic = "EPIC-0.1-BETA-CONVERGENCE"
+title = "Converge beta findings into replacement candidates"
+status = "planned"
+horizon = "backlog"
+priority = "P0"
+size = "L"
+owner = "quality-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-BETA1-EXACT-RELEASE-01"]
+decision_blockers = []
+outcome = "Classify every beta finding, repair release blockers with regressions, and refresh only the qualification affected by each change."
+acceptance = [
+  "Every finding records exact candidate bytes, reproduction, severity, ownership, and disposition.",
+  "Every blocker has a regression before repair and passes the affected machine, package, interface, and human requalification.",
+  "Accepted limitations are explicit in release-facing documentation and do not contradict required local-product outcomes.",
+  "Replacement beta candidates are issued from exact source without a predetermined beta count or inherited evidence.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01"
+epic = "EPIC-0.1-BETA-CONVERGENCE"
+title = "Freeze supported compatibility, migration, and rollback states"
+status = "planned"
+horizon = "backlog"
+priority = "P0"
+size = "M"
+owner = "quality-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01"]
+decision_blockers = []
+outcome = "Declare and test the exact source versions, workspace formats, installer states, migrations, and rollback domains supported by 0.1."
+acceptance = [
+  "The supported-state matrix names every admitted source version, workspace format, installer state, and migration edge.",
+  "Older/newer application and frontend/backend combinations produce compatible operation, a supported migration, or an understandable refusal without silent rewriting.",
+  "Application rollback, FacMan workspace migration, and Factorio save conversion remain distinct domains with tested limits.",
+  "Unsupported internal states have a tested refusal or documented export/reconstruction path without a silent data-loss promise.",
+]
+
+[[epic]]
+id = "EPIC-0.1-RC-DELIVERY"
+release = "FACMAN-0.1-RC"
+title = "Final delivery, RC lifecycle, and support rehearsal"
+status = "planned"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Produce final-form delivery files, prove their full lifecycle, and make support and withdrawal ready before 0.1.0 publication."
+exit = [
+  "Exact final-form RC files pass construction, identity, signing/notarization, and lifecycle acceptance.",
+  "Support and withdrawal can operate without the original download or a healthy application binary.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01"
+epic = "EPIC-0.1-RC-DELIVERY"
+title = "Construct and bind the final delivery pipeline"
+status = "planned"
+horizon = "backlog"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01"]
+decision_blockers = []
+outcome = "Select exact release inputs, construct reproducible unsigned payloads, apply required signing/notarization, and assemble the final delivery files that will be accepted."
+acceptance = [
+  "Exact source, providers, dependencies, toolchains, profiles, and selected products are frozen before construction.",
+  "Independent clean roots reproduce unsigned payload bytes or the documented native semantic-equivalence boundary.",
+  "Required signatures, notarization, stapling, checksums, SBOM, provenance, licences, and consolidated evidence bind final assembled files.",
+  "No rebuilt, re-signed, or reassembled file inherits an earlier package acceptance receipt.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01"
+epic = "EPIC-0.1-RC-DELIVERY"
+title = "Rehearse the complete RC lifecycle"
+status = "planned"
+horizon = "backlog"
+priority = "P0"
+size = "L"
+owner = "quality-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01"]
+decision_blockers = []
+outcome = "Prove clean install, retained-state upgrade, interruption, repair, rollback, reapply, and removal using exact final-form RC delivery files."
+acceptance = [
+  "Portable, per-user, and every admitted system-wide or platform-native path use the exact selected application components and correct maintenance entry points.",
+  "Clean install and retained-state upgrade complete with exact ownership, identity, preservation, and activation receipts.",
+  "Interruptions at payload, activation, shortcut, registration, and final-receipt boundaries recover without losing the original diagnosis.",
+  "Repair, rollback, reapply, and uninstall work when the application executable or normal resources are damaged and preserve declared workspace data.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01"
+epic = "EPIC-0.1-RC-DELIVERY"
+title = "Make support and withdrawal operational"
+status = "planned"
+horizon = "backlog"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01"]
+decision_blockers = []
+outcome = "Establish the material, procedures, guidance, and ownership required to support, repair, or withdraw 0.1 safely."
+acceptance = [
+  "Security and support intake routes, triage ownership, response expectations, and user-facing guidance are current and tested.",
+  "Retained repair material can restore or remove the product independently of a healthy application executable and the original download.",
+  "Missing or altered retained maintenance material produces an exact recovery condition and never invokes an arbitrary replacement.",
+  "Withdrawal preserves immutable custody, communicates affected identities, and gives users a verified recovery or removal path.",
+]
+
+[[epic]]
+id = "EPIC-0.1.0-SUPPORTED-LOCAL-FIRST"
+release = "FACMAN-0.1.0-STABLE"
+title = "Supported local-first 0.1.0 publication and servicing"
+status = "planned"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Publish the exact accepted local-first product and begin compatible 0.1.x servicing from immutable release truth."
+exit = [
+  "Published downloads equal the accepted files and pass download-back verification.",
+  "The maintenance branch, forward-port path, support intake, and release documentation are active.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-SUCCESSOR-PUBLICATION-SERVICING-ACTIVATION-01"
+epic = "EPIC-0.1.0-SUPPORTED-LOCAL-FIRST"
+title = "Publish accepted 0.1.0 bytes and activate servicing"
+status = "planned"
+horizon = "backlog"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01"]
+decision_blockers = []
+outcome = "Publish only the accepted 0.1.0 files, verify them after download, and activate the maintenance and forward-port process."
+acceptance = [
+  "Allocation, immutable tag, signing/notarization, publication, support activation, and servicing effects each have their required current authority and durable receipt.",
+  "The published tag, source, assets, checksums, signatures, SBOM, provenance, licences, and evidence match the accepted final identities.",
+  "Fresh downloads of every published asset verify and reproduce the accepted install, portable, maintenance, and removal entry points.",
+  "The 0.1.x maintenance branch and forward-port process are exercised, while release notes, changelog, roadmap, support claims, compatibility limits, and withdrawal guidance agree.",
 ]
 
 [[workunit]]

@@ -199,6 +199,9 @@ PLAN_RELEASE_IDS = [
     "FACMAN-0.1.0-ALPHA.7",
     "FACMAN-0.1-FEATURE-FREEZE",
     "FACMAN-0.1.0-BETA.1",
+    "FACMAN-0.1-BETA-CONVERGENCE",
+    "FACMAN-0.1-RC",
+    "FACMAN-0.1.0-STABLE",
 ]
 PROJECTIONS_WINDOWS_REFERENCE_0_1 = ["cli_json", "tui", "winforms"]
 PROJECTIONS_BETA_TERMINAL = ["cli_json", "cli_human", "tui"]
@@ -215,6 +218,9 @@ PROJECTIONS_ALPHA_6 = PROJECTIONS_ALPHA_5
 PROJECTIONS_ALPHA_7 = PROJECTIONS_ALPHA_5
 PROJECTIONS_FEATURE_FREEZE = PROJECTIONS_ALPHA_5
 PROJECTIONS_BETA_1 = PROJECTIONS_ALPHA_5
+PROJECTIONS_BETA_CONVERGENCE = PROJECTIONS_BETA_1
+PROJECTIONS_RC = PROJECTIONS_BETA_1
+PROJECTIONS_STABLE_0_1 = PROJECTIONS_BETA_1
 FACTORIO_FAMILIES_ALPHA_1 = ["F100", "F110", "F200", "F210"]
 FUTURE_PLAN_GRAPH = [
     (
@@ -252,6 +258,42 @@ FUTURE_PLAN_GRAPH = [
         "EPIC-0.1.0-BETA.1-EXACT-RELEASE",
         "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
         "FACMAN-0.1-FEATURE-FREEZE-01",
+    ),
+    (
+        "FACMAN-0.1-BETA-CONVERGENCE",
+        "EPIC-0.1-BETA-CONVERGENCE",
+        "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01",
+        "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+    ),
+    (
+        "FACMAN-0.1-BETA-CONVERGENCE",
+        "EPIC-0.1-BETA-CONVERGENCE",
+        "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01",
+        "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01",
+    ),
+    (
+        "FACMAN-0.1-RC",
+        "EPIC-0.1-RC-DELIVERY",
+        "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01",
+        "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01",
+    ),
+    (
+        "FACMAN-0.1-RC",
+        "EPIC-0.1-RC-DELIVERY",
+        "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01",
+        "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01",
+    ),
+    (
+        "FACMAN-0.1-RC",
+        "EPIC-0.1-RC-DELIVERY",
+        "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01",
+        "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01",
+    ),
+    (
+        "FACMAN-0.1.0-STABLE",
+        "EPIC-0.1.0-SUPPORTED-LOCAL-FIRST",
+        "FACMAN-0.1-SUCCESSOR-PUBLICATION-SERVICING-ACTIVATION-01",
+        "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01",
     ),
 ]
 EVIDENCE_CLASSES = [
@@ -774,6 +816,21 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
             PROJECTIONS_FEATURE_FREEZE,
         ),
         "FACMAN-0.1.0-BETA.1": ("version_intent", "0.1.0-beta.1", PROJECTIONS_BETA_1),
+        "FACMAN-0.1-BETA-CONVERGENCE": (
+            "version_slot",
+            "beta_n_after_0.1.0-beta.1",
+            PROJECTIONS_BETA_CONVERGENCE,
+        ),
+        "FACMAN-0.1-RC": (
+            "version_slot",
+            "first_rc_after_beta_convergence",
+            PROJECTIONS_RC,
+        ),
+        "FACMAN-0.1.0-STABLE": (
+            "version_intent",
+            "0.1.0",
+            PROJECTIONS_STABLE_0_1,
+        ),
     }
     for release_id, (identity_field, identity_value, projections) in future_specs.items():
         release = by_id[release_id]
@@ -825,9 +882,38 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
             "two clean roots", "beta human packet",
         ),
         "FACMAN-0.1-BETA1-EXACT-RELEASE-01": (
-            "human-tested stabilization commit", "six products", "native-ux",
+            "human-tested stabilization commit", "profile-derived", "terminal/desktop",
             "visual", "localization", "text-expansion", "no historical",
             "signing", "notarization", "publication", "support",
+        ),
+        "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01": (
+            "exact candidate bytes", "regression", "affected machine", "package",
+            "interface", "human requalification", "accepted limitations",
+            "predetermined beta count",
+        ),
+        "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01": (
+            "supported-state matrix", "source version", "workspace format",
+            "installer state", "application rollback", "factorio save conversion",
+            "understandable refusal", "export/reconstruction",
+        ),
+        "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01": (
+            "exact source", "providers", "dependencies", "toolchains", "unsigned",
+            "signatures", "notarization", "checksums", "sbom", "provenance",
+            "no rebuilt",
+        ),
+        "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01": (
+            "portable", "per-user", "system-wide", "platform-native", "clean install",
+            "retained-state upgrade", "payload", "activation", "shortcut",
+            "registration", "final-receipt", "repair", "rollback", "reapply",
+            "uninstall", "application executable", "resources are damaged",
+        ),
+        "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01": (
+            "security and support intake", "retained repair material", "independently",
+            "missing or altered", "arbitrary replacement", "withdrawal",
+        ),
+        "FACMAN-0.1-SUCCESSOR-PUBLICATION-SERVICING-ACTIVATION-01": (
+            "immutable tag", "publication", "fresh downloads", "maintenance branch",
+            "forward-port", "release notes", "changelog", "roadmap",
         ),
     }
     for release_id, epic_id, workunit_id, dependency_id in FUTURE_PLAN_GRAPH:
@@ -847,6 +933,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
             problems.append(f"{workunit_id} must remain scoped to factorio-launcher")
         if workunit.get("decision_blockers") != []:
             problems.append(f"{workunit_id} decision blockers have drifted")
+        if workunit_id.startswith("FACMAN-0.1-SUCCESSOR-") and workunit.get("horizon") != "backlog":
+            problems.append(f"{workunit_id} must remain in the backlog horizon until admitted")
         if alpha6_entry:
             if workunit.get("owner") != "runtime-maintainer":
                 problems.append(f"{workunit_id} implementation owner has drifted")

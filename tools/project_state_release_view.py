@@ -24,6 +24,12 @@ ROADMAP_SEQUENCE = (
     "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
     "FACMAN-0.1-FEATURE-FREEZE-01",
     "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+    "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01",
+    "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01",
+    "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01",
+    "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01",
+    "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01",
+    "FACMAN-0.1-SUCCESSOR-PUBLICATION-SERVICING-ACTIVATION-01",
 )
 ROADMAP_ACTIONS = (
     "Close final Alpha.5 candidate truth",
@@ -35,7 +41,13 @@ ROADMAP_ACTIONS = (
     "Close content, modpack, world, save, and clean-root reconstruction routes",
     "Complete cross-platform terminal and fresh Play/session journeys, then WinForms/GTK3 references; retain AppKit preview until 0.4 graduation",
     "Enter feature freeze only after J01-J12 are machine-complete",
-    "Build and accept the exact six-product beta.1 candidate",
+    "Build and accept the exact profile-derived beta.1 candidate",
+    "Classify beta findings and qualify each bounded repair",
+    "Freeze supported compatibility, migration, and rollback states",
+    "Construct and bind final-form delivery files",
+    "Rehearse clean install, retained-state upgrade, recovery, rollback, and removal",
+    "Make support, retained repair, and withdrawal operational",
+    "Publish accepted 0.1.0 bytes and activate compatible servicing",
 )
 
 

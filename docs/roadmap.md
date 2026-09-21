@@ -20,8 +20,14 @@ Current release obligations are selected only by `release/index/active_release_v
 2. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.
 3. Complete cross-platform terminal and fresh Play/session journeys, then WinForms/GTK3 references; retain AppKit preview until 0.4 graduation in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.
 4. Enter feature freeze only after J01-J12 are machine-complete in `FACMAN-0.1-FEATURE-FREEZE-01`.
-5. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.
-6. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.
+5. Build and accept the exact profile-derived beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.
+6. Classify beta findings and qualify each bounded repair in `FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01`.
+7. Freeze supported compatibility, migration, and rollback states in `FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01`.
+8. Construct and bind final-form delivery files in `FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01`.
+9. Rehearse clean install, retained-state upgrade, recovery, rollback, and removal in `FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01`.
+10. Make support, retained repair, and withdrawal operational in `FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01`.
+11. Publish accepted 0.1.0 bytes and activate compatible servicing in `FACMAN-0.1-SUCCESSOR-PUBLICATION-SERVICING-ACTIVATION-01`.
+12. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.
 
 The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new
 normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.
