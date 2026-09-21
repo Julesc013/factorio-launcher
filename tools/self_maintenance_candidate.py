@@ -383,6 +383,22 @@ def predecessor_roots(task_root: Path, baseline_revision: str) -> tuple[Path, Pa
     return checkout_root, output_root
 
 
+def predecessor_environment(
+    source: Path, output_root: Path, universal_launcher_root: Path,
+    universal_setup_root: Path,
+) -> dict[str, str]:
+    """Bind predecessor subprocesses to output owned by that checkout."""
+
+    owned_output = development_layout.ensure_task_root(
+        output_root, source, development_layout.current_task_id(source)
+    )
+    environment = dict(os.environ)
+    environment["FACMAN_TASK_ROOT"] = str(owned_output)
+    environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(universal_launcher_root)
+    environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(universal_setup_root)
+    return environment
+
+
 def build_predecessor(
     args: argparse.Namespace, checkout_root: Path, output_root: Path, baseline_revision: str,
     *, deadline: float, evidence_root: Path,
@@ -399,9 +415,9 @@ def build_predecessor(
         raise ValueError("baseline provider lock differs from the candidate provider lock")
     if not (source / "runtime/self_setup/facman_self_maintenance_package.cpp").is_file():
         raise ValueError("baseline source cannot produce a self-maintenance package")
-    environment = dict(os.environ)
-    environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(args.universal_launcher_root)
-    environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(args.universal_setup_root)
+    environment = predecessor_environment(
+        source, output_root, args.universal_launcher_root, args.universal_setup_root
+    )
     checkout_observation_root = output_root / "source-observation"
     checkout_observation = checkout_observation_root / "current-checkout-observation.v2.json"
     source_observation = output_root / "release-source-observation.v1.json"
