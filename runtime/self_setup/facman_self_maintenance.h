@@ -215,6 +215,13 @@ struct EpochTransitionRequest {
   std::string operation_id;
   PackageInspection package;
   bool apply = false;
+  // The exact currently executing setup binary is retained separately from
+  // the target package's maintenance launcher.  A downgrade must continue in
+  // the newer, protocol-capable process even though it installs an older
+  // target launcher for later repair.
+  std::filesystem::path continuation_helper;
+  std::string continuation_helper_sha256;
+  bool shell_integration = true;
 };
 
 struct EpochTransitionPreparation {
@@ -307,6 +314,7 @@ struct EpochPendingTransition {
   std::string target_activation_sha256;
   bool completed = false;
   bool pre_handoff = false;
+  bool shell_integration = true;
   // pre_handoff, handoff_staging, continuation_pending, publication_pending,
   // shell_cutover_pending, or shell_cutover_complete when completed is true.
   std::string phase;
@@ -337,7 +345,8 @@ public:
   virtual CandidateState inspect_candidate(const Plan &plan) = 0;
   virtual EffectResult review_install_local(const Plan &plan) = 0;
   virtual facman::core::Result<RetainedMaintenanceInputs> retain_handoff_inputs(
-      const Plan &plan) = 0;
+      const Plan &plan, const std::filesystem::path &continuation_helper,
+      const std::string &continuation_helper_sha256) = 0;
 };
 
 // This deliberately stops at an exact provider-verified candidate.  A later

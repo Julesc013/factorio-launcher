@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_self_maintenance.h"
+#include "facman_self_maintenance_provider.h"
 
 #include "fl_archive.h"
 #include "fl_file_io.h"
@@ -167,8 +168,9 @@ std::string canonical_handoff_with_field(
       "schema", "product_id", "epoch_id", "epoch_manifest_sha256", "operation",
       "operation_id", "source_generation_id", "source_activation_name",
       "source_activation_sha256", "target_generation_id", "retained_package",
-      "retained_package_sha256", "retained_helper", "retained_helper_sha256",
-      "provider_plan_sha256", "nonce"};
+      "retained_package_sha256", "continuation_helper",
+      "continuation_helper_sha256", "provider_plan_sha256", "nonce",
+      "shell_integration"};
   facman::core::json::ObjectBuilder rebuilt;
   for (const char *field : fields) {
     const std::string value = std::string(field) == changed_field
@@ -354,10 +356,12 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
 struct EpochPreparationFakeEffects final
     : facman::self_maintenance::EpochPreparationEffects {
   fs::path state_root;
+  fs::path acceptance_root;
   unsigned inspect_calls = 0;
   unsigned review_calls = 0;
   unsigned retain_calls = 0;
   bool retain_foreign_package = false;
+  bool use_production_review = false;
   std::string helper_bytes;
   std::vector<fs::path> reviewed_packages;
 
@@ -368,19 +372,29 @@ struct EpochPreparationFakeEffects final
   EffectResult review_install_local(const Plan &plan) override {
     ++review_calls;
     reviewed_packages.push_back(plan.package);
+    if (use_production_review) {
+      facman::self_maintenance::ProviderBridge provider(state_root,
+                                                        acceptance_root);
+      return provider.review_install_local(plan);
+    }
     return {true, false, sha("epoch-provider-review\n" +
         facman::platform::path_to_utf8(plan.package.lexically_normal())), {}};
   }
   facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>
-  retain_handoff_inputs(const Plan &plan) override {
+  retain_handoff_inputs(const Plan &plan, const fs::path &continuation_helper,
+                        const std::string &continuation_helper_sha256) override {
     ++retain_calls;
     const fs::path retained = state_root / "epoch-handoff" / plan.operation_id;
     fs::create_directories(retained);
     const fs::path package = retained / "package.zip";
-    const fs::path helper = retained / "FacManSetup.exe";
+    const fs::path helper = retained / "FacManContinuation.exe";
     std::ofstream(package, std::ios::binary | std::ios::trunc) <<
         (retain_foreign_package ? "foreign-package" : bytes(plan.package));
-    std::ofstream(helper, std::ios::binary | std::ios::trunc) << helper_bytes;
+    std::ofstream(helper, std::ios::binary | std::ios::trunc) <<
+        bytes(continuation_helper);
+    if (sha(bytes(helper)) != continuation_helper_sha256)
+      return facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>::failure(
+          {"test_continuation_helper_changed", "continuation helper digest changed", {}});
     return facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>::success(
         {package, sha(bytes(package)), helper, sha(bytes(helper))});
   }
@@ -787,11 +801,82 @@ int emit_prehandoff_epoch_fixture(int argc, char **argv) {
   return 0;
 }
 
+int stage_existing_handoff_fixture(int argc, char **argv) {
+  if (argc != 8) {
+    std::cerr << "usage: facman_self_maintenance_smoke --stage-existing-handoff "
+                 "<coordinator> <state-root> <acceptance-root> <target-package> "
+                 "<operation> <continuation-helper>\n";
+    return 2;
+  }
+  const fs::path coordinator = fs::absolute(fs::path(argv[2])).lexically_normal();
+  const fs::path state_root = fs::absolute(fs::path(argv[3])).lexically_normal();
+  const fs::path acceptance_root = fs::absolute(fs::path(argv[4])).lexically_normal();
+  const fs::path target_package = fs::absolute(fs::path(argv[5])).lexically_normal();
+  const std::string operation = argv[6];
+  const fs::path continuation_helper =
+      fs::absolute(fs::path(argv[7])).lexically_normal();
+  if (operation != "update" && operation != "downgrade") {
+    std::cerr << "fixture operation must be update or downgrade\n";
+    return 2;
+  }
+
+  auto active = facman::self_maintenance::discover_lifecycle_epoch_active(
+      coordinator);
+  auto target = facman::self_maintenance::inspect_package(target_package);
+  if (!active || !target) {
+    const auto &failure = !active ? active.error() : target.error();
+    std::cerr << failure.code << ": " << failure.message << " ("
+              << failure.detail << ")\n";
+    return 3;
+  }
+  const std::string operation_id = "maint." + operation + "." +
+      active.value().active.active.generation_id.substr(0, 8) + "." +
+      target.value().package_sha256.substr(0, 20);
+  EpochPreparationFakeEffects effects;
+  effects.state_root = state_root;
+  effects.acceptance_root = acceptance_root;
+  effects.use_production_review = true;
+  facman::self_maintenance::EpochTransitionRequest request{
+      coordinator, active.value().epoch.epoch_id,
+      operation == "update" ? Operation::update : Operation::downgrade,
+      operation_id, target.value(), true, continuation_helper,
+      sha(bytes(continuation_helper)), false};
+  auto prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      request, effects);
+  if (!prepared) {
+    std::cerr << prepared.error().code << ": " << prepared.error().message
+              << " (" << prepared.error().detail << ")\n";
+    return 3;
+  }
+  std::error_code error;
+  const fs::path staged = prepared.value().journal.parent_path() /
+      "00-handoff-ready.staging.v3.json";
+  fs::rename(prepared.value().journal, staged, error);
+  if (error) {
+    std::cerr << "could not stage prepared handoff: " << error.message() << '\n';
+    return 3;
+  }
+
+  facman::core::json::ObjectBuilder output;
+  output.add_string("schema", "facman.self_maintenance_test_epoch.v1");
+  output.add_string("epoch_id", active.value().epoch.epoch_id);
+  output.add_string("generation_id",
+                    active.value().active.active.generation_id);
+  output.add_string("operation_id", operation_id);
+  output.add_string("coordinator", facman::platform::path_to_utf8(coordinator));
+  output.add_string("source_install_root", facman::platform::path_to_utf8(
+      active.value().active.active.install_root));
+  std::cout << output.serialize() << '\n';
+  return 0;
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
   if (argc > 1 && std::string(argv[1]) == "--emit-prehandoff-epoch")
     return emit_prehandoff_epoch_fixture(argc, argv);
+  if (argc > 1 && std::string(argv[1]) == "--stage-existing-handoff")
+    return stage_existing_handoff_fixture(argc, argv);
   if (argc != 1) {
     std::cerr << "unexpected facman_self_maintenance_smoke arguments\n";
     return 2;
@@ -1981,7 +2066,13 @@ int main(int argc, char **argv) {
     if (!inspected) throw std::runtime_error("could not construct valid epoch transition package");
     fixture.inspection = inspected.take_value();
     fixture.request = {fixture.coordinator, fixture.epoch.epoch_id, Operation::update,
-                       "epoch.prepare.one", fixture.inspection, false};
+                       "epoch.prepare.one", fixture.inspection, false, {}, {}, true};
+    fixture.request.continuation_helper = root / name / "current-setup.exe";
+    std::ofstream(fixture.request.continuation_helper,
+                  std::ios::binary | std::ios::trunc)
+        << "current-protocol-capable-continuation-helper";
+    fixture.request.continuation_helper_sha256 =
+        sha(bytes(fixture.request.continuation_helper));
     fixture.effects.state_root = fixture.epoch.state_root;
     fixture.effects.helper_bytes = preparation_helper;
     return fixture;
@@ -2055,11 +2146,34 @@ int main(int argc, char **argv) {
                         preparation_apply.value().inputs.helper &&
                     pending_handoff.value()->retained_inputs.helper_sha256 ==
                         preparation_apply.value().inputs.helper_sha256 &&
+                    pending_handoff.value()->retained_inputs.helper_sha256 ==
+                        preparation.request.continuation_helper_sha256 &&
+                    pending_handoff.value()->retained_inputs.helper_sha256 !=
+                        preparation.inspection.maintenance_launcher_sha256 &&
+                    pending_handoff.value()->shell_integration &&
                     pending_handoff.value()->retained_package.descriptor.package_layout ==
                         preparation.inspection.descriptor.package_layout &&
                     ordinary_during_handoff.error().code ==
                         "self_maintenance_epoch_recovery_required",
                 "epoch preparation preview, exact handoff, and recovery boundary were not exact");
+  auto no_shell_preparation = make_preparation_fixture(
+      "epoch-transition-no-shell-binding");
+  no_shell_preparation.request.apply = true;
+  no_shell_preparation.request.shell_integration = false;
+  auto no_shell_prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      no_shell_preparation.request, no_shell_preparation.effects);
+  auto no_shell_pending =
+      facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
+          no_shell_preparation.coordinator);
+  no_shell_preparation.request.shell_integration = true;
+  auto changed_shell_retry =
+      facman::self_maintenance::prepare_lifecycle_epoch_transition(
+          no_shell_preparation.request, no_shell_preparation.effects);
+  ok &= require(no_shell_prepared && no_shell_pending &&
+                    no_shell_pending.value().has_value() &&
+                    !no_shell_pending.value()->shell_integration &&
+                    !changed_shell_retry,
+                "epoch handoff did not bind the exact shell integration choice");
 
   // Pending discovery must retain the unfinished operation's exact name set,
   // not merely the records that were present when the scan began.
@@ -2363,7 +2477,7 @@ int main(int argc, char **argv) {
                 "ordinary discovery accepted substituted shell custody during activation scan");
 
   const fs::path foreign_operation_record = provider_operation / "90-foreign.v2.json";
-  epoch_hook_watch = provider_operation / "00-handoff-ready.v2.json";
+  epoch_hook_watch = provider_operation / "00-handoff-ready.v3.json";
   epoch_hook_mutation = foreign_operation_record;
   epoch_hook_bytes = "{}\n";
   epoch_hook_called = false;
@@ -2474,7 +2588,12 @@ int main(int argc, char **argv) {
   facman::self_maintenance::EpochTransitionRequest second_preparation_request{
       provider_continuation.coordinator, provider_continuation.epoch.epoch_id,
       Operation::update, "epoch.prepare.two",
-      second_inspection ? second_inspection.value() : facman::self_maintenance::PackageInspection{}, true};
+      second_inspection ? second_inspection.value() : facman::self_maintenance::PackageInspection{},
+      true, {}, {}, true};
+  second_preparation_request.continuation_helper =
+      provider_continuation.request.continuation_helper;
+  second_preparation_request.continuation_helper_sha256 =
+      provider_continuation.request.continuation_helper_sha256;
   auto second_prepared = second_inspection
       ? facman::self_maintenance::prepare_lifecycle_epoch_transition(
             second_preparation_request, second_preparation_effects)
@@ -2524,7 +2643,11 @@ int main(int argc, char **argv) {
   facman::self_maintenance::EpochTransitionRequest third_preparation_request{
       provider_continuation.coordinator, provider_continuation.epoch.epoch_id,
       Operation::downgrade, "epoch.prepare.three",
-      provider_continuation.inspection, true};
+      provider_continuation.inspection, true, {}, {}, true};
+  third_preparation_request.continuation_helper =
+      provider_continuation.request.continuation_helper;
+  third_preparation_request.continuation_helper_sha256 =
+      provider_continuation.request.continuation_helper_sha256;
   auto third_prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       third_preparation_request, third_preparation_effects);
   EpochContinuationFakeEffects third_continuation_effects;
@@ -3047,7 +3170,7 @@ int main(int argc, char **argv) {
   fs::create_directories(epoch_operation_hook_outside);
   std::ofstream(epoch_operation_hook_outside / "package.zip", std::ios::binary | std::ios::trunc) <<
       bytes(retained_ancestor_swap.handoff.inputs.package);
-  std::ofstream(epoch_operation_hook_outside / "FacManSetup.exe", std::ios::binary | std::ios::trunc) <<
+  std::ofstream(epoch_operation_hook_outside / "FacManContinuation.exe", std::ios::binary | std::ios::trunc) <<
       bytes(retained_ancestor_swap.handoff.inputs.helper);
   epoch_operation_hook_called = false;
   epoch_operation_hook_rename_succeeded = false;
@@ -3099,7 +3222,7 @@ int main(int argc, char **argv) {
   const std::string foreign_staging_bytes = canonical_handoff_with_retained_package(
       foreign_staging_original, foreign_staging_package);
   const fs::path foreign_staging_journal = foreign_staging_fixture.handoff.journal.parent_path() /
-      "00-handoff-ready.staging.v2.json";
+      "00-handoff-ready.staging.v3.json";
   std::error_code foreign_staging_error;
   fs::rename(foreign_staging_fixture.handoff.journal, foreign_staging_journal,
              foreign_staging_error);
@@ -3119,7 +3242,7 @@ int main(int argc, char **argv) {
   auto post_publication = make_preparation_fixture("epoch-transition-post-publication");
   post_publication.request.apply = true;
   epoch_hook_watch = post_publication.coordinator / "epochs" / post_publication.epoch.epoch_id /
-      "maintenance" / "epoch.prepare.one" / "00-handoff-ready.v2.json";
+      "maintenance" / "epoch.prepare.one" / "00-handoff-ready.v3.json";
   epoch_hook_mutation = epoch_hook_watch;
   epoch_hook_second_mutation = post_publication.epoch.state_root / "epoch-handoff" /
       "epoch.prepare.one" / "package.zip";
@@ -3153,7 +3276,7 @@ int main(int argc, char **argv) {
       retained_mismatch.request, retained_mismatch.effects);
   const bool mismatch_journal_exists = fs::exists(retained_mismatch.coordinator / "epochs" /
       retained_mismatch.epoch.epoch_id / "maintenance" / "epoch.prepare.one" /
-      "00-handoff-ready.v2.json");
+      "00-handoff-ready.v3.json");
   ok &= require(!retained_package_mismatch && !mismatch_journal_exists,
                 "foreign retained package was accepted into a new handoff");
 
@@ -3216,7 +3339,7 @@ int main(int argc, char **argv) {
 
   auto provider_staging = prepare_fresh_epoch_fixture("epoch-transition-provider-staging-retry");
   const fs::path provider_staging_journal = provider_staging.handoff.journal.parent_path() /
-      "00-handoff-ready.staging.v2.json";
+      "00-handoff-ready.staging.v3.json";
   std::error_code provider_staging_rename_error;
   fs::rename(provider_staging.handoff.journal, provider_staging_journal,
              provider_staging_rename_error);
@@ -3235,9 +3358,14 @@ int main(int argc, char **argv) {
           provider_staging.request, provider_staging_restart);
   const std::string provider_staging_receipt = sha("epoch-provider-review\n" +
       facman::platform::path_to_utf8(provider_staging.handoff.inputs.package.lexically_normal()));
-  const std::string provider_staging_stored = provider_staging_rename_error ? std::string() :
-      json_string_field(facman::core::json::parse(bytes(provider_staging.handoff.journal)).value(),
-                        "provider_plan_sha256");
+  std::string provider_staging_stored;
+  if (!provider_staging_rename_error && provider_staging_retry) {
+    auto provider_staging_document =
+        facman::core::json::parse(bytes(provider_staging.handoff.journal));
+    if (provider_staging_document)
+      provider_staging_stored = json_string_field(
+          provider_staging_document.value(), "provider_plan_sha256");
+  }
   ok &= require(provider_final_retry && !provider_final_restart.reviewed_packages.empty() &&
                     provider_final_restart.reviewed_packages.back() == provider_final.handoff.inputs.package &&
                     provider_final_stored == provider_final_receipt && !provider_staging_rename_error &&

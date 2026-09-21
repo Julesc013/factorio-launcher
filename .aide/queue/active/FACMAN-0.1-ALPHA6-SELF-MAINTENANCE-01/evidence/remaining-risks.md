@@ -88,8 +88,9 @@ source still needs:
 
 - a source-distinct produced-package Windows A/B lifecycle with retained exact
   inputs and real current-user Start Menu and HKCU observations;
-- packaged parent-exit execution through the retained helper and restart
-  continuation on the declared Windows host;
+- source-distinct packaged parent-exit execution through B's retained helper on
+  the declared Windows host; the synthetic packaged lifecycle now proves normal
+  launch and staged-v3 public retry, but it does not replace that candidate;
 - chain-aware repair, removal, retirement completion, retention, and garbage
   collection behavior beyond the current safe refusals;
 - physical supported-platform qualification and human/product acceptance.
@@ -98,3 +99,20 @@ The current Linux results are WSL source/native evidence. They do not establish
 physical Linux or macOS package behavior. The lifecycle fixture's no-shell
 permit remains qualification-only and does not weaken production shell
 requirements.
+
+PR #320's first corrective rerun passed Linux coverage under the unchanged
+30-second child limit and existing coverage threshold. Its Windows Debug helper
+continued beyond a newly introduced 65-second fixture observation cap while
+remaining inside the product's existing 600-second handoff budget; cleanup then
+correctly refused to remove its live target executable. The observer correction
+still requires exact hosted requalification under the unchanged 180-second
+CTest gate.
+
+PR #320 run `35642988291` showed that the observer correction alone was
+insufficient on the slower hosted Debug runner: every other lane passed, while
+the Windows lifecycle reached the unchanged outer gate. A retained local phase
+trace reached every durable terminal record and identified repeated
+uncompressed Debug Setup archive work as the bounded fixture cost. The
+external-maintenance fixture now uses admitted Deflate packages while the
+ordinary stored-archive lifecycle remains intact. Exact hosted
+requalification is still required under the unchanged gate.

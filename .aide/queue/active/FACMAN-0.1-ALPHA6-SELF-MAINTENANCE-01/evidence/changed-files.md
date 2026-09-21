@@ -230,3 +230,45 @@ is related evidence only.
 
 No Universal Setup source, new provider authority, package profile, protected
 workflow, release asset, or generated report is changed by this checkpoint.
+
+## External retained-helper handoff checkpoint
+
+- `runtime/self_setup/facman_self_maintenance.{h,cpp}` records the current
+  continuation helper separately from the target package helper, upgrades the
+  immutable handoff to v3, binds shell choice, and preserves staged-record
+  recovery across mixed record versions.
+- `apps/setup/main.cpp` retains and launches the current setup binary, parses a
+  strict private continuation command, waits for the exact parent, validates
+  journal/helper identity, extracts the target launcher, and executes the
+  remaining durable phases within one absolute deadline.
+- `tools/provider_canary_process{,_windows}.py` adds the explicit Windows
+  Job-empty completion mode used only by the real self-maintenance transition;
+  `tests/test_provider_canary_process.py` proves that an owned descendant can
+  finish without being killed after the primary exits.
+- `tests/native/facman_self_maintenance_smoke.cpp` covers distinct current and
+  target helpers, immutable shell choice, v3 staging recovery, and emits an
+  exact provider-reviewed staged fixture for the public retry regression.
+- `tests/integration/facman_self_setup_lifecycle.py` observes external
+  completion read-only, verifies source-distinct helper identities, exercises
+  strict private-input refusals, and proves a second public apply promotes and
+  relaunches a staged v3 handoff without letting the initiating process enter
+  continuation effects. The normal packaged case observes full external
+  completion. Its 120-second hosted-Debug observation cap stays inside the
+  unchanged 180-second CTest gate and the product's existing 600-second
+  absolute handoff budget.
+- `apps/setup/windows_maintenance_handoff.cpp` gives the private helper an
+  explicit no-console `NUL` standard-handle set so it cannot retain redirected
+  caller pipes while waiting for the initiating process to exit.
+- `docs/development/self-maintenance.md` documents the external process,
+  custody, deadline, controller and remaining product-qualification boundary.
+
+The WorkUnit evidence files record the reviewed source checkpoint. No provider
+authority, product version, package profile or release asset is changed.
+
+## Hosted Debug archive-cost correction
+
+- `tests/integration/facman_self_setup_lifecycle.py` uses Deflate for the
+  synthetic external-maintenance archives while the ordinary lifecycle keeps
+  stored-archive coverage. The complete helper launch, provider, publication,
+  shell, terminal observation, mismatch and staged-retry assertions remain
+  inside the unchanged product and CTest deadlines.

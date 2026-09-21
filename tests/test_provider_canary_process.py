@@ -149,6 +149,24 @@ class CanaryProcessTests(unittest.TestCase):
         self.assertIn(b"parent-complete", result.stdout)
         self.assertLess(result.receipt["elapsed_seconds"], 3)
 
+    def test_wait_for_job_empty_allows_owned_descendant_to_finish(self):
+        marker = self.root / "descendant-complete"
+        result = self.run_helper(
+            "import subprocess,sys\n"
+            "subprocess.Popen([sys.executable,'-c',"
+            f"\"import time;from pathlib import Path;time.sleep(.2);Path({marker.as_posix()!r}).write_text('done')\"] )\n"
+            "print('parent-complete',flush=True)\n",
+            timeout=3,
+            wait_for_job_empty_after_primary=True,
+        )
+        self.assertTrue(result.ok, result.receipt)
+        self.assertTrue(result.receipt["waited_for_job_empty_after_primary"])
+        self.assertTrue(result.receipt["primary_stopped"])
+        self.assertTrue(result.receipt["job_empty_observed"])
+        self.assertFalse(result.receipt["job_terminated"])
+        self.assertEqual(marker.read_text(), "done")
+        self.assertIn(b"parent-complete", result.stdout)
+
     def test_pipe_error_retains_partial_output_and_refuses_success(self):
         drain = process.windows.Capture.drain
         def fail_after_read(capture):

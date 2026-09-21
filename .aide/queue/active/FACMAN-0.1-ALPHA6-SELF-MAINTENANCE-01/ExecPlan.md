@@ -147,3 +147,77 @@ MSVC and GCC accepted but Clang rejected under
 affected maintenance target rebuilt and passed on Windows and Ubuntu 24.04;
 source formatting and `git diff --check` also passed. The corrected macOS
 hosted build remains the exact platform acceptance check for this correction.
+
+## 2026-09-22 external retained-helper handoff checkpoint
+
+Implemented from exact integrated dev base
+`ea43094b2dfa8d4b2b80fe3b2811e2a50bacafda`, the public epoch apply now
+retains the currently executing setup binary as `FacManContinuation.exe`,
+launches it with a pinned v3 handoff journal, reports `handoff_launched`, and
+exits before provider, publication, or shell effects. The external helper
+waits for the exact parent process identity, revalidates its own retained path
+and digest, extracts the target package's separate maintenance launcher, and
+continues the durable operation under the original absolute deadline.
+
+The Windows candidate controller can now wait for the owned Job to become
+empty after the public process exits. It preserves the ordinary descendant
+termination mode for every other command and still terminates the complete Job
+on timeout or execution failure. The packaged lifecycle covers normal external
+handoff and a second public apply from an already durable staged v3 journal.
+
+Current-source Windows native and packaged tests, WSL native compilation and
+execution, Python controller/candidate tests, strict validation, formatting,
+portable AIDE validation, and diff checks pass. Independent non-authoring
+source review found no safety blocker. The WorkUnit remains active pending the
+source-distinct produced-package Windows candidate, real Start Menu/HKCU
+effects, chain-aware repair/removal and supported-platform/human acceptance.
+
+## 2026-09-22 PR #320 handoff-boundary remediation
+
+The first hosted PR attempt found that the private continuation inherited a
+caller's redirected standard handles. That kept captured pipes open while the
+child waited for its parent and made the nominally asynchronous public apply
+consume most of the Debug lifecycle budget. The helper now inherits only the
+exact parent-process handle plus explicit `NUL` standard handles and runs
+without a console.
+
+The packaged lifecycle retains one complete public external continuation. Its
+staged-retry regression reuses the resulting active epoch, promotes the exact
+staged v3 journal, launches a lightweight retained probe, and proves the public
+initiator writes no continuation records after launch. Native tests retain the
+full staged continuation/recovery matrix. The unchanged Windows lifecycle gate
+passes in 111.31 seconds instead of timing out at 180 seconds; the focused four
+Windows tests and two WSL maintenance/provider tests pass. Hosted
+requalification remains pending, including the separate coverage-runner export
+timeout; no validation limit or coverage threshold changed.
+
+## 2026-09-22 hosted Debug observer correction
+
+PR #320 run `35640200272` passed the previously failing Linux coverage job
+under its unchanged limits. Windows Debug proved that the isolated continuation
+can outlive a new 65-second fixture observer while remaining inside the
+product's existing 600-second absolute handoff budget. Cleanup then encountered
+the still-live installed executable and refused deletion. The observer now
+allows 120 seconds inside the unchanged 180-second outer CTest gate, retaining
+time for terminal observation, the staged-launch regression, and cleanup.
+This changes no product deadline, CTest timeout, test selection, or coverage
+threshold. The exact local Windows Debug lifecycle passed in 112.21 seconds;
+hosted requalification remains pending.
+
+## 2026-09-22 hosted Debug archive-cost correction
+
+PR #320 run `35642988291` passed every non-Windows lane, including Linux
+coverage under its unchanged limits, but the Windows lifecycle reached the
+unchanged 180-second outer CTest timeout before the synthetic external helper
+finished. A retained local phase trace showed correct progress through all
+eight durable phases and isolated the cost to repeatedly hashing and copying
+the uncompressed Debug Setup image in the maintenance archives.
+
+The ordinary lifecycle still exercises stored archives. The synthetic
+external-maintenance packages now use the other admitted format, Deflate,
+while retaining the complete helper launch, provider, publication, shell,
+terminal observation, mismatch and staged-retry assertions. The exact local
+Windows Debug lifecycle passed in 81.04 seconds, down from the immediately
+preceding retained 89-second observation. Product deadlines, the outer CTest
+timeout, the test selection, and every assertion remain unchanged. Exact
+hosted requalification remains pending.
