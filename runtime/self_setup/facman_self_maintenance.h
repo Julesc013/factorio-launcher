@@ -257,6 +257,30 @@ struct EpochContinuationResponse {
   ProviderApplyBinding provider;
 };
 
+struct EpochPublicationRequest {
+  std::filesystem::path coordinator_root;
+  std::string operation_id;
+  std::string nonce;
+  std::string journal_sha256;
+  bool apply = false;
+};
+
+struct EpochPublicationResponse {
+  std::string phase;
+  Generation generation;
+  std::filesystem::path journal;
+};
+
+class EpochPublicationEffects {
+public:
+  virtual ~EpochPublicationEffects() = default;
+  virtual EffectResult inspect_installed(
+      const Plan &plan, const ProviderApplyBinding &binding) = 0;
+  virtual EffectResult validate_terminal_verification(
+      const Plan &plan, const ProviderApplyBinding &binding,
+      const std::string &receipt_sha256) = 0;
+};
+
 class EpochPreparationEffects {
 public:
   virtual ~EpochPreparationEffects() = default;
@@ -268,7 +292,7 @@ public:
 
 // This deliberately stops at an exact provider-verified candidate.  A later
 // slice owns generation publication, activation, and native shell cutover.
-class EpochContinuationEffects {
+class EpochContinuationEffects : public EpochPublicationEffects {
 public:
   virtual ~EpochContinuationEffects() = default;
   virtual CandidateState inspect_candidate(const Plan &plan) = 0;
@@ -278,14 +302,14 @@ public:
       const Plan &plan, const ProviderApplyBinding &binding) = 0;
   virtual EffectResult apply_bound_install_local(
       const Plan &plan, const ProviderApplyBinding &binding) = 0;
-  virtual EffectResult inspect_installed(const Plan &plan,
-                                         const ProviderApplyBinding &binding) = 0;
+  virtual EffectResult inspect_installed(
+      const Plan &plan, const ProviderApplyBinding &binding) override = 0;
   virtual EffectResult verify_installed(const Plan &plan) = 0;
   // Revalidates an already durable provider verification receipt without
   // issuing a new timestamped verification request.
   virtual EffectResult validate_terminal_verification(
       const Plan &plan, const ProviderApplyBinding &binding,
-      const std::string &receipt_sha256) = 0;
+      const std::string &receipt_sha256) override = 0;
 };
 
 // The provider surface deliberately exposes only install_local. FacMan never
@@ -351,6 +375,9 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation(
 facman::core::Result<EpochContinuationResponse>
 execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
                                      EpochContinuationEffects &effects);
+facman::core::Result<EpochPublicationResponse>
+execute_lifecycle_epoch_publication(const EpochPublicationRequest &request,
+                                    EpochPublicationEffects &effects);
 facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
     const std::filesystem::path &coordinator_root,
     const LifecycleEpoch &proposed, bool apply);
