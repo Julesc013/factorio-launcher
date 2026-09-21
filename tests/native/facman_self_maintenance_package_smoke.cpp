@@ -96,6 +96,7 @@ int main() {
                                  "0.1.0-alpha.6");
   auto inspected = facman::self_maintenance::inspect_package(valid);
   ok &= require(inspected && inspected.value().package_sha256.size() == 64U &&
+                    inspected.value().maintenance_launcher_sha256.size() == 64U &&
                     inspected.value().descriptor.product_version ==
                         "0.1.0-alpha.6",
                 "strict maintenance package was not accepted");

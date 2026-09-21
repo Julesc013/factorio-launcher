@@ -50,6 +50,7 @@ struct Generation {
 struct PackageInspection {
   std::filesystem::path package;
   std::string package_sha256;
+  std::string maintenance_launcher_sha256;
   PackageDescriptor descriptor;
 };
 
@@ -93,6 +94,11 @@ struct LifecycleEpoch {
 
 struct LifecycleEpochChain {
   std::vector<LifecycleEpoch> epochs;
+};
+
+struct EpochActiveState {
+  LifecycleEpoch epoch;
+  ActiveState active;
 };
 
 struct EpochGenesisRequest {
@@ -195,6 +201,40 @@ struct EffectResult {
   std::string detail;
 };
 
+struct RetainedMaintenanceInputs {
+  std::filesystem::path package;
+  std::string package_sha256;
+  std::filesystem::path helper;
+  std::string helper_sha256;
+};
+
+struct EpochTransitionRequest {
+  std::filesystem::path coordinator_root;
+  std::string epoch_id;
+  Operation operation = Operation::update;
+  std::string operation_id;
+  PackageInspection package;
+  bool apply = false;
+};
+
+struct EpochTransitionPreparation {
+  std::string phase;
+  Plan transition;
+  std::filesystem::path journal;
+  std::string journal_sha256;
+  RetainedMaintenanceInputs inputs;
+  std::string nonce;
+};
+
+class EpochPreparationEffects {
+public:
+  virtual ~EpochPreparationEffects() = default;
+  virtual CandidateState inspect_candidate(const Plan &plan) = 0;
+  virtual EffectResult review_install_local(const Plan &plan) = 0;
+  virtual facman::core::Result<RetainedMaintenanceInputs> retain_handoff_inputs(
+      const Plan &plan) = 0;
+};
+
 // The provider surface deliberately exposes only install_local. FacMan never
 // requests USK's whole-root update primitive; rollback is a shell activation
 // of an already retained, independently owned generation.
@@ -247,6 +287,14 @@ facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
     const std::filesystem::path &coordinator_root);
+facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
+    const std::filesystem::path &coordinator_root);
+facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transition(
+    const EpochTransitionRequest &request, EpochPreparationEffects &effects);
+facman::core::Result<Plan> admit_lifecycle_epoch_continuation(
+    const std::filesystem::path &coordinator_root,
+    const std::string &operation_id, const std::string &nonce,
+    const std::string &journal_sha256);
 facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
     const std::filesystem::path &coordinator_root,
     const LifecycleEpoch &proposed, bool apply);
@@ -260,6 +308,19 @@ facman::core::Result<RetirementResponse> retire_active(
 facman::core::Result<ActiveState> adopt_legacy(
     const std::filesystem::path &coordinator_root,
     const Generation &legacy, bool apply);
+
+namespace testing {
+
+// Test-only seam called after an epoch record has been pinned and read.
+using EpochRecordPinnedHook = void (*)(const std::filesystem::path &);
+void set_epoch_record_pinned_hook(EpochRecordPinnedHook hook) noexcept;
+// Test-only seam called after the canonical retained-input operation directory
+// has been opened through its held state-root ancestors.
+using EpochHandoffOperationPinnedHook = void (*)(const std::filesystem::path &);
+void set_epoch_handoff_operation_pinned_hook(
+    EpochHandoffOperationPinnedHook hook) noexcept;
+
+} // namespace testing
 
 // Stable names used by every setup root and every transition kind.
 std::filesystem::path global_lock_path(

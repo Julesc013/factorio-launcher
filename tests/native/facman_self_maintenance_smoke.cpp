@@ -3,7 +3,9 @@
 
 #include "facman_self_maintenance.h"
 
+#include "fl_archive.h"
 #include "fl_file_io.h"
+#include "fl_json.h"
 #include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
@@ -31,6 +33,22 @@ namespace {
 
 fs::path before_reopen_source;
 fs::path before_reopen_moved;
+fs::path epoch_hook_watch;
+fs::path epoch_hook_mutation;
+fs::path epoch_hook_second_mutation;
+std::string epoch_hook_bytes;
+std::string epoch_hook_second_bytes;
+bool epoch_hook_called = false;
+bool epoch_hook_mutated = false;
+bool epoch_hook_mutation_attempted = false;
+bool epoch_hook_second_mutated = false;
+bool epoch_hook_second_mutation_attempted = false;
+fs::path epoch_operation_hook_watch;
+fs::path epoch_operation_hook_outside;
+bool epoch_operation_hook_called = false;
+bool epoch_operation_hook_rename_succeeded = false;
+bool epoch_operation_hook_symlink_succeeded = false;
+std::string bytes(const fs::path &path);
 
 void substitute_before_reopen(const fs::path &path) {
   if (path != before_reopen_source) return;
@@ -40,9 +58,114 @@ void substitute_before_reopen(const fs::path &path) {
   std::ofstream(path, std::ios::binary | std::ios::trunc) << "foreign staging bytes";
 }
 
+void mutate_epoch_record_after_pin(const fs::path &path) {
+  if (path != epoch_hook_watch) return;
+  epoch_hook_called = true;
+  std::ofstream output(epoch_hook_mutation, std::ios::binary | std::ios::trunc);
+  output << epoch_hook_bytes;
+}
+
+void replace_epoch_record_after_pin(const fs::path &path) {
+  if (path != epoch_hook_watch) return;
+  epoch_hook_called = true;
+  std::error_code error;
+  const fs::path moved = epoch_hook_mutation.parent_path() /
+      (epoch_hook_mutation.filename().string() + ".hook-moved");
+  fs::rename(epoch_hook_mutation, moved, error);
+  if (error) return;
+  std::ofstream output(epoch_hook_mutation, std::ios::binary | std::ios::trunc);
+  output << epoch_hook_bytes;
+  epoch_hook_mutated = static_cast<bool>(output);
+}
+
+void replace_epoch_record_and_retained_input_after_pin(const fs::path &path) {
+  if (path != epoch_hook_watch) return;
+  epoch_hook_called = true;
+  const auto replace = [](const fs::path &target, const std::string &content,
+                          const std::string &suffix, bool &attempted,
+                          bool &mutated) {
+    attempted = true;
+    std::error_code error;
+    const fs::path moved = target.parent_path() /
+        (target.filename().string() + suffix);
+    fs::rename(target, moved, error);
+    if (error) return;
+    std::ofstream output(target, std::ios::binary | std::ios::trunc);
+    output << content;
+    mutated = static_cast<bool>(output);
+  };
+  replace(epoch_hook_mutation, epoch_hook_bytes, ".hook-moved",
+          epoch_hook_mutation_attempted, epoch_hook_mutated);
+  replace(epoch_hook_second_mutation, epoch_hook_second_bytes, ".hook-moved",
+          epoch_hook_second_mutation_attempted, epoch_hook_second_mutated);
+}
+
+void overwrite_epoch_record_in_place_after_pin(const fs::path &path) {
+  if (path != epoch_hook_watch) return;
+  epoch_hook_called = true;
+  std::string original = bytes(path);
+  if (original.empty()) return;
+  original[0] = original[0] == '{' ? '[' : '{';
+  std::ofstream output(path, std::ios::binary | std::ios::trunc);
+  output << original;
+  epoch_hook_mutated = static_cast<bool>(output);
+}
+
+void swap_epoch_handoff_operation_after_pin(const fs::path &path) {
+  if (path != epoch_operation_hook_watch) return;
+  epoch_operation_hook_called = true;
+  std::error_code error;
+  const fs::path moved = path.parent_path() / (path.filename().string() + ".hook-moved");
+  fs::rename(path, moved, error);
+  epoch_operation_hook_rename_succeeded = !error;
+  if (error) return;
+  fs::create_directory_symlink(epoch_operation_hook_outside, path, error);
+  epoch_operation_hook_symlink_succeeded = !error;
+}
+
+bool equal_size_mutation_refused_or_denied(bool mutated, bool admitted) {
+#ifdef _WIN32
+  return !mutated || !admitted;
+#else
+  return mutated && !admitted;
+#endif
+}
+
 std::string sha(const std::string &value) {
   return facman::base::sha256_hex_bytes(
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
+}
+
+std::string json_string_field(const facman::core::json::Value &document,
+                              const char *name) {
+  const auto *field = document.find(name);
+  if (field == nullptr || !field->is_string())
+    throw std::runtime_error(std::string("missing JSON string field: ") + name);
+  auto value = field->string_value();
+  if (!value) throw std::runtime_error(value.error().message);
+  return value.take_value();
+}
+
+std::string canonical_handoff_with_retained_package(
+    const std::string &journal, const fs::path &retained_package) {
+  auto parsed = facman::core::json::parse(journal);
+  if (!parsed || !parsed.value().is_object())
+    throw std::runtime_error("could not parse canonical handoff fixture");
+  const char *const fields[] = {
+      "schema", "product_id", "epoch_id", "epoch_manifest_sha256", "operation",
+      "operation_id", "source_generation_id", "source_activation_name",
+      "source_activation_sha256", "target_generation_id", "retained_package",
+      "retained_package_sha256", "retained_helper", "retained_helper_sha256",
+      "provider_plan_sha256", "nonce"};
+  facman::core::json::ObjectBuilder rebuilt;
+  for (const char *field : fields) {
+    const std::string value = std::string(field) == "retained_package"
+        ? facman::platform::path_to_utf8(retained_package)
+        : json_string_field(parsed.value(), field);
+    if (!rebuilt.add_string(field, value))
+      throw std::runtime_error(std::string("could not rebuild handoff field: ") + field);
+  }
+  return rebuilt.serialize() + "\n";
 }
 
 fs::path physical_generation_root(const fs::path &logical_root,
@@ -75,6 +198,55 @@ std::string generation_identity(const std::string &version,
       "versioned_generation_with_maintenance_v1\n" +
       "generations/" + version + "\nFacMan.exe\nbin/facman.exe\n"
       "maintenance/FacManSetup.exe\n");
+}
+
+std::string package_descriptor_bytes(const std::string &version) {
+  return "{\"automatic_update\":false,\"entrypoints\":{"
+      "\"cli_relative_path\":\"bin/facman.exe\","
+      "\"gui_relative_path\":\"FacMan.exe\","
+      "\"maintenance_relative_path\":\"maintenance/FacManSetup.exe\"},"
+      "\"facman_source_revision\":\"" + std::string(40, 'd') +
+      "\",\"generation_relative_path\":\"generations/" + version +
+      "\",\"package_layout\":\"versioned_generation_with_maintenance_v1\","
+      "\"product_id\":\"facman\",\"product_version\":\"" + version +
+      "\",\"schema\":\"facman.self_maintenance_package.v1\","
+      "\"setup_protocol\":\"facman.self_maintenance.v1\","
+      "\"universal_setup_revision\":\"" + std::string(40, 'd') + "\"}";
+}
+
+std::string package_current_bytes(const std::string &version) {
+  return "{\"automatic_update\":false,\"facman_source_revision\":\"" +
+      std::string(40, 'd') + "\",\"generation\":\"generations/" + version +
+      "\",\"portable_package\":\"facman.zip\",\"portable_sha256\":\"" +
+      std::string(64, 'c') + "\",\"product_id\":\"facman\",\"schema\":"
+      "\"facman.current_generation.v1\",\"universal_setup_revision\":\"" +
+      std::string(40, 'd') + "\",\"version\":\"" + version +
+      "\",\"workspace_preserved\":true}";
+}
+
+fs::path epoch_package(const fs::path &root, const std::string &version,
+                       const std::string &helper) {
+  const fs::path source = root / "epoch-package-source";
+  fs::create_directories(source);
+  std::ofstream(source / "descriptor.json", std::ios::binary | std::ios::trunc) <<
+      package_descriptor_bytes(version);
+  std::ofstream(source / "current.json", std::ios::binary | std::ios::trunc) <<
+      package_current_bytes(version);
+  std::ofstream(source / "binary", std::ios::binary | std::ios::trunc) << "binary";
+  std::ofstream(source / "helper", std::ios::binary | std::ios::trunc) << helper;
+  std::vector<facman::archive::WriteEntry> entries{
+      {"facman/state/self-maintenance-package.v1.json", source / "descriptor.json", false},
+      {"facman/state/current-generation.v1.json", source / "current.json", false},
+      {"facman/generations/" + version + "/FacMan.exe", source / "binary", false},
+      {"facman/generations/" + version + "/bin/facman.exe", source / "binary", false},
+      {"facman/maintenance/FacManSetup.exe", source / "helper", false}};
+  facman::archive::WriteOptions options;
+  options.method = facman::archive::CompressionMethod::stored;
+  options.limits = facman::archive::PackageArchivePolicy::limits();
+  facman::archive::WriteResult result;
+  const auto status = facman::archive::write_to_new_owned_staging(
+      root / "epoch-package-staging", "candidate.zip", entries, options, result);
+  return status.ok() ? result.archive_path : fs::path();
 }
 
 struct FakeEffects final : facman::self_maintenance::Effects {
@@ -158,6 +330,51 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
           {"self_setup_interrupted", "active native boundary interrupted", {}});
     return facman::core::Result<void>::success();
   }
+};
+
+struct EpochPreparationFakeEffects final
+    : facman::self_maintenance::EpochPreparationEffects {
+  fs::path state_root;
+  unsigned inspect_calls = 0;
+  unsigned review_calls = 0;
+  unsigned retain_calls = 0;
+  bool retain_foreign_package = false;
+  std::string helper_bytes;
+  std::vector<fs::path> reviewed_packages;
+
+  CandidateState inspect_candidate(const Plan &) override {
+    ++inspect_calls;
+    return CandidateState::absent;
+  }
+  EffectResult review_install_local(const Plan &plan) override {
+    ++review_calls;
+    reviewed_packages.push_back(plan.package);
+    return {true, false, sha("epoch-provider-review\n" +
+        facman::platform::path_to_utf8(plan.package.lexically_normal())), {}};
+  }
+  facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>
+  retain_handoff_inputs(const Plan &plan) override {
+    ++retain_calls;
+    const fs::path retained = state_root / "epoch-handoff" / plan.operation_id;
+    fs::create_directories(retained);
+    const fs::path package = retained / "package.zip";
+    const fs::path helper = retained / "FacManSetup.exe";
+    std::ofstream(package, std::ios::binary | std::ios::trunc) <<
+        (retain_foreign_package ? "foreign-package" : bytes(plan.package));
+    std::ofstream(helper, std::ios::binary | std::ios::trunc) << helper_bytes;
+    return facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>::success(
+        {package, sha(bytes(package)), helper, sha(bytes(helper))});
+  }
+};
+
+struct EpochPreparationFixture {
+  fs::path coordinator;
+  facman::self_maintenance::LifecycleEpoch epoch;
+  fs::path source_package;
+  facman::self_maintenance::PackageInspection inspection;
+  facman::self_maintenance::EpochTransitionRequest request;
+  EpochPreparationFakeEffects effects;
+  facman::self_maintenance::EpochTransitionPreparation handoff;
 };
 
 Generation generation(const fs::path &root, const std::string &version,
@@ -250,6 +467,88 @@ std::string activation_bytes(const std::string &operation_id,
       source + "\",\"target_generation_id\":\"" + target + "\"}\n";
 }
 
+fs::path epoch_generation_root(const fs::path &logical_root,
+                               const std::string &epoch_id,
+                               const std::string &generation_id) {
+  const std::string logical_identity = sha("facman.self.logical-root.v1\n" +
+      facman::platform::path_to_utf8(logical_root.lexically_normal()) + "\n");
+  return logical_root.parent_path() / facman::platform::path_from_utf8(
+      "FacMan.generation." + sha("facman.self.physical-generation-root.v2\n" +
+          logical_identity + "\n" + epoch_id + "\n" + generation_id + "\n"));
+}
+
+std::string epoch_generation_bytes(const facman::self_maintenance::LifecycleEpoch &epoch,
+                                   const Generation &generation) {
+  facman::core::json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_generation.v2");
+  object.add_string("product_id", "facman");
+  object.add_string("epoch_id", epoch.epoch_id);
+  object.add_string("generation_id", generation.generation_id);
+  object.add_string("product_version", generation.product_version);
+  object.add_string("package_sha256", generation.package_sha256);
+  object.add_string("facman_source_revision", generation.facman_source_revision);
+  object.add_string("universal_setup_revision", generation.universal_setup_revision);
+  object.add_string("install_id", generation.install_id);
+  object.add_string("install_root", facman::platform::path_to_utf8(generation.install_root));
+  object.add_string("logical_root", facman::platform::path_to_utf8(generation.logical_root));
+  object.add_string("state_root", facman::platform::path_to_utf8(generation.state_root));
+  object.add_string("acceptance_root", facman::platform::path_to_utf8(generation.acceptance_root));
+  object.add_string("gui", facman::platform::path_to_utf8(generation.gui));
+  object.add_string("maintenance_launcher", facman::platform::path_to_utf8(generation.maintenance_launcher));
+  return object.serialize() + "\n";
+}
+
+std::string epoch_link_bytes(const facman::self_maintenance::LifecycleEpoch &epoch,
+                             const std::string &operation,
+                             const std::string &operation_id,
+                             const std::string &source_id,
+                             const std::string &target_id,
+                             const std::string &target_sha,
+                             const std::string &previous_name,
+                             const std::string &previous_sha) {
+  facman::core::json::ObjectBuilder previous;
+  previous.add_string("name", previous_name);
+  previous.add_string("sha256", previous_sha);
+  facman::core::json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_activation.v2");
+  object.add_string("product_id", "facman");
+  object.add_string("epoch_id", epoch.epoch_id);
+  object.add_string("operation", operation);
+  object.add_string("operation_id", operation_id);
+  object.add_string("source_generation_id", source_id);
+  object.add_string("target_generation_id", target_id);
+  object.add_string("generation_record_sha256", target_sha);
+  object.add_object("previous", previous);
+  return object.serialize() + "\n";
+}
+
+Generation make_epoch_update_generation(const facman::self_maintenance::LifecycleEpoch &epoch,
+                                        const std::string &version, char fill) {
+  const facman::self_maintenance::PackageDescriptor descriptor{
+      "facman", version, "generations/" + version, std::string(40, fill),
+      std::string(40, fill), "facman.self_maintenance.v1",
+      "versioned_generation_with_maintenance_v1", "FacMan.exe", "bin/facman.exe",
+      "maintenance/FacManSetup.exe", false};
+  auto made = facman::self_maintenance::make_generation(
+      descriptor, std::string(64, fill), "facman.self", epoch.logical_root,
+      epoch.logical_root, epoch.state_root, epoch.acceptance_root);
+  if (!made) throw std::runtime_error("could not make epoch generation");
+  Generation result = made.take_value();
+  result.install_id = "facman.self.epoch." + epoch.epoch_id + ".generation." +
+      result.generation_id;
+  result.install_root = epoch_generation_root(epoch.logical_root, epoch.epoch_id,
+                                              result.generation_id);
+  result.gui = result.install_root / "generations" / result.product_version / "FacMan.exe";
+  result.maintenance_launcher = result.install_root / "maintenance" / "FacManSetup.exe";
+  return result;
+}
+
+void write_new_record(const fs::path &path, const std::string &content) {
+  std::string detail;
+  if (!facman::base::write_text_new_atomic(path, content, detail))
+    throw std::runtime_error(detail);
+}
+
 void replace_file(const fs::path &path, const std::string &content) {
   std::ofstream output(path, std::ios::binary | std::ios::trunc);
   output << content;
@@ -304,7 +603,11 @@ int main() {
       legacy_coordinator, legacy, true);
   auto legacy_discovered = facman::self_maintenance::discover_active(
       legacy_coordinator);
+  auto legacy_epoch_active = facman::self_maintenance::discover_lifecycle_epoch_active(
+      legacy_coordinator);
   ok &= require(legacy_adopted && legacy_repeated && legacy_discovered &&
+                    legacy_epoch_active && legacy_epoch_active.value().epoch.compatibility_epoch &&
+                    legacy_epoch_active.value().active.active.install_id == "facman.self" &&
                     legacy_discovered.value().has_value() &&
                     legacy_discovered.value()->active.install_id ==
                         "facman.self" &&
@@ -1259,6 +1562,626 @@ int main() {
                         "activations" / ("activation.epoch.genesis." + epoch_generation.generation_id + ".v2.json")),
                 "epoch genesis preview, activation, retry, or v2 identity was not exact");
 
+  // Epoch records use the same immutable publish helper as genesis.  These
+  // focused fixtures exercise discovery only; routing a real transition is a
+  // later slice.
+  const auto epoch_fixture = [&](const std::string &name) {
+    const fs::path fixture_root = root / name;
+    const fs::path coordinator = fixture_root / "coordinator";
+    fs::create_directories(fixture_root);
+    facman::self_maintenance::LifecycleEpoch proposed;
+    proposed.acceptance_root = fixture_root;
+    proposed.logical_root = fixture_root / "FacMan";
+    proposed.state_root = fixture_root / "state";
+    proposed.genesis_generation_id = generation_identity("9.8.7", genesis_package, 'c');
+    auto published = facman::self_maintenance::publish_lifecycle_epoch(
+        coordinator, proposed, true);
+    if (!published || published.value().epochs.empty())
+      throw std::runtime_error("could not publish epoch fixture");
+    const auto &epoch = published.value().epochs.back();
+    auto generation = facman::self_maintenance::make_epoch_genesis_generation(
+        epoch, genesis_descriptor, genesis_package);
+    if (!generation) throw std::runtime_error("could not make epoch fixture genesis");
+    auto activated = facman::self_maintenance::activate_lifecycle_epoch_genesis(
+        {coordinator, epoch.epoch_id, generation.take_value(), true});
+    if (!activated) throw std::runtime_error("could not activate epoch fixture genesis");
+    return coordinator;
+  };
+  const auto write_epoch_generation = [&](const fs::path &coordinator,
+                                          const facman::self_maintenance::LifecycleEpoch &epoch,
+                                          const Generation &value) {
+    write_new_record(coordinator / "epochs" / epoch.epoch_id / "generations" /
+        ("generation." + value.generation_id + ".v2.json"),
+        epoch_generation_bytes(epoch, value));
+  };
+  const auto write_epoch_link = [&](const fs::path &coordinator,
+                                    const facman::self_maintenance::LifecycleEpoch &epoch,
+                                    const std::string &operation,
+                                    const std::string &operation_id,
+                                    const Generation &source,
+                                    const Generation &target,
+                                    const std::string &previous_name,
+                                    const std::string &previous_sha) {
+    const std::string record = epoch_generation_bytes(epoch, target);
+    write_epoch_generation(coordinator, epoch, target);
+    write_new_record(coordinator / "epochs" / epoch.epoch_id / "activations" /
+        ("activation." + operation_id + ".v2.json"),
+        epoch_link_bytes(epoch, operation, operation_id, source.generation_id,
+            target.generation_id, sha(record), previous_name, previous_sha));
+  };
+  const auto epoch_from = [&](const fs::path &coordinator) {
+    auto chain = facman::self_maintenance::discover_lifecycle_epoch_chain(coordinator);
+    return chain.value().epochs.back();
+  };
+  const std::string genesis_activation_name =
+      "activation.epoch.genesis." + epoch_generation.generation_id + ".v2.json";
+  const std::string genesis_activation_sha = sha(bytes(genesis_coordinator / "epochs" /
+      genesis_epoch_id / "activations" / genesis_activation_name));
+  const auto genesis_sha_for = [&](const fs::path &coordinator,
+                                   const facman::self_maintenance::LifecycleEpoch &epoch) {
+    return sha(bytes(coordinator / "epochs" / epoch.epoch_id / "activations" /
+        genesis_activation_name));
+  };
+
+  const fs::path update_coordinator = epoch_fixture("epoch-linked-update");
+  const auto update_epoch = epoch_from(update_coordinator);
+  const Generation update_generation = make_epoch_update_generation(update_epoch, "9.8.8", 'd');
+  write_epoch_link(update_coordinator, update_epoch, "update", "epoch.update.one",
+      epoch_generation, update_generation, genesis_activation_name,
+      genesis_sha_for(update_coordinator, update_epoch));
+  auto linked_update = facman::self_maintenance::discover_lifecycle_epoch_active(update_coordinator);
+
+  const fs::path downgrade_coordinator = epoch_fixture("epoch-linked-downgrade");
+  const auto downgrade_epoch = epoch_from(downgrade_coordinator);
+  const Generation upgrade_generation = make_epoch_update_generation(downgrade_epoch, "9.8.8", 'd');
+  write_epoch_link(downgrade_coordinator, downgrade_epoch, "update", "epoch.update.one",
+      epoch_generation, upgrade_generation, genesis_activation_name,
+      genesis_sha_for(downgrade_coordinator, downgrade_epoch));
+  const std::string update_name = "activation.epoch.update.one.v2.json";
+  const std::string update_sha = sha(bytes(downgrade_coordinator / "epochs" /
+      downgrade_epoch.epoch_id / "activations" / update_name));
+  const Generation downgrade_generation = make_epoch_update_generation(downgrade_epoch, "9.8.6", 'e');
+  write_epoch_link(downgrade_coordinator, downgrade_epoch, "downgrade", "epoch.downgrade.one",
+      upgrade_generation, downgrade_generation, update_name, update_sha);
+  auto linked_downgrade = facman::self_maintenance::discover_lifecycle_epoch_active(
+      downgrade_coordinator);
+  ok &= require(linked_update && linked_update.value().active.active.generation_id ==
+                    update_generation.generation_id && linked_update.value().active.previous &&
+                    linked_update.value().active.previous->generation_id == epoch_generation.generation_id &&
+                    linked_update.value().active.activation_name == "activation.epoch.update.one.v2.json" &&
+                    linked_downgrade && linked_downgrade.value().active.active.generation_id ==
+                    downgrade_generation.generation_id && linked_downgrade.value().active.previous &&
+                    linked_downgrade.value().active.previous->generation_id == upgrade_generation.generation_id,
+                "linked epoch update or downgrade head discovery was not exact");
+
+  const fs::path activation_substitution_coordinator = epoch_fixture("epoch-pinned-activation");
+  const auto activation_substitution_epoch = epoch_from(activation_substitution_coordinator);
+  const Generation activation_substitution_target = make_epoch_update_generation(
+      activation_substitution_epoch, "9.8.8", 'd');
+  write_epoch_link(activation_substitution_coordinator, activation_substitution_epoch, "update",
+      "epoch.update.one", epoch_generation, activation_substitution_target,
+      genesis_activation_name, genesis_sha_for(activation_substitution_coordinator,
+                                                activation_substitution_epoch));
+  epoch_hook_watch = activation_substitution_coordinator / "epochs" /
+      activation_substitution_epoch.epoch_id / "activations" / genesis_activation_name;
+  epoch_hook_mutation = activation_substitution_coordinator / "epochs" /
+      activation_substitution_epoch.epoch_id / "activations" /
+      "activation.epoch.update.one.v2.json";
+  epoch_hook_bytes = "{}\n";
+  epoch_hook_called = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      mutate_epoch_record_after_pin);
+  auto activation_substitution = facman::self_maintenance::discover_lifecycle_epoch_active(
+      activation_substitution_coordinator);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  const bool activation_substitution_hook_called = epoch_hook_called;
+  const fs::path generation_substitution_coordinator = epoch_fixture("epoch-pinned-generation");
+  const auto generation_substitution_epoch = epoch_from(generation_substitution_coordinator);
+  const Generation generation_substitution_target = make_epoch_update_generation(
+      generation_substitution_epoch, "9.8.8", 'd');
+  write_epoch_link(generation_substitution_coordinator, generation_substitution_epoch, "update",
+      "epoch.update.one", epoch_generation, generation_substitution_target,
+      genesis_activation_name, genesis_sha_for(generation_substitution_coordinator,
+                                                generation_substitution_epoch));
+  epoch_hook_watch = generation_substitution_coordinator / "epochs" /
+      generation_substitution_epoch.epoch_id / "activations" / genesis_activation_name;
+  epoch_hook_mutation = generation_substitution_coordinator / "epochs" /
+      generation_substitution_epoch.epoch_id / "generations" /
+      ("generation." + generation_substitution_target.generation_id + ".v2.json");
+  epoch_hook_called = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      mutate_epoch_record_after_pin);
+  auto generation_substitution = facman::self_maintenance::discover_lifecycle_epoch_active(
+      generation_substitution_coordinator);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  const bool generation_substitution_hook_called = epoch_hook_called;
+  ok &= require(activation_substitution_hook_called && generation_substitution_hook_called &&
+                    !activation_substitution && !generation_substitution,
+                "same-name epoch record substitution during a multi-record scan was accepted");
+
+  const fs::path equal_size_scanner_coordinator = epoch_fixture("epoch-equal-size-scanner");
+  const auto equal_size_scanner_epoch = epoch_from(equal_size_scanner_coordinator);
+  epoch_hook_watch = equal_size_scanner_coordinator / "epochs" /
+      equal_size_scanner_epoch.epoch_id / "activations" / genesis_activation_name;
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      overwrite_epoch_record_in_place_after_pin);
+  auto equal_size_scanner = facman::self_maintenance::discover_lifecycle_epoch_active(
+      equal_size_scanner_coordinator);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  ok &= require(epoch_hook_called && equal_size_mutation_refused_or_denied(
+                    epoch_hook_mutated, static_cast<bool>(equal_size_scanner)),
+                "equal-size in-place activation record mutation after pin was accepted");
+
+  const fs::path equal_size_generation_coordinator = epoch_fixture("epoch-equal-size-generation");
+  const auto equal_size_generation_epoch = epoch_from(equal_size_generation_coordinator);
+  const Generation equal_size_generation_target = make_epoch_update_generation(
+      equal_size_generation_epoch, "9.8.8", 'd');
+  write_epoch_link(equal_size_generation_coordinator, equal_size_generation_epoch, "update",
+      "epoch.update.one", epoch_generation, equal_size_generation_target,
+      genesis_activation_name,
+      genesis_sha_for(equal_size_generation_coordinator, equal_size_generation_epoch));
+  epoch_hook_watch = equal_size_generation_coordinator / "epochs" /
+      equal_size_generation_epoch.epoch_id / "generations" /
+      ("generation." + equal_size_generation_target.generation_id + ".v2.json");
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      overwrite_epoch_record_in_place_after_pin);
+  auto equal_size_generation = facman::self_maintenance::discover_lifecycle_epoch_active(
+      equal_size_generation_coordinator);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  ok &= require(epoch_hook_called && equal_size_mutation_refused_or_denied(
+                    epoch_hook_mutated, static_cast<bool>(equal_size_generation)),
+                "equal-size in-place generation record mutation after pin was accepted");
+
+  const std::string preparation_helper = "epoch-maintenance-helper";
+  const auto make_preparation_fixture = [&](const std::string &name) {
+    EpochPreparationFixture fixture;
+    fixture.coordinator = epoch_fixture(name);
+    fixture.epoch = epoch_from(fixture.coordinator);
+    fixture.source_package = epoch_package(root / name, "9.8.8", preparation_helper);
+    auto inspected = facman::self_maintenance::inspect_package(fixture.source_package);
+    if (!inspected) throw std::runtime_error("could not construct valid epoch transition package");
+    fixture.inspection = inspected.take_value();
+    fixture.request = {fixture.coordinator, fixture.epoch.epoch_id, Operation::update,
+                       "epoch.prepare.one", fixture.inspection, false};
+    fixture.effects.state_root = fixture.epoch.state_root;
+    fixture.effects.helper_bytes = preparation_helper;
+    return fixture;
+  };
+  const auto prepare_fresh_epoch_fixture = [&](const std::string &name) {
+    auto fixture = make_preparation_fixture(name);
+    fixture.request.apply = true;
+    auto prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+        fixture.request, fixture.effects);
+    if (!prepared) throw std::runtime_error("could not publish prepared epoch handoff");
+    fixture.handoff = prepared.take_value();
+    return fixture;
+  };
+
+  auto preparation = make_preparation_fixture("epoch-transition-preparation");
+  auto preparation_preview = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      preparation.request, preparation.effects);
+  const fs::path fabricated_package = root / "epoch-transition-preparation" / "fabricated.zip";
+  std::ofstream(fabricated_package, std::ios::binary | std::ios::trunc) << "not-an-archive";
+  auto fabricated_request = preparation.request;
+  fabricated_request.package.package = fabricated_package;
+  fabricated_request.package.package_sha256 = sha("not-an-archive");
+  auto fabricated_package_refusal = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      fabricated_request, preparation.effects);
+  const bool preview_wrote = fs::exists(preparation.coordinator / "epochs" /
+      preparation.epoch.epoch_id / "maintenance") || preparation.effects.retain_calls != 0U;
+  preparation.request.apply = true;
+  auto preparation_apply = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      preparation.request, preparation.effects);
+  auto preparation_retry = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      preparation.request, preparation.effects);
+  auto ordinary_during_handoff = facman::self_maintenance::discover_lifecycle_epoch_active(
+      preparation.coordinator);
+  auto wrong_handoff_nonce = facman::self_maintenance::admit_lifecycle_epoch_continuation(
+      preparation.coordinator, "epoch.prepare.one", "wrong-nonce",
+      preparation_apply ? preparation_apply.value().journal_sha256 : std::string(64, 'a'));
+  auto wrong_handoff_digest = facman::self_maintenance::admit_lifecycle_epoch_continuation(
+      preparation.coordinator, "epoch.prepare.one",
+      preparation_apply ? preparation_apply.value().nonce : "epoch-nonce", std::string(64, 'a'));
+  auto exact_handoff = facman::self_maintenance::admit_lifecycle_epoch_continuation(
+      preparation.coordinator, "epoch.prepare.one",
+      preparation_apply ? preparation_apply.value().nonce : "epoch-nonce",
+      preparation_apply ? preparation_apply.value().journal_sha256 : std::string(64, 'a'));
+  ok &= require(preparation_preview && preparation_preview.value().phase == "plan" && !preview_wrote &&
+                    !fabricated_package_refusal && preparation.effects.retain_calls == 1U &&
+                    preparation_apply && preparation_retry &&
+                    preparation_apply.value().journal_sha256 == preparation_retry.value().journal_sha256 &&
+                    preparation_apply.value().nonce == preparation_retry.value().nonce &&
+                    !ordinary_during_handoff && exact_handoff &&
+                    exact_handoff.value().package == preparation_apply.value().inputs.package &&
+                    !wrong_handoff_nonce && !wrong_handoff_digest &&
+                    ordinary_during_handoff.error().code ==
+                        "self_maintenance_epoch_recovery_required",
+                "epoch preparation preview, exact handoff, and recovery boundary were not exact");
+
+  auto continuation_replacement = prepare_fresh_epoch_fixture(
+      "epoch-transition-pinned-continuation");
+  epoch_hook_watch = continuation_replacement.handoff.journal;
+  epoch_hook_mutation = continuation_replacement.handoff.journal;
+  epoch_hook_bytes = "foreign-journal-bytes\n";
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      replace_epoch_record_after_pin);
+  auto mutated_journal_continuation = facman::self_maintenance::admit_lifecycle_epoch_continuation(
+      continuation_replacement.coordinator, "epoch.prepare.one",
+      continuation_replacement.handoff.nonce, continuation_replacement.handoff.journal_sha256);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  ok &= require(epoch_hook_called &&
+                    (!epoch_hook_mutated || !mutated_journal_continuation),
+                "same-name journal replacement after pin during continuation was accepted");
+
+  auto equal_size_journal = prepare_fresh_epoch_fixture(
+      "epoch-transition-equal-size-journal");
+  epoch_hook_watch = equal_size_journal.handoff.journal;
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      overwrite_epoch_record_in_place_after_pin);
+  auto equal_size_journal_continuation = facman::self_maintenance::admit_lifecycle_epoch_continuation(
+      equal_size_journal.coordinator, "epoch.prepare.one", equal_size_journal.handoff.nonce,
+      equal_size_journal.handoff.journal_sha256);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  ok &= require(epoch_hook_called && equal_size_mutation_refused_or_denied(
+                    epoch_hook_mutated, static_cast<bool>(equal_size_journal_continuation)),
+                "equal-size in-place continuation journal mutation after pin was accepted");
+
+  auto equal_size_package = prepare_fresh_epoch_fixture(
+      "epoch-transition-equal-size-package");
+  epoch_hook_watch = equal_size_package.handoff.inputs.package;
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      overwrite_epoch_record_in_place_after_pin);
+  auto equal_size_package_continuation = facman::self_maintenance::admit_lifecycle_epoch_continuation(
+      equal_size_package.coordinator, "epoch.prepare.one", equal_size_package.handoff.nonce,
+      equal_size_package.handoff.journal_sha256);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  ok &= require(epoch_hook_called && equal_size_mutation_refused_or_denied(
+                    epoch_hook_mutated, static_cast<bool>(equal_size_package_continuation)),
+                "equal-size in-place retained package mutation after pin was accepted");
+
+  auto equal_size_helper = prepare_fresh_epoch_fixture(
+      "epoch-transition-equal-size-helper");
+  epoch_hook_watch = equal_size_helper.handoff.inputs.helper;
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      overwrite_epoch_record_in_place_after_pin);
+  auto equal_size_helper_continuation = facman::self_maintenance::admit_lifecycle_epoch_continuation(
+      equal_size_helper.coordinator, "epoch.prepare.one", equal_size_helper.handoff.nonce,
+      equal_size_helper.handoff.journal_sha256);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  ok &= require(epoch_hook_called && equal_size_mutation_refused_or_denied(
+                    epoch_hook_mutated, static_cast<bool>(equal_size_helper_continuation)),
+                "equal-size in-place retained helper mutation after pin was accepted");
+
+  auto retained_ancestor_swap = prepare_fresh_epoch_fixture(
+      "epoch-transition-retained-ancestor-swap");
+  epoch_operation_hook_watch = retained_ancestor_swap.handoff.inputs.package.parent_path();
+  epoch_operation_hook_outside = retained_ancestor_swap.epoch.acceptance_root / "outside-handoff";
+  fs::create_directories(epoch_operation_hook_outside);
+  std::ofstream(epoch_operation_hook_outside / "package.zip", std::ios::binary | std::ios::trunc) <<
+      bytes(retained_ancestor_swap.handoff.inputs.package);
+  std::ofstream(epoch_operation_hook_outside / "FacManSetup.exe", std::ios::binary | std::ios::trunc) <<
+      bytes(retained_ancestor_swap.handoff.inputs.helper);
+  epoch_operation_hook_called = false;
+  epoch_operation_hook_rename_succeeded = false;
+  epoch_operation_hook_symlink_succeeded = false;
+  facman::self_maintenance::testing::set_epoch_handoff_operation_pinned_hook(
+      swap_epoch_handoff_operation_after_pin);
+  auto retained_ancestor_swap_continuation = facman::self_maintenance::admit_lifecycle_epoch_continuation(
+      retained_ancestor_swap.coordinator, "epoch.prepare.one", retained_ancestor_swap.handoff.nonce,
+      retained_ancestor_swap.handoff.journal_sha256);
+  facman::self_maintenance::testing::set_epoch_handoff_operation_pinned_hook(nullptr);
+  ok &= require(epoch_operation_hook_called &&
+#ifdef _WIN32
+                    ((!epoch_operation_hook_rename_succeeded &&
+                      !epoch_operation_hook_symlink_succeeded) ||
+                     (epoch_operation_hook_rename_succeeded &&
+                      epoch_operation_hook_symlink_succeeded &&
+                      !retained_ancestor_swap_continuation)),
+#else
+                    epoch_operation_hook_rename_succeeded &&
+                    epoch_operation_hook_symlink_succeeded &&
+                    !retained_ancestor_swap_continuation,
+#endif
+                "retained custody ancestor swap after operation-directory pin was accepted");
+
+  auto foreign_final_fixture = prepare_fresh_epoch_fixture("epoch-transition-foreign-final");
+  const fs::path foreign_final_package = foreign_final_fixture.epoch.acceptance_root /
+      "foreign-retained-package.zip";
+  std::ofstream(foreign_final_package, std::ios::binary | std::ios::trunc) <<
+      bytes(foreign_final_fixture.handoff.inputs.package);
+  const std::string foreign_final_original = bytes(foreign_final_fixture.handoff.journal);
+  const std::string foreign_final_bytes = canonical_handoff_with_retained_package(
+      foreign_final_original, foreign_final_package);
+  replace_file(foreign_final_fixture.handoff.journal, foreign_final_bytes);
+  auto foreign_final = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      foreign_final_fixture.request, foreign_final_fixture.effects);
+  ok &= require(foreign_final_bytes != foreign_final_original &&
+                    json_string_field(facman::core::json::parse(foreign_final_bytes).value(),
+                                      "retained_package") ==
+                        facman::platform::path_to_utf8(foreign_final_package) &&
+                    !foreign_final && bytes(foreign_final_fixture.handoff.journal) == foreign_final_bytes,
+                "canonical-but-foreign FINAL handoff was not refused and preserved");
+
+  auto foreign_staging_fixture = prepare_fresh_epoch_fixture("epoch-transition-foreign-staging");
+  const fs::path foreign_staging_package = foreign_staging_fixture.epoch.acceptance_root /
+      "foreign-retained-package.zip";
+  std::ofstream(foreign_staging_package, std::ios::binary | std::ios::trunc) <<
+      bytes(foreign_staging_fixture.handoff.inputs.package);
+  const std::string foreign_staging_original = bytes(foreign_staging_fixture.handoff.journal);
+  const std::string foreign_staging_bytes = canonical_handoff_with_retained_package(
+      foreign_staging_original, foreign_staging_package);
+  const fs::path foreign_staging_journal = foreign_staging_fixture.handoff.journal.parent_path() /
+      "00-handoff-ready.staging.v2.json";
+  std::error_code foreign_staging_error;
+  fs::rename(foreign_staging_fixture.handoff.journal, foreign_staging_journal,
+             foreign_staging_error);
+  if (!foreign_staging_error) replace_file(foreign_staging_journal, foreign_staging_bytes);
+  auto foreign_staging = foreign_staging_error
+      ? facman::core::Result<facman::self_maintenance::EpochTransitionPreparation>::failure(
+          {"test_rename_failed", foreign_staging_error.message(), {}})
+      : facman::self_maintenance::prepare_lifecycle_epoch_transition(
+          foreign_staging_fixture.request, foreign_staging_fixture.effects);
+  ok &= require(!foreign_staging_error && foreign_staging_bytes != foreign_staging_original &&
+                    json_string_field(facman::core::json::parse(foreign_staging_bytes).value(),
+                                      "retained_package") ==
+                        facman::platform::path_to_utf8(foreign_staging_package) &&
+                    !foreign_staging && bytes(foreign_staging_journal) == foreign_staging_bytes,
+                "canonical-but-foreign STAGING handoff was not refused and preserved");
+
+  auto post_publication = make_preparation_fixture("epoch-transition-post-publication");
+  post_publication.request.apply = true;
+  epoch_hook_watch = post_publication.coordinator / "epochs" / post_publication.epoch.epoch_id /
+      "maintenance" / "epoch.prepare.one" / "00-handoff-ready.v2.json";
+  epoch_hook_mutation = epoch_hook_watch;
+  epoch_hook_second_mutation = post_publication.epoch.state_root / "epoch-handoff" /
+      "epoch.prepare.one" / "package.zip";
+  epoch_hook_bytes = "foreign-post-publication-journal\n";
+  epoch_hook_second_bytes = "foreign-post-publication-package\n";
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  epoch_hook_second_mutated = false;
+  epoch_hook_mutation_attempted = false;
+  epoch_hook_second_mutation_attempted = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      replace_epoch_record_and_retained_input_after_pin);
+  auto post_publication_result = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      post_publication.request, post_publication.effects);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  const bool post_publication_replaced = epoch_hook_mutated || epoch_hook_second_mutated;
+  ok &= require(epoch_hook_called && epoch_hook_mutation_attempted &&
+                    epoch_hook_second_mutation_attempted &&
+                    (!post_publication_replaced || !post_publication_result)
+#ifdef _WIN32
+                    && (post_publication_replaced ||
+                        (!epoch_hook_mutated && !epoch_hook_second_mutated))
+#else
+                    && epoch_hook_mutated && epoch_hook_second_mutated && !post_publication_result
+#endif
+                    , "post-publication journal and retained-input replacement was not rejected or denied while pinned");
+  auto retained_mismatch = make_preparation_fixture("epoch-transition-retained-mismatch");
+  retained_mismatch.request.apply = true;
+  retained_mismatch.effects.retain_foreign_package = true;
+  auto retained_package_mismatch = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      retained_mismatch.request, retained_mismatch.effects);
+  const bool mismatch_journal_exists = fs::exists(retained_mismatch.coordinator / "epochs" /
+      retained_mismatch.epoch.epoch_id / "maintenance" / "epoch.prepare.one" /
+      "00-handoff-ready.v2.json");
+  ok &= require(!retained_package_mismatch && !mismatch_journal_exists,
+                "foreign retained package was accepted into a new handoff");
+
+  auto empty_retry = make_preparation_fixture("epoch-transition-empty-retry");
+  fs::create_directories(empty_retry.coordinator / "epochs" / empty_retry.epoch.epoch_id /
+      "maintenance" / "epoch.prepare.one");
+  empty_retry.request.apply = true;
+  auto empty_operation_retry = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      empty_retry.request, empty_retry.effects);
+  ok &= require(static_cast<bool>(empty_operation_retry),
+                "empty maintenance operation directory did not recover into a handoff");
+
+  auto empty_parent = make_preparation_fixture("epoch-transition-empty-parent");
+  fs::create_directories(empty_parent.coordinator / "epochs" / empty_parent.epoch.epoch_id /
+      "maintenance");
+  empty_parent.request.apply = true;
+  auto empty_parent_retry = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      empty_parent.request, empty_parent.effects);
+  ok &= require(static_cast<bool>(empty_parent_retry),
+                "empty maintenance parent alone did not recover into a handoff");
+
+  auto source_removed = prepare_fresh_epoch_fixture("epoch-transition-source-removed-retry");
+  fs::remove(source_removed.source_package);
+  EpochPreparationFakeEffects source_removed_restart;
+  source_removed_restart.state_root = source_removed.epoch.state_root;
+  source_removed_restart.helper_bytes = preparation_helper;
+  auto source_removed_retry = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      source_removed.request, source_removed_restart);
+  ok &= require(source_removed_retry &&
+                    source_removed_retry.value().journal_sha256 == source_removed.handoff.journal_sha256 &&
+                    !source_removed_restart.reviewed_packages.empty() &&
+                    source_removed_restart.reviewed_packages.back() == source_removed.handoff.inputs.package,
+                "retry after source removal did not use its retained handoff input");
+
+  auto provider_final = prepare_fresh_epoch_fixture("epoch-transition-provider-final-retry");
+  EpochPreparationFakeEffects provider_final_restart;
+  provider_final_restart.state_root = provider_final.epoch.state_root;
+  provider_final_restart.helper_bytes = preparation_helper;
+  auto provider_final_retry = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      provider_final.request, provider_final_restart);
+  const std::string provider_final_receipt = sha("epoch-provider-review\n" +
+      facman::platform::path_to_utf8(provider_final.handoff.inputs.package.lexically_normal()));
+  const std::string provider_final_stored = json_string_field(
+      facman::core::json::parse(bytes(provider_final.handoff.journal)).value(),
+      "provider_plan_sha256");
+
+  auto provider_staging = prepare_fresh_epoch_fixture("epoch-transition-provider-staging-retry");
+  const fs::path provider_staging_journal = provider_staging.handoff.journal.parent_path() /
+      "00-handoff-ready.staging.v2.json";
+  std::error_code provider_staging_rename_error;
+  fs::rename(provider_staging.handoff.journal, provider_staging_journal,
+             provider_staging_rename_error);
+  EpochPreparationFakeEffects provider_staging_restart;
+  provider_staging_restart.state_root = provider_staging.epoch.state_root;
+  provider_staging_restart.helper_bytes = preparation_helper;
+  auto provider_staging_retry = provider_staging_rename_error
+      ? facman::core::Result<facman::self_maintenance::EpochTransitionPreparation>::failure(
+          {"test_rename_failed", provider_staging_rename_error.message(), {}})
+      : facman::self_maintenance::prepare_lifecycle_epoch_transition(
+          provider_staging.request, provider_staging_restart);
+  const std::string provider_staging_receipt = sha("epoch-provider-review\n" +
+      facman::platform::path_to_utf8(provider_staging.handoff.inputs.package.lexically_normal()));
+  const std::string provider_staging_stored = provider_staging_rename_error ? std::string() :
+      json_string_field(facman::core::json::parse(bytes(provider_staging.handoff.journal)).value(),
+                        "provider_plan_sha256");
+  ok &= require(provider_final_retry && !provider_final_restart.reviewed_packages.empty() &&
+                    provider_final_restart.reviewed_packages.back() == provider_final.handoff.inputs.package &&
+                    provider_final_stored == provider_final_receipt && !provider_staging_rename_error &&
+                    provider_staging_retry && !provider_staging_restart.reviewed_packages.empty() &&
+                    provider_staging_restart.reviewed_packages.back() == provider_staging.handoff.inputs.package &&
+                    provider_staging_stored == provider_staging_receipt &&
+                    provider_final_receipt != provider_staging_receipt,
+                "provider restart, final retry, or staging retry did not bind a path-derived retained receipt");
+
+  const fs::path fork_coordinator = epoch_fixture("epoch-linked-fork");
+  const auto fork_epoch = epoch_from(fork_coordinator);
+  const Generation fork_a = make_epoch_update_generation(fork_epoch, "9.8.8", 'd');
+  const Generation fork_b = make_epoch_update_generation(fork_epoch, "9.8.9", 'e');
+  write_epoch_link(fork_coordinator, fork_epoch, "update", "epoch.update.one", epoch_generation,
+      fork_a, genesis_activation_name, genesis_sha_for(fork_coordinator, fork_epoch));
+  write_epoch_link(fork_coordinator, fork_epoch, "update", "epoch.update.two", epoch_generation,
+      fork_b, genesis_activation_name, genesis_sha_for(fork_coordinator, fork_epoch));
+  auto forked_epoch = facman::self_maintenance::discover_lifecycle_epoch_active(fork_coordinator);
+
+  const fs::path direction_coordinator = epoch_fixture("epoch-linked-invalid-direction");
+  const auto direction_epoch = epoch_from(direction_coordinator);
+  const Generation direction_target = make_epoch_update_generation(direction_epoch, "9.8.6", 'd');
+  write_epoch_link(direction_coordinator, direction_epoch, "update", "epoch.update.one",
+      epoch_generation, direction_target, genesis_activation_name,
+      genesis_sha_for(direction_coordinator, direction_epoch));
+  auto invalid_link_direction = facman::self_maintenance::discover_lifecycle_epoch_active(
+      direction_coordinator);
+  const fs::path downgrade_direction_coordinator = epoch_fixture(
+      "epoch-linked-invalid-downgrade-direction");
+  const auto downgrade_direction_epoch = epoch_from(downgrade_direction_coordinator);
+  const Generation downgrade_direction_target = make_epoch_update_generation(
+      downgrade_direction_epoch, "9.8.8", 'd');
+  write_epoch_link(downgrade_direction_coordinator, downgrade_direction_epoch, "downgrade",
+      "epoch.update.one", epoch_generation, downgrade_direction_target,
+      genesis_activation_name,
+      genesis_sha_for(downgrade_direction_coordinator, downgrade_direction_epoch));
+  auto invalid_downgrade_direction = facman::self_maintenance::discover_lifecycle_epoch_active(
+      downgrade_direction_coordinator);
+  const fs::path malformed_link_coordinator = epoch_fixture("epoch-linked-malformed-operation");
+  const auto malformed_link_epoch = epoch_from(malformed_link_coordinator);
+  const Generation malformed_link_target = make_epoch_update_generation(malformed_link_epoch, "9.8.8", 'd');
+  write_epoch_link(malformed_link_coordinator, malformed_link_epoch, "rollback", "epoch.update.one",
+      epoch_generation, malformed_link_target, genesis_activation_name,
+      genesis_sha_for(malformed_link_coordinator, malformed_link_epoch));
+  auto malformed_link_operation = facman::self_maintenance::discover_lifecycle_epoch_active(
+      malformed_link_coordinator);
+  ok &= require(!malformed_link_operation,
+                "unsupported or malformed v2 linked activation operation was accepted");
+  ok &= require(!invalid_link_direction && !invalid_downgrade_direction,
+                "semver-invalid v2 update or downgrade direction was accepted");
+
+  const fs::path broken_coordinator = epoch_fixture("epoch-linked-broken");
+  const auto broken_epoch = epoch_from(broken_coordinator);
+  const Generation broken_target = make_epoch_update_generation(broken_epoch, "9.8.8", 'd');
+  write_epoch_link(broken_coordinator, broken_epoch, "update", "epoch.update.one", epoch_generation,
+      broken_target, "activation.epoch.update.one.v2.json", std::string(64, 'a'));
+  auto broken_epoch_result = facman::self_maintenance::discover_lifecycle_epoch_active(
+      broken_coordinator);
+
+  const fs::path mismatch_coordinator = epoch_fixture("epoch-linked-mismatch");
+  const auto mismatch_epoch = epoch_from(mismatch_coordinator);
+  const Generation mismatch_target = make_epoch_update_generation(mismatch_epoch, "9.8.8", 'd');
+  Generation mismatched_source = make_epoch_update_generation(mismatch_epoch, "9.8.7", 'f');
+  write_epoch_link(mismatch_coordinator, mismatch_epoch, "update", "epoch.update.one",
+      mismatched_source, mismatch_target, genesis_activation_name,
+      genesis_sha_for(mismatch_coordinator, mismatch_epoch));
+  auto mismatch_epoch_result = facman::self_maintenance::discover_lifecycle_epoch_active(
+      mismatch_coordinator);
+
+  const fs::path missing_coordinator = epoch_fixture("epoch-linked-missing");
+  const auto missing_epoch = epoch_from(missing_coordinator);
+  const Generation missing_target = make_epoch_update_generation(missing_epoch, "9.8.8", 'd');
+  write_new_record(missing_coordinator / "epochs" / missing_epoch.epoch_id / "activations" /
+      "activation.epoch.update.one.v2.json", epoch_link_bytes(missing_epoch, "update",
+      "epoch.update.one", epoch_generation.generation_id, missing_target.generation_id,
+      std::string(64, 'a'), genesis_activation_name,
+      genesis_sha_for(missing_coordinator, missing_epoch)));
+  auto missing_epoch_result = facman::self_maintenance::discover_lifecycle_epoch_active(
+      missing_coordinator);
+
+  const fs::path noncanonical_coordinator = epoch_fixture("epoch-linked-noncanonical");
+  const auto noncanonical_epoch = epoch_from(noncanonical_coordinator);
+  const Generation noncanonical_target = make_epoch_update_generation(noncanonical_epoch, "9.8.8", 'd');
+  write_new_record(noncanonical_coordinator / "epochs" / noncanonical_epoch.epoch_id /
+      "generations" / ("generation." + noncanonical_target.generation_id + ".v2.json"), "{}\n");
+  write_new_record(noncanonical_coordinator / "epochs" / noncanonical_epoch.epoch_id /
+      "activations" / "activation.epoch.update.one.v2.json", epoch_link_bytes(noncanonical_epoch,
+      "update", "epoch.update.one", epoch_generation.generation_id,
+      noncanonical_target.generation_id, sha("{}\n"), genesis_activation_name,
+      genesis_sha_for(noncanonical_coordinator, noncanonical_epoch)));
+  auto noncanonical_epoch_result = facman::self_maintenance::discover_lifecycle_epoch_active(
+      noncanonical_coordinator);
+
+  const fs::path cycle_coordinator = epoch_fixture("epoch-linked-cycle");
+  const auto cycle_epoch = epoch_from(cycle_coordinator);
+  const Generation cycle_target = make_epoch_update_generation(cycle_epoch, "9.8.8", 'd');
+  write_epoch_link(cycle_coordinator, cycle_epoch, "update", "epoch.update.one", cycle_target,
+      cycle_target, "activation.epoch.update.one.v2.json", std::string(64, 'a'));
+  auto cycle_epoch_result = facman::self_maintenance::discover_lifecycle_epoch_active(
+      cycle_coordinator);
+
+  const fs::path wrong_epoch_coordinator = epoch_fixture("epoch-linked-wrong-epoch");
+  const auto wrong_epoch = epoch_from(wrong_epoch_coordinator);
+  auto foreign_epoch = wrong_epoch;
+  foreign_epoch.epoch_id = std::string(64, 'a');
+  const Generation foreign_target = make_epoch_update_generation(foreign_epoch, "9.8.8", 'd');
+  const std::string foreign_record = epoch_generation_bytes(foreign_epoch, foreign_target);
+  write_new_record(wrong_epoch_coordinator / "epochs" / wrong_epoch.epoch_id / "generations" /
+      ("generation." + foreign_target.generation_id + ".v2.json"), foreign_record);
+  write_new_record(wrong_epoch_coordinator / "epochs" / wrong_epoch.epoch_id / "activations" /
+      "activation.epoch.update.one.v2.json", epoch_link_bytes(wrong_epoch, "update",
+      "epoch.update.one", epoch_generation.generation_id, foreign_target.generation_id,
+      sha(foreign_record), genesis_activation_name,
+      genesis_sha_for(wrong_epoch_coordinator, wrong_epoch)));
+  auto wrong_epoch_result = facman::self_maintenance::discover_lifecycle_epoch_active(
+      wrong_epoch_coordinator);
+
+  const fs::path extras_coordinator = epoch_fixture("epoch-linked-extras");
+  const auto extras_epoch = epoch_from(extras_coordinator);
+  const Generation extras_target = make_epoch_update_generation(extras_epoch, "9.8.8", 'd');
+  const Generation extras_unused = make_epoch_update_generation(extras_epoch, "9.8.9", 'e');
+  write_epoch_link(extras_coordinator, extras_epoch, "update", "epoch.update.one", epoch_generation,
+      extras_target, genesis_activation_name, genesis_sha_for(extras_coordinator, extras_epoch));
+  write_epoch_generation(extras_coordinator, extras_epoch, extras_unused);
+  auto extras_epoch_result = facman::self_maintenance::discover_lifecycle_epoch_active(
+      extras_coordinator);
+  ok &= require(!forked_epoch && !broken_epoch_result && !mismatch_epoch_result &&
+                    !missing_epoch_result && !noncanonical_epoch_result && !cycle_epoch_result &&
+                    !wrong_epoch_result && !extras_epoch_result &&
+                    forked_epoch.error().code == "self_maintenance_epoch_recovery_required" &&
+                    broken_epoch_result.error().code == "self_maintenance_epoch_recovery_required" &&
+                    mismatch_epoch_result.error().code == "self_maintenance_epoch_recovery_required" &&
+                    missing_epoch_result.error().code == "self_maintenance_epoch_recovery_required" &&
+                    noncanonical_epoch_result.error().code == "self_maintenance_epoch_recovery_required" &&
+                    cycle_epoch_result.error().code == "self_maintenance_epoch_recovery_required" &&
+                    wrong_epoch_result.error().code == "self_maintenance_epoch_recovery_required" &&
+                    extras_epoch_result.error().code == "self_maintenance_epoch_recovery_required",
+                "epoch activation fork, broken predecessor, generation binding, or extras were admitted");
+
   const fs::path activation_staging_root = root / "epoch-activation-staging";
   facman::self_maintenance::LifecycleEpoch activation_staging_epoch;
   activation_staging_epoch.acceptance_root = activation_staging_root;
@@ -1380,9 +2303,13 @@ int main() {
   fs::create_directories(forbidden_epoch_state);
   auto state_before_routing = facman::self_maintenance::discover_lifecycle_epoch_chain(
       epoch_coordinator);
+  auto active_before_routing = facman::self_maintenance::discover_lifecycle_epoch_active(
+      epoch_coordinator);
   fs::remove_all(forbidden_epoch_state, ignored);
-  ok &= require(!state_before_routing &&
+  ok &= require(!state_before_routing && !active_before_routing &&
                     state_before_routing.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    active_before_routing.error().code ==
                         "self_maintenance_epoch_recovery_required",
                 "real epoch state was admitted before epoch routing exists");
 

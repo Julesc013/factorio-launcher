@@ -2416,7 +2416,8 @@ facman::core::Result<InstalledIdentity> decode_installed_identity(
 
 std::string bridge_key(const Plan &plan) {
   return provider_hash(plan.operation + "\n" + plan.operation_id + "\n" +
-      generation_record_bytes(plan.target) + plan.package_sha256 + "\n");
+      generation_record_bytes(plan.target) + plan.package_sha256 + "\n" +
+      facman::platform::path_to_utf8(plan.package.lexically_normal()) + "\n");
 }
 
 std::string maintenance_recipe_digest(const Plan &transition) {
@@ -2431,6 +2432,13 @@ std::string maintenance_recipe_digest(const Plan &transition) {
   recipe_identity.add_string("target_layout",
                              "versioned_generation_with_maintenance_v1");
   return provider_hash(recipe_identity.serialize());
+}
+
+std::string maintenance_review_receipt(const Plan &transition,
+                                       const std::string &semantic_digest) {
+  return provider_hash("facman.self_maintenance.provider_review.v1\n" +
+      bridge_key(transition) + "\n" + maintenance_recipe_digest(transition) +
+      "\n" + self_setup::provider_revision() + "\n" + semantic_digest + "\n");
 }
 
 json::ObjectBuilder maintenance_install_plan(
@@ -2483,7 +2491,48 @@ json::ObjectBuilder maintenance_install_plan(
 struct MaintenancePlanReview {
   std::string plan_id;
   std::string digest;
+  std::string semantic_digest;
 };
+
+facman::core::Result<std::string> maintenance_plan_semantic_digest(
+    const json::Value &payload, bool authority) {
+  // plan_digest is deliberately excluded: providers commonly derive it from
+  // the complete response, including created_at and plan_id.  The projection
+  // below binds every independently validated, apply-relevant plan field while
+  // allowing a fresh bridge to retry the same plan with new request metadata.
+  json::ObjectBuilder projection;
+  for (const char *key : {"schema", "status", "operation",
+                          "component_selection", "effects", "input_identity",
+                          "planned_entries", "refusal_policy", "revalidation",
+                          "source", "target", "totals"}) {
+    const json::Value *field = payload.find(key);
+    if (field == nullptr || !projection.add_value(key, *field))
+      return facman::core::Result<std::string>::failure(provider_error(
+          "self_maintenance_provider_response_invalid",
+          "Universal Setup plan semantic projection is incomplete"));
+  }
+  if (authority) {
+    for (const char *key : {"required_commit_authority",
+                            "commit_authority_available"}) {
+      const json::Value *field = payload.find(key);
+      if (field == nullptr || !projection.add_value(key, *field))
+        return facman::core::Result<std::string>::failure(provider_error(
+            "self_maintenance_provider_response_invalid",
+            "Universal Setup plan authority projection is incomplete"));
+    }
+  }
+  auto parsed = json::parse(projection.serialize());
+  auto canonical = parsed
+      ? json::canonical_integer_json(parsed.value())
+      : facman::core::Result<std::string>::failure(provider_error(
+            "self_maintenance_provider_response_invalid",
+            "Universal Setup plan semantic projection could not be parsed"));
+  if (!canonical)
+    return facman::core::Result<std::string>::failure(provider_error(
+        "self_maintenance_provider_response_invalid",
+        "Universal Setup plan semantic projection could not be canonicalized"));
+  return facman::core::Result<std::string>::success(provider_hash(canonical.value()));
+}
 
 facman::core::Result<MaintenancePlanReview> decode_maintenance_plan(
     const std::string &response, const Plan &transition,
@@ -2665,8 +2714,12 @@ facman::core::Result<MaintenancePlanReview> decode_maintenance_plan(
           "self_maintenance_provider_response_invalid",
           "Universal Setup plan effects are incompatible"));
   }
+  auto semantic_digest = maintenance_plan_semantic_digest(*payload, authority);
+  if (!semantic_digest)
+    return facman::core::Result<MaintenancePlanReview>::failure(semantic_digest.error());
   return facman::core::Result<MaintenancePlanReview>::success(
-      {request_id, provider_string(*payload, "plan_digest")});
+      {request_id, provider_string(*payload, "plan_digest"),
+       semantic_digest.take_value()});
 }
 
 } // namespace
@@ -2679,6 +2732,7 @@ struct ProviderBridge::Impl {
   std::string reviewed_key;
   std::string reviewed_transaction_id;
   std::string reviewed_recipe_digest;
+  std::string reviewed_receipt;
   std::string apply_payload;
   std::string inspected_key;
   std::string inspected_state_digest;
@@ -2795,14 +2849,25 @@ EffectResult ProviderBridge::review_install_local(const Plan &transition) {
   const std::string key = bridge_key(transition);
   if (impl_->reviewed_key == key && !impl_->apply_payload.empty())
     return impl_->reviewed_recipe_digest == maintenance_recipe_digest(transition)
-        ? EffectResult{true, false, provider_hash(impl_->apply_payload), {}}
+        ? EffectResult{true, false, impl_->reviewed_receipt, {}}
         : EffectResult{false, false, {},
               "cached provider plan has a different recipe identity"};
   impl_->reviewed_key.clear();
   impl_->reviewed_transaction_id.clear();
   impl_->reviewed_recipe_digest.clear();
+  impl_->reviewed_receipt.clear();
   impl_->apply_payload.clear();
-  const std::string created_at = self_setup::timestamp();
+  std::string created_at = self_setup::timestamp();
+  if (impl_->clock != nullptr) {
+    // Tests and embedders that supply the bridge clock get a deterministic
+    // request timestamp; ordinary provider operation remains wall-clock based.
+    auto controlled_time = self_setup::timestamp_after(
+        "1970-01-01T00:00:00Z", impl_->clock);
+    if (!controlled_time)
+      return {false, false, {}, controlled_time.error().message + ": " +
+          controlled_time.error().detail};
+    created_at = controlled_time.take_value();
+  }
   const std::string request_id =
       "request.maintenance." + key.substr(0, 32);
   const auto plan = maintenance_install_plan(
@@ -2838,8 +2903,10 @@ EffectResult ProviderBridge::review_install_local(const Plan &transition) {
   impl_->reviewed_key = key;
   impl_->reviewed_transaction_id = transaction_id;
   impl_->reviewed_recipe_digest = recipe_digest;
+  impl_->reviewed_receipt = maintenance_review_receipt(
+      transition, reviewed.value().semantic_digest);
   impl_->apply_payload = apply.value().serialize();
-  return {true, false, provider_hash(planned.value()), {}};
+  return {true, false, impl_->reviewed_receipt, {}};
 }
 
 EffectResult ProviderBridge::install_local(const Plan &transition) {
