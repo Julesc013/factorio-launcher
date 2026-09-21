@@ -3119,6 +3119,11 @@ EffectResult ProviderBridge::install_local(const Plan &transition) {
   return {true, false, provider_hash(response.value()), {}};
 }
 
+EffectResult ProviderBridge::prepare_install_local(const Plan &) {
+  return {false, false, {},
+          "offline repair input retention requires the application storage edge"};
+}
+
 namespace {
 bool installed_binds_transition(const InstalledIdentity &installed, const Plan &transition,
                                const std::string *transaction = nullptr) {
@@ -3169,17 +3174,31 @@ EffectResult ProviderBridge::inspect_installed(const Plan &transition,
 EffectResult ProviderBridge::validate_terminal_verification(
     const Plan &transition, const ProviderApplyBinding &binding,
     const std::string &receipt_sha256) {
-  if (!provider_digest(receipt_sha256))
+  if (!provider_digest(receipt_sha256) ||
+      !self_setup::valid_timestamp(binding.plan_created_at))
     return {false, false, {}, "durable provider verification receipt is invalid"};
   auto installed = inspect_identity(transition.target.install_id);
   if (!installed || !installed_binds_transition(installed.value(), transition,
-                                                 &binding.transaction_id) ||
-      installed.value().last_verification_status != "pass" ||
-      installed.value().last_verification_report_digest != receipt_sha256)
+                                                 &binding.transaction_id))
     return {false, false, {}, installed ?
-        "installed state does not reproduce the durable verification report" :
+        "installed state does not reproduce the durable apply identity" :
         installed.error().message + ": " + installed.error().detail};
-  return {true, false, receipt_sha256, {}};
+  // installed.verify is read-only: its report is not written back into the
+  // installed-state record.  Reproduce the exact deterministic request from
+  // the durable provider binding and compare the freshly observed filesystem
+  // report with the receipt stored in phase 40.
+  impl_->inspected_key = bridge_key(transition);
+  impl_->inspected_state_digest = installed.value().installed_state_digest;
+  impl_->inspected_ownership_digest = installed.value().ownership_manifest_digest;
+  impl_->inspected_recipe_digest = installed.value().recipe_digest;
+  impl_->reviewed_plan_created_at = binding.plan_created_at;
+  const EffectResult reproduced = verify_installed(transition);
+  if (!reproduced.ok || reproduced.outcome_unknown ||
+      reproduced.receipt_sha256 != receipt_sha256)
+    return {false, reproduced.outcome_unknown, {}, reproduced.ok
+        ? "installed state does not reproduce the durable verification report"
+        : reproduced.detail};
+  return reproduced;
 }
 
 EffectResult ProviderBridge::verify_installed(const Plan &transition) {
@@ -3193,7 +3212,10 @@ EffectResult ProviderBridge::verify_installed(const Plan &transition) {
   json::ObjectBuilder request;
   const std::string report_id =
       "report.maintenance." + identity.substr(0, 32);
-  const std::string verified_at = self_setup::timestamp();
+  const std::string verified_at =
+      self_setup::valid_timestamp(impl_->reviewed_plan_created_at)
+          ? impl_->reviewed_plan_created_at
+          : self_setup::timestamp();
   request.add_string("schema", "usk.installed_verify_request.v1");
   request.add_string("request_id",
       "request.maintenance.verify." + identity.substr(0, 24));

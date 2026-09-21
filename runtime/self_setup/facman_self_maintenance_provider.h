@@ -50,8 +50,9 @@ public:
       const Plan &plan, const std::string &expected_provider_plan_sha256);
   facman::core::Result<void> rehydrate_install_local(
       const Plan &plan, const ProviderApplyBinding &binding);
+  EffectResult prepare_install_local(const Plan &plan) override;
   EffectResult apply_bound_install_local(const Plan &plan,
-                                         const ProviderApplyBinding &binding);
+                                          const ProviderApplyBinding &binding);
   EffectResult install_local(const Plan &plan);
   EffectResult inspect_installed(const Plan &plan);
   // Continuation recovery must prove the persisted transaction, rather than

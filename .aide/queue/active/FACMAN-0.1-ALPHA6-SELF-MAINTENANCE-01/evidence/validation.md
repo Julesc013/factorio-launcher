@@ -251,3 +251,37 @@ caller's retained-predecessor contract. The 9 candidate-tool tests pass with a
 negative proving that an otherwise coherent physical side-by-side A response
 and record cannot replace the required retained `facman.self` logical-root A.
 Pinned-Python compilation, source formatting, and `git diff --check` pass.
+
+## 2026-09-21 restart-safe lifecycle epoch routing
+
+Source base: `f8cb69e62c2fd5f9f59094dd3b1ba1d6cde58174`
+
+The current-source Windows developer root passed:
+
+- a complete Debug build and 49/49 CTests in 198.90 seconds;
+- a later focused rebuild after the final provider-interface correction, with
+  `facman_self_setup_lifecycle`, `facman_self_maintenance_smoke`, and
+  `facman_self_maintenance_provider_smoke` passing 3/3;
+- the isolated public setup lifecycle, including matching pre-handoff epoch
+  continuation, mismatched-request refusal, and the existing update, downgrade,
+  rollback, and migrated-uninstall controls.
+
+The current-source Ubuntu 24.04 external root rebuilt and passed
+`facman_posix_child_lifecycle_smoke`, `facman_posix_process_pump_smoke`,
+`facman_posix_process_pump_socket_smoke`, and
+`facman_self_maintenance_smoke` (4/4). After the final provider-interface
+correction, the directly affected maintenance smoke rebuilt and passed again.
+This is WSL execution evidence, not physical-Linux product qualification.
+
+Pinned Python passed 74 tests across product candidate, candidate workflow,
+self-maintenance candidate, setup package, recovery contract, generated
+metadata, and generated frontend catalogs. The integration lifecycle compiled
+with `py_compile`. `tools/strict_check.py` passed with 436 schemas, 131
+commands, and 290 refusal codes. Source formatting, portable AIDE Lite,
+task inspect/noop, Git policy, `git diff --check`, and protected-report
+restoration also passed.
+
+The full 49-test Windows matrix predates only the explicit pure-virtual
+declaration and the raw-provider refusal for offline retention. The three
+directly affected setup/maintenance/provider tests rebuilt and passed after
+that correction; no broader product behavior changed.

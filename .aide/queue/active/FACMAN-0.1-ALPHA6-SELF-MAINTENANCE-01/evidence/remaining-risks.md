@@ -79,3 +79,22 @@ unqualified baseline outputs when a later equivalence gate fails. These checks
 still require execution in the optional disposable Windows current-user job.
 No local real-shell effect was run during this correction, so current Start
 Menu/HKCU behavior and the produced A/B package chain remain pending evidence.
+
+## Restart-safe lifecycle epoch routing checkpoint limits
+
+Exact pending discovery and continuation now cover the isolated no-shell public
+route and native state machine. The WorkUnit remains active because the current
+source still needs:
+
+- a source-distinct produced-package Windows A/B lifecycle with retained exact
+  inputs and real current-user Start Menu and HKCU observations;
+- packaged parent-exit execution through the retained helper and restart
+  continuation on the declared Windows host;
+- chain-aware repair, removal, retirement completion, retention, and garbage
+  collection behavior beyond the current safe refusals;
+- physical supported-platform qualification and human/product acceptance.
+
+The current Linux results are WSL source/native evidence. They do not establish
+physical Linux or macOS package behavior. The lifecycle fixture's no-shell
+permit remains qualification-only and does not weaken production shell
+requirements.
