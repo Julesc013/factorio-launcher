@@ -461,35 +461,38 @@ int main() {
   const auto bound_inspected = bound_applied.ok
       ? fresh_binding_bridge.inspect_installed(plan, bound.value())
       : maintenance::EffectResult{false, false, {}, "bound apply failed"};
-  const auto terminal_verified = bound_applied.ok
+  const auto bound_verified = bound_inspected.ok
+      ? fresh_binding_bridge.verify_installed(plan)
+      : maintenance::EffectResult{false, false, {}, "bound inspect failed"};
+  const auto terminal_verified = bound_verified.ok
       ? fresh_binding_bridge.validate_terminal_verification(
-          plan, bound.value(), std::string(64, '1'))
+          plan, bound.value(), bound_verified.receipt_sha256)
       : maintenance::EffectResult{false, false, {}, "bound apply failed"};
   auto wrong_terminal_transaction = bound ? bound.value() : maintenance::ProviderApplyBinding{};
   wrong_terminal_transaction.transaction_id = "tx.m.wrong";
   const auto terminal_wrong_transaction = bound_applied.ok
       ? fresh_binding_bridge.validate_terminal_verification(
-          plan, wrong_terminal_transaction, std::string(64, '1'))
-      : maintenance::EffectResult{true, false, {}, {}};
-  Provider terminal_status_effects;
-  terminal_status_effects.expected = plan;
-  terminal_status_effects.transaction_id = bound ? bound.value().transaction_id : std::string();
-  terminal_status_effects.last_verification_status = "warn";
-  maintenance::ProviderBridge terminal_status_bridge(root / "state", root,
-                                                       &terminal_status_effects, &clock);
-  const auto terminal_wrong_status = bound
-      ? terminal_status_bridge.validate_terminal_verification(plan, bound.value(),
-                                                               std::string(64, '1'))
+          plan, wrong_terminal_transaction, bound_verified.receipt_sha256)
       : maintenance::EffectResult{true, false, {}, {}};
   Provider terminal_digest_effects;
   terminal_digest_effects.expected = plan;
   terminal_digest_effects.transaction_id = bound ? bound.value().transaction_id : std::string();
-  terminal_digest_effects.last_verification_digest = std::string(64, '8');
+  terminal_digest_effects.wrong_verify_digest = true;
   maintenance::ProviderBridge terminal_digest_bridge(root / "state", root,
                                                        &terminal_digest_effects, &clock);
   const auto terminal_wrong_digest = bound
-      ? terminal_digest_bridge.validate_terminal_verification(plan, bound.value(),
-                                                               std::string(64, '1'))
+      ? terminal_digest_bridge.validate_terminal_verification(
+            plan, bound.value(), bound_verified.receipt_sha256)
+      : maintenance::EffectResult{true, false, {}, {}};
+  Provider terminal_ownership_effects;
+  terminal_ownership_effects.expected = plan;
+  terminal_ownership_effects.transaction_id = bound ? bound.value().transaction_id : std::string();
+  terminal_ownership_effects.wrong_verify_ownership = true;
+  maintenance::ProviderBridge terminal_ownership_bridge(root / "state", root,
+                                                          &terminal_ownership_effects, &clock);
+  const auto terminal_wrong_ownership = bound
+      ? terminal_ownership_bridge.validate_terminal_verification(
+            plan, bound.value(), bound_verified.receipt_sha256)
       : maintenance::EffectResult{true, false, {}, {}};
   const auto rejects_cached_binding_mutation = [&](auto mutate) {
     if (!bound) return false;
@@ -538,14 +541,18 @@ int main() {
   maintenance::ProviderBridge foreign_binding_bridge(
       root / "state", root, &foreign_binding_effects, &clock);
   ok &= require(bound && rehydrated && bound_applied.ok && bound_inspected.ok &&
+                    bound_verified.ok &&
                     terminal_verified.ok && !terminal_wrong_transaction.ok &&
-                    !terminal_wrong_status.ok && !terminal_wrong_digest.ok &&
+                    !terminal_wrong_digest.ok && !terminal_wrong_ownership.ok &&
                     all_cached_binding_fields_refused &&
-                    terminal_status_effects.commands == std::vector<std::string>{"installed.inspect"} &&
-                    terminal_digest_effects.commands == std::vector<std::string>{"installed.inspect"} &&
+                    terminal_digest_effects.commands == std::vector<std::string>{
+                        "installed.inspect", "installed.verify"} &&
+                    terminal_ownership_effects.commands == std::vector<std::string>{
+                        "installed.inspect", "installed.verify"} &&
                     fresh_binding_effects.commands == std::vector<std::string>{
                         "install_local.plan", "install_local.apply", "installed.inspect",
-                        "installed.inspect", "installed.inspect"} &&
+                        "installed.verify", "installed.inspect", "installed.verify",
+                        "installed.inspect"} &&
                     !tampered_binding_bridge.rehydrate_install_local(plan, tampered_binding) &&
                     tampered_binding_effects.commands.empty() &&
                     !foreign_binding_bridge.rehydrate_install_local(plan, foreign_binding) &&

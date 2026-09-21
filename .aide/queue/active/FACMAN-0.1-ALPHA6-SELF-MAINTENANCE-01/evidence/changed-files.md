@@ -202,3 +202,31 @@ is related evidence only.
   linked-file, marker-custody and failure-retention coverage.
 - `docs/development/self-maintenance.md` and this WorkUnit describe the exact
   admission behavior without claiming that the optional real-host gate ran.
+
+## Restart-safe lifecycle epoch routing checkpoint
+
+- `apps/setup/main.cpp` discovers an exact pending epoch transition, routes a
+  matching public apply request into continuation, refuses a mismatch, and
+  keeps preview free of continuation effects.
+- `runtime/self_setup/facman_self_maintenance.{h,cpp}` adds exact pending and
+  terminal discovery plus restart-safe continuation across retained-input,
+  provider-entry, provider-apply, verification, shell-cutover, publication,
+  and completion phases. It holds and revalidates namespace and record
+  identities, requires the unfinished operation to be the lifecycle tail, and
+  replays deterministic terminal verification.
+- `runtime/self_setup/facman_self_maintenance_provider.h` and
+  `runtime/self_setup/facman_self_setup.cpp` expose the application-owned
+  offline-retention edge. The raw provider bridge refuses that edge because it
+  does not own application storage.
+- `tests/native/facman_self_maintenance_smoke.cpp` adds phase-interruption,
+  replay, name-insertion, record-change, retained-input, exact-tail, preview,
+  and repeated-generation regressions. The provider smoke verifies terminal
+  report and ownership binding.
+- `tests/integration/facman_self_setup_lifecycle.py` and its native CTest wiring
+  add an isolated public CLI pre-handoff continuation fixture and mismatched
+  request refusal.
+- `docs/development/self-maintenance.md` and this WorkUnit record the new
+  behavior and its remaining product-qualification boundary.
+
+No Universal Setup source, new provider authority, package profile, protected
+workflow, release asset, or generated report is changed by this checkpoint.

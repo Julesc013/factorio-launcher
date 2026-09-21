@@ -8,7 +8,8 @@ if(WIN32 AND TARGET facman_setup)
   add_test(NAME facman_self_setup_lifecycle
     COMMAND ${Python3_EXECUTABLE}
       ${PROJECT_SOURCE_DIR}/tests/integration/facman_self_setup_lifecycle.py
-      --setup-exe $<TARGET_FILE:facman_setup>)
+      --setup-exe $<TARGET_FILE:facman_setup>
+      --epoch-fixture-exe $<TARGET_FILE:facman_self_maintenance_smoke>)
   set_tests_properties(facman_self_setup_lifecycle PROPERTIES
     LABELS "integration;filesystem;transaction;setup;package-runtime"
     TIMEOUT 180)

@@ -110,3 +110,40 @@ the payload-equivalence gate. Failed equivalence retains those inputs with a
 install and logical-root identities, linked retained inputs, marker ownership,
 and failed-gate retention. This remains source validation; no real current-user
 effect or hosted candidate result is claimed.
+
+## 2026-09-21 restart-safe lifecycle epoch routing checkpoint
+
+Implemented from exact integrated dev base
+`f8cb69e62c2fd5f9f59094dd3b1ba1d6cde58174`, this bounded checkpoint connects
+public update, downgrade, and rollback to the existing lifecycle-epoch state
+machine. It discovers and resumes only the exact unfinished tail, keeps preview
+read-only, retains offline repair inputs before provider entry, rehydrates the
+recorded provider transaction after entry, and binds shell cutover,
+publication, and completion to one immutable source/target transition.
+
+Pending discovery now holds and revalidates the complete operation name set,
+records, retained inputs, epoch namespace, and lifecycle tail. The terminal
+phase replays deterministic read-only provider verification using the durable
+operation time rather than treating the provider's stored last-verification
+field as the new report. Native regressions cover mismatched requests,
+interruption at each phase boundary, name insertion, record replacement,
+retained-input changes, exact terminal identity, preview purity, and repeated
+generations. The isolated public CLI exercises matching continuation and
+mismatched refusal.
+
+Current-source Windows, Linux, Python, strict, formatting, AIDE, and diff
+validation passed. Independent non-authoring review is recorded with the final
+checkpoint receipt. The WorkUnit remains active: this checkpoint does not
+claim the source-distinct packaged Windows lifecycle, real Start Menu/HKCU
+effects, retained-helper parent-exit execution, chain-aware repair/removal, or
+human/product acceptance.
+
+## 2026-09-22 macOS override portability correction
+
+The first hosted PR build exposed seven inherited provider declarations that
+MSVC and GCC accepted but Clang rejected under
+`-Winconsistent-missing-override -Werror`. The declarations now carry explicit
+`override` specifiers without changing their signatures or behavior. The
+affected maintenance target rebuilt and passed on Windows and Ubuntu 24.04;
+source formatting and `git diff --check` also passed. The corrected macOS
+hosted build remains the exact platform acceptance check for this correction.

@@ -103,3 +103,31 @@ generations cannot be selected through update or downgrade.
 This is evidence only after that optional job runs successfully on the declared
 Windows host. Its disposable account may retire the final chain through the
 same recovery-aware coordinator, but that is not yet full native qualification.
+
+## Restart-safe lifecycle epoch transitions
+
+The public update, downgrade, and rollback routes now discover one exact
+unfinished lifecycle-epoch transition before starting a new operation. A
+matching request continues the immutable operation; a different request is
+refused with recovery guidance. Preview remains read-only and never continues
+or creates an operation.
+
+Pre-handoff continuation retains the package and helper through the normal
+FacMan storage edge before provider entry. After a durable provider-entry
+record exists, continuation rehydrates the exact provider transaction instead
+of preparing it again. Each subsequent phase binds the installed generation,
+read-only verification result, shell cutover, publication, and completion to
+the same epoch, operation, source generation, target generation, package, and
+provider identities. Terminal verification replays the deterministic
+read-only provider verification at the operation's recorded time; it does not
+depend on a mutable cached verification field.
+
+Pending discovery holds and revalidates the epoch namespace, operation names,
+records, retained inputs, and lifecycle tail. Inserted, replaced, linked, or
+ambiguous records cause recovery-required refusal. Completed immutable
+operations remain history; only the unfinished tail can be resumed.
+
+This checkpoint qualifies the isolated no-shell CLI transition and native
+state machine on current source. It does not replace the still-required
+source-distinct packaged Windows run, real Start Menu and HKCU observations,
+retained-helper parent-exit handoff, or chain-aware repair and removal.
