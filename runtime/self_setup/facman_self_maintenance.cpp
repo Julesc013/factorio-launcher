@@ -1594,11 +1594,22 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
                 *allowed_maintenance_operation) ||
             (!operation_names.empty() && !maintenance.open_child_directory_no_follow(
                 *allowed_maintenance_operation, operation).ok()) ||
-            (!operation_names.empty() &&
-             (!operation.list_child_names_bounded(2U, records).ok() ||
-              records.size() > 1U ||
-              (!records.empty() && records.front() != "00-handoff-ready.v2.json" &&
-               records.front() != "00-handoff-ready.staging.v2.json"))))
+             (!operation_names.empty() &&
+              (!operation.list_child_names_bounded(6U, records).ok() ||
+               records.size() > 5U ||
+               ([&] {
+                 const std::vector<fs::path> finals = {
+                     "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
+                     "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
+                     "40-provider-verified.v2.json"};
+                 for (std::size_t i = 0; i < records.size(); ++i) {
+                   const fs::path staging = finals[i].string().substr(
+                       0, finals[i].string().size() - 7U) + "staging.v2.json";
+                   if (records[i] != finals[i] &&
+                       !(i + 1U == records.size() && records[i] == staging)) return true;
+                 }
+                 return false;
+               }()))))
           return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
               "epoch maintenance recovery state is not the exact targeted handoff"));
         continue;
@@ -1897,7 +1908,9 @@ facman::core::Result<void> publish_epoch_record(
     return facman::core::Result<void>::success();
   }
   std::vector<fs::path> names;
-  if (!directory.list_child_names_bounded(4U, names).ok())
+  // A provider continuation may have four durable predecessors plus one
+  // canonical staging tail; other epoch journals use fewer entries.
+  if (!directory.list_child_names_bounded(6U, names).ok())
     return facman::core::Result<void>::failure(epoch_recovery(
         "epoch record directory could not be enumerated for recovery"));
   const auto present = [&](const std::string &name) {
@@ -1945,6 +1958,11 @@ facman::core::Result<void> publish_epoch_record(
   }
   if (!directory.flush_metadata().ok()) return facman::core::Result<void>::failure(
       epoch_recovery("epoch record directory could not be flushed"));
+  auto final_bytes = read_epoch_relative_bounded(directory, final_name,
+                                                 kMaximumEpochGenesisRecordBytes);
+  if (!final_bytes || final_bytes.value() != bytes)
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "epoch published record changed before its final identity was verified"));
   return facman::core::Result<void>::success();
 }
 
@@ -3016,6 +3034,562 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation(
     return facman::core::Result<Plan>::failure(epoch_recovery(
         "epoch continuation journal or retained input changed before return"));
   return plan;
+}
+
+namespace {
+
+constexpr std::size_t kMaximumEpochContinuationRecords = 5U;
+
+std::string epoch_continuation_record_bytes(
+    const LifecycleEpoch &epoch, const EpochHandoff &handoff,
+    const std::string &handoff_sha256, const std::string &phase,
+    const ProviderApplyBinding &provider, const std::string &receipt = {},
+    const std::string &outcome = {}) {
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_epoch_provider_continuation.v2");
+  object.add_string("product_id", "facman");
+  object.add_string("epoch_id", epoch.epoch_id);
+  object.add_string("epoch_manifest_sha256", epoch.manifest_sha256);
+  object.add_string("handoff_sha256", handoff_sha256);
+  object.add_string("operation_id", handoff.operation_id);
+  object.add_string("source_generation_id", handoff.source_generation_id);
+  object.add_string("target_generation_id", handoff.target_generation_id);
+  object.add_string("phase", phase);
+  object.add_string("provider_plan_sha256", provider.provider_plan_sha256);
+  object.add_string("transaction_id", provider.transaction_id);
+  object.add_string("apply_sha256", provider.apply_sha256);
+  object.add_string("apply_payload", provider.apply_payload);
+  object.add_string("semantic_digest", provider.semantic_digest);
+  object.add_string("bridge_key", provider.bridge_key);
+  object.add_string("reviewed_plan_id", provider.reviewed_plan_id);
+  object.add_string("reviewed_plan_digest", provider.reviewed_plan_digest);
+  object.add_string("plan_created_at", provider.plan_created_at);
+  object.add_string("request_id", provider.request_id);
+  object.add_string("receipt_sha256", receipt);
+  object.add_string("outcome", outcome);
+  return object.serialize() + "\n";
+}
+
+facman::core::Result<ProviderApplyBinding> parse_epoch_continuation_record(
+    const std::string &bytes, const LifecycleEpoch &epoch,
+    const EpochHandoff &handoff, const std::string &handoff_sha256,
+    const std::string &phase, std::string *receipt = nullptr,
+    std::string *outcome = nullptr) {
+  auto document = json::parse(bytes);
+  const std::initializer_list<const char *> keys = {
+      "schema", "product_id", "epoch_id", "epoch_manifest_sha256",
+      "handoff_sha256", "operation_id", "source_generation_id",
+      "target_generation_id", "phase", "provider_plan_sha256",
+      "transaction_id", "apply_sha256", "apply_payload", "semantic_digest", "bridge_key",
+      "reviewed_plan_id", "reviewed_plan_digest", "plan_created_at", "request_id",
+      "receipt_sha256", "outcome"};
+  if (!document || !exact_keys(document.value(), keys) ||
+      !lifecycle_string_fields(document.value(), keys))
+    return facman::core::Result<ProviderApplyBinding>::failure(epoch_recovery(
+        "epoch provider continuation record has an incompatible exact schema"));
+  ProviderApplyBinding provider{string_field(document.value(), "provider_plan_sha256"),
+      string_field(document.value(), "transaction_id"),
+      string_field(document.value(), "apply_sha256"),
+      string_field(document.value(), "apply_payload"),
+      string_field(document.value(), "semantic_digest"), string_field(document.value(), "bridge_key"),
+      string_field(document.value(), "reviewed_plan_id"),
+      string_field(document.value(), "reviewed_plan_digest"),
+      string_field(document.value(), "plan_created_at"), string_field(document.value(), "request_id")};
+  const std::string observed_receipt = string_field(document.value(), "receipt_sha256");
+  const std::string observed_outcome = string_field(document.value(), "outcome");
+  std::string detail;
+  const bool outcome_record = phase == "30-provider-outcome";
+  const bool verified_record = phase == "40-provider-verified";
+  const bool receipt_required = verified_record ||
+      (outcome_record && observed_outcome == "installed");
+  if (string_field(document.value(), "schema") !=
+          "facman.self_epoch_provider_continuation.v2" ||
+      string_field(document.value(), "product_id") != "facman" ||
+      string_field(document.value(), "epoch_id") != epoch.epoch_id ||
+      string_field(document.value(), "epoch_manifest_sha256") != epoch.manifest_sha256 ||
+      string_field(document.value(), "handoff_sha256") != handoff_sha256 ||
+      string_field(document.value(), "operation_id") != handoff.operation_id ||
+      string_field(document.value(), "source_generation_id") != handoff.source_generation_id ||
+      string_field(document.value(), "target_generation_id") != handoff.target_generation_id ||
+      string_field(document.value(), "phase") != phase ||
+      provider.provider_plan_sha256 != handoff.provider_plan_sha256 ||
+      !digest(provider.provider_plan_sha256) || !digest(provider.apply_sha256) ||
+      !digest(provider.semantic_digest) || !digest(provider.bridge_key) ||
+      provider.reviewed_plan_id.empty() || !digest(provider.reviewed_plan_digest) ||
+      provider.plan_created_at.empty() || provider.request_id.empty() ||
+      provider.apply_payload.empty() || hash(provider.apply_payload) != provider.apply_sha256 ||
+      !facman::base::validate_identifier(provider.transaction_id, detail) ||
+      (receipt_required ? !digest(observed_receipt) : !observed_receipt.empty()) ||
+      (!outcome_record && !verified_record && !observed_outcome.empty()) ||
+      (outcome_record && observed_outcome != "installed" &&
+       observed_outcome != "recovery_required") ||
+      (verified_record && observed_outcome != "verified") ||
+      bytes != epoch_continuation_record_bytes(epoch, handoff, handoff_sha256,
+                                                phase, provider, observed_receipt, observed_outcome))
+    return facman::core::Result<ProviderApplyBinding>::failure(epoch_recovery(
+        "epoch provider continuation record identity or canonical bytes are invalid"));
+  if (receipt != nullptr) *receipt = observed_receipt;
+  if (outcome != nullptr) *outcome = observed_outcome;
+  return facman::core::Result<ProviderApplyBinding>::success(std::move(provider));
+}
+
+facman::core::Result<void> validate_epoch_continuation_names(
+    const facman::platform::StableDirectoryObject &operation,
+    std::vector<fs::path> &names) {
+  if (!operation.list_child_names_bounded(kMaximumEpochContinuationRecords + 1U,
+                                          names).ok() || names.empty() ||
+      names.size() > kMaximumEpochContinuationRecords)
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "epoch continuation operation contains an unsafe record set"));
+  const std::vector<fs::path> allowed = {
+      "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
+      "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
+      "40-provider-verified.v2.json"};
+  for (std::size_t index = 0; index < names.size(); ++index) {
+    const std::string final_name = allowed[index].string();
+    const std::string staging_name = final_name.substr(0, final_name.size() - 7U) +
+        "staging.v2.json";
+    if (names[index] != allowed[index] &&
+        !(index + 1U == names.size() && names[index] == staging_name))
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch continuation operation contains an unexpected or out-of-order record"));
+  }
+  return facman::core::Result<void>::success();
+}
+
+bool epoch_continuation_has(const std::vector<fs::path> &names, const char *name) {
+  return std::find(names.begin(), names.end(), fs::path(name)) != names.end();
+}
+
+bool same_provider_apply_binding(const ProviderApplyBinding &left,
+                                 const ProviderApplyBinding &right) {
+  return left.provider_plan_sha256 == right.provider_plan_sha256 &&
+      left.transaction_id == right.transaction_id && left.apply_sha256 == right.apply_sha256 &&
+      left.apply_payload == right.apply_payload && left.semantic_digest == right.semantic_digest &&
+      left.bridge_key == right.bridge_key && left.reviewed_plan_id == right.reviewed_plan_id &&
+      left.reviewed_plan_digest == right.reviewed_plan_digest &&
+      left.plan_created_at == right.plan_created_at && left.request_id == right.request_id;
+}
+
+std::string epoch_continuation_staging_name(const char *final_name) {
+  const std::string name(final_name);
+  return name.substr(0, name.size() - 7U) + "staging.v2.json";
+}
+
+} // namespace
+
+facman::core::Result<EpochContinuationResponse>
+execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
+                                     EpochContinuationEffects &effects) {
+  auto admitted = admit_lifecycle_epoch_continuation(request.coordinator_root,
+      request.operation_id, request.nonce, request.journal_sha256);
+  if (!admitted) return facman::core::Result<EpochContinuationResponse>::failure(admitted.error());
+  Plan transition = admitted.take_value();
+  const std::string install_prefix = "facman.self.epoch.";
+  if (transition.target.install_id.compare(0, install_prefix.size(), install_prefix) != 0 ||
+      transition.target.install_id.size() < install_prefix.size() + 64U + 12U ||
+      transition.target.install_id.compare(install_prefix.size() + 64U, 12U,
+          ".generation.") != 0)
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "admitted epoch continuation target has no exact epoch install identity"));
+  const std::string admitted_epoch_id = transition.target.install_id.substr(
+      install_prefix.size(), 64U);
+  if (!digest(admitted_epoch_id)) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("admitted epoch continuation target has an invalid epoch identity"));
+  auto chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root, {}, nullptr,
+      request.operation_id, admitted_epoch_id);
+  if (!chain || chain.value().epochs.empty() || chain.value().epochs.back().compatibility_epoch)
+    return facman::core::Result<EpochContinuationResponse>::failure(!chain ? chain.error() :
+        epoch_recovery("epoch continuation has no real lifecycle tail"));
+  const LifecycleEpoch epoch = chain.value().epochs.back();
+  // Admission releases its read-side lock before returning. Reacquire the
+  // global lock for durable continuation records, then prove that the epoch
+  // tail did not move between those two boundaries.
+  auto authority = admit_coordinator(request.coordinator_root, epoch.acceptance_root, false);
+  if (!authority) return facman::core::Result<EpochContinuationResponse>::failure(authority.error());
+  auto lock = acquire(authority.take_value(), request.operation_id);
+  if (!lock) return facman::core::Result<EpochContinuationResponse>::failure(lock.error());
+  auto locked_chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root, {}, nullptr,
+      request.operation_id, epoch.epoch_id);
+  if (!locked_chain || locked_chain.value().epochs.empty() ||
+      locked_chain.value().epochs.back().epoch_id != epoch.epoch_id ||
+      locked_chain.value().epochs.back().manifest_sha256 != epoch.manifest_sha256)
+    return facman::core::Result<EpochContinuationResponse>::failure(!locked_chain ?
+        locked_chain.error() : epoch_recovery("epoch continuation tail changed after admission"));
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(request.coordinator_root, epoch.epoch_id, true);
+  if (!opened) return facman::core::Result<EpochContinuationResponse>::failure(opened.error());
+  auto manifest_bytes = read_epoch_relative_bounded(scope.epoch, "epoch.v1.json",
+                                                    kMaximumEpochGenesisRecordBytes);
+  facman::platform::StableInputFile held_manifest;
+  if (!manifest_bytes || hash(manifest_bytes.value()) != epoch.manifest_sha256 ||
+      !scope.epoch.open_child_file_no_follow_pinned("epoch.v1.json", held_manifest).ok() ||
+      !held_file_matches_bytes(held_manifest, manifest_bytes.value()))
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "epoch manifest cannot be held through provider execution"));
+  facman::platform::StableDirectoryObject maintenance, operation;
+  if (!scope.epoch.open_child_directory_no_follow_for_relative_writes("maintenance", maintenance).ok() ||
+      !maintenance.open_child_directory_no_follow_for_relative_writes(request.operation_id, operation).ok())
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "epoch continuation operation directory is unavailable through held ancestors"));
+  std::vector<fs::path> names;
+  auto valid_names = validate_epoch_continuation_names(operation, names);
+  if (!valid_names) return facman::core::Result<EpochContinuationResponse>::failure(valid_names.error());
+  const bool entered_final_at_start = epoch_continuation_has(
+      names, "20-provider-apply-entered.v2.json");
+  auto handoff_bytes = read_epoch_relative_bounded(operation, "00-handoff-ready.v2.json",
+                                                   kMaximumEpochGenesisRecordBytes);
+  auto handoff = handoff_bytes ? parse_epoch_handoff(handoff_bytes.value())
+      : facman::core::Result<EpochHandoff>::failure(handoff_bytes.error());
+  if (!handoff || hash(handoff_bytes.value()) != request.journal_sha256)
+    return facman::core::Result<EpochContinuationResponse>::failure(!handoff ? handoff.error() :
+        epoch_recovery("epoch continuation handoff changed before provider execution"));
+  facman::platform::StableInputFile held_handoff;
+  if (!operation.open_child_file_no_follow_pinned("00-handoff-ready.v2.json", held_handoff).ok() ||
+      !held_file_matches_bytes(held_handoff, handoff_bytes.value()))
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "epoch continuation handoff cannot be held through provider execution"));
+  auto active_after_lock = discover_epoch_genesis_state(epoch, scope, nullptr, false,
+                                                        &request.operation_id);
+  if (!active_after_lock || !active_after_lock.value() ||
+      active_after_lock.value()->active.generation_id != handoff.value().source_generation_id ||
+      active_after_lock.value()->active.generation_id != transition.source.generation_id ||
+      active_after_lock.value()->activation_name != handoff.value().source_activation_name ||
+      active_after_lock.value()->activation_sha256 != handoff.value().source_activation_sha256 ||
+      transition.target.generation_id != handoff.value().target_generation_id)
+    return facman::core::Result<EpochContinuationResponse>::failure(!active_after_lock ?
+        active_after_lock.error() : epoch_recovery("active epoch head changed after admission"));
+  facman::platform::StableDirectoryObject held_generations, held_activations;
+  facman::platform::StableInputFile held_source_generation, held_source_activation;
+  const fs::path source_generation_name = epoch_generation_name(
+      handoff.value().source_generation_id);
+  const fs::path source_activation_name = handoff.value().source_activation_name;
+  if (!scope.epoch.open_child_directory_no_follow("generations", held_generations).ok() ||
+      !scope.epoch.open_child_directory_no_follow("activations", held_activations).ok())
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "active epoch source ancestors cannot be held"));
+  auto source_generation_bytes = read_epoch_relative_bounded(held_generations, source_generation_name,
+      kMaximumEpochGenesisRecordBytes);
+  auto source_activation_bytes = read_epoch_relative_bounded(held_activations, source_activation_name,
+      kMaximumEpochGenesisRecordBytes);
+  if (!source_generation_bytes || !source_activation_bytes ||
+      hash(source_activation_bytes.value()) != handoff.value().source_activation_sha256 ||
+      !held_generations.open_child_file_no_follow_pinned(source_generation_name, held_source_generation).ok() ||
+      !held_activations.open_child_file_no_follow_pinned(source_activation_name, held_source_activation).ok() ||
+      !held_file_matches_bytes(held_source_generation, source_generation_bytes.value()) ||
+      !held_file_matches_bytes(held_source_activation, source_activation_bytes.value()))
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "active epoch source records cannot be held"));
+  auto retained = validate_retained_inputs(epoch, request.operation_id, handoff.value().inputs);
+  if (!retained || !revalidate_retained_inputs(retained.value()))
+    return facman::core::Result<EpochContinuationResponse>::failure(!retained ? retained.error() :
+        epoch_recovery("retained continuation input changed before provider execution"));
+  struct HeldContinuationRecord {
+    fs::path name;
+    std::string bytes;
+    facman::platform::StableInputFile file;
+  };
+  std::vector<HeldContinuationRecord> held_records;
+  const auto refresh_held_records = [&]() {
+    std::vector<fs::path> current;
+    if (!validate_epoch_continuation_names(operation, current).ok()) return false;
+    std::vector<HeldContinuationRecord> replacement;
+    for (const auto &name : current) {
+      if (name == "00-handoff-ready.v2.json") continue;
+      auto bytes = read_epoch_relative_bounded(operation, name, kMaximumEpochGenesisRecordBytes);
+      HeldContinuationRecord record;
+      if (!bytes || !operation.open_child_file_no_follow_pinned(name, record.file).ok() ||
+          !held_file_matches_bytes(record.file, bytes.value())) return false;
+      record.name = name;
+      record.bytes = bytes.take_value();
+      replacement.push_back(std::move(record));
+    }
+    held_records = std::move(replacement);
+    return true;
+  };
+  if (!refresh_held_records()) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("epoch continuation records cannot be held through provider execution"));
+  const auto refresh_after_publish = [&]
+      (const std::vector<std::pair<fs::path, std::string>> &prior,
+       const fs::path &final_name, const std::string &final_bytes) {
+    if (!refresh_held_records()) return false;
+    if (held_records.size() != prior.size() + 1U) return false;
+    for (const auto &expected : prior) {
+      const auto found = std::find_if(held_records.begin(), held_records.end(),
+          [&](const HeldContinuationRecord &record) { return record.name == expected.first; });
+      if (found == held_records.end() || found->bytes != expected.second) return false;
+    }
+    const auto published = std::find_if(held_records.begin(), held_records.end(),
+        [&](const HeldContinuationRecord &record) { return record.name == final_name; });
+    return published != held_records.end() && published->bytes == final_bytes;
+  };
+  const auto held_snapshot = [&]() {
+    std::vector<std::pair<fs::path, std::string>> result;
+    for (const auto &record : held_records) result.emplace_back(record.name, record.bytes);
+    return result;
+  };
+  const auto custody_valid = [&]() {
+    std::vector<fs::path> exact_names;
+    const bool names_exact = validate_epoch_continuation_names(operation, exact_names).ok();
+    auto current_active = discover_epoch_genesis_state(epoch, scope, nullptr, false,
+                                                       &request.operation_id);
+    return names_exact && current_active && current_active.value() &&
+        current_active.value()->active.generation_id == handoff.value().source_generation_id &&
+        current_active.value()->activation_name == source_activation_name &&
+        current_active.value()->activation_sha256 == handoff.value().source_activation_sha256 &&
+        held_file_matches_bytes(held_manifest, manifest_bytes.value()) &&
+        held_file_matches_bytes(held_source_generation, source_generation_bytes.value()) &&
+        held_file_matches_bytes(held_source_activation, source_activation_bytes.value()) &&
+        held_file_matches_bytes(held_handoff, handoff_bytes.value()) &&
+        revalidate_retained_inputs(retained.value()) &&
+        exact_names.size() == held_records.size() + 1U &&
+        !exact_names.empty() && exact_names.front() == "00-handoff-ready.v2.json" &&
+        std::equal(held_records.begin(), held_records.end(), exact_names.begin() + 1,
+            [](const HeldContinuationRecord &record, const fs::path &name) {
+              return record.name == name;
+            }) &&
+        held_generations.revalidate().ok() && held_activations.revalidate().ok() &&
+        std::all_of(held_records.begin(), held_records.end(), [](HeldContinuationRecord &record) {
+          return held_file_matches_bytes(record.file, record.bytes);
+        }) && operation.revalidate().ok() &&
+        maintenance.revalidate().ok() && scope.epoch.revalidate().ok() &&
+        scope.epochs.revalidate().ok() && scope.coordinator.revalidate().ok();
+  };
+  const fs::path journal = scope.epoch.path() / "maintenance" / request.operation_id /
+      "00-handoff-ready.v2.json";
+  if (!request.apply) return facman::core::Result<EpochContinuationResponse>::success(
+      {"plan", std::move(transition), journal, {}});
+
+  ProviderApplyBinding binding;
+  const char *bound_name = "10-provider-apply-bound.v2.json";
+  const std::string bound_staging = epoch_continuation_staging_name(bound_name);
+  if (epoch_continuation_has(names, bound_staging.c_str())) {
+    auto bytes = read_epoch_relative_bounded(operation, bound_staging,
+                                             kMaximumEpochGenesisRecordBytes);
+    auto parsed = bytes ? parse_epoch_continuation_record(bytes.value(), epoch, handoff.value(),
+        request.journal_sha256, "10-provider-apply-bound")
+        : facman::core::Result<ProviderApplyBinding>::failure(bytes.error());
+    if (!parsed || !custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        !parsed ? parsed.error() : epoch_recovery("epoch custody changed before staging recovery"));
+    // Windows no-follow handles deliberately retain a sharing restriction; a
+    // staging handle must be released only after its bytes were parsed before
+    // atomically publishing that same identity.
+    std::vector<std::pair<fs::path, std::string>> prior_bound_records;
+    for (const auto &record : held_records)
+      if (record.name != bound_staging)
+        prior_bound_records.emplace_back(record.name, record.bytes);
+    held_records.clear();
+    auto published = publish_epoch_record(operation, bound_staging, bound_name, bytes.value());
+    if (!published || !validate_epoch_continuation_names(operation, names).ok() ||
+        !refresh_after_publish(prior_bound_records, bound_name, bytes.value()))
+      return facman::core::Result<EpochContinuationResponse>::failure(!published ? published.error() :
+          epoch_recovery("epoch bound staging recovery did not produce an exact record set"));
+  }
+  if (epoch_continuation_has(names, bound_name)) {
+    auto bytes = read_epoch_relative_bounded(operation, bound_name, kMaximumEpochGenesisRecordBytes);
+    auto parsed = bytes ? parse_epoch_continuation_record(bytes.value(), epoch, handoff.value(),
+        request.journal_sha256, "10-provider-apply-bound")
+        : facman::core::Result<ProviderApplyBinding>::failure(bytes.error());
+    if (!parsed) return facman::core::Result<EpochContinuationResponse>::failure(parsed.error());
+    binding = parsed.take_value();
+    if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        epoch_recovery("epoch custody changed before provider binding rehydration"));
+    auto reconstructed = effects.rehydrate_install_local(transition, binding);
+    if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        epoch_recovery("epoch custody changed during provider binding rehydration"));
+    if (!reconstructed)
+      return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+          "provider apply identity could not be rehydrated from its durable binding"));
+  } else {
+    if (!custody_valid() || effects.inspect_candidate(transition) != CandidateState::absent ||
+        !custody_valid())
+      return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+          "epoch provider candidate is not absent before apply binding"));
+    if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        epoch_recovery("epoch custody changed before provider apply binding"));
+    auto bound = effects.bind_install_local(transition, handoff.value().provider_plan_sha256);
+    if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        epoch_recovery("epoch custody changed during provider apply binding"));
+    std::string binding_detail;
+    if (!bound || bound.value().provider_plan_sha256 != handoff.value().provider_plan_sha256 ||
+        !digest(bound.value().apply_sha256) || bound.value().apply_payload.empty() ||
+        hash(bound.value().apply_payload) != bound.value().apply_sha256 ||
+        !digest(bound.value().semantic_digest) || !digest(bound.value().bridge_key) ||
+        bound.value().reviewed_plan_id.empty() || !digest(bound.value().reviewed_plan_digest) ||
+        bound.value().plan_created_at.empty() || bound.value().request_id.empty() ||
+        !facman::base::validate_identifier(bound.value().transaction_id, binding_detail))
+      return facman::core::Result<EpochContinuationResponse>::failure(!bound ? bound.error() :
+          epoch_recovery("provider binding does not match the immutable handoff"));
+    binding = bound.take_value();
+    const std::string bytes = epoch_continuation_record_bytes(epoch, handoff.value(),
+        request.journal_sha256, "10-provider-apply-bound", binding);
+    const auto prior_bound_records = held_snapshot();
+    auto written = publish_epoch_record(operation, "10-provider-apply-bound.staging.v2.json",
+        bound_name, bytes);
+    if (!written) return facman::core::Result<EpochContinuationResponse>::failure(written.error());
+    if (!written || !validate_epoch_continuation_names(operation, names).ok() ||
+        !refresh_after_publish(prior_bound_records, bound_name, bytes))
+      return facman::core::Result<EpochContinuationResponse>::failure(!written ? written.error() :
+          epoch_recovery("epoch provider binding record set is not exact"));
+  }
+  std::string recorded_outcome_receipt, recorded_verified_receipt, recorded_outcome;
+  for (const auto &record : std::vector<std::pair<const char *, const char *>>{
+           {"20-provider-apply-entered.v2.json", "20-provider-apply-entered"},
+           {"30-provider-outcome.v2.json", "30-provider-outcome"},
+           {"40-provider-verified.v2.json", "40-provider-verified"}}) {
+    const std::string staging = epoch_continuation_staging_name(record.first);
+    const bool staged = epoch_continuation_has(names, staging.c_str());
+    if (!epoch_continuation_has(names, record.first) && !staged) continue;
+    const char *read_name = staged ? staging.c_str() : record.first;
+    auto bytes = read_epoch_relative_bounded(operation, read_name,
+                                             kMaximumEpochGenesisRecordBytes);
+    std::string receipt, outcome;
+    auto parsed = bytes ? parse_epoch_continuation_record(bytes.value(), epoch,
+        handoff.value(), request.journal_sha256, record.second, &receipt, &outcome)
+        : facman::core::Result<ProviderApplyBinding>::failure(bytes.error());
+    if (!parsed || !same_provider_apply_binding(parsed.value(), binding))
+      return facman::core::Result<EpochContinuationResponse>::failure(!parsed ? parsed.error() :
+          epoch_recovery("epoch provider continuation record changed its durable binding"));
+    if (staged) {
+      if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+          epoch_recovery("epoch custody changed before staging recovery"));
+      std::vector<std::pair<fs::path, std::string>> prior_staging_records;
+      for (const auto &held : held_records)
+        if (held.name != staging)
+          prior_staging_records.emplace_back(held.name, held.bytes);
+      held_records.clear();
+      auto published = publish_epoch_record(operation, staging, record.first, bytes.value());
+      if (!published || !validate_epoch_continuation_names(operation, names).ok() ||
+          !refresh_after_publish(prior_staging_records, record.first, bytes.value()))
+        return facman::core::Result<EpochContinuationResponse>::failure(!published ? published.error() :
+            epoch_recovery("epoch staging recovery did not produce an exact record set"));
+    }
+    if (std::string(record.second) == "30-provider-outcome") {
+      recorded_outcome_receipt = receipt;
+      recorded_outcome = outcome;
+    } else if (std::string(record.second) == "40-provider-verified") {
+      recorded_verified_receipt = receipt;
+    }
+  }
+  if (!entered_final_at_start) {
+    if (!epoch_continuation_has(names, "20-provider-apply-entered.v2.json")) {
+      const std::string bytes = epoch_continuation_record_bytes(epoch, handoff.value(),
+          request.journal_sha256, "20-provider-apply-entered", binding);
+      const auto prior_entered_records = held_snapshot();
+      auto written = publish_epoch_record(operation, "20-provider-apply-entered.staging.v2.json",
+          "20-provider-apply-entered.v2.json", bytes);
+      if (!written || !validate_epoch_continuation_names(operation, names).ok() ||
+          !refresh_after_publish(prior_entered_records, "20-provider-apply-entered.v2.json", bytes))
+        return facman::core::Result<EpochContinuationResponse>::failure(!written ? written.error() :
+            epoch_recovery("epoch apply-entered record set is not exact"));
+    }
+    if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        epoch_recovery("epoch custody changed before provider apply"));
+    const EffectResult applied = effects.apply_bound_install_local(transition, binding);
+    if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        epoch_recovery("epoch custody changed during provider apply"));
+    if (!applied.ok || applied.outcome_unknown || !digest(applied.receipt_sha256))
+      return facman::core::Result<EpochContinuationResponse>::failure(effect_error(
+        "self_maintenance_install_failed", "epoch provider apply did not return an exact receipt", applied).error());
+  }
+  if (recorded_outcome == "recovery_required")
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "provider apply entered and requires external recovery inspection"));
+  if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("epoch custody changed before installed candidate inspection"));
+  const CandidateState post_apply_candidate = effects.inspect_candidate(transition);
+  if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("epoch custody changed during installed candidate inspection"));
+  if (post_apply_candidate != CandidateState::exact) {
+    if (!epoch_continuation_has(names, "30-provider-outcome.v2.json")) {
+      const std::string recovery_bytes = epoch_continuation_record_bytes(epoch, handoff.value(),
+          request.journal_sha256, "30-provider-outcome", binding, {}, "recovery_required");
+      const auto prior_recovery_records = held_snapshot();
+      auto written = publish_epoch_record(operation, "30-provider-outcome.staging.v2.json",
+          "30-provider-outcome.v2.json", recovery_bytes);
+      if (!written || !refresh_after_publish(prior_recovery_records,
+          "30-provider-outcome.v2.json", recovery_bytes)) return facman::core::Result<EpochContinuationResponse>::failure(
+          !written ? written.error() : epoch_recovery("epoch recovery outcome cannot be held"));
+    }
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "provider apply was entered but its exact installed outcome is not recoverable"));
+  }
+  if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("epoch custody changed before installed inspection"));
+  const EffectResult inspected = effects.inspect_installed(transition, binding);
+  if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("epoch custody changed during installed inspection"));
+  if (!inspected.ok || inspected.outcome_unknown || !digest(inspected.receipt_sha256)) {
+    if (!epoch_continuation_has(names, "30-provider-outcome.v2.json")) {
+      const std::string recovery_bytes = epoch_continuation_record_bytes(epoch, handoff.value(),
+          request.journal_sha256, "30-provider-outcome", binding, {}, "recovery_required");
+      const auto prior_recovery_records = held_snapshot();
+      auto written = publish_epoch_record(operation, "30-provider-outcome.staging.v2.json",
+          "30-provider-outcome.v2.json", recovery_bytes);
+      if (!written || !refresh_after_publish(prior_recovery_records,
+          "30-provider-outcome.v2.json", recovery_bytes)) return facman::core::Result<EpochContinuationResponse>::failure(
+          !written ? written.error() : epoch_recovery("epoch recovery outcome cannot be held"));
+    }
+    return facman::core::Result<EpochContinuationResponse>::failure(effect_error(
+        "self_maintenance_inspect_failed", "epoch provider installed state is not exact", inspected).error());
+  }
+  if (!recorded_outcome_receipt.empty() && recorded_outcome_receipt != inspected.receipt_sha256)
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "installed inspection receipt differs from the durable outcome"));
+  if (!epoch_continuation_has(names, "30-provider-outcome.v2.json")) {
+    const std::string outcome_bytes = epoch_continuation_record_bytes(epoch, handoff.value(),
+        request.journal_sha256, "30-provider-outcome", binding, inspected.receipt_sha256, "installed");
+    const auto prior_outcome_records = held_snapshot();
+    auto written = publish_epoch_record(operation, "30-provider-outcome.staging.v2.json",
+        "30-provider-outcome.v2.json", outcome_bytes);
+    if (!written || !refresh_after_publish(prior_outcome_records,
+        "30-provider-outcome.v2.json", outcome_bytes)) return facman::core::Result<EpochContinuationResponse>::failure(
+        !written ? written.error() : epoch_recovery("epoch provider outcome cannot be held"));
+  }
+  // 40 is terminal: its staging file was created only after a successful
+  // verification callback.  Reproduce the transaction-bound installed
+  // identity, then preserve that immutable verification receipt rather than
+  // creating a fresh timestamped provider verification.
+  if (!recorded_verified_receipt.empty()) {
+    if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        epoch_recovery("epoch custody changed before terminal continuation return"));
+    const EffectResult terminal = effects.validate_terminal_verification(
+        transition, binding, recorded_verified_receipt);
+    if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+        epoch_recovery("epoch custody changed during terminal verification validation"));
+    if (!terminal.ok || terminal.outcome_unknown ||
+        terminal.receipt_sha256 != recorded_verified_receipt)
+      return facman::core::Result<EpochContinuationResponse>::failure(effect_error(
+          "self_maintenance_verify_failed", "durable provider verification is not reproducible",
+          terminal).error());
+    return facman::core::Result<EpochContinuationResponse>::success(
+        {"provider_verified", std::move(transition), journal, std::move(binding)});
+  }
+  if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("epoch custody changed before provider verification"));
+  const EffectResult verified = effects.verify_installed(transition);
+  if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("epoch custody changed during provider verification"));
+  if (!verified.ok || verified.outcome_unknown || !digest(verified.receipt_sha256))
+    return facman::core::Result<EpochContinuationResponse>::failure(effect_error(
+        "self_maintenance_verify_failed", "epoch provider installed state failed verification", verified).error());
+  if (!recorded_verified_receipt.empty() && recorded_verified_receipt != verified.receipt_sha256)
+    return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
+        "provider verification receipt differs from the durable verification"));
+  if (!epoch_continuation_has(names, "40-provider-verified.v2.json")) {
+    const std::string verified_bytes = epoch_continuation_record_bytes(epoch, handoff.value(),
+        request.journal_sha256, "40-provider-verified", binding, verified.receipt_sha256, "verified");
+    const auto prior_verified_records = held_snapshot();
+    auto written = publish_epoch_record(operation, "40-provider-verified.staging.v2.json",
+        "40-provider-verified.v2.json", verified_bytes);
+    if (!written || !refresh_after_publish(prior_verified_records,
+        "40-provider-verified.v2.json", verified_bytes)) return facman::core::Result<EpochContinuationResponse>::failure(
+        !written ? written.error() : epoch_recovery("epoch provider verification cannot be held"));
+  }
+  if (!custody_valid()) return facman::core::Result<EpochContinuationResponse>::failure(
+      epoch_recovery("epoch custody changed before provider continuation return"));
+  return facman::core::Result<EpochContinuationResponse>::success(
+      {"provider_verified", std::move(transition), journal, std::move(binding)});
 }
 
 facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(

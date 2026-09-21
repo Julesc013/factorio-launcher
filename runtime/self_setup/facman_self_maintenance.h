@@ -226,6 +226,37 @@ struct EpochTransitionPreparation {
   std::string nonce;
 };
 
+// The provider review receipt in the handoff is insufficient to replay an
+// external apply after a process exit.  This immutable binding records the
+// exact transaction and canonical apply request chosen by the provider.
+struct ProviderApplyBinding {
+  std::string provider_plan_sha256;
+  std::string transaction_id;
+  std::string apply_sha256;
+  std::string apply_payload;
+  std::string semantic_digest;
+  std::string bridge_key;
+  std::string reviewed_plan_id;
+  std::string reviewed_plan_digest;
+  std::string plan_created_at;
+  std::string request_id;
+};
+
+struct EpochContinuationRequest {
+  std::filesystem::path coordinator_root;
+  std::string operation_id;
+  std::string nonce;
+  std::string journal_sha256;
+  bool apply = false;
+};
+
+struct EpochContinuationResponse {
+  std::string phase;
+  Plan transition;
+  std::filesystem::path journal;
+  ProviderApplyBinding provider;
+};
+
 class EpochPreparationEffects {
 public:
   virtual ~EpochPreparationEffects() = default;
@@ -233,6 +264,28 @@ public:
   virtual EffectResult review_install_local(const Plan &plan) = 0;
   virtual facman::core::Result<RetainedMaintenanceInputs> retain_handoff_inputs(
       const Plan &plan) = 0;
+};
+
+// This deliberately stops at an exact provider-verified candidate.  A later
+// slice owns generation publication, activation, and native shell cutover.
+class EpochContinuationEffects {
+public:
+  virtual ~EpochContinuationEffects() = default;
+  virtual CandidateState inspect_candidate(const Plan &plan) = 0;
+  virtual facman::core::Result<ProviderApplyBinding> bind_install_local(
+      const Plan &plan, const std::string &expected_provider_plan_sha256) = 0;
+  virtual facman::core::Result<void> rehydrate_install_local(
+      const Plan &plan, const ProviderApplyBinding &binding) = 0;
+  virtual EffectResult apply_bound_install_local(
+      const Plan &plan, const ProviderApplyBinding &binding) = 0;
+  virtual EffectResult inspect_installed(const Plan &plan,
+                                         const ProviderApplyBinding &binding) = 0;
+  virtual EffectResult verify_installed(const Plan &plan) = 0;
+  // Revalidates an already durable provider verification receipt without
+  // issuing a new timestamped verification request.
+  virtual EffectResult validate_terminal_verification(
+      const Plan &plan, const ProviderApplyBinding &binding,
+      const std::string &receipt_sha256) = 0;
 };
 
 // The provider surface deliberately exposes only install_local. FacMan never
@@ -295,6 +348,9 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation(
     const std::filesystem::path &coordinator_root,
     const std::string &operation_id, const std::string &nonce,
     const std::string &journal_sha256);
+facman::core::Result<EpochContinuationResponse>
+execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
+                                     EpochContinuationEffects &effects);
 facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
     const std::filesystem::path &coordinator_root,
     const LifecycleEpoch &proposed, bool apply);

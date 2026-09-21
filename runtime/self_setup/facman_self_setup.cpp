@@ -2369,6 +2369,8 @@ facman::core::Result<InstalledIdentity> decode_installed_identity(
   result.ownership_manifest_digest =
       provider_string(*payload, "ownership_manifest_digest");
   result.installed_state_digest = provider_installed_state_digest(*payload);
+  result.last_verification_report_digest = provider_string(*last_verification, "report_digest");
+  result.last_verification_status = provider_string(*last_verification, "status");
   if (!provider_digest(result.installed_state_digest))
     return facman::core::Result<InstalledIdentity>::failure(provider_error(
         "self_maintenance_provider_response_invalid",
@@ -2733,6 +2735,12 @@ struct ProviderBridge::Impl {
   std::string reviewed_transaction_id;
   std::string reviewed_recipe_digest;
   std::string reviewed_receipt;
+  std::string reviewed_semantic_digest;
+  std::string reviewed_plan_id;
+  std::string reviewed_plan_digest;
+  std::string reviewed_plan_created_at;
+  std::string reviewed_request_id;
+  ProviderApplyBinding reviewed_binding;
   std::string apply_payload;
   std::string inspected_key;
   std::string inspected_state_digest;
@@ -2856,6 +2864,11 @@ EffectResult ProviderBridge::review_install_local(const Plan &transition) {
   impl_->reviewed_transaction_id.clear();
   impl_->reviewed_recipe_digest.clear();
   impl_->reviewed_receipt.clear();
+  impl_->reviewed_semantic_digest.clear();
+  impl_->reviewed_plan_id.clear();
+  impl_->reviewed_plan_digest.clear();
+  impl_->reviewed_plan_created_at.clear();
+  impl_->reviewed_request_id.clear();
   impl_->apply_payload.clear();
   std::string created_at = self_setup::timestamp();
   if (impl_->clock != nullptr) {
@@ -2905,8 +2918,169 @@ EffectResult ProviderBridge::review_install_local(const Plan &transition) {
   impl_->reviewed_recipe_digest = recipe_digest;
   impl_->reviewed_receipt = maintenance_review_receipt(
       transition, reviewed.value().semantic_digest);
+  impl_->reviewed_semantic_digest = reviewed.value().semantic_digest;
+  impl_->reviewed_plan_id = reviewed.value().plan_id;
+  impl_->reviewed_plan_digest = reviewed.value().digest;
+  impl_->reviewed_plan_created_at = created_at;
+  impl_->reviewed_request_id = request_id;
   impl_->apply_payload = apply.value().serialize();
   return {true, false, impl_->reviewed_receipt, {}};
+}
+
+facman::core::Result<ProviderApplyBinding> ProviderBridge::bind_install_local(
+    const Plan &transition, const std::string &expected_provider_plan_sha256) {
+  const EffectResult reviewed = review_install_local(transition);
+  if (!reviewed.ok || reviewed.outcome_unknown ||
+      reviewed.receipt_sha256 != expected_provider_plan_sha256 ||
+      impl_->reviewed_transaction_id.empty())
+    return facman::core::Result<ProviderApplyBinding>::failure({
+        "self_maintenance_provider_binding_invalid",
+        "provider review does not bind the admitted epoch handoff", reviewed.detail});
+  const std::string apply_digest = provider_hash(impl_->apply_payload);
+  if (!provider_digest(apply_digest) || impl_->apply_payload.empty())
+    return facman::core::Result<ProviderApplyBinding>::failure({
+        "self_maintenance_provider_binding_invalid",
+        "provider apply request is unavailable after review", {}});
+  impl_->reviewed_binding = {reviewed.receipt_sha256, impl_->reviewed_transaction_id, apply_digest,
+       impl_->apply_payload, impl_->reviewed_semantic_digest, impl_->reviewed_key,
+       impl_->reviewed_plan_id, impl_->reviewed_plan_digest,
+       impl_->reviewed_plan_created_at, impl_->reviewed_request_id};
+  return facman::core::Result<ProviderApplyBinding>::success(impl_->reviewed_binding);
+}
+
+facman::core::Result<void> ProviderBridge::rehydrate_install_local(
+    const Plan &transition, const ProviderApplyBinding &binding) {
+  std::string detail;
+  auto payload = json::parse(binding.apply_payload);
+  const json::Value *plan_request = payload && payload.value().is_object()
+      ? payload.value().find("plan_request") : nullptr;
+  const json::Value *archive = plan_request != nullptr && plan_request->is_object()
+      ? plan_request->find("archive") : nullptr;
+  const json::Value *target = plan_request != nullptr && plan_request->is_object()
+      ? plan_request->find("target") : nullptr;
+  const json::Value *recipe = plan_request != nullptr && plan_request->is_object()
+      ? plan_request->find("recipe") : nullptr;
+  const std::string key = bridge_key(transition);
+  const std::string expected_request_id = "request.maintenance." + key.substr(0, 32);
+  const std::string expected_transaction_id = "tx.m." + key.substr(0, 24);
+  const auto expected_plan = maintenance_install_plan(
+      transition, binding.plan_created_at, expected_request_id).serialize();
+  const auto expected_plan_document = json::parse(expected_plan);
+  const auto canonical_expected_plan = expected_plan_document
+      ? json::canonical_integer_json(expected_plan_document.value())
+      : json::canonical_integer_json(json::Value{});
+  const auto canonical_plan = plan_request != nullptr
+      ? json::canonical_integer_json(*plan_request) : json::canonical_integer_json(json::Value{});
+  if (plan_request == nullptr || !canonical_plan || !canonical_expected_plan ||
+      canonical_plan.value() != canonical_expected_plan.value())
+    return facman::core::Result<void>::failure(provider_error(
+        "self_maintenance_provider_binding_invalid", "stored provider plan request differs from binding"));
+  if (binding.bridge_key != key || binding.request_id != expected_request_id ||
+      binding.transaction_id != expected_transaction_id)
+    return facman::core::Result<void>::failure(provider_error(
+        "self_maintenance_provider_binding_invalid", "stored provider key identities differ from binding"));
+  if (binding.provider_plan_sha256 != maintenance_review_receipt(transition, binding.semantic_digest))
+    return facman::core::Result<void>::failure(provider_error(
+        "self_maintenance_provider_binding_invalid", "stored provider receipt differs from semantic binding"));
+  if (binding.provider_plan_sha256.empty() ||
+      binding.transaction_id.empty() || binding.transaction_id.size() > 128U ||
+      binding.apply_payload.empty() || provider_hash(binding.apply_payload) != binding.apply_sha256 ||
+      !payload || !payload.value().is_object() ||
+      !provider_exact_keys(payload.value(), {"schema", "transaction_id", "applied_at",
+          "confirmation", "reviewed_plan_id", "reviewed_plan_digest", "plan_request"}) ||
+      provider_string(payload.value(), "transaction_id") != binding.transaction_id ||
+      provider_string(payload.value(), "schema") != "usk.install_local_apply_request.v1" ||
+      provider_string(payload.value(), "confirmation") != "APPLY" ||
+      provider_string(payload.value(), "reviewed_plan_id").empty() ||
+      !provider_digest(provider_string(payload.value(), "reviewed_plan_digest")) ||
+      !self_setup::valid_timestamp(provider_string(payload.value(), "applied_at")) ||
+      binding.bridge_key != key || binding.request_id != expected_request_id ||
+      binding.transaction_id != expected_transaction_id ||
+      !self_setup::valid_timestamp(binding.plan_created_at) ||
+      plan_request == nullptr || !canonical_plan || !canonical_expected_plan ||
+      canonical_plan.value() != canonical_expected_plan.value() ||
+      provider_string(payload.value(), "reviewed_plan_id") != binding.reviewed_plan_id ||
+      provider_string(payload.value(), "reviewed_plan_digest") != binding.reviewed_plan_digest ||
+      binding.provider_plan_sha256 != maintenance_review_receipt(
+          transition, binding.semantic_digest) ||
+      plan_request == nullptr || !plan_request->is_object() ||
+      provider_string(*plan_request, "schema") != "usk.install_local_plan_request.v1" ||
+      provider_string(*plan_request, "install_id") != transition.target.install_id ||
+      archive == nullptr || !archive->is_object() ||
+      provider_string(*archive, "expected_sha256") != transition.package_sha256 ||
+      target == nullptr || !target->is_object() ||
+      provider_string(*target, "root") != facman::platform::path_to_utf8(transition.target.install_root) ||
+      recipe == nullptr || !recipe->is_object() ||
+      provider_string(*recipe, "recipe_digest") != maintenance_recipe_digest(transition) ||
+      provider_string(*recipe, "provider_revision") != self_setup::provider_revision() ||
+      transition.target.universal_setup_revision != self_setup::provider_revision() ||
+      !provider_same_path(transition.target.state_root, impl_->state_root) ||
+      !provider_same_path(transition.target.acceptance_root, impl_->acceptance_root))
+    return facman::core::Result<void>::failure(provider_error(
+        "self_maintenance_provider_binding_invalid",
+        "stored provider apply payload is not an exact usable binding"));
+  facman::platform::StableDirectoryObject acceptance, state;
+  if (!acceptance.open_no_follow(impl_->acceptance_root).ok() ||
+      !acceptance.validate_descendant(impl_->state_root, false).ok() ||
+      !state.open_no_follow(impl_->state_root).ok())
+    return facman::core::Result<void>::failure(provider_error(
+        "self_maintenance_provider_root_unsafe", "provider authority changed before rehydration"));
+  impl_->acceptance_pin = std::move(acceptance);
+  impl_->state_pin = std::move(state);
+  // The durable receipt is a projection of provider-reviewed semantics, not
+  // merely of the caller-supplied digest. Re-run the exact read-only request
+  // with its persisted timestamp/request identity before accepting an apply
+  // payload, so an alternate permitted-effect plan cannot borrow another
+  // plan's semantic digest and receipt.
+  const auto persisted_plan = maintenance_install_plan(
+      transition, binding.plan_created_at, binding.request_id);
+  auto reviewed_response = self_setup::command_with(
+      impl_->effects, "install_local.plan", persisted_plan.serialize(),
+      impl_->state_root, impl_->acceptance_root, true);
+  const auto persisted_document = json::parse(persisted_plan.serialize());
+  const json::Value *persisted_recipe = persisted_document
+      ? persisted_document.value().find("recipe") : nullptr;
+  const std::string persisted_recipe_digest = persisted_recipe != nullptr
+      ? provider_string(*persisted_recipe, "recipe_digest") : std::string();
+  auto reviewed_persisted = reviewed_response
+      ? decode_maintenance_plan(reviewed_response.value(), transition,
+          binding.plan_created_at, binding.request_id, persisted_recipe_digest)
+      : facman::core::Result<MaintenancePlanReview>::failure(reviewed_response.error());
+  if (!reviewed_persisted ||
+      reviewed_persisted.value().semantic_digest != binding.semantic_digest ||
+      reviewed_persisted.value().plan_id != binding.reviewed_plan_id ||
+      reviewed_persisted.value().digest != binding.reviewed_plan_digest)
+    return facman::core::Result<void>::failure(provider_error(
+        "self_maintenance_provider_binding_invalid",
+        "stored provider semantic identity differs from the exact reviewed plan"));
+  impl_->reviewed_key = binding.bridge_key;
+  impl_->reviewed_transaction_id = binding.transaction_id;
+  impl_->reviewed_recipe_digest = maintenance_recipe_digest(transition);
+  impl_->reviewed_receipt = binding.provider_plan_sha256;
+  impl_->reviewed_semantic_digest = binding.semantic_digest;
+  impl_->reviewed_plan_id = binding.reviewed_plan_id;
+  impl_->reviewed_plan_digest = binding.reviewed_plan_digest;
+  impl_->reviewed_plan_created_at = binding.plan_created_at;
+  impl_->reviewed_request_id = binding.request_id;
+  impl_->reviewed_binding = binding;
+  impl_->apply_payload = binding.apply_payload;
+  return facman::core::Result<void>::success();
+}
+
+EffectResult ProviderBridge::apply_bound_install_local(
+    const Plan &transition, const ProviderApplyBinding &binding) {
+  const ProviderApplyBinding &cached = impl_->reviewed_binding;
+  if (binding.provider_plan_sha256 != cached.provider_plan_sha256 ||
+      binding.transaction_id != cached.transaction_id ||
+      binding.apply_sha256 != cached.apply_sha256 ||
+      binding.apply_payload != cached.apply_payload ||
+      binding.semantic_digest != cached.semantic_digest || binding.bridge_key != cached.bridge_key ||
+      binding.reviewed_plan_id != cached.reviewed_plan_id ||
+      binding.reviewed_plan_digest != cached.reviewed_plan_digest ||
+      binding.plan_created_at != cached.plan_created_at || binding.request_id != cached.request_id ||
+      binding.apply_sha256 != provider_hash(impl_->apply_payload))
+    return {false, false, {}, "provider apply binding differs from the reviewed request"};
+  return install_local(transition);
 }
 
 EffectResult ProviderBridge::install_local(const Plan &transition) {
@@ -2945,29 +3119,67 @@ EffectResult ProviderBridge::install_local(const Plan &transition) {
   return {true, false, provider_hash(response.value()), {}};
 }
 
+namespace {
+bool installed_binds_transition(const InstalledIdentity &installed, const Plan &transition,
+                               const std::string *transaction = nullptr) {
+  return installed.install_id == transition.target.install_id &&
+      installed.product_version == transition.target.product_version &&
+      installed.source_archive_sha256 == transition.target.package_sha256 &&
+      installed.recipe_digest == maintenance_recipe_digest(transition) &&
+      installed.provider_revision == transition.target.universal_setup_revision &&
+      provider_same_path(installed.install_root, transition.target.install_root) &&
+      (transaction == nullptr || installed.transaction_id == *transaction);
+}
+
+} // namespace
+
 EffectResult ProviderBridge::inspect_installed(const Plan &transition) {
   auto installed = inspect_identity(transition.target.install_id);
-  if (!installed ||
-      installed.value().product_version != transition.target.product_version ||
-      installed.value().source_archive_sha256 != transition.target.package_sha256 ||
-      installed.value().recipe_digest != maintenance_recipe_digest(transition) ||
-      installed.value().provider_revision !=
-          transition.target.universal_setup_revision ||
-      !provider_same_path(installed.value().install_root,
-                          transition.target.install_root))
-    return {false, false, {}, installed ?
-        "installed state does not bind the retained generation" :
-        installed.error().message + ": " + installed.error().detail};
+  if (!installed) return {false, false, {}, installed.error().message + ": " + installed.error().detail};
+  if (!installed_binds_transition(installed.value(), transition))
+    return {false, false, {}, "installed state does not bind the retained generation"};
   const std::string identity = installed.value().install_id + "\n" +
-      installed.value().product_version + "\n" +
-      installed.value().source_archive_sha256 + "\n" +
+      installed.value().product_version + "\n" + installed.value().source_archive_sha256 + "\n" +
       facman::platform::path_to_utf8(installed.value().install_root) + "\n";
   impl_->inspected_key = bridge_key(transition);
   impl_->inspected_state_digest = installed.value().installed_state_digest;
-  impl_->inspected_ownership_digest =
-      installed.value().ownership_manifest_digest;
+  impl_->inspected_ownership_digest = installed.value().ownership_manifest_digest;
   impl_->inspected_recipe_digest = installed.value().recipe_digest;
   return {true, false, provider_hash(identity), {}};
+}
+
+EffectResult ProviderBridge::inspect_installed(const Plan &transition,
+                                               const ProviderApplyBinding &binding) {
+  if (binding.transaction_id.empty() || binding.transaction_id.size() > 128U)
+    return {false, false, {}, "stored provider transaction identity is invalid"};
+  auto installed = inspect_identity(transition.target.install_id);
+  if (!installed) return {false, false, {}, installed.error().message + ": " + installed.error().detail};
+  if (!installed_binds_transition(installed.value(), transition, &binding.transaction_id))
+    return {false, false, {}, "installed state does not bind the durable apply transaction"};
+  const std::string identity = installed.value().install_id + "\n" +
+      installed.value().product_version + "\n" + installed.value().source_archive_sha256 + "\n" +
+      facman::platform::path_to_utf8(installed.value().install_root) + "\n";
+  impl_->inspected_key = bridge_key(transition);
+  impl_->inspected_state_digest = installed.value().installed_state_digest;
+  impl_->inspected_ownership_digest = installed.value().ownership_manifest_digest;
+  impl_->inspected_recipe_digest = installed.value().recipe_digest;
+  return {true, false, provider_hash(identity), {}};
+}
+
+EffectResult ProviderBridge::validate_terminal_verification(
+    const Plan &transition, const ProviderApplyBinding &binding,
+    const std::string &receipt_sha256) {
+  if (!provider_digest(receipt_sha256))
+    return {false, false, {}, "durable provider verification receipt is invalid"};
+  auto installed = inspect_identity(transition.target.install_id);
+  if (!installed || !installed_binds_transition(installed.value(), transition,
+                                                 &binding.transaction_id) ||
+      installed.value().last_verification_status != "pass" ||
+      installed.value().last_verification_report_digest != receipt_sha256)
+    return {false, false, {}, installed ?
+        "installed state does not reproduce the durable verification report" :
+        installed.error().message + ": " + installed.error().detail};
+  return {true, false, receipt_sha256, {}};
 }
 
 EffectResult ProviderBridge::verify_installed(const Plan &transition) {

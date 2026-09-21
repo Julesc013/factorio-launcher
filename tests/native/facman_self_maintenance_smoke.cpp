@@ -367,6 +367,67 @@ struct EpochPreparationFakeEffects final
   }
 };
 
+struct EpochContinuationFakeEffects final
+    : facman::self_maintenance::EpochContinuationEffects {
+  CandidateState candidate = CandidateState::absent;
+  unsigned bind_calls = 0;
+  unsigned apply_calls = 0;
+  unsigned inspect_calls = 0;
+  unsigned verify_calls = 0;
+  bool lose_apply_receipt = false;
+  bool wrong_binding = false;
+  bool invalid_transaction = false;
+  bool contradictory_inspect = false;
+  bool contradictory_verify = false;
+  std::function<void()> after_apply;
+
+  CandidateState inspect_candidate(const Plan &) override { return candidate; }
+  facman::core::Result<facman::self_maintenance::ProviderApplyBinding>
+  bind_install_local(const Plan &, const std::string &expected) override {
+    ++bind_calls;
+    return facman::core::Result<facman::self_maintenance::ProviderApplyBinding>::success(
+        {wrong_binding ? sha("wrong-plan") : expected,
+         invalid_transaction ? std::string() : "epoch.provider.tx",
+         sha("epoch.apply"), "epoch.apply", sha("epoch.semantic"), sha("epoch.bridge"),
+         "epoch-plan", sha("epoch.plan"), "2026-01-01T00:00:00Z", "epoch-request"});
+  }
+  facman::core::Result<void> rehydrate_install_local(
+      const Plan &, const facman::self_maintenance::ProviderApplyBinding &binding) override {
+    return binding.apply_payload == "epoch.apply" && binding.apply_sha256 == sha("epoch.apply")
+        ? facman::core::Result<void>::success()
+        : facman::core::Result<void>::failure({"test", "binding changed", {}});
+  }
+  EffectResult apply_bound_install_local(
+      const Plan &, const facman::self_maintenance::ProviderApplyBinding &) override {
+    ++apply_calls;
+    if (lose_apply_receipt) return {false, true, {}, "receipt lost"};
+    candidate = CandidateState::exact;
+    if (after_apply) after_apply();
+    return {true, false, sha("epoch.apply.receipt"), {}};
+  }
+  EffectResult inspect_installed(const Plan &, const facman::self_maintenance::ProviderApplyBinding &) override {
+    ++inspect_calls;
+    if (contradictory_inspect) return {true, true, sha("epoch.inspect"), "contradictory"};
+    return candidate == CandidateState::exact
+        ? EffectResult{true, false, sha("epoch.inspect"), {}}
+        : EffectResult{false, true, {}, "candidate not exact"};
+  }
+  EffectResult verify_installed(const Plan &) override {
+    ++verify_calls;
+    if (contradictory_verify) return {true, true, sha("epoch.verify"), "contradictory"};
+    return candidate == CandidateState::exact
+        ? EffectResult{true, false, sha("epoch.verify"), {}}
+        : EffectResult{false, true, {}, "candidate not exact"};
+  }
+  EffectResult validate_terminal_verification(
+      const Plan &, const facman::self_maintenance::ProviderApplyBinding &,
+      const std::string &receipt) override {
+    return receipt == sha("epoch.verify") && candidate == CandidateState::exact
+        ? EffectResult{true, false, receipt, {}}
+        : EffectResult{false, false, {}, "terminal verification differs"};
+  }
+};
+
 struct EpochPreparationFixture {
   fs::path coordinator;
   facman::self_maintenance::LifecycleEpoch epoch;
@@ -1801,6 +1862,155 @@ int main() {
                     ordinary_during_handoff.error().code ==
                         "self_maintenance_epoch_recovery_required",
                 "epoch preparation preview, exact handoff, and recovery boundary were not exact");
+
+  // Provider continuation is intentionally a library-only boundary: it may
+  // install and verify the candidate, but it must not publish a generation or
+  // move the epoch activation head.
+  auto provider_continuation = prepare_fresh_epoch_fixture("epoch-provider-continuation");
+  EpochContinuationFakeEffects provider_continuation_effects;
+  facman::self_maintenance::EpochContinuationRequest continuation_request{
+      provider_continuation.coordinator, "epoch.prepare.one",
+      provider_continuation.handoff.nonce, provider_continuation.handoff.journal_sha256, true};
+  auto provider_completed = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      continuation_request, provider_continuation_effects);
+  // A process-equivalent restart has only durable provider state: it must
+  // rehydrate the immutable request and never replay the entered apply.
+  EpochContinuationFakeEffects provider_restarted_effects;
+  provider_restarted_effects.candidate = CandidateState::exact;
+  auto provider_restarted = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      continuation_request, provider_restarted_effects);
+  const fs::path provider_operation = provider_continuation.coordinator / "epochs" /
+      provider_continuation.epoch.epoch_id / "maintenance" / "epoch.prepare.one";
+  const bool provider_only = !fs::exists(provider_continuation.coordinator / "generations") &&
+      fs::exists(provider_operation / "10-provider-apply-bound.v2.json") &&
+      fs::exists(provider_operation / "20-provider-apply-entered.v2.json") &&
+      fs::exists(provider_operation / "30-provider-outcome.v2.json") &&
+      fs::exists(provider_operation / "40-provider-verified.v2.json") &&
+      !fs::exists(provider_continuation.coordinator / "epochs" /
+          provider_continuation.epoch.epoch_id / "generations" /
+          ("generation." + provider_continuation.handoff.transition.target.generation_id + ".v2.json"));
+  ok &= require(provider_completed && provider_restarted &&
+                    provider_completed.value().phase == "provider_verified" &&
+                    provider_restarted.value().phase == "provider_verified" &&
+                    provider_continuation_effects.apply_calls == 1U &&
+                    provider_restarted_effects.apply_calls == 0U && provider_only,
+                "epoch provider continuation was not durable, idempotent, or publication-free");
+
+  bool continuation_staging_recovered = true;
+  for (unsigned phase = 1U; phase <= 4U; ++phase) {
+    auto staged = prepare_fresh_epoch_fixture("epoch-provider-staging-" + std::to_string(phase));
+    EpochContinuationFakeEffects staged_effects;
+    facman::self_maintenance::EpochContinuationRequest staged_request{
+        staged.coordinator, "epoch.prepare.one", staged.handoff.nonce,
+        staged.handoff.journal_sha256, true};
+    facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(phase);
+    auto staging_interrupted = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+        staged_request, staged_effects);
+    facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(0U);
+    auto staging_recovered = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+        staged_request, staged_effects);
+    continuation_staging_recovered = continuation_staging_recovered && !staging_interrupted && staging_recovered &&
+        staged_effects.apply_calls == 1U &&
+        fs::exists(staged.coordinator / "epochs" / staged.epoch.epoch_id / "maintenance" /
+                   "epoch.prepare.one" / "40-provider-verified.v2.json");
+  }
+  ok &= require(continuation_staging_recovered,
+                "each canonical epoch provider staging tail was not recovered exactly");
+
+  auto uncertain_continuation = prepare_fresh_epoch_fixture("epoch-provider-uncertain");
+  EpochContinuationFakeEffects uncertain_effects;
+  uncertain_effects.lose_apply_receipt = true;
+  facman::self_maintenance::EpochContinuationRequest uncertain_request{
+      uncertain_continuation.coordinator, "epoch.prepare.one",
+      uncertain_continuation.handoff.nonce, uncertain_continuation.handoff.journal_sha256, true};
+  auto uncertain_first = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      uncertain_request, uncertain_effects);
+  auto uncertain_restart = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      uncertain_request, uncertain_effects);
+  ok &= require(!uncertain_first && !uncertain_restart && uncertain_effects.apply_calls == 1U &&
+                    fs::exists(uncertain_continuation.coordinator / "epochs" /
+                        uncertain_continuation.epoch.epoch_id / "maintenance" /
+                        "epoch.prepare.one" / "20-provider-apply-entered.v2.json"),
+                "entered epoch provider apply was repeated after an uncertain outcome");
+
+  auto wrong_binding_continuation = prepare_fresh_epoch_fixture("epoch-provider-wrong-binding");
+  EpochContinuationFakeEffects wrong_binding_effects;
+  wrong_binding_effects.wrong_binding = true;
+  facman::self_maintenance::EpochContinuationRequest wrong_binding_request{
+      wrong_binding_continuation.coordinator, "epoch.prepare.one",
+      wrong_binding_continuation.handoff.nonce,
+      wrong_binding_continuation.handoff.journal_sha256, true};
+  auto wrong_binding = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      wrong_binding_request, wrong_binding_effects);
+  ok &= require(!wrong_binding && wrong_binding_effects.apply_calls == 0U,
+                "mismatched epoch provider binding entered apply");
+
+  auto invalid_transaction_continuation = prepare_fresh_epoch_fixture(
+      "epoch-provider-invalid-transaction");
+  EpochContinuationFakeEffects invalid_transaction_effects;
+  invalid_transaction_effects.invalid_transaction = true;
+  facman::self_maintenance::EpochContinuationRequest invalid_transaction_request{
+      invalid_transaction_continuation.coordinator, "epoch.prepare.one",
+      invalid_transaction_continuation.handoff.nonce,
+      invalid_transaction_continuation.handoff.journal_sha256, true};
+  auto invalid_transaction = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      invalid_transaction_request, invalid_transaction_effects);
+  ok &= require(!invalid_transaction && invalid_transaction_effects.apply_calls == 0U,
+                "empty epoch provider transaction entered apply");
+
+  auto contradictory_continuation = prepare_fresh_epoch_fixture(
+      "epoch-provider-contradictory-outcome");
+  EpochContinuationFakeEffects contradictory_effects;
+  contradictory_effects.contradictory_inspect = true;
+  facman::self_maintenance::EpochContinuationRequest contradictory_request{
+      contradictory_continuation.coordinator, "epoch.prepare.one",
+      contradictory_continuation.handoff.nonce,
+      contradictory_continuation.handoff.journal_sha256, true};
+  auto contradictory_result = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      contradictory_request, contradictory_effects);
+  ok &= require(!contradictory_result && contradictory_effects.apply_calls == 1U &&
+                    !fs::exists(contradictory_continuation.coordinator / "generations") &&
+                    !fs::exists(contradictory_continuation.coordinator / "activations"),
+                "contradictory provider outcome crossed the epoch publication boundary");
+
+  auto callback_mutation_continuation = prepare_fresh_epoch_fixture(
+      "epoch-provider-callback-record-mutation");
+  EpochContinuationFakeEffects callback_mutation_effects;
+  const fs::path callback_operation = callback_mutation_continuation.coordinator / "epochs" /
+      callback_mutation_continuation.epoch.epoch_id / "maintenance" / "epoch.prepare.one";
+  bool callback_mutation_opened = false;
+  callback_mutation_effects.after_apply = [callback_operation, &callback_mutation_opened] {
+    std::ofstream output(callback_operation / "10-provider-apply-bound.v2.json",
+                         std::ios::binary | std::ios::trunc);
+    callback_mutation_opened = output.good();
+    output << "foreign-binding\n";
+  };
+  facman::self_maintenance::EpochContinuationRequest callback_mutation_request{
+      callback_mutation_continuation.coordinator, "epoch.prepare.one",
+      callback_mutation_continuation.handoff.nonce,
+      callback_mutation_continuation.handoff.journal_sha256, true};
+  auto callback_mutation_result = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      callback_mutation_request, callback_mutation_effects);
+  ok &= require((!callback_mutation_opened || !callback_mutation_result) &&
+                    callback_mutation_effects.apply_calls == 1U &&
+                    (!callback_mutation_opened ||
+                     !fs::exists(callback_operation / "30-provider-outcome.v2.json")),
+                "provider callback mutation of a held binding reached a later durable phase");
+
+  auto foreign_record_continuation = prepare_fresh_epoch_fixture("epoch-provider-foreign-record");
+  const fs::path foreign_continuation_record = foreign_record_continuation.coordinator / "epochs" /
+      foreign_record_continuation.epoch.epoch_id / "maintenance" / "epoch.prepare.one" /
+      "01-foreign.v2.json";
+  std::ofstream(foreign_continuation_record, std::ios::binary | std::ios::trunc) << "foreign\n";
+  EpochContinuationFakeEffects foreign_record_effects;
+  facman::self_maintenance::EpochContinuationRequest foreign_record_request{
+      foreign_record_continuation.coordinator, "epoch.prepare.one",
+      foreign_record_continuation.handoff.nonce,
+      foreign_record_continuation.handoff.journal_sha256, true};
+  auto foreign_record_result = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      foreign_record_request, foreign_record_effects);
+  ok &= require(!foreign_record_result && foreign_record_effects.apply_calls == 0U,
+                "foreign epoch continuation record entered provider apply");
 
   auto continuation_replacement = prepare_fresh_epoch_fixture(
       "epoch-transition-pinned-continuation");
