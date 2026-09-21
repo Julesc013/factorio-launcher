@@ -142,25 +142,43 @@ def await_external_handoff(
     operation_id = initial.get("operation_id")
     if not isinstance(operation_id, str) or not operation_id:
         raise AssertionError(f"{operation} handoff launch omitted its operation identity")
-    local_deadline = time.monotonic() + 30.0
+    # The production handoff has one 60-second absolute budget.  The observer
+    # must not start fixture cleanup while a valid Debug continuation is still
+    # inside that same admitted window.
+    local_deadline = time.monotonic() + 65.0
     if REAL_DEADLINE is not None:
         local_deadline = min(local_deadline, REAL_DEADLINE)
-    pending_phases = {
-        "continuation_pending", "publication_pending", "shell_cutover_pending",
-    }
+    serialized_arguments = [str(value) for value in query_arguments]
+    try:
+        state_root = Path(serialized_arguments[
+            serialized_arguments.index("--state-root") + 1
+        ])
+    except (ValueError, IndexError) as exc:
+        raise AssertionError("external handoff observation omitted its state root") from exc
+    operation_root = state_root.parent / "setup-coordinator.v1" / "epochs"
+    terminal_name = "80-registration-cutover.v2.json"
     while time.monotonic() < local_deadline:
-        observed = invoke(
-            executable, operation, *query_arguments,
-            shell_integration=shell_integration,
-            noninteractive=noninteractive,
-        )
-        if observed.get("operation_id") != operation_id:
-            raise AssertionError(f"{operation} handoff observation changed operation identity")
-        phase = observed.get("phase")
-        if phase in {"completed", "shell_cutover_complete"}:
+        terminal = list(operation_root.glob(
+            f"*/maintenance/{operation_id}/{terminal_name}"
+        ))
+        if len(terminal) > 1:
+            raise AssertionError(f"{operation} handoff produced duplicate terminal records")
+        if terminal:
+            observed = invoke(
+                executable, operation, *query_arguments,
+                shell_integration=shell_integration,
+                noninteractive=noninteractive,
+            )
+            if observed.get("operation_id") != operation_id:
+                raise AssertionError(
+                    f"{operation} handoff observation changed operation identity"
+                )
+            if observed.get("phase") not in {"completed", "shell_cutover_complete"}:
+                raise AssertionError(
+                    f"{operation} handoff reported unexpected terminal phase "
+                    f"{observed.get('phase')!r}"
+                )
             return observed
-        if phase not in pending_phases:
-            raise AssertionError(f"{operation} handoff reported unexpected phase {phase!r}")
         time.sleep(0.02)
     raise AssertionError(f"{operation} external maintenance helper did not complete in time")
 
@@ -210,20 +228,17 @@ def emit_prehandoff_epoch(
     return response
 
 
-def emit_staged_handoff_epoch(
+def stage_existing_handoff_epoch(
     helper: Path,
     coordinator: Path,
-    logical_root: Path,
     state_root: Path,
     acceptance_root: Path,
-    source_package: Path,
     target_package: Path,
     continuation_helper: Path,
 ) -> dict[str, object]:
     command = [
-        str(helper), "--emit-handoff-staging-epoch", str(coordinator),
-        str(logical_root), str(state_root), str(acceptance_root),
-        str(source_package), str(target_package), "update",
+        str(helper), "--stage-existing-handoff", str(coordinator),
+        str(state_root), str(acceptance_root), str(target_package), "update",
         str(continuation_helper),
     ]
     result = run_command(command)
@@ -885,59 +900,32 @@ def epoch_prehandoff_cli_controls(
             exact_completed.get("operation_id") != emitted.get("operation_id")):
         raise AssertionError("exact-package pre-handoff apply did not complete")
 
-    retry_case = root / "epoch-cli-handoff-staging"
-    retry_case.mkdir()
-    retry_install = retry_case / "Programs" / "FacMan"
-    retry_state = retry_case / "SetupState"
-    retry_install.parent.mkdir()
-    retry_source_package = retry_case / "source.zip"
-    retry_target_package = retry_case / "target.zip"
-    stored_maintenance_payload(retry_source_package, executable, version)
-    stored_maintenance_payload(retry_target_package, executable, target_version)
-    retry_installed = invoke(
-        executable, "install", "--package", retry_source_package,
-        "--root", retry_install, "--state-root", retry_state,
-        "--acceptance-root", retry_case, "--yes",
+    # Reuse the now-active B generation for the staged-retry case.  Creating a
+    # second installed lineage here duplicated the most expensive Debug and
+    # coverage work without exercising another product behavior.
+    retry_emitted = stage_existing_handoff_epoch(
+        fixture_helper, coordinator, state, case, mismatch_package,
+        fixture_helper,
     )
-    if retry_installed.get("phase") != "receipt":
-        raise AssertionError("staged-handoff CLI fixture baseline did not install")
-    retry_coordinator = retry_case / "setup-coordinator.v1"
-    if retry_coordinator.exists():
-        shutil.rmtree(retry_coordinator)
-    retry_emitted = emit_staged_handoff_epoch(
-        fixture_helper, retry_coordinator, retry_install, retry_state,
-        retry_case, retry_source_package, retry_target_package, executable,
-    )
-    retry_source_root = Path(str(retry_emitted.get("source_install_root", "")))
-    if not retry_source_root.is_absolute() or retry_source_root.exists():
-        raise AssertionError("staged-handoff fixture returned an unsafe source root")
-    shutil.copytree(retry_install, retry_source_root)
     retry_apply_permit = maintenance_qualification_permit(
-        retry_case, "update", True, version, retry_install, retry_state
+        case, "update", True, version, install, state
     )
     retried = invoke(
-        executable, "update", "--package", retry_target_package,
-        "--root", retry_install, "--state-root", retry_state,
-        "--acceptance-root", retry_case, "--yes",
+        executable, "update", "--package", mismatch_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
         "--qualification-fixture-permit", retry_apply_permit,
     )
     if (retried.get("phase") != "handoff_launched" or
             retried.get("operation_id") != retry_emitted.get("operation_id")):
         raise AssertionError("staged handoff public retry did not relaunch its helper")
-    retry_preview_permit = maintenance_qualification_permit(
-        retry_case, "update", False, version, retry_install, retry_state
-    )
-    retry_completed = await_external_handoff(
-        executable, retried, "update",
-        ("--package", retry_target_package,
-         "--root", retry_install, "--state-root", retry_state,
-         "--acceptance-root", retry_case,
-         "--qualification-fixture-permit", retry_preview_permit),
-        shell_integration=False, noninteractive=False,
-    )
-    if (retry_completed.get("phase") != "shell_cutover_complete" or
-            retry_completed.get("operation_id") != retry_emitted.get("operation_id")):
-        raise AssertionError("staged handoff public retry did not complete")
+    operation_records = list((coordinator / "epochs").glob(
+        f"*/maintenance/{retry_emitted.get('operation_id')}/*"
+    ))
+    if [path.name for path in operation_records] != ["00-handoff-ready.v3.json"]:
+        raise AssertionError(
+            "staged public retry did not stop the initiating process at helper launch"
+        )
 
 
 def journal_observation(install: Path) -> list[dict[str, object]]:

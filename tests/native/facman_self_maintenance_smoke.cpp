@@ -713,14 +713,11 @@ void replace_file(const fs::path &path, const std::string &content) {
   if (!output) throw std::runtime_error("could not replace test record");
 }
 
-int emit_prehandoff_epoch_fixture(int argc, char **argv, bool stage_handoff) {
-  const int expected_arguments = stage_handoff ? 10 : 9;
-  if (argc != expected_arguments) {
-    std::cerr << "usage: facman_self_maintenance_smoke "
-                 "--emit-prehandoff-epoch|--emit-handoff-staging-epoch "
+int emit_prehandoff_epoch_fixture(int argc, char **argv) {
+  if (argc != 9) {
+    std::cerr << "usage: facman_self_maintenance_smoke --emit-prehandoff-epoch "
                  "<coordinator> <logical-root> <state-root> <acceptance-root> "
-                 "<source-package> <target-package> <operation> "
-                 "[continuation-helper]\n";
+                 "<source-package> <target-package> <operation>\n";
     return 2;
   }
   const fs::path coordinator = fs::absolute(fs::path(argv[2])).lexically_normal();
@@ -792,36 +789,6 @@ int emit_prehandoff_epoch_fixture(int argc, char **argv, bool stage_handoff) {
     return 3;
   }
 
-  if (stage_handoff) {
-    const fs::path continuation_helper =
-        fs::absolute(fs::path(argv[9])).lexically_normal();
-    EpochPreparationFakeEffects effects;
-    effects.state_root = state_root;
-    effects.acceptance_root = acceptance_root;
-    effects.use_production_review = true;
-    facman::self_maintenance::EpochTransitionRequest request{
-        coordinator, epoch.epoch_id,
-        operation == "update" ? Operation::update : Operation::downgrade,
-        operation_id, target.value(), true, continuation_helper,
-        sha(bytes(continuation_helper)), false};
-    auto prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
-        request, effects);
-    if (!prepared) {
-      std::cerr << prepared.error().code << ": " << prepared.error().message
-                << " (" << prepared.error().detail << ")\n";
-      return 3;
-    }
-    const fs::path staged =
-        prepared.value().journal.parent_path() /
-        "00-handoff-ready.staging.v3.json";
-    fs::rename(prepared.value().journal, staged, error);
-    if (error) {
-      std::cerr << "could not stage prepared handoff: " << error.message()
-                << '\n';
-      return 3;
-    }
-  }
-
   facman::core::json::ObjectBuilder output;
   output.add_string("schema", "facman.self_maintenance_test_epoch.v1");
   output.add_string("epoch_id", epoch.epoch_id);
@@ -834,13 +801,82 @@ int emit_prehandoff_epoch_fixture(int argc, char **argv, bool stage_handoff) {
   return 0;
 }
 
+int stage_existing_handoff_fixture(int argc, char **argv) {
+  if (argc != 8) {
+    std::cerr << "usage: facman_self_maintenance_smoke --stage-existing-handoff "
+                 "<coordinator> <state-root> <acceptance-root> <target-package> "
+                 "<operation> <continuation-helper>\n";
+    return 2;
+  }
+  const fs::path coordinator = fs::absolute(fs::path(argv[2])).lexically_normal();
+  const fs::path state_root = fs::absolute(fs::path(argv[3])).lexically_normal();
+  const fs::path acceptance_root = fs::absolute(fs::path(argv[4])).lexically_normal();
+  const fs::path target_package = fs::absolute(fs::path(argv[5])).lexically_normal();
+  const std::string operation = argv[6];
+  const fs::path continuation_helper =
+      fs::absolute(fs::path(argv[7])).lexically_normal();
+  if (operation != "update" && operation != "downgrade") {
+    std::cerr << "fixture operation must be update or downgrade\n";
+    return 2;
+  }
+
+  auto active = facman::self_maintenance::discover_lifecycle_epoch_active(
+      coordinator);
+  auto target = facman::self_maintenance::inspect_package(target_package);
+  if (!active || !target) {
+    const auto &failure = !active ? active.error() : target.error();
+    std::cerr << failure.code << ": " << failure.message << " ("
+              << failure.detail << ")\n";
+    return 3;
+  }
+  const std::string operation_id = "maint." + operation + "." +
+      active.value().active.active.generation_id.substr(0, 8) + "." +
+      target.value().package_sha256.substr(0, 20);
+  EpochPreparationFakeEffects effects;
+  effects.state_root = state_root;
+  effects.acceptance_root = acceptance_root;
+  effects.use_production_review = true;
+  facman::self_maintenance::EpochTransitionRequest request{
+      coordinator, active.value().epoch.epoch_id,
+      operation == "update" ? Operation::update : Operation::downgrade,
+      operation_id, target.value(), true, continuation_helper,
+      sha(bytes(continuation_helper)), false};
+  auto prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
+      request, effects);
+  if (!prepared) {
+    std::cerr << prepared.error().code << ": " << prepared.error().message
+              << " (" << prepared.error().detail << ")\n";
+    return 3;
+  }
+  std::error_code error;
+  const fs::path staged = prepared.value().journal.parent_path() /
+      "00-handoff-ready.staging.v3.json";
+  fs::rename(prepared.value().journal, staged, error);
+  if (error) {
+    std::cerr << "could not stage prepared handoff: " << error.message() << '\n';
+    return 3;
+  }
+
+  facman::core::json::ObjectBuilder output;
+  output.add_string("schema", "facman.self_maintenance_test_epoch.v1");
+  output.add_string("epoch_id", active.value().epoch.epoch_id);
+  output.add_string("generation_id",
+                    active.value().active.active.generation_id);
+  output.add_string("operation_id", operation_id);
+  output.add_string("coordinator", facman::platform::path_to_utf8(coordinator));
+  output.add_string("source_install_root", facman::platform::path_to_utf8(
+      active.value().active.active.install_root));
+  std::cout << output.serialize() << '\n';
+  return 0;
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
   if (argc > 1 && std::string(argv[1]) == "--emit-prehandoff-epoch")
-    return emit_prehandoff_epoch_fixture(argc, argv, false);
-  if (argc > 1 && std::string(argv[1]) == "--emit-handoff-staging-epoch")
-    return emit_prehandoff_epoch_fixture(argc, argv, true);
+    return emit_prehandoff_epoch_fixture(argc, argv);
+  if (argc > 1 && std::string(argv[1]) == "--stage-existing-handoff")
+    return stage_existing_handoff_fixture(argc, argv);
   if (argc != 1) {
     std::cerr << "unexpected facman_self_maintenance_smoke arguments\n";
     return 2;

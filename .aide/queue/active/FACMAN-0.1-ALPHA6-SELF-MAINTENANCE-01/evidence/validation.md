@@ -303,11 +303,13 @@ Source base: `ea43094b2dfa8d4b2b80fe3b2811e2a50bacafda`
 
 The existing Windows Debug root rebuilt `FacManSetup` and
 `facman_self_maintenance_smoke`. The final focused lifecycle regression passed
-after adding a provider-reviewed staged-v3 fixture: a second public apply
-promoted the staged journal, relaunched the retained helper and reached
-`shell_cutover_complete`. The earlier invalid synthetic attempt was retained as
-a failed test observation; it used a fake provider-plan digest and the product
-correctly refused it before effects.
+after adding a provider-reviewed staged-v3 fixture. A second public apply
+promotes the staged journal and relaunches the retained helper while the
+initiating process remains outside continuation effects. The normal packaged
+case reaches `shell_cutover_complete` through the real retained Setup helper.
+The earlier invalid synthetic attempt was retained as a failed test
+observation; it used a fake provider-plan digest and the product correctly
+refused it before effects.
 
 The affected Windows validation passed:
 
@@ -333,6 +335,29 @@ derivation, pinned launch, one absolute deadline, no post-launch public
 effects, v3 recovery, shell binding and Job-empty containment. Its verdict was
 PASS with no source-safety blocker. Its one suggested packaged retry case is
 the staged-v3 public regression recorded above.
+
+PR #320 run `35633030665` then exposed two bounded CI failures. The Windows
+Debug lifecycle exceeded its unchanged 180-second CTest limit because two full
+continuations were duplicated and the private child retained the caller's
+captured standard handles. The Linux coverage job passed 49 other CTests and
+preserved its evidence, but the resource export child reached its fixed
+30-second limit after the other coverage-instrumented resource CLI children
+also took about 27 seconds each. No timeout or coverage policy was increased.
+
+The corrective successor isolates the private Windows helper with explicit
+inherited `NUL` handles and `CREATE_NO_WINDOW`, polls the immutable terminal
+record before invoking the public read-side observer, reuses the first active
+epoch for staged retry, and limits that second case to staged promotion plus
+exact helper launch. One full packaged continuation remains. The unchanged
+Windows gate now passes `facman_self_setup_lifecycle` in 111.31 seconds; the
+focused four-test set passes in 143.08 seconds, including maintenance smoke in
+30.73 seconds, provider smoke in 0.29 seconds, and handoff smoke in 0.57 seconds.
+Ubuntu 24.04 WSL rebuilt and passed the maintenance and provider smokes 2/2 in
+9.46 seconds. The pinned-Python provider/candidate matrix passed 61/61 in 9.673
+seconds; source formatting, Python compilation, and portable AIDE Lite also
+passed. The full strict repository check passed with the current 436 schemas,
+131 commands, and 290 refusal codes. Exact hosted Windows and coverage
+requalification remains pending.
 
 This checkpoint does not claim the source-distinct produced-package Windows
 A/B lifecycle, real Start Menu/HKCU effects, physical Linux/macOS package

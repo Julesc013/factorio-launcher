@@ -131,6 +131,11 @@ publication, and shell cutover share one absolute deadline. A public apply retry
 at an unfinished phase relaunches the same retained helper; a read-only request
 can observe the durable phase without continuing it.
 
+The private helper inherits only the parent-process synchronization handle and
+explicit `NUL` standard handles. It has no console and cannot keep a caller's
+redirected output pipes open after the public Setup process returns. This keeps
+`handoff_launched` asynchronous for terminal, automation, and test callers.
+
 After a durable provider-entry record exists, continuation rehydrates the exact
 provider transaction instead of preparing it again. Each subsequent phase binds
 the installed generation, read-only verification result, shell cutover,

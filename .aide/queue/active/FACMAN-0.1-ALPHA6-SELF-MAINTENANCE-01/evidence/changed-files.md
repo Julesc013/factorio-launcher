@@ -250,8 +250,13 @@ workflow, release asset, or generated report is changed by this checkpoint.
   exact provider-reviewed staged fixture for the public retry regression.
 - `tests/integration/facman_self_setup_lifecycle.py` observes external
   completion read-only, verifies source-distinct helper identities, exercises
-  strict private-input refusals, and proves a second public apply relaunches a
-  staged v3 handoff through completion.
+  strict private-input refusals, and proves a second public apply promotes and
+  relaunches a staged v3 handoff without letting the initiating process enter
+  continuation effects. The normal packaged case observes full external
+  completion.
+- `apps/setup/windows_maintenance_handoff.cpp` gives the private helper an
+  explicit no-console `NUL` standard-handle set so it cannot retain redirected
+  caller pipes while waiting for the initiating process to exit.
 - `docs/development/self-maintenance.md` documents the external process,
   custody, deadline, controller and remaining product-qualification boundary.
 

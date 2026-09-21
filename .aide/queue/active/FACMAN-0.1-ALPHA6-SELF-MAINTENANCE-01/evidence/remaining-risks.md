@@ -99,3 +99,9 @@ The current Linux results are WSL source/native evidence. They do not establish
 physical Linux or macOS package behavior. The lifecycle fixture's no-shell
 permit remains qualification-only and does not weaken production shell
 requirements.
+
+PR #320's first hosted coverage attempt timed out one resource-export child
+after the preceding coverage-instrumented CLI children also ran unusually close
+to their fixed 30-second child limit. The threshold and child limits were not
+weakened. Exact hosted requalification of this successor remains required to
+distinguish runner-wide coverage slowdown from a reproducible source defect.

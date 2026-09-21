@@ -171,3 +171,22 @@ portable AIDE validation, and diff checks pass. Independent non-authoring
 source review found no safety blocker. The WorkUnit remains active pending the
 source-distinct produced-package Windows candidate, real Start Menu/HKCU
 effects, chain-aware repair/removal and supported-platform/human acceptance.
+
+## 2026-09-22 PR #320 handoff-boundary remediation
+
+The first hosted PR attempt found that the private continuation inherited a
+caller's redirected standard handles. That kept captured pipes open while the
+child waited for its parent and made the nominally asynchronous public apply
+consume most of the Debug lifecycle budget. The helper now inherits only the
+exact parent-process handle plus explicit `NUL` standard handles and runs
+without a console.
+
+The packaged lifecycle retains one complete public external continuation. Its
+staged-retry regression reuses the resulting active epoch, promotes the exact
+staged v3 journal, launches a lightweight retained probe, and proves the public
+initiator writes no continuation records after launch. Native tests retain the
+full staged continuation/recovery matrix. The unchanged Windows lifecycle gate
+passes in 111.31 seconds instead of timing out at 180 seconds; the focused four
+Windows tests and two WSL maintenance/provider tests pass. Hosted
+requalification remains pending, including the separate coverage-runner export
+timeout; no validation limit or coverage threshold changed.
