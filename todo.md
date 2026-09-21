@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1.0-ALPHA.6
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-22
 ---
 
 # FacMan execution dashboard
@@ -102,7 +102,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Admitted backlog
 
-29 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
+35 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
 
 ## Blocking decisions
 

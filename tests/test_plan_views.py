@@ -149,6 +149,30 @@ class PlanViewTests(unittest.TestCase):
                 "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
                 "FACMAN-0.1-FEATURE-FREEZE-01",
             ),
+            (
+                "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01",
+                "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01",
+                "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01",
+                "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01",
+                "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01",
+                "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-PUBLICATION-SERVICING-ACTIVATION-01",
+                "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01",
+            ),
         ]
         for workunit_id, dependency_id in graph:
             workunit = workunits[workunit_id]
@@ -158,6 +182,32 @@ class PlanViewTests(unittest.TestCase):
             if workunit["status"] == "complete":
                 self.assertTrue(workunit.get("evidence"), workunit_id)
                 self.assertEqual(workunits[dependency_id]["status"], "complete")
+
+        successors = [workunit_id for workunit_id, _ in graph[-6:]]
+        for workunit_id in successors:
+            self.assertEqual(workunits[workunit_id]["status"], "planned")
+            self.assertEqual(workunits[workunit_id]["horizon"], "backlog")
+
+        releases = {item["id"]: item for item in self.plan["release"]}
+        for release_id in (
+            "FACMAN-0.1-BETA-CONVERGENCE",
+            "FACMAN-0.1-RC",
+            "FACMAN-0.1.0-STABLE",
+        ):
+            self.assertEqual(releases[release_id]["status"], "planned")
+            self.assertTrue(releases[release_id]["planning_label"])
+            self.assertFalse(releases[release_id]["version_allocated"])
+
+    def test_beta_candidate_inventory_is_derived_from_admitted_profiles(self) -> None:
+        releases = {item["id"]: item for item in self.plan["release"]}
+        beta = releases["FACMAN-0.1.0-BETA.1"]
+        beta_text = " ".join(
+            [beta["objective"], *beta["cut_line"], *beta["exit"]]
+        )
+        self.assertIn("profile-derived", beta_text)
+        self.assertIn("Terminal/Desktop", beta_text)
+        self.assertNotIn("six-product", beta_text)
+        self.assertNotIn("six products", beta_text)
 
     def test_feature_freeze_is_qualification_not_a_catch_all_implementation_workunit(self) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}
