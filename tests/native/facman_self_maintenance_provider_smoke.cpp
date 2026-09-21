@@ -505,14 +505,24 @@ int main() {
         std::vector<std::string>{"install_local.plan"};
   };
   const bool all_cached_binding_fields_refused =
-      rejects_cached_binding_mutation([](auto &value) { value.provider_plan_sha256[0] = '0'; }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.provider_plan_sha256[0] = value.provider_plan_sha256[0] == '0' ? '1' : '0';
+      }) &&
       rejects_cached_binding_mutation([](auto &value) { value.transaction_id += ".x"; }) &&
-      rejects_cached_binding_mutation([](auto &value) { value.apply_sha256[0] = '0'; }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.apply_sha256[0] = value.apply_sha256[0] == '0' ? '1' : '0';
+      }) &&
       rejects_cached_binding_mutation([](auto &value) { value.apply_payload += "x"; }) &&
-      rejects_cached_binding_mutation([](auto &value) { value.semantic_digest[0] = '0'; }) &&
-      rejects_cached_binding_mutation([](auto &value) { value.bridge_key[0] = '0'; }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.semantic_digest[0] = value.semantic_digest[0] == '0' ? '1' : '0';
+      }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.bridge_key[0] = value.bridge_key[0] == '0' ? '1' : '0';
+      }) &&
       rejects_cached_binding_mutation([](auto &value) { value.reviewed_plan_id += ".x"; }) &&
-      rejects_cached_binding_mutation([](auto &value) { value.reviewed_plan_digest[0] = '0'; }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.reviewed_plan_digest[0] = value.reviewed_plan_digest[0] == '0' ? '1' : '0';
+      }) &&
       rejects_cached_binding_mutation([](auto &value) { value.plan_created_at = "2026-01-01T00:00:00Z"; }) &&
       rejects_cached_binding_mutation([](auto &value) { value.request_id += ".x"; });
   auto tampered_binding = bound ? bound.value() : maintenance::ProviderApplyBinding{};
