@@ -68,7 +68,7 @@ facman_native_test(facman_self_maintenance_smoke
   facman_self_maintenance_smoke.cpp "fast-unit;setup;security;recovery")
 target_compile_features(facman_self_maintenance_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_self_maintenance_smoke PRIVATE facman_self_setup_static)
-set_tests_properties(facman_self_maintenance_smoke PROPERTIES TIMEOUT 30)
+set_tests_properties(facman_self_maintenance_smoke PROPERTIES TIMEOUT 60)
 facman_native_test(facman_self_maintenance_provider_smoke
   facman_self_maintenance_provider_smoke.cpp "fast-unit;setup;security")
 target_compile_features(facman_self_maintenance_provider_smoke PRIVATE cxx_std_17)

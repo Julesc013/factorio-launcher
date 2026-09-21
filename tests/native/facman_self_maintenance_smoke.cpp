@@ -428,6 +428,29 @@ struct EpochContinuationFakeEffects final
   }
 };
 
+struct EpochPublicationFakeEffects final : facman::self_maintenance::EpochPublicationEffects {
+  unsigned inspect_calls = 0;
+  unsigned terminal_calls = 0;
+  std::string installed_receipt = sha("epoch.inspect");
+  std::function<void()> after_inspect;
+  std::function<void()> after_terminal;
+  EffectResult inspect_installed(
+      const Plan &, const facman::self_maintenance::ProviderApplyBinding &) override {
+    ++inspect_calls;
+    if (after_inspect) after_inspect();
+    return {true, false, installed_receipt, {}};
+  }
+  EffectResult validate_terminal_verification(
+      const Plan &, const facman::self_maintenance::ProviderApplyBinding &,
+      const std::string &receipt) override {
+    ++terminal_calls;
+    if (after_terminal) after_terminal();
+    return receipt == sha("epoch.verify")
+        ? EffectResult{true, false, receipt, {}}
+        : EffectResult{false, false, {}, "terminal receipt changed"};
+  }
+};
+
 struct EpochPreparationFixture {
   fs::path coordinator;
   facman::self_maintenance::LifecycleEpoch epoch;
@@ -1895,6 +1918,314 @@ int main() {
                     provider_continuation_effects.apply_calls == 1U &&
                     provider_restarted_effects.apply_calls == 0U && provider_only,
                 "epoch provider continuation was not durable, idempotent, or publication-free");
+
+  EpochPublicationFakeEffects publication_effects;
+  facman::self_maintenance::EpochPublicationRequest publication_request{
+      provider_continuation.coordinator, "epoch.prepare.one",
+      provider_continuation.handoff.nonce, provider_continuation.handoff.journal_sha256, false};
+  auto publication_preview = facman::self_maintenance::execute_lifecycle_epoch_publication(
+      publication_request, publication_effects);
+  const bool publication_preview_pure = publication_effects.inspect_calls == 0U &&
+      publication_effects.terminal_calls == 0U &&
+      !fs::exists(provider_operation / "50-generation-published.v2.json") &&
+      !fs::exists(provider_operation / "60-activation-published.v2.json");
+  publication_request.apply = true;
+  auto publication_completed = facman::self_maintenance::execute_lifecycle_epoch_publication(
+      publication_request, publication_effects);
+  EpochPublicationFakeEffects publication_restarted_effects;
+  auto publication_restarted = facman::self_maintenance::execute_lifecycle_epoch_publication(
+      publication_request, publication_restarted_effects);
+  const fs::path publication_epoch = provider_continuation.coordinator / "epochs" /
+      provider_continuation.epoch.epoch_id;
+  const auto &publication_target = provider_completed ? provider_completed.value().transition.target
+                                                       : Generation{};
+  ok &= require(publication_preview && publication_preview.value().phase == "plan" &&
+                    publication_preview_pure &&
+                    publication_completed &&
+                    publication_completed.value().phase == "epoch_activated" &&
+                    publication_restarted &&
+                    publication_restarted.value().phase == "epoch_activated" &&
+                    fs::exists(publication_epoch / "generations" /
+                        ("generation." + publication_target.generation_id + ".v2.json")) &&
+                    fs::exists(publication_epoch / "activations" /
+                        "activation.epoch.prepare.one.v2.json") &&
+                    fs::exists(provider_operation / "50-generation-published.v2.json") &&
+                    fs::exists(provider_operation / "60-activation-published.v2.json") &&
+                    publication_effects.inspect_calls == 1U &&
+                    publication_effects.terminal_calls == 1U &&
+                    publication_restarted_effects.inspect_calls == 1U &&
+                    publication_restarted_effects.terminal_calls == 1U,
+                "epoch publication was not preview-pure, durable, or restart-idempotent");
+
+  bool publication_staging_recovered = true;
+  for (unsigned phase = 1U; phase <= 4U; ++phase) {
+    auto staged = prepare_fresh_epoch_fixture(
+        "epoch-publication-staging-" + std::to_string(phase));
+    EpochContinuationFakeEffects continuation_effects;
+    facman::self_maintenance::EpochContinuationRequest staged_continuation_request{
+        staged.coordinator, "epoch.prepare.one", staged.handoff.nonce,
+        staged.handoff.journal_sha256, true};
+    auto continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+        staged_continuation_request, continuation_effects);
+    EpochPublicationFakeEffects publication_interrupted_effects;
+    facman::self_maintenance::EpochPublicationRequest staged_publication_request{
+        staged.coordinator, "epoch.prepare.one", staged.handoff.nonce,
+        staged.handoff.journal_sha256, true};
+    facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(phase);
+    auto publication_interrupted = facman::self_maintenance::execute_lifecycle_epoch_publication(
+        staged_publication_request, publication_interrupted_effects);
+    facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(0U);
+    EpochPublicationFakeEffects recovered_effects;
+    auto publication_recovered = facman::self_maintenance::execute_lifecycle_epoch_publication(
+        staged_publication_request, recovered_effects);
+    const fs::path staged_epoch = staged.coordinator / "epochs" /
+        staged.epoch.epoch_id;
+    const fs::path staged_operation = staged_epoch / "maintenance" /
+        "epoch.prepare.one";
+    const bool phase_recovered = continued &&
+        !publication_interrupted && publication_recovered &&
+        publication_recovered.value().phase == "epoch_activated" &&
+        fs::exists(staged_epoch / "generations" /
+            ("generation." + publication_recovered.value().generation.generation_id +
+             ".v2.json")) &&
+        fs::exists(staged_epoch / "activations" /
+            "activation.epoch.prepare.one.v2.json") &&
+        fs::exists(staged_operation / "50-generation-published.v2.json") &&
+        fs::exists(staged_operation / "60-activation-published.v2.json") &&
+        publication_interrupted_effects.inspect_calls == 1U &&
+        publication_interrupted_effects.terminal_calls == 1U &&
+        recovered_effects.inspect_calls == 1U &&
+        recovered_effects.terminal_calls == 1U;
+    if (!phase_recovered) {
+      std::cerr << "epoch publication recovery phase " << phase << " failed";
+      if (publication_interrupted)
+        std::cerr << ": injected fault did not interrupt";
+      if (!publication_recovered)
+        std::cerr << ": recovery=" << publication_recovered.error().code << " "
+                  << publication_recovered.error().message;
+      std::cerr << '\n';
+    }
+    publication_staging_recovered = publication_staging_recovered && phase_recovered;
+  }
+  ok &= require(publication_staging_recovered,
+                "each durable epoch publication boundary was not recovered exactly");
+
+  auto malformed_publication = prepare_fresh_epoch_fixture(
+      "epoch-publication-malformed-phase-30");
+  EpochContinuationFakeEffects malformed_continuation_effects;
+  facman::self_maintenance::EpochContinuationRequest malformed_continuation_request{
+      malformed_publication.coordinator, "epoch.prepare.one",
+      malformed_publication.handoff.nonce,
+      malformed_publication.handoff.journal_sha256, true};
+  auto malformed_continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      malformed_continuation_request, malformed_continuation_effects);
+  const fs::path malformed_operation = malformed_publication.coordinator / "epochs" /
+      malformed_publication.epoch.epoch_id / "maintenance" / "epoch.prepare.one";
+  const fs::path malformed_outcome = malformed_operation / "30-provider-outcome.v2.json";
+  std::string malformed_outcome_bytes = bytes(malformed_outcome);
+  const std::string installed_field = "\"outcome\":\"installed\"";
+  const auto installed_position = malformed_outcome_bytes.find(installed_field);
+  if (installed_position != std::string::npos)
+    malformed_outcome_bytes.replace(installed_position, installed_field.size(),
+                                    "\"outcome\":\"failed\"");
+  replace_file(malformed_outcome, malformed_outcome_bytes);
+  EpochPublicationFakeEffects malformed_publication_effects;
+  facman::self_maintenance::EpochPublicationRequest malformed_request{
+      malformed_publication.coordinator, "epoch.prepare.one",
+      malformed_publication.handoff.nonce,
+      malformed_publication.handoff.journal_sha256, true};
+  auto malformed_publication_result =
+      facman::self_maintenance::execute_lifecycle_epoch_publication(
+          malformed_request, malformed_publication_effects);
+  ok &= require(malformed_continued && installed_position != std::string::npos &&
+                    !malformed_publication_result &&
+                    malformed_publication_effects.inspect_calls == 0U &&
+                    malformed_publication_effects.terminal_calls == 0U &&
+                    !fs::exists(malformed_operation / "50-generation-published.v2.json"),
+                "foreign provider outcome entered epoch publication");
+
+  auto substituted_receipt_publication = prepare_fresh_epoch_fixture(
+      "epoch-publication-substituted-phase-30-receipt");
+  EpochContinuationFakeEffects substituted_receipt_continuation_effects;
+  facman::self_maintenance::EpochContinuationRequest
+      substituted_receipt_continuation_request{
+          substituted_receipt_publication.coordinator, "epoch.prepare.one",
+          substituted_receipt_publication.handoff.nonce,
+          substituted_receipt_publication.handoff.journal_sha256, true};
+  auto substituted_receipt_continued =
+      facman::self_maintenance::execute_lifecycle_epoch_continuation(
+          substituted_receipt_continuation_request,
+          substituted_receipt_continuation_effects);
+  const fs::path substituted_receipt_operation =
+      substituted_receipt_publication.coordinator / "epochs" /
+      substituted_receipt_publication.epoch.epoch_id / "maintenance" /
+      "epoch.prepare.one";
+  const fs::path substituted_receipt_outcome = substituted_receipt_operation /
+      "30-provider-outcome.v2.json";
+  std::string substituted_receipt_bytes = bytes(substituted_receipt_outcome);
+  const std::string exact_receipt_field =
+      "\"receipt_sha256\":\"" + sha("epoch.inspect") + "\"";
+  const std::string wrong_receipt_field =
+      "\"receipt_sha256\":\"" + sha("foreign-epoch.inspect") + "\"";
+  const auto receipt_position = substituted_receipt_bytes.find(
+      exact_receipt_field);
+  if (receipt_position != std::string::npos)
+    substituted_receipt_bytes.replace(receipt_position,
+        exact_receipt_field.size(), wrong_receipt_field);
+  replace_file(substituted_receipt_outcome, substituted_receipt_bytes);
+  EpochPublicationFakeEffects substituted_receipt_effects;
+  facman::self_maintenance::EpochPublicationRequest substituted_receipt_request{
+      substituted_receipt_publication.coordinator, "epoch.prepare.one",
+      substituted_receipt_publication.handoff.nonce,
+      substituted_receipt_publication.handoff.journal_sha256, true};
+  auto substituted_receipt_result =
+      facman::self_maintenance::execute_lifecycle_epoch_publication(
+          substituted_receipt_request, substituted_receipt_effects);
+  ok &= require(substituted_receipt_continued &&
+                    receipt_position != std::string::npos &&
+                    !substituted_receipt_result &&
+                    substituted_receipt_effects.inspect_calls == 1U &&
+                    substituted_receipt_effects.terminal_calls == 0U &&
+                    !fs::exists(substituted_receipt_operation /
+                                "50-generation-published.v2.json"),
+                "canonical foreign phase-30 receipt entered epoch publication");
+
+  auto preview_mutation_publication = prepare_fresh_epoch_fixture(
+      "epoch-publication-preview-late-mutation");
+  EpochContinuationFakeEffects preview_mutation_continuation_effects;
+  facman::self_maintenance::EpochContinuationRequest
+      preview_mutation_continuation_request{
+          preview_mutation_publication.coordinator, "epoch.prepare.one",
+          preview_mutation_publication.handoff.nonce,
+          preview_mutation_publication.handoff.journal_sha256, true};
+  auto preview_mutation_continued =
+      facman::self_maintenance::execute_lifecycle_epoch_continuation(
+          preview_mutation_continuation_request,
+          preview_mutation_continuation_effects);
+  const fs::path preview_mutation_epoch =
+      preview_mutation_publication.coordinator / "epochs" /
+      preview_mutation_publication.epoch.epoch_id;
+  const fs::path preview_mutation_operation = preview_mutation_epoch /
+      "maintenance" / "epoch.prepare.one";
+  epoch_hook_watch = preview_mutation_epoch / "activations" /
+      preview_mutation_publication.handoff.transition.previous_activation_name;
+  epoch_hook_mutation = preview_mutation_operation /
+      "30-provider-outcome.v2.json";
+  epoch_hook_bytes = bytes(epoch_hook_mutation);
+  const auto preview_receipt_position = epoch_hook_bytes.find(
+      exact_receipt_field);
+  if (preview_receipt_position != std::string::npos)
+    epoch_hook_bytes.replace(preview_receipt_position,
+        exact_receipt_field.size(), wrong_receipt_field);
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      replace_epoch_record_after_pin);
+  EpochPublicationFakeEffects preview_mutation_effects;
+  facman::self_maintenance::EpochPublicationRequest preview_mutation_request{
+      preview_mutation_publication.coordinator, "epoch.prepare.one",
+      preview_mutation_publication.handoff.nonce,
+      preview_mutation_publication.handoff.journal_sha256, false};
+  auto preview_mutation_result =
+      facman::self_maintenance::execute_lifecycle_epoch_publication(
+          preview_mutation_request, preview_mutation_effects);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  ok &= require(preview_mutation_continued && epoch_hook_called &&
+                    preview_receipt_position != std::string::npos &&
+                    equal_size_mutation_refused_or_denied(
+                        epoch_hook_mutated,
+                        static_cast<bool>(preview_mutation_result)) &&
+                    preview_mutation_effects.inspect_calls == 0U &&
+                    preview_mutation_effects.terminal_calls == 0U &&
+                    !fs::exists(preview_mutation_operation /
+                                "50-generation-published.v2.json"),
+                "late held-record mutation produced a successful publication preview");
+
+  auto installed_callback_mutation = prepare_fresh_epoch_fixture(
+      "epoch-publication-installed-callback-mutation");
+  EpochContinuationFakeEffects installed_callback_continuation_effects;
+  facman::self_maintenance::EpochContinuationRequest
+      installed_callback_continuation_request{
+          installed_callback_mutation.coordinator, "epoch.prepare.one",
+          installed_callback_mutation.handoff.nonce,
+          installed_callback_mutation.handoff.journal_sha256, true};
+  auto installed_callback_continued =
+      facman::self_maintenance::execute_lifecycle_epoch_continuation(
+          installed_callback_continuation_request,
+          installed_callback_continuation_effects);
+  const fs::path installed_callback_operation =
+      installed_callback_mutation.coordinator / "epochs" /
+      installed_callback_mutation.epoch.epoch_id / "maintenance" /
+      "epoch.prepare.one";
+  bool installed_callback_opened = false;
+  EpochPublicationFakeEffects installed_callback_effects;
+  installed_callback_effects.after_inspect =
+      [installed_callback_operation, exact_receipt_field,
+       wrong_receipt_field, &installed_callback_opened] {
+        const fs::path outcome = installed_callback_operation /
+            "30-provider-outcome.v2.json";
+        std::string content = bytes(outcome);
+        const auto position = content.find(exact_receipt_field);
+        if (position != std::string::npos)
+          content.replace(position, exact_receipt_field.size(),
+                          wrong_receipt_field);
+        std::ofstream output(outcome, std::ios::binary | std::ios::trunc);
+        installed_callback_opened = output.good();
+        output << content;
+      };
+  facman::self_maintenance::EpochPublicationRequest installed_callback_request{
+      installed_callback_mutation.coordinator, "epoch.prepare.one",
+      installed_callback_mutation.handoff.nonce,
+      installed_callback_mutation.handoff.journal_sha256, true};
+  auto installed_callback_result =
+      facman::self_maintenance::execute_lifecycle_epoch_publication(
+          installed_callback_request, installed_callback_effects);
+  ok &= require(installed_callback_continued &&
+                    (!installed_callback_opened || !installed_callback_result) &&
+                    installed_callback_effects.inspect_calls == 1U &&
+                    (!installed_callback_opened ||
+                     installed_callback_effects.terminal_calls == 0U) &&
+                    (!installed_callback_opened ||
+                     !fs::exists(installed_callback_operation /
+                                 "50-generation-published.v2.json")),
+                "installed-inspection mutation crossed the publication boundary");
+
+  auto publication_callback_mutation = prepare_fresh_epoch_fixture(
+      "epoch-publication-callback-mutation");
+  EpochContinuationFakeEffects callback_continuation_effects;
+  facman::self_maintenance::EpochContinuationRequest callback_continuation_request{
+      publication_callback_mutation.coordinator, "epoch.prepare.one",
+      publication_callback_mutation.handoff.nonce,
+      publication_callback_mutation.handoff.journal_sha256, true};
+  auto callback_continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+      callback_continuation_request, callback_continuation_effects);
+  const fs::path callback_publication_operation =
+      publication_callback_mutation.coordinator / "epochs" /
+      publication_callback_mutation.epoch.epoch_id / "maintenance" /
+      "epoch.prepare.one";
+  bool publication_callback_opened = false;
+  EpochPublicationFakeEffects callback_publication_effects;
+  callback_publication_effects.after_terminal =
+      [callback_publication_operation, &publication_callback_opened] {
+        std::ofstream output(callback_publication_operation /
+                                 "40-provider-verified.v2.json",
+                             std::ios::binary | std::ios::trunc);
+        publication_callback_opened = output.good();
+        output << "foreign-verification\n";
+      };
+  facman::self_maintenance::EpochPublicationRequest callback_publication_request{
+      publication_callback_mutation.coordinator, "epoch.prepare.one",
+      publication_callback_mutation.handoff.nonce,
+      publication_callback_mutation.handoff.journal_sha256, true};
+  auto callback_publication_result =
+      facman::self_maintenance::execute_lifecycle_epoch_publication(
+          callback_publication_request, callback_publication_effects);
+  ok &= require(callback_continued &&
+                    (!publication_callback_opened || !callback_publication_result) &&
+                    (!publication_callback_opened ||
+                     !fs::exists(callback_publication_operation /
+                                 "50-generation-published.v2.json")),
+                "terminal callback mutation crossed the epoch publication boundary");
 
   bool continuation_staging_recovered = true;
   for (unsigned phase = 1U; phase <= 4U; ++phase) {
