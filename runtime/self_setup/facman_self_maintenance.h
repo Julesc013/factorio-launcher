@@ -271,6 +271,23 @@ struct EpochPublicationResponse {
   std::filesystem::path journal;
 };
 
+// Completes only the native ownership hand-off for an already published epoch
+// genesis.  It deliberately has no generation, activation, or provider-apply
+// authority.
+struct EpochShellCutoverRequest {
+  std::filesystem::path coordinator_root;
+  std::string operation_id;
+  std::string nonce;
+  std::string journal_sha256;
+  bool apply = false;
+};
+
+struct EpochShellCutoverResponse {
+  std::string phase;
+  Generation generation;
+  std::filesystem::path journal;
+};
+
 class EpochPublicationEffects {
 public:
   virtual ~EpochPublicationEffects() = default;
@@ -279,6 +296,15 @@ public:
   virtual EffectResult validate_terminal_verification(
       const Plan &plan, const ProviderApplyBinding &binding,
       const std::string &receipt_sha256) = 0;
+};
+
+class EpochShellCutoverEffects : public EpochPublicationEffects {
+public:
+  virtual ~EpochShellCutoverEffects() = default;
+  virtual ShellState inspect_shortcut(const Plan &plan) = 0;
+  virtual ShellState inspect_registration(const Plan &plan) = 0;
+  virtual EffectResult cutover_shortcut(const Plan &plan) = 0;
+  virtual EffectResult cutover_registration(const Plan &plan) = 0;
 };
 
 class EpochPreparationEffects {
@@ -378,6 +404,9 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
 facman::core::Result<EpochPublicationResponse>
 execute_lifecycle_epoch_publication(const EpochPublicationRequest &request,
                                     EpochPublicationEffects &effects);
+facman::core::Result<EpochShellCutoverResponse>
+execute_lifecycle_epoch_shell_cutover(const EpochShellCutoverRequest &request,
+                                      EpochShellCutoverEffects &effects);
 facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
     const std::filesystem::path &coordinator_root,
     const LifecycleEpoch &proposed, bool apply);

@@ -451,6 +451,38 @@ struct EpochPublicationFakeEffects final : facman::self_maintenance::EpochPublic
   }
 };
 
+struct EpochShellCutoverFakeEffects final : facman::self_maintenance::EpochShellCutoverEffects {
+  ShellState shortcut = ShellState::old_exact;
+  ShellState registration = ShellState::old_exact;
+  unsigned terminal_calls = 0;
+  unsigned shortcut_calls = 0;
+  unsigned registration_calls = 0;
+  EffectResult inspect_installed(
+      const Plan &, const facman::self_maintenance::ProviderApplyBinding &) override {
+    return {true, false, sha("epoch.inspect"), {}};
+  }
+  EffectResult validate_terminal_verification(
+      const Plan &, const facman::self_maintenance::ProviderApplyBinding &,
+      const std::string &receipt) override {
+    ++terminal_calls;
+    return receipt == sha("epoch.verify")
+        ? EffectResult{true, false, receipt, {}}
+        : EffectResult{false, false, {}, "terminal receipt changed"};
+  }
+  ShellState inspect_shortcut(const Plan &) override { return shortcut; }
+  ShellState inspect_registration(const Plan &) override { return registration; }
+  EffectResult cutover_shortcut(const Plan &) override {
+    ++shortcut_calls;
+    shortcut = ShellState::new_exact;
+    return {true, false, sha("epoch.shortcut"), {}};
+  }
+  EffectResult cutover_registration(const Plan &) override {
+    ++registration_calls;
+    registration = ShellState::new_exact;
+    return {true, false, sha("epoch.registration"), {}};
+  }
+};
+
 struct EpochPreparationFixture {
   fs::path coordinator;
   facman::self_maintenance::LifecycleEpoch epoch;
@@ -1956,6 +1988,175 @@ int main() {
                     publication_restarted_effects.inspect_calls == 1U &&
                     publication_restarted_effects.terminal_calls == 1U,
                 "epoch publication was not preview-pure, durable, or restart-idempotent");
+
+  EpochShellCutoverFakeEffects shell_preview_effects;
+  facman::self_maintenance::EpochShellCutoverRequest shell_request{
+      provider_continuation.coordinator, "epoch.prepare.one",
+      provider_continuation.handoff.nonce, provider_continuation.handoff.journal_sha256, false};
+  auto shell_preview = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
+      shell_request, shell_preview_effects);
+  const bool shell_preview_pure = shell_preview_effects.terminal_calls == 0U &&
+      shell_preview_effects.shortcut_calls == 0U && shell_preview_effects.registration_calls == 0U &&
+      !fs::exists(provider_operation / "70-shortcut-cutover.v2.json") &&
+      !fs::exists(provider_operation / "80-registration-cutover.v2.json");
+  shell_request.apply = true;
+  EpochShellCutoverFakeEffects shell_effects;
+  auto shell_completed = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
+      shell_request, shell_effects);
+  auto shell_restarted = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
+      shell_request, shell_effects);
+  auto ordinary_after_shell = facman::self_maintenance::discover_lifecycle_epoch_active(
+      provider_continuation.coordinator);
+  ok &= require(shell_preview && shell_preview.value().phase == "shortcut_pending" &&
+                    shell_preview_pure && shell_completed && shell_restarted &&
+                    shell_completed.value().phase == "shell_cutover_complete" &&
+                    shell_restarted.value().phase == "shell_cutover_complete" &&
+                    fs::exists(provider_operation / "70-shortcut-cutover.v2.json") &&
+                    fs::exists(provider_operation / "80-registration-cutover.v2.json") &&
+                    shell_effects.shortcut_calls == 1U && shell_effects.registration_calls == 1U,
+                "epoch shell cutover was not preview-pure, durable, or idempotent");
+  ok &= require(ordinary_after_shell &&
+                    ordinary_after_shell.value().active.active.generation_id ==
+                        publication_target.generation_id,
+                "completed epoch shell cutover did not restore ordinary active discovery");
+
+  const fs::path eighty_final = provider_operation /
+      "80-registration-cutover.v2.json";
+  const fs::path eighty_staging = provider_operation /
+      "80-registration-cutover.staging.v2.json";
+
+  const Generation unauthorized_tail = make_epoch_update_generation(
+      provider_continuation.epoch, "9.8.9", 'f');
+  const std::string publication_activation_name =
+      "activation.epoch.prepare.one.v2.json";
+  const std::string publication_activation_sha = sha(bytes(
+      publication_epoch / "activations" / publication_activation_name));
+  write_epoch_link(provider_continuation.coordinator, provider_continuation.epoch,
+      "update", "epoch.update.unauthorized", publication_target, unauthorized_tail,
+      publication_activation_name, publication_activation_sha);
+  auto unauthorized_tail_discovery =
+      facman::self_maintenance::discover_lifecycle_epoch_active(
+          provider_continuation.coordinator);
+  std::error_code shell_negative_cleanup_error;
+  fs::remove(publication_epoch / "activations" /
+      "activation.epoch.update.unauthorized.v2.json", shell_negative_cleanup_error);
+  shell_negative_cleanup_error.clear();
+  fs::remove(publication_epoch / "generations" /
+      ("generation." + unauthorized_tail.generation_id + ".v2.json"),
+      shell_negative_cleanup_error);
+  ok &= require(!unauthorized_tail_discovery,
+                "ordinary discovery accepted an activation beyond the completed shell target");
+
+  epoch_hook_watch = publication_epoch / "activations" /
+      genesis_activation_name;
+  epoch_hook_mutation = eighty_final;
+  epoch_hook_bytes = "{}\n";
+  epoch_hook_called = false;
+  epoch_hook_mutated = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      replace_epoch_record_after_pin);
+  auto shell_record_substitution =
+      facman::self_maintenance::discover_lifecycle_epoch_active(
+          provider_continuation.coordinator);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  const bool shell_record_substitution_safe = epoch_hook_called &&
+      equal_size_mutation_refused_or_denied(
+          epoch_hook_mutated, static_cast<bool>(shell_record_substitution));
+  const fs::path eighty_moved = provider_operation /
+      "80-registration-cutover.v2.json.hook-moved";
+  if (fs::exists(eighty_moved)) {
+    shell_negative_cleanup_error.clear();
+    fs::remove(eighty_final, shell_negative_cleanup_error);
+    shell_negative_cleanup_error.clear();
+    fs::rename(eighty_moved, eighty_final, shell_negative_cleanup_error);
+  }
+  ok &= require(shell_record_substitution_safe,
+                "ordinary discovery accepted substituted shell custody during activation scan");
+
+  const fs::path foreign_operation_record = provider_operation / "90-foreign.v2.json";
+  epoch_hook_watch = provider_operation / "00-handoff-ready.v2.json";
+  epoch_hook_mutation = foreign_operation_record;
+  epoch_hook_bytes = "{}\n";
+  epoch_hook_called = false;
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(
+      mutate_epoch_record_after_pin);
+  auto foreign_operation_discovery =
+      facman::self_maintenance::discover_lifecycle_epoch_active(
+          provider_continuation.coordinator);
+  facman::self_maintenance::testing::set_epoch_record_pinned_hook(nullptr);
+  const bool foreign_operation_inserted = fs::exists(foreign_operation_record);
+  shell_negative_cleanup_error.clear();
+  fs::remove(foreign_operation_record, shell_negative_cleanup_error);
+  ok &= require(epoch_hook_called && foreign_operation_inserted &&
+                    !foreign_operation_discovery,
+                "ordinary discovery accepted an operation record inserted during closure validation");
+
+  std::error_code shell_staging_rename_error;
+  fs::rename(eighty_final, eighty_staging, shell_staging_rename_error);
+  EpochShellCutoverFakeEffects shell_staging_effects;
+  shell_staging_effects.shortcut = ShellState::new_exact;
+  shell_staging_effects.registration = ShellState::new_exact;
+  auto shell_staging_recovered = shell_staging_rename_error
+      ? facman::core::Result<facman::self_maintenance::EpochShellCutoverResponse>::failure(
+            {"test_rename_failed", shell_staging_rename_error.message(), {}})
+      : facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
+            shell_request, shell_staging_effects);
+  ok &= require(shell_staging_recovered && fs::exists(eighty_final) &&
+                    !fs::exists(eighty_staging) &&
+                    shell_staging_effects.terminal_calls == 1U &&
+                    shell_staging_effects.shortcut_calls == 0U &&
+                    shell_staging_effects.registration_calls == 0U,
+                "canonical terminal shell staging was not promoted without effect replay");
+
+  bool shell_boundary_recovered = true;
+  for (unsigned phase = 1U; phase <= 2U; ++phase) {
+    auto staged = prepare_fresh_epoch_fixture(
+        "epoch-shell-staging-" + std::to_string(phase));
+    EpochContinuationFakeEffects continuation_effects;
+    facman::self_maintenance::EpochContinuationRequest staged_continuation_request{
+        staged.coordinator, "epoch.prepare.one", staged.handoff.nonce,
+        staged.handoff.journal_sha256, true};
+    auto continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+        staged_continuation_request, continuation_effects);
+    EpochPublicationFakeEffects publication_effects_for_shell;
+    facman::self_maintenance::EpochPublicationRequest staged_publication_request{
+        staged.coordinator, "epoch.prepare.one", staged.handoff.nonce,
+        staged.handoff.journal_sha256, true};
+    auto published = facman::self_maintenance::execute_lifecycle_epoch_publication(
+        staged_publication_request, publication_effects_for_shell);
+    EpochShellCutoverFakeEffects staged_shell_effects;
+    facman::self_maintenance::EpochShellCutoverRequest staged_shell_request{
+        staged.coordinator, "epoch.prepare.one", staged.handoff.nonce,
+        staged.handoff.journal_sha256, true};
+    facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(phase);
+    auto shell_interrupted = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
+        staged_shell_request, staged_shell_effects);
+    facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(0U);
+    auto shell_recovered = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
+        staged_shell_request, staged_shell_effects);
+    const fs::path operation = staged.coordinator / "epochs" /
+        staged.epoch.epoch_id / "maintenance" / "epoch.prepare.one";
+    const bool phase_recovered = continued && published && !shell_interrupted &&
+        shell_recovered && shell_recovered.value().phase == "shell_cutover_complete" &&
+        fs::exists(operation / "70-shortcut-cutover.v2.json") &&
+        fs::exists(operation / "80-registration-cutover.v2.json") &&
+        !fs::exists(operation / "70-shortcut-cutover.staging.v2.json") &&
+        !fs::exists(operation / "80-registration-cutover.staging.v2.json") &&
+        staged_shell_effects.shortcut_calls == 1U &&
+        staged_shell_effects.registration_calls == 1U &&
+        staged_shell_effects.terminal_calls == 2U;
+    if (!phase_recovered) {
+      std::cerr << "epoch shell recovery phase " << phase << " failed";
+      if (shell_interrupted) std::cerr << ": injected fault did not interrupt";
+      if (!shell_recovered)
+        std::cerr << ": recovery=" << shell_recovered.error().code << " "
+                  << shell_recovered.error().message;
+      std::cerr << '\n';
+    }
+    shell_boundary_recovered = shell_boundary_recovered && phase_recovered;
+  }
+  ok &= require(shell_boundary_recovered,
+                "each durable epoch shell boundary was not recovered exactly");
 
   bool publication_staging_recovered = true;
   for (unsigned phase = 1U; phase <= 4U; ++phase) {

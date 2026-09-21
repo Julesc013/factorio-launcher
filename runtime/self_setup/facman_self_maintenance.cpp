@@ -1577,11 +1577,40 @@ struct PendingEpochTransitionState {
   std::string activation_bytes;
 };
 
+struct HeldPublicationRecord {
+  fs::path name;
+  std::string bytes;
+  facman::platform::StableInputFile file;
+};
+
+struct CompletedEpochShellCutover {
+  std::string operation_id;
+  std::string activation_name;
+  std::string activation_sha256;
+  std::string generation_id;
+  std::vector<fs::path> operation_names;
+  std::vector<fs::path> record_names;
+  facman::platform::StableDirectoryObject maintenance;
+  facman::platform::StableDirectoryObject operation;
+  std::vector<HeldPublicationRecord> records;
+};
+
+// Defined with the phase-70/80 record parsers below.  Ordinary discovery may
+// pass a maintenance directory only after the complete, immutable shell
+// closure is present; all intermediate tails stay targeted-recovery-only.
+bool completed_epoch_shell_cutover(const LifecycleEpoch &epoch,
+    const PinnedLifecycleEpochScope &scope,
+    CompletedEpochShellCutover &completed);
+bool revalidate_completed_epoch_shell_cutover(
+    CompletedEpochShellCutover &completed,
+    const PinnedLifecycleEpochScope &scope);
+
 facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
     const LifecycleEpoch &epoch, const PinnedLifecycleEpochScope &scope,
     const Generation *expected = nullptr, bool allow_incomplete = false,
     const std::string *allowed_maintenance_operation = nullptr,
     const PendingEpochTransitionState *pending_transition = nullptr) {
+  std::optional<CompletedEpochShellCutover> completed_shell_cutover;
   std::vector<fs::path> children;
   if (!scope.epoch.list_child_names_bounded(4U, children).ok())
     return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
@@ -1604,14 +1633,15 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
             (!operation_names.empty() && !maintenance.open_child_directory_no_follow(
                 *allowed_maintenance_operation, operation).ok()) ||
              (!operation_names.empty() &&
-              (!operation.list_child_names_bounded(8U, records).ok() ||
-               records.size() > 7U ||
+              (!operation.list_child_names_bounded(10U, records).ok() ||
+               records.size() > 9U ||
                ([&] {
                  const std::vector<fs::path> finals = {
                      "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
                      "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
                      "40-provider-verified.v2.json", "50-generation-published.v2.json",
-                     "60-activation-published.v2.json"};
+                     "60-activation-published.v2.json", "70-shortcut-cutover.v2.json",
+                     "80-registration-cutover.v2.json"};
                  for (std::size_t i = 0; i < records.size(); ++i) {
                    const fs::path staging = finals[i].string().substr(
                        0, finals[i].string().size() - 7U) + "staging.v2.json";
@@ -1623,6 +1653,13 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
           return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
               "epoch maintenance recovery state is not the exact targeted handoff"));
         continue;
+      }
+      if (child == "maintenance" && allowed_maintenance_operation == nullptr) {
+        CompletedEpochShellCutover completed;
+        if (completed_epoch_shell_cutover(epoch, scope, completed)) {
+          completed_shell_cutover.emplace(std::move(completed));
+          continue;
+        }
       }
       return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
           child == "maintenance"
@@ -1946,6 +1983,16 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
     if (!held_file_matches_bytes(record.file, record.bytes))
       return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
           "epoch generation record changed before discovery completed"));
+  if (completed_shell_cutover &&
+      (cursor->name != completed_shell_cutover->activation_name ||
+       cursor->digest != completed_shell_cutover->activation_sha256 ||
+       cursor->target_generation_id != completed_shell_cutover->generation_id))
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "epoch activation head is not the completed shell cutover target"));
+  if (completed_shell_cutover &&
+      !revalidate_completed_epoch_shell_cutover(*completed_shell_cutover, scope))
+    return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+        "completed epoch shell cutover changed during active discovery"));
   ActiveState state{cursor->target, {}, cursor->name, cursor->digest};
   if (ordered.size() > 1U) state.previous = ordered[ordered.size() - 2U]->target;
   return facman::core::Result<std::optional<ActiveState>>::success(
@@ -3671,13 +3718,7 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
 
 namespace {
 
-constexpr std::size_t kMaximumEpochPublicationRecords = 7U;
-
-struct HeldPublicationRecord {
-  fs::path name;
-  std::string bytes;
-  facman::platform::StableInputFile file;
-};
+constexpr std::size_t kMaximumEpochPublicationRecords = 9U;
 
 struct EpochPublicationIdentity {
   std::string epoch_id;
@@ -3688,8 +3729,10 @@ struct EpochPublicationIdentity {
   std::string generation_bytes;
   std::string activation_name;
   std::string activation_bytes;
+  std::string binding_bytes;
   std::string outcome_bytes;
   std::string outcome_receipt;
+  std::string verified_bytes;
   std::string fifty_bytes;
   std::string sixty_bytes;
   std::string terminal_receipt;
@@ -3710,8 +3753,10 @@ struct EpochPublicationAdmission {
   std::string activation_name;
   std::string activation_staging_name;
   std::string activation_bytes;
+  std::string binding_bytes;
   std::string outcome_bytes;
   std::string outcome_receipt;
+  std::string verified_bytes;
   std::string fifty_bytes;
   std::string sixty_bytes;
   fs::path journal;
@@ -3759,7 +3804,8 @@ facman::core::Result<void> validate_epoch_publication_names(
       "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
       "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
       "40-provider-verified.v2.json", "50-generation-published.v2.json",
-      "60-activation-published.v2.json"};
+      "60-activation-published.v2.json", "70-shortcut-cutover.v2.json",
+      "80-registration-cutover.v2.json"};
   for (std::size_t index = 0; index < names.size(); ++index) {
     const fs::path staging = epoch_continuation_staging_name(
         finals[index].string().c_str());
@@ -3866,8 +3912,8 @@ EpochPublicationIdentity publication_identity(
   return {state.epoch.epoch_id, state.epoch.manifest_sha256,
       state.handoff_bytes, state.source_generation_bytes,
       state.source_activation_bytes, state.generation_bytes,
-      state.activation_name, state.activation_bytes, state.outcome_bytes,
-      state.outcome_receipt, state.fifty_bytes,
+      state.activation_name, state.activation_bytes, state.binding_bytes,
+      state.outcome_bytes, state.outcome_receipt, state.verified_bytes, state.fifty_bytes,
       state.sixty_bytes, state.terminal_receipt, state.binding};
 }
 
@@ -3881,8 +3927,10 @@ bool same_publication_identity(const EpochPublicationIdentity &left,
       left.generation_bytes == right.generation_bytes &&
       left.activation_name == right.activation_name &&
       left.activation_bytes == right.activation_bytes &&
+      left.binding_bytes == right.binding_bytes &&
       left.outcome_bytes == right.outcome_bytes &&
       left.outcome_receipt == right.outcome_receipt &&
+      left.verified_bytes == right.verified_bytes &&
       left.fifty_bytes == right.fifty_bytes &&
       left.sixty_bytes == right.sixty_bytes &&
       left.terminal_receipt == right.terminal_receipt &&
@@ -4067,6 +4115,8 @@ facman::core::Result<EpochPublicationAdmission> load_epoch_publication(
     return facman::core::Result<EpochPublicationAdmission>::failure(epoch_recovery(
         "epoch publication requires exact installed and verified provider outcomes"));
   state.terminal_receipt = verified_receipt;
+  state.binding_bytes = bound_record_bytes;
+  state.verified_bytes = verified_record_bytes;
   state.generation_bytes = epoch_generation_bytes(
       state.epoch, state.transition.target);
   state.activation_name = "activation." + request.operation_id + ".v2.json";
@@ -4471,6 +4521,417 @@ execute_lifecycle_epoch_publication(const EpochPublicationRequest &request,
         "epoch publication final custody or directory flush failed"));
   return facman::core::Result<EpochPublicationResponse>::success(
       {"epoch_activated", state.transition.target, state.journal});
+}
+
+namespace {
+
+std::string epoch_shell_cutover_marker_bytes(
+    const EpochPublicationAdmission &state, const std::string &phase,
+    const std::string &previous_record_sha256, const std::string &effect) {
+  const std::string ownership_receipt = hash(
+      "facman.self_epoch_shell_ownership.v1\n" + state.epoch.epoch_id + "\n" +
+      hash(state.handoff_bytes) + "\n" +
+      epoch_generation_name(state.transition.target.generation_id) + "\n" +
+      hash(state.generation_bytes) + "\n" + state.activation_name + "\n" +
+      hash(state.activation_bytes) + "\n" + effect + "\nnew_exact\n");
+  json::ObjectBuilder marker;
+  marker.add_string("schema", "facman.self_epoch_shell_cutover.v2");
+  marker.add_string("product_id", "facman");
+  marker.add_string("phase", phase);
+  marker.add_string("epoch_id", state.epoch.epoch_id);
+  marker.add_string("epoch_manifest_sha256", state.epoch.manifest_sha256);
+  marker.add_string("handoff_sha256", hash(state.handoff_bytes));
+  marker.add_string("operation_id", state.handoff.operation_id);
+  marker.add_string("previous_record_sha256", previous_record_sha256);
+  marker.add_string("effect", effect);
+  marker.add_string("target_generation_id", state.transition.target.generation_id);
+  marker.add_string("target_generation_name",
+                    epoch_generation_name(state.transition.target.generation_id));
+  marker.add_string("target_generation_sha256", hash(state.generation_bytes));
+  marker.add_string("target_activation_name", state.activation_name);
+  marker.add_string("target_activation_sha256", hash(state.activation_bytes));
+  marker.add_string("provider_binding_record_sha256", hash(state.binding_bytes));
+  marker.add_string("provider_outcome_record_sha256", hash(state.outcome_bytes));
+  marker.add_string("provider_verified_record_sha256", hash(state.verified_bytes));
+  marker.add_string("provider_terminal_receipt_sha256", state.terminal_receipt);
+  marker.add_string("ownership", "new_exact");
+  marker.add_string("ownership_receipt_sha256", ownership_receipt);
+  return marker.serialize() + "\n";
+}
+
+bool completed_epoch_shell_cutover(const LifecycleEpoch &epoch,
+    const PinnedLifecycleEpochScope &scope,
+    CompletedEpochShellCutover &completed) {
+  CompletedEpochShellCutover candidate;
+  if (!scope.epoch.open_child_directory_no_follow(
+          "maintenance", candidate.maintenance).ok() ||
+      !candidate.maintenance.list_child_names_bounded(
+          2U, candidate.operation_names).ok() ||
+      candidate.operation_names.size() != 1U) return false;
+  if (!candidate.maintenance.open_child_directory_no_follow(
+          candidate.operation_names.front(), candidate.operation).ok() ||
+      !candidate.operation.list_child_names_bounded(
+          10U, candidate.record_names).ok()) return false;
+  const std::vector<fs::path> expected_names = {
+      "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
+      "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
+      "40-provider-verified.v2.json", "50-generation-published.v2.json",
+      "60-activation-published.v2.json", "70-shortcut-cutover.v2.json",
+      "80-registration-cutover.v2.json"};
+  if (candidate.record_names != expected_names) return false;
+  candidate.records.reserve(expected_names.size());
+  for (const fs::path &name : expected_names) {
+    auto held = hold_publication_record(candidate.operation, name);
+    if (!held) return false;
+    notify_epoch_record_pinned(candidate.operation.path() / name);
+    candidate.records.push_back(held.take_value());
+  }
+  const auto read = [&](const char *name) {
+    for (const auto &record : candidate.records)
+      if (record.name == fs::path(name))
+        return facman::core::Result<std::string>::success(record.bytes);
+    return facman::core::Result<std::string>::failure(epoch_recovery(
+        "completed epoch shell record is unavailable"));
+  };
+  auto handoff_bytes = read("00-handoff-ready.v2.json");
+  auto handoff = handoff_bytes ? parse_epoch_handoff(handoff_bytes.value())
+      : facman::core::Result<EpochHandoff>::failure(handoff_bytes.error());
+  if (!handoff || handoff.value().epoch_id != epoch.epoch_id ||
+      handoff.value().manifest_sha256 != epoch.manifest_sha256 ||
+      handoff.value().operation_id != candidate.operation_names.front().string()) return false;
+  const std::string handoff_sha = hash(handoff_bytes.value());
+  ProviderApplyBinding binding;
+  std::string outcome, outcome_receipt, terminal_receipt;
+  std::string bound_bytes, outcome_bytes, verified_bytes;
+  for (const auto &entry : std::vector<std::pair<const char *, const char *>>{
+           {"10-provider-apply-bound.v2.json", "10-provider-apply-bound"},
+           {"20-provider-apply-entered.v2.json", "20-provider-apply-entered"},
+           {"30-provider-outcome.v2.json", "30-provider-outcome"},
+           {"40-provider-verified.v2.json", "40-provider-verified"}}) {
+    auto bytes = read(entry.first);
+    std::string receipt, recorded_outcome;
+    auto parsed = bytes ? parse_epoch_continuation_record(bytes.value(), epoch,
+        handoff.value(), handoff_sha, entry.second, &receipt, &recorded_outcome)
+        : facman::core::Result<ProviderApplyBinding>::failure(bytes.error());
+    if (!parsed || (!binding.transaction_id.empty() &&
+        !same_provider_apply_binding(binding, parsed.value()))) return false;
+    binding = parsed.take_value();
+    if (std::string(entry.second) == "10-provider-apply-bound") bound_bytes = bytes.value();
+    if (std::string(entry.second) == "30-provider-outcome") {
+      outcome = recorded_outcome; outcome_receipt = receipt; outcome_bytes = bytes.value();
+    }
+    if (std::string(entry.second) == "40-provider-verified") {
+      terminal_receipt = receipt; verified_bytes = bytes.value();
+    }
+  }
+  if (outcome != "installed" || !digest(outcome_receipt) || !digest(terminal_receipt)) return false;
+  std::string generation_bytes;
+  auto target = parse_epoch_generation(epoch, scope, handoff.value().target_generation_id,
+                                       &generation_bytes);
+  if (!target || hash(generation_bytes).empty()) return false;
+  const std::string activation_name = "activation." + handoff.value().operation_id + ".v2.json";
+  const std::string activation_bytes = epoch_link_activation_bytes(epoch,
+      handoff.value().operation,
+      handoff.value().operation_id, handoff.value().source_generation_id,
+      target.value().generation_id, hash(generation_bytes), handoff.value().source_activation_name,
+      handoff.value().source_activation_sha256);
+  const std::string fifty = epoch_publication_marker_bytes(epoch, handoff_sha,
+      "50-generation-published", hash(verified_bytes),
+      epoch_generation_name(target.value().generation_id), hash(generation_bytes),
+      hash(bound_bytes), hash(outcome_bytes), hash(verified_bytes), terminal_receipt);
+  const std::string sixty = epoch_publication_marker_bytes(epoch, handoff_sha,
+      "60-activation-published", hash(fifty), activation_name, hash(activation_bytes),
+      hash(bound_bytes), hash(outcome_bytes), hash(verified_bytes), terminal_receipt);
+  auto fifty_bytes = read("50-generation-published.v2.json");
+  auto sixty_bytes = read("60-activation-published.v2.json");
+  if (!fifty_bytes || !sixty_bytes || fifty_bytes.value() != fifty || sixty_bytes.value() != sixty)
+    return false;
+  EpochPublicationAdmission marker_state;
+  marker_state.epoch = epoch;
+  marker_state.handoff = handoff.value();
+  marker_state.handoff_bytes = handoff_bytes.value();
+  marker_state.transition.target = target.value();
+  marker_state.generation_bytes = generation_bytes;
+  marker_state.activation_name = activation_name;
+  marker_state.activation_bytes = activation_bytes;
+  marker_state.binding_bytes = bound_bytes;
+  marker_state.outcome_bytes = outcome_bytes;
+  marker_state.verified_bytes = verified_bytes;
+  marker_state.terminal_receipt = terminal_receipt;
+  marker_state.sixty_bytes = sixty;
+  const std::string seventy = epoch_shell_cutover_marker_bytes(marker_state,
+      "70-shortcut-cutover", hash(sixty), "shortcut");
+  const std::string eighty = epoch_shell_cutover_marker_bytes(marker_state,
+      "80-registration-cutover", hash(seventy), "registration");
+  auto seventy_bytes = read("70-shortcut-cutover.v2.json");
+  auto eighty_bytes = read("80-registration-cutover.v2.json");
+  if (!seventy_bytes || !eighty_bytes || seventy_bytes.value() != seventy ||
+      eighty_bytes.value() != eighty) return false;
+  candidate.operation_id = handoff.value().operation_id;
+  candidate.activation_name = activation_name;
+  candidate.activation_sha256 = hash(activation_bytes);
+  candidate.generation_id = target.value().generation_id;
+  if (!revalidate_completed_epoch_shell_cutover(candidate, scope)) return false;
+  completed = std::move(candidate);
+  return true;
+}
+
+bool revalidate_completed_epoch_shell_cutover(
+    CompletedEpochShellCutover &completed,
+    const PinnedLifecycleEpochScope &scope) {
+  std::vector<fs::path> operation_names, record_names;
+  return completed.maintenance.list_child_names_bounded(2U, operation_names).ok() &&
+      operation_names == completed.operation_names &&
+      completed.operation.list_child_names_bounded(10U, record_names).ok() &&
+      record_names == completed.record_names &&
+      std::all_of(completed.records.begin(), completed.records.end(),
+          [](HeldPublicationRecord &record) {
+            return held_file_matches_bytes(record.file, record.bytes);
+          }) && completed.operation.revalidate().ok() &&
+      completed.maintenance.revalidate().ok() && scope.epoch.revalidate().ok() &&
+      scope.epochs.revalidate().ok() && scope.coordinator.revalidate().ok();
+}
+
+struct EpochShellAdmission {
+  EpochPublicationAdmission publication;
+  std::string seventy_bytes;
+  std::string eighty_bytes;
+  bool seventy_staged = false;
+  bool seventy_final = false;
+  bool eighty_staged = false;
+  bool eighty_final = false;
+};
+
+struct EpochShellIdentity {
+  EpochPublicationIdentity publication;
+  std::string seventy_bytes;
+  std::string eighty_bytes;
+  bool seventy_staged = false;
+  bool seventy_final = false;
+  bool eighty_staged = false;
+  bool eighty_final = false;
+  std::vector<fs::path> operation_names;
+};
+
+facman::core::Result<EpochShellAdmission> load_epoch_shell_cutover(
+    const EpochShellCutoverRequest &request, bool write_capable) {
+  EpochPublicationRequest publication_request{request.coordinator_root,
+      request.operation_id, request.nonce, request.journal_sha256, request.apply};
+  auto loaded = load_epoch_publication(publication_request, write_capable);
+  if (!loaded) return facman::core::Result<EpochShellAdmission>::failure(loaded.error());
+  EpochShellAdmission result;
+  result.publication = loaded.take_value();
+  auto &state = result.publication;
+  if (!state.generation_final || !state.fifty_final || !state.activation_final ||
+      !state.sixty_final || state.generation_staged || state.fifty_staged ||
+      state.activation_staged || state.sixty_staged)
+    return facman::core::Result<EpochShellAdmission>::failure(epoch_recovery(
+        "epoch shell cutover requires a fully published target genesis"));
+  result.seventy_staged = publication_has(state.operation_names,
+      "70-shortcut-cutover.staging.v2.json");
+  result.seventy_final = publication_has(state.operation_names,
+      "70-shortcut-cutover.v2.json");
+  result.eighty_staged = publication_has(state.operation_names,
+      "80-registration-cutover.staging.v2.json");
+  result.eighty_final = publication_has(state.operation_names,
+      "80-registration-cutover.v2.json");
+  if ((result.seventy_staged && result.seventy_final) ||
+      (result.eighty_staged && result.eighty_final) ||
+      ((result.eighty_staged || result.eighty_final) && !result.seventy_final))
+    return facman::core::Result<EpochShellAdmission>::failure(epoch_recovery(
+        "epoch shell cutover records are conflicting or out of order"));
+  result.seventy_bytes = epoch_shell_cutover_marker_bytes(state,
+      "70-shortcut-cutover", hash(state.sixty_bytes), "shortcut");
+  result.eighty_bytes = epoch_shell_cutover_marker_bytes(state,
+      "80-registration-cutover", hash(result.seventy_bytes), "registration");
+  const auto exact = [&](const char *name, const std::string &expected) {
+    auto bytes = read_epoch_relative_bounded(state.operation, name,
+        kMaximumEpochGenesisRecordBytes);
+    return bytes && bytes.value() == expected;
+  };
+  if ((result.seventy_staged && !exact("70-shortcut-cutover.staging.v2.json",
+                                       result.seventy_bytes)) ||
+      (result.seventy_final && !exact("70-shortcut-cutover.v2.json",
+                                      result.seventy_bytes)) ||
+      (result.eighty_staged && !exact("80-registration-cutover.staging.v2.json",
+                                      result.eighty_bytes)) ||
+      (result.eighty_final && !exact("80-registration-cutover.v2.json",
+                                     result.eighty_bytes)))
+    return facman::core::Result<EpochShellAdmission>::failure(epoch_recovery(
+        "epoch shell cutover marker has foreign or noncanonical bytes"));
+  if (!publication_custody_valid(state, publication_request))
+    return facman::core::Result<EpochShellAdmission>::failure(epoch_recovery(
+        "epoch shell cutover custody changed during admission"));
+  return facman::core::Result<EpochShellAdmission>::success(std::move(result));
+}
+
+EpochShellIdentity shell_identity(const EpochShellAdmission &state) {
+  return {publication_identity(state.publication), state.seventy_bytes,
+      state.eighty_bytes, state.seventy_staged, state.seventy_final,
+      state.eighty_staged, state.eighty_final,
+      state.publication.operation_names};
+}
+
+bool same_shell_identity(const EpochShellIdentity &left,
+                         const EpochShellIdentity &right) {
+  return same_publication_identity(left.publication, right.publication) &&
+      left.seventy_bytes == right.seventy_bytes && left.eighty_bytes == right.eighty_bytes &&
+      left.seventy_staged == right.seventy_staged && left.seventy_final == right.seventy_final &&
+      left.eighty_staged == right.eighty_staged && left.eighty_final == right.eighty_final &&
+      left.operation_names == right.operation_names;
+}
+
+std::string epoch_shell_phase(const EpochShellAdmission &state) {
+  if (state.eighty_final) return "shell_cutover_complete";
+  if (state.eighty_staged || state.seventy_final) return "registration_pending";
+  return "shortcut_pending";
+}
+
+} // namespace
+
+facman::core::Result<EpochShellCutoverResponse>
+execute_lifecycle_epoch_shell_cutover(const EpochShellCutoverRequest &request,
+                                      EpochShellCutoverEffects &effects) {
+  EpochShellIdentity observed_identity;
+  fs::path observed_acceptance_root;
+  {
+    auto observed = load_epoch_shell_cutover(request, false);
+    if (!observed)
+      return facman::core::Result<EpochShellCutoverResponse>::failure(
+          observed.error());
+    if (!request.apply)
+      return facman::core::Result<EpochShellCutoverResponse>::success(
+          {epoch_shell_phase(observed.value()),
+           observed.value().publication.transition.target,
+           observed.value().publication.journal});
+    observed_identity = shell_identity(observed.value());
+    observed_acceptance_root = observed.value().publication.epoch.acceptance_root;
+  }
+  auto authority = admit_coordinator(request.coordinator_root,
+      observed_acceptance_root, false);
+  if (!authority) return facman::core::Result<EpochShellCutoverResponse>::failure(authority.error());
+  auto lock = acquire(authority.take_value(), request.operation_id);
+  if (!lock) return facman::core::Result<EpochShellCutoverResponse>::failure(lock.error());
+  auto locked = load_epoch_shell_cutover(request, true);
+  if (!locked || !same_shell_identity(observed_identity,
+                                      shell_identity(locked.value())))
+    return facman::core::Result<EpochShellCutoverResponse>::failure(!locked ? locked.error() :
+        epoch_recovery("epoch shell cutover identity changed across lock acquisition"));
+  EpochShellAdmission state = locked.take_value();
+  const EpochPublicationIdentity immutable =
+      publication_identity(state.publication);
+  const std::string immutable_seventy = state.seventy_bytes;
+  const std::string immutable_eighty = state.eighty_bytes;
+  const auto reload_unchanged = [&]() -> facman::core::Result<void> {
+    auto refreshed = load_epoch_shell_cutover(request, true);
+    if (!refreshed || !same_shell_identity(shell_identity(state),
+                                           shell_identity(refreshed.value())))
+      return facman::core::Result<void>::failure(!refreshed ? refreshed.error() :
+          epoch_recovery("epoch shell cutover custody changed across callback"));
+    state = refreshed.take_value();
+    return facman::core::Result<void>::success();
+  };
+  const auto reload_after_write = [&]() -> facman::core::Result<void> {
+    auto refreshed = load_epoch_shell_cutover(request, true);
+    if (!refreshed || !same_publication_identity(
+            immutable, publication_identity(refreshed.value().publication)) ||
+        refreshed.value().seventy_bytes != immutable_seventy ||
+        refreshed.value().eighty_bytes != immutable_eighty)
+      return facman::core::Result<void>::failure(!refreshed
+          ? refreshed.error() : epoch_recovery(
+              "epoch shell cutover identity changed after a durable boundary"));
+    state = refreshed.take_value();
+    return facman::core::Result<void>::success();
+  };
+  if (!state.eighty_final) {
+    const EffectResult terminal = effects.validate_terminal_verification(
+        state.publication.transition, state.publication.binding,
+        state.publication.terminal_receipt);
+    auto revalidated = reload_unchanged();
+    if (!revalidated) return facman::core::Result<EpochShellCutoverResponse>::failure(revalidated.error());
+    if (!terminal.ok || terminal.outcome_unknown ||
+        terminal.receipt_sha256 != state.publication.terminal_receipt)
+      return facman::core::Result<EpochShellCutoverResponse>::failure(effect_error(
+          "self_maintenance_verify_failed", "terminal provider verification changed before shell cutover",
+          terminal).error());
+  }
+  if (!state.seventy_final) {
+    const ShellState shell = effects.inspect_shortcut(state.publication.transition);
+    auto revalidated = reload_unchanged();
+    if (!revalidated) return facman::core::Result<EpochShellCutoverResponse>::failure(revalidated.error());
+    if (shell == ShellState::old_exact) {
+      const EffectResult changed = effects.cutover_shortcut(state.publication.transition);
+      revalidated = reload_unchanged();
+      if (!revalidated) return facman::core::Result<EpochShellCutoverResponse>::failure(revalidated.error());
+      if (!changed.ok || changed.outcome_unknown)
+        return facman::core::Result<EpochShellCutoverResponse>::failure(effect_error(
+            "self_maintenance_shortcut_failed", "epoch shortcut cutover failed", changed).error());
+      if (effects.inspect_shortcut(state.publication.transition) != ShellState::new_exact)
+        return facman::core::Result<EpochShellCutoverResponse>::failure(epoch_recovery(
+            "epoch shortcut cutover did not reach exact target ownership"));
+      revalidated = reload_unchanged();
+      if (!revalidated) return facman::core::Result<EpochShellCutoverResponse>::failure(revalidated.error());
+    } else if (shell != ShellState::new_exact) {
+      return facman::core::Result<EpochShellCutoverResponse>::failure(epoch_recovery(
+          "epoch shortcut is not the exact source or target object"));
+    }
+    // Release pinned operation records before reopening an existing staging
+    // file for durable promotion on Windows. Their exact bytes remain bound by
+    // immutable and are reloaded immediately after publication.
+    state.publication.operation_records.clear();
+    auto written = publish_epoch_record(state.publication.operation,
+        "70-shortcut-cutover.staging.v2.json", "70-shortcut-cutover.v2.json",
+        state.seventy_bytes, kMaximumEpochPublicationRecords);
+    if (!written) return facman::core::Result<EpochShellCutoverResponse>::failure(written.error());
+    auto refreshed = reload_after_write();
+    if (!refreshed || !state.seventy_final)
+      return facman::core::Result<EpochShellCutoverResponse>::failure(!refreshed ? refreshed.error() :
+          epoch_recovery("epoch shortcut marker did not reach its exact final state"));
+  }
+  if (!state.eighty_final) {
+    if (effects.inspect_shortcut(state.publication.transition) != ShellState::new_exact)
+      return facman::core::Result<EpochShellCutoverResponse>::failure(epoch_recovery(
+          "durable shortcut cutover no longer has exact target ownership"));
+    auto revalidated = reload_unchanged();
+    if (!revalidated) return facman::core::Result<EpochShellCutoverResponse>::failure(revalidated.error());
+    const ShellState shell = effects.inspect_registration(state.publication.transition);
+    revalidated = reload_unchanged();
+    if (!revalidated) return facman::core::Result<EpochShellCutoverResponse>::failure(revalidated.error());
+    if (shell == ShellState::old_exact) {
+      const EffectResult changed = effects.cutover_registration(state.publication.transition);
+      revalidated = reload_unchanged();
+      if (!revalidated) return facman::core::Result<EpochShellCutoverResponse>::failure(revalidated.error());
+      if (!changed.ok || changed.outcome_unknown)
+        return facman::core::Result<EpochShellCutoverResponse>::failure(effect_error(
+            "self_maintenance_registration_failed", "epoch registration cutover failed", changed).error());
+      if (effects.inspect_registration(state.publication.transition) != ShellState::new_exact)
+        return facman::core::Result<EpochShellCutoverResponse>::failure(epoch_recovery(
+            "epoch registration cutover did not reach exact target ownership"));
+      revalidated = reload_unchanged();
+      if (!revalidated) return facman::core::Result<EpochShellCutoverResponse>::failure(revalidated.error());
+    } else if (shell != ShellState::new_exact) {
+      return facman::core::Result<EpochShellCutoverResponse>::failure(epoch_recovery(
+          "epoch registration is not the exact source or target object"));
+    }
+    state.publication.operation_records.clear();
+    auto written = publish_epoch_record(state.publication.operation,
+        "80-registration-cutover.staging.v2.json", "80-registration-cutover.v2.json",
+        state.eighty_bytes, kMaximumEpochPublicationRecords);
+    if (!written) return facman::core::Result<EpochShellCutoverResponse>::failure(written.error());
+    auto refreshed = reload_after_write();
+    if (!refreshed || !state.eighty_final)
+      return facman::core::Result<EpochShellCutoverResponse>::failure(!refreshed ? refreshed.error() :
+          epoch_recovery("epoch registration marker did not reach its exact final state"));
+  }
+  if (effects.inspect_shortcut(state.publication.transition) != ShellState::new_exact ||
+      effects.inspect_registration(state.publication.transition) != ShellState::new_exact ||
+      !publication_custody_valid(state.publication,
+          EpochPublicationRequest{request.coordinator_root, request.operation_id,
+              request.nonce, request.journal_sha256, true}))
+    return facman::core::Result<EpochShellCutoverResponse>::failure(epoch_recovery(
+        "epoch shell cutover final custody or ownership is not exact"));
+  return facman::core::Result<EpochShellCutoverResponse>::success(
+      {"shell_cutover_complete", state.publication.transition.target, state.publication.journal});
 }
 
 facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(

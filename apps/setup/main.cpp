@@ -1340,7 +1340,8 @@ std::string digest_text(const std::string &value) {
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
 }
 
-class MaintenanceEffects final : public facman::self_maintenance::Effects {
+class MaintenanceEffects final : public facman::self_maintenance::Effects,
+                                 public facman::self_maintenance::EpochShellCutoverEffects {
 public:
   MaintenanceEffects(facman::self_maintenance::ProviderBridge &provider,
                      fs::path state_root, fs::path acceptance_root,
@@ -1403,9 +1404,25 @@ public:
     return result;
   }
 
+  facman::self_maintenance::EffectResult inspect_installed(
+      const facman::self_maintenance::Plan &plan,
+      const facman::self_maintenance::ProviderApplyBinding &binding) override {
+    auto result = provider_.inspect_installed(plan, binding);
+    if (result.ok && !ensure_target_pins(plan))
+      return {false, false, {}, target_pin_detail_};
+    return result;
+  }
+
   facman::self_maintenance::EffectResult verify_installed(
       const facman::self_maintenance::Plan &plan) override {
     return provider_.verify_installed(plan);
+  }
+
+  facman::self_maintenance::EffectResult validate_terminal_verification(
+      const facman::self_maintenance::Plan &plan,
+      const facman::self_maintenance::ProviderApplyBinding &binding,
+      const std::string &receipt) override {
+    return provider_.validate_terminal_verification(plan, binding, receipt);
   }
 
   facman::self_maintenance::ShellState inspect_shortcut(
