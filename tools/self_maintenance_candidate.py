@@ -396,7 +396,33 @@ def predecessor_environment(
     environment["FACMAN_TASK_ROOT"] = str(owned_output)
     environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(universal_launcher_root)
     environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(universal_setup_root)
+    environment["PYTHONPATH"] = str(source)
     return environment
+
+
+def build_predecessor_winforms(
+    source: Path, output_root: Path, environment: dict[str, str],
+    *, deadline: float,
+) -> Path:
+    """Build the predecessor GUI through that checkout's owned helper."""
+
+    script = (
+        "from pathlib import Path\n"
+        "import subprocess\n"
+        "import sys\n"
+        "from tools import winforms_build\n"
+        "def invoke(command):\n"
+        "    subprocess.run(command, check=True)\n"
+        "winforms_build.build(Path(sys.argv[1]), invoke)\n"
+    )
+    run(
+        [sys.executable, "-c", script, str(output_root)],
+        cwd=source, env=environment, deadline=deadline,
+    )
+    return exact_regular(
+        output_root / "winforms-product/Release/FacMan.exe",
+        "baseline WinForms product",
+    )
 
 
 def build_predecessor(
@@ -465,6 +491,9 @@ def build_predecessor(
     ], cwd=source, env=environment, deadline=deadline)
     run(["cmake", "--build", str(build), "--config", "Release", "--parallel"],
         cwd=source, env=environment, deadline=deadline)
+    build_predecessor_winforms(
+        source, output_root, environment, deadline=deadline,
+    )
     run([
         sys.executable, str(source / "tools/package_build.py"),
         "--profile", "windows_product_x64", "--out", str(packages),

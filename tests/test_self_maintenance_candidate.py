@@ -60,6 +60,7 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             self.assertEqual(str(output.resolve()), environment["FACMAN_TASK_ROOT"])
             self.assertEqual(str(launcher), environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"])
             self.assertEqual(str(setup), environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"])
+            self.assertEqual(str(source), environment["PYTHONPATH"])
             marker = development_layout.read_marker(output, source)
             self.assertEqual(
                 development_layout.repository_key(source), marker["repository_key"],
@@ -78,6 +79,34 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
                 )
             with self.assertRaisesRegex(ValueError, "repository_key"):
                 development_layout.read_marker(output, candidate.ROOT)
+
+    def test_predecessor_winforms_uses_its_checkout_and_owned_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "predecessor-source"
+            output = root / "predecessor-output"
+            source.mkdir()
+            output.mkdir()
+            environment = {"PYTHONPATH": str(source)}
+            executable = output / "winforms-product/Release/FacMan.exe"
+
+            def build(command: list[str], **kwargs: object) -> None:
+                self.assertEqual(candidate.sys.executable, command[0])
+                self.assertEqual("-c", command[1])
+                self.assertIn("from tools import winforms_build", command[2])
+                self.assertEqual(str(output), command[3])
+                self.assertEqual(source, kwargs["cwd"])
+                self.assertIs(environment, kwargs["env"])
+                executable.parent.mkdir(parents=True)
+                executable.write_bytes(b"predecessor WinForms")
+
+            with mock.patch.object(candidate, "run", side_effect=build) as invoked:
+                result = candidate.build_predecessor_winforms(
+                    source, output, environment, deadline=time.monotonic() + 30,
+                )
+
+            self.assertEqual(executable, result)
+            invoked.assert_called_once()
 
     def test_clone_clean_detached_materializes_long_path_and_persists_setting(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

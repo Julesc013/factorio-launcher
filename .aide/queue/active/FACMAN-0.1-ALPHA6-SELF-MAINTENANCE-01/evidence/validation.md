@@ -400,3 +400,29 @@ The corrective successor also passed 53 focused Python candidate, workflow,
 setup-package and process-controller tests, source formatting, the full strict
 repository check (436 schemas, 131 commands and 290 refusal codes), portable
 AIDE Lite validation, Python parsing and `git diff --check`.
+
+## 2026-09-22 source-distinct predecessor product correction
+
+Run `35662564497` tested exact source
+`171eb897e3390078a73a9d300593a22ce3a3984f`. Linux completed in 5 minutes 17
+seconds and macOS in 10 minutes 23 seconds. Windows passed 49/49 native tests,
+the current-source product package and current-user setup lifecycle, then
+failed while constructing the detached Alpha.5 predecessor product. The first
+failure was `package-build: missing built artifact for
+apps/gui/windows/winforms`; no source-distinct A-to-B transition was entered.
+The retained Windows job log has SHA-256
+`e77129aa8d46fb97e416ea2357e7c9b10e5e662d1a670e9f1fabfa68ee3f5d78`.
+
+The successor builds predecessor WinForms through the predecessor checkout's
+own helper and predecessor-owned output root before package construction.
+Validation passed:
+
+- 32 focused self-maintenance candidate and workflow tests;
+- 120 broader candidate, package-contract, resource-proof and development-root
+  tests, with one platform-conditioned skip;
+- Python compilation, source formatting and `git diff --check`;
+- full strict validation with 436 schemas, 131 commands and 290 refusal codes.
+
+The exact hosted rerun is pending. The Linux/macOS successes retain their
+original source scope, while the Windows source-distinct transition and final
+six-asset bundle remain unqualified.
