@@ -285,3 +285,14 @@ The full 49-test Windows matrix predates only the explicit pure-virtual
 declaration and the raw-provider refusal for offline retention. The three
 directly affected setup/maintenance/provider tests rebuilt and passed after
 that correction; no broader product behavior changed.
+
+## 2026-09-22 macOS override portability correction
+
+PR #317's first `macos-native-cli` build failed before test execution because
+Clang diagnosed seven inherited `ProviderBridge` declarations without explicit
+`override` under `-Winconsistent-missing-override -Werror`. The declaration-only
+correction rebuilt `facman_self_maintenance_smoke` in the existing Windows and
+Ubuntu 24.04 external roots. The focused test passed in both roots (31.08 and
+9.47 seconds respectively). `tools/source_format_check.py` and
+`git diff --check` passed. The corrected hosted macOS result remains pending;
+the failed run does not qualify macOS behavior.

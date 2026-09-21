@@ -137,3 +137,13 @@ checkpoint receipt. The WorkUnit remains active: this checkpoint does not
 claim the source-distinct packaged Windows lifecycle, real Start Menu/HKCU
 effects, retained-helper parent-exit execution, chain-aware repair/removal, or
 human/product acceptance.
+
+## 2026-09-22 macOS override portability correction
+
+The first hosted PR build exposed seven inherited provider declarations that
+MSVC and GCC accepted but Clang rejected under
+`-Winconsistent-missing-override -Werror`. The declarations now carry explicit
+`override` specifiers without changing their signatures or behavior. The
+affected maintenance target rebuilt and passed on Windows and Ubuntu 24.04;
+source formatting and `git diff --check` also passed. The corrected macOS
+hosted build remains the exact platform acceptance check for this correction.

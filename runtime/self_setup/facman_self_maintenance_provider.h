@@ -44,25 +44,27 @@ public:
 
   facman::core::Result<InstalledIdentity> inspect_identity(
       const std::string &install_id);
-  CandidateState inspect_candidate(const Plan &plan);
+  CandidateState inspect_candidate(const Plan &plan) override;
   EffectResult review_install_local(const Plan &plan);
   facman::core::Result<ProviderApplyBinding> bind_install_local(
-      const Plan &plan, const std::string &expected_provider_plan_sha256);
+      const Plan &plan,
+      const std::string &expected_provider_plan_sha256) override;
   facman::core::Result<void> rehydrate_install_local(
-      const Plan &plan, const ProviderApplyBinding &binding);
+      const Plan &plan, const ProviderApplyBinding &binding) override;
   EffectResult prepare_install_local(const Plan &plan) override;
   EffectResult apply_bound_install_local(const Plan &plan,
-                                          const ProviderApplyBinding &binding);
+                                          const ProviderApplyBinding &binding)
+      override;
   EffectResult install_local(const Plan &plan);
   EffectResult inspect_installed(const Plan &plan);
   // Continuation recovery must prove the persisted transaction, rather than
   // merely finding a matching target installation.
   EffectResult inspect_installed(const Plan &plan,
-                                 const ProviderApplyBinding &binding);
-  EffectResult verify_installed(const Plan &plan);
+                                 const ProviderApplyBinding &binding) override;
+  EffectResult verify_installed(const Plan &plan) override;
   EffectResult validate_terminal_verification(
       const Plan &plan, const ProviderApplyBinding &binding,
-      const std::string &receipt_sha256);
+      const std::string &receipt_sha256) override;
 
 private:
   struct Impl;
