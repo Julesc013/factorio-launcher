@@ -264,3 +264,11 @@ workflow, release asset, or generated report is changed by this checkpoint.
 
 The WorkUnit evidence files record the reviewed source checkpoint. No provider
 authority, product version, package profile or release asset is changed.
+
+## Hosted Debug archive-cost correction
+
+- `tests/integration/facman_self_setup_lifecycle.py` uses Deflate for the
+  synthetic external-maintenance archives while the ordinary lifecycle keeps
+  stored-archive coverage. The complete helper launch, provider, publication,
+  shell, terminal observation, mismatch and staged-retry assertions remain
+  inside the unchanged product and CTest deadlines.

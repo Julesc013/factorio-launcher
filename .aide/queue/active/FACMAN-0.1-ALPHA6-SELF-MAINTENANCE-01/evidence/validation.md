@@ -376,3 +376,27 @@ This checkpoint does not claim the source-distinct produced-package Windows
 A/B lifecycle, real Start Menu/HKCU effects, physical Linux/macOS package
 behavior, chain-aware repair/removal or human acceptance. Those exits remain
 active.
+
+## 2026-09-22 hosted Debug archive-cost correction
+
+PR #320 run `35642988291` passed Linux native, Linux coverage, macOS CLI,
+macOS archive, AppKit, CodeQL, C/C++, C#, Python, security policy, synthetic
+provider and promotion checks. Its Windows job built successfully and passed
+48/49 native tests, but `facman_self_setup_lifecycle` reached the unchanged
+180.01-second CTest timeout. This was an outer timeout rather than a reported
+product refusal or failed assertion.
+
+A retained local run recorded the external helper's exact phase sequence from
+`00-handoff-ready.v3.json` through `80-registration-cutover.v2.json`. Changing
+only the synthetic maintenance archives from stored to admitted Deflate reduced
+each archive from 7,429,970 to 2,220,607 bytes and the complete exact lifecycle
+passed in 81.04 seconds. The ordinary lifecycle still covers stored archives;
+the external helper, provider, publication, shell, mismatch and staged-retry
+assertions all remain. No product deadline, outer CTest timeout, test selection,
+coverage threshold, or assertion changed. Exact hosted requalification remains
+pending.
+
+The corrective successor also passed 53 focused Python candidate, workflow,
+setup-package and process-controller tests, source formatting, the full strict
+repository check (436 schemas, 131 commands and 290 refusal codes), portable
+AIDE Lite validation, Python parsing and `git diff --check`.

@@ -203,3 +203,21 @@ time for terminal observation, the staged-launch regression, and cleanup.
 This changes no product deadline, CTest timeout, test selection, or coverage
 threshold. The exact local Windows Debug lifecycle passed in 112.21 seconds;
 hosted requalification remains pending.
+
+## 2026-09-22 hosted Debug archive-cost correction
+
+PR #320 run `35642988291` passed every non-Windows lane, including Linux
+coverage under its unchanged limits, but the Windows lifecycle reached the
+unchanged 180-second outer CTest timeout before the synthetic external helper
+finished. A retained local phase trace showed correct progress through all
+eight durable phases and isolated the cost to repeatedly hashing and copying
+the uncompressed Debug Setup image in the maintenance archives.
+
+The ordinary lifecycle still exercises stored archives. The synthetic
+external-maintenance packages now use the other admitted format, Deflate,
+while retaining the complete helper launch, provider, publication, shell,
+terminal observation, mismatch and staged-retry assertions. The exact local
+Windows Debug lifecycle passed in 81.04 seconds, down from the immediately
+preceding retained 89-second observation. Product deadlines, the outer CTest
+timeout, the test selection, and every assertion remain unchanged. Exact
+hosted requalification remains pending.

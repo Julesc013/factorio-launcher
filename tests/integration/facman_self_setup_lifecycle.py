@@ -347,7 +347,7 @@ def stored_payload(path: Path, executable: Path, version: str, compression: int 
             archive.writestr(info, data)
 
 
-def stored_maintenance_payload(path: Path, executable: Path, version: str) -> None:
+def deflated_maintenance_payload(path: Path, executable: Path, version: str) -> None:
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
     from tools.self_setup_package import (
@@ -391,7 +391,11 @@ def stored_maintenance_payload(path: Path, executable: Path, version: str) -> No
     with zipfile.ZipFile(path, "w", allowZip64=True) as archive:
         for name, data in sorted(files.items()):
             info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
-            info.compress_type = zipfile.ZIP_STORED
+            # The general lifecycle above exercises stored archives.  Use the
+            # other admitted archive form here so the full external-maintenance
+            # path does not repeatedly hash and copy an uncompressed Debug
+            # Setup image on hosted Windows.
+            info.compress_type = zipfile.ZIP_DEFLATED
             info.create_system = 3
             info.external_attr = 0o100644 << 16
             archive.writestr(info, data)
@@ -812,9 +816,9 @@ def epoch_prehandoff_cli_controls(
     source_package = case / "source.zip"
     target_package = case / "target.zip"
     mismatch_package = case / "mismatch.zip"
-    stored_maintenance_payload(source_package, executable, version)
-    stored_maintenance_payload(target_package, executable, target_version)
-    stored_maintenance_payload(mismatch_package, executable, mismatch_version)
+    deflated_maintenance_payload(source_package, executable, version)
+    deflated_maintenance_payload(target_package, executable, target_version)
+    deflated_maintenance_payload(mismatch_package, executable, mismatch_version)
 
     installed = invoke(
         executable, "install", "--package", source_package,
@@ -2088,7 +2092,7 @@ def main() -> int:
             ).encode("utf-8"))
             target_version = maintenance_version
             maintenance_package = root / "maintenance-update.zip"
-            stored_maintenance_payload(
+            deflated_maintenance_payload(
                 maintenance_package, executable, target_version
             )
             coordinator = root / "setup-coordinator.v1"

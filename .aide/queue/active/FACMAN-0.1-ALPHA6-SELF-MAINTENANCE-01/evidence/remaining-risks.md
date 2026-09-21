@@ -107,3 +107,12 @@ remaining inside the product's existing 600-second handoff budget; cleanup then
 correctly refused to remove its live target executable. The observer correction
 still requires exact hosted requalification under the unchanged 180-second
 CTest gate.
+
+PR #320 run `35642988291` showed that the observer correction alone was
+insufficient on the slower hosted Debug runner: every other lane passed, while
+the Windows lifecycle reached the unchanged outer gate. A retained local phase
+trace reached every durable terminal record and identified repeated
+uncompressed Debug Setup archive work as the bounded fixture cost. The
+external-maintenance fixture now uses admitted Deflate packages while the
+ordinary stored-archive lifecycle remains intact. Exact hosted
+requalification is still required under the unchanged gate.
