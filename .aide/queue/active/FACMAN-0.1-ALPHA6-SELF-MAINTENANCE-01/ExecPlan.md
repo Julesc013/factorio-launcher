@@ -190,3 +190,16 @@ passes in 111.31 seconds instead of timing out at 180 seconds; the focused four
 Windows tests and two WSL maintenance/provider tests pass. Hosted
 requalification remains pending, including the separate coverage-runner export
 timeout; no validation limit or coverage threshold changed.
+
+## 2026-09-22 hosted Debug observer correction
+
+PR #320 run `35640200272` passed the previously failing Linux coverage job
+under its unchanged limits. Windows Debug proved that the isolated continuation
+can outlive a new 65-second fixture observer while remaining inside the
+product's existing 600-second absolute handoff budget. Cleanup then encountered
+the still-live installed executable and refused deletion. The observer now
+allows 120 seconds inside the unchanged 180-second outer CTest gate, retaining
+time for terminal observation, the staged-launch regression, and cleanup.
+This changes no product deadline, CTest timeout, test selection, or coverage
+threshold. The exact local Windows Debug lifecycle passed in 112.21 seconds;
+hosted requalification remains pending.

@@ -359,6 +359,19 @@ passed. The full strict repository check passed with the current 436 schemas,
 131 commands, and 290 refusal codes. Exact hosted Windows and coverage
 requalification remains pending.
 
+PR #320 run `35640200272` then passed Linux coverage in 6 minutes 45
+seconds without changing its 30-second resource-child limit or coverage
+threshold. Windows Debug reached the corrected external continuation, but the
+fixture stopped observing it after 65 seconds even though the product has one
+existing 600-second absolute handoff deadline. The still-running continuation
+held the installed target executable, so temporary-root cleanup correctly
+refused deletion instead of hiding the live process. The fixture observation
+cap is corrected to 120 seconds within the unchanged 180-second outer CTest
+gate, leaving the remainder for the staged-launch regression and cleanup.
+The exact local Windows Debug lifecycle then passed in 112.21 seconds; Python
+parsing, source formatting, and diff checks also passed. Exact hosted
+requalification remains pending.
+
 This checkpoint does not claim the source-distinct produced-package Windows
 A/B lifecycle, real Start Menu/HKCU effects, physical Linux/macOS package
 behavior, chain-aware repair/removal or human acceptance. Those exits remain

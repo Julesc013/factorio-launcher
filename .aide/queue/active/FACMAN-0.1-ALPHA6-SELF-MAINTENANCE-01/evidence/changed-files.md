@@ -253,7 +253,9 @@ workflow, release asset, or generated report is changed by this checkpoint.
   strict private-input refusals, and proves a second public apply promotes and
   relaunches a staged v3 handoff without letting the initiating process enter
   continuation effects. The normal packaged case observes full external
-  completion.
+  completion. Its 120-second hosted-Debug observation cap stays inside the
+  unchanged 180-second CTest gate and the product's existing 600-second
+  absolute handoff budget.
 - `apps/setup/windows_maintenance_handoff.cpp` gives the private helper an
   explicit no-console `NUL` standard-handle set so it cannot retain redirected
   caller pipes while waiting for the initiating process to exit.

@@ -100,8 +100,10 @@ physical Linux or macOS package behavior. The lifecycle fixture's no-shell
 permit remains qualification-only and does not weaken production shell
 requirements.
 
-PR #320's first hosted coverage attempt timed out one resource-export child
-after the preceding coverage-instrumented CLI children also ran unusually close
-to their fixed 30-second child limit. The threshold and child limits were not
-weakened. Exact hosted requalification of this successor remains required to
-distinguish runner-wide coverage slowdown from a reproducible source defect.
+PR #320's first corrective rerun passed Linux coverage under the unchanged
+30-second child limit and existing coverage threshold. Its Windows Debug helper
+continued beyond a newly introduced 65-second fixture observation cap while
+remaining inside the product's existing 600-second handoff budget; cleanup then
+correctly refused to remove its live target executable. The observer correction
+still requires exact hosted requalification under the unchanged 180-second
+CTest gate.

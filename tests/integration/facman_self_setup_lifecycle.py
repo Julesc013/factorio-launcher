@@ -142,10 +142,11 @@ def await_external_handoff(
     operation_id = initial.get("operation_id")
     if not isinstance(operation_id, str) or not operation_id:
         raise AssertionError(f"{operation} handoff launch omitted its operation identity")
-    # The production handoff has one 60-second absolute budget.  The observer
-    # must not start fixture cleanup while a valid Debug continuation is still
-    # inside that same admitted window.
-    local_deadline = time.monotonic() + 65.0
+    # The production handoff has one 600-second absolute budget.  This focused
+    # fixture remains bounded by the unchanged 180-second outer CTest gate: it
+    # allows a slower hosted Debug continuation up to 120 seconds and retains
+    # the remaining time for observation, the staged-launch case, and cleanup.
+    local_deadline = time.monotonic() + 120.0
     if REAL_DEADLINE is not None:
         local_deadline = min(local_deadline, REAL_DEADLINE)
     serialized_arguments = [str(value) for value in query_arguments]
