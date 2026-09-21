@@ -221,3 +221,22 @@ Windows Debug lifecycle passed in 81.04 seconds, down from the immediately
 preceding retained 89-second observation. Product deadlines, the outer CTest
 timeout, the test selection, and every assertion remain unchanged. Exact
 hosted requalification remains pending.
+
+## 2026-09-22 source-distinct predecessor product correction
+
+Product-candidate run `35662564497` was bound to exact integrated dev
+`171eb897e3390078a73a9d300593a22ce3a3984f`. Linux and macOS platform jobs
+passed, and Windows passed its complete 49-test native matrix, current-source
+package proofs and real current-user setup lifecycle. The source-distinct
+transition then stopped before producing the Alpha.5 predecessor package:
+the detached predecessor built its native product but had not built the
+WinForms component required by the `windows_product_x64` profile.
+
+The bounded successor invokes the predecessor checkout's own
+`tools.winforms_build` helper, writes its output beneath the predecessor-owned
+task root, and pins `PYTHONPATH` to that detached source. It does not reuse the
+candidate GUI or relax the product profile. Focused candidate/controller tests,
+the broader 120-test package and candidate matrix, source formatting, Python
+compilation, diff checks and the complete strict repository check pass. A new
+exact hosted product-candidate run remains required; the failed run grants no
+source-distinct transition or candidate-bundle qualification.
