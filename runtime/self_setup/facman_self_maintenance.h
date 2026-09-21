@@ -288,6 +288,30 @@ struct EpochShellCutoverResponse {
   std::filesystem::path journal;
 };
 
+// Read-only recovery discovery for the one exact, unfinished maintenance
+// transition at the lifecycle tail.  It deliberately exposes only immutable
+// handoff identity, never a caller-supplied filesystem path.
+struct EpochPendingTransition {
+  std::string epoch_id;
+  std::string epoch_manifest_sha256;
+  Operation operation = Operation::update;
+  std::string operation_id;
+  std::string nonce;
+  std::string journal_sha256;
+  PackageInspection retained_package;
+  RetainedMaintenanceInputs retained_inputs;
+  Generation target;
+  std::string source_activation_name;
+  std::string source_activation_sha256;
+  std::string target_activation_name;
+  std::string target_activation_sha256;
+  bool completed = false;
+  bool pre_handoff = false;
+  // pre_handoff, handoff_staging, continuation_pending, publication_pending,
+  // shell_cutover_pending, or shell_cutover_complete when completed is true.
+  std::string phase;
+};
+
 class EpochPublicationEffects {
 public:
   virtual ~EpochPublicationEffects() = default;
@@ -326,13 +350,17 @@ public:
       const Plan &plan, const std::string &expected_provider_plan_sha256) = 0;
   virtual facman::core::Result<void> rehydrate_install_local(
       const Plan &plan, const ProviderApplyBinding &binding) = 0;
+  // Retains the already admitted handoff package and maintenance helper in
+  // the generation-independent offline repair cache.  This is idempotent and
+  // must complete before the provider apply-entered record is published.
+  virtual EffectResult prepare_install_local(const Plan &plan) = 0;
   virtual EffectResult apply_bound_install_local(
       const Plan &plan, const ProviderApplyBinding &binding) = 0;
   virtual EffectResult inspect_installed(
       const Plan &plan, const ProviderApplyBinding &binding) override = 0;
   virtual EffectResult verify_installed(const Plan &plan) = 0;
-  // Revalidates an already durable provider verification receipt without
-  // issuing a new timestamped verification request.
+  // Revalidates an already durable provider verification receipt by replaying
+  // its deterministic read-only verification identity.
   virtual EffectResult validate_terminal_verification(
       const Plan &plan, const ProviderApplyBinding &binding,
       const std::string &receipt_sha256) override = 0;
@@ -391,6 +419,15 @@ facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(
 facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
+    const std::filesystem::path &coordinator_root);
+facman::core::Result<std::optional<EpochPendingTransition>>
+discover_lifecycle_epoch_pending_transition(
+    const std::filesystem::path &coordinator_root);
+// Matches only the exact completed shell cutover at the current active head.
+// Callers use it for an idempotent terminal retry after unfinished discovery
+// has returned no tail.
+facman::core::Result<std::optional<EpochPendingTransition>>
+discover_lifecycle_epoch_terminal_transition(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transition(
     const EpochTransitionRequest &request, EpochPreparationEffects &effects);

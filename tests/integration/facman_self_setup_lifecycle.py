@@ -13,6 +13,7 @@ import ctypes
 import hashlib
 import os
 import secrets
+import shutil
 import stat
 import struct
 import json
@@ -124,6 +125,51 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
             "stderr_sha256": hashlib.sha256(result.stderr.encode("utf-8")).hexdigest(),
             "bounded_process_receipt": getattr(result, "facman_bounded_receipt", None),
         })
+    return response
+
+
+def tree_snapshot(root: Path) -> dict[str, object]:
+    directories: list[str] = []
+    files: dict[str, str] = {}
+    for path in sorted(root.rglob("*")):
+        relative = path.relative_to(root).as_posix()
+        if path.is_dir():
+            directories.append(relative)
+        elif path.is_file():
+            files[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+        else:
+            raise AssertionError(f"fixture contains an unsupported filesystem object: {path}")
+    return {"directories": directories, "files": files}
+
+
+def emit_prehandoff_epoch(
+    helper: Path,
+    coordinator: Path,
+    logical_root: Path,
+    state_root: Path,
+    acceptance_root: Path,
+    source_package: Path,
+    target_package: Path,
+) -> dict[str, object]:
+    command = [
+        str(helper), "--emit-prehandoff-epoch", str(coordinator),
+        str(logical_root), str(state_root), str(acceptance_root),
+        str(source_package), str(target_package), "update",
+    ]
+    result = run_command(command)
+    if result.returncode:
+        raise AssertionError(
+            f"epoch fixture helper returned {result.returncode}: {command}\n"
+            f"stdout={result.stdout[-8000:]}\nstderr={result.stderr[-8000:]}"
+        )
+    try:
+        response = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise AssertionError(
+            f"epoch fixture helper did not return JSON: {command}\n{result.stdout[-8000:]}"
+        ) from exc
+    if response.get("schema") != "facman.self_maintenance_test_epoch.v1":
+        raise AssertionError("epoch fixture helper returned an unexpected schema")
     return response
 
 
@@ -664,6 +710,98 @@ def maintenance_qualification_permit(
         "expires_at_unix_seconds": now + 120,
     }, sort_keys=True, separators=(",", ":")), encoding="utf-8")
     return permit
+
+
+def epoch_prehandoff_cli_controls(
+        root: Path, executable: Path, fixture_helper: Path, version: str) -> None:
+    case = root / "epoch-cli-prehandoff"
+    case.mkdir()
+    install = case / "Programs" / "FacMan"
+    state = case / "SetupState"
+    install.parent.mkdir()
+    prefix, number = version.rsplit(".", 1)
+    target_version = f"{prefix}.{int(number) + 1}"
+    mismatch_version = f"{prefix}.{int(number) + 2}"
+    source_package = case / "source.zip"
+    target_package = case / "target.zip"
+    mismatch_package = case / "mismatch.zip"
+    stored_maintenance_payload(source_package, executable, version)
+    stored_maintenance_payload(target_package, executable, target_version)
+    stored_maintenance_payload(mismatch_package, executable, mismatch_version)
+
+    installed = invoke(
+        executable, "install", "--package", source_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
+    )
+    if installed.get("phase") != "receipt":
+        raise AssertionError("epoch CLI fixture baseline did not install")
+    coordinator = case / "setup-coordinator.v1"
+    if coordinator.exists():
+        shutil.rmtree(coordinator)
+    emitted = emit_prehandoff_epoch(
+        fixture_helper, coordinator, install, state, case,
+        source_package, target_package,
+    )
+    source_install_root = Path(str(emitted.get("source_install_root", "")))
+    if not source_install_root.is_absolute() or source_install_root.exists():
+        raise AssertionError("epoch fixture returned an unsafe source install root")
+    shutil.copytree(install, source_install_root)
+
+    preview_permit = maintenance_qualification_permit(
+        case, "update", False, version, install, state
+    )
+    apply_permit = maintenance_qualification_permit(
+        case, "update", True, version, install, state
+    )
+    before = tree_snapshot(case)
+    mismatch_preview = invoke(
+        executable, "update", "--package", mismatch_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case,
+        "--qualification-fixture-permit", preview_permit,
+        expected=4,
+    )
+    if (mismatch_preview.get("error", {}).get("code") !=
+            "self_maintenance_epoch_recovery_required" or
+            tree_snapshot(case) != before):
+        raise AssertionError(
+            "different-package pre-handoff preview did not refuse without effects"
+        )
+    mismatch_apply = invoke(
+        executable, "update", "--package", mismatch_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
+        "--qualification-fixture-permit", apply_permit,
+        expected=4,
+    )
+    if (mismatch_apply.get("error", {}).get("code") !=
+            "self_maintenance_epoch_recovery_required" or
+            tree_snapshot(case) != before):
+        raise AssertionError(
+            "different-package pre-handoff apply did not refuse without effects"
+        )
+    exact_preview = invoke(
+        executable, "update", "--package", target_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case,
+        "--qualification-fixture-permit", preview_permit,
+    )
+    if (exact_preview.get("phase") != "plan" or
+            exact_preview.get("operation_id") != emitted.get("operation_id") or
+            tree_snapshot(case) != before):
+        raise AssertionError(
+            "exact-package pre-handoff preview was not pure and deterministic"
+        )
+    exact_apply = invoke(
+        executable, "update", "--package", target_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
+        "--qualification-fixture-permit", apply_permit,
+    )
+    if (exact_apply.get("phase") != "shell_cutover_complete" or
+            exact_apply.get("operation_id") != emitted.get("operation_id")):
+        raise AssertionError("exact-package pre-handoff apply did not complete")
 
 
 def journal_observation(install: Path) -> list[dict[str, object]]:
@@ -1426,6 +1564,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--setup-exe", type=Path, required=True)
     parser.add_argument(
+        "--epoch-fixture-exe",
+        type=Path,
+        help="Native test helper used to emit a canonical pre-handoff epoch.",
+    )
+    parser.add_argument(
         "--payload",
         type=Path,
         help="Exercise an exact produced self-setup payload instead of the synthetic fixture.",
@@ -1538,6 +1681,10 @@ def main() -> int:
     if args.resource_package_evidence is not None and args.payload is None:
         parser.error("--resource-package-evidence requires --payload")
     executable = args.setup_exe.resolve(strict=True)
+    epoch_fixture_executable = (
+        args.epoch_fixture_exe.resolve(strict=True)
+        if args.epoch_fixture_exe is not None else None
+    )
     version_result = run_command([str(executable), "--version"])
     if version_result.returncode:
         raise AssertionError("setup version command failed")
@@ -1642,6 +1789,11 @@ def main() -> int:
         )
         if verified["provider"]["payload"]["status"] != "pass":
             raise AssertionError("fresh install did not verify")
+
+        if epoch_fixture_executable is not None:
+            epoch_prehandoff_cli_controls(
+                root, executable, epoch_fixture_executable, version
+            )
 
         if args.workspace_lifecycle_evidence is not None:
             if args.payload is None:
@@ -1784,6 +1936,42 @@ def main() -> int:
                     rolled_back.get("generation_id") !=
                     discovered.get("generation_id")):
                 raise AssertionError("public rollback did not reactivate legacy")
+            # Once an epoch directory exists it is authoritative.  A partial
+            # tail must be refused before the legacy v1 update can reach the
+            # provider or mutate the flat activation history.
+            epoch_root = coordinator / "epochs"
+            before_records = sorted(
+                str(path.relative_to(coordinator))
+                for path in coordinator.rglob("*") if path.is_file()
+            )
+            epoch_permit = maintenance_qualification_permit(
+                root, "update", False, version, install, state
+            )
+            epoch_root.mkdir()
+            empty_epoch_refusal = invoke(
+                executable, "update", "--package", maintenance_package,
+                "--root", install, "--state-root", state,
+                "--acceptance-root", root,
+                "--qualification-fixture-permit", epoch_permit, expected=4,
+            )
+            partial_epoch = epoch_root / ("a" * 64)
+            partial_epoch.mkdir()
+            partial_epoch_refusal = invoke(
+                executable, "update", "--package", maintenance_package,
+                "--root", install, "--state-root", state,
+                "--acceptance-root", root,
+                "--qualification-fixture-permit", epoch_permit, expected=4,
+            )
+            if (empty_epoch_refusal.get("error", {}).get("code") !=
+                    "self_maintenance_epoch_recovery_required" or
+                    partial_epoch_refusal.get("error", {}).get("code") !=
+                    "self_maintenance_epoch_recovery_required" or
+                    sorted(str(path.relative_to(coordinator))
+                           for path in coordinator.rglob("*") if path.is_file()) != before_records):
+                raise AssertionError(
+                    "partial epoch did not refuse maintenance before flat effects"
+                )
+            shutil.rmtree(epoch_root)
             maintenance_chain_active = True
 
         workspace = root / "FacManWorkspace"
