@@ -7,6 +7,7 @@
 #include "fl_file_io.h"
 #include "fl_json.h"
 #include "fl_path_safety.h"
+#include "fl_sha256.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -269,6 +270,20 @@ facman::core::Result<PackageInspection> inspect_package(
     return facman::core::Result<PackageInspection>::failure(error(
         "self_maintenance_package_incompatible",
         "maintenance package does not contain every exact entrypoint"));
+  const archive::Entry *maintenance_entry = nullptr;
+  for (const auto &entry : archive_plan.entries)
+    if (entry.path == maintenance && !entry.directory) maintenance_entry = &entry;
+  facman::base::Sha256Hasher maintenance_hasher;
+  const auto maintenance_status = archive::stream_entry(archive_plan,
+      maintenance_entry->index, limits, [&](const unsigned char *data, std::size_t count) {
+        maintenance_hasher.update(data, count);
+        return true;
+      });
+  if (!maintenance_status.ok())
+    return facman::core::Result<PackageInspection>::failure(error(
+        "self_maintenance_package_changed", "maintenance launcher could not be identified",
+        maintenance_status.detail));
+  const std::string maintenance_digest = maintenance_hasher.finish();
   std::string digest;
   const auto hashed = archive::archive_sha256(archive_plan, limits, digest);
   if (!hashed.ok() || !lower_hex(digest, 64U))
@@ -276,7 +291,8 @@ facman::core::Result<PackageInspection> inspect_package(
         "self_maintenance_package_changed",
         "maintenance package could not be identified", hashed.detail));
   return facman::core::Result<PackageInspection>::success(
-      {package.lexically_normal(), std::move(digest), descriptor.take_value()});
+      {package.lexically_normal(), std::move(digest), maintenance_digest,
+       descriptor.take_value()});
 }
 
 facman::core::Result<void> extract_maintenance_launcher(
