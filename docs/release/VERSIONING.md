@@ -37,7 +37,8 @@ only for non-precedence provenance.
 0.1.0-alpha.0+dev.<run>.g<sha>  untagged disposable build
 0.1.0-alpha.3                  immutable tagged private-draft distribution baseline
 0.1.0-alpha.4                  integrated foundation architecture baseline
-0.1.0-alpha.5                  active beta-readiness convergence candidate
+0.1.0-alpha.5                  historical machine-qualified candidate evidence
+0.1.0-alpha.6                  allocated unqualified development identity
 0.1.0-beta.1                   human-tested beta candidate
 0.1.0-rc.1                     frozen release candidate
 0.1.0                          stable 0.x release, marketed as Public Beta
@@ -55,14 +56,16 @@ That identity is retained only as historical evidence and can never be tagged,
 renamed, or published as a release. The tagged private-draft
 `facman-0.1.0-alpha.3` source and assets are immutable historical evidence.
 `facman-0.1.0-alpha.4` is the integrated forward-only foundation baseline.
-`facman-0.1.0-alpha.5` is the current beta-readiness candidate on the alpha
-channel. Exact run `33603385303`, attempt 1 qualified source revision
+`facman-0.1.0-alpha.6` is the current allocated alpha development identity;
+it has no candidate receipt, tag, signature, publication, or support claim.
+Exact run `33603385303`, attempt 1 qualified historical alpha.5 source revision
 `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
 `c07938618bc0f533fd12756cba123f54b8592048` as an unsigned, unpublished,
 non-authorizing candidate. It remains unsupported and does not acquire a human
 verdict, beta allocation, signing, notarization, publication, or support
-authority from its version or that run. The binding receipt is
-`release/index/alpha5_promotion_candidate_closeout.v1.toml`.
+authority from its version or that run. The final binding receipt is
+`release/index/alpha5_final_candidate_closeout.v1.toml`. The promotion
+closeout is a separate historical record and does not replace that final run.
 
 Candidate qualification is revision-bound. The receipt does not qualify its
 own closeout revision, a synchronization merge, or any future revision; each
@@ -120,8 +123,8 @@ The active compressed 0.1 programme brings the safe architectural parts of
 those later milestones forward without importing their unsupported breadth:
 
 ```text
-0.1.0-alpha.5  exact hosted package candidate passed; human/authority gates open
-  -> alpha.6   managed local install and lifecycle closure
+0.1.0-alpha.5  historical exact hosted package candidate; human/authority gates open
+  -> alpha.6   allocated managed local install and lifecycle closure
   -> alpha.7   Play/session and GTK3/AppKit semantic convergence
   -> alpha.N   twelve-journey feature freeze and exact reconstruction
   -> beta.1    exact human-tested candidate
@@ -142,8 +145,8 @@ SBOM, provenance, tests, known limits, support class, migration/rollback law,
 withdrawal state, and the required human receipt. See
 `release/ledger/README.md`.
 
-Current repository state identifies the product as
-`facman-0.1.0-alpha.5`. The beta-readiness WorkUnit preserves the alpha.4
+Current repository state identifies the development product as
+`facman-0.1.0-alpha.6`. The historical alpha.5 beta-readiness WorkUnit preserves the alpha.4
 foundation and has machine-qualified the bounded Windows product and macOS
 Intel/Linux previews around one resource, provider, command, migration, and
 package architecture. The successful candidate carried five jobs, four

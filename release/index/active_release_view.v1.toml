@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 schema = "facman.active_release_view.v1"
-product_version = "0.1.0-alpha.5"
+product_version = "0.1.0-alpha.6"
 view_role = "sole_current_release_obligation_selector"
-candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
 artifact_matrix = "release/index/artifact_matrix.v1.toml"
 package_manifest = "release/index/package_manifest.v1.toml"
 support_matrix = "release/index/support_matrix.v1.toml"
@@ -47,6 +46,7 @@ active_asset_patterns = [
   "FacMan-<version>-evidence.zip",
 ]
 historical_candidate_receipts = [
+  "release/index/alpha5_final_candidate_closeout.v1.toml",
   "release/index/alpha5_promotion_candidate_closeout.v1.toml",
 ]
 historical_distribution_records = [

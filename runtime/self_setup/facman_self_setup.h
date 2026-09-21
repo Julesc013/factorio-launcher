@@ -10,6 +10,10 @@
 #include <optional>
 #include <string>
 
+namespace facman::self_maintenance {
+class CoordinatorLockToken;
+}
+
 namespace facman::self_setup {
 
 enum class Operation { install, verify, repair, uninstall };
@@ -133,6 +137,10 @@ public:
 
 struct Request {
   Operation operation = Operation::verify;
+  // Identifies the exact Universal Setup installation this operation owns.
+  // The historical FacMan self-install remains the default for callers that
+  // do not yet select a generation-specific identity.
+  std::string install_id = "facman.self";
   std::filesystem::path package;
   std::filesystem::path maintenance_launcher;
   std::filesystem::path install_root;
@@ -140,6 +148,10 @@ struct Request {
   std::filesystem::path acceptance_root;
   std::string product_version;
   bool apply = false;
+  // Supplied only by retire_active while it owns the exact global coordinator
+  // lock. It prevents recursive acquisition around a per-generation uninstall.
+  const facman::self_maintenance::CoordinatorLockToken *coordinator_lock =
+      nullptr;
   // A null adapter is the portable/no-shell-integration mode. It still
   // records native effects as not_applicable in the composite journal.
   NativeEffects *native_effects = nullptr;
@@ -151,6 +163,11 @@ struct Request {
 };
 
 facman::core::Result<Response> execute(const Request &request);
+// Read-only admission used by the chain retirement coordinator.  It refuses
+// to run a generation uninstall over an unresolved ordinary setup journal.
+facman::core::Result<bool> has_pending_operation(
+    const std::filesystem::path &install_root,
+    const std::filesystem::path &coordinator_root);
 std::string provider_revision();
 
 } // namespace facman::self_setup

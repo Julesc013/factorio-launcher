@@ -7,6 +7,8 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cctype>
+#include <cstdio>
 #include <cstring>
 #include <cwchar>
 #include <limits>
@@ -17,18 +19,127 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
+#include <winternl.h>
 #else
+#include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#if defined(__linux__)
+#include <sys/syscall.h>
+#endif
 #endif
 
 namespace facman::platform {
 namespace {
 
+thread_local bool relative_publish_post_rename_fault_for_testing = false;
+thread_local unsigned relative_publish_pre_rename_fault_countdown_for_testing = 0U;
+thread_local testing::RelativePublishBeforeReopenHook
+    relative_publish_before_reopen_hook_for_testing = nullptr;
+
+IoStatus published_unverified_failure(const IoStatus& underlying)
+{
+    return IoStatus::failure(
+        "output_published_unverified",
+        underlying.code + ": " + underlying.detail);
+}
+
+bool portable_leaf(const std::filesystem::path& leaf, std::string& value)
+{
+    value = leaf.generic_u8string();
+    if (value.empty() || value.size() > 255U || value == "." || value == ".." || leaf.has_root_path() ||
+        leaf.has_parent_path() || value.find_first_of("\\\\/:") != std::string::npos ||
+        value.back() == '.' || value.back() == ' ') return false;
+    for (const unsigned char character : value) {
+        if (character < 0x21U || character > 0x7eU ||
+            std::strchr("<>\"|?*", static_cast<int>(character)) != nullptr) return false;
+    }
+    std::string base = value.substr(0, value.find('.'));
+    std::transform(base.begin(), base.end(), base.begin(), [](unsigned char character) {
+        return static_cast<char>(std::toupper(character));
+    });
+    if (base == "CON" || base == "PRN" || base == "AUX" || base == "NUL") return false;
+    return base.size() == 4U &&
+        (base.rfind("COM", 0U) == 0U || base.rfind("LPT", 0U) == 0U) &&
+        base[3] >= '1' && base[3] <= '9' ? false : true;
+}
+
 #ifdef _WIN32
 using NativeHandle = HANDLE;
 const NativeHandle kInvalidHandle = INVALID_HANDLE_VALUE;
+using OpenRelative = NTSTATUS (NTAPI*)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES,
+    PIO_STATUS_BLOCK, PLARGE_INTEGER, ULONG, ULONG, ULONG, ULONG, PVOID, ULONG);
+using SetRelativeInformation = NTSTATUS (NTAPI*)(HANDLE, PIO_STATUS_BLOCK, PVOID, ULONG,
+    FILE_INFORMATION_CLASS);
+
+OpenRelative nt_create_file()
+{
+    const HMODULE module = GetModuleHandleW(L"ntdll.dll");
+    const FARPROC address = module ? GetProcAddress(module, "NtCreateFile") : nullptr;
+    OpenRelative result = nullptr;
+    static_assert(sizeof(result) == sizeof(address));
+    std::memcpy(&result, &address, sizeof(address));
+    return result;
+}
+
+SetRelativeInformation nt_set_information_file()
+{
+    const HMODULE module = GetModuleHandleW(L"ntdll.dll");
+    const FARPROC address = module ? GetProcAddress(module, "NtSetInformationFile") : nullptr;
+    SetRelativeInformation result = nullptr;
+    static_assert(sizeof(result) == sizeof(address));
+    std::memcpy(&result, &address, sizeof(address));
+    return result;
+}
+
+IoStatus nt_rename_status(NTSTATUS status)
+{
+    const ULONG value = static_cast<ULONG>(status);
+    if (value == 0xc0000035UL) return IoStatus::failure("commit_no_replace_collision", "destination exists");
+    if (value == 0xc000000dUL) return IoStatus::failure("relative_publish_unavailable", "NtSetInformationFile rejected relative rename");
+    if (value == 0xc00000d4UL) return IoStatus::failure("commit_cross_device", "relative rename crossed devices");
+    if (value == 0xc000050bUL) return IoStatus::failure("commit_reparse_refused", "reparse encountered during relative rename");
+    char detail[32] {};
+    std::snprintf(detail, sizeof(detail), "NtSetInformationFile status 0x%08lx", value);
+    return IoStatus::failure("commit_no_replace_failed", detail);
+}
+
+IoStatus open_relative_windows(
+    HANDLE parent, const std::string& leaf, ACCESS_MASK access, ULONG disposition,
+    ULONG options, HANDLE& result,
+    ULONG share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE)
+{
+    const OpenRelative open_relative = nt_create_file();
+    if (!open_relative) return IoStatus::failure("relative_open_unavailable", "NtCreateFile unavailable");
+    std::wstring name(leaf.begin(), leaf.end());
+    UNICODE_STRING unicode {};
+    unicode.Buffer = name.data();
+    unicode.Length = static_cast<USHORT>(name.size() * sizeof(wchar_t));
+    unicode.MaximumLength = unicode.Length;
+    OBJECT_ATTRIBUTES attributes {};
+    attributes.Length = sizeof(attributes);
+    attributes.RootDirectory = parent;
+    attributes.ObjectName = &unicode;
+    attributes.Attributes = 0x1040; // OBJ_DONT_REPARSE | OBJ_CASE_INSENSITIVE
+    IO_STATUS_BLOCK io {};
+    result = kInvalidHandle;
+    const NTSTATUS status = open_relative(&result, access | SYNCHRONIZE, &attributes, &io,
+        nullptr, FILE_ATTRIBUTE_NORMAL, share,
+        disposition, options | 0x00000020, nullptr, 0);
+    if (status < 0) {
+        result = kInvalidHandle;
+        return IoStatus::failure("relative_open_failed", "NtCreateFile failed with status " +
+            std::to_string(static_cast<ULONG>(status)));
+    }
+    return IoStatus::success();
+}
+
+bool duplicate_handle(HANDLE source, HANDLE& target)
+{
+    return DuplicateHandle(GetCurrentProcess(), source, GetCurrentProcess(), &target, 0,
+        FALSE, DUPLICATE_SAME_ACCESS) != 0;
+}
 
 std::string windows_error(const char* operation)
 {
@@ -139,27 +250,89 @@ IoStatus flush_directory(const std::filesystem::path& directory)
         ? IoStatus::success(DurabilityLevel::file_and_directory_flushed)
         : IoStatus::failure("directory_flush_failed", std::strerror(error));
 }
+
+bool duplicate_handle(int source, int& target)
+{
+    target = ::fcntl(source, F_DUPFD_CLOEXEC, 0);
+    return target >= 0;
+}
+
+IoStatus flush_directory_handle(int handle)
+{
+    if (::fsync(handle) != 0) return IoStatus::failure("directory_flush_failed", std::strerror(errno));
+    return IoStatus::success(DurabilityLevel::file_and_directory_flushed);
+}
 #endif
 
+IoStatus close_native_handle(NativeHandle& handle, const char* code)
+{
+    if (handle == kInvalidHandle) return IoStatus::success();
+#ifdef _WIN32
+    if (!CloseHandle(handle)) {
+        handle = kInvalidHandle;
+        return IoStatus::failure(code, windows_error("CloseHandle"));
+    }
+#else
+    if (::close(handle) != 0) {
+        const std::string detail = std::strerror(errno);
+        handle = kInvalidHandle;
+        return IoStatus::failure(code, detail);
+    }
+#endif
+    handle = kInvalidHandle;
+    return IoStatus::success();
+}
+
+void close_native_handle_noexcept(NativeHandle& handle) noexcept
+{
+    if (handle == kInvalidHandle) return;
+#ifdef _WIN32
+    (void)CloseHandle(handle);
+#else
+    (void)::close(handle);
+#endif
+    handle = kInvalidHandle;
+}
+
 } // namespace
+
+namespace testing {
+
+void set_relative_publish_post_rename_fault(bool enabled) noexcept
+{
+    relative_publish_post_rename_fault_for_testing = enabled;
+}
+
+void set_relative_publish_pre_rename_fault_countdown(unsigned count) noexcept
+{
+    relative_publish_pre_rename_fault_countdown_for_testing = count;
+}
+
+void set_relative_publish_before_reopen_hook(RelativePublishBeforeReopenHook hook) noexcept
+{
+    relative_publish_before_reopen_hook_for_testing = hook;
+}
+
+} // namespace testing
 
 struct StableInputFile::Impl {
     NativeHandle handle = kInvalidHandle;
     FileIdentity identity;
     std::filesystem::path path;
+    ~Impl()
+    {
+#ifdef _WIN32
+        if (handle != kInvalidHandle) CloseHandle(handle);
+#else
+        if (handle != kInvalidHandle) ::close(handle);
+#endif
+    }
 };
 
 StableInputFile::StableInputFile() : impl_(std::make_unique<Impl>()) {}
 StableInputFile::StableInputFile(StableInputFile&&) noexcept = default;
 StableInputFile& StableInputFile::operator=(StableInputFile&&) noexcept = default;
-StableInputFile::~StableInputFile()
-{
-#ifdef _WIN32
-    if (impl_ && impl_->handle != kInvalidHandle) CloseHandle(impl_->handle);
-#else
-    if (impl_ && impl_->handle != kInvalidHandle) ::close(impl_->handle);
-#endif
-}
+StableInputFile::~StableInputFile() = default;
 
 IoStatus StableInputFile::open_no_follow(const std::filesystem::path& path)
 {
@@ -278,22 +451,34 @@ struct StableDirectoryObject::Impl {
     NativeHandle handle = kInvalidHandle;
     PathIdentity identity;
     std::filesystem::path path;
+    ~Impl()
+    {
+#ifdef _WIN32
+        if (handle != kInvalidHandle) CloseHandle(handle);
+#else
+        if (handle != kInvalidHandle) ::close(handle);
+#endif
+    }
 };
 
 StableDirectoryObject::StableDirectoryObject() : impl_(std::make_unique<Impl>()) {}
 StableDirectoryObject::StableDirectoryObject(StableDirectoryObject&&) noexcept = default;
 StableDirectoryObject& StableDirectoryObject::operator=(StableDirectoryObject&&) noexcept = default;
 
-StableDirectoryObject::~StableDirectoryObject()
-{
-#ifdef _WIN32
-    if (impl_ && impl_->handle != kInvalidHandle) CloseHandle(impl_->handle);
-#else
-    if (impl_ && impl_->handle != kInvalidHandle) ::close(impl_->handle);
-#endif
-}
+StableDirectoryObject::~StableDirectoryObject() = default;
 
 IoStatus StableDirectoryObject::open_no_follow(const std::filesystem::path& path)
+{
+    return open_no_follow_impl(path, false);
+}
+
+IoStatus StableDirectoryObject::open_no_follow_for_relative_writes(const std::filesystem::path& path)
+{
+    return open_no_follow_impl(path, true);
+}
+
+IoStatus StableDirectoryObject::open_no_follow_impl(
+    const std::filesystem::path& path, bool relative_writes)
 {
     if (!impl_ || impl_->handle != kInvalidHandle) {
         return IoStatus::failure("directory_object_already_open", path_to_utf8(path));
@@ -304,10 +489,14 @@ IoStatus StableDirectoryObject::open_no_follow(const std::filesystem::path& path
     if (absolute_error || absolute.empty()) {
         return IoStatus::failure("directory_object_path_invalid", path_to_utf8(path));
     }
+#ifndef _WIN32
+    (void)relative_writes;
+#endif
 #ifdef _WIN32
     const std::wstring native_path = windows_extended_path(absolute);
     impl_->handle = CreateFileW(
-        native_path.c_str(), FILE_READ_ATTRIBUTES | FILE_LIST_DIRECTORY,
+        native_path.c_str(), FILE_READ_ATTRIBUTES | FILE_LIST_DIRECTORY |
+            (relative_writes ? FILE_ADD_FILE | FILE_ADD_SUBDIRECTORY | FILE_TRAVERSE | SYNCHRONIZE : 0),
         FILE_SHARE_READ | FILE_SHARE_WRITE,
         nullptr, OPEN_EXISTING,
         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
@@ -463,28 +652,329 @@ bool StableDirectoryObject::open() const noexcept
     return impl_ && impl_->handle != kInvalidHandle;
 }
 
-struct DurableOutputFile::Impl {
+IoStatus StableDirectoryObject::flush_metadata() const
+{
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
+#ifdef _WIN32
+    // Windows does not provide a supported directory-flush contract.
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+#else
+    return flush_directory_handle(impl_->handle);
+#endif
+}
+
+IoStatus StableDirectoryObject::open_child_directory_no_follow(
+    const std::filesystem::path& leaf, StableDirectoryObject& child) const
+{
+    return open_child_directory_no_follow_impl(leaf, child, false);
+}
+
+IoStatus StableDirectoryObject::open_child_directory_no_follow_for_relative_writes(
+    const std::filesystem::path& leaf, StableDirectoryObject& child) const
+{
+    return open_child_directory_no_follow_impl(leaf, child, true);
+}
+
+IoStatus StableDirectoryObject::open_child_directory_no_follow_impl(
+    const std::filesystem::path& leaf,
+    StableDirectoryObject& child,
+    bool relative_writes) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name)) return IoStatus::failure("relative_leaf_invalid", path_to_utf8(leaf));
+    if (!child.impl_ || child.open()) return IoStatus::failure("directory_object_already_open", name);
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
     NativeHandle handle = kInvalidHandle;
+#ifndef _WIN32
+    (void)relative_writes;
+#endif
+#ifdef _WIN32
+    IoStatus status = open_relative_windows(impl_->handle, name,
+        FILE_READ_ATTRIBUTES | FILE_LIST_DIRECTORY |
+            (relative_writes ? FILE_ADD_FILE | FILE_ADD_SUBDIRECTORY | FILE_TRAVERSE : 0),
+        1, 0x00200001, handle,
+        FILE_SHARE_READ | FILE_SHARE_WRITE);
+    if (!status.ok()) return status;
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(handle, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(handle);
+        return IoStatus::failure("directory_object_identity_failed", detail);
+    }
+    child.impl_->identity = path_identity_from_info(impl_->path / leaf, handle, info);
+#else
+    handle = ::openat(impl_->handle, name.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (handle < 0) return IoStatus::failure("relative_open_failed", std::strerror(errno));
+    struct stat info {};
+    if (::fstat(handle, &info) != 0) {
+        const std::string detail = std::strerror(errno);
+        ::close(handle);
+        return IoStatus::failure("directory_object_identity_failed", detail);
+    }
+    child.impl_->identity = path_identity_from_stat(info);
+#endif
+    if (child.impl_->identity.kind != PathObjectKind::directory || child.impl_->identity.reparse_or_link) {
+#ifdef _WIN32
+        CloseHandle(handle);
+#else
+        ::close(handle);
+#endif
+        child.impl_->identity = {};
+        return IoStatus::failure("relative_child_not_plain_directory", name);
+    }
+    child.impl_->handle = handle;
+    child.impl_->path = impl_->path / leaf;
+    return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::create_child_directory_exclusive(
+    const std::filesystem::path& leaf, StableDirectoryObject& child) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name)) return IoStatus::failure("relative_leaf_invalid", path_to_utf8(leaf));
+    if (!child.impl_ || child.open()) return IoStatus::failure("directory_object_already_open", name);
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
+#ifdef _WIN32
+    HANDLE created = kInvalidHandle;
+    IoStatus status = open_relative_windows(impl_->handle, name,
+        FILE_READ_ATTRIBUTES | FILE_LIST_DIRECTORY | FILE_ADD_FILE | FILE_ADD_SUBDIRECTORY |
+            FILE_TRAVERSE,
+        2, 0x00200001, created, FILE_SHARE_READ | FILE_SHARE_WRITE);
+    if (!status.ok()) return IoStatus::failure("relative_directory_create_failed", status.detail);
+    child.impl_->handle = created;
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(created, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(created);
+        child.impl_->handle = kInvalidHandle;
+        return IoStatus::failure("directory_object_identity_failed", detail);
+    }
+    child.impl_->identity = path_identity_from_info(impl_->path / leaf, created, info);
+#else
+    if (::mkdirat(impl_->handle, name.c_str(), 0700) != 0)
+        return IoStatus::failure("relative_directory_create_failed", std::strerror(errno));
+    const int opened = ::openat(impl_->handle, name.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (opened < 0) return IoStatus::failure("relative_directory_open_failed", std::strerror(errno));
+    child.impl_->handle = opened;
+    struct stat info {};
+    if (::fstat(opened, &info) != 0) {
+        const std::string detail = std::strerror(errno);
+        ::close(opened);
+        child.impl_->handle = kInvalidHandle;
+        return IoStatus::failure("directory_object_identity_failed", detail);
+    }
+    child.impl_->identity = path_identity_from_stat(info);
+#endif
+    child.impl_->path = impl_->path / leaf;
+    return child.revalidate();
+}
+
+IoStatus StableDirectoryObject::open_child_file_no_follow_pinned(
+    const std::filesystem::path& leaf, StableInputFile& child) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name)) return IoStatus::failure("relative_leaf_invalid", path_to_utf8(leaf));
+    if (!child.impl_ || child.open()) return IoStatus::failure("input_already_open", name);
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
+    NativeHandle handle = kInvalidHandle;
+#ifdef _WIN32
+    IoStatus status = open_relative_windows(impl_->handle, name, GENERIC_READ, 1, 0x00200040, handle,
+        FILE_SHARE_READ);
+    if (!status.ok()) return status;
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(handle, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(handle);
+        return IoStatus::failure("input_identity_failed", detail);
+    }
+    child.impl_->identity = identity_from_info(info);
+#else
+    handle = ::openat(impl_->handle, name.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (handle < 0) return IoStatus::failure("relative_open_failed", std::strerror(errno));
+    struct stat info {};
+    if (::fstat(handle, &info) != 0) {
+        const std::string detail = std::strerror(errno);
+        ::close(handle);
+        return IoStatus::failure("input_identity_failed", detail);
+    }
+    child.impl_->identity = identity_from_stat(info);
+#endif
+    if (!child.impl_->identity.regular_file || child.impl_->identity.link_count != 1U) {
+#ifdef _WIN32
+        CloseHandle(handle);
+#else
+        ::close(handle);
+#endif
+        return IoStatus::failure(child.impl_->identity.regular_file ? "input_multiple_links" : "input_not_regular", name);
+    }
+    child.impl_->handle = handle;
+    child.impl_->path = impl_->path / leaf;
+    return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::list_child_names_bounded(
+    std::size_t maximum_entries,
+    std::vector<std::filesystem::path>& names) const
+{
+    names.clear();
+    const IoStatus before = revalidate();
+    if (!before.ok()) return before;
+#ifdef _WIN32
+    HANDLE duplicate = kInvalidHandle;
+    if (!duplicate_handle(impl_->handle, duplicate))
+        return IoStatus::failure("directory_enumerate_failed", windows_error("DuplicateHandle"));
+    std::vector<unsigned char> buffer(64U * 1024U);
+    bool more = true;
+    bool restart = true;
+    while (more) {
+        if (!GetFileInformationByHandleEx(duplicate,
+                restart ? FileIdBothDirectoryRestartInfo : FileIdBothDirectoryInfo,
+                buffer.data(), static_cast<DWORD>(buffer.size()))) {
+            const DWORD error = GetLastError();
+            if (error == ERROR_NO_MORE_FILES) break;
+            CloseHandle(duplicate);
+            names.clear();
+            return IoStatus::failure("directory_enumerate_failed", windows_error("GetFileInformationByHandleEx"));
+        }
+        restart = false;
+        std::size_t offset = 0U;
+        for (;;) {
+            const auto* entry = reinterpret_cast<const FILE_ID_BOTH_DIR_INFO*>(buffer.data() + offset);
+            const std::size_t chars = entry->FileNameLength / sizeof(wchar_t);
+            const std::wstring value(entry->FileName, chars);
+            if (value != L"." && value != L"..") {
+                const std::filesystem::path leaf(value);
+                std::string portable;
+                if (!portable_leaf(leaf, portable) || names.size() >= maximum_entries) {
+                    CloseHandle(duplicate);
+                    names.clear();
+                    return IoStatus::failure("directory_enumerate_invalid", "directory contains an invalid or excessive leaf");
+                }
+                names.push_back(leaf);
+            }
+            if (entry->NextEntryOffset == 0U) break;
+            offset += entry->NextEntryOffset;
+            if (offset >= buffer.size()) {
+                CloseHandle(duplicate);
+                names.clear();
+                return IoStatus::failure("directory_enumerate_failed", "directory entry offset is invalid");
+            }
+        }
+    }
+    CloseHandle(duplicate);
+#else
+    const int duplicate = ::openat(impl_->handle, ".", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (duplicate < 0) return IoStatus::failure("directory_enumerate_failed", std::strerror(errno));
+    DIR* directory = ::fdopendir(duplicate);
+    if (directory == nullptr) {
+        const std::string detail = std::strerror(errno);
+        ::close(duplicate);
+        return IoStatus::failure("directory_enumerate_failed", detail);
+    }
+    errno = 0;
+    while (dirent* entry = ::readdir(directory)) {
+        const std::string value(entry->d_name);
+        if (value == "." || value == "..") continue;
+        std::string portable;
+        if (!portable_leaf(std::filesystem::path(value), portable) ||
+            names.size() >= maximum_entries) {
+            ::closedir(directory);
+            names.clear();
+            return IoStatus::failure("directory_enumerate_invalid", "directory contains an invalid or excessive leaf");
+        }
+        names.emplace_back(value);
+    }
+    const int enumeration_error = errno;
+    if (::closedir(directory) != 0 && enumeration_error == 0) {
+        names.clear();
+        return IoStatus::failure("directory_enumerate_failed", std::strerror(errno));
+    }
+    if (enumeration_error != 0) {
+        names.clear();
+        return IoStatus::failure("directory_enumerate_failed", std::strerror(enumeration_error));
+    }
+#endif
+    std::sort(names.begin(), names.end(), [](const auto& left, const auto& right) {
+        return left.generic_u8string() < right.generic_u8string();
+    });
+    const IoStatus after = revalidate();
+    if (!after.ok()) names.clear();
+    return after;
+}
+
+struct DurableOutputFile::Impl {
+    enum class RelativeNamespaceState { none, staging, published_unverified };
+    NativeHandle handle = kInvalidHandle;
+    NativeHandle parent_handle = kInvalidHandle;
     std::filesystem::path path;
+    std::string staging_leaf;
+    FileIdentity identity;
+    bool relative_created = false;
+    RelativeNamespaceState relative_state = RelativeNamespaceState::none;
     std::uint64_t next_offset = 0;
     std::uint64_t maximum_size = 0;
+    void reset_relative_state() noexcept
+    {
+        relative_created = false;
+        relative_state = RelativeNamespaceState::none;
+        staging_leaf.clear();
+        parent_handle = kInvalidHandle;
+        identity = {};
+        next_offset = 0;
+        maximum_size = 0;
+    }
+    void close_owned_handles_noexcept() noexcept
+    {
+        close_native_handle_noexcept(handle);
+        close_native_handle_noexcept(parent_handle);
+    }
+    ~Impl()
+    {
+#ifdef _WIN32
+        if (handle != kInvalidHandle) CloseHandle(handle);
+        if (parent_handle != kInvalidHandle) CloseHandle(parent_handle);
+#else
+        if (handle != kInvalidHandle) ::close(handle);
+        if (parent_handle != kInvalidHandle) ::close(parent_handle);
+#endif
+    }
 };
 
 DurableOutputFile::DurableOutputFile() : impl_(std::make_unique<Impl>()) {}
 DurableOutputFile::DurableOutputFile(DurableOutputFile&&) noexcept = default;
 DurableOutputFile& DurableOutputFile::operator=(DurableOutputFile&&) noexcept = default;
-DurableOutputFile::~DurableOutputFile()
+DurableOutputFile::~DurableOutputFile() = default;
+
+IoStatus testing_close_relative_staging_for_recovery(DurableOutputFile& output)
 {
+    auto& state = *output.impl_;
+    if (state.handle == kInvalidHandle || state.parent_handle == kInvalidHandle ||
+        !state.relative_created ||
+        state.relative_state != DurableOutputFile::Impl::RelativeNamespaceState::staging)
+        return IoStatus::failure("relative_recovery_not_staging", "");
 #ifdef _WIN32
-    if (impl_ && impl_->handle != kInvalidHandle) CloseHandle(impl_->handle);
+    if (!FlushFileBuffers(state.handle))
+        return IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
 #else
-    if (impl_ && impl_->handle != kInvalidHandle) ::close(impl_->handle);
+    if (::fsync(state.handle) != 0)
+        return IoStatus::failure("output_flush_failed", std::strerror(errno));
+    const IoStatus flushed = flush_directory_handle(state.parent_handle);
+    if (!flushed.ok()) return flushed;
 #endif
+    const IoStatus file_closed = close_native_handle(state.handle, "output_close_failed");
+    if (!file_closed.ok()) return file_closed;
+    return close_native_handle(state.parent_handle, "output_parent_close_failed");
 }
 
 IoStatus DurableOutputFile::create_exclusive(const std::filesystem::path& path, std::uint64_t maximum_size)
 {
-    if (impl_->handle != kInvalidHandle) return IoStatus::failure("output_already_open", path_to_utf8(path));
+    if (impl_->handle != kInvalidHandle || impl_->parent_handle != kInvalidHandle ||
+        impl_->relative_state != Impl::RelativeNamespaceState::none)
+        return IoStatus::failure("output_already_open", path_to_utf8(path));
 #ifdef _WIN32
     const std::wstring native_path = windows_extended_path(path);
     impl_->handle = CreateFileW(native_path.c_str(), GENERIC_WRITE | DELETE, 0,
@@ -495,7 +985,151 @@ IoStatus DurableOutputFile::create_exclusive(const std::filesystem::path& path, 
     if (impl_->handle < 0) return IoStatus::failure("output_create_failed", std::strerror(errno));
 #endif
     impl_->path = path;
+    impl_->identity = {};
+    impl_->next_offset = 0;
     impl_->maximum_size = maximum_size;
+    return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::create_child_file_exclusive(
+    const std::filesystem::path& leaf,
+    std::uint64_t maximum_size,
+    DurableOutputFile& child) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name)) return IoStatus::failure("relative_leaf_invalid", path_to_utf8(leaf));
+    if (!child.impl_ || child.impl_->handle != kInvalidHandle ||
+        child.impl_->parent_handle != kInvalidHandle ||
+        child.impl_->relative_state != DurableOutputFile::Impl::RelativeNamespaceState::none)
+        return IoStatus::failure("output_already_open", name);
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
+    NativeHandle parent = kInvalidHandle;
+    if (!duplicate_handle(impl_->handle, parent)) {
+#ifdef _WIN32
+        return IoStatus::failure("relative_parent_duplicate_failed", windows_error("DuplicateHandle"));
+#else
+        return IoStatus::failure("relative_parent_duplicate_failed", std::strerror(errno));
+#endif
+    }
+    NativeHandle file = kInvalidHandle;
+#ifdef _WIN32
+    IoStatus status = open_relative_windows(parent, name,
+        GENERIC_WRITE | DELETE | FILE_READ_ATTRIBUTES, 2, 0x00200040, file, 0);
+    if (!status.ok()) {
+        CloseHandle(parent);
+        return IoStatus::failure("relative_file_create_failed", status.detail);
+    }
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(file, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(file);
+        CloseHandle(parent);
+        return IoStatus::failure("output_identity_failed", detail);
+    }
+    child.impl_->identity = identity_from_info(info);
+#else
+    file = ::openat(parent, name.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
+    if (file < 0) {
+        const std::string detail = std::strerror(errno);
+        ::close(parent);
+        return IoStatus::failure("relative_file_create_failed", detail);
+    }
+    struct stat info {};
+    if (::fstat(file, &info) != 0) {
+        const std::string detail = std::strerror(errno);
+        ::close(file);
+        ::close(parent);
+        return IoStatus::failure("output_identity_failed", detail);
+    }
+    child.impl_->identity = identity_from_stat(info);
+#endif
+    if (!child.impl_->identity.regular_file || child.impl_->identity.link_count != 1U) {
+#ifdef _WIN32
+        CloseHandle(file);
+        CloseHandle(parent);
+#else
+        ::close(file);
+        ::close(parent);
+#endif
+        return IoStatus::failure("output_not_regular", name);
+    }
+    child.impl_->handle = file;
+    child.impl_->parent_handle = parent;
+    child.impl_->path = impl_->path / leaf;
+    child.impl_->staging_leaf = name;
+    child.impl_->next_offset = 0;
+    child.impl_->maximum_size = maximum_size;
+    child.impl_->relative_created = true;
+    child.impl_->relative_state = DurableOutputFile::Impl::RelativeNamespaceState::staging;
+    return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::reopen_child_file_no_follow_for_relative_publish(
+    const std::filesystem::path& leaf, const FileIdentity& expected,
+    std::uint64_t maximum_size, DurableOutputFile& child) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name)) return IoStatus::failure("relative_leaf_invalid", path_to_utf8(leaf));
+    if (!expected.regular_file || expected.link_count != 1U || expected.size > maximum_size)
+        return IoStatus::failure("relative_publish_identity_invalid", name);
+    if (!child.impl_ || child.impl_->handle != kInvalidHandle ||
+        child.impl_->parent_handle != kInvalidHandle ||
+        child.impl_->relative_state != DurableOutputFile::Impl::RelativeNamespaceState::none)
+        return IoStatus::failure("output_already_open", name);
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
+    if (relative_publish_before_reopen_hook_for_testing != nullptr)
+        relative_publish_before_reopen_hook_for_testing(impl_->path / leaf);
+    NativeHandle parent = kInvalidHandle;
+    if (!duplicate_handle(impl_->handle, parent)) {
+#ifdef _WIN32
+        return IoStatus::failure("relative_parent_duplicate_failed", windows_error("DuplicateHandle"));
+#else
+        return IoStatus::failure("relative_parent_duplicate_failed", std::strerror(errno));
+#endif
+    }
+    NativeHandle file = kInvalidHandle;
+    FileIdentity actual;
+#ifdef _WIN32
+    IoStatus opened = open_relative_windows(parent, name,
+        GENERIC_WRITE | DELETE | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+        1, 0x00200040, file, 0);
+    if (!opened.ok()) { CloseHandle(parent); return IoStatus::failure("relative_publish_reopen_failed", opened.detail); }
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(file, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(file); CloseHandle(parent);
+        return IoStatus::failure("relative_publish_identity_failed", detail);
+    }
+    actual = identity_from_info(info);
+#else
+    file = ::openat(parent, name.c_str(), O_WRONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (file < 0) { const std::string detail = std::strerror(errno); ::close(parent);
+        return IoStatus::failure("relative_publish_reopen_failed", detail); }
+    struct stat info {};
+    if (::fstat(file, &info) != 0) { const std::string detail = std::strerror(errno);
+        ::close(file); ::close(parent); return IoStatus::failure("relative_publish_identity_failed", detail); }
+    actual = identity_from_stat(info);
+#endif
+    if (!expected.unchanged(actual) || !actual.regular_file || actual.link_count != 1U ||
+        actual.size > maximum_size) {
+#ifdef _WIN32
+        CloseHandle(file); CloseHandle(parent);
+#else
+        ::close(file); ::close(parent);
+#endif
+        return IoStatus::failure("relative_publish_identity_changed", name);
+    }
+    child.impl_->handle = file;
+    child.impl_->parent_handle = parent;
+    child.impl_->path = impl_->path / leaf;
+    child.impl_->staging_leaf = name;
+    child.impl_->identity = actual;
+    child.impl_->next_offset = actual.size;
+    child.impl_->maximum_size = maximum_size;
+    child.impl_->relative_created = true;
+    child.impl_->relative_state = DurableOutputFile::Impl::RelativeNamespaceState::staging;
     return IoStatus::success();
 }
 
@@ -519,16 +1153,50 @@ std::size_t DurableOutputFile::write_at(std::uint64_t offset, const void* buffer
 
 IoStatus DurableOutputFile::flush_file_and_parent()
 {
-    if (impl_->handle == kInvalidHandle) return IoStatus::failure("output_not_open", "");
+    if (impl_->handle == kInvalidHandle) {
+        if (impl_->relative_created &&
+            impl_->relative_state != Impl::RelativeNamespaceState::published_unverified) {
+            const IoStatus parent_closed =
+                close_native_handle(impl_->parent_handle, "output_parent_close_failed");
+            impl_->reset_relative_state();
+            if (!parent_closed.ok()) return parent_closed;
+        }
+        return IoStatus::failure("output_not_open", "");
+    }
+    IoStatus status;
 #ifdef _WIN32
-    if (!FlushFileBuffers(impl_->handle)) return IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
-    if (!CloseHandle(impl_->handle)) return IoStatus::failure("output_close_failed", windows_error("CloseHandle"));
-    impl_->handle = kInvalidHandle;
-    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+    if (!FlushFileBuffers(impl_->handle)) {
+        status = IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
+    } else {
+        status = IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+    }
 #else
-    if (::fsync(impl_->handle) != 0) return IoStatus::failure("output_flush_failed", std::strerror(errno));
-    if (::close(impl_->handle) != 0) return IoStatus::failure("output_close_failed", std::strerror(errno));
-    impl_->handle = kInvalidHandle;
+    if (::fsync(impl_->handle) != 0) {
+        status = IoStatus::failure("output_flush_failed", std::strerror(errno));
+    } else {
+        status = IoStatus::success(DurabilityLevel::file_flushed);
+    }
+#endif
+    const IoStatus file_closed = close_native_handle(impl_->handle, "output_close_failed");
+    if (status.ok() && !file_closed.ok()) status = file_closed;
+
+    if (impl_->relative_created) {
+#ifndef _WIN32
+        if (status.ok() && impl_->parent_handle != kInvalidHandle) {
+            const IoStatus parent_flushed = flush_directory_handle(impl_->parent_handle);
+            if (!parent_flushed.ok()) status = parent_flushed;
+            else status = parent_flushed;
+        }
+#endif
+        const IoStatus parent_closed = close_native_handle(impl_->parent_handle, "output_parent_close_failed");
+        if (status.ok() && !parent_closed.ok()) status = parent_closed;
+        impl_->reset_relative_state();
+        return status;
+    }
+#ifdef _WIN32
+    return status;
+#else
+    if (!status.ok()) return status;
     return flush_directory(impl_->path.parent_path());
 #endif
 }
@@ -543,8 +1211,7 @@ IoStatus DurableOutputFile::publish_no_replace(
     }
     const std::wstring native_destination = windows_extended_path(destination);
     const std::size_t name_bytes = native_destination.size() * sizeof(wchar_t);
-    std::vector<unsigned char> storage(
-        offsetof(FILE_RENAME_INFO, FileName) + name_bytes + sizeof(wchar_t), 0U);
+    std::vector<unsigned char> storage(sizeof(FILE_RENAME_INFO) + name_bytes, 0U);
     auto* rename = reinterpret_cast<FILE_RENAME_INFO*>(storage.data());
     rename->ReplaceIfExists = FALSE;
     rename->RootDirectory = nullptr;
@@ -601,43 +1268,178 @@ IoStatus DurableOutputFile::publish_no_replace(
 #endif
 }
 
+IoStatus DurableOutputFile::publish_sibling_no_replace(
+    const std::filesystem::path& destination_leaf)
+{
+    std::string destination;
+    if (!portable_leaf(destination_leaf, destination))
+        return IoStatus::failure("relative_leaf_invalid", path_to_utf8(destination_leaf));
+    if (impl_->handle == kInvalidHandle || !impl_->relative_created ||
+        impl_->relative_state != Impl::RelativeNamespaceState::staging ||
+        impl_->parent_handle == kInvalidHandle)
+        return IoStatus::failure("relative_output_not_open", destination);
+#ifdef _WIN32
+    if (!FlushFileBuffers(impl_->handle))
+        return IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
+    if (relative_publish_pre_rename_fault_countdown_for_testing != 0U &&
+        --relative_publish_pre_rename_fault_countdown_for_testing == 0U)
+        return IoStatus::failure("output_pre_rename_fault_injected", "test seam");
+    BY_HANDLE_FILE_INFORMATION source_info {};
+    if (!GetFileInformationByHandle(impl_->handle, &source_info) ||
+        !impl_->identity.same_object(identity_from_info(source_info)) ||
+        !identity_from_info(source_info).regular_file || source_info.nNumberOfLinks != 1U)
+        return IoStatus::failure("commit_source_identity_changed", impl_->staging_leaf);
+    std::wstring name(destination.begin(), destination.end());
+    const std::size_t name_bytes = name.size() * sizeof(wchar_t);
+    std::vector<unsigned char> storage(sizeof(FILE_RENAME_INFO) + name_bytes, 0U);
+    auto* rename = reinterpret_cast<FILE_RENAME_INFO*>(storage.data());
+    rename->ReplaceIfExists = FALSE;
+    rename->RootDirectory = impl_->parent_handle;
+    if (name_bytes > std::numeric_limits<DWORD>::max())
+        return IoStatus::failure("relative_publish_unavailable", "destination leaf is too large");
+    rename->FileNameLength = static_cast<DWORD>(name_bytes);
+    std::memcpy(rename->FileName, name.data(), name_bytes);
+    if (storage.size() > std::numeric_limits<ULONG>::max())
+        return IoStatus::failure("relative_publish_unavailable", "rename information is too large");
+    const SetRelativeInformation set_information = nt_set_information_file();
+    if (!set_information)
+        return IoStatus::failure("relative_publish_unavailable", "NtSetInformationFile unavailable");
+    IO_STATUS_BLOCK rename_io {};
+    const NTSTATUS rename_status = set_information(
+        impl_->handle, &rename_io, rename, static_cast<ULONG>(storage.size()),
+        static_cast<FILE_INFORMATION_CLASS>(10)); // FileRenameInformation
+    if (rename_status < 0) return nt_rename_status(rename_status);
+    impl_->relative_state = Impl::RelativeNamespaceState::published_unverified;
+    impl_->staging_leaf = destination;
+    impl_->path = impl_->path.parent_path() / destination_leaf;
+    const auto fail_after_namespace_rename = [&](IoStatus failure) {
+        impl_->close_owned_handles_noexcept();
+        return published_unverified_failure(failure);
+    };
+    if (relative_publish_post_rename_fault_for_testing) {
+        return fail_after_namespace_rename(
+            IoStatus::failure("output_post_rename_fault_injected", "test seam"));
+    }
+    if (!FlushFileBuffers(impl_->handle)) {
+        return fail_after_namespace_rename(
+            IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers")));
+    }
+    const IoStatus file_closed = close_native_handle(impl_->handle, "output_close_failed");
+    if (!file_closed.ok()) return fail_after_namespace_rename(file_closed);
+    HANDLE published = kInvalidHandle;
+    IoStatus published_status = open_relative_windows(impl_->parent_handle, destination,
+        FILE_READ_ATTRIBUTES, 1, 0x00200040, published);
+    if (!published_status.ok()) return fail_after_namespace_rename(published_status);
+    BY_HANDLE_FILE_INFORMATION published_info {};
+    const bool published_ok = GetFileInformationByHandle(published, &published_info) != 0;
+    const IoStatus published_closed = close_native_handle(published, "output_close_failed");
+    const FileIdentity published_identity = identity_from_info(published_info);
+    if (!published_ok || !impl_->identity.same_object(published_identity) ||
+        !published_identity.regular_file || published_identity.link_count != 1U) {
+        return fail_after_namespace_rename(
+            IoStatus::failure("commit_destination_identity_changed", destination));
+    }
+    if (!published_closed.ok()) return fail_after_namespace_rename(published_closed);
+    const IoStatus parent_closed = close_native_handle(impl_->parent_handle, "output_parent_close_failed");
+    if (!parent_closed.ok()) return fail_after_namespace_rename(parent_closed);
+    impl_->reset_relative_state();
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+#else
+    if (::fsync(impl_->handle) != 0)
+        return IoStatus::failure("output_flush_failed", std::strerror(errno));
+    if (relative_publish_pre_rename_fault_countdown_for_testing != 0U &&
+        --relative_publish_pre_rename_fault_countdown_for_testing == 0U)
+        return IoStatus::failure("output_pre_rename_fault_injected", "test seam");
+    struct stat held {};
+    struct stat named {};
+    if (::fstat(impl_->handle, &held) != 0 ||
+        ::fstatat(impl_->parent_handle, impl_->staging_leaf.c_str(), &named, AT_SYMLINK_NOFOLLOW) != 0 ||
+        held.st_dev != named.st_dev || held.st_ino != named.st_ino || !S_ISREG(named.st_mode) ||
+        held.st_nlink != 1 || named.st_nlink != 1)
+        return IoStatus::failure("commit_source_identity_changed", impl_->staging_leaf);
+#if defined(__linux__) && defined(SYS_renameat2)
+    if (::syscall(SYS_renameat2, impl_->parent_handle, impl_->staging_leaf.c_str(),
+            impl_->parent_handle, destination.c_str(), 1U) != 0)
+        return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
+#elif defined(__APPLE__)
+    if (::renameatx_np(impl_->parent_handle, impl_->staging_leaf.c_str(),
+            impl_->parent_handle, destination.c_str(), RENAME_EXCL) != 0)
+        return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
+#else
+    return IoStatus::failure("commit_no_replace_unsupported", "atomic relative no-replace rename unavailable");
+#endif
+    impl_->relative_state = Impl::RelativeNamespaceState::published_unverified;
+    impl_->staging_leaf = destination;
+    impl_->path = impl_->path.parent_path() / destination_leaf;
+    const auto fail_after_namespace_rename = [&](IoStatus failure) {
+        impl_->close_owned_handles_noexcept();
+        return published_unverified_failure(failure);
+    };
+    if (relative_publish_post_rename_fault_for_testing) {
+        return fail_after_namespace_rename(
+            IoStatus::failure("output_post_rename_fault_injected", "test seam"));
+    }
+    struct stat published {};
+    if (::fstatat(impl_->parent_handle, destination.c_str(), &published, AT_SYMLINK_NOFOLLOW) != 0 ||
+        held.st_dev != published.st_dev || held.st_ino != published.st_ino || !S_ISREG(published.st_mode) ||
+        published.st_nlink != 1) {
+        return fail_after_namespace_rename(
+            IoStatus::failure("commit_destination_identity_changed", destination));
+    }
+    const IoStatus file_closed = close_native_handle(impl_->handle, "output_close_failed");
+    if (!file_closed.ok()) return fail_after_namespace_rename(file_closed);
+    IoStatus flushed = flush_directory_handle(impl_->parent_handle);
+    if (!flushed.ok()) return fail_after_namespace_rename(flushed);
+    const IoStatus parent_closed = close_native_handle(impl_->parent_handle, "output_parent_close_failed");
+    if (!parent_closed.ok()) return fail_after_namespace_rename(parent_closed);
+    impl_->reset_relative_state();
+    return flushed;
+#endif
+}
+
 IoStatus DurableOutputFile::discard_open()
 {
-    if (impl_->handle == kInvalidHandle) return IoStatus::success();
+    if (impl_->relative_state == Impl::RelativeNamespaceState::published_unverified) {
+        impl_->close_owned_handles_noexcept();
+        return IoStatus::failure("output_published_unverified", "published output requires manual recovery");
+    }
+    if (impl_->handle == kInvalidHandle && impl_->parent_handle == kInvalidHandle) {
+        impl_->reset_relative_state();
+        return IoStatus::success();
+    }
+    IoStatus status = IoStatus::success();
 #ifdef _WIN32
     FILE_DISPOSITION_INFO disposition {};
     disposition.DeleteFile = TRUE;
-    if (!SetFileInformationByHandle(
+    if (impl_->handle != kInvalidHandle && !SetFileInformationByHandle(
             impl_->handle, FileDispositionInfo, &disposition,
             static_cast<DWORD>(sizeof(disposition)))) {
-        return IoStatus::failure(
+        status = IoStatus::failure(
             "output_discard_failed",
             windows_error("SetFileInformationByHandle(FileDispositionInfo)"));
     }
-    if (!CloseHandle(impl_->handle)) {
-        return IoStatus::failure("output_close_failed", windows_error("CloseHandle"));
-    }
-    impl_->handle = kInvalidHandle;
-    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+    const IoStatus file_closed = close_native_handle(impl_->handle, "output_close_failed");
+    if (status.ok() && !file_closed.ok()) status = file_closed;
+    if (status.ok()) status = IoStatus::success(DurabilityLevel::best_effort_platform_limit);
 #else
-    if (::close(impl_->handle) != 0) {
-        return IoStatus::failure("output_close_failed", std::strerror(errno));
-    }
-    impl_->handle = kInvalidHandle;
-    return IoStatus::failure(
+    const IoStatus file_closed = close_native_handle(impl_->handle, "output_close_failed");
+    if (!file_closed.ok()) status = file_closed;
+    if (status.ok()) status = IoStatus::failure(
         "output_discard_preserved",
-        "open temporary is preserved because handle-owned unlink is unavailable");
+        impl_->relative_created
+            ? "relative staging file is preserved for recovery"
+            : "open temporary is preserved because handle-owned unlink is unavailable");
 #endif
+    const IoStatus parent_closed = close_native_handle(impl_->parent_handle, "output_parent_close_failed");
+    if (status.ok() && !parent_closed.ok()) status = parent_closed;
+    impl_->reset_relative_state();
+    return status;
 }
 void DurableOutputFile::close_without_flush() noexcept
 {
-    if (impl_->handle == kInvalidHandle) return;
-#ifdef _WIN32
-    CloseHandle(impl_->handle);
-#else
-    ::close(impl_->handle);
-#endif
-    impl_->handle = kInvalidHandle;
+    impl_->close_owned_handles_noexcept();
+    if (impl_->relative_state != Impl::RelativeNamespaceState::published_unverified)
+        impl_->reset_relative_state();
 }
 const std::filesystem::path& DurableOutputFile::path() const noexcept { return impl_->path; }
 

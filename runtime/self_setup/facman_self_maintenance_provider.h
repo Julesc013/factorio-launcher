@@ -22,13 +22,15 @@ struct InstalledIdentity {
   std::string transaction_id;
   std::string ownership_manifest_digest;
   std::string installed_state_digest;
+  std::string last_verification_report_digest;
+  std::string last_verification_status;
   std::filesystem::path install_root;
   std::string gui_relative_path;
   std::string cli_relative_path;
   std::string maintenance_relative_path;
 };
 
-class ProviderBridge {
+class ProviderBridge : public EpochContinuationEffects {
 public:
   ProviderBridge(std::filesystem::path state_root,
                  std::filesystem::path acceptance_root,
@@ -44,9 +46,22 @@ public:
       const std::string &install_id);
   CandidateState inspect_candidate(const Plan &plan);
   EffectResult review_install_local(const Plan &plan);
+  facman::core::Result<ProviderApplyBinding> bind_install_local(
+      const Plan &plan, const std::string &expected_provider_plan_sha256);
+  facman::core::Result<void> rehydrate_install_local(
+      const Plan &plan, const ProviderApplyBinding &binding);
+  EffectResult apply_bound_install_local(const Plan &plan,
+                                         const ProviderApplyBinding &binding);
   EffectResult install_local(const Plan &plan);
   EffectResult inspect_installed(const Plan &plan);
+  // Continuation recovery must prove the persisted transaction, rather than
+  // merely finding a matching target installation.
+  EffectResult inspect_installed(const Plan &plan,
+                                 const ProviderApplyBinding &binding);
   EffectResult verify_installed(const Plan &plan);
+  EffectResult validate_terminal_verification(
+      const Plan &plan, const ProviderApplyBinding &binding,
+      const std::string &receipt_sha256);
 
 private:
   struct Impl;

@@ -1340,7 +1340,8 @@ std::string digest_text(const std::string &value) {
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
 }
 
-class MaintenanceEffects final : public facman::self_maintenance::Effects {
+class MaintenanceEffects final : public facman::self_maintenance::Effects,
+                                 public facman::self_maintenance::EpochShellCutoverEffects {
 public:
   MaintenanceEffects(facman::self_maintenance::ProviderBridge &provider,
                      fs::path state_root, fs::path acceptance_root,
@@ -1403,9 +1404,25 @@ public:
     return result;
   }
 
+  facman::self_maintenance::EffectResult inspect_installed(
+      const facman::self_maintenance::Plan &plan,
+      const facman::self_maintenance::ProviderApplyBinding &binding) override {
+    auto result = provider_.inspect_installed(plan, binding);
+    if (result.ok && !ensure_target_pins(plan))
+      return {false, false, {}, target_pin_detail_};
+    return result;
+  }
+
   facman::self_maintenance::EffectResult verify_installed(
       const facman::self_maintenance::Plan &plan) override {
     return provider_.verify_installed(plan);
+  }
+
+  facman::self_maintenance::EffectResult validate_terminal_verification(
+      const facman::self_maintenance::Plan &plan,
+      const facman::self_maintenance::ProviderApplyBinding &binding,
+      const std::string &receipt) override {
+    return provider_.validate_terminal_verification(plan, binding, receipt);
   }
 
   facman::self_maintenance::ShellState inspect_shortcut(
@@ -1990,6 +2007,8 @@ int run_maintenance(Options &options, const fs::path &,
   request.active = state.active;
   request.previous_activation_name = state.activation_name;
   request.previous_activation_sha256 = state.activation_sha256;
+  if (state.previous.has_value())
+    request.rollback_target = *state.previous;
   const std::string target_identity = operation ==
           facman::self_maintenance::Operation::rollback
       ? state.previous->generation_id
@@ -1998,9 +2017,7 @@ int run_maintenance(Options &options, const fs::path &,
       maintenance_operation_text(operation) + "." +
       state.active.generation_id.substr(0, 8) + "." +
       target_identity.substr(0, 20);
-  if (operation == facman::self_maintenance::Operation::rollback) {
-    request.rollback_target = *state.previous;
-  } else {
+  if (operation != facman::self_maintenance::Operation::rollback) {
     request.package = package->package;
     request.package_sha256 = package->package_sha256;
     request.package_descriptor = package->descriptor;
@@ -2089,6 +2106,70 @@ int run_maintenance(Options &options, const fs::path &,
   return 0;
 }
 
+class SetupRetirementEffects final
+    : public facman::self_maintenance::RetirementEffects {
+public:
+  SetupRetirementEffects(const Options &options, fs::path coordinator_root,
+                         SetupNativeEffects &native_effects)
+      : options_(options), coordinator_root_(std::move(coordinator_root)),
+        native_effects_(native_effects) {}
+
+  facman::core::Result<void> inspect_retirement_generation(
+      const facman::self_maintenance::Generation &generation,
+      bool active) override {
+    (void)active;
+    auto pending = facman::self_setup::has_pending_operation(
+        generation.install_root, coordinator_root_);
+    if (!pending)
+      return facman::core::Result<void>::failure(pending.error());
+    if (pending.value())
+      return facman::core::Result<void>::failure(
+          {"self_setup_recovery_required",
+           "generation has an unresolved nested setup journal", generation.install_id});
+    facman::self_maintenance::ProviderBridge provider(
+        generation.state_root, generation.acceptance_root);
+    auto inspected = provider.inspect_identity(generation.install_id);
+    if (!inspected ||
+        !same_path(inspected.value().install_root, generation.install_root) ||
+        inspected.value().product_version != generation.product_version ||
+        inspected.value().source_archive_sha256 != generation.package_sha256 ||
+        inspected.value().provider_revision != generation.universal_setup_revision)
+      return facman::core::Result<void>::failure(
+          {"self_maintenance_provider_identity_ambiguous",
+           "provider installed identity does not exactly bind the generation",
+           inspected ? generation.install_id : inspected.error().detail});
+    return facman::core::Result<void>::success();
+  }
+
+  facman::core::Result<void> uninstall_generation(
+      const facman::self_maintenance::Generation &generation,
+      bool active,
+      const facman::self_maintenance::CoordinatorLockToken
+          &coordinator_lock) override {
+    facman::self_setup::Request request;
+    request.operation = facman::self_setup::Operation::uninstall;
+    request.install_id = generation.install_id;
+    request.maintenance_launcher = generation.maintenance_launcher;
+    request.install_root = generation.install_root;
+    request.state_root = generation.state_root;
+    request.acceptance_root = generation.acceptance_root;
+    request.product_version = generation.product_version;
+    request.apply = true;
+    request.coordinator_lock = &coordinator_lock;
+    if (active && options_.shell_integration)
+      request.native_effects = &native_effects_;
+    auto removed = facman::self_setup::execute(request);
+    if (!removed)
+      return facman::core::Result<void>::failure(removed.error());
+    return facman::core::Result<void>::success();
+  }
+
+private:
+  const Options &options_;
+  fs::path coordinator_root_;
+  SetupNativeEffects &native_effects_;
+};
+
 } // namespace
 
 int wmain(int argc, wchar_t **argv) {
@@ -2144,9 +2225,58 @@ int wmain(int argc, wchar_t **argv) {
   if (options.operation == facman::self_setup::Operation::verify ||
       options.operation == facman::self_setup::Operation::repair ||
       options.operation == facman::self_setup::Operation::uninstall) {
-    auto active = facman::self_maintenance::discover_active(
+    const fs::path coordinator_root =
         (options.state_root.parent_path() / "setup-coordinator.v1")
-            .lexically_normal());
+            .lexically_normal();
+    if (options.operation == facman::self_setup::Operation::uninstall) {
+      auto chain = facman::self_maintenance::discover_activation_chain(
+          coordinator_root);
+      if (!chain) {
+        print_error(chain.error(), options.json);
+        return 4;
+      }
+      if (chain.value().has_value()) {
+        const auto &generation = chain.value()->generations.back();
+        if (!same_path(generation.logical_root, options.install_root) ||
+            !same_path(generation.state_root, options.state_root) ||
+            !same_path(generation.acceptance_root, options.acceptance_root)) {
+          print_error({"self_maintenance_lineage_mismatch",
+                       "uninstall roots do not bind the active activation chain",
+                       generation.install_id}, options.json);
+          return 4;
+        }
+        SetupNativeEffects retirement_native_effects;
+        SetupRetirementEffects retirement_effects(
+            options, coordinator_root, retirement_native_effects);
+        facman::self_maintenance::RetirementRequest retirement;
+        retirement.coordinator_root = coordinator_root;
+        retirement.apply = options.apply;
+        auto retired = facman::self_maintenance::retire_active(
+            retirement, retirement_effects);
+        if (!retired) {
+          print_error(retired.error(), options.json);
+          return 4;
+        }
+        if (options.json) {
+          facman::core::json::ObjectBuilder output;
+          output.add_string("schema", "facman.self_setup_cli.v1");
+          output.add_string("status", "ok");
+          output.add_string("operation", "uninstall");
+          output.add_string("phase", retired.value().phase);
+          output.add_string("retirement_journal",
+                            facman::platform::path_to_utf8(
+                                retired.value().journal_directory));
+          std::cout << output.serialize() << '\n';
+        } else if (retired.value().phase == "planned") {
+          std::cout << "FacMan activation-chain retirement is planned. Repeat with --yes to apply it.\n";
+        } else {
+          std::cout << "FacMan activation-chain retirement "
+                    << retired.value().phase << ".\n";
+        }
+        return 0;
+      }
+    }
+    auto active = facman::self_maintenance::discover_active(coordinator_root);
     if (!active) {
       print_error(active.error(), options.json);
       return 4;
@@ -2156,14 +2286,6 @@ int wmain(int argc, wchar_t **argv) {
       print_error({"self_maintenance_active_generation_unsupported",
                    "verify of an activation-chain installation must use a "
                    "future chain-aware maintenance command",
-                   active.value()->active.install_id}, options.json);
-      return 4;
-    }
-    if (active.value().has_value() &&
-        options.operation == facman::self_setup::Operation::uninstall) {
-      print_error({"self_maintenance_active_generation_unsupported",
-                   "uninstall is refused while any FacMan activation chain "
-                   "exists; chain retirement is not available in this checkpoint",
                    active.value()->active.install_id}, options.json);
       return 4;
     }

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import subprocess
 import sys
 import unittest
@@ -24,6 +25,23 @@ class ProviderAdoptionSuccessorTests(unittest.TestCase):
         changed["current_inputs"]["providers_lock"] = "0" * 64
         problems = successor.validate(record=changed)
         self.assertTrue(any("current input closure differs" in item for item in problems))
+
+    def test_product_only_successor_scope_is_closed(self) -> None:
+        changed = copy.deepcopy(self.record)
+        changed["product_version_successor"]["qualification"] = "machine_qualified"
+        problems = successor.validate(record=changed)
+        self.assertTrue(
+            any("product version successor differs" in item for item in problems),
+            problems,
+        )
+
+    def test_unrelated_product_input_change_cannot_pass_version_normalization(self) -> None:
+        data = (successor.ROOT / "release/index/dependency_lock.v1.toml").read_bytes()
+        changed = data.replace(b'miniz-3.1.2.zip', b'miniz-3.1.3.zip')
+        self.assertNotEqual(
+            hashlib.sha256(successor._normalise_product_version_successor(changed)).hexdigest(),
+            successor.ADOPTION_INPUTS["dependency_lock"],
+        )
 
     def test_current_projection_binds_six_jobs_without_an_aggregate(self) -> None:
         self.assertIsNone(self.record["projection_source"]["aggregate_job"])

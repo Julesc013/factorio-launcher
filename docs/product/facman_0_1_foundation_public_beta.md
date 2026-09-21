@@ -3,7 +3,8 @@
 FacMan 0.1 is shaped like the eventual 1.0 product while deliberately carrying
 a smaller, evidence-backed feature set. It is one product named **FacMan**, one
 terminal executable named `facman`, one same-binary TUI route (`facman tui`),
-and an existing Alpha.5 portable/setup distribution. Prospective corrected
+and an allocated, unqualified Alpha.6 product identity. The existing Alpha.5
+portable/setup distribution is historical evidence only. Prospective corrected
 delivery requirements are recorded in `release/index/plan.v1.toml` under
 `delivery_train`; their in-progress admission does not qualify new packages or
 activate support, execution, signing or publication.

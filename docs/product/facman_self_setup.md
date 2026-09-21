@@ -2,8 +2,9 @@
 
 The current FacMan 0.1 contract defines one self-contained offline setup
 package per admitted platform. Setup installs FacMan itself; it never installs,
-updates, launches, repairs, or removes Factorio. Exact `0.1.0-alpha.5` products
-remain candidate-workflow outputs until their platform evidence is recorded.
+updates, launches, repairs, or removes Factorio. Historical exact
+`0.1.0-alpha.5` products remain candidate-workflow evidence; current
+`0.1.0-alpha.6` products remain unqualified until their platform evidence is recorded.
 
 ## Windows x64
 
@@ -115,12 +116,19 @@ state must remain a stable descendant of that acceptance authority.
 
 A verified legacy `facman.self` installation is adopted with one deterministic,
 idempotent migration genesis before its first applied update or downgrade. A
-provider plan refusal occurs before that genesis is written. Until activation
-chain retirement and multi-generation removal are implemented, every uninstall
-is refused while a chain exists. Repair is limited to a verified active migrated
-`facman.self`; active side-by-side generations are refused. Generic `verify`
-also refuses an activation-chain installation instead of accidentally routing
-to the legacy install ID.
+provider plan refusal occurs before that genesis is written. Chain uninstall
+records an immutable exact-head retirement intent and step markers, removes
+deduplicated retained generations before the active generation, and uses the
+native shell adapter only for that final active step. An entered incomplete
+step, a changed/foreign chain or marker, nested setup journal, or provider/native
+identity ambiguity requires recovery and is not replayed. An incomplete
+retirement blocks every ordinary activation-chain transition; only the exact
+retirement coordinator can pass its call-scoped lock proof into the nested
+uninstall. Completion leaves the immutable activation history available while discovery reports no active chain.
+Repair is limited to a verified active migrated `facman.self`; active
+side-by-side generations are refused. Generic `verify` also refuses an
+activation-chain installation instead of accidentally routing to the legacy
+install ID.
 
 Windows shortcut cutover accepts only the exact old or exact new entrypoint.
 It keeps an operation-bound same-directory backup so an interruption between
@@ -190,7 +198,8 @@ installed-state and receipts, and preserves workspaces and Factorio data.
 
 ## Current limits
 
-- `0.1.0-alpha.5` is an implementation candidate, not a published release.
+- `0.1.0-alpha.5` is historical implementation-candidate evidence, not a
+  published release; `0.1.0-alpha.6` is allocated but unqualified.
 - Canonical-stage equivalence is contract-tested; exact six-asset candidate
   lifecycle receipts remain pending.
 - All packages are unsigned; macOS is not notarized.
@@ -200,7 +209,7 @@ installed-state and receipts, and preserves workspaces and Factorio data.
   pinned production-provider bridge, public setup routing, deterministic legacy
   adoption, exact Windows cutover adapter, and inherited-handle primitive form
   a focused, locally tested source slice.
-  Multi-generation repair/removal, activation-chain retirement, a full
+  Multi-generation repair, retention garbage collection, a full
   parent-exit/helper-resume run, and two source-distinct produced-package
   lifecycle qualification remain pending. The
   active WorkUnits therefore remain open.

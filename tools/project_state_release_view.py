@@ -45,7 +45,7 @@ def active_release_state(root: Path, load_toml: LoadToml) -> dict[str, Any]:
         "authority": ACTIVE_VIEW.as_posix(),
         "view_role": active["view_role"],
         "product_version": active["product_version"],
-        "candidate_receipt": active["candidate_receipt"],
+        "candidate_receipt": active.get("candidate_receipt", ""),
         "active_profiles": list(active["active_profile_ids"]),
         "reference_profiles": list(active["reference_profile_ids"]),
         "selected_preview_profiles": list(active["selected_preview_profile_ids"]),

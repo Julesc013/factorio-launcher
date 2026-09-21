@@ -170,7 +170,6 @@ def validate(values: dict[str, dict[str, Any]]) -> list[str]:
         problems.extend(_schema_problems(name, instance, schema))
 
     bindings = {
-        "candidate_receipt": "release/index/alpha5_final_candidate_closeout.v1.toml",
         "artifact_matrix": "release/index/artifact_matrix.v1.toml",
         "package_manifest": "release/index/package_manifest.v1.toml",
         "support_matrix": "release/index/support_matrix.v1.toml",
@@ -374,21 +373,28 @@ def validate(values: dict[str, dict[str, Any]]) -> list[str]:
     current_candidate = values["current_candidate"]
     historical_candidate = values["historical_candidate"]
     historical_distribution = values["historical_distribution"]
-    if current_candidate.get("record_role") != "current_alpha5_candidate":
-        problems.append("final Alpha.5 receipt is not the current candidate")
+    if current_candidate.get("record_role") != "historical_alpha5_final_candidate":
+        problems.append("final Alpha.5 receipt must retain its historical record role")
+    if current_candidate.get("current_candidate") is not False:
+        problems.append("final Alpha.5 receipt presents as current")
+    if "candidate_receipt" in active:
+        problems.append("allocated Alpha.6 has no current candidate receipt")
     if historical_candidate.get("record_role") != "historical_alpha5_candidate":
         problems.append("earlier Alpha.5 receipt lacks a historical role")
     if historical_candidate.get("current_candidate") is not False:
         problems.append("earlier Alpha.5 receipt presents as current")
     if historical_candidate.get("successor_current_candidate_receipt") != (
-        active.get("candidate_receipt")
+        "release/index/alpha5_final_candidate_closeout.v1.toml"
     ):
-        problems.append("earlier Alpha.5 receipt does not bind its current successor")
+        problems.append("earlier Alpha.5 receipt does not bind its final historical successor")
     _exact(
         problems,
         "historical candidate receipts",
         active.get("historical_candidate_receipts"),
-        ("release/index/alpha5_promotion_candidate_closeout.v1.toml",),
+        (
+            "release/index/alpha5_final_candidate_closeout.v1.toml",
+            "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+        ),
     )
     _exact(
         problems,
@@ -401,9 +407,9 @@ def validate(values: dict[str, dict[str, Any]]) -> list[str]:
     if historical_distribution.get("current_candidate") is not False:
         problems.append("Alpha.3 distribution presents as current")
     if historical_distribution.get("successor_current_candidate_receipt") != (
-        active.get("candidate_receipt")
+        "release/index/alpha5_final_candidate_closeout.v1.toml"
     ):
-        problems.append("Alpha.3 distribution does not bind its current successor")
+        problems.append("Alpha.3 distribution does not bind its final historical successor")
 
     for key in (
         "release_authority",

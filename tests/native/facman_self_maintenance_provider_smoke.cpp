@@ -40,8 +40,11 @@ std::string nested(const std::string &text, const char *object,
 }
 
 struct Clock final : facman::self_setup::Clock {
+  unsigned int second = 0;
   std::string after(const std::string &) override {
-    return "9999-12-31T23:59:59Z";
+    ++second;
+    return "2027-01-01T00:00:" +
+        std::string(second < 10U ? "0" : "") + std::to_string(second) + "Z";
   }
 };
 
@@ -57,9 +60,17 @@ struct Provider final : facman::self_setup::ProviderEffects {
   bool wrong_verify_ownership = false;
   bool bad_verify_summary = false;
   bool wrong_verify_digest = false;
+  bool alternate_allowed_effect = false;
+  bool alternate_plan_digest = false;
+  bool add_response_padding = false;
+  std::string last_plan_created_at;
+  std::string last_plan_digest;
+  std::string last_plan_response;
   std::string transaction_id;
   std::string inspected_state_digest;
   std::string ownership_digest = std::string(64, '2');
+  std::string last_verification_digest = std::string(64, '1');
+  std::string last_verification_status = "pass";
   std::vector<std::string> commands;
 
   std::string recipe_digest() const {
@@ -96,9 +107,9 @@ struct Provider final : facman::self_setup::ProviderEffects {
       entrypoints.add_object(item);
     }
     json::ObjectBuilder verification;
-    verification.add_string("report_digest", std::string(64, '1'));
+    verification.add_string("report_digest", last_verification_digest);
     verification.add_string("report_id", "report.previous");
-    verification.add_string("status", "pass");
+    verification.add_string("status", last_verification_status);
     verification.add_string("verified_at", "2026-09-16T00:00:00Z");
     json::ObjectBuilder abi;
     abi.add_unsigned_integer("major", 1U);
@@ -147,6 +158,7 @@ struct Provider final : facman::self_setup::ProviderEffects {
         return facman::core::Result<std::string>::failure(
             {"refused", "injected plan refusal", ""});
       const std::string request_id = member(payload, "request_id");
+      last_plan_created_at = member(payload, "created_at");
       if (member(payload, "install_id") != expected.target.install_id ||
           nested(payload, "target", "root") !=
               facman::platform::path_to_utf8(expected.target.install_root) ||
@@ -201,7 +213,8 @@ struct Provider final : facman::self_setup::ProviderEffects {
       json::ObjectBuilder effect;
       effect.add_string("effect_id", "effect.0");
       effect.add_string("kind", "write_file");
-      effect.add_string("relative_path", "FacMan.exe");
+      effect.add_string("relative_path", alternate_allowed_effect
+          ? "FacMan-revised.exe" : "FacMan.exe");
       effect.add_string("root_class", "owned_target");
       json::ArrayBuilder effects;
       effects.add_object(effect);
@@ -231,7 +244,8 @@ struct Provider final : facman::self_setup::ProviderEffects {
       plan.add_array("effects", effects);
       plan.add_object("input_identity", input);
       plan.add_string("operation", "install_local");
-      plan.add_string("plan_digest", std::string(64, 'a'));
+      last_plan_digest = std::string(64, alternate_plan_digest ? 'b' : 'a');
+      plan.add_string("plan_digest", last_plan_digest);
       plan.add_string("plan_id", request_id);
       plan.add_array("planned_entries", entries);
       plan.add_object("refusal_policy", refusal);
@@ -241,7 +255,10 @@ struct Provider final : facman::self_setup::ProviderEffects {
       plan.add_string("status", "planned");
       plan.add_object("target", target);
       plan.add_object("totals", totals);
-      return facman::core::Result<std::string>::success(envelope(plan));
+      std::string response = envelope(plan);
+      if (add_response_padding) response += "\n";
+      last_plan_response = response;
+      return facman::core::Result<std::string>::success(std::move(response));
     }
     if (name == "install_local.apply") {
       if (empty_apply_payload)
@@ -378,7 +395,187 @@ int main() {
   maintenance::ProviderBridge bridge(root / "state", root, &effects, &clock);
   bool ok = true;
   const auto prepared = bridge.review_install_local(plan);
+  const auto prepared_retry = bridge.review_install_local(plan);
+  Provider restarted_effects;
+  restarted_effects.expected = plan;
+  // A restart receives a newly serialized response (and may receive a new
+  // created_at); its provider byte digest is intentionally different although
+  // every validated effect semantic is identical.
+  restarted_effects.alternate_plan_digest = true;
+  restarted_effects.add_response_padding = true;
+  maintenance::ProviderBridge restarted_bridge(
+      root / "state", root, &restarted_effects, &clock);
+  const auto restarted_prepared = restarted_bridge.review_install_local(plan);
+  Provider changed_effect_effects;
+  changed_effect_effects.expected = plan;
+  changed_effect_effects.alternate_allowed_effect = true;
+  changed_effect_effects.alternate_plan_digest = true;
+  maintenance::ProviderBridge changed_effect_bridge(
+      root / "state", root, &changed_effect_effects, &clock);
+  const auto changed_effect_prepared = changed_effect_bridge.review_install_local(plan);
+  const fs::path retained_package = root / "state" / "epoch-handoff" /
+      "maintenance.provider.smoke" / "package.zip";
+  fs::create_directories(retained_package.parent_path());
+  fs::copy_file(plan.package, retained_package,
+                fs::copy_options::overwrite_existing);
+  auto retained_plan = plan;
+  retained_plan.package = retained_package;
+  Provider retained_final_effects;
+  retained_final_effects.expected = retained_plan;
+  maintenance::ProviderBridge retained_final_bridge(
+      root / "state", root, &retained_final_effects, &clock);
+  const auto retained_final_prepared = retained_final_bridge.review_install_local(retained_plan);
+  Provider retained_staging_effects;
+  retained_staging_effects.expected = retained_plan;
+  maintenance::ProviderBridge retained_staging_bridge(
+      root / "state", root, &retained_staging_effects, &clock);
+  const auto retained_staging_prepared = retained_staging_bridge.review_install_local(retained_plan);
   ok &= require(prepared.ok, "install_local plan was not prepared");
+  ok &= require(prepared_retry.ok && restarted_prepared.ok &&
+                    changed_effect_prepared.ok &&
+                    retained_final_prepared.ok && retained_staging_prepared.ok &&
+                    prepared.receipt_sha256 == prepared_retry.receipt_sha256 &&
+                    prepared.receipt_sha256 == restarted_prepared.receipt_sha256 &&
+                    retained_final_prepared.receipt_sha256 ==
+                        retained_staging_prepared.receipt_sha256 &&
+                    prepared.receipt_sha256 != retained_final_prepared.receipt_sha256,
+                "provider review receipt was not stable across retry/restart or distinct by retained path");
+  ok &= require(!effects.last_plan_created_at.empty() &&
+                    !restarted_effects.last_plan_created_at.empty() &&
+                    effects.last_plan_created_at != restarted_effects.last_plan_created_at &&
+                    effects.last_plan_digest != restarted_effects.last_plan_digest &&
+                    effects.last_plan_response != restarted_effects.last_plan_response &&
+                    prepared.receipt_sha256 != changed_effect_prepared.receipt_sha256,
+                "provider review receipt did not bind a changed allowed effect for handoff retry refusal");
+  const auto bound = bridge.bind_install_local(plan, prepared.receipt_sha256);
+  Provider fresh_binding_effects;
+  fresh_binding_effects.expected = plan;
+  maintenance::ProviderBridge fresh_binding_bridge(
+      root / "state", root, &fresh_binding_effects, &clock);
+  const auto rehydrated = bound
+      ? fresh_binding_bridge.rehydrate_install_local(plan, bound.value())
+      : facman::core::Result<void>::failure({"test", "binding unavailable", {}});
+  const auto bound_applied = rehydrated
+      ? fresh_binding_bridge.apply_bound_install_local(plan, bound.value())
+      : maintenance::EffectResult{false, false, {}, "rehydration failed"};
+  const auto bound_inspected = bound_applied.ok
+      ? fresh_binding_bridge.inspect_installed(plan, bound.value())
+      : maintenance::EffectResult{false, false, {}, "bound apply failed"};
+  const auto terminal_verified = bound_applied.ok
+      ? fresh_binding_bridge.validate_terminal_verification(
+          plan, bound.value(), std::string(64, '1'))
+      : maintenance::EffectResult{false, false, {}, "bound apply failed"};
+  auto wrong_terminal_transaction = bound ? bound.value() : maintenance::ProviderApplyBinding{};
+  wrong_terminal_transaction.transaction_id = "tx.m.wrong";
+  const auto terminal_wrong_transaction = bound_applied.ok
+      ? fresh_binding_bridge.validate_terminal_verification(
+          plan, wrong_terminal_transaction, std::string(64, '1'))
+      : maintenance::EffectResult{true, false, {}, {}};
+  Provider terminal_status_effects;
+  terminal_status_effects.expected = plan;
+  terminal_status_effects.transaction_id = bound ? bound.value().transaction_id : std::string();
+  terminal_status_effects.last_verification_status = "warn";
+  maintenance::ProviderBridge terminal_status_bridge(root / "state", root,
+                                                       &terminal_status_effects, &clock);
+  const auto terminal_wrong_status = bound
+      ? terminal_status_bridge.validate_terminal_verification(plan, bound.value(),
+                                                               std::string(64, '1'))
+      : maintenance::EffectResult{true, false, {}, {}};
+  Provider terminal_digest_effects;
+  terminal_digest_effects.expected = plan;
+  terminal_digest_effects.transaction_id = bound ? bound.value().transaction_id : std::string();
+  terminal_digest_effects.last_verification_digest = std::string(64, '8');
+  maintenance::ProviderBridge terminal_digest_bridge(root / "state", root,
+                                                       &terminal_digest_effects, &clock);
+  const auto terminal_wrong_digest = bound
+      ? terminal_digest_bridge.validate_terminal_verification(plan, bound.value(),
+                                                               std::string(64, '1'))
+      : maintenance::EffectResult{true, false, {}, {}};
+  const auto rejects_cached_binding_mutation = [&](auto mutate) {
+    if (!bound) return false;
+    Provider mutation_effects;
+    mutation_effects.expected = plan;
+    maintenance::ProviderBridge mutation_bridge(root / "state", root,
+                                                  &mutation_effects, &clock);
+    if (!mutation_bridge.rehydrate_install_local(plan, bound.value())) return false;
+    auto altered = bound.value();
+    mutate(altered);
+    const auto rejected = mutation_bridge.apply_bound_install_local(plan, altered);
+    return !rejected.ok && mutation_effects.commands ==
+        std::vector<std::string>{"install_local.plan"};
+  };
+  const bool all_cached_binding_fields_refused =
+      rejects_cached_binding_mutation([](auto &value) {
+        value.provider_plan_sha256[0] = value.provider_plan_sha256[0] == '0' ? '1' : '0';
+      }) &&
+      rejects_cached_binding_mutation([](auto &value) { value.transaction_id += ".x"; }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.apply_sha256[0] = value.apply_sha256[0] == '0' ? '1' : '0';
+      }) &&
+      rejects_cached_binding_mutation([](auto &value) { value.apply_payload += "x"; }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.semantic_digest[0] = value.semantic_digest[0] == '0' ? '1' : '0';
+      }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.bridge_key[0] = value.bridge_key[0] == '0' ? '1' : '0';
+      }) &&
+      rejects_cached_binding_mutation([](auto &value) { value.reviewed_plan_id += ".x"; }) &&
+      rejects_cached_binding_mutation([](auto &value) {
+        value.reviewed_plan_digest[0] = value.reviewed_plan_digest[0] == '0' ? '1' : '0';
+      }) &&
+      rejects_cached_binding_mutation([](auto &value) { value.plan_created_at = "2026-01-01T00:00:00Z"; }) &&
+      rejects_cached_binding_mutation([](auto &value) { value.request_id += ".x"; });
+  auto tampered_binding = bound ? bound.value() : maintenance::ProviderApplyBinding{};
+  tampered_binding.apply_payload += "x";
+  Provider tampered_binding_effects;
+  tampered_binding_effects.expected = plan;
+  maintenance::ProviderBridge tampered_binding_bridge(
+      root / "state", root, &tampered_binding_effects, &clock);
+  auto foreign_binding = bound ? bound.value() : maintenance::ProviderApplyBinding{};
+  foreign_binding.bridge_key = std::string(64, 'f');
+  Provider foreign_binding_effects;
+  foreign_binding_effects.expected = plan;
+  maintenance::ProviderBridge foreign_binding_bridge(
+      root / "state", root, &foreign_binding_effects, &clock);
+  ok &= require(bound && rehydrated && bound_applied.ok && bound_inspected.ok &&
+                    terminal_verified.ok && !terminal_wrong_transaction.ok &&
+                    !terminal_wrong_status.ok && !terminal_wrong_digest.ok &&
+                    all_cached_binding_fields_refused &&
+                    terminal_status_effects.commands == std::vector<std::string>{"installed.inspect"} &&
+                    terminal_digest_effects.commands == std::vector<std::string>{"installed.inspect"} &&
+                    fresh_binding_effects.commands == std::vector<std::string>{
+                        "install_local.plan", "install_local.apply", "installed.inspect",
+                        "installed.inspect", "installed.inspect"} &&
+                    !tampered_binding_bridge.rehydrate_install_local(plan, tampered_binding) &&
+                    tampered_binding_effects.commands.empty() &&
+                    !foreign_binding_bridge.rehydrate_install_local(plan, foreign_binding) &&
+                    foreign_binding_effects.commands.empty(),
+                "fresh bridge did not exactly rehydrate or refuse a foreign provider binding");
+  Provider alternate_binding_effects;
+  alternate_binding_effects.expected = plan;
+  alternate_binding_effects.alternate_allowed_effect = true;
+  maintenance::ProviderBridge alternate_binding_bridge(
+      root / "state", root, &alternate_binding_effects, &clock);
+  const auto alternate_binding = alternate_binding_bridge.bind_install_local(
+      plan, alternate_binding_bridge.review_install_local(plan).receipt_sha256);
+  auto mixed_binding = alternate_binding ? alternate_binding.value()
+                                         : maintenance::ProviderApplyBinding{};
+  if (bound) {
+    mixed_binding.provider_plan_sha256 = bound.value().provider_plan_sha256;
+    mixed_binding.semantic_digest = bound.value().semantic_digest;
+  }
+  Provider mixed_binding_effects;
+  mixed_binding_effects.expected = plan;
+  mixed_binding_effects.alternate_allowed_effect = true;
+  maintenance::ProviderBridge mixed_binding_bridge(
+      root / "state", root, &mixed_binding_effects, &clock);
+  ok &= require(alternate_binding && bound &&
+                    !mixed_binding_bridge.rehydrate_install_local(plan, mixed_binding) &&
+                    mixed_binding_effects.commands == std::vector<std::string>{"install_local.plan"},
+                "mixed provider semantic digest and alternate allowed effect reached apply");
+  const auto restarted_applied = restarted_bridge.install_local(plan);
+  ok &= require(restarted_applied.ok,
+                "fresh bridge did not retain its exact reviewed apply payload");
   const auto applied = bridge.install_local(plan);
   ok &= require(applied.ok, "reviewed install_local plan was not applied");
   const auto inspected = bridge.inspect_installed(plan);

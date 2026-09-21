@@ -9,6 +9,8 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace facman::self_maintenance {
 
@@ -48,6 +50,7 @@ struct Generation {
 struct PackageInspection {
   std::filesystem::path package;
   std::string package_sha256;
+  std::string maintenance_launcher_sha256;
   PackageDescriptor descriptor;
 };
 
@@ -56,6 +59,110 @@ struct ActiveState {
   std::optional<Generation> previous;
   std::string activation_name;
   std::string activation_sha256;
+};
+
+// The activation records are immutable history.  This view exposes their
+// complete, validated generation sequence (including repeated generations)
+// so a coordinator can make a bounded retirement decision without inferring
+// lineage from only the current head.
+struct ActivationChain {
+  std::vector<Generation> generations;
+  std::string activation_name;
+  std::string activation_sha256;
+};
+
+// A lifecycle epoch is an immutable, content-addressed boundary around a
+// self-maintenance activation history.  The all-zero epoch id is reserved for
+// the synthesized compatibility view of the pre-epoch (v1) layout and is
+// never persisted beneath coordinator/epochs.
+struct LifecycleEpoch {
+  std::string epoch_id;
+  std::filesystem::path acceptance_root;
+  std::string genesis_generation_id;
+  std::filesystem::path logical_root;
+  std::string predecessor_epoch_id;
+  std::string predecessor_manifest_sha256;
+  std::string predecessor_retirement_sha256;
+  std::filesystem::path state_root;
+
+  // Observed immutable bytes, populated by discovery.  They are not members
+  // of the persisted epoch identity document.
+  std::string manifest_sha256;
+  std::string retirement_sha256;
+  bool compatibility_epoch = false;
+};
+
+struct LifecycleEpochChain {
+  std::vector<LifecycleEpoch> epochs;
+};
+
+struct EpochActiveState {
+  LifecycleEpoch epoch;
+  ActiveState active;
+};
+
+struct EpochGenesisRequest {
+  std::filesystem::path coordinator_root;
+  std::string epoch_id;
+  Generation generation;
+  bool apply = false;
+};
+
+struct RetirementStep {
+  Generation generation;
+  bool active = false;
+};
+
+struct RetirementRequest {
+  std::filesystem::path coordinator_root;
+  bool apply = false;
+};
+
+struct RetirementResponse {
+  std::string phase;
+  std::filesystem::path journal_directory;
+  std::vector<RetirementStep> steps;
+};
+
+class RetirementEffects;
+
+// An unforgeable, call-scoped proof that retire_active owns the exact global
+// coordinator lock.  The setup runtime accepts this proof only for the same
+// coordinator, avoiding a recursive acquisition without trusting a caller-set
+// boolean.
+class CoordinatorLockToken {
+public:
+  CoordinatorLockToken(const CoordinatorLockToken &) = delete;
+  CoordinatorLockToken &operator=(const CoordinatorLockToken &) = delete;
+  const std::filesystem::path &coordinator_root() const {
+    return coordinator_root_;
+  }
+  const std::string &operation_id() const { return operation_id_; }
+
+private:
+  CoordinatorLockToken(std::filesystem::path coordinator_root,
+                       std::string operation_id)
+      : coordinator_root_(std::move(coordinator_root)),
+        operation_id_(std::move(operation_id)) {}
+  friend facman::core::Result<RetirementResponse> retire_active(
+      const RetirementRequest &request, RetirementEffects &effects);
+
+  std::filesystem::path coordinator_root_;
+  std::string operation_id_;
+};
+
+// The application supplies the provider/native edge.  It must reject any
+// foreign or ambiguous installed identity before uninstalling a step.  The
+// coordinator persists an entered marker before calling uninstall_generation,
+// which makes an interrupted edge recovery-required rather than replayable.
+class RetirementEffects {
+public:
+  virtual ~RetirementEffects() = default;
+  virtual facman::core::Result<void> inspect_retirement_generation(
+      const Generation &generation, bool active) = 0;
+  virtual facman::core::Result<void> uninstall_generation(
+      const Generation &generation, bool active,
+      const CoordinatorLockToken &coordinator_lock) = 0;
 };
 
 struct Request {
@@ -92,6 +199,143 @@ struct EffectResult {
   bool outcome_unknown = false;
   std::string receipt_sha256;
   std::string detail;
+};
+
+struct RetainedMaintenanceInputs {
+  std::filesystem::path package;
+  std::string package_sha256;
+  std::filesystem::path helper;
+  std::string helper_sha256;
+};
+
+struct EpochTransitionRequest {
+  std::filesystem::path coordinator_root;
+  std::string epoch_id;
+  Operation operation = Operation::update;
+  std::string operation_id;
+  PackageInspection package;
+  bool apply = false;
+};
+
+struct EpochTransitionPreparation {
+  std::string phase;
+  Plan transition;
+  std::filesystem::path journal;
+  std::string journal_sha256;
+  RetainedMaintenanceInputs inputs;
+  std::string nonce;
+};
+
+// The provider review receipt in the handoff is insufficient to replay an
+// external apply after a process exit.  This immutable binding records the
+// exact transaction and canonical apply request chosen by the provider.
+struct ProviderApplyBinding {
+  std::string provider_plan_sha256;
+  std::string transaction_id;
+  std::string apply_sha256;
+  std::string apply_payload;
+  std::string semantic_digest;
+  std::string bridge_key;
+  std::string reviewed_plan_id;
+  std::string reviewed_plan_digest;
+  std::string plan_created_at;
+  std::string request_id;
+};
+
+struct EpochContinuationRequest {
+  std::filesystem::path coordinator_root;
+  std::string operation_id;
+  std::string nonce;
+  std::string journal_sha256;
+  bool apply = false;
+};
+
+struct EpochContinuationResponse {
+  std::string phase;
+  Plan transition;
+  std::filesystem::path journal;
+  ProviderApplyBinding provider;
+};
+
+struct EpochPublicationRequest {
+  std::filesystem::path coordinator_root;
+  std::string operation_id;
+  std::string nonce;
+  std::string journal_sha256;
+  bool apply = false;
+};
+
+struct EpochPublicationResponse {
+  std::string phase;
+  Generation generation;
+  std::filesystem::path journal;
+};
+
+// Completes only the native ownership hand-off for an already published epoch
+// genesis.  It deliberately has no generation, activation, or provider-apply
+// authority.
+struct EpochShellCutoverRequest {
+  std::filesystem::path coordinator_root;
+  std::string operation_id;
+  std::string nonce;
+  std::string journal_sha256;
+  bool apply = false;
+};
+
+struct EpochShellCutoverResponse {
+  std::string phase;
+  Generation generation;
+  std::filesystem::path journal;
+};
+
+class EpochPublicationEffects {
+public:
+  virtual ~EpochPublicationEffects() = default;
+  virtual EffectResult inspect_installed(
+      const Plan &plan, const ProviderApplyBinding &binding) = 0;
+  virtual EffectResult validate_terminal_verification(
+      const Plan &plan, const ProviderApplyBinding &binding,
+      const std::string &receipt_sha256) = 0;
+};
+
+class EpochShellCutoverEffects : public EpochPublicationEffects {
+public:
+  virtual ~EpochShellCutoverEffects() = default;
+  virtual ShellState inspect_shortcut(const Plan &plan) = 0;
+  virtual ShellState inspect_registration(const Plan &plan) = 0;
+  virtual EffectResult cutover_shortcut(const Plan &plan) = 0;
+  virtual EffectResult cutover_registration(const Plan &plan) = 0;
+};
+
+class EpochPreparationEffects {
+public:
+  virtual ~EpochPreparationEffects() = default;
+  virtual CandidateState inspect_candidate(const Plan &plan) = 0;
+  virtual EffectResult review_install_local(const Plan &plan) = 0;
+  virtual facman::core::Result<RetainedMaintenanceInputs> retain_handoff_inputs(
+      const Plan &plan) = 0;
+};
+
+// This deliberately stops at an exact provider-verified candidate.  A later
+// slice owns generation publication, activation, and native shell cutover.
+class EpochContinuationEffects : public EpochPublicationEffects {
+public:
+  virtual ~EpochContinuationEffects() = default;
+  virtual CandidateState inspect_candidate(const Plan &plan) = 0;
+  virtual facman::core::Result<ProviderApplyBinding> bind_install_local(
+      const Plan &plan, const std::string &expected_provider_plan_sha256) = 0;
+  virtual facman::core::Result<void> rehydrate_install_local(
+      const Plan &plan, const ProviderApplyBinding &binding) = 0;
+  virtual EffectResult apply_bound_install_local(
+      const Plan &plan, const ProviderApplyBinding &binding) = 0;
+  virtual EffectResult inspect_installed(
+      const Plan &plan, const ProviderApplyBinding &binding) override = 0;
+  virtual EffectResult verify_installed(const Plan &plan) = 0;
+  // Revalidates an already durable provider verification receipt without
+  // issuing a new timestamped verification request.
+  virtual EffectResult validate_terminal_verification(
+      const Plan &plan, const ProviderApplyBinding &binding,
+      const std::string &receipt_sha256) override = 0;
 };
 
 // The provider surface deliberately exposes only install_local. FacMan never
@@ -142,9 +386,53 @@ facman::core::Result<Generation> make_generation(
     const std::filesystem::path &acceptance_root);
 facman::core::Result<std::optional<ActiveState>> discover_active(
     const std::filesystem::path &coordinator_root);
+facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(
+    const std::filesystem::path &coordinator_root);
+facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
+    const std::filesystem::path &coordinator_root);
+facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
+    const std::filesystem::path &coordinator_root);
+facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transition(
+    const EpochTransitionRequest &request, EpochPreparationEffects &effects);
+facman::core::Result<Plan> admit_lifecycle_epoch_continuation(
+    const std::filesystem::path &coordinator_root,
+    const std::string &operation_id, const std::string &nonce,
+    const std::string &journal_sha256);
+facman::core::Result<EpochContinuationResponse>
+execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
+                                     EpochContinuationEffects &effects);
+facman::core::Result<EpochPublicationResponse>
+execute_lifecycle_epoch_publication(const EpochPublicationRequest &request,
+                                    EpochPublicationEffects &effects);
+facman::core::Result<EpochShellCutoverResponse>
+execute_lifecycle_epoch_shell_cutover(const EpochShellCutoverRequest &request,
+                                      EpochShellCutoverEffects &effects);
+facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
+    const std::filesystem::path &coordinator_root,
+    const LifecycleEpoch &proposed, bool apply);
+facman::core::Result<Generation> make_epoch_genesis_generation(
+    const LifecycleEpoch &epoch, const PackageDescriptor &descriptor,
+    const std::string &package_sha256);
+facman::core::Result<ActiveState> activate_lifecycle_epoch_genesis(
+    const EpochGenesisRequest &request);
+facman::core::Result<RetirementResponse> retire_active(
+    const RetirementRequest &request, RetirementEffects &effects);
 facman::core::Result<ActiveState> adopt_legacy(
     const std::filesystem::path &coordinator_root,
     const Generation &legacy, bool apply);
+
+namespace testing {
+
+// Test-only seam called after an epoch record has been pinned and read.
+using EpochRecordPinnedHook = void (*)(const std::filesystem::path &);
+void set_epoch_record_pinned_hook(EpochRecordPinnedHook hook) noexcept;
+// Test-only seam called after the canonical retained-input operation directory
+// has been opened through its held state-root ancestors.
+using EpochHandoffOperationPinnedHook = void (*)(const std::filesystem::path &);
+void set_epoch_handoff_operation_pinned_hook(
+    EpochHandoffOperationPinnedHook hook) noexcept;
+
+} // namespace testing
 
 // Stable names used by every setup root and every transition kind.
 std::filesystem::path global_lock_path(

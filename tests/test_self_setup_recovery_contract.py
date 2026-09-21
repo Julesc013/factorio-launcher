@@ -13,13 +13,16 @@ from tools import json_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = ROOT / "contracts/schema/facman/facman_setup_operation_journal.v1.schema.json"
+V1_SCHEMA_PATH = ROOT / "contracts/schema/facman/facman_setup_operation_journal.v1.schema.json"
+V2_SCHEMA_PATH = ROOT / "contracts/schema/facman/facman_setup_operation_journal.v2.schema.json"
 
 
 class SelfSetupRecoveryContractTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+        self.schema = json.loads(V1_SCHEMA_PATH.read_text(encoding="utf-8"))
         self.validator = jsonschema.Draft202012Validator(self.schema)
+        self.v2_schema = json.loads(V2_SCHEMA_PATH.read_text(encoding="utf-8"))
+        self.v2_validator = jsonschema.Draft202012Validator(self.v2_schema)
         self.value = {
             "schema": "facman.setup_operation_journal.v1",
             "operation_id": "setup.install.0123456789abcdef0123456789abcdef",
@@ -62,6 +65,13 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
     def assert_schema_invalid(self, value: dict) -> None:
         self.assertTrue(list(self.validator.iter_errors(value)))
 
+    def assert_v2_schema_valid(self, value: dict) -> None:
+        self.assertEqual(json_contract.validate(value, self.v2_schema), [])
+        self.assertEqual(list(self.v2_validator.iter_errors(value)), [])
+
+    def assert_v2_schema_invalid(self, value: dict) -> None:
+        self.assertTrue(list(self.v2_validator.iter_errors(value)))
+
     @staticmethod
     def set_operation(value: dict, operation: str) -> None:
         suffix = "0123456789abcdef0123456789abcdef"
@@ -78,6 +88,28 @@ class SelfSetupRecoveryContractTests(unittest.TestCase):
         self.assertFalse(self.schema["additionalProperties"])
         self.assertEqual(json_contract.validate(self.value, self.schema), [])
         self.assert_schema_valid(self.value)
+
+    def test_v1_remains_the_closed_legacy_journal_contract(self) -> None:
+        legacy_with_install_id = json.loads(json.dumps(self.value))
+        legacy_with_install_id["install_id"] = "facman.self"
+        self.assert_schema_invalid(legacy_with_install_id)
+
+    def test_v2_requires_a_bounded_exact_install_id(self) -> None:
+        value = json.loads(json.dumps(self.value))
+        value["schema"] = "facman.setup_operation_journal.v2"
+        value["install_id"] = "facman.self.generation.0123456789abcdef"
+        self.assertFalse(self.v2_schema["additionalProperties"])
+        self.assert_v2_schema_valid(value)
+        self.assert_schema_invalid(value)
+
+        missing = json.loads(json.dumps(value))
+        del missing["install_id"]
+        self.assert_v2_schema_invalid(missing)
+        for invalid_id in ("facman/self", "", "x" * 161):
+            with self.subTest(invalid_id=invalid_id):
+                invalid = json.loads(json.dumps(value))
+                invalid["install_id"] = invalid_id
+                self.assert_v2_schema_invalid(invalid)
 
     def test_identity_or_effect_substitution_is_refused_by_the_contract(self) -> None:
         for key, value in (

@@ -45,12 +45,61 @@ registration cutover.
 
 This checkpoint keeps completed generations for rollback. Repair is allowed
 only for a verified active migrated `facman.self` and refuses an active
-side-by-side generation. Uninstall refuses whenever an activation chain exists,
-including a migrated legacy genesis. Multi-generation repair/removal, chain
-retirement, retention policy, and garbage collection are not implemented here.
+side-by-side generation. Uninstall of an activation chain writes an immutable
+retirement intent under `setup-coordinator.v1/retirements`, bound to the exact
+head name/digest, complete activation sequence, and ordered unique generation
+identities. It removes retained generations without shell integration and the
+active generation last with the normal native adapter. Each invocation completes
+at most one retained step; an entered but uncompleted provider/native edge,
+foreign marker, changed chain, unresolved nested setup journal, or ambiguous
+identity is recovery-required. Once the retirement intent exists, ordinary
+update, downgrade, rollback, verify, and repair discovery is blocked until the
+same retirement is resumed. Nested setup skips its own lock only when given the
+coordinator's call-scoped proof for that exact lock root; isolated fixtures with
+a different setup coordinator acquire both locks. Completed retirement hides
+the active chain but preserves activation and generation history. Retention policy, garbage
+collection, and multi-generation repair remain outside this slice.
 
 Normal maintenance requires the Windows shell integration. `--no-shell-integration`
 is admitted only for a disposable qualification root that contains the exact
 root marker and an unexpired, root-bound fixture permit for the requested
 operation and apply mode. A production root or an unpermitted fixture is
 refused before coordinator, provider, or shell effects.
+
+## Gated source-distinct candidate transition
+
+The manually dispatched Windows product-candidate workflow can receive an exact
+40-character lowercase `self_maintenance_baseline_ref`. The workflow transfers
+that value through the process environment rather than interpolating it into a
+shell program. It builds that clean ancestor outside the
+checkout and accepts it only when its provider lock is byte-identical to the
+candidate's, its produced package records its own exact source revision, and
+its SemVer is strictly lower than the candidate package. The gated lifecycle
+then uses package A for install, package B for update, A for downgrade, and
+rollback for the final B cutover. It records the two package identities,
+exact generation and activation record contents, and actual current-user Start
+Menu and 64-bit HKCU observations against each activated physical root. The
+baseline setup, portable package, source/provider observations and payload
+equivalence receipt are copied into the uploaded evidence scope. Each produced
+baseline artifact is staged immediately, before the later payload-equivalence
+gate, and the staging receipt labels it `produced_unqualified` until that gate
+passes. A bounded attempt receipt remains available when build or transition
+qualification fails.
+
+The host verifier independently recomputes each domain-separated generation
+identity, the full side-by-side install ID, and the physical generation root
+from the logical root. It accepts `facman.self` only when the complete record is
+the exact retained legacy A record established by the migration genesis.
+Retained package, launcher, custody-receipt, and task-root marker reads reject
+links/reparse points, multiple hard links, unstable metadata, and paths outside
+their admitted roots before their bytes are trusted.
+
+When a package operation names the exact generation identity of the immediate
+retained predecessor, FacMan reuses that already validated generation. This is
+what permits a legacy logical-root A to be selected after side-by-side B was
+activated without creating a conflicting second record for A. Other retained
+generations cannot be selected through update or downgrade.
+
+This is evidence only after that optional job runs successfully on the declared
+Windows host. Its disposable account may retire the final chain through the
+same recovery-aware coordinator, but that is not yet full native qualification.

@@ -33,7 +33,8 @@ append-only ledger record.
 
 ## Current platform proof
 
-- The current product identity is `facman-0.1.0-alpha.5`. Exact candidate run
+- The current development product identity is `facman-0.1.0-alpha.6`; it is
+  unqualified and has no current candidate receipt. Historical exact candidate run
   `33603385303`, attempt 1 passed from revision
   `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
   `c07938618bc0f533fd12756cba123f54b8592048`, but remains unsupported,
@@ -54,12 +55,13 @@ append-only ledger record.
 - Qt6 is a scaffold only. Qt6, WinUI, and SwiftUI are post-beta admission lanes,
   not current release or support claims.
 
-The `0.1.0-alpha.5` beta-readiness scope and exact source/provider locks define
-the current alpha candidate. The binding receipt is
-`release/index/alpha5_promotion_candidate_closeout.v1.toml`; the archived
+The current `0.1.0-alpha.6` allocation has no qualified candidate receipt.
+The historical `0.1.0-alpha.5` beta-readiness scope and exact source/provider
+locks describe only the earlier candidate. Its final binding receipt is
+`release/index/alpha5_final_candidate_closeout.v1.toml`; the archived
 foundation checkpoint is
 `.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
-The receipt qualifies only `4683ecd9a1b9ead5eb84be152760d12583da0f0e` /
+That historical receipt qualifies only `4683ecd9a1b9ead5eb84be152760d12583da0f0e` /
 `c07938618bc0f533fd12756cba123f54b8592048`; truth-only and future
 revisions need a fresh candidate run. Earlier candidates are historical
 evidence only and their package hashes cannot be reused.

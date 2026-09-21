@@ -152,6 +152,14 @@ class FoundationBetaReadinessTests(unittest.TestCase):
         problems = self.validate(changed)
         self.assertTrue(any("non-circular" in problem for problem in problems), problems)
 
+    def test_current_alpha6_must_remain_unqualified_while_alpha5_evidence_is_historical(self) -> None:
+        changed = copy.deepcopy(self.readiness)
+        changed["status"] = "not_ready_exact_candidate_qualified_human_authority_pending"
+        changed["platform"][0]["current_state"] = "exact_candidate_machine_qualified"
+        problems = self.validate(changed)
+        self.assertTrue(any("distinguish the unqualified current alpha6" in problem for problem in problems), problems)
+        self.assertTrue(any("windows_x64 has an invalid evidence state" in problem for problem in problems), problems)
+
     def test_machine_candidate_does_not_grant_beta_or_external_authority(self) -> None:
         changed = copy.deepcopy(self.readiness)
         changed["beta_ready"] = True

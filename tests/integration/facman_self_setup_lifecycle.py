@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CALL_EVIDENCE: Path | None = None
 CALL_COUNT = 0
 CANARY_TIMEOUT: float | None = None
+REAL_DEADLINE: float | None = None
 REAL_COMMANDS: list[dict[str, object]] = []
 REAL_CHILD_ROOT: Path | None = None
 PROCESS_CALL_COUNT = 0
@@ -64,7 +65,12 @@ def run_command(command: list[str]):
     if REAL_CHILD_ROOT is not None:
         PROCESS_CALL_COUNT += 1
         directory = REAL_CHILD_ROOT / f"{PROCESS_CALL_COUNT:03d}-setup-child"
-    result = bounded.command(command, cwd=ROOT, timeout=CANARY_TIMEOUT, directory=directory)
+    timeout = CANARY_TIMEOUT
+    if REAL_DEADLINE is not None:
+        timeout = min(timeout, REAL_DEADLINE - time.monotonic())
+        if timeout <= 0:
+            raise AssertionError("real current-user qualification exhausted its total deadline")
+    result = bounded.command(command, cwd=ROOT, timeout=timeout, directory=directory)
     if result.receipt["termination"] != "completed":
         raise bounded.CommandFailure(result)
     completed = subprocess.CompletedProcess(command, result.returncode,
@@ -309,6 +315,91 @@ def sha256_path(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _plain_metadata(path: Path, label: str, *, directory: bool) -> os.stat_result:
+    try:
+        metadata = os.lstat(path)
+    except OSError as exc:
+        raise AssertionError(f"{label} could not be observed without following links") from exc
+    reparse = bool(getattr(metadata, "st_file_attributes", 0) & 0x400)
+    expected = stat.S_ISDIR(metadata.st_mode) if directory else stat.S_ISREG(metadata.st_mode)
+    if stat.S_ISLNK(metadata.st_mode) or reparse or not expected:
+        kind = "directory" if directory else "regular file"
+        raise AssertionError(f"{label} is not a plain {kind}")
+    if not directory and metadata.st_nlink != 1:
+        raise AssertionError(f"{label} is not a single-link regular file")
+    return metadata
+
+
+def _retained_file_metadata(
+        path: Path, state_root: Path, acceptance_root: Path,
+        label: str) -> os.stat_result:
+    repair_root = state_root / "repair-sources"
+    if (os.path.normcase(os.path.abspath(path.parent)) !=
+            os.path.normcase(os.path.abspath(repair_root))):
+        raise AssertionError(f"{label} is outside the exact retained repair directory")
+    authority = Path(os.path.abspath(acceptance_root))
+    repair = Path(os.path.abspath(repair_root))
+    try:
+        relative = Path(os.path.relpath(repair, authority))
+    except ValueError as exc:
+        raise AssertionError(f"{label} is outside retained repair authority") from exc
+    if relative.is_absolute() or relative == Path("..") or ".." in relative.parts:
+        raise AssertionError(f"{label} is outside retained repair authority")
+    current = authority
+    _plain_metadata(current, "retained repair acceptance root", directory=True)
+    for component in relative.parts:
+        current = current / component
+        _plain_metadata(current, "retained repair ancestry", directory=True)
+    return _plain_metadata(path, label, directory=False)
+
+
+def stable_retained_digest(
+        path: Path, state_root: Path, acceptance_root: Path, label: str) -> str:
+    metadata = _retained_file_metadata(path, state_root, acceptance_root, label)
+    identity = (metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns)
+    digest = hashlib.sha256()
+    observed = 0
+    with path.open("rb") as source:
+        opened = os.fstat(source.fileno())
+        if (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns) != identity:
+            raise AssertionError(f"{label} changed before it was read")
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            observed += len(chunk)
+            digest.update(chunk)
+        closed = os.fstat(source.fileno())
+        if (closed.st_dev, closed.st_ino, closed.st_size, closed.st_mtime_ns) != identity:
+            raise AssertionError(f"{label} changed while it was read")
+    final = _retained_file_metadata(path, state_root, acceptance_root, label)
+    if ((final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns) != identity or
+            observed != metadata.st_size):
+        raise AssertionError(f"{label} pathname changed while it was read")
+    return digest.hexdigest()
+
+
+def stable_retained_bytes(
+        path: Path, state_root: Path, acceptance_root: Path,
+        label: str, maximum: int) -> bytes:
+    metadata = _retained_file_metadata(
+        path, state_root, acceptance_root, label
+    )
+    if metadata.st_size > maximum:
+        raise AssertionError(f"{label} exceeds its bounded read size")
+    identity = (metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns)
+    with path.open("rb") as source:
+        opened = os.fstat(source.fileno())
+        if (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns) != identity:
+            raise AssertionError(f"{label} changed before it was read")
+        content = source.read(maximum + 1)
+        closed = os.fstat(source.fileno())
+        if (closed.st_dev, closed.st_ino, closed.st_size, closed.st_mtime_ns) != identity:
+            raise AssertionError(f"{label} changed while it was read")
+    final = _retained_file_metadata(path, state_root, acceptance_root, label)
+    if ((final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns) != identity or
+            len(content) != metadata.st_size or len(content) > maximum):
+        raise AssertionError(f"{label} pathname changed while it was read")
+    return content
+
+
 def windows_start_menu_shortcut() -> Path:
     appdata = os.environ.get("APPDATA", "")
     if not appdata:
@@ -437,8 +528,12 @@ def same_windows_path(left: object, right: Path) -> bool:
 
 def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object],
                         install: Path, state_root: Path, acceptance_root: Path,
-                        version: str, phase: str) -> None:
-    generation = install / "generations" / version
+                        version: str, phase: str, *,
+                        active_root: Path | None = None,
+                        active_package_sha256: str | None = None,
+                        retained_package_sha256s: set[str] | None = None) -> None:
+    active_root = active_root or install
+    generation = active_root / "generations" / version
     fields = shortcut.get("fields") if shortcut.get("state") == "present" else None
     if not isinstance(fields, dict) or not same_windows_path(fields.get("target"), generation / "FacMan.exe") or \
             not same_windows_path(fields.get("working_directory"), generation) or fields.get("arguments") != "":
@@ -449,23 +544,57 @@ def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object]
     if not isinstance(values, list):
         raise AssertionError(f"{phase}: uninstall registration values are unreadable")
     table = {item["name"]: item for item in values if isinstance(item, dict) and "name" in item}
-    sources = list((state_root / "repair-sources").glob("*.zip"))
-    if len(sources) != 1 or sources[0].stem != sha256_path(sources[0]):
+    repair_root = state_root / "repair-sources"
+    _plain_metadata(state_root, "retained repair state root", directory=True)
+    _plain_metadata(repair_root, "retained repair directory", directory=True)
+    try:
+        source_names = sorted(
+            entry.name for entry in os.scandir(repair_root)
+            if entry.name.endswith(".zip")
+        )
+    except OSError as exc:
+        raise AssertionError(f"{phase}: retained repair directory is unreadable") from exc
+    sources = [repair_root / name for name in source_names]
+    source_table: dict[str, Path] = {}
+    for source in sources:
+        observed_digest = stable_retained_digest(
+            source, state_root, acceptance_root, f"{phase} retained repair ZIP"
+        )
+        if source.stem == observed_digest:
+            source_table[source.stem] = source
+    expected_sources = retained_package_sha256s
+    if expected_sources is None:
+        expected_sources = set(source_table)
+        if len(expected_sources) != 1:
+            raise AssertionError(f"{phase}: exact digest-named offline repair source is absent")
+    if set(source_table) != expected_sources or len(sources) != len(source_table):
         raise AssertionError(f"{phase}: exact digest-named offline repair source is absent")
-    repair_source = sources[0]
+    if active_package_sha256 is None:
+        active_package_sha256 = next(iter(expected_sources))
+    repair_source = source_table.get(active_package_sha256)
+    if repair_source is None:
+        raise AssertionError(f"{phase}: active generation repair source is absent")
+    for retained_sha256, retained_source in source_table.items():
+        retained_launcher = retained_source.with_name(
+            f"{retained_sha256}.FacManSetup.exe"
+        )
+        retained_receipt = retained_source.with_name(
+            f"{retained_sha256}.maintenance.v1"
+        )
+        launcher_sha256 = stable_retained_digest(
+            retained_launcher, state_root, acceptance_root,
+            f"{phase} retained maintenance launcher"
+        )
+        expected_receipt = (
+            "facman-repair-source-receipt-v1\n"
+            f"source_sha256={retained_sha256}\n"
+            f"launcher_sha256={launcher_sha256}\n"
+        ).encode("utf-8")
+        if stable_retained_bytes(
+                retained_receipt, state_root, acceptance_root,
+                f"{phase} retained maintenance receipt", 4096) != expected_receipt:
+            raise AssertionError(f"{phase}: retained maintenance custody receipt is invalid")
     maintenance = repair_source.with_name(f"{repair_source.stem}.FacManSetup.exe")
-    if not maintenance.is_file():
-        raise AssertionError(f"{phase}: external offline maintenance launcher is absent")
-    receipt = repair_source.with_name(f"{repair_source.stem}.maintenance.v1")
-    expected_receipt = (
-        "facman-repair-source-receipt-v1\n"
-        f"source_sha256={repair_source.stem}\n"
-        f"launcher_sha256={sha256_path(maintenance)}\n"
-    )
-    if not receipt.is_file() or receipt.read_text(encoding="utf-8") != expected_receipt or \
-            repair_source.stat().st_nlink != 1 or maintenance.stat().st_nlink != 1 or \
-            receipt.stat().st_nlink != 1:
-        raise AssertionError(f"{phase}: retained maintenance custody receipt is invalid")
     uninstall = (
         f'"{maintenance}" uninstall --root "{install}" --state-root "{state_root}" '
         f'--acceptance-root "{acceptance_root}" --yes --noninteractive --shell-integration'
@@ -575,6 +704,438 @@ def assert_interrupted(response: dict[str, object], boundary: str) -> None:
         raise AssertionError(
             f"qualification boundary {boundary} did not report self_setup_interrupted: {compact_response}"
         )
+
+
+def self_maintenance_identity(path: Path) -> dict[str, str]:
+    """Read the exact immutable identity records from one produced setup overlay."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools.self_maintenance_candidate import identity_from_overlay
+    try:
+        return identity_from_overlay(path)
+    except (KeyError, OSError, ValueError, zipfile.BadZipFile) as exc:
+        raise AssertionError(
+            f"produced setup package has no exact self-maintenance identity: {path}"
+        ) from exc
+
+
+def semver_order(left: str, right: str) -> int:
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools.self_maintenance_candidate import semver_order as compare
+    try:
+        return compare(left, right)
+    except ValueError as exc:
+        raise AssertionError(str(exc)) from exc
+
+
+def exact_json_record(path: Path, expected: Path, keys: set[str], label: str) -> dict[str, object]:
+    if not path.is_absolute() or os.path.normcase(os.path.abspath(path)) != \
+            os.path.normcase(os.path.abspath(expected)):
+        raise AssertionError(f"{label} path does not bind its exact coordinator location")
+    metadata = os.lstat(path)
+    reparse = bool(getattr(metadata, "st_file_attributes", 0) & 0x400)
+    if (stat.S_ISLNK(metadata.st_mode) or reparse or not stat.S_ISREG(metadata.st_mode) or
+            metadata.st_nlink != 1 or metadata.st_size > 64 * 1024):
+        raise AssertionError(f"{label} is not a bounded single-link regular file")
+    identity = (metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns)
+    raw = path.read_bytes()
+    observed = os.lstat(path)
+    if (len(raw) != metadata.st_size or
+            (observed.st_dev, observed.st_ino, observed.st_size, observed.st_mtime_ns) != identity):
+        raise AssertionError(f"{label} changed while it was read")
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise AssertionError(f"{label} is not JSON") from exc
+    if not isinstance(value, dict) or set(value) != keys:
+        raise AssertionError(f"{label} does not have its exact record schema")
+    return value
+
+
+GENERATION_RECORD_KEYS = {
+    "schema", "product_id", "generation_id", "product_version", "package_sha256",
+    "facman_source_revision", "universal_setup_revision", "install_id", "install_root",
+    "logical_root", "state_root", "acceptance_root", "gui", "maintenance_launcher",
+}
+
+
+def generation_identity(identity: dict[str, str], package_sha256: str) -> str:
+    material = (
+        "facman.self.generation.v1\n"
+        "facman\n"
+        f"{identity['version']}\n"
+        f"{package_sha256}\n"
+        f"{identity['source_revision']}\n"
+        f"{identity['provider_revision']}\n"
+        "facman.self_maintenance.v1\n"
+        "versioned_generation_with_maintenance_v1\n"
+        f"generations/{identity['version']}\n"
+        "FacMan.exe\n"
+        "bin/facman.exe\n"
+        "maintenance/FacManSetup.exe\n"
+    )
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+def normalized_path(path: Path) -> Path:
+    return Path(os.path.normpath(str(path)))
+
+
+def physical_generation_root(logical_root: Path, generation_id: str) -> Path:
+    logical = normalized_path(logical_root)
+    logical_id = hashlib.sha256(
+        ("facman.self.logical-root.v1\n" + str(logical) + "\n").encode("utf-8")
+    ).hexdigest()
+    physical_id = hashlib.sha256((
+        "facman.self.physical-generation-root.v1\n" + logical_id + "\n" +
+        generation_id + "\n"
+    ).encode("utf-8")).hexdigest()
+    return logical.parent / ("FacMan.generation." + physical_id)
+
+
+def expected_generation_record(
+        identity: dict[str, str], package_sha256: str, logical_root: Path,
+        state_root: Path, acceptance_root: Path, *, legacy: bool) -> dict[str, object]:
+    generation_id = generation_identity(identity, package_sha256)
+    logical_root = normalized_path(logical_root)
+    state_root = normalized_path(state_root)
+    acceptance_root = normalized_path(acceptance_root)
+    install_root = logical_root if legacy else physical_generation_root(
+        logical_root, generation_id
+    )
+    install_id = "facman.self" if legacy else "facman.self.generation." + generation_id
+    return {
+        "schema": "facman.self_generation.v1",
+        "product_id": "facman",
+        "generation_id": generation_id,
+        "product_version": identity["version"],
+        "package_sha256": package_sha256,
+        "facman_source_revision": identity["source_revision"],
+        "universal_setup_revision": identity["provider_revision"],
+        "install_id": install_id,
+        "install_root": str(install_root),
+        "logical_root": str(logical_root),
+        "state_root": str(state_root),
+        "acceptance_root": str(acceptance_root),
+        "gui": str(install_root / "generations" / identity["version"] / "FacMan.exe"),
+        "maintenance_launcher": str(install_root / "maintenance" / "FacManSetup.exe"),
+    }
+
+
+def require_transition_receipt(
+        response: dict[str, object], operation: str, identity: dict[str, str],
+        package_sha256: str, logical_root: Path, state_root: Path,
+        acceptance_root: Path, previous: tuple[str, str] | None, *,
+        migration_source: tuple[dict[str, str], str] | None = None,
+        retained_legacy: dict[str, object] | None = None) -> dict[str, object]:
+    response_keys = {
+        "schema", "status", "operation", "phase", "operation_id",
+        "generation_id", "product_version", "install_id", "install_root",
+        "generation_record", "activation_record",
+    }
+    if (set(response) != response_keys or
+            response.get("schema") != "facman.self_maintenance_cli.v1" or
+            response.get("status") != "ok" or response.get("operation") != operation or
+            response.get("phase") != "completed" or
+            response.get("product_version") != identity["version"]):
+        raise AssertionError(f"{operation} did not report an exact completed maintenance receipt")
+    operation_id = response.get("operation_id")
+    generation_id = response.get("generation_id")
+    install_id = response.get("install_id")
+    install_root_text = response.get("install_root")
+    expected_generation_id = generation_identity(identity, package_sha256)
+    if (not isinstance(operation_id, str) or not operation_id or
+            not isinstance(generation_id, str) or len(generation_id) != 64 or
+            any(value not in "0123456789abcdef" for value in generation_id) or
+            generation_id != expected_generation_id or
+            not isinstance(install_id, str) or not install_id or
+            not isinstance(install_root_text, str) or not install_root_text):
+        raise AssertionError(f"{operation} response identity is incomplete or independently invalid")
+    legacy_target = retained_legacy is not None
+    expected_target = expected_generation_record(
+        identity, package_sha256, logical_root, state_root, acceptance_root,
+        legacy=legacy_target,
+    )
+    if legacy_target:
+        if install_id != "facman.self":
+            raise AssertionError(
+                f"{operation} retained legacy target changed its exact install id/root mode"
+            )
+    elif install_id != "facman.self.generation." + generation_id:
+        raise AssertionError(f"{operation} install id does not bind the generation identity")
+    install_root = Path(install_root_text)
+    if (os.path.normcase(os.path.abspath(install_root)) !=
+            os.path.normcase(os.path.abspath(Path(str(expected_target["install_root"]))))):
+        raise AssertionError(f"{operation} physical generation root was not independently derived")
+    coordinator = acceptance_root / "setup-coordinator.v1"
+    generation_path = Path(str(response.get("generation_record", "")))
+    activation_path = Path(str(response.get("activation_record", "")))
+    generation = exact_json_record(
+        generation_path,
+        coordinator / "generations" / f"generation.{generation_id}.v1.json",
+        GENERATION_RECORD_KEYS,
+        f"{operation} generation record",
+    )
+    if generation != expected_target:
+        raise AssertionError(f"{operation} generation record does not bind the target package/root")
+    if legacy_target and generation != retained_legacy:
+        raise AssertionError(f"{operation} legacy target is not the exact retained predecessor")
+    activation = exact_json_record(
+        activation_path,
+        coordinator / "activations" / f"activation.{operation_id}.v1.json",
+        {"schema", "product_id", "operation", "operation_id", "source_generation_id",
+         "target_generation_id", "previous"},
+        f"{operation} activation record",
+    )
+    previous_value = activation.get("previous")
+    if (activation.get("schema") != "facman.self_activation.v1" or
+            activation.get("product_id") != "facman" or
+            activation.get("operation") != operation or
+            activation.get("operation_id") != operation_id or
+            activation.get("target_generation_id") != generation_id or
+            not isinstance(activation.get("source_generation_id"), str) or
+            not isinstance(previous_value, dict) or
+            set(previous_value) != {"name", "sha256"}):
+        raise AssertionError(f"{operation} activation record does not bind the transition")
+    observed_previous = (previous_value.get("name"), previous_value.get("sha256"))
+    if not all(isinstance(value, str) and value for value in observed_previous):
+        raise AssertionError(f"{operation} activation has no exact predecessor")
+    if (Path(str(observed_previous[0])).name != observed_previous[0] or
+            not str(observed_previous[0]).startswith("activation.") or
+            not str(observed_previous[0]).endswith(".v1.json") or
+            len(str(observed_previous[1])) != 64 or
+            any(value not in "0123456789abcdef" for value in str(observed_previous[1]))):
+        raise AssertionError(f"{operation} activation predecessor identity is invalid")
+    if previous is not None and observed_previous != previous:
+        raise AssertionError(f"{operation} activation does not extend the reviewed chain head")
+    predecessor = coordinator / "activations" / str(observed_previous[0])
+    if sha256_path(predecessor) != observed_previous[1]:
+        raise AssertionError(f"{operation} activation predecessor digest changed")
+    observed_legacy: dict[str, object] | None = None
+    if previous is None:
+        if migration_source is None:
+            raise AssertionError(f"{operation} has no independently bound migration source")
+        migration = exact_json_record(
+            predecessor, predecessor,
+            {"schema", "product_id", "operation", "operation_id", "generation_id", "previous"},
+            "legacy migration activation",
+        )
+        source_identity, source_package_sha256 = migration_source
+        source_generation_id = generation_identity(
+            source_identity, source_package_sha256
+        )
+        if (migration.get("schema") != "facman.self_activation.v1" or
+                migration.get("product_id") != "facman" or
+                migration.get("operation") != "migration" or
+                migration.get("generation_id") != source_generation_id or
+                migration.get("generation_id") != activation.get("source_generation_id") or
+                migration.get("previous") != {"name": "", "sha256": ""}):
+            raise AssertionError("legacy migration does not bind the update source")
+        observed_legacy = exact_json_record(
+            coordinator / "generations" / f"generation.{source_generation_id}.v1.json",
+            coordinator / "generations" / f"generation.{source_generation_id}.v1.json",
+            GENERATION_RECORD_KEYS,
+            "legacy migration generation record",
+        )
+        expected_legacy = expected_generation_record(
+            source_identity, source_package_sha256, logical_root, state_root,
+            acceptance_root, legacy=True,
+        )
+        if observed_legacy != expected_legacy:
+            raise AssertionError("legacy migration generation does not bind its package/root")
+    else:
+        predecessor_activation = exact_json_record(
+            predecessor, predecessor,
+            {"schema", "product_id", "operation", "operation_id", "source_generation_id",
+             "target_generation_id", "previous"},
+            f"{operation} predecessor activation",
+        )
+        if (predecessor_activation.get("schema") != "facman.self_activation.v1" or
+                predecessor_activation.get("product_id") != "facman" or
+                predecessor_activation.get("target_generation_id") !=
+                activation.get("source_generation_id")):
+            raise AssertionError(f"{operation} activation source does not extend its predecessor")
+    return {
+        "generation_id": generation_id,
+        "install_root": install_root,
+        "activation": (activation_path.name, sha256_path(activation_path)),
+        "source_generation_id": activation["source_generation_id"],
+        "retained_legacy": observed_legacy if observed_legacy is not None else retained_legacy,
+    }
+
+
+def run_real_self_maintenance_transition(args: argparse.Namespace, executable: Path) -> int:
+    """Exercise a real current-user A -> B -> A -> B package transition.
+
+    The runner account is intentionally disposable.  It retires the final
+    chain through the public uninstaller and observes retained then active
+    completion; no out-of-band deletion is allowed.
+    """
+    if os.name != "nt":
+        raise AssertionError("--real-self-maintenance-transition is Windows-only")
+    root = args.fixture_root
+    evidence = args.evidence
+    candidate_payload = args.payload
+    baseline_executable = args.baseline_setup_exe
+    baseline_payload = args.baseline_payload
+    assert root is not None and evidence is not None and candidate_payload is not None
+    assert baseline_executable is not None and baseline_payload is not None
+    root.mkdir(parents=False)
+    programs = root / "Programs"
+    programs.mkdir()
+    global REAL_CHILD_ROOT
+    REAL_CHILD_ROOT = root / "setup-children"
+    REAL_CHILD_ROOT.mkdir()
+    observations: list[dict[str, object]] = []
+    candidate_identity = self_maintenance_identity(candidate_payload)
+    baseline_identity = self_maintenance_identity(baseline_payload)
+    candidate_package_sha256 = sha256_path(candidate_payload)
+    baseline_package_sha256 = sha256_path(baseline_payload)
+    if (candidate_identity["source_revision"] == baseline_identity["source_revision"] or
+            semver_order(baseline_identity["version"], candidate_identity["version"]) >= 0):
+        raise AssertionError(
+            "real maintenance transition requires source-distinct, strictly "
+            "version-ordered produced setup packages"
+        )
+
+    install = programs / "FacMan"
+    state_root = root / "SetupState"
+
+    def observe(phase: str) -> tuple[dict[str, object], dict[str, object]]:
+        shortcut = inspect_shortcut_no_follow(windows_start_menu_shortcut())
+        registry = inspect_registry_64()
+        observations.append({
+            "phase": phase,
+            "shortcut": shortcut,
+            "registry": registry,
+            "journal": journal_observation(install),
+            "install_inventory": file_inventory(install),
+        })
+        return shortcut, registry
+
+    try:
+        pre_shortcut, pre_registry = observe("preflight")
+        assert_absent_native(pre_shortcut, pre_registry, "preflight")
+        for label, setup, identity in (
+                ("baseline", baseline_executable, baseline_identity),
+                ("candidate", executable, candidate_identity)):
+            version_result = run_command([str(setup), "--version"])
+            if version_result.returncode or version_result.stdout.strip() != identity["version"]:
+                raise AssertionError(f"{label} setup version does not bind its produced package")
+
+        common = ("--root", install, "--state-root", state_root,
+                  "--acceptance-root", root, "--yes")
+        installed = invoke(baseline_executable, "install", *common,
+                           shell_integration=True, noninteractive=True)
+        if installed.get("status") != "ok":
+            raise AssertionError("baseline produced setup did not install from its own overlay")
+        shortcut, registry = observe("baseline_install_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root,
+                            baseline_identity["version"], "baseline install",
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256})
+
+        updated = invoke(executable, "update", "--package", candidate_payload, *common,
+                         shell_integration=True, noninteractive=True)
+        update_receipt = require_transition_receipt(
+            updated, "update", candidate_identity, candidate_package_sha256,
+            install, state_root, root, None,
+            migration_source=(baseline_identity, baseline_package_sha256),
+        )
+        shortcut, registry = observe("candidate_update_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root,
+                            candidate_identity["version"], "candidate update",
+                            active_root=update_receipt["install_root"],
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+
+        downgraded = invoke(executable, "downgrade", "--package", baseline_payload, *common,
+                            shell_integration=True, noninteractive=True)
+        downgrade_receipt = require_transition_receipt(
+            downgraded, "downgrade", baseline_identity, baseline_package_sha256,
+            install, state_root, root, update_receipt["activation"],
+            retained_legacy=update_receipt["retained_legacy"],
+        )
+        shortcut, registry = observe("baseline_downgrade_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root,
+                            baseline_identity["version"], "baseline downgrade",
+                            active_root=downgrade_receipt["install_root"],
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+
+        rolled_back = invoke(executable, "rollback", *common,
+                             shell_integration=True, noninteractive=True)
+        rollback_receipt = require_transition_receipt(
+            rolled_back, "rollback", candidate_identity, candidate_package_sha256,
+            install, state_root, root, downgrade_receipt["activation"],
+        )
+        shortcut, registry = observe("candidate_rollback_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root,
+                            candidate_identity["version"], "candidate rollback",
+                            active_root=rollback_receipt["install_root"],
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+        retained_retirement = invoke(executable, "uninstall", *common,
+                                     shell_integration=True, noninteractive=True)
+        if retained_retirement.get("phase") != "step_completed":
+            raise AssertionError("chain retirement did not complete only its retained step")
+        shortcut, registry = observe("chain_retirement_retained_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root,
+                            candidate_identity["version"], "retained retirement",
+                            active_root=rollback_receipt["install_root"],
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={candidate_package_sha256})
+        active_retirement = invoke(executable, "uninstall", *common,
+                                   shell_integration=True, noninteractive=True)
+        if active_retirement.get("phase") != "completed":
+            raise AssertionError("chain retirement did not complete its active step")
+        shortcut, registry = observe("chain_retirement_active_completed")
+        assert_absent_native(shortcut, registry, "chain retirement")
+        if install.exists():
+            raise AssertionError("chain retirement retained the logical install root")
+        outcome = "passed"
+        return 0
+    except BaseException as exc:
+        outcome = "blocked_or_failed"
+        observations.append({"phase": "failure", "error": repr(exc)})
+        raise
+    finally:
+        primary_failure = sys.exc_info()[0] is not None
+        try:
+            evidence.parent.mkdir(parents=True, exist_ok=True)
+            evidence.write_text(json.dumps({
+                "schema": "facman.real_self_maintenance_transition_evidence.v1",
+                "outcome": locals().get("outcome", "blocked_or_failed"),
+                "source": {
+                    "baseline_setup": str(baseline_executable),
+                    "baseline_setup_sha256": sha256_path(baseline_executable),
+                    "baseline_payload": str(baseline_payload),
+                    "baseline_payload_sha256": sha256_path(baseline_payload),
+                    "candidate_setup": str(executable),
+                    "candidate_setup_sha256": sha256_path(executable),
+                    "candidate_payload": str(candidate_payload),
+                    "candidate_payload_sha256": sha256_path(candidate_payload),
+                    "baseline_identity": baseline_identity,
+                    "candidate_identity": candidate_identity,
+                },
+                "paths": {"fixture_root": str(root), "install_root": str(install),
+                          "state_root": str(state_root), "evidence": str(evidence),
+                          "setup_child_receipts": str(REAL_CHILD_ROOT)},
+                "commands": REAL_COMMANDS,
+                "observations": observations,
+                "registry_view": "64-bit",
+                "retained_final_state": "chain retirement completed through public setup",
+            }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        except BaseException as persistence_error:
+            note = f"NOTE: real self-maintenance evidence persistence failed: {persistence_error!r}"
+            if primary_failure:
+                print(note, file=sys.stderr)
+            else:
+                raise AssertionError(note) from persistence_error
 
 
 def run_real_current_user_integration(args: argparse.Namespace, executable: Path) -> int:
@@ -861,7 +1422,7 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
 
 
 def main() -> int:
-    global CALL_EVIDENCE, CANARY_TIMEOUT
+    global CALL_EVIDENCE, CANARY_TIMEOUT, REAL_DEADLINE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--setup-exe", type=Path, required=True)
     parser.add_argument(
@@ -886,22 +1447,36 @@ def main() -> int:
                         help="New disposable fixture path; retain all effects including failed runs.")
     parser.add_argument("--real-current-user-integration", action="store_true",
                         help="Windows disposable-runner qualification of current-user shell integration.")
+    parser.add_argument("--real-self-maintenance-transition", action="store_true",
+                        help="Windows disposable-runner qualification of A -> B -> A -> B maintenance.")
+    parser.add_argument("--baseline-setup-exe", type=Path,
+                        help="Exact older produced setup executable for the maintenance transition.")
+    parser.add_argument("--baseline-payload", type=Path,
+                        help="Exact older produced setup overlay for downgrade qualification.")
     parser.add_argument("--evidence", type=Path,
                         help="Absent evidence JSON path, required by real current-user integration.")
     parser.add_argument("--canary-command-timeout", type=float,
                          help="Windows source-canary only: finite owned command containment.")
     parser.add_argument("--real-command-timeout", type=float,
                         help="Required finite setup-child deadline for real current-user integration.")
+    parser.add_argument("--real-total-timeout", type=float,
+                        help="Finite total deadline shared by every real current-user child.")
     args = parser.parse_args()
-    if args.real_current_user_integration:
+    if args.real_current_user_integration or args.real_self_maintenance_transition:
         if os.name != "nt":
-            parser.error("--real-current-user-integration is Windows-only")
+            parser.error("real current-user qualification is Windows-only")
+        if args.real_current_user_integration and args.real_self_maintenance_transition:
+            parser.error("choose exactly one real current-user qualification mode")
         if args.payload is None or not args.payload.is_absolute() or not args.payload.is_file():
-            parser.error("real current-user integration requires an exact absolute --payload file")
+            parser.error(
+                "real current-user integration requires an exact absolute --payload file"
+                if args.real_current_user_integration else
+                "real maintenance transition requires an exact absolute --payload file"
+            )
         if args.fixture_root is None or not args.fixture_root.is_absolute() or args.fixture_root.exists():
-            parser.error("real current-user integration requires an absent absolute retained --fixture-root")
+            parser.error("real current-user qualification requires an absent absolute retained --fixture-root")
         if args.evidence is None or not args.evidence.is_absolute() or args.evidence.exists():
-            parser.error("real current-user integration requires an absent absolute --evidence path")
+            parser.error("real current-user qualification requires an absent absolute --evidence path")
         try:
             relative_evidence = args.evidence.relative_to(args.fixture_root)
         except ValueError:
@@ -912,12 +1487,32 @@ def main() -> int:
             parser.error("real current-user integration writes its own exact evidence JSON")
         if args.real_command_timeout is None:
             parser.error("real current-user integration requires --real-command-timeout")
+        if args.real_total_timeout is None or args.real_total_timeout <= 0:
+            parser.error("real current-user qualification requires --real-total-timeout")
+        if args.real_total_timeout > 3600:
+            parser.error("--real-total-timeout must not exceed 3600 seconds")
+        if args.real_self_maintenance_transition:
+            if (args.baseline_setup_exe is None or not args.baseline_setup_exe.is_absolute() or
+                    not args.baseline_setup_exe.is_file()):
+                parser.error("real maintenance transition requires an exact absolute --baseline-setup-exe")
+            if (args.baseline_payload is None or not args.baseline_payload.is_absolute() or
+                    not args.baseline_payload.is_file()):
+                parser.error("real maintenance transition requires an exact absolute --baseline-payload")
+            args.baseline_setup_exe = args.baseline_setup_exe.resolve(strict=True)
+            args.baseline_payload = args.baseline_payload.resolve(strict=True)
+        elif args.baseline_setup_exe is not None or args.baseline_payload is not None:
+            parser.error("baseline package inputs are limited to real maintenance transition")
         if str(ROOT) not in sys.path:
             sys.path.insert(0, str(ROOT))
         from tools import provider_canary_process as bounded
         CANARY_TIMEOUT = bounded.seconds(args.real_command_timeout, "real setup-child deadline")
+        REAL_DEADLINE = time.monotonic() + bounded.seconds(
+            args.real_total_timeout, "real current-user total deadline"
+        )
         executable = args.setup_exe.resolve(strict=True)
         args.payload = args.payload.resolve(strict=True)
+        if args.real_self_maintenance_transition:
+            return run_real_self_maintenance_transition(args, executable)
         return run_real_current_user_integration(args, executable)
     if args.canary_command_timeout is not None:
         if args.fixture_root is None or args.payload is not None:
@@ -1189,23 +1784,19 @@ def main() -> int:
                     rolled_back.get("generation_id") !=
                     discovered.get("generation_id")):
                 raise AssertionError("public rollback did not reactivate legacy")
-            migrated_uninstall = invoke(
-                executable, "uninstall", "--root", install,
-                "--state-root", state, "--acceptance-root", root, "--yes",
-                expected=4,
-            )
-            if (migrated_uninstall.get("error", {}).get("code") !=
-                    "self_maintenance_active_generation_unsupported" or
-                    not install.is_dir()):
-                raise AssertionError(
-                    "migrated legacy uninstall was not safely refused"
-                )
             maintenance_chain_active = True
 
         workspace = root / "FacManWorkspace"
         workspace.mkdir()
         keep = workspace / "keep.txt"
         keep.write_text("preserve\n", encoding="utf-8")
+        if maintenance_chain_active:
+            retained = invoke(
+                executable, "uninstall", "--root", install,
+                "--state-root", state, "--acceptance-root", root, "--yes",
+            )
+            if retained.get("phase") != "step_completed":
+                raise AssertionError("activation-chain retained uninstall did not complete")
         unknown = install / "operator-note.txt"
         unknown.write_text("retain\n", encoding="utf-8")
         refusal = invoke(
@@ -1216,8 +1807,8 @@ def main() -> int:
             raise AssertionError("foreign-content uninstall refusal did not preserve data")
         if maintenance_chain_active:
             if refusal.get("error", {}).get("code") != \
-                    "self_maintenance_active_generation_unsupported":
-                raise AssertionError("activation-chain uninstall refusal changed")
+                    "self_maintenance_retirement_recovery_required":
+                raise AssertionError("activation-chain foreign refusal lost its recovery boundary")
             return 0
         unknown.rename(root / "operator-note-preserved.txt")
 
