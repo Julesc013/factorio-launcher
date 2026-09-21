@@ -12,6 +12,7 @@ import time
 import unittest
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 from tools import development_layout
 from tools import self_maintenance_candidate as candidate
@@ -30,6 +31,53 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             self.assertFalse(checkout.is_relative_to(task_root))
             self.assertFalse(task_root.is_relative_to(checkout))
             self.assertIn(".owned-task.predecessor.aaaaaaaaaaaa", checkout.name)
+
+    def test_predecessor_environment_rebinds_inherited_candidate_task_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            candidate_task = development_layout.ensure_task_root(
+                root / "candidate-task", candidate.ROOT, "candidate-test",
+            )
+            source = root / "predecessor-source"
+            source.mkdir()
+            output = candidate_task / "predecessor-output"
+            launcher = root / "universal-launcher"
+            setup = root / "universal-setup"
+
+            with mock.patch.dict(
+                os.environ, {"FACMAN_TASK_ROOT": str(candidate_task)}, clear=False,
+            ):
+                with self.assertRaisesRegex(ValueError, "repository_key"):
+                    development_layout.ensure_task_root(
+                        development_layout.default_task_root(source),
+                        source,
+                        development_layout.current_task_id(source),
+                    )
+                environment = candidate.predecessor_environment(
+                    source, output, launcher, setup,
+                )
+
+            self.assertEqual(str(output.resolve()), environment["FACMAN_TASK_ROOT"])
+            self.assertEqual(str(launcher), environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"])
+            self.assertEqual(str(setup), environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"])
+            marker = development_layout.read_marker(output, source)
+            self.assertEqual(
+                development_layout.repository_key(source), marker["repository_key"],
+            )
+            self.assertEqual(
+                development_layout.current_task_id(source), marker["task_id"],
+            )
+            with mock.patch.dict(os.environ, environment, clear=False):
+                self.assertEqual(
+                    output.resolve(),
+                    development_layout.ensure_task_root(
+                        development_layout.default_task_root(source),
+                        source,
+                        development_layout.current_task_id(source),
+                    ),
+                )
+            with self.assertRaisesRegex(ValueError, "repository_key"):
+                development_layout.read_marker(output, candidate.ROOT)
 
     def test_clone_clean_detached_materializes_long_path_and_persists_setting(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
