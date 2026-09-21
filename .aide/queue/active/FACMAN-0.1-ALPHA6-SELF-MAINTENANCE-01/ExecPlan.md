@@ -147,3 +147,27 @@ MSVC and GCC accepted but Clang rejected under
 affected maintenance target rebuilt and passed on Windows and Ubuntu 24.04;
 source formatting and `git diff --check` also passed. The corrected macOS
 hosted build remains the exact platform acceptance check for this correction.
+
+## 2026-09-22 external retained-helper handoff checkpoint
+
+Implemented from exact integrated dev base
+`ea43094b2dfa8d4b2b80fe3b2811e2a50bacafda`, the public epoch apply now
+retains the currently executing setup binary as `FacManContinuation.exe`,
+launches it with a pinned v3 handoff journal, reports `handoff_launched`, and
+exits before provider, publication, or shell effects. The external helper
+waits for the exact parent process identity, revalidates its own retained path
+and digest, extracts the target package's separate maintenance launcher, and
+continues the durable operation under the original absolute deadline.
+
+The Windows candidate controller can now wait for the owned Job to become
+empty after the public process exits. It preserves the ordinary descendant
+termination mode for every other command and still terminates the complete Job
+on timeout or execution failure. The packaged lifecycle covers normal external
+handoff and a second public apply from an already durable staged v3 journal.
+
+Current-source Windows native and packaged tests, WSL native compilation and
+execution, Python controller/candidate tests, strict validation, formatting,
+portable AIDE validation, and diff checks pass. Independent non-authoring
+source review found no safety blocker. The WorkUnit remains active pending the
+source-distinct produced-package Windows candidate, real Start Menu/HKCU
+effects, chain-aware repair/removal and supported-platform/human acceptance.

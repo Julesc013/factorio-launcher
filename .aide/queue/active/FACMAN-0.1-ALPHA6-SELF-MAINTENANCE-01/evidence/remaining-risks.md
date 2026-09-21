@@ -88,8 +88,9 @@ source still needs:
 
 - a source-distinct produced-package Windows A/B lifecycle with retained exact
   inputs and real current-user Start Menu and HKCU observations;
-- packaged parent-exit execution through the retained helper and restart
-  continuation on the declared Windows host;
+- source-distinct packaged parent-exit execution through B's retained helper on
+  the declared Windows host; the synthetic packaged lifecycle now proves normal
+  launch and staged-v3 public retry, but it does not replace that candidate;
 - chain-aware repair, removal, retirement completion, retention, and garbage
   collection behavior beyond the current safe refusals;
 - physical supported-platform qualification and human/product acceptance.

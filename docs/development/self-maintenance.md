@@ -9,8 +9,10 @@ The package must contain matching canonical maintenance and current-generation
 metadata plus the exact GUI, CLI, and maintenance entrypoints. FacMan inspects
 and hashes one held archive object. It admits and validates the exact read-only
 provider plan before any coordinator or repair-cache write. Apply then extracts
-the target package's maintenance launcher and retains that launcher with the
-exact package under the FacMan setup-state root before provider entry.
+the target package's maintenance launcher for target-generation repair. A
+lifecycle-epoch handoff separately retains the currently executing Setup binary
+as its protocol-capable continuation helper, together with the exact target
+package, under the FacMan setup-state root before provider entry.
 
 The first operation over an existing `facman.self` installation verifies its
 pinned Universal Setup installed state and creates a deterministic migration
@@ -113,21 +115,43 @@ refused with recovery guidance. Preview remains read-only and never continues
 or creates an operation.
 
 Pre-handoff continuation retains the package and helper through the normal
-FacMan storage edge before provider entry. After a durable provider-entry
-record exists, continuation rehydrates the exact provider transaction instead
-of preparing it again. Each subsequent phase binds the installed generation,
-read-only verification result, shell cutover, publication, and completion to
-the same epoch, operation, source generation, target generation, package, and
-provider identities. Terminal verification replays the deterministic
-read-only provider verification at the operation's recorded time; it does not
-depend on a mutable cached verification field.
+FacMan storage edge before provider entry. The helper is the exact current Setup
+binary, stored as `FacManContinuation.exe`; it is distinct from the maintenance
+launcher embedded in the target package. This distinction lets a newer B Setup
+continue a B-to-A downgrade while the A launcher is used only for A's retained
+repair source and installed maintenance entrypoint.
+
+The public process launches the retained helper with an inherited handle to the
+exact initiating process and reports `handoff_launched`. The helper validates
+that handle's PID and creation time, waits for the initiator to exit, then
+revalidates the canonical v3 handoff journal, its own path and digest, the bound
+shell-integration choice, and the retained package. It extracts the target
+launcher only after those checks. Parent wait, provider continuation,
+publication, and shell cutover share one absolute deadline. A public apply retry
+at an unfinished phase relaunches the same retained helper; a read-only request
+can observe the durable phase without continuing it.
+
+After a durable provider-entry record exists, continuation rehydrates the exact
+provider transaction instead of preparing it again. Each subsequent phase binds
+the installed generation, read-only verification result, shell cutover,
+publication, and completion to the same epoch, operation, source generation,
+target generation, package, helper, shell choice, and provider identities.
+Terminal verification replays the deterministic read-only provider verification
+at the operation's recorded time; it does not depend on a mutable cached
+verification field.
 
 Pending discovery holds and revalidates the epoch namespace, operation names,
 records, retained inputs, and lifecycle tail. Inserted, replaced, linked, or
 ambiguous records cause recovery-required refusal. Completed immutable
 operations remain history; only the unfinished tail can be resumed.
 
-This checkpoint qualifies the isolated no-shell CLI transition and native
-state machine on current source. It does not replace the still-required
-source-distinct packaged Windows run, real Start Menu and HKCU observations,
-retained-helper parent-exit handoff, or chain-aware repair and removal.
+The bounded Windows canary mode used for the source-distinct lifecycle waits for
+the owned Job to become empty after the initiating Setup exits. This permits the
+inherited helper to finish while preserving the same outer deadline and
+kill-on-close containment. Ordinary canary commands retain their existing rule
+that a completed primary cannot leave descendants behind.
+
+This source checkpoint covers the isolated no-shell CLI transition, native
+state machine, and retained-helper parent-exit protocol. It does not replace the
+still-required source-distinct packaged Windows run with real Start Menu and
+HKCU observations, or chain-aware repair and removal.

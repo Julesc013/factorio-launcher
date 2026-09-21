@@ -29,6 +29,7 @@ CALL_EVIDENCE: Path | None = None
 CALL_COUNT = 0
 CANARY_TIMEOUT: float | None = None
 REAL_DEADLINE: float | None = None
+WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY = False
 REAL_COMMANDS: list[dict[str, object]] = []
 REAL_CHILD_ROOT: Path | None = None
 PROCESS_CALL_COUNT = 0
@@ -71,7 +72,10 @@ def run_command(command: list[str]):
         timeout = min(timeout, REAL_DEADLINE - time.monotonic())
         if timeout <= 0:
             raise AssertionError("real current-user qualification exhausted its total deadline")
-    result = bounded.command(command, cwd=ROOT, timeout=timeout, directory=directory)
+    result = bounded.command(
+        command, cwd=ROOT, timeout=timeout, directory=directory,
+        wait_for_job_empty_after_primary=WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY,
+    )
     if result.receipt["termination"] != "completed":
         raise bounded.CommandFailure(result)
     completed = subprocess.CompletedProcess(command, result.returncode,
@@ -128,6 +132,39 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
     return response
 
 
+def await_external_handoff(
+        executable: Path, initial: dict[str, object], operation: str,
+        query_arguments: tuple[object, ...], *, shell_integration: bool,
+        noninteractive: bool) -> dict[str, object]:
+    """Observe one launched helper without granting the observer apply authority."""
+    if initial.get("phase") != "handoff_launched":
+        return initial
+    operation_id = initial.get("operation_id")
+    if not isinstance(operation_id, str) or not operation_id:
+        raise AssertionError(f"{operation} handoff launch omitted its operation identity")
+    local_deadline = time.monotonic() + 30.0
+    if REAL_DEADLINE is not None:
+        local_deadline = min(local_deadline, REAL_DEADLINE)
+    pending_phases = {
+        "continuation_pending", "publication_pending", "shell_cutover_pending",
+    }
+    while time.monotonic() < local_deadline:
+        observed = invoke(
+            executable, operation, *query_arguments,
+            shell_integration=shell_integration,
+            noninteractive=noninteractive,
+        )
+        if observed.get("operation_id") != operation_id:
+            raise AssertionError(f"{operation} handoff observation changed operation identity")
+        phase = observed.get("phase")
+        if phase in {"completed", "shell_cutover_complete"}:
+            return observed
+        if phase not in pending_phases:
+            raise AssertionError(f"{operation} handoff reported unexpected phase {phase!r}")
+        time.sleep(0.02)
+    raise AssertionError(f"{operation} external maintenance helper did not complete in time")
+
+
 def tree_snapshot(root: Path) -> dict[str, object]:
     directories: list[str] = []
     files: dict[str, str] = {}
@@ -170,6 +207,40 @@ def emit_prehandoff_epoch(
         ) from exc
     if response.get("schema") != "facman.self_maintenance_test_epoch.v1":
         raise AssertionError("epoch fixture helper returned an unexpected schema")
+    return response
+
+
+def emit_staged_handoff_epoch(
+    helper: Path,
+    coordinator: Path,
+    logical_root: Path,
+    state_root: Path,
+    acceptance_root: Path,
+    source_package: Path,
+    target_package: Path,
+    continuation_helper: Path,
+) -> dict[str, object]:
+    command = [
+        str(helper), "--emit-handoff-staging-epoch", str(coordinator),
+        str(logical_root), str(state_root), str(acceptance_root),
+        str(source_package), str(target_package), "update",
+        str(continuation_helper),
+    ]
+    result = run_command(command)
+    if result.returncode:
+        raise AssertionError(
+            f"staged epoch fixture helper returned {result.returncode}: {command}\n"
+            f"stdout={result.stdout[-8000:]}\nstderr={result.stderr[-8000:]}"
+        )
+    try:
+        response = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise AssertionError(
+            f"staged epoch fixture helper did not return JSON: {command}\n"
+            f"{result.stdout[-8000:]}"
+        ) from exc
+    if response.get("schema") != "facman.self_maintenance_test_epoch.v1":
+        raise AssertionError("staged epoch fixture helper returned an unexpected schema")
     return response
 
 
@@ -799,9 +870,74 @@ def epoch_prehandoff_cli_controls(
         "--acceptance-root", case, "--yes",
         "--qualification-fixture-permit", apply_permit,
     )
-    if (exact_apply.get("phase") != "shell_cutover_complete" or
+    if (exact_apply.get("phase") != "handoff_launched" or
             exact_apply.get("operation_id") != emitted.get("operation_id")):
+        raise AssertionError("exact-package pre-handoff apply did not launch its external helper")
+    exact_completed = await_external_handoff(
+        executable, exact_apply, "update",
+        ("--package", target_package,
+         "--root", install, "--state-root", state,
+         "--acceptance-root", case,
+         "--qualification-fixture-permit", preview_permit),
+        shell_integration=False, noninteractive=False,
+    )
+    if (exact_completed.get("phase") != "shell_cutover_complete" or
+            exact_completed.get("operation_id") != emitted.get("operation_id")):
         raise AssertionError("exact-package pre-handoff apply did not complete")
+
+    retry_case = root / "epoch-cli-handoff-staging"
+    retry_case.mkdir()
+    retry_install = retry_case / "Programs" / "FacMan"
+    retry_state = retry_case / "SetupState"
+    retry_install.parent.mkdir()
+    retry_source_package = retry_case / "source.zip"
+    retry_target_package = retry_case / "target.zip"
+    stored_maintenance_payload(retry_source_package, executable, version)
+    stored_maintenance_payload(retry_target_package, executable, target_version)
+    retry_installed = invoke(
+        executable, "install", "--package", retry_source_package,
+        "--root", retry_install, "--state-root", retry_state,
+        "--acceptance-root", retry_case, "--yes",
+    )
+    if retry_installed.get("phase") != "receipt":
+        raise AssertionError("staged-handoff CLI fixture baseline did not install")
+    retry_coordinator = retry_case / "setup-coordinator.v1"
+    if retry_coordinator.exists():
+        shutil.rmtree(retry_coordinator)
+    retry_emitted = emit_staged_handoff_epoch(
+        fixture_helper, retry_coordinator, retry_install, retry_state,
+        retry_case, retry_source_package, retry_target_package, executable,
+    )
+    retry_source_root = Path(str(retry_emitted.get("source_install_root", "")))
+    if not retry_source_root.is_absolute() or retry_source_root.exists():
+        raise AssertionError("staged-handoff fixture returned an unsafe source root")
+    shutil.copytree(retry_install, retry_source_root)
+    retry_apply_permit = maintenance_qualification_permit(
+        retry_case, "update", True, version, retry_install, retry_state
+    )
+    retried = invoke(
+        executable, "update", "--package", retry_target_package,
+        "--root", retry_install, "--state-root", retry_state,
+        "--acceptance-root", retry_case, "--yes",
+        "--qualification-fixture-permit", retry_apply_permit,
+    )
+    if (retried.get("phase") != "handoff_launched" or
+            retried.get("operation_id") != retry_emitted.get("operation_id")):
+        raise AssertionError("staged handoff public retry did not relaunch its helper")
+    retry_preview_permit = maintenance_qualification_permit(
+        retry_case, "update", False, version, retry_install, retry_state
+    )
+    retry_completed = await_external_handoff(
+        executable, retried, "update",
+        ("--package", retry_target_package,
+         "--root", retry_install, "--state-root", retry_state,
+         "--acceptance-root", retry_case,
+         "--qualification-fixture-permit", retry_preview_permit),
+        shell_integration=False, noninteractive=False,
+    )
+    if (retry_completed.get("phase") != "shell_cutover_complete" or
+            retry_completed.get("operation_id") != retry_emitted.get("operation_id")):
+        raise AssertionError("staged handoff public retry did not complete")
 
 
 def journal_observation(install: Path) -> list[dict[str, object]]:
@@ -855,6 +991,16 @@ def self_maintenance_identity(path: Path) -> dict[str, str]:
         raise AssertionError(
             f"produced setup package has no exact self-maintenance identity: {path}"
         ) from exc
+
+
+def package_maintenance_launcher_sha256(path: Path) -> str:
+    with zipfile.ZipFile(path) as archive:
+        matches = [entry for entry in archive.infolist()
+                   if entry.filename == "facman/maintenance/FacManSetup.exe"
+                   and not entry.is_dir()]
+        if len(matches) != 1 or matches[0].file_size <= 0 or matches[0].file_size > 256 * 1024 * 1024:
+            raise AssertionError("produced package has no exact bounded maintenance launcher")
+        return hashlib.sha256(archive.read(matches[0])).hexdigest()
 
 
 def semver_order(left: str, right: str) -> int:
@@ -1176,6 +1322,13 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
 
         updated = invoke(executable, "update", "--package", candidate_payload, *common,
                          shell_integration=True, noninteractive=True)
+        updated = await_external_handoff(
+            executable, updated, "update",
+            ("--package", candidate_payload,
+             "--root", install, "--state-root", state_root,
+             "--acceptance-root", root),
+            shell_integration=True, noninteractive=True,
+        )
         update_receipt = require_transition_receipt(
             updated, "update", candidate_identity, candidate_package_sha256,
             install, state_root, root, None,
@@ -1189,14 +1342,57 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256})
 
-        downgraded = invoke(executable, "downgrade", "--package", baseline_payload, *common,
-                            shell_integration=True, noninteractive=True)
+        downgraded_launch = invoke(
+            executable, "downgrade", "--package", baseline_payload, *common,
+            shell_integration=True, noninteractive=True,
+        )
+        if downgraded_launch.get("phase") != "handoff_launched":
+            raise AssertionError("source-distinct downgrade did not launch its retained B helper")
+        downgrade_operation_id = downgraded_launch.get("operation_id")
+        if not isinstance(downgrade_operation_id, str) or not downgrade_operation_id:
+            raise AssertionError("source-distinct downgrade omitted its handoff operation identity")
+        continuation_helper = (state_root / "epoch-handoff" /
+                               downgrade_operation_id / "FacManContinuation.exe")
+        continuation_sha256 = stable_retained_digest(
+            continuation_helper, state_root, root,
+            "downgrade retained continuation helper",
+        )
+        candidate_setup_sha256 = sha256_path(executable)
+        baseline_launcher_sha256 = package_maintenance_launcher_sha256(baseline_payload)
+        if (continuation_sha256 != candidate_setup_sha256 or
+                continuation_sha256 == baseline_launcher_sha256):
+            raise AssertionError(
+                "B-to-A downgrade did not retain B Setup separately from A's target launcher"
+            )
+        observations.append({
+            "phase": "baseline_downgrade_handoff_launched",
+            "operation_id": downgrade_operation_id,
+            "continuation_helper": str(continuation_helper),
+            "continuation_helper_sha256": continuation_sha256,
+            "target_maintenance_launcher_sha256": baseline_launcher_sha256,
+        })
+        downgraded = await_external_handoff(
+            executable, downgraded_launch, "downgrade",
+            ("--package", baseline_payload,
+             "--root", install, "--state-root", state_root,
+             "--acceptance-root", root),
+            shell_integration=True, noninteractive=True,
+        )
         downgrade_receipt = require_transition_receipt(
             downgraded, "downgrade", baseline_identity, baseline_package_sha256,
             install, state_root, root, update_receipt["activation"],
             retained_legacy=update_receipt["retained_legacy"],
         )
         shortcut, registry = observe("baseline_downgrade_completed")
+        baseline_repair_launcher = (state_root / "repair-sources" /
+            f"{baseline_package_sha256}.FacManSetup.exe")
+        if stable_retained_digest(
+                baseline_repair_launcher, state_root, root,
+                "baseline target maintenance launcher",
+        ) != baseline_launcher_sha256:
+            raise AssertionError(
+                "B-to-A downgrade did not retain A's package helper for A repair"
+            )
         assert_owned_native(shortcut, registry, install, state_root, root,
                             baseline_identity["version"], "baseline downgrade",
                             active_root=downgrade_receipt["install_root"],
@@ -1561,6 +1757,7 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
 
 def main() -> int:
     global CALL_EVIDENCE, CANARY_TIMEOUT, REAL_DEADLINE
+    global WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--setup-exe", type=Path, required=True)
     parser.add_argument(
@@ -1652,6 +1849,7 @@ def main() -> int:
         REAL_DEADLINE = time.monotonic() + bounded.seconds(
             args.real_total_timeout, "real current-user total deadline"
         )
+        WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY = args.real_self_maintenance_transition
         executable = args.setup_exe.resolve(strict=True)
         args.payload = args.payload.resolve(strict=True)
         if args.real_self_maintenance_transition:
@@ -1691,6 +1889,35 @@ def main() -> int:
     version = version_result.stdout.strip()
     if not version.startswith("0.1.0-"):
         raise AssertionError(f"unexpected setup version: {version}")
+    incomplete_private = run_command([str(executable), "continue-maintenance"])
+    relative_private = run_command([
+        str(executable), "continue-maintenance",
+        "--operation-id", "maint.update.fixture",
+        "--handoff-nonce", "fixture-nonce",
+        "--handoff-journal", "relative-handoff.json",
+        "--handoff-journal-sha256", "a" * 64,
+        "--parent-handle", "1",
+        "--parent-pid", "1",
+        "--parent-created", "1",
+        "--deadline-tick-ms", "1",
+    ])
+    duplicate_private = run_command([
+        str(executable), "continue-maintenance",
+        "--operation-id", "maint.update.fixture",
+        "--operation-id", "maint.update.duplicate",
+        "--handoff-journal", str((ROOT / "missing-handoff.json").resolve()),
+        "--handoff-journal-sha256", "a" * 64,
+        "--parent-handle", "1",
+        "--parent-pid", "1",
+        "--parent-created", "1",
+        "--deadline-tick-ms", "1",
+    ])
+    if (incomplete_private.returncode != 2 or relative_private.returncode != 2 or
+            duplicate_private.returncode != 2 or incomplete_private.stdout or
+            relative_private.stdout or duplicate_private.stdout):
+        raise AssertionError(
+            "private maintenance continuation arguments were not strictly refused"
+        )
 
     fixture = (contextlib.nullcontext(str(args.fixture_root)) if args.fixture_root is not None
                else tempfile.TemporaryDirectory(prefix=(

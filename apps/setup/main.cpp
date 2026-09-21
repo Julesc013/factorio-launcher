@@ -4,6 +4,7 @@
 #include "facman_self_setup.h"
 #include "facman_self_maintenance.h"
 #include "facman_self_maintenance_provider.h"
+#include "windows_maintenance_handoff.h"
 #include "windows_integration.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
@@ -26,6 +27,7 @@
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -35,6 +37,9 @@
 namespace fs = std::filesystem;
 
 namespace {
+
+std::string utf8(const std::wstring &value);
+bool lowercase_hex_64(const std::string &value);
 
 struct Options {
   facman::self_setup::Operation operation =
@@ -69,6 +74,110 @@ struct Options {
   fs::path qualification_fixture_permit;
   bool qualification_fixture_permit_explicit = false;
 };
+
+struct ContinuationOptions {
+  std::string operation_id;
+  std::string nonce;
+  fs::path journal;
+  std::string journal_sha256;
+  std::uintptr_t parent_handle = 0;
+  DWORD parent_pid = 0;
+  std::uint64_t parent_created = 0;
+  std::uint64_t deadline_tick_ms = 0;
+};
+
+bool parse_unsigned(const std::wstring &text, std::uint64_t &value) {
+  if (text.empty()) return false;
+  std::uint64_t result = 0;
+  for (const wchar_t character : text) {
+    if (character < L'0' || character > L'9') return false;
+    const std::uint64_t digit = static_cast<std::uint64_t>(character - L'0');
+    if (result > ((std::numeric_limits<std::uint64_t>::max)() - digit) / 10U)
+      return false;
+    result = result * 10U + digit;
+  }
+  value = result;
+  return true;
+}
+
+bool parse_continuation(int argc, wchar_t **argv, ContinuationOptions &options,
+                        std::string &problem) {
+  if (argc != 18 || std::wstring(argv[1]) != L"continue-maintenance") {
+    problem = "private continuation requires exactly eight named inputs";
+    return false;
+  }
+  unsigned operation_count = 0, nonce_count = 0, journal_count = 0,
+           journal_sha_count = 0, handle_count = 0, pid_count = 0,
+           created_count = 0, deadline_count = 0;
+  std::uint64_t handle = 0, pid = 0;
+  for (int index = 2; index < argc; index += 2) {
+    const std::wstring name(argv[index]);
+    const std::wstring value(argv[index + 1]);
+    if (value.empty()) {
+      problem = "private continuation input is empty";
+      return false;
+    }
+    if (name == L"--operation-id") {
+      ++operation_count;
+      options.operation_id = utf8(value);
+    } else if (name == L"--handoff-nonce") {
+      ++nonce_count;
+      options.nonce = utf8(value);
+    } else if (name == L"--handoff-journal") {
+      ++journal_count;
+      options.journal = fs::path(value);
+    } else if (name == L"--handoff-journal-sha256") {
+      ++journal_sha_count;
+      options.journal_sha256 = utf8(value);
+    } else if (name == L"--parent-handle") {
+      ++handle_count;
+      if (!parse_unsigned(value, handle)) {
+        problem = "private continuation parent handle is invalid";
+        return false;
+      }
+    } else if (name == L"--parent-pid") {
+      ++pid_count;
+      if (!parse_unsigned(value, pid)) {
+        problem = "private continuation parent PID is invalid";
+        return false;
+      }
+    } else if (name == L"--parent-created") {
+      ++created_count;
+      if (!parse_unsigned(value, options.parent_created)) {
+        problem = "private continuation parent creation time is invalid";
+        return false;
+      }
+    } else if (name == L"--deadline-tick-ms") {
+      ++deadline_count;
+      if (!parse_unsigned(value, options.deadline_tick_ms)) {
+        problem = "private continuation deadline is invalid";
+        return false;
+      }
+    } else {
+      problem = "private continuation contains an unknown input";
+      return false;
+    }
+  }
+  std::string identifier_detail;
+  if (operation_count != 1U || nonce_count != 1U || journal_count != 1U ||
+      journal_sha_count != 1U || handle_count != 1U || pid_count != 1U ||
+      created_count != 1U || deadline_count != 1U ||
+      !facman::base::validate_identifier(options.operation_id, identifier_detail) ||
+      !facman::base::validate_identifier(options.nonce, identifier_detail) ||
+      handle == 0 ||
+      handle > static_cast<std::uint64_t>((std::numeric_limits<std::intptr_t>::max)()) ||
+      pid == 0 || pid > (std::numeric_limits<DWORD>::max)() ||
+      options.parent_created == 0 || options.deadline_tick_ms == 0 ||
+      !options.journal.is_absolute() ||
+      options.journal != options.journal.lexically_normal() ||
+      !lowercase_hex_64(options.journal_sha256)) {
+    problem = "private continuation inputs are incomplete or out of range";
+    return false;
+  }
+  options.parent_handle = static_cast<std::uintptr_t>(handle);
+  options.parent_pid = static_cast<DWORD>(pid);
+  return true;
+}
 
 struct MaterializedPackage {
   fs::path path;
@@ -1385,8 +1494,11 @@ public:
   }
 
   facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>
-  retain_handoff_inputs(const facman::self_maintenance::Plan &plan) override {
-    return retain_epoch_handoff_inputs(plan);
+  retain_handoff_inputs(const facman::self_maintenance::Plan &plan,
+      const fs::path &continuation_helper,
+      const std::string &continuation_helper_sha256) override {
+    return retain_epoch_handoff_inputs(
+        plan, continuation_helper, continuation_helper_sha256);
   }
 
   facman::core::Result<facman::self_maintenance::ProviderApplyBinding>
@@ -1477,7 +1589,9 @@ public:
 
 private:
   facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>
-  retain_epoch_handoff_inputs(const facman::self_maintenance::Plan &plan) {
+  retain_epoch_handoff_inputs(const facman::self_maintenance::Plan &plan,
+      const fs::path &continuation_helper,
+      const std::string &continuation_helper_sha256) {
     using Inputs = facman::self_maintenance::RetainedMaintenanceInputs;
     const fs::path handoff_root = plan.target.state_root / "epoch-handoff";
     const fs::path operation_root = handoff_root / plan.operation_id;
@@ -1505,8 +1619,8 @@ private:
     const auto is_initial_prefix = [&](const std::vector<fs::path> &names) {
       return names.empty() || names == std::vector<fs::path>{"package.zip"} ||
           names == std::vector<fs::path>{"package.staging"} ||
-          names == std::vector<fs::path>{"FacManSetup.staging", "package.zip"} ||
-          names == std::vector<fs::path>{"FacManSetup.exe", "package.zip"};
+          names == std::vector<fs::path>{"FacManContinuation.staging", "package.zip"} ||
+          names == std::vector<fs::path>{"FacManContinuation.exe", "package.zip"};
     };
     if (!operation.list_child_names_bounded(3U, initial_names).ok() ||
         !is_initial_prefix(initial_names))
@@ -1603,13 +1717,14 @@ private:
     };
     auto package = retain(plan.package, "package.zip", "package.staging",
                           kMaximumRepairSourceBytes, plan.package_sha256);
-    auto helper = package ? retain(maintenance_launcher_, "FacManSetup.exe", "FacManSetup.staging",
+    auto helper = package ? retain(continuation_helper, "FacManContinuation.exe",
+                                   "FacManContinuation.staging",
                                    kMaximumRepairLauncherBytes,
-                                   maintenance_launcher_sha256_)
+                                   continuation_helper_sha256)
                           : facman::core::Result<std::string>::failure(package.error());
     std::vector<fs::path> names;
     if (!package || !helper || !operation.list_child_names_bounded(3U, names).ok() ||
-        names != std::vector<fs::path>{"FacManSetup.exe", "package.zip"} ||
+        names != std::vector<fs::path>{"FacManContinuation.exe", "package.zip"} ||
         !acceptance.revalidate().ok() || !acceptance.validate_descendant(plan.target.state_root, false).ok() ||
         !state.revalidate().ok() || !handoffs.revalidate().ok() || !operation.revalidate().ok() ||
         !operation.flush_metadata().ok() || !handoffs.flush_metadata().ok() ||
@@ -1618,7 +1733,8 @@ private:
           facman::core::Error{"self_maintenance_epoch_recovery_required",
               "epoch handoff custody set is incomplete or changed", {}});
     return facman::core::Result<Inputs>::success(
-        {operation_root / "package.zip", package.value(), operation_root / "FacManSetup.exe", helper.value()});
+        {operation_root / "package.zip", package.value(),
+         operation_root / "FacManContinuation.exe", helper.value()});
   }
 
   facman::self_setup::NativeContext native_context(
@@ -1985,6 +2101,169 @@ bool admit_maintenance_qualification(
   return true;
 }
 
+constexpr std::uint64_t kMaintenanceHandoffBudgetMs = 600000U;
+
+bool extract_target_maintenance_launcher(
+    const facman::self_maintenance::PackageInspection &package,
+    MaterializedPackage &target_launcher, std::string &problem) {
+  wchar_t temporary_root[MAX_PATH + 1]{};
+  wchar_t temporary_file[MAX_PATH + 1]{};
+  if (GetTempPathW(MAX_PATH, temporary_root) == 0 ||
+      GetTempFileNameW(temporary_root, L"fmm", 0, temporary_file) == 0) {
+    problem = "Windows could not allocate target launcher staging";
+    return false;
+  }
+  target_launcher.temporary = fs::path(temporary_file);
+  std::error_code removed;
+  fs::remove(target_launcher.temporary, removed);
+  if (removed) {
+    problem = "target launcher staging could not be prepared: " +
+        removed.message();
+    return false;
+  }
+  auto extracted = facman::self_maintenance::extract_maintenance_launcher(
+      package, target_launcher.temporary);
+  if (!extracted) {
+    problem = extracted.error().message;
+    if (!extracted.error().detail.empty())
+      problem += ": " + extracted.error().detail;
+    return false;
+  }
+  target_launcher.path = target_launcher.temporary;
+  return true;
+}
+
+std::optional<std::string> exact_regular_file_digest(
+    const fs::path &path, std::string &problem) {
+  facman::platform::StableInputFile input;
+  const auto opened = input.open_no_follow_pinned(path);
+  if (!opened.ok() || !input.identity().regular_file ||
+      input.identity().link_count != 1U || input.size() == 0U ||
+      input.size() > kMaximumRepairLauncherBytes) {
+    problem = opened.ok() ? "file identity is not an admitted regular file"
+                          : opened.detail;
+    return std::nullopt;
+  }
+  auto digest = digest_stable_input(input);
+  if (!digest || !input.revalidate().ok() || !input.revalidate_path().ok()) {
+    problem = "file identity changed while it was hashed";
+    return std::nullopt;
+  }
+  return digest;
+}
+
+bool derive_continuation_coordinator(const ContinuationOptions &options,
+                                     fs::path &coordinator,
+                                     std::string &problem) {
+  const fs::path operation = options.journal.parent_path();
+  const fs::path maintenance = operation.parent_path();
+  const fs::path epoch = maintenance.parent_path();
+  const fs::path epochs = epoch.parent_path();
+  coordinator = epochs.parent_path();
+  std::string identifier_detail;
+  if (options.journal.filename() != "00-handoff-ready.v3.json" ||
+      operation.filename() != fs::path(options.operation_id) ||
+      maintenance.filename() != "maintenance" || epochs.filename() != "epochs" ||
+      coordinator.empty() || !coordinator.is_absolute() ||
+      !facman::base::validate_identifier(options.operation_id,
+                                         identifier_detail) ||
+      !facman::base::validate_identifier(options.nonce, identifier_detail) ||
+      !lowercase_hex_64(epoch.filename().string())) {
+    problem = "private continuation journal does not have the canonical epoch path";
+    return false;
+  }
+  const fs::path expected = coordinator / "epochs" / epoch.filename() /
+      "maintenance" / options.operation_id / "00-handoff-ready.v3.json";
+  if (expected.lexically_normal() != options.journal) {
+    problem = "private continuation journal path is not canonical";
+    return false;
+  }
+  return true;
+}
+
+facman::setup::handoff::Result launch_continuation_helper(
+    const facman::self_maintenance::EpochTransitionPreparation &prepared) {
+  const std::uint64_t now = GetTickCount64();
+  if (now > (std::numeric_limits<std::uint64_t>::max)() -
+                kMaintenanceHandoffBudgetMs)
+    return {false, "maintenance handoff deadline overflow"};
+  return facman::setup::handoff::launch({prepared.inputs.helper,
+      prepared.inputs.helper_sha256, prepared.journal, prepared.journal_sha256,
+      prepared.transition.operation_id, prepared.nonce,
+      now + kMaintenanceHandoffBudgetMs});
+}
+
+int run_private_continuation(const ContinuationOptions &options) {
+  const auto waited = facman::setup::handoff::wait_for_initiator(
+      {options.parent_handle, options.parent_pid, options.parent_created,
+       options.deadline_tick_ms});
+  if (!waited.ok) return 4;
+
+  fs::path coordinator_root;
+  std::string problem;
+  if (!derive_continuation_coordinator(options, coordinator_root, problem) ||
+      GetTickCount64() >= options.deadline_tick_ms)
+    return 4;
+  auto pending =
+      facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
+          coordinator_root);
+  if (!pending || !pending.value().has_value()) return 4;
+  const auto &transition = *pending.value();
+  if (transition.pre_handoff || transition.completed ||
+      transition.operation_id != options.operation_id ||
+      transition.nonce != options.nonce ||
+      transition.journal_sha256 != options.journal_sha256)
+    return 4;
+
+  auto executable = current_executable_path(problem);
+  auto executable_digest = executable
+      ? exact_regular_file_digest(*executable, problem)
+      : std::optional<std::string>{};
+  if (!executable || !executable_digest ||
+      !same_path(*executable, transition.retained_inputs.helper) ||
+      *executable_digest != transition.retained_inputs.helper_sha256)
+    return 4;
+
+  MaterializedPackage target_launcher;
+  if (!extract_target_maintenance_launcher(
+          transition.retained_package, target_launcher, problem) ||
+      GetTickCount64() >= options.deadline_tick_ms)
+    return 4;
+  facman::self_maintenance::ProviderBridge provider(
+      transition.target.state_root, transition.target.acceptance_root);
+  MaintenanceEffects effects(provider, transition.target.state_root,
+      transition.target.acceptance_root, target_launcher.path,
+      transition.retained_package.maintenance_launcher_sha256,
+      transition.shell_integration);
+
+  std::string phase = transition.phase;
+  if (phase == "continuation_pending") {
+    auto continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+        {coordinator_root, options.operation_id, options.nonce,
+         options.journal_sha256, true}, effects);
+    if (!continued) return 4;
+    phase = "publication_pending";
+  }
+  if (GetTickCount64() >= options.deadline_tick_ms) return 4;
+  if (phase == "publication_pending") {
+    auto published = facman::self_maintenance::execute_lifecycle_epoch_publication(
+        {coordinator_root, options.operation_id, options.nonce,
+         options.journal_sha256, true},
+        static_cast<facman::self_maintenance::EpochContinuationEffects &>(effects));
+    if (!published) return 4;
+    phase = "shell_cutover_pending";
+  }
+  if (GetTickCount64() >= options.deadline_tick_ms) return 4;
+  if (phase == "shell_cutover_pending") {
+    auto shell = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
+        {coordinator_root, options.operation_id, options.nonce,
+         options.journal_sha256, true}, effects);
+    if (!shell || shell.value().phase != "shell_cutover_complete") return 4;
+    phase = shell.value().phase;
+  }
+  return phase == "shell_cutover_complete" ? 0 : 4;
+}
+
 int run_maintenance(Options &options, const fs::path &,
                     MaintenanceQualification *qualification) {
   const auto operation = *options.maintenance_operation;
@@ -2183,11 +2462,16 @@ int run_maintenance(Options &options, const fs::path &,
           facman::platform::path_to_utf8(pending.target.logical_root)}, options.json);
       return 4;
     }
+    if (options.shell_integration != pending.shell_integration) {
+      print_maintenance_error({"self_maintenance_epoch_recovery_required",
+          "requested shell integration does not match the immutable pending handoff",
+          pending.operation_id}, options.json);
+      return 4;
+    }
     MaintenanceEffects effects(provider, options.state_root,
-                               options.acceptance_root,
-                               pending.retained_inputs.helper,
-                               pending.retained_inputs.helper_sha256,
-                               options.shell_integration);
+                               options.acceptance_root, {},
+                               pending.retained_package.maintenance_launcher_sha256,
+                               pending.shell_integration);
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error({"self_maintenance_provider_root_unsafe",
@@ -2219,7 +2503,11 @@ int run_maintenance(Options &options, const fs::path &,
       facman::self_maintenance::EpochTransitionRequest request{
           coordinator_root, pending.epoch_id, pending.operation,
           pending.operation_id,
-          pending.retained_package, true};
+          pending.retained_package, true, {}, {}, true};
+      request.continuation_helper = pending.retained_inputs.helper;
+      request.continuation_helper_sha256 =
+          pending.retained_inputs.helper_sha256;
+      request.shell_integration = pending.shell_integration;
       auto prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
           request, effects);
       if (!prepared) {
@@ -2231,54 +2519,37 @@ int run_maintenance(Options &options, const fs::path &,
       reported = prepared.value().transition.target;
       phase = "continuation_pending";
     }
-    if (options.apply && phase == "continuation_pending") {
-      if (!authority_stable(authority_detail)) {
-        print_maintenance_error({"self_maintenance_provider_root_unsafe",
-            "maintenance authority changed before epoch provider continuation", authority_detail},
+    if (options.apply && !pending.completed && phase != "handoff_staging") {
+      if (phase != "continuation_pending" && phase != "publication_pending" &&
+          phase != "shell_cutover_pending") {
+        print_maintenance_error({"self_maintenance_epoch_recovery_required",
+            "pending epoch is not at an externally continuable phase", phase},
             options.json);
         return 4;
       }
-      auto continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
-          {coordinator_root, pending.operation_id, nonce, journal_sha256, true}, effects);
-      if (!continued) {
-        print_maintenance_error(continued.error(), options.json);
-        return 4;
-      }
-      reported = continued.value().transition.target;
-      phase = "publication_pending";
-    }
-    if (options.apply && phase == "publication_pending") {
       if (!authority_stable(authority_detail)) {
         print_maintenance_error({"self_maintenance_provider_root_unsafe",
-            "maintenance authority changed before epoch publication", authority_detail},
+            "maintenance authority changed before external helper launch", authority_detail},
             options.json);
         return 4;
       }
-      auto published = facman::self_maintenance::execute_lifecycle_epoch_publication(
-          {coordinator_root, pending.operation_id, nonce, journal_sha256, true},
-          static_cast<facman::self_maintenance::EpochContinuationEffects &>(effects));
-      if (!published) {
-        print_maintenance_error(published.error(), options.json);
-        return 4;
-      }
-      reported = published.value().generation;
-      phase = "shell_cutover_pending";
-    }
-    if (options.apply && phase == "shell_cutover_pending") {
-      if (!authority_stable(authority_detail)) {
-        print_maintenance_error({"self_maintenance_provider_root_unsafe",
-            "maintenance authority changed before epoch shell cutover", authority_detail},
+      facman::self_maintenance::EpochTransitionPreparation prepared;
+      prepared.phase = "handoff_ready";
+      prepared.transition.operation_id = pending.operation_id;
+      prepared.transition.target = pending.target;
+      prepared.journal = coordinator_root / "epochs" / pending.epoch_id /
+          "maintenance" / pending.operation_id / "00-handoff-ready.v3.json";
+      prepared.journal_sha256 = journal_sha256;
+      prepared.inputs = pending.retained_inputs;
+      prepared.nonce = nonce;
+      const auto launched = launch_continuation_helper(prepared);
+      if (!launched.ok) {
+        print_maintenance_error({"self_maintenance_epoch_recovery_required",
+            "external maintenance helper could not be launched", launched.detail},
             options.json);
         return 4;
       }
-      auto shell = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
-          {coordinator_root, pending.operation_id, nonce, journal_sha256, true}, effects);
-      if (!shell) {
-        print_maintenance_error(shell.error(), options.json);
-        return 4;
-      }
-      reported = shell.value().generation;
-      phase = shell.value().phase;
+      phase = "handoff_launched";
     }
     const fs::path epoch_root = coordinator_root / "epochs" / pending.epoch_id;
     const fs::path generation_record = reported.generation_id.empty() ? fs::path() :
@@ -2373,6 +2644,22 @@ int run_maintenance(Options &options, const fs::path &,
     epoch_request.operation_id = operation_id;
     epoch_request.package = *package;
     epoch_request.apply = options.apply;
+    epoch_request.shell_integration = options.shell_integration;
+    if (options.apply) {
+      std::string helper_problem;
+      auto current_helper = current_executable_path(helper_problem);
+      auto current_helper_sha256 = current_helper
+          ? exact_regular_file_digest(*current_helper, helper_problem)
+          : std::optional<std::string>{};
+      if (!current_helper || !current_helper_sha256) {
+        print_maintenance_error({"self_maintenance_launcher_invalid",
+            "current setup binary cannot be retained for continuation",
+            helper_problem}, options.json);
+        return 4;
+      }
+      epoch_request.continuation_helper = *current_helper;
+      epoch_request.continuation_helper_sha256 = *current_helper_sha256;
+    }
     MaintenanceEffects effects(provider, options.state_root,
                                options.acceptance_root, launcher,
                                package->maintenance_launcher_sha256,
@@ -2397,61 +2684,21 @@ int run_maintenance(Options &options, const fs::path &,
     fs::path generation_record;
     fs::path activation_record;
     if (options.apply) {
-      const auto continuation_request = facman::self_maintenance::EpochContinuationRequest{
-          coordinator_root, operation_id, prepared.value().nonce,
-          prepared.value().journal_sha256, true};
       if (!authority_stable(authority_detail)) {
         print_maintenance_error(
             {"self_maintenance_provider_root_unsafe",
-             "maintenance authority changed before epoch provider continuation", authority_detail},
+             "maintenance authority changed before external helper launch", authority_detail},
             options.json);
         return 4;
       }
-      auto continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
-          continuation_request, effects);
-      if (!continued) {
-        print_maintenance_error(continued.error(), options.json);
-        return 4;
-      }
-      const auto publication_request = facman::self_maintenance::EpochPublicationRequest{
-          coordinator_root, operation_id, prepared.value().nonce,
-          prepared.value().journal_sha256, true};
-      if (!authority_stable(authority_detail)) {
-        print_maintenance_error(
-            {"self_maintenance_provider_root_unsafe",
-             "maintenance authority changed before epoch publication", authority_detail},
+      const auto launched = launch_continuation_helper(prepared.value());
+      if (!launched.ok) {
+        print_maintenance_error({"self_maintenance_epoch_recovery_required",
+            "external maintenance helper could not be launched", launched.detail},
             options.json);
         return 4;
       }
-      auto published = facman::self_maintenance::execute_lifecycle_epoch_publication(
-          publication_request,
-          static_cast<facman::self_maintenance::EpochContinuationEffects &>(effects));
-      if (!published) {
-        print_maintenance_error(published.error(), options.json);
-        return 4;
-      }
-      const auto shell_request = facman::self_maintenance::EpochShellCutoverRequest{
-          coordinator_root, operation_id, prepared.value().nonce,
-          prepared.value().journal_sha256, true};
-      if (!authority_stable(authority_detail)) {
-        print_maintenance_error(
-            {"self_maintenance_provider_root_unsafe",
-             "maintenance authority changed before epoch shell cutover", authority_detail},
-            options.json);
-        return 4;
-      }
-      auto shell = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
-          shell_request, effects);
-      if (!shell) {
-        print_maintenance_error(shell.error(), options.json);
-        return 4;
-      }
-      reported = shell.value().generation;
-      phase = shell.value().phase;
-      generation_record = coordinator_root / "epochs" / epoch_request.epoch_id /
-          "generations" / ("generation." + reported.generation_id + ".v2.json");
-      activation_record = coordinator_root / "epochs" / epoch_request.epoch_id /
-          "activations" / ("activation." + operation_id + ".v2.json");
+      phase = "handoff_launched";
     }
     if (options.json) {
       facman::core::json::ObjectBuilder output;
@@ -2738,6 +2985,13 @@ private:
 
 int wmain(int argc, wchar_t **argv) {
   SetConsoleOutputCP(CP_UTF8);
+  if (argc > 1 && std::wstring(argv[1]) == L"continue-maintenance") {
+    ContinuationOptions continuation;
+    std::string continuation_problem;
+    if (!parse_continuation(argc, argv, continuation, continuation_problem))
+      return 2;
+    return run_private_continuation(continuation);
+  }
   Options options;
   std::string problem;
   if (!parse(argc, argv, options, problem)) {

@@ -139,10 +139,11 @@ class Capture:
             self.read = W.HANDLE()
 
 
-def stop_and_drain(api, job, process, assigned, captures, result, cleanup_seconds):
+def stop_and_drain(api, job, process, assigned, captures, result, cleanup_seconds,
+                   *, terminate_job=True):
     """Finite cleanup; a termination request alone does not prove job completion."""
     end = time.monotonic() + cleanup_seconds
-    if job:
+    if job and terminate_job:
         result["job_terminated"] = bool(api.TerminateJobObject(job, 124))
     if process.process and not assigned:
         require(api.TerminateProcess(process.process, 125), "TerminateProcess")
@@ -175,7 +176,8 @@ def stop_and_drain(api, job, process, assigned, captures, result, cleanup_second
 
 
 def run(command: list[str], cwd: Path, environment: dict[str, str], streams: tuple,
-        *, seconds: float, cleanup_seconds: float, output_limit: int) -> dict:
+        *, seconds: float, cleanup_seconds: float, output_limit: int,
+        wait_for_job_empty_after_primary: bool = False) -> dict:
     import msvcrt
     deadline = time.monotonic() + seconds
     api = kernel()
@@ -185,7 +187,9 @@ def run(command: list[str], cwd: Path, environment: dict[str, str], streams: tup
     captures = []
     result = {"dispatched": False, "resumed": False, "termination": "start_failed",
               "exit_code": None, "process_identity": None, "job_terminated": False,
-              "primary_stopped": False, "job_empty_observed": False, "error": None}
+              "primary_stopped": False, "job_empty_observed": False,
+              "waited_for_job_empty_after_primary": wait_for_job_empty_after_primary,
+              "error": None}
     stdin = msvcrt.get_osfhandle(streams[0].fileno())
     try:
         job = api.CreateJobObjectW(None, None)
@@ -246,8 +250,18 @@ def run(command: list[str], cwd: Path, environment: dict[str, str], streams: tup
                 if state == 0xFFFFFFFF:
                     require(False, "WaitForSingleObject")
                 if state == 0:
-                    result["termination"] = "completed"
-                    break
+                    result["primary_stopped"] = True
+                    if not wait_for_job_empty_after_primary:
+                        result["termination"] = "completed"
+                        break
+                    accounting = Accounting()
+                    require(api.QueryInformationJobObject(job, 1, C.byref(accounting),
+                                                          C.sizeof(accounting), None),
+                            "QueryInformationJobObject")
+                    result["job_empty_observed"] = accounting.active == 0
+                    if result["job_empty_observed"]:
+                        result["termination"] = "completed"
+                        break
                 if time.monotonic() >= deadline:
                     break
     except Exception as error:
@@ -257,7 +271,9 @@ def run(command: list[str], cwd: Path, environment: dict[str, str], streams: tup
         try:
             for capture in captures:
                 capture.close_writer()
-            stop_and_drain(api, job, process, assigned, captures, result, cleanup_seconds)
+            stop_and_drain(api, job, process, assigned, captures, result, cleanup_seconds,
+                           terminate_job=not (wait_for_job_empty_after_primary and
+                                              result["termination"] == "completed"))
         except Exception as error:
             result["termination"] = "cleanup_incomplete"
             result["cleanup_error"] = str(error)[:4096]

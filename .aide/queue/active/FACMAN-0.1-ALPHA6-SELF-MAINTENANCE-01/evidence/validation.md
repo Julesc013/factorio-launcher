@@ -296,3 +296,45 @@ Ubuntu 24.04 external roots. The focused test passed in both roots (31.08 and
 9.47 seconds respectively). `tools/source_format_check.py` and
 `git diff --check` passed. The corrected hosted macOS result remains pending;
 the failed run does not qualify macOS behavior.
+
+## 2026-09-22 external retained-helper handoff
+
+Source base: `ea43094b2dfa8d4b2b80fe3b2811e2a50bacafda`
+
+The existing Windows Debug root rebuilt `FacManSetup` and
+`facman_self_maintenance_smoke`. The final focused lifecycle regression passed
+after adding a provider-reviewed staged-v3 fixture: a second public apply
+promoted the staged journal, relaunched the retained helper and reached
+`shell_cutover_complete`. The earlier invalid synthetic attempt was retained as
+a failed test observation; it used a fake provider-plan digest and the product
+correctly refused it before effects.
+
+The affected Windows validation passed:
+
+- `facman_self_setup_lifecycle`: 1/1 in 166.58 seconds, including normal
+  external handoff, strict private-input refusals and staged public retry;
+- the preceding final focused run passed
+  `facman_self_maintenance_smoke`,
+  `facman_windows_maintenance_handoff_smoke`, and
+  `facman_self_setup_lifecycle` 3/3 in 90.16 seconds before the staged retry was
+  added;
+- the pinned-Python provider-controller and candidate/workflow matrix passed
+  48/48 in 7.849 seconds.
+
+The Ubuntu 24.04 WSL external root rebuilt and passed the directly affected
+maintenance smoke. This is cross-platform source/native evidence, not physical
+Linux product qualification. `tools/strict_check.py` passed with 436 schemas,
+131 commands and 290 refusal codes. Source formatting, Python compilation,
+portable AIDE Lite validation and `git diff --check` passed.
+
+An independent non-authoring source review traced current-helper/target-helper
+separation, exact parent wait, strict private arguments, canonical journal
+derivation, pinned launch, one absolute deadline, no post-launch public
+effects, v3 recovery, shell binding and Job-empty containment. Its verdict was
+PASS with no source-safety blocker. Its one suggested packaged retry case is
+the staged-v3 public regression recorded above.
+
+This checkpoint does not claim the source-distinct produced-package Windows
+A/B lifecycle, real Start Menu/HKCU effects, physical Linux/macOS package
+behavior, chain-aware repair/removal or human acceptance. Those exits remain
+active.
