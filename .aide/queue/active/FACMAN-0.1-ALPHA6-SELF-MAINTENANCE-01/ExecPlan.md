@@ -319,3 +319,22 @@ the renamed evidence copies. It does not relax the portable digest, Setup
 identity, payload-equivalence contract, source distinction or transition
 admission. A new exact hosted run remains required; run `35683529084` grants no
 transition or final bundle qualification.
+
+## 2026-09-22 retained Setup-overlay identity correction
+
+Product-candidate run `35688220467` tested exact integrated dev
+`d84e464b00fa8a533399c59b266f107de9a63f7e`. Linux and macOS passed. Windows
+passed the current-source product and setup work, built and audited the exact
+Alpha.5 predecessor products, and entered the real source-distinct transition.
+The Alpha.5 Setup installation completed with its real Start Menu and HKCU
+effects, then the qualification harness stopped because it compared the
+retained repair source with the SHA-256 of the outer Setup executable.
+
+The installed source is correctly the Setup executable's materialized ZIP
+overlay, retained under that overlay's own SHA-256. The bounded successor reads
+the exact non-ZIP64 overlay boundary using the same end-record, local-header and
+central-directory invariants as the Windows runtime, hashes only those retained
+bytes through a stable single-link input, and uses that digest for every
+generation, repair-source and transition assertion. Outer Setup hashes remain
+recorded separately. A new exact hosted run remains required; run `35688220467`
+grants no completed A-to-B transition or final bundle qualification.

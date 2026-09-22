@@ -246,6 +246,23 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             self.assertEqual("0.1.0-alpha.6", identity["version"])
             self.assertEqual(source, identity["source_revision"])
 
+    def test_setup_overlay_digest_binds_only_the_materialized_zip_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package, _ = self.overlay(
+                root, version="0.1.0-alpha.6", source="b" * 40,
+            )
+            expected = candidate.sha256_file(package)
+            prefixed = root / "FacMan-0.1.0-alpha.6-windows-x64-setup.exe"
+            prefixed.write_bytes(b"MZ\x00bounded bootstrap\n" + package.read_bytes())
+
+            self.assertEqual(expected, candidate.setup_overlay_sha256(package))
+            self.assertEqual(expected, candidate.setup_overlay_sha256(prefixed))
+
+            prefixed.write_bytes(prefixed.read_bytes() + b"foreign trailing byte")
+            with self.assertRaisesRegex(ValueError, "ZIP end record"):
+                candidate.setup_overlay_sha256(prefixed)
+
     def test_identity_refuses_cross_record_source_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             package, _ = self.overlay(Path(temporary), version="0.1.0-alpha.6", source="b" * 40,

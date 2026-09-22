@@ -552,3 +552,40 @@ diff checks, portable AIDE testing and validation, and the full strict check
 passed. The strict result retains 436 schemas, 131 commands and 290 refusal
 codes. Exact hosted requalification remains pending; no transition, six-asset
 candidate, release or publication claim follows from the failed run.
+
+## 2026-09-22 retained Setup-overlay identity correction
+
+Run `35688220467` was bound to source
+`d84e464b00fa8a533399c59b266f107de9a63f7e`, tree
+`da6efdeaafa9b51ecdeea8c13335a32b741184b4`, and Alpha.5 baseline
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+completed the current-source package and real current-user setup lifecycle,
+produced and audited the exact Alpha.5 portable and Setup products, and then
+installed Alpha.5 from that source-distinct Setup. Its real shortcut and HKCU
+registration bound repair to
+`b5cdf9d768e192e2c1b877625b05577b910ba061d79d95a15777b7d2965aadc7.zip`.
+The harness incorrectly supplied the outer Setup executable SHA-256
+`139efc98637e7b98b4866f105a11ed9f84e6774f48c7540925c80610483ae6bf`
+as the expected retained-package identity and stopped at the first post-install
+assertion. No update, downgrade, repair, rollback or removal phase ran.
+
+The retained Windows log has SHA-256
+`833186e8c3c0965952965f0ca67667cfbb8e1263aa8ba85f239900a96b120d25`;
+GitHub artifact `10678237103` has digest
+`462ff805fbed0424efa59b6dce57bbe7b80a5bde8bb71f621db34f0a2d5e9760`,
+and the 1,624-entry local evidence manifest has SHA-256
+`6e05c68c21aedfb9be23d87c3c1c22b5f35673b91ba236110f600cd94948647e`.
+The transition attempt and retained lifecycle receipts have SHA-256 values
+`0ea744fa4e4dd957fa910b5bfe66f332c8b505719ddd0c3201f0212923deb59a`
+and `2c7dff5bda8cb63f5e9bab5575475bc33281ae964346bb8d590f1e580992b783`.
+
+The successor's exact overlay reader computes `b5cdf9d7...` from the retained
+Alpha.5 Setup, matching the installed repair-source filename and registry
+commands. Its regression proves a prefixed Setup and the corresponding pure ZIP
+have the same materialized digest and refuses foreign trailing bytes. Fifteen
+focused tests and the 107-test broader candidate/package matrix pass. Python
+compilation, source formatting, diff checks, portable AIDE testing and
+validation, and the full strict check pass; the strict result retains 436
+schemas, 131 commands and 290 refusal codes. Exact hosted requalification is
+pending, and the failed run grants no transition, final candidate, release or
+publication claim.
