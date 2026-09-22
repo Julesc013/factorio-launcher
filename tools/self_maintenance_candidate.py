@@ -385,7 +385,7 @@ def predecessor_roots(task_root: Path, baseline_revision: str) -> tuple[Path, Pa
 
 def predecessor_environment(
     source: Path, output_root: Path, universal_launcher_root: Path,
-    universal_setup_root: Path,
+    universal_setup_root: Path, source_revision: str,
 ) -> dict[str, str]:
     """Bind predecessor subprocesses to output owned by that checkout."""
 
@@ -397,6 +397,7 @@ def predecessor_environment(
     environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(universal_launcher_root)
     environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(universal_setup_root)
     environment["PYTHONPATH"] = str(source)
+    environment["FACMAN_CI_SOURCE_SHA"] = source_revision
     environment["FACMAN_WINFORMS_OUTPUT_ROOT"] = str(
         owned_output / "winforms-product" / "Release"
     )
@@ -445,7 +446,8 @@ def build_predecessor(
     if not (source / "runtime/self_setup/facman_self_maintenance_package.cpp").is_file():
         raise ValueError("baseline source cannot produce a self-maintenance package")
     environment = predecessor_environment(
-        source, output_root, args.universal_launcher_root, args.universal_setup_root
+        source, output_root, args.universal_launcher_root, args.universal_setup_root,
+        baseline_revision,
     )
     checkout_observation_root = output_root / "source-observation"
     checkout_observation = checkout_observation_root / "current-checkout-observation.v2.json"

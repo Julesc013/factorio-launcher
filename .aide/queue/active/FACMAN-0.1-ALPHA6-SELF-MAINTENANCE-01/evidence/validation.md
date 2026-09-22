@@ -449,3 +449,30 @@ and full strict validation with 436 schemas, 131 commands and 290 refusal codes
 also passed. Exact hosted requalification remains pending. No source-distinct
 transition, six-asset candidate, release, or publication claim follows from
 the failed run.
+
+## 2026-09-22 predecessor CI source-identity correction
+
+Run `35673461778` was bound to source
+`bd838f1b92c976f9c6138d188a8d978ede023fd1` and Alpha.5 baseline
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+accepted the predecessor's external WinForms output, then the Alpha.5 package
+provenance check refused with `GitHub source SHA disagrees with packaged source
+revision`. No source-distinct A-to-B transition was entered. The retained
+Windows job log has SHA-256
+`810aecce911eb98b9d9680585bbdec4c2eac857ae4694633a055fc147b2058b5`;
+the downloaded GitHub artifact digest is
+`c7bdbc744d3b1c938f67990df16470f7e3cb94ff33191a2488a374feff86cfcf`, and the
+1,623-entry local evidence manifest has SHA-256
+`2abd735a549f4de76bbc010c145ea6e85276b362b5657fe2bb7e1732ac707c68`.
+
+The successor binds `FACMAN_CI_SOURCE_SHA` to the exact resolved predecessor
+revision. Its regression starts with conflicting candidate and stale explicit
+CI identities, proves the predecessor value replaces the explicit identity,
+and proves the outer candidate `GITHUB_SHA` remains unchanged. The focused
+candidate, workflow, and external-component staging selection passed 40 tests.
+The broader candidate/package matrix passed 120 tests with one
+platform-conditioned skip. Python compilation, source formatting, diff checks,
+portable AIDE testing and validation, and the full strict check passed. The
+strict result retains 436 schemas, 131 commands, and 290 refusal codes. Exact
+hosted requalification remains pending; no transition, six-asset candidate,
+release, or publication claim follows from the failed run.

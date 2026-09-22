@@ -44,8 +44,15 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             launcher = root / "universal-launcher"
             setup = root / "universal-setup"
 
+            predecessor_revision = "a" * 40
             with mock.patch.dict(
-                os.environ, {"FACMAN_TASK_ROOT": str(candidate_task)}, clear=False,
+                os.environ,
+                {
+                    "FACMAN_TASK_ROOT": str(candidate_task),
+                    "GITHUB_SHA": "b" * 40,
+                    "FACMAN_CI_SOURCE_SHA": "c" * 40,
+                },
+                clear=False,
             ):
                 with self.assertRaisesRegex(ValueError, "repository_key"):
                     development_layout.ensure_task_root(
@@ -54,13 +61,17 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
                         development_layout.current_task_id(source),
                     )
                 environment = candidate.predecessor_environment(
-                    source, output, launcher, setup,
+                    source, output, launcher, setup, predecessor_revision,
                 )
 
             self.assertEqual(str(output.resolve()), environment["FACMAN_TASK_ROOT"])
             self.assertEqual(str(launcher), environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"])
             self.assertEqual(str(setup), environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"])
             self.assertEqual(str(source), environment["PYTHONPATH"])
+            self.assertEqual(
+                predecessor_revision, environment["FACMAN_CI_SOURCE_SHA"],
+            )
+            self.assertEqual("b" * 40, environment["GITHUB_SHA"])
             self.assertEqual(
                 str(output / "winforms-product" / "Release"),
                 environment["FACMAN_WINFORMS_OUTPUT_ROOT"],

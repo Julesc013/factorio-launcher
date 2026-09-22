@@ -260,3 +260,21 @@ tests pass, as do the broader 120-test candidate/package matrix, Python
 compilation, source formatting, diff checks and the complete strict repository
 check. A new exact hosted product-candidate run remains required; run
 `35668651886` grants no transition or bundle qualification.
+
+## 2026-09-22 predecessor CI source-identity correction
+
+Product-candidate run `35673461778` tested exact integrated dev
+`bd838f1b92c976f9c6138d188a8d978ede023fd1` against Alpha.5 predecessor
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+completed the current-source package, real current-user setup lifecycle, and
+the detached predecessor native and WinForms builds. The predecessor package
+then refused before the source-distinct transition because it inherited the
+candidate run's `GITHUB_SHA` while its package correctly declared the Alpha.5
+source revision.
+
+The bounded successor passes the resolved predecessor revision into its
+isolated environment as `FACMAN_CI_SOURCE_SHA`, the package provenance
+contract's explicit checkout-source identity. It keeps the outer candidate
+`GITHUB_SHA`, package comparison, and exact provenance check intact. A new
+hosted run remains required; the failed run grants no transition or bundle
+qualification.
