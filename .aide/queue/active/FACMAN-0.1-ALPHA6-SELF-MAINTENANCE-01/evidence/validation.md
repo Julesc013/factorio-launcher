@@ -426,3 +426,26 @@ Validation passed:
 The exact hosted rerun is pending. The Linux/macOS successes retain their
 original source scope, while the Windows source-distinct transition and final
 six-asset bundle remain unqualified.
+
+## 2026-09-22 predecessor WinForms output binding correction
+
+Run `35668651886` was bound to source
+`05016bb154c147b0926642f190437f3578bc1dfa` and Alpha.5 baseline
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. The
+Windows job completed the current-source package and real current-user setup
+lifecycle, then built the detached predecessor native and WinForms products.
+The WinForms build succeeded at the owned external path, but the Alpha.5
+package builder was not given `FACMAN_WINFORMS_OUTPUT_ROOT` and refused its
+required `apps/gui/windows/winforms` component before the A-to-B transition.
+The retained Windows log has SHA-256
+`16a35e340277437b85432624915e226783188dd5d18e4e5e9340295c7c7535ff`.
+
+The successor sets that existing package input to the same predecessor-owned
+`winforms-product/Release` directory used by the build helper. The focused
+candidate, workflow, and external-component staging selection passed 40 tests.
+The broader candidate/package matrix passed 120 tests with one
+platform-conditioned skip; Python compilation, source formatting, diff checks
+and full strict validation with 436 schemas, 131 commands and 290 refusal codes
+also passed. Exact hosted requalification remains pending. No source-distinct
+transition, six-asset candidate, release, or publication claim follows from
+the failed run.

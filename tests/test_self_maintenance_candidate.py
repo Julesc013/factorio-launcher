@@ -61,6 +61,10 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             self.assertEqual(str(launcher), environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"])
             self.assertEqual(str(setup), environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"])
             self.assertEqual(str(source), environment["PYTHONPATH"])
+            self.assertEqual(
+                str(output / "winforms-product" / "Release"),
+                environment["FACMAN_WINFORMS_OUTPUT_ROOT"],
+            )
             marker = development_layout.read_marker(output, source)
             self.assertEqual(
                 development_layout.repository_key(source), marker["repository_key"],
