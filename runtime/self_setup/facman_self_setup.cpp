@@ -343,6 +343,13 @@ std::string provider_transaction_identity(const std::string &operation_id,
       install_id + "\n").substr(0, 24);
 }
 
+bool classic_generation_install_identity(const std::string &install_id) {
+  static const std::string prefix = "facman.self.generation.";
+  return install_id.size() == prefix.size() + 64U &&
+      install_id.compare(0, prefix.size(), prefix) == 0 &&
+      digest_or_empty(install_id.substr(prefix.size()));
+}
+
 facman::core::Result<std::string> stable_file_digest(const fs::path &path) {
   facman::platform::StableInputFile input;
   const auto opened = input.open_no_follow(path);
@@ -672,8 +679,19 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
         error("self_setup_recovery_required", "setup operation journal contains invalid identities", facman::platform::path_to_utf8(path)));
   const std::string expected_transaction = provider_transaction_identity(
       journal.operation_id, journal.install_id);
+  const std::string legacy_direct_transaction = "tx." + journal.operation_id;
+  // Pre-compaction builds already emitted generation-specific uninstall
+  // journals. Preserve their recorded transaction through restart recovery;
+  // substituting the compact identity would describe a different provider
+  // transaction. New journals always use the bounded identity above.
+  const bool legacy_generation_uninstall_transaction =
+      !journal.legacy_v1 && journal.operation == "uninstall" &&
+      classic_generation_install_identity(journal.install_id) &&
+      expected_transaction != legacy_direct_transaction &&
+      journal.provider_transaction_id == legacy_direct_transaction;
   if (journal.provider_request_id != "request." + journal.operation_id ||
-      journal.provider_transaction_id != expected_transaction ||
+      (journal.provider_transaction_id != expected_transaction &&
+       !legacy_generation_uninstall_transaction) ||
       (journal.operation == "install" && journal.provider_plan_id != journal.provider_request_id) ||
       (journal.operation != "install" && journal.provider_plan_id != "plan." + journal.operation_id)) {
     return facman::core::Result<SetupJournal>::failure(error(

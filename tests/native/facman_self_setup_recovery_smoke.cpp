@@ -906,6 +906,58 @@ void cases() {
     value.replace(offset, from.size(), to);
     return true;
   };
+  Tree legacy_generation_uninstall{
+      fs::temp_directory_path() /
+      "facman-self-setup-recovery-smoke-legacy-generation-uninstall"};
+  fs::remove_all(legacy_generation_uninstall.root, ignored);
+  fs::create_directories(legacy_generation_uninstall.root);
+  Provider legacy_generation_provider;
+  Native legacy_generation_native;
+  InterruptAt legacy_generation_after_plan(
+      setup::DurableBoundary::provider_plan_reviewed);
+  auto legacy_generation_request = request_for(
+      legacy_generation_uninstall, legacy_generation_provider,
+      &legacy_generation_native, setup::Operation::uninstall);
+  legacy_generation_request.install_id =
+      "facman.self.generation." + std::string(64, 'b');
+  legacy_generation_request.durable_boundary_hook =
+      &legacy_generation_after_plan;
+  require(!setup::execute(legacy_generation_request) &&
+              nested_string_member(active_journal(legacy_generation_uninstall),
+                                   "provider", "phase") == "plan_reviewed",
+          "generation uninstall fixture reaches a durable pre-apply phase");
+  const fs::path legacy_generation_path =
+      active_journal_path(legacy_generation_uninstall);
+  std::string legacy_generation_json =
+      active_journal(legacy_generation_uninstall);
+  const std::string legacy_generation_operation_id =
+      string_member(legacy_generation_json, "operation_id");
+  const std::string compact_generation_transaction = nested_string_member(
+      legacy_generation_json, "provider", "transaction_id");
+  const std::string direct_generation_transaction =
+      "tx." + legacy_generation_operation_id;
+  require(compact_generation_transaction != direct_generation_transaction &&
+              replace_once(
+                  legacy_generation_json,
+                  "\"transaction_id\":\"" +
+                      compact_generation_transaction + "\"",
+                  "\"transaction_id\":\"" +
+                      direct_generation_transaction + "\""),
+          "pre-compaction generation uninstall fixture keeps its direct transaction");
+  {
+    std::ofstream output(legacy_generation_path,
+                         std::ios::binary | std::ios::trunc);
+    output << legacy_generation_json;
+  }
+  auto legacy_generation_resume = request_for(
+      legacy_generation_uninstall, legacy_generation_provider,
+      &legacy_generation_native, setup::Operation::uninstall);
+  legacy_generation_resume.install_id = legacy_generation_request.install_id;
+  require(setup::execute(legacy_generation_resume) &&
+              legacy_generation_provider.apply_transaction_ids.size() == 1U &&
+              legacy_generation_provider.apply_transaction_ids.front() ==
+                  direct_generation_transaction,
+          "pre-compaction generation uninstall resumes with its recorded transaction");
   const std::string v2_intent = string_member(v2_legacy_json, "intent_digest");
   require(replace_once(v1_legacy_json, "facman.setup_operation_journal.v2",
                        "facman.setup_operation_journal.v1") &&
