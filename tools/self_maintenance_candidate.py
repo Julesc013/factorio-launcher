@@ -397,6 +397,9 @@ def predecessor_environment(
     environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(universal_launcher_root)
     environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(universal_setup_root)
     environment["PYTHONPATH"] = str(source)
+    environment["FACMAN_WINFORMS_OUTPUT_ROOT"] = str(
+        owned_output / "winforms-product" / "Release"
+    )
     return environment
 
 

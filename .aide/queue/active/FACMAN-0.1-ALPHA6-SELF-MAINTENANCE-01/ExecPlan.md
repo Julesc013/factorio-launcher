@@ -240,3 +240,23 @@ the broader 120-test package and candidate matrix, source formatting, Python
 compilation, diff checks and the complete strict repository check pass. A new
 exact hosted product-candidate run remains required; the failed run grants no
 source-distinct transition or candidate-bundle qualification.
+
+## 2026-09-22 predecessor WinForms output binding correction
+
+Product-candidate run `35668651886` tested exact integrated dev
+`05016bb154c147b0926642f190437f3578bc1dfa`. Linux and macOS passed again.
+Windows reached the detached Alpha.5 predecessor build, completed its native
+and WinForms builds, and then failed before package construction because the
+predecessor package process was not given the external WinForms output path.
+It therefore searched only the detached checkout's default `bin/Release`
+directory even though the required executable existed in the marker-owned
+predecessor task root.
+
+The corrective successor binds the predecessor's existing
+`FACMAN_WINFORMS_OUTPUT_ROOT` package input to that exact owned output. It does
+not copy a binary into the checkout, use the candidate GUI, or broaden the
+package resolver. Focused candidate, workflow, and external-component staging
+tests pass, as do the broader 120-test candidate/package matrix, Python
+compilation, source formatting, diff checks and the complete strict repository
+check. A new exact hosted product-candidate run remains required; run
+`35668651886` grants no transition or bundle qualification.
