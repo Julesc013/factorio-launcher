@@ -404,6 +404,16 @@ def predecessor_environment(
     return environment
 
 
+def predecessor_audit_environment(
+    producer_environment: dict[str, str],
+) -> dict[str, str]:
+    """Use current qualification code without changing predecessor production."""
+
+    environment = dict(producer_environment)
+    environment["PYTHONPATH"] = str(ROOT)
+    return environment
+
+
 def build_predecessor_winforms(
     source: Path, output_root: Path, environment: dict[str, str],
     *, deadline: float,
@@ -525,15 +535,16 @@ def build_predecessor(
     gates["payload_equivalence"] = "pending"
     write_baseline_staging(evidence_root, staged, gates)
     equivalence = output_root / "evidence/windows-payload-equivalence.v1.json"
+    auditor_environment = predecessor_audit_environment(environment)
     try:
         run([
-            sys.executable, str(source / "tools/package_contract_tck.py"),
+            sys.executable, str(ROOT / "tools/package_contract_tck.py"),
             "--profile", "windows_product_x64", "--canonical-stage",
             str(packages / "windows_product_x64"), "--payload-zip", str(result),
             "--canonical-artifact", str(portable), "--payload-artifact", str(result),
             "--adapter", "windows_setup_overlay_v1", "--version", baseline_version,
             "--receipt", str(equivalence),
-        ], cwd=source, env=environment, deadline=deadline)
+        ], cwd=ROOT, env=auditor_environment, deadline=deadline)
     except BaseException:
         gates["payload_equivalence"] = "failed"
         write_baseline_staging(evidence_root, staged, gates)

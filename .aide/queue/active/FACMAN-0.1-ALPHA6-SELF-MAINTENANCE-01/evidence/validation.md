@@ -476,3 +476,41 @@ portable AIDE testing and validation, and the full strict check passed. The
 strict result retains 436 schemas, 131 commands, and 290 refusal codes. Exact
 hosted requalification remains pending; no transition, six-asset candidate,
 release, or publication claim follows from the failed run.
+
+## 2026-09-22 current-contract predecessor audit correction
+
+Run `35678300868` was bound to source
+`d94166a2337ca27794881212586c7bce92cd48a2` and Alpha.5 baseline
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+passed the current-source native, package, resource and real current-user setup
+work, then produced the exact detached Alpha.5 portable and Setup artifacts.
+The predecessor's historical package auditor refused the Setup payload because
+its setup-overlay ownership catalogue omitted the legitimate
+`facman/state/self-maintenance-package.v1.json` file. The transition was not
+entered.
+
+The retained Windows job log has SHA-256
+`b6ffa34ed4fd54c31610f633ce1e224bfd422d7e457950a77382ade95a22b47c`;
+the downloaded GitHub artifact digest is
+`1984e17c0a79700f48e170bfdac4894a6df075e2099a869d5b19ac44c50263fc`, and the
+1,741-entry local evidence manifest has SHA-256
+`e85d5b741f395ecd9bece78df3a7ff8590f761236d5d93ec4355b03229773707`.
+The retained portable has SHA-256
+`b4ef9a2606b4ad462a8bd6c1d57179ad892eb3aa061326f95cc91ca20bba7764` and the
+retained Setup has SHA-256
+`139efc98637e7b98b4866f105a11ed9f84e6774f48c7540925c80610483ae6bf`.
+
+Replaying those exact artifacts through the current source's
+`windows_setup_overlay_v1` auditor passed without artifact changes. Its
+`current-auditor-equivalence.v1.json` receipt has SHA-256
+`80a0c55f3ad92586d408166761d7ac34ab118f2d943af535bbc2668c90a6a422`
+and binds all 115 canonical files. The successor changes only the auditor
+selection after Alpha.5 production. Its focused candidate, workflow and
+external-component staging selection passed 40 tests. The broader candidate,
+package, resource and development-root matrix passed 120 tests with one
+platform-conditioned skip, and the current package-contract TCK passed 14
+tests. Python compilation, source formatting, diff checks, portable AIDE
+testing and validation, and the full strict check passed. The strict result
+retains 436 schemas, 131 commands and 290 refusal codes. Exact hosted
+requalification remains pending; no transition, six-asset candidate, release,
+or publication claim follows from the failed run or local replay.

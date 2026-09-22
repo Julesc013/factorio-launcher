@@ -278,3 +278,24 @@ contract's explicit checkout-source identity. It keeps the outer candidate
 `GITHUB_SHA`, package comparison, and exact provenance check intact. A new
 hosted run remains required; the failed run grants no transition or bundle
 qualification.
+
+## 2026-09-22 current-contract predecessor audit correction
+
+Product-candidate run `35678300868` tested exact integrated dev
+`d94166a2337ca27794881212586c7bce92cd48a2` against Alpha.5 predecessor
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+passed its current-source native, package, resource and current-user setup
+work, then successfully built the detached predecessor native, WinForms,
+portable and Setup products. This confirms the predecessor source-identity
+correction. The run stopped before the A-to-B transition when the Alpha.5
+checkout's historical setup-overlay auditor treated
+`facman/state/self-maintenance-package.v1.json` as an unowned extra file.
+
+The exact retained Alpha.5 portable and Setup artifacts pass the current
+`windows_setup_overlay_v1` auditor unchanged. The bounded successor therefore
+keeps predecessor production, tools, environment and provenance pinned to
+Alpha.5, but qualifies those produced artifacts with the current candidate
+controller's ownership contract. It does not remove the retained state file,
+reuse a candidate product, or weaken payload equivalence. A new exact hosted
+run remains required; run `35678300868` grants no transition or final bundle
+qualification.
