@@ -13,6 +13,7 @@ import os
 import re
 import shutil
 import stat
+import struct
 import subprocess
 import sys
 import time
@@ -60,6 +61,69 @@ def sha256_file(path: Path) -> str:
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(chunk)
+    return digest.hexdigest()
+
+
+def setup_overlay_sha256(path: Path) -> str:
+    """Hash the exact ZIP overlay materialized by the Windows setup runtime."""
+
+    observed = exact_regular(path, "setup overlay")
+    metadata = observed.lstat()
+    identity = (
+        metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns,
+    )
+    maximum_tail = 22 + 65535
+    tail_size = min(metadata.st_size, maximum_tail)
+    if tail_size < 22:
+        raise ValueError("setup overlay is too small to contain a ZIP payload")
+    with observed.open("rb") as source:
+        opened = os.fstat(source.fileno())
+        if (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns) != identity:
+            raise ValueError("setup overlay changed before it was read")
+        source.seek(metadata.st_size - tail_size)
+        tail = source.read(tail_size)
+        eocd = next((
+            position for position in range(len(tail) - 22, -1, -1)
+            if tail[position:position + 4] == b"PK\x05\x06"
+            and position + 22 + struct.unpack_from("<H", tail, position + 20)[0]
+            == len(tail)
+        ), None)
+        if eocd is None:
+            raise ValueError("setup overlay has no bounded ZIP end record")
+        disk, central_disk, disk_entries, total_entries, central_size, central_offset = \
+            struct.unpack_from("<HHHHII", tail, eocd + 4)
+        if (
+            disk != 0 or central_disk != 0 or disk_entries != total_entries
+            or total_entries in (0, 0xffff)
+            or central_size == 0xffffffff or central_offset == 0xffffffff
+        ):
+            raise ValueError("setup overlay uses an unsupported split or ZIP64 payload")
+        absolute_eocd = metadata.st_size - tail_size + eocd
+        relative_span = central_size + central_offset
+        if relative_span > absolute_eocd:
+            raise ValueError("setup overlay ZIP offsets are inconsistent")
+        archive_start = absolute_eocd - relative_span
+        source.seek(archive_start)
+        if source.read(4) != b"PK\x03\x04":
+            raise ValueError("setup overlay has no ZIP local header at its payload boundary")
+        source.seek(archive_start + central_offset)
+        if source.read(4) != b"PK\x01\x02":
+            raise ValueError("setup overlay has no ZIP central directory at its payload boundary")
+        source.seek(archive_start)
+        digest = hashlib.sha256()
+        remaining_bytes = metadata.st_size - archive_start
+        while remaining_bytes:
+            chunk = source.read(min(1024 * 1024, remaining_bytes))
+            if not chunk:
+                raise ValueError("setup overlay ended before its declared payload boundary")
+            digest.update(chunk)
+            remaining_bytes -= len(chunk)
+        closed = os.fstat(source.fileno())
+        if (closed.st_dev, closed.st_ino, closed.st_size, closed.st_mtime_ns) != identity:
+            raise ValueError("setup overlay changed while it was read")
+    final = observed.lstat()
+    if (final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns) != identity:
+        raise ValueError("setup overlay pathname changed while it was read")
     return digest.hexdigest()
 
 

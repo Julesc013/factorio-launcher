@@ -986,6 +986,19 @@ def self_maintenance_identity(path: Path) -> dict[str, str]:
         ) from exc
 
 
+def setup_overlay_sha256(path: Path) -> str:
+    """Bind a produced Setup executable to the ZIP bytes it will retain."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools.self_maintenance_candidate import setup_overlay_sha256 as identify
+    try:
+        return identify(path)
+    except (OSError, ValueError) as exc:
+        raise AssertionError(
+            f"produced setup package has no exact materializable overlay: {path}"
+        ) from exc
+
+
 def package_maintenance_launcher_sha256(path: Path) -> str:
     with zipfile.ZipFile(path) as archive:
         matches = [entry for entry in archive.infolist()
@@ -1267,8 +1280,8 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
     observations: list[dict[str, object]] = []
     candidate_identity = self_maintenance_identity(candidate_payload)
     baseline_identity = self_maintenance_identity(baseline_payload)
-    candidate_package_sha256 = sha256_path(candidate_payload)
-    baseline_package_sha256 = sha256_path(baseline_payload)
+    candidate_package_sha256 = setup_overlay_sha256(candidate_payload)
+    baseline_package_sha256 = setup_overlay_sha256(baseline_payload)
     if (candidate_identity["source_revision"] == baseline_identity["source_revision"] or
             semver_order(baseline_identity["version"], candidate_identity["version"]) >= 0):
         raise AssertionError(
@@ -1442,10 +1455,12 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                     "baseline_setup_sha256": sha256_path(baseline_executable),
                     "baseline_payload": str(baseline_payload),
                     "baseline_payload_sha256": sha256_path(baseline_payload),
+                    "baseline_overlay_sha256": baseline_package_sha256,
                     "candidate_setup": str(executable),
                     "candidate_setup_sha256": sha256_path(executable),
                     "candidate_payload": str(candidate_payload),
                     "candidate_payload_sha256": sha256_path(candidate_payload),
+                    "candidate_overlay_sha256": candidate_package_sha256,
                     "baseline_identity": baseline_identity,
                     "candidate_identity": candidate_identity,
                 },
