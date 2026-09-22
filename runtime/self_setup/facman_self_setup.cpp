@@ -329,6 +329,20 @@ std::string digest_text(const std::string &value) {
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
 }
 
+std::string provider_transaction_identity(const std::string &operation_id,
+                                          const std::string &install_id) {
+  const std::string direct = "tx." + operation_id;
+  // Universal Setup derives `ownership.<install-id>.<transaction-id>` and
+  // admits identifiers only through 128 bytes. Generation install IDs already
+  // carry their full content identity, so compact only the transaction suffix
+  // when that derived identifier would exceed the provider contract.
+  if (("ownership." + install_id + "." + direct).size() <= 128U)
+    return direct;
+  return "tx." + digest_text(
+      "facman.setup.provider-transaction.v1\n" + operation_id + "\n" +
+      install_id + "\n").substr(0, 24);
+}
+
 facman::core::Result<std::string> stable_file_digest(const fs::path &path) {
   facman::platform::StableInputFile input;
   const auto opened = input.open_no_follow(path);
@@ -656,8 +670,10 @@ facman::core::Result<SetupJournal> load_journal(const fs::path &path) {
       journal.last_error.size() > 1024U)
     return facman::core::Result<SetupJournal>::failure(
         error("self_setup_recovery_required", "setup operation journal contains invalid identities", facman::platform::path_to_utf8(path)));
+  const std::string expected_transaction = provider_transaction_identity(
+      journal.operation_id, journal.install_id);
   if (journal.provider_request_id != "request." + journal.operation_id ||
-      journal.provider_transaction_id != "tx." + journal.operation_id ||
+      journal.provider_transaction_id != expected_transaction ||
       (journal.operation == "install" && journal.provider_plan_id != journal.provider_request_id) ||
       (journal.operation != "install" && journal.provider_plan_id != "plan." + journal.operation_id)) {
     return facman::core::Result<SetupJournal>::failure(error(
@@ -1838,7 +1854,8 @@ facman::core::Result<Response> execute(const Request &request) {
     // uninstall own their plan_id field but retain the same durable identity.
     journal.provider_plan_id = active.operation == Operation::install
         ? journal.provider_request_id : "plan." + journal.operation_id;
-    journal.provider_transaction_id = "tx." + journal.operation_id;
+    journal.provider_transaction_id = provider_transaction_identity(
+        journal.operation_id, journal.install_id);
     journal.provider_created_at = timestamp();
     if (mode == "portable") {
       journal.repair_source = "not_applicable";

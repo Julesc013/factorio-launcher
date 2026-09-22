@@ -3151,6 +3151,8 @@ int wmain(int argc, wchar_t **argv) {
     return run_maintenance(options, local,
         maintenance_qualification ? &*maintenance_qualification : nullptr);
 
+  std::optional<facman::self_maintenance::Generation>
+      active_repair_generation;
   if (options.operation == facman::self_setup::Operation::verify ||
       options.operation == facman::self_setup::Operation::repair ||
       options.operation == facman::self_setup::Operation::uninstall) {
@@ -3220,23 +3222,14 @@ int wmain(int argc, wchar_t **argv) {
       return 4;
     }
     if (active.value().has_value() &&
-        options.operation == facman::self_setup::Operation::repair &&
-        active.value()->active.install_id != "facman.self") {
-      print_error({"self_maintenance_active_generation_unsupported",
-                   "repair of an active side-by-side generation "
-                   "are not available in this checkpoint",
-                   active.value()->active.install_id}, options.json);
-      return 4;
-    }
-    if (active.value().has_value() &&
         options.operation == facman::self_setup::Operation::repair) {
       const auto &generation = active.value()->active;
-      if (!same_path(generation.logical_root, options.install_root) ||
-          !same_path(generation.install_root, options.install_root) ||
+      if ((!same_path(generation.logical_root, options.install_root) &&
+           !same_path(generation.install_root, options.install_root)) ||
           !same_path(generation.state_root, options.state_root) ||
           !same_path(generation.acceptance_root, options.acceptance_root)) {
         print_error({"self_maintenance_lineage_mismatch",
-                     "repair roots do not bind the active migrated legacy generation",
+                     "repair roots do not bind the active activation-chain generation",
                      generation.install_id}, options.json);
         return 4;
       }
@@ -3249,14 +3242,13 @@ int wmain(int argc, wchar_t **argv) {
       active_plan.source = generation;
       active_plan.target = generation;
       const auto inspected = provider.inspect_installed(active_plan);
-      const auto verified = provider.verify_installed(active_plan);
-      if (!inspected.ok || !verified.ok) {
-        print_error({"self_maintenance_active_generation_unsupported",
-                     "repair requires a verified active facman.self installation",
-                     !inspected.ok ? inspected.detail : verified.detail},
-                    options.json);
+      if (!inspected.ok) {
+        print_error({"self_maintenance_active_generation_unavailable",
+                     "repair requires an exact provider-inspected active generation",
+                     inspected.detail}, options.json);
         return 4;
       }
+      active_repair_generation = generation;
     }
   }
   fs::path maintenance_launcher;
@@ -3294,6 +3286,13 @@ int wmain(int argc, wchar_t **argv) {
   request.state_root = options.state_root;
   request.acceptance_root = options.acceptance_root;
   request.product_version = FACMAN_VERSION_SEMVER;
+  if (active_repair_generation.has_value()) {
+    request.install_id = active_repair_generation->install_id;
+    request.install_root = active_repair_generation->install_root;
+    request.state_root = active_repair_generation->state_root;
+    request.acceptance_root = active_repair_generation->acceptance_root;
+    request.product_version = active_repair_generation->product_version;
+  }
   request.apply = options.apply;
   SetupNativeEffects native_effects;
   SetupPackageMaterializer package_materializer;

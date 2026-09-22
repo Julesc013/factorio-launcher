@@ -375,6 +375,27 @@ void cases() {
               provider.apply_transaction_ids[1] != provider.apply_transaction_ids[2] &&
               provider.apply_transaction_ids[0] != provider.apply_transaction_ids[2],
           "provider transaction identities are unique and bounded for Windows staging paths");
+  Tree generation_repair{
+      fs::temp_directory_path() / "facman-self-setup-recovery-smoke-generation-repair"};
+  fs::remove_all(generation_repair.root, ignored);
+  fs::create_directories(generation_repair.root);
+  std::ofstream(generation_repair.root / "payload.zip", std::ios::binary)
+      << "fixture";
+  Provider generation_provider;
+  Native generation_native;
+  auto generation_request = request_for(
+      generation_repair, generation_provider, &generation_native,
+      setup::Operation::repair);
+  generation_request.install_id =
+      "facman.self.generation." + std::string(64, 'a');
+  auto generation_result = setup::execute(generation_request);
+  require(generation_result &&
+              generation_provider.apply_transaction_ids.size() == 1U &&
+              generation_provider.apply_transaction_ids.front().size() == 27U &&
+              generation_provider.apply_transaction_ids.front().rfind("tx.", 0) == 0 &&
+              ("ownership." + generation_request.install_id + "." +
+               generation_provider.apply_transaction_ids.front()).size() <= 128U,
+          "generation repair compacts its transaction before the provider-derived ownership limit");
   Tree contention{fs::temp_directory_path() / "facman-self-setup-recovery-smoke-contention"};
   fs::remove_all(contention.root, ignored); fs::create_directories(contention.root);
   std::ofstream(contention.root / "payload.zip", std::ios::binary) << "fixture";
