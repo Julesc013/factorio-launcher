@@ -299,3 +299,23 @@ controller's ownership contract. It does not remove the retained state file,
 reuse a candidate product, or weaken payload equivalence. A new exact hosted
 run remains required; run `35678300868` grants no transition or final bundle
 qualification.
+
+## 2026-09-22 predecessor produced-name identity correction
+
+Product-candidate run `35683529084` tested exact integrated dev
+`e94142405f868f996f555916279fb1428a65c1ea` against Alpha.5 predecessor
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+passed the current-source native, package, resource and current-user setup
+work, built the detached predecessor products, and passed the corrected current
+setup-overlay contract. It then stopped before the A-to-B transition because
+identity admission compared the Setup-embedded original portable filename with
+the differently named retained evidence copy.
+
+The successor reads package identity from the original produced Setup and
+portable pair, while separately requiring their byte sizes and SHA-256 values
+to match the exact retained evidence records and files. It therefore preserves
+the filename identity written by production and the custody relationship of
+the renamed evidence copies. It does not relax the portable digest, Setup
+identity, payload-equivalence contract, source distinction or transition
+admission. A new exact hosted run remains required; run `35683529084` grants no
+transition or final bundle qualification.
