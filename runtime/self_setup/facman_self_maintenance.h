@@ -89,6 +89,7 @@ struct LifecycleEpoch {
   // of the persisted epoch identity document.
   std::string manifest_sha256;
   std::string retirement_sha256;
+  std::optional<ActiveState> compatibility_active;
   bool compatibility_epoch = false;
 };
 
@@ -98,6 +99,14 @@ struct LifecycleEpochChain {
 
 struct EpochActiveState {
   LifecycleEpoch epoch;
+  ActiveState active;
+};
+
+// One read-only answer for public state selection.  A real lifecycle epoch
+// takes precedence over the synthesized compatibility view of flat v1
+// activation history.  `epoch` is empty only when the selected state is flat.
+struct AuthoritativeActiveState {
+  std::optional<LifecycleEpoch> epoch;
   ActiveState active;
 };
 
@@ -431,6 +440,8 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
     const std::filesystem::path &coordinator_root);
+facman::core::Result<std::optional<AuthoritativeActiveState>>
+resolve_authoritative_active_state(const std::filesystem::path &coordinator_root);
 facman::core::Result<std::optional<EpochPendingTransition>>
 discover_lifecycle_epoch_pending_transition(
     const std::filesystem::path &coordinator_root);

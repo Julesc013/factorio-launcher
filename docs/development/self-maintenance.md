@@ -123,6 +123,12 @@ matching request continues the immutable operation; a different request is
 refused with recovery guidance. Preview remains read-only and never continues
 or creates an operation.
 
+Epoch bootstrap remains disabled in this checkpoint. A clean or legacy flat
+installation therefore continues through its validated compatibility state;
+the resolver prefers a committed real epoch when one exists and never treats a
+stale flat head as authoritative. Legacy-to-epoch migration and its provider
+root transfer remain a later, separately reviewed change.
+
 Pre-handoff continuation retains the package and helper through the normal
 FacMan storage edge before provider entry. The helper is the exact current Setup
 binary, stored as `FacManContinuation.exe`; it is distinct from the maintenance

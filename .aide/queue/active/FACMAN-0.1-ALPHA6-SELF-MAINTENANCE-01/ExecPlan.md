@@ -375,3 +375,41 @@ Six focused native CTests, the direct Windows ownership and platform-I/O
 fixtures, and 134 candidate/package Python tests pass. The WorkUnit remains
 active for clean committed hosted requalification, chain-aware active repair,
 supported-platform qualification and human/product acceptance.
+
+## 2026-09-22 authoritative maintenance-state selection
+
+Hosted product-candidate run `35724336883` passed at exact merged source
+`b18018cdd8754dea175b11103622463fb78aaf9b` against Alpha.5 predecessor
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. It produced the six expected
+unsigned Windows, Linux and macOS portable/setup assets and completed the
+Windows source-distinct lifecycle, including active repair and final chain
+retirement. Local custody verification is retained outside the checkout at
+`task-facman-c-f1dde6a75f/evidence/product-candidate-dev-b18018cd-run-35724336883/local-verification.v1.json`,
+SHA-256
+`f3a3318f8710a1d03e99d388cebeb45b03ae4941d988eae8a573ce246b07bb1f`.
+That run qualifies the classic activation-chain path; it does not prove the
+separate lifecycle-epoch external handoff.
+
+Independent source review then confirmed that the production public install,
+update, repair and uninstall paths could not reach a real lifecycle epoch
+without a test-only seed. The first bounded successor adds one authoritative
+read-side selection: a committed real epoch takes precedence over flat
+compatibility history, an active compatibility chain remains the fallback, and
+an exactly completed compatibility retirement reports no active state. Public
+verify and repair consume that selection. Public uninstall refuses a real
+epoch before flat retirement effects, while the exact incomplete-flat
+retirement condition may still resume through its existing journal. Epoch
+bootstrap, provider-root transfer and chain-aware epoch retirement remain
+disabled pending their separately reviewed implementation.
+
+The unchanged 60-second native maintenance smoke passed in 33.34 seconds; the
+new authority regression passed in 0.41 seconds. The public Setup lifecycle
+passed in 94.41 seconds under its unchanged 180-second limit and covers exact
+epoch verify/repair selection, real-epoch uninstall refusal, clean two-step
+flat retirement, effect-free repeat uninstall, and refusal of an inserted epoch
+namespace before an incomplete flat retirement can advance. The affected
+recovery and Windows ownership CTests, 22 focused Python tests, source
+formatting, diff checks and the complete strict repository check also pass. The WorkUnit
+remains active for journaled classic-to-first-epoch bootstrap, actual external
+continuation from produced packages, epoch repair/rollback/retirement,
+supported-platform qualification and human/product acceptance.
