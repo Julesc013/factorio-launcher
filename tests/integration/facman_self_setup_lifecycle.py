@@ -864,6 +864,48 @@ def epoch_prehandoff_cli_controls(
         raise AssertionError("epoch fixture returned an unsafe source install root")
     shutil.copytree(install, source_install_root)
 
+    expected_install_id = emitted.get("install_id")
+    before_epoch_selection = tree_snapshot(case)
+    epoch_verify = invoke(
+        executable, "verify", "--root", install,
+        "--state-root", state, "--acceptance-root", case,
+        expected=4,
+    )
+    epoch_repair = invoke(
+        executable, "repair", "--package", source_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes", expected=4,
+    )
+    if (not isinstance(expected_install_id, str) or
+            epoch_verify.get("error", {}).get("code") !=
+            "self_maintenance_active_generation_unsupported" or
+            epoch_verify.get("error", {}).get("detail") != expected_install_id or
+            epoch_repair.get("error", {}).get("code") !=
+            "self_maintenance_active_generation_unavailable" or
+            not epoch_repair.get("error", {}).get("detail", "").startswith(
+                expected_install_id
+            ) or
+            tree_snapshot(case) != before_epoch_selection):
+        raise AssertionError(
+            "public verify/repair did not select the authoritative epoch generation: "
+            f"install_id={expected_install_id!r} verify={epoch_verify!r} "
+            f"repair={epoch_repair!r} changed="
+            f"{tree_snapshot(case) != before_epoch_selection}"
+        )
+
+    before_epoch_uninstall = tree_snapshot(case)
+    epoch_uninstall = invoke(
+        executable, "uninstall", "--root", install,
+        "--state-root", state, "--acceptance-root", case, "--yes",
+        expected=4,
+    )
+    if (epoch_uninstall.get("error", {}).get("code") !=
+            "self_maintenance_epoch_operation_unsupported" or
+            tree_snapshot(case) != before_epoch_uninstall):
+        raise AssertionError(
+            "authoritative epoch uninstall did not refuse before flat retirement"
+        )
+
     preview_permit = maintenance_qualification_permit(
         case, "update", False, version, install, state
     )
@@ -956,6 +998,83 @@ def epoch_prehandoff_cli_controls(
         raise AssertionError(
             "staged public retry did not stop the initiating process at helper launch"
         )
+
+
+def completed_retirement_repeat_cli_controls(
+        root: Path, executable: Path, version: str) -> None:
+    case = root / "completed-retirement-repeat"
+    case.mkdir()
+    install = case / "Programs" / "FacMan"
+    state = case / "SetupState"
+    install.parent.mkdir()
+    prefix, number = version.rsplit(".", 1)
+    target_version = f"{prefix}.{int(number) + 3}"
+    source_package = case / "source.zip"
+    target_package = case / "target.zip"
+    deflated_maintenance_payload(source_package, executable, version)
+    deflated_maintenance_payload(target_package, executable, target_version)
+
+    installed = invoke(
+        executable, "install", "--package", source_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
+    )
+    if installed.get("phase") != "receipt":
+        raise AssertionError("repeat-uninstall baseline did not install")
+    source_digest = hashlib.sha256(source_package.read_bytes()).hexdigest()
+    repair_cache = state / "repair-sources"
+    repair_cache.mkdir(exist_ok=True)
+    (repair_cache / ".facman-repair-sources.v1").write_bytes(
+        b"facman-repair-sources-v1\n"
+    )
+    retained_source = repair_cache / f"{source_digest}.zip"
+    retained_helper = repair_cache / f"{source_digest}.FacManSetup.exe"
+    retained_source.write_bytes(source_package.read_bytes())
+    retained_helper.write_bytes(executable.read_bytes())
+    helper_digest = hashlib.sha256(retained_helper.read_bytes()).hexdigest()
+    (repair_cache / f"{source_digest}.maintenance.v1").write_bytes((
+        "facman-repair-source-receipt-v1\n"
+        f"source_sha256={source_digest}\n"
+        f"launcher_sha256={helper_digest}\n"
+    ).encode("utf-8"))
+    update_permit = maintenance_qualification_permit(
+        case, "update", True, version, install, state
+    )
+    updated = invoke(
+        executable, "update", "--package", target_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
+        "--qualification-fixture-permit", update_permit,
+    )
+    updated = await_external_handoff(
+        executable, updated, "update",
+        ("--package", target_package, "--root", install,
+         "--state-root", state, "--acceptance-root", case,
+         "--qualification-fixture-permit", update_permit),
+        shell_integration=False, noninteractive=False,
+    )
+    if updated.get("phase") != "completed":
+        raise AssertionError("repeat-uninstall update did not complete")
+
+    phases = []
+    for _ in range(2):
+        retired = invoke(
+            executable, "uninstall", "--root", install,
+            "--state-root", state, "--acceptance-root", case, "--yes",
+        )
+        phases.append(retired.get("phase"))
+    if phases != ["step_completed", "completed"]:
+        raise AssertionError(
+            f"activation-chain retirement returned unexpected phases: {phases!r}"
+        )
+    before_repeat = tree_snapshot(case)
+    repeated = invoke(
+        executable, "uninstall", "--root", install,
+        "--state-root", state, "--acceptance-root", case, "--yes",
+    )
+    if (repeated.get("phase") != "completed" or
+            tree_snapshot(case) != before_repeat):
+        raise AssertionError("completed activation-chain uninstall was not idempotent")
 
 
 def journal_observation(install: Path) -> list[dict[str, object]]:
@@ -2207,6 +2326,9 @@ def main() -> int:
             epoch_prehandoff_cli_controls(
                 root, executable, epoch_fixture_executable, version
             )
+            completed_retirement_repeat_cli_controls(
+                root, executable, version
+            )
 
         if args.workspace_lifecycle_evidence is not None:
             if args.payload is None:
@@ -2427,6 +2549,23 @@ def main() -> int:
             )
             if retained.get("phase") != "step_completed":
                 raise AssertionError("activation-chain retained uninstall did not complete")
+            coordinator = state.parent / "setup-coordinator.v1"
+            hostile_epoch = coordinator / "epochs" / ("b" * 64)
+            hostile_epoch.mkdir(parents=True)
+            (hostile_epoch / "epoch.v1.json").write_text("{}\n", encoding="utf-8")
+            before_epoch_conflict = tree_snapshot(coordinator)
+            epoch_conflict = invoke(
+                executable, "uninstall", "--root", install,
+                "--state-root", state, "--acceptance-root", root, "--yes",
+                expected=4,
+            )
+            if (epoch_conflict.get("error", {}).get("code") !=
+                    "self_maintenance_epoch_recovery_required" or
+                    tree_snapshot(coordinator) != before_epoch_conflict):
+                raise AssertionError(
+                    "incomplete flat retirement advanced with an epoch namespace"
+                )
+            shutil.rmtree(coordinator / "epochs")
         unknown = install / "operator-note.txt"
         unknown.write_text("retain\n", encoding="utf-8")
         refusal = invoke(

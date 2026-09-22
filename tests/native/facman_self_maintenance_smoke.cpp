@@ -809,6 +809,7 @@ int emit_prehandoff_epoch_fixture(int argc, char **argv) {
   output.add_string("schema", "facman.self_maintenance_test_epoch.v1");
   output.add_string("epoch_id", epoch.epoch_id);
   output.add_string("generation_id", generation.value().generation_id);
+  output.add_string("install_id", generation.value().install_id);
   output.add_string("operation_id", operation_id);
   output.add_string("coordinator", facman::platform::path_to_utf8(coordinator));
   output.add_string("source_install_root",

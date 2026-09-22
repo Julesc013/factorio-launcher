@@ -894,6 +894,14 @@ void print_error(const facman::core::Error &value, bool json_mode) {
   std::cout << output.serialize() << '\n';
 }
 
+facman::core::Error setup_error_with_detail(std::string code,
+                                            std::string message,
+                                            std::string detail) {
+  facman::core::Error error(std::move(code), std::move(message), "");
+  error.detail = std::move(detail);
+  return error;
+}
+
 void print_maintenance_error(const facman::core::Error &value,
                              bool json_mode) {
   if (!json_mode) {
@@ -3159,7 +3167,27 @@ int wmain(int argc, wchar_t **argv) {
     const fs::path coordinator_root =
         (options.state_root.parent_path() / "setup-coordinator.v1")
             .lexically_normal();
+    auto selected = facman::self_maintenance::resolve_authoritative_active_state(
+        coordinator_root);
+    const bool resumable_flat_retirement =
+        !selected &&
+        options.operation == facman::self_setup::Operation::uninstall &&
+        selected.error().code ==
+            "self_maintenance_retirement_recovery_required";
+    if (!selected && !resumable_flat_retirement) {
+      print_error(selected.error(), options.json);
+      return 4;
+    }
     if (options.operation == facman::self_setup::Operation::uninstall) {
+      if (selected && selected.value().has_value() &&
+          selected.value()->epoch.has_value()) {
+        print_error(setup_error_with_detail(
+            "self_maintenance_epoch_operation_unsupported",
+            "uninstall of an authoritative lifecycle epoch requires "
+            "chain-aware epoch retirement",
+            selected.value()->epoch->epoch_id), options.json);
+        return 4;
+      }
       auto chain = facman::self_maintenance::discover_activation_chain(
           coordinator_root);
       if (!chain) {
@@ -3207,30 +3235,31 @@ int wmain(int argc, wchar_t **argv) {
         }
         return 0;
       }
+      if (!selected) {
+        print_error(selected.error(), options.json);
+        return 4;
+      }
     }
-    auto active = facman::self_maintenance::discover_active(coordinator_root);
-    if (!active) {
-      print_error(active.error(), options.json);
-      return 4;
-    }
-    if (active.value().has_value() &&
+    if (selected.value().has_value() &&
         options.operation == facman::self_setup::Operation::verify) {
-      print_error({"self_maintenance_active_generation_unsupported",
-                   "verify of an activation-chain installation must use a "
-                   "future chain-aware maintenance command",
-                   active.value()->active.install_id}, options.json);
+      print_error(setup_error_with_detail(
+          "self_maintenance_active_generation_unsupported",
+          "verify of an activation-chain installation must use a "
+          "future chain-aware maintenance command",
+          selected.value()->active.active.install_id), options.json);
       return 4;
     }
-    if (active.value().has_value() &&
+    if (selected.value().has_value() &&
         options.operation == facman::self_setup::Operation::repair) {
-      const auto &generation = active.value()->active;
+      const auto &generation = selected.value()->active.active;
       if ((!same_path(generation.logical_root, options.install_root) &&
            !same_path(generation.install_root, options.install_root)) ||
           !same_path(generation.state_root, options.state_root) ||
           !same_path(generation.acceptance_root, options.acceptance_root)) {
-        print_error({"self_maintenance_lineage_mismatch",
-                     "repair roots do not bind the active activation-chain generation",
-                     generation.install_id}, options.json);
+        print_error(setup_error_with_detail(
+            "self_maintenance_lineage_mismatch",
+            "repair roots do not bind the active activation-chain generation",
+            generation.install_id), options.json);
         return 4;
       }
       facman::self_maintenance::ProviderBridge provider(
@@ -3243,9 +3272,12 @@ int wmain(int argc, wchar_t **argv) {
       active_plan.target = generation;
       const auto inspected = provider.inspect_installed(active_plan);
       if (!inspected.ok) {
-        print_error({"self_maintenance_active_generation_unavailable",
-                     "repair requires an exact provider-inspected active generation",
-                     inspected.detail}, options.json);
+        std::string detail = generation.install_id;
+        if (!inspected.detail.empty()) detail += ": " + inspected.detail;
+        print_error(setup_error_with_detail(
+            "self_maintenance_active_generation_unavailable",
+            "repair requires an exact provider-inspected active generation",
+            std::move(detail)), options.json);
         return 4;
       }
       active_repair_generation = generation;
