@@ -76,6 +76,13 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
                 str(output / "winforms-product" / "Release"),
                 environment["FACMAN_WINFORMS_OUTPUT_ROOT"],
             )
+            audit_environment = candidate.predecessor_audit_environment(environment)
+            self.assertIsNot(environment, audit_environment)
+            self.assertEqual(str(candidate.ROOT), audit_environment["PYTHONPATH"])
+            self.assertEqual(
+                predecessor_revision, audit_environment["FACMAN_CI_SOURCE_SHA"],
+            )
+            self.assertEqual(str(source), environment["PYTHONPATH"])
             marker = development_layout.read_marker(output, source)
             self.assertEqual(
                 development_layout.repository_key(source), marker["repository_key"],
@@ -652,6 +659,7 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             source_text = (candidate.ROOT / "tools/self_maintenance_candidate.py").read_text(
                 encoding="utf-8"
             )
-            gate_call = source_text.index('str(source / "tools/package_contract_tck.py")')
+            gate_call = source_text.index('str(ROOT / "tools/package_contract_tck.py")')
             self.assertLess(source_text.index('staged["portable"]'), gate_call)
             self.assertLess(source_text.index('staged["setup"]'), gate_call)
+            self.assertIn("cwd=ROOT, env=auditor_environment", source_text)
