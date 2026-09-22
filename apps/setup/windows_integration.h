@@ -103,6 +103,11 @@ CutoverOwnership inspect_windows_cutover_effect(
 // preserved for recovery.
 Result apply_windows_cutover_effect(Effect effect,
                                     const CutoverContext &context);
+// Retires only the deterministic operation-bound source-shortcut backup after
+// the caller has durably committed activation. An absent backup is success;
+// any object that is not the exact reviewed source shortcut is preserved.
+Result retire_windows_shortcut_cutover_backup(
+    const CutoverContext &context);
 // Native smoke-test helpers bind a shortcut operation to an isolated fixture
 // path; production entry points always resolve the current-user Start Menu.
 Ownership inspect_windows_shortcut_fixture(const std::filesystem::path &shortcut,
@@ -115,6 +120,8 @@ Result apply_windows_shortcut_fixture(const std::filesystem::path &shortcut,
 CutoverOwnership inspect_windows_shortcut_cutover_fixture(
     const std::filesystem::path &shortcut, const CutoverContext &context);
 Result apply_windows_shortcut_cutover_fixture(
+    const std::filesystem::path &shortcut, const CutoverContext &context);
+Result retire_windows_shortcut_cutover_fixture(
     const std::filesystem::path &shortcut, const CutoverContext &context);
 } // namespace facman::setup::integration
 #endif

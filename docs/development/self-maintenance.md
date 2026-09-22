@@ -59,7 +59,11 @@ update, downgrade, rollback, verify, and repair discovery is blocked until the
 same retirement is resumed. Nested setup skips its own lock only when given the
 coordinator's call-scoped proof for that exact lock root; isolated fixtures with
 a different setup coordinator acquire both locks. Completed retirement hides
-the active chain but preserves activation and generation history. Retention policy, garbage
+the active chain but preserves activation and generation history. After a
+retained generation is removed, its exact digest-bound package, maintenance
+launcher, and custody receipt are removed from the pinned repair cache before
+the step is committed. The executing active generation's repair triplet remains
+available after its final uninstall step. Broader retention policy, garbage
 collection, and multi-generation repair remain outside this slice.
 
 Normal maintenance requires the Windows shell integration. `--no-shell-integration`
@@ -118,8 +122,11 @@ Pre-handoff continuation retains the package and helper through the normal
 FacMan storage edge before provider entry. The helper is the exact current Setup
 binary, stored as `FacManContinuation.exe`; it is distinct from the maintenance
 launcher embedded in the target package. This distinction lets a newer B Setup
-continue a B-to-A downgrade while the A launcher is used only for A's retained
-repair source and installed maintenance entrypoint.
+continue a B-to-A installation when provider work is required while the A
+launcher is used only for A's retained repair source and installed maintenance
+entrypoint. When A is the exact immediate retained predecessor, no provider
+mutation or executable replacement occurs: B may verify and reactivate A in the
+initiating process, and the immutable generation/package checks remain required.
 
 The public process launches the retained helper with an inherited handle to the
 exact initiating process and reports `handoff_launched`. The helper validates

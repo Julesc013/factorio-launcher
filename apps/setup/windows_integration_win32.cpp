@@ -583,6 +583,39 @@ Result cutover_shortcut(const fs::path &link,
   return {true, "exact Start Menu shortcut cutover completed"};
 }
 
+Result retire_shortcut_cutover_backup(const fs::path &link,
+                                      const CutoverContext &context) {
+  std::string identifier_detail;
+  if (!facman::base::validate_identifier(context.operation_id,
+                                         identifier_detail))
+    return {false, "shortcut cutover operation id is invalid", true};
+  const fs::path backup = cutover_backup(link, context.operation_id);
+  Handle backup_file;
+  const CutoverOwnership state = open_cutover_shortcut(
+      backup, context, true, backup_file);
+  if (state == CutoverOwnership::absent)
+    return {true, "operation-bound shortcut backup is already absent"};
+  if (state != CutoverOwnership::old_exact)
+    return {false,
+            "operation-bound shortcut backup is foreign or unreadable",
+            true};
+  FILE_DISPOSITION_INFO disposition{TRUE};
+  if (!SetFileInformationByHandle(backup_file.value, FileDispositionInfo,
+                                  &disposition, sizeof(disposition)))
+    return {false,
+            "operation-bound shortcut backup could not be retired",
+            true};
+  CloseHandle(backup_file.value);
+  backup_file.value = INVALID_HANDLE_VALUE;
+  Handle observed;
+  if (open_cutover_shortcut(backup, context, false, observed) !=
+      CutoverOwnership::absent)
+    return {false,
+            "operation-bound shortcut backup retirement could not be verified",
+            true};
+  return {true, "operation-bound shortcut backup retired"};
+}
+
 Result cutover_registration(const CutoverContext &context) {
   Handle transaction;
   transaction.value = CreateTransaction(nullptr, nullptr, 0, 0, 0, 0, nullptr);
@@ -945,6 +978,26 @@ Result apply_windows_cutover_effect(Effect effect,
   return cutover_registration(normalized_context);
 }
 
+Result retire_windows_shortcut_cutover_backup(
+    const CutoverContext &context) {
+  std::error_code status;
+  CutoverContext normalized_context = context;
+  normalized_context.source.install_root =
+      fs::absolute(context.source.install_root, status).lexically_normal();
+  if (status)
+    return {false, "source install root could not be made absolute", true};
+  normalized_context.target.install_root =
+      fs::absolute(context.target.install_root, status).lexically_normal();
+  if (status)
+    return {false, "target install root could not be made absolute", true};
+  const fs::path link = start_menu_link();
+  if (link.empty())
+    return {false,
+            "Windows could not resolve the current-user Start Menu",
+            true};
+  return retire_shortcut_cutover_backup(link, normalized_context);
+}
+
 Ownership inspect_windows_shortcut_fixture(const fs::path &shortcut,
                                            const fs::path &install_root,
                                            const std::string &product_version) {
@@ -991,5 +1044,12 @@ Result apply_windows_shortcut_cutover_fixture(
     const fs::path &shortcut, const CutoverContext &context) {
   if (shortcut.empty()) return {false, "shortcut fixture path is empty", true};
   return cutover_shortcut(shortcut, context);
+}
+
+Result retire_windows_shortcut_cutover_fixture(
+    const fs::path &shortcut, const CutoverContext &context) {
+  if (shortcut.empty())
+    return {false, "shortcut fixture path is empty", true};
+  return retire_shortcut_cutover_backup(shortcut, context);
 }
 } // namespace facman::setup::integration

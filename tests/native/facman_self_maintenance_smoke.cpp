@@ -276,6 +276,7 @@ struct FakeEffects final : facman::self_maintenance::Effects {
   ShellState registration = ShellState::old_exact;
   bool fail_install = false;
   bool fail_prepare = false;
+  bool fail_retire = false;
   unsigned review_calls = 0;
   unsigned prepare_calls = 0;
   bool fail_verify = false;
@@ -284,6 +285,7 @@ struct FakeEffects final : facman::self_maintenance::Effects {
   unsigned verify_calls = 0;
   unsigned shortcut_calls = 0;
   unsigned registration_calls = 0;
+  unsigned retire_calls = 0;
   std::string provider_operation;
   std::function<void()> after_review;
 
@@ -324,6 +326,12 @@ struct FakeEffects final : facman::self_maintenance::Effects {
     ++registration_calls;
     registration = ShellState::new_exact;
     return {true, false, sha("registration"), {}};
+  }
+  EffectResult retire_shortcut_backup(const Plan &) override {
+    ++retire_calls;
+    return fail_retire
+        ? EffectResult{false, false, {}, "backup retirement failure"}
+        : EffectResult{true, false, sha("shortcut backup retired"), {}};
   }
 };
 
@@ -498,6 +506,8 @@ struct EpochShellCutoverFakeEffects final : facman::self_maintenance::EpochShell
   unsigned terminal_calls = 0;
   unsigned shortcut_calls = 0;
   unsigned registration_calls = 0;
+  unsigned retire_calls = 0;
+  bool fail_retire = false;
   EffectResult inspect_installed(
       const Plan &, const facman::self_maintenance::ProviderApplyBinding &) override {
     return {true, false, sha("epoch.inspect"), {}};
@@ -521,6 +531,12 @@ struct EpochShellCutoverFakeEffects final : facman::self_maintenance::EpochShell
     ++registration_calls;
     registration = ShellState::new_exact;
     return {true, false, sha("epoch.registration"), {}};
+  }
+  EffectResult retire_shortcut_backup(const Plan &) override {
+    ++retire_calls;
+    return fail_retire
+        ? EffectResult{false, false, {}, "epoch backup retirement failure"}
+        : EffectResult{true, false, sha("epoch.shortcut backup retired"), {}};
   }
 };
 
@@ -1165,7 +1181,8 @@ int main(int argc, char **argv) {
                     update_effects.verify_calls == 1,
                 "update did not install, inspect, and verify through install_local");
   ok &= require(update_effects.shortcut_calls == 1 &&
-                    update_effects.registration_calls == 1,
+                    update_effects.registration_calls == 1 &&
+                    update_effects.retire_calls == 1,
                 "update did not cut over both exact shell objects");
   ok &= require(fs::is_regular_file(updated.value().generation_record) &&
                     fs::is_regular_file(updated.value().activation_record),
@@ -1200,8 +1217,43 @@ int main(int argc, char **argv) {
   update_effects.fail_verify = false;
   auto repeated_update = facman::self_maintenance::execute(update, update_effects);
   ok &= require(repeated_update &&
-                    update_effects.install_calls == completed_install_calls,
+                    update_effects.install_calls == completed_install_calls &&
+                    update_effects.retire_calls == 2U,
                 "completed update retry was not idempotent");
+
+  auto retirement_failure = request(root / "retirement-failure",
+                                    Operation::update);
+  retirement_failure.apply = true;
+  FakeEffects retirement_failure_effects;
+  retirement_failure_effects.fail_retire = true;
+  auto retirement_failed = facman::self_maintenance::execute(
+      retirement_failure, retirement_failure_effects);
+  const auto retirement_plan = facman::self_maintenance::plan(
+      retirement_failure);
+  const fs::path retirement_operation = retirement_failure.coordinator_root /
+      "maintenance" /
+      (retirement_plan ? retirement_plan.value().operation_id : "invalid");
+  ok &= require(!retirement_failed &&
+                    retirement_failed.error().code ==
+                        "self_maintenance_shortcut_backup_retirement_failed" &&
+                    retirement_failure_effects.shortcut_calls == 1U &&
+                    retirement_failure_effects.registration_calls == 1U &&
+                    retirement_failure_effects.retire_calls == 1U &&
+                    fs::is_regular_file(retirement_operation /
+                                        "70-activation-recorded.v1.json") &&
+                    !fs::exists(retirement_operation /
+                                "80-shortcut-backup-retired.v1.json"),
+                "post-activation backup retirement failure was not recoverable");
+  retirement_failure_effects.fail_retire = false;
+  auto retirement_recovered = facman::self_maintenance::execute(
+      retirement_failure, retirement_failure_effects);
+  ok &= require(retirement_recovered &&
+                    retirement_failure_effects.shortcut_calls == 1U &&
+                    retirement_failure_effects.registration_calls == 1U &&
+                    retirement_failure_effects.retire_calls == 2U &&
+                    fs::is_regular_file(retirement_operation /
+                                        "80-shortcut-backup-retired.v1.json"),
+                "backup retirement retry repeated cutover or failed to close");
 
   auto outside_authority = request(root / "outside-authority",
                                    Operation::update);
@@ -2396,7 +2448,9 @@ int main(int argc, char **argv) {
                     shell_restarted.value().phase == "shell_cutover_complete" &&
                     fs::exists(provider_operation / "70-shortcut-cutover.v2.json") &&
                     fs::exists(provider_operation / "80-registration-cutover.v2.json") &&
-                    shell_effects.shortcut_calls == 1U && shell_effects.registration_calls == 1U,
+                    shell_effects.shortcut_calls == 1U &&
+                    shell_effects.registration_calls == 1U &&
+                    shell_effects.retire_calls == 2U,
                 "epoch shell cutover was not preview-pure, durable, or idempotent");
   ok &= require(ordinary_after_shell &&
                     ordinary_after_shell.value().active.active.generation_id ==

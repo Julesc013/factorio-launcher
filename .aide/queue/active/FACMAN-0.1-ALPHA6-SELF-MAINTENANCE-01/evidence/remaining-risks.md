@@ -116,3 +116,20 @@ uncompressed Debug Setup archive work as the bounded fixture cost. The
 external-maintenance fixture now uses admitted Deflate packages while the
 ordinary stored-archive lifecycle remains intact. Exact hosted
 requalification is still required under the unchanged gate.
+
+## Current remainder after local `realv13`
+
+The source-distinct current-user lifecycle and chain-aware uninstall path now
+work locally through the registered maintenance command. The predecessor repair
+triplet is retired with its generation, and the final active generation leaves
+no executable root, shortcut or uninstall registration. This supersedes the
+older statements above that chain retirement and real shell effects were wholly
+absent.
+
+The WorkUnit remains active because the passing package was produced from a
+dirty worktree over `e4ee7006...`, not the eventual commit. A fresh hosted
+candidate must bind the clean commit and repeat the platform and product gates.
+Active side-by-side repair, supported-platform package qualification and human
+acceptance also remain. Final-helper retention and garbage collection remain a
+separate policy boundary; they must not be represented as completed removal of
+all maintenance state.

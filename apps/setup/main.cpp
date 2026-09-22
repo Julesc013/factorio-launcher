@@ -1159,6 +1159,54 @@ facman::self_setup::RetainedSourceResult validate_maintenance_launcher(
       context, expected_sha256, false, retained_pins);
 }
 
+facman::core::Result<void> retire_repair_source(
+    const facman::self_setup::NativeContext &context,
+    PinnedRepairSource &pins) {
+  std::string detail;
+  if (!pins.revalidate(detail))
+    return facman::core::Result<void>::failure(
+        {"self_maintenance_repair_source_retirement_failed",
+         "retained repair source changed before retirement", detail});
+
+  const fs::path source = context.repair_source;
+  const std::pair<fs::path, facman::platform::FileIdentity> files[] = {
+      {source, pins.source.identity()},
+      {repair_launcher_path(source), pins.launcher.identity()},
+      {repair_receipt_path(source), pins.receipt.identity()},
+  };
+  // Pinned reads deliberately deny namespace replacement.  Retain their exact
+  // identities, close only the three generation-owned handles, then reopen and
+  // remove each pathname through remove_exact_object's identity check.  The
+  // acceptance, state, cache, and marker objects stay pinned throughout.
+  pins.source = facman::platform::StableInputFile{};
+  pins.launcher = facman::platform::StableInputFile{};
+  pins.receipt = facman::platform::StableInputFile{};
+  for (const auto &[path, identity] : files) {
+    const auto removed = facman::platform::remove_exact_object(path, identity);
+    if (!removed.ok())
+      return facman::core::Result<void>::failure(
+          {"self_maintenance_repair_source_retirement_failed",
+           "exact retained repair source file could not be retired",
+           facman::platform::path_to_utf8(path) + ": " + removed.detail});
+  }
+
+  const auto acceptance_status = pins.acceptance.revalidate();
+  const auto state_status = pins.state.revalidate();
+  const auto cache_status = pins.cache.revalidate();
+  const auto marker_status = pins.marker.revalidate_path();
+  if (!acceptance_status.ok() || !state_status.ok() || !cache_status.ok() ||
+      !marker_status.ok()) {
+    const auto &failed = !acceptance_status.ok() ? acceptance_status
+        : (!state_status.ok() ? state_status
+        : (!cache_status.ok() ? cache_status : marker_status));
+    return facman::core::Result<void>::failure(
+        {"self_maintenance_repair_source_retirement_failed",
+         "repair source cache identity changed during retirement",
+         failed.detail});
+  }
+  return facman::core::Result<void>::success();
+}
+
 facman::self_setup::RetainedSourceResult retain_repair_source(
     const facman::self_setup::NativeContext &context,
     const fs::path &package, const fs::path &maintenance_launcher,
@@ -1451,6 +1499,8 @@ std::string digest_text(const std::string &value) {
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
 }
 
+bool same_path(const fs::path &left, const fs::path &right);
+
 class MaintenanceEffects final : public facman::self_maintenance::Effects,
                                  public facman::self_maintenance::EpochPreparationEffects,
                                  public facman::self_maintenance::EpochContinuationEffects,
@@ -1585,6 +1635,30 @@ public:
   facman::self_maintenance::EffectResult cutover_registration(
       const facman::self_maintenance::Plan &plan) override {
     return cutover(facman::setup::integration::Effect::registration, plan);
+  }
+
+  facman::self_maintenance::EffectResult retire_shortcut_backup(
+      const facman::self_maintenance::Plan &plan) override {
+    if (!ensure_target_pins(plan))
+      return {false, false, {}, target_pin_detail_};
+    const std::string receipt = digest_text(
+        plan.operation_id + "\nshortcut-backup-retired\n");
+    if (!shell_integration_)
+      return {true, false, receipt,
+              "shortcut integration is disabled; no backup exists"};
+    const auto result =
+        facman::setup::integration::retire_windows_shortcut_cutover_backup(
+            windows_context(plan));
+    if (!revalidate_target_pins()) {
+      const std::string detail = result.detail.empty()
+          ? target_pin_detail_
+          : result.detail + "; target pin revalidation: " +
+                target_pin_detail_;
+      return {false, true, {}, detail};
+    }
+    if (!result.ok)
+      return {false, result.recovery_required, {}, result.detail};
+    return {true, false, receipt, result.detail};
   }
 
 private:
@@ -1832,12 +1906,24 @@ private:
     }
     const auto retained_digest = digest_stable_input(target_pins_.launcher);
     const auto installed_digest = digest_stable_input(maintenance);
+    const bool legacy_retained_generation =
+        (plan.operation == "downgrade" || plan.operation == "rollback") &&
+        plan.target.install_id == "facman.self" &&
+        same_path(plan.target.install_root, plan.target.logical_root);
     if (!retained_digest.has_value() || !installed_digest.has_value() ||
-        *retained_digest != *installed_digest) {
+        (*retained_digest != *installed_digest &&
+         !legacy_retained_generation)) {
       target_pin_detail_ =
           "installed maintenance launcher differs from the retained helper";
       return false;
     }
+    // Legacy installs retained the downloaded self-extracting Setup file as
+    // their repair helper, while Universal Setup owned the smaller embedded
+    // maintenance entry point under the logical installation root.  The
+    // migrated generation record and provider installed-state verification
+    // bind both identities independently.  Keep both files pinned here; only
+    // skip their byte-equality requirement for that exact retained legacy
+    // generation.
     target_gui_ = std::move(gui);
     target_maintenance_ = std::move(maintenance);
     target_files_ready_ = true;
@@ -2846,10 +2932,11 @@ int run_maintenance(Options &options, const fs::path &,
   if (options.apply && migrate_legacy) {
     const auto admitted = effects.review_install_local(reviewed.value());
     if (!admitted.ok) {
-      print_maintenance_error(
-          {"self_maintenance_plan_failed",
-           "candidate installation plan was refused before legacy adoption",
-           admitted.detail}, options.json);
+      facman::core::Error error{
+          "self_maintenance_plan_failed",
+          "candidate installation plan was refused before legacy adoption", ""};
+      error.detail = admitted.detail;
+      print_maintenance_error(error, options.json);
       return 4;
     }
     std::string authority_detail;
@@ -2957,6 +3044,24 @@ public:
       bool active,
       const facman::self_maintenance::CoordinatorLockToken
           &coordinator_lock) override {
+    const facman::self_setup::NativeContext retirement_context{
+        facman::self_setup::Operation::uninstall,
+        generation.install_root,
+        generation.state_root,
+        generation.acceptance_root,
+        generation.state_root / "repair-sources" /
+            facman::platform::path_from_utf8(generation.package_sha256 + ".zip"),
+        generation.product_version};
+    PinnedRepairSource retirement_pins;
+    if (!active) {
+      const auto retained = validate_repair_source(
+          retirement_context, generation.package_sha256, &retirement_pins);
+      if (!retained.ok)
+        return facman::core::Result<void>::failure(
+            {"self_maintenance_repair_source_retirement_failed",
+             "retained generation repair source is not exactly owned",
+             retained.detail});
+    }
     facman::self_setup::Request request;
     request.operation = facman::self_setup::Operation::uninstall;
     request.install_id = generation.install_id;
@@ -2972,6 +3077,12 @@ public:
     auto removed = facman::self_setup::execute(request);
     if (!removed)
       return facman::core::Result<void>::failure(removed.error());
+    if (!active) {
+      auto retired = retire_repair_source(
+          retirement_context, retirement_pins);
+      if (!retired)
+        return facman::core::Result<void>::failure(retired.error());
+    }
     return facman::core::Result<void>::success();
   }
 
@@ -3055,7 +3166,8 @@ int wmain(int argc, wchar_t **argv) {
       }
       if (chain.value().has_value()) {
         const auto &generation = chain.value()->generations.back();
-        if (!same_path(generation.logical_root, options.install_root) ||
+        if ((!same_path(generation.logical_root, options.install_root) &&
+             !same_path(generation.install_root, options.install_root)) ||
             !same_path(generation.state_root, options.state_root) ||
             !same_path(generation.acceptance_root, options.acceptance_root)) {
           print_error({"self_maintenance_lineage_mismatch",

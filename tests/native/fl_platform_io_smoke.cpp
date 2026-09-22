@@ -267,6 +267,7 @@ int main()
     if (!status.ok() ||
         pinned_output.write_at(0, payload.data(), payload.size()) != payload.size() ||
         !pinned_output.publish_no_replace(pinned_destination).ok()) return 18;
+    facman::platform::FileIdentity pinned_identity;
     {
         facman::platform::StableInputFile pinned;
         const auto opened_pinned = pinned.open_no_follow_pinned(pinned_destination);
@@ -279,6 +280,7 @@ int main()
                       << ':' << validated_pinned.detail << '\n';
             return 19;
         }
+        pinned_identity = pinned.identity();
         const fs::path moved = root / "pinned-moved.txt";
         error.clear();
         fs::rename(pinned_destination, moved, error);
@@ -294,8 +296,8 @@ int main()
         if (error) return 22;
 #endif
     }
-    fs::remove(pinned_destination, error);
-    if (error) return 23;
+    if (!facman::platform::remove_exact_object(
+            pinned_destination, pinned_identity).ok()) return 23;
     const fs::path refused_staging = root / "refused.tmp";
     const fs::path foreign_destination = root / "foreign.txt";
     const std::string foreign = "foreign bytes";

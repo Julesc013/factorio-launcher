@@ -308,6 +308,25 @@ void shortcut_cutover_cases() {
   require(integration::inspect_windows_shortcut_cutover_fixture(
               shortcut, context) == integration::CutoverOwnership::new_exact,
           "resumed cutover publishes the exact target");
+  require(fs::is_regular_file(backup),
+          "resumed cutover retains its source backup until durable activation");
+  require(integration::retire_windows_shortcut_cutover_fixture(
+              shortcut, context).ok && !fs::exists(backup),
+          "durably activated cutover retires the exact source backup");
+  require(integration::retire_windows_shortcut_cutover_fixture(
+              shortcut, context).ok,
+          "shortcut backup retirement is idempotent when already absent");
+  require(integration::inspect_windows_shortcut_cutover_fixture(
+              shortcut, context) == integration::CutoverOwnership::new_exact,
+          "backup retirement preserves the active target shortcut");
+  require(integration::apply_windows_shortcut_fixture(
+              backup, new_root, "2.0.0", false).ok,
+          "non-source operation-bound backup fixture created");
+  const auto foreign_backup =
+      integration::retire_windows_shortcut_cutover_fixture(shortcut, context);
+  require(!foreign_backup.ok && foreign_backup.recovery_required &&
+              fs::is_regular_file(backup),
+          "non-source operation-bound backup is refused and preserved");
   fs::remove_all(fixture, error);
   require(!error, "shortcut cutover fixture retired");
 }

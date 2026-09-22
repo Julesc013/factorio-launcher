@@ -337,6 +337,7 @@ public:
   virtual ShellState inspect_registration(const Plan &plan) = 0;
   virtual EffectResult cutover_shortcut(const Plan &plan) = 0;
   virtual EffectResult cutover_registration(const Plan &plan) = 0;
+  virtual EffectResult retire_shortcut_backup(const Plan &plan) = 0;
 };
 
 class EpochPreparationEffects {
@@ -395,6 +396,7 @@ public:
   virtual ShellState inspect_registration(const Plan &plan) = 0;
   virtual EffectResult cutover_shortcut(const Plan &plan) = 0;
   virtual EffectResult cutover_registration(const Plan &plan) = 0;
+  virtual EffectResult retire_shortcut_backup(const Plan &plan) = 0;
 };
 
 struct Response {

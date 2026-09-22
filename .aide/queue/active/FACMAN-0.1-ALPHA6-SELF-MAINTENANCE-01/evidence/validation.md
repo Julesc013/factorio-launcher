@@ -589,3 +589,32 @@ validation, and the full strict check pass; the strict result retains 436
 schemas, 131 commands and 290 refusal codes. Exact hosted requalification is
 pending, and the failed run grants no transition, final candidate, release or
 publication claim.
+
+## 2026-09-22 local chain-retirement qualification
+
+- The focused Release build of Setup, self-setup recovery, self-maintenance,
+  provider, package, handoff, Windows ownership and platform-I/O targets passed.
+- Focused CTest selection: 6/6 passed, including the packaged lifecycle,
+  provider, package, handoff and recovery fixtures.
+- `facman_windows_integration_ownership_smoke.exe`: passed 132 assertions.
+- `fl_platform_io_smoke.exe`: passed, including close-pinned-then-exact-remove.
+- Candidate/package Python selection: 134 tests passed.
+- Real current-user source-distinct `realv13`: passed A install, over-limit
+  refusal, A-to-B update, B-to-A downgrade, rollback to B, retained A
+  retirement and final registered B uninstall. The evidence JSON SHA-256 is
+  `0cbcfea4ef182d0a38bde089e1dfba765b0088155e2ffa6e2e5f4f5ffe2bd9ac`.
+- Final observation: registry absent, Start Menu shortcut absent, logical root
+  absent and zero physical generation roots. The active candidate repair
+  triplet remains retained under overlay digest `979d0682...`.
+
+The earlier `realv12` failure is retained. Its provider uninstall completed but
+pinned read handles correctly denied the first repair-source deletion. An
+explicit recovery receipt records the exact retired provider state and unchanged
+repair triplet before the deterministic completed marker was appended; the
+registered active uninstall then removed all public integration and generation
+effects. The successor closes only the three verified file handles before exact
+identity-bound deletion while retaining the cache, state, acceptance and marker
+pins.
+
+This local package records dirty source over `e4ee7006...`. A clean committed
+candidate and its hosted result are still required before acceptance.

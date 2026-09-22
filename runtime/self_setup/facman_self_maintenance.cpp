@@ -964,7 +964,8 @@ bool phase_semantics(const Plan &plan, const std::string &phase,
   const bool provider_phase = phase == "10-provider-entered" ||
       phase == "20-provider-receipt" || phase == "30-candidate-verified";
   const bool receipt_phase = phase == "20-provider-receipt" ||
-      phase == "30-candidate-verified" || phase == "70-activation-recorded";
+      phase == "30-candidate-verified" || phase == "70-activation-recorded" ||
+      phase == "80-shortcut-backup-retired";
   if (rollback) {
     if (plan.provider_operation != "none" || !plan.package_sha256.empty() ||
         provider_phase) return false;
@@ -1000,7 +1001,7 @@ facman::core::Result<void> validate_operation_records(
       "00-intent", "10-provider-entered", "20-provider-receipt",
       "30-candidate-verified", "40-generation-recorded",
       "50-shortcut-cutover", "60-registration-cutover",
-      "70-activation-recorded"};
+      "70-activation-recorded", "80-shortcut-backup-retired"};
   std::error_code status;
   std::size_t count = 0;
   for (fs::directory_iterator iterator(directory, status), end;
@@ -5071,6 +5072,17 @@ execute_lifecycle_epoch_shell_cutover(const EpochShellCutoverRequest &request,
               request.nonce, request.journal_sha256, true}))
     return facman::core::Result<EpochShellCutoverResponse>::failure(epoch_recovery(
         "epoch shell cutover final custody or ownership is not exact"));
+  const EffectResult retired =
+      effects.retire_shortcut_backup(state.publication.transition);
+  auto revalidated = reload_unchanged();
+  if (!revalidated)
+    return facman::core::Result<EpochShellCutoverResponse>::failure(
+        revalidated.error());
+  if (!retired.ok || retired.outcome_unknown ||
+      !digest(retired.receipt_sha256))
+    return facman::core::Result<EpochShellCutoverResponse>::failure(effect_error(
+        "self_maintenance_shortcut_backup_retirement_failed",
+        "epoch shortcut backup retirement failed", retired).error());
   return facman::core::Result<EpochShellCutoverResponse>::success(
       {"shell_cutover_complete", state.publication.transition.target, state.publication.journal});
 }
@@ -6217,6 +6229,18 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
                                     "70-activation-recorded", hash(activation));
     if (!final_phase)
       return facman::core::Result<Response>::failure(final_phase.error());
+    const auto retired = effects.retire_shortcut_backup(transition);
+    if (!retired.ok || retired.outcome_unknown ||
+        !digest(retired.receipt_sha256))
+      return facman::core::Result<Response>::failure(effect_error(
+          "self_maintenance_shortcut_backup_retirement_failed",
+          "completed activation shortcut backup retirement failed",
+          retired).error());
+    final_phase = record_phase(request, transition,
+                               "80-shortcut-backup-retired",
+                               retired.receipt_sha256);
+    if (!final_phase)
+      return facman::core::Result<Response>::failure(final_phase.error());
     const fs::path existing_generation = request.coordinator_root /
         "generations" /
         ("generation." + transition.target.generation_id + ".v1.json");
@@ -6419,6 +6443,18 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_activation_changed",
         "committed activation is not the unique current generation head"));
+  const auto retired = effects.retire_shortcut_backup(transition);
+  if (!retired.ok || retired.outcome_unknown ||
+      !digest(retired.receipt_sha256))
+    return facman::core::Result<Response>::failure(effect_error(
+        "self_maintenance_shortcut_backup_retirement_failed",
+        "shortcut backup retirement failed after activation commit",
+        retired).error());
+  recorded = record_phase(request, transition,
+                          "80-shortcut-backup-retired",
+                          retired.receipt_sha256);
+  if (!recorded)
+    return facman::core::Result<Response>::failure(recorded.error());
   return facman::core::Result<Response>::success(
       {transition.operation, "completed", transition.operation_id,
        transition.target, generation_record, activation_record});
