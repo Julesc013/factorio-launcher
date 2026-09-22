@@ -347,7 +347,9 @@ def stored_payload(path: Path, executable: Path, version: str, compression: int 
             archive.writestr(info, data)
 
 
-def deflated_maintenance_payload(path: Path, executable: Path, version: str) -> None:
+def deflated_maintenance_payload(
+        path: Path, executable: Path, version: str,
+        *, overlimit_member: bool = False) -> None:
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
     from tools.self_setup_package import (
@@ -388,6 +390,10 @@ def deflated_maintenance_payload(path: Path, executable: Path, version: str) -> 
             ) + "\n"
         ).encode("utf-8"),
     }
+    if overlimit_member:
+        files[f"facman/generations/{version}/path-limit-" + "x" * 220] = (
+            b"provider path-limit refusal fixture\n"
+        )
     with zipfile.ZipFile(path, "w", allowZip64=True) as archive:
         for name, data in sorted(files.items()):
             info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
@@ -399,6 +405,25 @@ def deflated_maintenance_payload(path: Path, executable: Path, version: str) -> 
             info.create_system = 3
             info.external_attr = 0o100644 << 16
             archive.writestr(info, data)
+
+
+def require_path_limit_plan_refusal(response: dict[str, object]) -> None:
+    error = response.get("error", {})
+    detail_text = str(error.get("detail", ""))
+    payload_start = detail_text.find("{")
+    try:
+        detail = json.loads(detail_text[payload_start:])
+    except (AttributeError, json.JSONDecodeError) as exc:
+        raise AssertionError(
+            "provider plan refusal did not retain its structured diagnostic"
+        ) from exc
+    if (
+        error.get("code") != "self_maintenance_plan_failed"
+        or detail.get("error", {}).get("code") != "native_path_limit_exceeded"
+    ):
+        raise AssertionError(
+            "provider path-limit plan refusal returned the wrong diagnostic"
+        )
 
 
 def damaged_archive_controls(root: Path, executable: Path, package: Path) -> None:
@@ -733,11 +758,11 @@ def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object]
             raise AssertionError(f"{phase}: retained maintenance custody receipt is invalid")
     maintenance = repair_source.with_name(f"{repair_source.stem}.FacManSetup.exe")
     uninstall = (
-        f'"{maintenance}" uninstall --root "{install}" --state-root "{state_root}" '
+        f'"{maintenance}" uninstall --root "{active_root}" --state-root "{state_root}" '
         f'--acceptance-root "{acceptance_root}" --yes --noninteractive --shell-integration'
     )
     modify = (
-        f'"{maintenance}" repair --package "{repair_source}" --root "{install}" '
+        f'"{maintenance}" repair --package "{repair_source}" --root "{active_root}" '
         f'--state-root "{state_root}" --acceptance-root "{acceptance_root}" '
         f'--yes --noninteractive --shell-integration'
     )
@@ -745,7 +770,7 @@ def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object]
         "DisplayName": ("FacMan", 1),
         "DisplayVersion": (version, 1),
         "Publisher": ("Jules C", 1),
-        "InstallLocation": (str(install), 1),
+        "InstallLocation": (str(active_root), 1),
         "DisplayIcon": (f'"{generation / "FacMan.exe"}"', 1),
         "UninstallString": (uninstall, 1),
         "QuietUninstallString": (uninstall + " --json", 1),
@@ -1048,6 +1073,23 @@ GENERATION_RECORD_KEYS = {
     "facman_source_revision", "universal_setup_revision", "install_id", "install_root",
     "logical_root", "state_root", "acceptance_root", "gui", "maintenance_launcher",
 }
+GENERATION_RECORD_PATH_KEYS = {
+    "install_root", "logical_root", "state_root", "acceptance_root", "gui",
+    "maintenance_launcher",
+}
+
+
+def generation_record_matches(actual: dict[str, object],
+                              expected: dict[str, object]) -> bool:
+    if set(actual) != GENERATION_RECORD_KEYS or set(expected) != GENERATION_RECORD_KEYS:
+        return False
+    for key in GENERATION_RECORD_KEYS - GENERATION_RECORD_PATH_KEYS:
+        if actual.get(key) != expected.get(key):
+            return False
+    return all(
+        same_windows_path(actual.get(key), Path(str(expected.get(key, ""))))
+        for key in GENERATION_RECORD_PATH_KEYS
+    )
 
 
 def generation_identity(identity: dict[str, str], package_sha256: str) -> str:
@@ -1167,7 +1209,7 @@ def require_transition_receipt(
         GENERATION_RECORD_KEYS,
         f"{operation} generation record",
     )
-    if generation != expected_target:
+    if not generation_record_matches(generation, expected_target):
         raise AssertionError(f"{operation} generation record does not bind the target package/root")
     if legacy_target and generation != retained_legacy:
         raise AssertionError(f"{operation} legacy target is not the exact retained predecessor")
@@ -1232,7 +1274,7 @@ def require_transition_receipt(
             source_identity, source_package_sha256, logical_root, state_root,
             acceptance_root, legacy=True,
         )
-        if observed_legacy != expected_legacy:
+        if not generation_record_matches(observed_legacy, expected_legacy):
             raise AssertionError("legacy migration generation does not bind its package/root")
     else:
         predecessor_activation = exact_json_record(
@@ -1326,6 +1368,38 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_package_sha256=baseline_package_sha256,
                             retained_package_sha256s={baseline_package_sha256})
 
+        overlimit_payload = root / "candidate-path-limit.zip"
+        deflated_maintenance_payload(
+            overlimit_payload, executable, candidate_identity["version"],
+            overlimit_member=True,
+        )
+        coordinator = state_root.parent / "setup-coordinator.v1"
+        before_refusal = {
+            "programs": tree_snapshot(programs),
+            "state": tree_snapshot(state_root),
+            "coordinator_present": coordinator.exists(),
+        }
+        refused = invoke(
+            executable, "update", "--package", overlimit_payload, *common,
+            shell_integration=True, noninteractive=True, expected=4,
+        )
+        require_path_limit_plan_refusal(refused)
+        if (
+            {
+                "programs": tree_snapshot(programs),
+                "state": tree_snapshot(state_root),
+                "coordinator_present": coordinator.exists(),
+            } != before_refusal
+        ):
+            raise AssertionError(
+                "provider path-limit plan refusal was not observable and effect-free"
+            )
+        refused_shortcut, refused_registry = observe("candidate_path_limit_refused")
+        if refused_shortcut != shortcut or refused_registry != registry:
+            raise AssertionError(
+                "provider path-limit plan refusal changed current-user shell integration"
+            )
+
         updated = invoke(executable, "update", "--package", candidate_payload, *common,
                          shell_integration=True, noninteractive=True)
         updated = await_external_handoff(
@@ -1352,38 +1426,55 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
             executable, "downgrade", "--package", baseline_payload, *common,
             shell_integration=True, noninteractive=True,
         )
-        if downgraded_launch.get("phase") != "handoff_launched":
-            raise AssertionError("source-distinct downgrade did not launch its retained B helper")
-        downgrade_operation_id = downgraded_launch.get("operation_id")
-        if not isinstance(downgrade_operation_id, str) or not downgrade_operation_id:
-            raise AssertionError("source-distinct downgrade omitted its handoff operation identity")
-        continuation_helper = (state_root / "epoch-handoff" /
-                               downgrade_operation_id / "FacManContinuation.exe")
-        continuation_sha256 = stable_retained_digest(
-            continuation_helper, state_root, root,
-            "downgrade retained continuation helper",
-        )
-        candidate_setup_sha256 = sha256_path(executable)
         baseline_launcher_sha256 = package_maintenance_launcher_sha256(baseline_payload)
-        if (continuation_sha256 != candidate_setup_sha256 or
-                continuation_sha256 == baseline_launcher_sha256):
-            raise AssertionError(
-                "B-to-A downgrade did not retain B Setup separately from A's target launcher"
+        if downgraded_launch.get("phase") == "handoff_launched":
+            downgrade_operation_id = downgraded_launch.get("operation_id")
+            if not isinstance(downgrade_operation_id, str) or not downgrade_operation_id:
+                raise AssertionError("source-distinct downgrade omitted its handoff operation identity")
+            continuation_helper = (state_root / "epoch-handoff" /
+                                   downgrade_operation_id / "FacManContinuation.exe")
+            continuation_sha256 = stable_retained_digest(
+                continuation_helper, state_root, root,
+                "downgrade retained continuation helper",
             )
-        observations.append({
-            "phase": "baseline_downgrade_handoff_launched",
-            "operation_id": downgrade_operation_id,
-            "continuation_helper": str(continuation_helper),
-            "continuation_helper_sha256": continuation_sha256,
-            "target_maintenance_launcher_sha256": baseline_launcher_sha256,
-        })
-        downgraded = await_external_handoff(
-            executable, downgraded_launch, "downgrade",
-            ("--package", baseline_payload,
-             "--root", install, "--state-root", state_root,
-             "--acceptance-root", root),
-            shell_integration=True, noninteractive=True,
-        )
+            candidate_setup_sha256 = sha256_path(executable)
+            if (continuation_sha256 != candidate_setup_sha256 or
+                    continuation_sha256 == baseline_launcher_sha256):
+                raise AssertionError(
+                    "B-to-A downgrade did not retain B Setup separately from A's target launcher"
+                )
+            observations.append({
+                "phase": "baseline_downgrade_handoff_launched",
+                "operation_id": downgrade_operation_id,
+                "continuation_helper": str(continuation_helper),
+                "continuation_helper_sha256": continuation_sha256,
+                "target_maintenance_launcher_sha256": baseline_launcher_sha256,
+            })
+            downgraded = await_external_handoff(
+                executable, downgraded_launch, "downgrade",
+                ("--package", baseline_payload,
+                 "--root", install, "--state-root", state_root,
+                 "--acceptance-root", root),
+                shell_integration=True, noninteractive=True,
+            )
+        elif downgraded_launch.get("phase") == "completed":
+            # The immediate retained predecessor needs no provider mutation and
+            # cannot overwrite the currently executing B Setup.  The classic
+            # migration coordinator may therefore verify and reactivate A in
+            # the initiating B process.  The receipt checks below still bind A
+            # to the exact immutable predecessor record and package.
+            observations.append({
+                "phase": "baseline_downgrade_retained_target_completed_inline",
+                "operation_id": downgraded_launch.get("operation_id"),
+                "executing_setup_sha256": sha256_path(executable),
+                "target_maintenance_launcher_sha256": baseline_launcher_sha256,
+            })
+            downgraded = downgraded_launch
+        else:
+            raise AssertionError(
+                "source-distinct downgrade neither completed an exact retained "
+                "target nor launched its continuation helper"
+            )
         downgrade_receipt = require_transition_receipt(
             downgraded, "downgrade", baseline_identity, baseline_package_sha256,
             install, state_root, root, update_receipt["activation"],
@@ -1392,12 +1483,13 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         shortcut, registry = observe("baseline_downgrade_completed")
         baseline_repair_launcher = (state_root / "repair-sources" /
             f"{baseline_package_sha256}.FacManSetup.exe")
+        baseline_repair_helper_sha256 = sha256_path(baseline_executable)
         if stable_retained_digest(
                 baseline_repair_launcher, state_root, root,
-                "baseline target maintenance launcher",
-        ) != baseline_launcher_sha256:
+                "baseline retained repair helper",
+        ) != baseline_repair_helper_sha256:
             raise AssertionError(
-                "B-to-A downgrade did not retain A's package helper for A repair"
+                "B-to-A downgrade did not retain A's exact downloaded repair helper"
             )
         assert_owned_native(shortcut, registry, install, state_root, root,
                             baseline_identity["version"], "baseline downgrade",
@@ -1419,8 +1511,11 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256})
-        retained_retirement = invoke(executable, "uninstall", *common,
-                                     shell_integration=True, noninteractive=True)
+        registered_retirement = registry_text(registry, "UninstallString")
+        retained_result = invoke_registered(
+            registered_retirement, "--json",
+        )
+        retained_retirement = json.loads(retained_result.stdout)
         if retained_retirement.get("phase") != "step_completed":
             raise AssertionError("chain retirement did not complete only its retained step")
         shortcut, registry = observe("chain_retirement_retained_completed")
@@ -1429,8 +1524,10 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_root=rollback_receipt["install_root"],
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={candidate_package_sha256})
-        active_retirement = invoke(executable, "uninstall", *common,
-                                   shell_integration=True, noninteractive=True)
+        active_result = invoke_registered(
+            registered_retirement, "--json",
+        )
+        active_retirement = json.loads(active_result.stdout)
         if active_retirement.get("phase") != "completed":
             raise AssertionError("chain retirement did not complete its active step")
         shortcut, registry = observe("chain_retirement_active_completed")
@@ -2111,6 +2208,35 @@ def main() -> int:
                 maintenance_package, executable, target_version
             )
             coordinator = root / "setup-coordinator.v1"
+            overlimit_package = root / "maintenance-path-limit.zip"
+            deflated_maintenance_payload(
+                overlimit_package, executable, target_version,
+                overlimit_member=True,
+            )
+            refusal_permit = maintenance_qualification_permit(
+                root, "update", True, version, install, state
+            )
+            before_refusal = {
+                "programs": tree_snapshot(programs),
+                "state": tree_snapshot(state),
+                "coordinator_present": coordinator.exists(),
+            }
+            refused = invoke(
+                executable, "update", "--package", overlimit_package,
+                "--root", install, "--state-root", state,
+                "--acceptance-root", root, "--yes",
+                "--qualification-fixture-permit", refusal_permit,
+                expected=4,
+            )
+            require_path_limit_plan_refusal(refused)
+            if {
+                "programs": tree_snapshot(programs),
+                "state": tree_snapshot(state),
+                "coordinator_present": coordinator.exists(),
+            } != before_refusal:
+                raise AssertionError(
+                    "provider path-limit plan refusal changed synthetic lifecycle state"
+                )
             unqualified = invoke(
                 executable, "update", "--package", maintenance_package,
                 "--root", install, "--state-root", state,

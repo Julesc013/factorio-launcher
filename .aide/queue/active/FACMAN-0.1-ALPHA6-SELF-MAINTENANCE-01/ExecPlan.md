@@ -338,3 +338,40 @@ bytes through a stable single-link input, and uses that digest for every
 generation, repair-source and transition assertion. Outer Setup hashes remain
 recorded separately. A new exact hosted run remains required; run `35688220467`
 grants no completed A-to-B transition or final bundle qualification.
+
+## 2026-09-22 complete local source-distinct lifecycle
+
+The next hosted attempt, run `35693982331` on integrated dev
+`e4ee70065af133fcbc0d01c0fde033910435ab20`, passed Linux, macOS and contract
+work but exposed two product-boundary assumptions in the Windows transition.
+The migrated Alpha.5 retained helper is the downloaded outer Setup while its
+installed maintenance entrypoint is the embedded Setup, and exact predecessor
+reactivation completes inline because it performs no provider or executable
+mutation. The implementation and harness now preserve those distinctions while
+requiring both exact provider and file identities.
+
+The local `realv13` candidate then completed Alpha.5 install, an effect-free
+over-limit refusal, Alpha.6 update, exact Alpha.5 downgrade, Alpha.6 rollback,
+one retained-generation retirement, and final registered uninstall through the
+real current-user Start Menu and 64-bit HKCU adapters. The predecessor's exact
+digest-named ZIP, Setup helper and custody receipt are retired only after its
+provider uninstall succeeds. The active Setup repair triplet remains available
+after final uninstall because it is the executing helper and broader retention
+policy is a later boundary.
+
+The retained evidence is
+`realv13/windows-real-self-maintenance-transition.v1.json`, SHA-256
+`0cbcfea4ef182d0a38bde089e1dfba765b0088155e2ffa6e2e5f4f5ffe2bd9ac`.
+It binds candidate outer Setup SHA-256
+`372575cb9eb396de7942ae385d2674d0de5965b76ccbee047fcf8ac495b04256`,
+candidate overlay SHA-256
+`979d06826ac88af89da4702ff9a5ae1e637b832977afc813d19de2b7cebb9c20`
+and predecessor overlay SHA-256
+`b5cdf9d768e192e2c1b877625b05577b910ba061d79d95a15777b7d2965aadc7`.
+The candidate record correctly says `source_dirty=true`; this is exact local
+implementation evidence, not committed-source or release qualification.
+
+Six focused native CTests, the direct Windows ownership and platform-I/O
+fixtures, and 134 candidate/package Python tests pass. The WorkUnit remains
+active for clean committed hosted requalification, chain-aware active repair,
+supported-platform qualification and human/product acceptance.

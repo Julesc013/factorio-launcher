@@ -20,6 +20,37 @@ from tests.integration import facman_self_setup_lifecycle as lifecycle
 
 
 class SelfMaintenanceCandidateTests(unittest.TestCase):
+    def test_candidate_payload_capacity_binds_exact_fixture_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package = root / "candidate.zip"
+            with zipfile.ZipFile(package, "w") as archive:
+                archive.writestr("facman/bin/facman.exe", b"facman\n")
+                archive.writestr("facman/release/" + "x" * 40, b"record\n")
+            capacity = candidate.candidate_payload_path_capacity(
+                package, root / "maintenance-transition"
+            )
+            self.assertEqual(
+                candidate.WINDOWS_PROVIDER_FILE_LIMIT,
+                capacity["limit_utf16_units"],
+            )
+            self.assertEqual("release/" + "x" * 40, capacity["relative_path"])
+            self.assertGreaterEqual(capacity["headroom_utf16_units"], 0)
+
+            with self.assertRaisesRegex(ValueError, "provider file limit"):
+                candidate.candidate_payload_path_capacity(
+                    package, root / ("overlong-" + "y" * 300)
+                )
+
+    def test_candidate_payload_capacity_refuses_noncanonical_members(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package = root / "candidate.zip"
+            with zipfile.ZipFile(package, "w") as archive:
+                archive.writestr("other/bin/facman.exe", b"facman\n")
+            with self.assertRaisesRegex(ValueError, "noncanonical payload path"):
+                candidate.candidate_payload_path_capacity(package, root / "fixture")
+
     def test_predecessor_checkout_is_a_disjoint_task_root_sibling(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             parent = Path(temporary)
@@ -405,6 +436,15 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             activation_path = activations / f"activation.{operation_id}.v1.json"
             activation_path.write_text(json.dumps(activation) + "\n", encoding="utf-8")
             generation_path = generations / f"generation.{generation_id}.v1.json"
+            if os.name == "nt":
+                generation = dict(generation)
+                generation["gui"] = (
+                    str(physical / "generations") + "/" + identity["version"]
+                    + "\\FacMan.exe"
+                )
+                generation["maintenance_launcher"] = (
+                    str(physical / "maintenance") + "/FacManSetup.exe"
+                )
             generation_path.write_text(json.dumps(generation) + "\n", encoding="utf-8")
             response = {
                 "schema": "facman.self_maintenance_cli.v1",
@@ -551,11 +591,11 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             generation = physical / "generations" / version
             gui = generation / "FacMan.exe"
             uninstall = (
-                f'"{maintenance}" uninstall --root "{logical}" --state-root "{state}" '
+                f'"{maintenance}" uninstall --root "{physical}" --state-root "{state}" '
                 f'--acceptance-root "{root}" --yes --noninteractive --shell-integration'
             )
             modify = (
-                f'"{maintenance}" repair --package "{active_source}" --root "{logical}" '
+                f'"{maintenance}" repair --package "{active_source}" --root "{physical}" '
                 f'--state-root "{state}" --acceptance-root "{root}" '
                 f'--yes --noninteractive --shell-integration'
             )
@@ -563,7 +603,7 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
                 "DisplayName": ("FacMan", 1),
                 "DisplayVersion": (version, 1),
                 "Publisher": ("Jules C", 1),
-                "InstallLocation": (str(logical), 1),
+                "InstallLocation": (str(physical), 1),
                 "DisplayIcon": (f'"{gui}"', 1),
                 "UninstallString": (uninstall, 1),
                 "QuietUninstallString": (uninstall + " --json", 1),

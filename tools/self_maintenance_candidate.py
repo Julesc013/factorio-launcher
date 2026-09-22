@@ -48,6 +48,8 @@ CURRENT_KEYS = {
 }
 MAX_IDENTITY_BYTES = 64 * 1024
 GIT_COMMAND = ("git", "-c", "core.longpaths=true")
+WINDOWS_PROVIDER_FILE_LIMIT = 259
+CURRENT_GENERATION_DIRECTORY = "FacMan.generation." + "0" * 64
 
 
 def git_command(*arguments: str) -> list[str]:
@@ -62,6 +64,47 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def candidate_payload_path_capacity(package: Path, fixture_root: Path) -> dict[str, object]:
+    """Bind the longest installed package path before the expensive transition."""
+
+    target_root = fixture_root / "Programs" / CURRENT_GENERATION_DIRECTORY
+    longest: tuple[int, str, str] | None = None
+    with zipfile.ZipFile(package) as archive:
+        for entry in archive.infolist():
+            if entry.is_dir():
+                continue
+            parts = entry.filename.split("/")
+            if (
+                len(parts) < 2 or parts[0] != "facman"
+                or any(part in ("", ".", "..") for part in parts)
+            ):
+                raise ValueError(
+                    "candidate setup overlay contains a noncanonical payload path"
+                )
+            relative = "/".join(parts[1:])
+            target = target_root.joinpath(*parts[1:])
+            units = len(str(target).encode("utf-16-le")) // 2
+            if longest is None or units > longest[0]:
+                longest = (units, relative, str(target))
+    if longest is None:
+        raise ValueError("candidate setup overlay contains no payload files")
+    units, relative, target = longest
+    result = {
+        "schema": "facman.candidate_payload_path_capacity.v1",
+        "limit_utf16_units": WINDOWS_PROVIDER_FILE_LIMIT,
+        "maximum_utf16_units": units,
+        "headroom_utf16_units": WINDOWS_PROVIDER_FILE_LIMIT - units,
+        "relative_path": relative,
+        "target_path": target,
+    }
+    if units > WINDOWS_PROVIDER_FILE_LIMIT:
+        raise ValueError(
+            "candidate transition fixture exceeds the Windows provider file limit: "
+            f"{units} > {WINDOWS_PROVIDER_FILE_LIMIT}: {target}"
+        )
+    return result
 
 
 def setup_overlay_sha256(path: Path) -> str:
@@ -752,9 +795,13 @@ def execute(args: argparse.Namespace) -> int:
         write_attempt(attempt_path, attempt)
         checkout_root, baseline_root = predecessor_roots(task_root, baseline_revision)
         fixture_root = require_external_new(
-            evidence_root / "real self-maintenance transition", "transition fixture root"
+            evidence_root / "maintenance-transition", "transition fixture root"
         )
         evidence = fixture_root / "windows-real-self-maintenance-transition.v1.json"
+        attempt["candidate_payload_path_capacity"] = candidate_payload_path_capacity(
+            args.candidate_setup, fixture_root
+        )
+        write_attempt(attempt_path, attempt)
         baseline = build_predecessor(
             args, checkout_root, baseline_root, baseline_revision,
             deadline=outer_deadline, evidence_root=evidence_root,
