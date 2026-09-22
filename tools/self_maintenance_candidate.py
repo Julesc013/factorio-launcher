@@ -279,6 +279,51 @@ def identity_from_overlay(path: Path, portable: Path | None = None) -> dict[str,
     }
 
 
+def identity_from_predecessor_outputs(
+    predecessor: dict[str, object],
+) -> dict[str, str]:
+    """Bind produced package names to their hash-identical retained copies."""
+
+    produced_setup = predecessor.get("setup")
+    produced_portable = predecessor.get("portable")
+    staged = predecessor.get("staged")
+    if (
+        not isinstance(produced_setup, Path)
+        or not isinstance(produced_portable, Path)
+        or not isinstance(staged, dict)
+    ):
+        raise ValueError("predecessor outputs have no exact produced and retained paths")
+    for label, produced in (
+        ("setup", produced_setup), ("portable", produced_portable),
+    ):
+        record = staged.get(label)
+        if not isinstance(record, dict):
+            raise ValueError(f"predecessor outputs have no retained {label} record")
+        retained_value = record.get("path")
+        recorded_bytes = record.get("bytes")
+        recorded_sha256 = record.get("sha256")
+        if (
+            not isinstance(retained_value, str)
+            or not isinstance(recorded_bytes, int)
+            or isinstance(recorded_bytes, bool)
+            or not isinstance(recorded_sha256, str)
+            or not HEX_DIGEST.fullmatch(recorded_sha256)
+        ):
+            raise ValueError(f"predecessor retained {label} record is invalid")
+        produced = exact_regular(produced, f"produced predecessor {label}")
+        retained = exact_regular(Path(retained_value), f"retained predecessor {label}")
+        produced_sha256 = sha256_file(produced)
+        retained_sha256 = sha256_file(retained)
+        if (
+            produced.stat().st_size != recorded_bytes
+            or retained.stat().st_size != recorded_bytes
+            or produced_sha256 != recorded_sha256
+            or retained_sha256 != recorded_sha256
+        ):
+            raise ValueError(f"produced and retained predecessor {label} differ")
+    return identity_from_overlay(produced_setup, produced_portable)
+
+
 def _semver_parts(value: str) -> tuple[tuple[int, int, int], tuple[tuple[int, object], ...] | None]:
     if not re.fullmatch(SEMVER_PATTERN, value):
         raise ValueError(f"invalid semantic version: {value!r}")
@@ -654,8 +699,7 @@ def execute(args: argparse.Namespace) -> int:
         if not isinstance(staged, dict):
             raise ValueError("baseline evidence staging did not return an exact manifest")
         baseline_setup = Path(str(staged["setup"]["path"]))
-        baseline_portable = Path(str(staged["portable"]["path"]))
-        baseline_identity = identity_from_overlay(baseline_setup, baseline_portable)
+        baseline_identity = identity_from_predecessor_outputs(baseline)
         candidate_identity = identity_from_overlay(args.candidate_setup, args.candidate_portable)
         locked_setup = locked_provider_revision(ROOT, "universal_setup")
         if (

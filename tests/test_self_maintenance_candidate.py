@@ -269,6 +269,36 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "does not bind"):
                 candidate.identity_from_overlay(package, portable)
 
+    def test_predecessor_identity_preserves_produced_name_and_retained_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = "b" * 40
+            package, portable = self.overlay(
+                root, version="0.1.0-alpha.5", source=source,
+            )
+            retained_setup = candidate.copy_evidence(
+                package, root / "windows-self-maintenance-baseline-setup.exe",
+            )
+            retained_portable = candidate.copy_evidence(
+                portable, root / "windows-self-maintenance-baseline-portable.zip",
+            )
+            predecessor = {
+                "setup": package,
+                "portable": portable,
+                "staged": {
+                    "setup": retained_setup,
+                    "portable": retained_portable,
+                },
+            }
+
+            identity = candidate.identity_from_predecessor_outputs(predecessor)
+            self.assertEqual(portable.name, identity["portable_name"])
+            self.assertEqual(source, identity["source_revision"])
+
+            Path(str(retained_portable["path"])).write_bytes(b"changed evidence")
+            with self.assertRaisesRegex(ValueError, "predecessor portable differ"):
+                candidate.identity_from_predecessor_outputs(predecessor)
+
     def test_semver_gate_accepts_alpha_successor_and_refuses_same_or_reverse(self) -> None:
         self.assertLess(candidate.semver_order("0.1.0-alpha.5", "0.1.0-alpha.6"), 0)
         self.assertEqual(0, candidate.semver_order("0.1.0-alpha.6", "0.1.0-alpha.6"))

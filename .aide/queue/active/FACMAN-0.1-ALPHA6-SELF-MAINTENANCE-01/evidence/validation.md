@@ -514,3 +514,41 @@ testing and validation, and the full strict check passed. The strict result
 retains 436 schemas, 131 commands and 290 refusal codes. Exact hosted
 requalification remains pending; no transition, six-asset candidate, release,
 or publication claim follows from the failed run or local replay.
+
+## 2026-09-22 predecessor produced-name identity correction
+
+Run `35683529084` was bound to source
+`e94142405f868f996f555916279fb1428a65c1ea` and Alpha.5 baseline
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+passed the current-source native, package, resource and real current-user setup
+work, then produced the exact Alpha.5 portable and Setup artifacts. The current
+package-contract TCK passed all 115 canonical files and the three admitted
+setup-overlay files. Identity admission then refused before transition because
+the retained portable evidence filename was
+`windows-self-maintenance-baseline-portable.zip`, while the Setup correctly
+bound the produced filename
+`FacMan-0.1.0-alpha.5-windows-x64-portable.zip`. The bytes and SHA-256 were
+identical.
+
+The retained Windows job log has SHA-256
+`637f3498ca16f503f86d1d3791a867e4730f3ed9b2770765570d8bcfd951619f`;
+GitHub artifact `10675968541` has digest
+`0a324598abad7e0d1522eaa5ffb7e5a70dfbe2f4bd55b5d88d8daeeb1579465c`,
+and the 1,626-entry local evidence manifest has SHA-256
+`90f190f3a83d17787aae4ded62c0deae018da038fa91d9e0fed7ca2ac0494457`.
+The retained portable and Setup SHA-256 values remain respectively
+`b4ef9a2606b4ad462a8bd6c1d57179ad892eb3aa061326f95cc91ca20bba7764`
+and `139efc98637e7b98b4866f105a11ed9f84e6774f48c7540925c80610483ae6bf`.
+
+The successor validates identity against the original produced names and
+bytes, then independently requires each original and renamed retained copy to
+match the retained byte count and SHA-256 record. A regression accepts the
+legitimate renamed retained copies and refuses a changed retained portable.
+The focused candidate, workflow and external-component staging selection
+passed 41 tests. The broader candidate, package, resource and development-root
+matrix passed 121 tests with one platform-conditioned skip, and the current
+package-contract TCK passed 14 tests. Python compilation, source formatting,
+diff checks, portable AIDE testing and validation, and the full strict check
+passed. The strict result retains 436 schemas, 131 commands and 290 refusal
+codes. Exact hosted requalification remains pending; no transition, six-asset
+candidate, release or publication claim follows from the failed run.
