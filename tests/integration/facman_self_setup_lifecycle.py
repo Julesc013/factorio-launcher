@@ -1511,6 +1511,87 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256})
+        registered_repair = registry_text(registry, "ModifyPath")
+        active_root = rollback_receipt["install_root"]
+        candidate_repair_source = (
+            state_root / "repair-sources" / f"{candidate_package_sha256}.zip"
+        )
+        withheld_repair_source = root / "withheld-active-generation-repair.zip"
+        os.replace(candidate_repair_source, withheld_repair_source)
+        try:
+            before_missing_repair = {
+                "generation": tree_snapshot(active_root),
+                "state": tree_snapshot(state_root),
+                "shortcut": shortcut,
+                "registry": registry,
+                "journals": journal_observation(active_root),
+            }
+            missing_repair_result = invoke_registered(
+                registered_repair, "--json", expected=4,
+            )
+            missing_repair = json.loads(missing_repair_result.stdout)
+            missing_shortcut, missing_registry = observe(
+                "active_generation_repair_missing_payload_refused"
+            )
+            missing_error = missing_repair.get("error")
+            if (missing_repair.get("status") != "error" or
+                    not isinstance(missing_error, dict) or
+                    missing_error.get("code") != "self_setup_package_missing" or
+                    tree_snapshot(active_root) != before_missing_repair["generation"] or
+                    tree_snapshot(state_root) != before_missing_repair["state"] or
+                    missing_shortcut != before_missing_repair["shortcut"] or
+                    missing_registry != before_missing_repair["registry"] or
+                    journal_observation(active_root) != before_missing_repair["journals"]):
+                raise AssertionError(
+                    "active-generation repair with a missing retained payload "
+                    "was not a typed no-effect refusal"
+                )
+        finally:
+            if withheld_repair_source.exists():
+                os.replace(withheld_repair_source, candidate_repair_source)
+
+        active_gui = (
+            active_root / "generations" /
+            candidate_identity["version"] / "FacMan.exe"
+        )
+        active_gui_sha256 = sha256_path(active_gui)
+        active_gui.write_bytes(b"deliberate active-generation damage\n")
+        repair_permit = qualification_permit(
+            root, "provider_plan_reviewed", "repair",
+            candidate_identity["version"], active_root, state_root,
+        )
+        interrupted_repair_result = invoke_registered(
+            registered_repair, "--json",
+            "--qualification-interrupt-after", "provider_plan_reviewed",
+            "--qualification-interrupt-permit", repair_permit,
+            expected=4,
+        )
+        interrupted_repair = json.loads(interrupted_repair_result.stdout)
+        assert_interrupted(interrupted_repair, "provider_plan_reviewed")
+        if not any(
+                item.get("provider_phase") == "plan_reviewed"
+                for item in journal_observation(active_root)):
+            raise AssertionError(
+                "active-generation repair interruption did not persist its provider phase"
+            )
+        resumed_repair_result = invoke_registered(registered_repair, "--json")
+        resumed_repair = json.loads(resumed_repair_result.stdout)
+        if (resumed_repair.get("status") != "ok" or
+                resumed_repair.get("operation") != "repair" or
+                resumed_repair.get("phase") != "receipt" or
+                sha256_path(active_gui) != active_gui_sha256):
+            raise AssertionError(
+                "registered active-generation repair did not resume and restore "
+                "the exact packaged executable"
+            )
+        shortcut, registry = observe("active_generation_repair_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root,
+                            candidate_identity["version"],
+                            "active-generation repair",
+                            active_root=active_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
         registered_retirement = registry_text(registry, "UninstallString")
         retained_result = invoke_registered(
             registered_retirement, "--json",

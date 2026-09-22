@@ -45,9 +45,13 @@ whole-root `update.*` authority. Activation occurs only after the candidate and
 its installed files verify, followed by coordinated Start Menu and uninstall
 registration cutover.
 
-This checkpoint keeps completed generations for rollback. Repair is allowed
-only for a verified active migrated `facman.self` and refuses an active
-side-by-side generation. Uninstall of an activation chain writes an immutable
+This checkpoint keeps completed generations for rollback. Repair accepts only
+the exact active generation after its chain roots and provider-installed
+identity bind. It routes the ordinary repair coordinator to that generation's
+install ID, physical root, product version, state root, and retained source.
+An already-clean verification result is not a prerequisite for repair; the
+provider's read-only repair plan must instead bind and classify the damaged
+installed state before apply. Uninstall of an activation chain writes an immutable
 retirement intent under `setup-coordinator.v1/retirements`, bound to the exact
 head name/digest, complete activation sequence, and ordered unique generation
 identities. It removes retained generations without shell integration and the
@@ -64,7 +68,8 @@ retained generation is removed, its exact digest-bound package, maintenance
 launcher, and custody receipt are removed from the pinned repair cache before
 the step is committed. The executing active generation's repair triplet remains
 available after its final uninstall step. Broader retention policy, garbage
-collection, and multi-generation repair remain outside this slice.
+collection, and repair of inactive retained generations remain outside this
+slice.
 
 Normal maintenance requires the Windows shell integration. `--no-shell-integration`
 is admitted only for a disposable qualification root that contains the exact
@@ -164,6 +169,7 @@ kill-on-close containment. Ordinary canary commands retain their existing rule
 that a completed primary cannot leave descendants behind.
 
 This source checkpoint covers the isolated no-shell CLI transition, native
-state machine, and retained-helper parent-exit protocol. It does not replace the
-still-required source-distinct packaged Windows run with real Start Menu and
-HKCU observations, or chain-aware repair and removal.
+state machine, retained-helper parent-exit protocol, and active-generation
+repair route. It does not replace the still-required source-distinct packaged
+Windows run with real Start Menu, HKCU, interrupted repair, and removal
+observations for the exact source under test.

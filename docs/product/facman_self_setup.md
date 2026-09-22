@@ -125,10 +125,15 @@ identity ambiguity requires recovery and is not replayed. An incomplete
 retirement blocks every ordinary activation-chain transition; only the exact
 retirement coordinator can pass its call-scoped lock proof into the nested
 uninstall. Completion leaves the immutable activation history available while discovery reports no active chain.
-Repair is limited to a verified active migrated `facman.self`; active
-side-by-side generations are refused. Generic `verify` also refuses an
-activation-chain installation instead of accidentally routing to the legacy
-install ID.
+Repair resolves the exact active activation-chain generation and routes the
+ordinary provider/native repair transaction through its generation-specific
+install ID, physical root, product version, state root, and digest-bound
+retained package. The installed identity must match the immutable generation
+record before repair planning. A clean verification result is deliberately not
+required because modified or missing owned files are the repair input. Repair
+of an inactive retained generation remains unsupported. Generic `verify` also
+refuses an activation-chain installation instead of accidentally routing to
+the legacy install ID.
 
 Windows shortcut cutover accepts only the exact old or exact new entrypoint.
 It keeps an operation-bound same-directory backup so an interruption between
@@ -209,9 +214,10 @@ installed-state and receipts, and preserves workspaces and Factorio data.
   pinned production-provider bridge, public setup routing, deterministic legacy
   adoption, exact Windows cutover adapter, and inherited-handle primitive form
   a focused, locally tested source slice.
-  Multi-generation repair, retention garbage collection, a full
-  parent-exit/helper-resume run, and two source-distinct produced-package
-  lifecycle qualification remain pending. The
+  Repair of inactive retained generations and retention garbage collection
+  remain pending. Every promotable source still requires its own
+  source-distinct produced-package lifecycle qualification; durable candidate
+  evidence records that result without changing the qualified source. The
   active WorkUnits therefore remain open.
 - Windows is the 0.1 support direction. macOS Intel and Ubuntu 24.04 x64
   GTK/X11 are experimental previews.
