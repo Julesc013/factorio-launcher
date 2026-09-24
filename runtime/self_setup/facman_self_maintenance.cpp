@@ -6011,6 +6011,11 @@ facman::core::Result<ActiveState> adopt_legacy(
     return facman::core::Result<ActiveState>::failure(created.error());
   auto held = acquire(authority.take_value(), operation_id);
   if (!held) return facman::core::Result<ActiveState>::failure(held.error());
+  // A direct legacy-adoption caller must not write flat history after an
+  // epoch namespace has appeared, even if it bypasses the public Setup route.
+  auto epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<ActiveState>::failure(epochs_absent.error());
   const fs::path activation_directory = coordinator_root / "activations";
   std::error_code status;
   bool has_activation = false;
@@ -6256,6 +6261,11 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
         "coordinator root remains absent after plan admission"));
   auto held = acquire(authority.take_value(), request.operation_id);
   if (!held) return facman::core::Result<Response>::failure(held.error());
+  // Public routing selects the real epoch first, but this older flat entry
+  // point is callable directly. Fence it under the same coordinator lock.
+  auto epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<Response>::failure(epochs_absent.error());
   const std::string activation = activation_json(transition);
   const fs::path activation_record = request.coordinator_root / "activations" /
       ("activation." + transition.operation_id + ".v1.json");
@@ -6310,6 +6320,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
       return facman::core::Result<Response>::failure(failure(
           "self_maintenance_activation_changed",
           "completed activation shell state is no longer exact"));
+    epochs_absent = require_flat_retirement_epoch_absence(held.value());
+    if (!epochs_absent)
+      return facman::core::Result<Response>::failure(epochs_absent.error());
     auto final_phase = record_phase(request, transition,
                                     "70-activation-recorded", hash(activation));
     if (!final_phase)
@@ -6369,6 +6382,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
             "self_maintenance_provider_recovery_required",
             "provider entry was recorded without an exact installed candidate"));
       }
+      epochs_absent = require_flat_retirement_epoch_absence(held.value());
+      if (!epochs_absent)
+        return facman::core::Result<Response>::failure(epochs_absent.error());
       const auto prepared_provider = effects.prepare_install_local(transition);
       if (!prepared_provider.ok)
         return facman::core::Result<Response>::failure(effect_error(
@@ -6377,6 +6393,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
             prepared_provider).error());
       recorded = record_phase(request, transition, "10-provider-entered");
       if (!recorded) return facman::core::Result<Response>::failure(recorded.error());
+      epochs_absent = require_flat_retirement_epoch_absence(held.value());
+      if (!epochs_absent)
+        return facman::core::Result<Response>::failure(epochs_absent.error());
       const auto installed = effects.install_local(transition);
       if (!installed.ok)
         return facman::core::Result<Response>::failure(effect_error(
@@ -6434,6 +6453,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
           "self_maintenance_verify_failed",
           "rollback target verification failed", verified).error());
   } else {
+    epochs_absent = require_flat_retirement_epoch_absence(held.value());
+    if (!epochs_absent)
+      return facman::core::Result<Response>::failure(epochs_absent.error());
     recorded = ensure_immutable(generation_record,
                                 serialize_generation(transition.target));
   }
@@ -6468,6 +6490,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
           "self_maintenance_rollback_invalid",
           "rollback target identity changed before shell cutover"));
   }
+  epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<Response>::failure(epochs_absent.error());
 
   ShellState shortcut = effects.inspect_shortcut(transition);
   if (shortcut == ShellState::foreign || shortcut == ShellState::unreadable ||
@@ -6475,6 +6500,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_shell_unsafe", "Start Menu shortcut is not the exact old or new FacMan object"));
   if (shortcut == ShellState::old_exact) {
+    epochs_absent = require_flat_retirement_epoch_absence(held.value());
+    if (!epochs_absent)
+      return facman::core::Result<Response>::failure(epochs_absent.error());
     const auto changed = effects.cutover_shortcut(transition);
     if (!changed.ok)
       return facman::core::Result<Response>::failure(effect_error(
@@ -6492,6 +6520,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_shell_unsafe", "uninstall registration is not the exact old or new FacMan object"));
   if (registration == ShellState::old_exact) {
+    epochs_absent = require_flat_retirement_epoch_absence(held.value());
+    if (!epochs_absent)
+      return facman::core::Result<Response>::failure(epochs_absent.error());
     const auto changed = effects.cutover_registration(transition);
     if (!changed.ok)
       return facman::core::Result<Response>::failure(effect_error(
@@ -6513,6 +6544,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_identity_changed",
         "generation or activation identity changed before activation commit"));
+  epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<Response>::failure(epochs_absent.error());
   recorded = ensure_immutable(activation_record, activation);
   if (!recorded) return facman::core::Result<Response>::failure(recorded.error());
   recorded = record_phase(request, transition, "70-activation-recorded",
@@ -6528,6 +6562,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_activation_changed",
         "committed activation is not the unique current generation head"));
+  epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<Response>::failure(epochs_absent.error());
   const auto retired = effects.retire_shortcut_backup(transition);
   if (!retired.ok || retired.outcome_unknown ||
       !digest(retired.receipt_sha256))
