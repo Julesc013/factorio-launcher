@@ -898,6 +898,28 @@ facman::core::Result<void> require_flat_retirement_epoch_absence(
     return facman::core::Result<void>::failure(failure(
         "self_maintenance_epoch_recovery_required",
         "lifecycle epoch namespace blocks flat retirement"));
+  const fs::path handoff = lock.admission.root / "authority-handoff.v1.json";
+  const auto handoff_descendant =
+      lock.admission.coordinator.validate_descendant(handoff, true);
+  facman::platform::PathIdentity handoff_identity;
+  const auto handoff_observed = facman::platform::inspect_path_no_follow(
+      handoff, handoff_identity);
+  if (!handoff_descendant.ok() || !handoff_observed.ok() ||
+      handoff_identity.exists)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_epoch_recovery_required",
+        "compatibility authority handoff blocks flat maintenance"));
+  const fs::path bootstrap = lock.admission.root / "authority-bootstrap.v1";
+  const auto bootstrap_descendant =
+      lock.admission.coordinator.validate_descendant(bootstrap, true);
+  facman::platform::PathIdentity bootstrap_identity;
+  const auto bootstrap_observed = facman::platform::inspect_path_no_follow(
+      bootstrap, bootstrap_identity);
+  if (!bootstrap_descendant.ok() || !bootstrap_observed.ok() ||
+      bootstrap_identity.exists)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_epoch_recovery_required",
+        "compatibility bootstrap journal blocks flat maintenance"));
   if (!lock.admission.revalidate(detail))
     return facman::core::Result<void>::failure(failure(
         "self_maintenance_lock_unsafe",
@@ -1303,6 +1325,49 @@ std::string compatibility_manifest_bytes(const ActivationChain &chain) {
   object.add_string("epoch_id", kCompatibilityEpochId);
   object.add_string("product_id", "facman");
   object.add_string("schema", "facman.self_lifecycle_epoch_v1_compat.v1");
+  return object.serialize() + "\n";
+}
+
+// Relinquishing the flat chain's authority does not mean its provider files or
+// native objects were uninstalled. This record has a distinct schema and path
+// from the destructive retirement receipt, while binding the same exact head.
+std::string compatibility_authority_handoff_bytes(
+    const ActivationChain &chain) {
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_compatibility_authority_handoff.v1");
+  object.add_string("product_id", "facman");
+  object.add_string("head_name", chain.activation_name);
+  object.add_string("head_sha256", chain.activation_sha256);
+  object.add_string("chain_digest", retirement_chain_digest(chain));
+  object.add_string("source_generation_id", chain.generations.back().generation_id);
+  object.add_string("source_package_sha256", chain.generations.back().package_sha256);
+  return object.serialize() + "\n";
+}
+
+std::string compatibility_bootstrap_entered_bytes(
+    const ActivationChain &chain, const LifecycleEpoch &epoch,
+    const Generation &target, bool shell_integration) {
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_compatibility_bootstrap_entered.v1");
+  object.add_string("source_head_name", chain.activation_name);
+  object.add_string("source_head_sha256", chain.activation_sha256);
+  object.add_string("source_generation_id", chain.generations.back().generation_id);
+  object.add_string("source_package_sha256", chain.generations.back().package_sha256);
+  object.add_string("epoch_id", epoch.epoch_id);
+  object.add_string("target_install_id", target.install_id);
+  object.add_string("target_install_root", facman::platform::path_to_utf8(target.install_root));
+  object.add_bool("shell_integration", shell_integration);
+  return object.serialize() + "\n";
+}
+
+std::string compatibility_bootstrap_phase_bytes(
+    const char *phase, const std::string &entered_sha256,
+    const std::string &receipt_sha256) {
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_compatibility_bootstrap_phase.v1");
+  object.add_string("phase", phase);
+  object.add_string("entered_sha256", entered_sha256);
+  object.add_string("receipt_sha256", receipt_sha256);
   return object.serialize() + "\n";
 }
 
@@ -2202,6 +2267,29 @@ facman::core::Result<void> publish_epoch_record(
   return facman::core::Result<void>::success();
 }
 
+facman::core::Result<std::optional<std::string>> read_optional_bootstrap_record(
+    const facman::platform::StableDirectoryObject &directory,
+    const std::string &name) {
+  const fs::path path = directory.path() / name;
+  facman::platform::PathIdentity identity;
+  if (!directory.validate_descendant(path, true).ok() ||
+      !facman::platform::inspect_path_no_follow(path, identity).ok())
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("bootstrap record could not be safely observed", name));
+  if (!identity.exists)
+    return facman::core::Result<std::optional<std::string>>::success({});
+  if (identity.reparse_or_link ||
+      identity.kind != facman::platform::PathObjectKind::regular_file)
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("bootstrap record is not a plain file", name));
+  auto bytes = read_epoch_relative_bounded(
+      directory, name, kMaximumEpochGenesisRecordBytes);
+  return bytes
+      ? facman::core::Result<std::optional<std::string>>::success(
+            std::optional<std::string>(bytes.take_value()))
+      : facman::core::Result<std::optional<std::string>>::failure(bytes.error());
+}
+
 facman::core::Result<void> validate_epoch_history(LifecycleEpoch &epoch,
                                                    const fs::path &root,
                                                    bool compatibility) {
@@ -2239,7 +2327,76 @@ facman::core::Result<void> validate_epoch_history(LifecycleEpoch &epoch,
   auto active = discover_active(root);
   if (!active) return facman::core::Result<void>::failure(
       compatibility ? active.error() : epoch_recovery("epoch retirement is incomplete",
-                                                       active.error().message));
+                                                        active.error().message));
+  if (compatibility) {
+    facman::platform::StableDirectoryObject coordinator;
+    const fs::path marker = root / "authority-handoff.v1.json";
+    facman::platform::PathIdentity identity;
+    const auto opened = coordinator.open_no_follow(root);
+    if (!opened.ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "compatibility authority handoff could not be safely observed"));
+    const auto admitted = coordinator.validate_descendant(marker, true);
+    const auto inspected = admitted.ok()
+        ? facman::platform::inspect_path_no_follow(marker, identity)
+        : admitted;
+    if (!admitted.ok() || !inspected.ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "compatibility authority handoff could not be safely observed"));
+    if (identity.exists) {
+      if (!active.value().has_value() || identity.reparse_or_link ||
+          identity.kind != facman::platform::PathObjectKind::regular_file)
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility authority handoff conflicts with flat retirement or an unsafe object"));
+      auto bytes = read_epoch_relative_bounded(coordinator,
+          "authority-handoff.v1.json", kMaximumEpochGenesisRecordBytes);
+      if (!bytes || bytes.value() != compatibility_authority_handoff_bytes(history) ||
+          !coordinator.revalidate().ok())
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility authority handoff is foreign, incomplete, or changed"));
+      LifecycleEpoch successor;
+      successor.acceptance_root = epoch.acceptance_root;
+      successor.genesis_generation_id = history.generations.back().generation_id;
+      successor.logical_root = epoch.logical_root;
+      successor.predecessor_epoch_id = kCompatibilityEpochId;
+      successor.predecessor_manifest_sha256 = hash(compatibility_manifest_bytes(history));
+      successor.predecessor_retirement_sha256 = hash(bytes.value());
+      successor.state_root = epoch.state_root;
+      successor.epoch_id = hash(lifecycle_identity_bytes(successor));
+      const Generation &source = history.generations.back();
+      auto target = make_epoch_genesis_generation(successor,
+          generation_descriptor(source), source.package_sha256);
+      facman::platform::StableDirectoryObject bootstrap;
+      if (!target || !coordinator.open_child_directory_no_follow(
+              "authority-bootstrap.v1", bootstrap).ok())
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility authority handoff lacks its exact bootstrap journal"));
+      auto entered = read_epoch_relative_bounded(bootstrap,
+          "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
+      if (!entered ||
+          (entered.value() != compatibility_bootstrap_entered_bytes(
+              history, successor, target.value(), true) &&
+           entered.value() != compatibility_bootstrap_entered_bytes(
+              history, successor, target.value(), false)))
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility bootstrap entry does not bind the exact epoch clone"));
+      auto verified = read_epoch_relative_bounded(bootstrap,
+          "20-clone-verified.v1.json", kMaximumEpochGenesisRecordBytes);
+      auto document = verified ? json::parse(verified.value())
+          : facman::core::Result<json::Value>::failure(verified.error());
+      const std::string receipt = document
+          ? string_field(document.value(), "receipt_sha256") : std::string();
+      if (!digest(receipt) || !verified ||
+          verified.value() != compatibility_bootstrap_phase_bytes(
+              "clone_verified", hash(entered.value()), receipt) ||
+          !bootstrap.revalidate().ok())
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility authority handoff lacks exact clone verification"));
+      epoch.retirement_sha256 = hash(bytes.value());
+      epoch.compatibility_handoff = true;
+      return facman::core::Result<void>::success();
+    }
+  }
   if (active.value().has_value()) {
     epoch.compatibility_active = std::move(*active.value());
     return facman::core::Result<void>::success();
@@ -2300,12 +2457,17 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
     sentinel.manifest_sha256 = hash(compatibility_manifest_bytes(*flat.value()));
     result.epochs.push_back(std::move(sentinel));
   } else {
-    for (const char *name : {"generations", "retirements", "maintenance"}) {
-      if (fs::exists(coordinator_root / name, status) && !status)
+    for (const char *name : {"generations", "retirements", "maintenance",
+                             "authority-handoff.v1.json", "authority-bootstrap.v1"}) {
+      facman::platform::PathIdentity identity;
+      if (!coordinator.validate_descendant(coordinator_root / name, true).ok() ||
+          !facman::platform::inspect_path_no_follow(
+              coordinator_root / name, identity).ok())
+        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+            "flat coordinator state could not be safely observed"));
+      if (identity.exists)
         return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
             "flat coordinator has state without a valid activation history"));
-      if (status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
-          "flat coordinator state could not be observed", status.message()));
     }
   }
 
@@ -2765,9 +2927,14 @@ facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active_from_chai
 
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
     const fs::path &coordinator_root) {
-  auto chain = discover_lifecycle_epoch_chain_impl(coordinator_root);
-  if (!chain) return facman::core::Result<EpochActiveState>::failure(chain.error());
-  return discover_lifecycle_epoch_active_from_chain(coordinator_root, chain.value());
+  auto selected = resolve_authoritative_active_state(coordinator_root);
+  if (!selected || !selected.value().has_value() ||
+      !selected.value()->epoch.has_value())
+    return facman::core::Result<EpochActiveState>::failure(!selected
+        ? selected.error() : epoch_recovery(
+            "no authoritative real lifecycle epoch is active"));
+  return facman::core::Result<EpochActiveState>::success(
+      {*selected.value()->epoch, selected.value()->active});
 }
 
 facman::core::Result<std::optional<AuthoritativeActiveState>>
@@ -2787,6 +2954,17 @@ resolve_authoritative_active_state(const fs::path &coordinator_root) {
         AuthoritativeActiveState{{}, std::move(*flat.value())});
   }
   const LifecycleEpoch &tail = chain.value().epochs.back();
+  if (tail.compatibility_epoch) {
+    facman::platform::PathIdentity bootstrap;
+    const auto observed = facman::platform::inspect_path_no_follow(
+        coordinator_root / "authority-bootstrap.v1", bootstrap);
+    if (!observed.ok() || bootstrap.exists)
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("compatibility bootstrap requires recovery"));
+  }
+  if (tail.compatibility_epoch && tail.compatibility_handoff)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        epoch_recovery("compatibility authority handoff awaits its real epoch genesis"));
   if (tail.compatibility_epoch && !tail.compatibility_active.has_value() &&
       !tail.retirement_sha256.empty())
     return facman::core::Result<std::optional<AuthoritativeActiveState>>::success({});
@@ -2795,6 +2973,66 @@ resolve_authoritative_active_state(const fs::path &coordinator_root) {
   if (!epoch)
     return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
         epoch.error());
+  if (!epoch.value().epoch.compatibility_epoch &&
+      chain.value().epochs.front().compatibility_handoff) {
+    auto flat = discover_activation_chain(coordinator_root);
+    facman::platform::StableDirectoryObject coordinator, bootstrap;
+    if (!flat || !flat.value().has_value() ||
+        !coordinator.open_no_follow(coordinator_root).ok() ||
+        !coordinator.open_child_directory_no_follow(
+            "authority-bootstrap.v1", bootstrap).ok())
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap completion cannot be safely observed"));
+    const Generation &target = epoch.value().active.active;
+    auto entered = read_epoch_relative_bounded(bootstrap,
+        "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
+    const std::string enabled = compatibility_bootstrap_entered_bytes(
+        *flat.value(), epoch.value().epoch, target, true);
+    const std::string disabled = compatibility_bootstrap_entered_bytes(
+        *flat.value(), epoch.value().epoch, target, false);
+    if (!entered || (entered.value() != enabled && entered.value() != disabled))
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap completion has a different entered identity"));
+    const bool shell = entered.value() == enabled;
+    const std::string entered_sha256 = hash(entered.value());
+    const std::string genesis_bytes = compatibility_bootstrap_phase_bytes(
+        "genesis_activated", entered_sha256,
+        epoch.value().active.activation_sha256);
+    const std::string shortcut_receipt = hash("facman.bootstrap.shortcut.v1\n" +
+        target.install_id + "\n" + (shell ? "cutover\n" : "disabled\n"));
+    const std::string registration_receipt = hash(
+        "facman.bootstrap.registration.v1\n" + target.install_id + "\n" +
+        (shell ? "cutover\n" : "disabled\n"));
+    const std::string registration_bytes = compatibility_bootstrap_phase_bytes(
+        "registration_cutover", entered_sha256, registration_receipt);
+    const std::vector<std::pair<std::string, std::string>> required = {
+        {"30-genesis-activated.v1.json", genesis_bytes},
+        {"40-shortcut-cutover.v1.json", compatibility_bootstrap_phase_bytes(
+            "shortcut_cutover", entered_sha256, shortcut_receipt)},
+        {"50-registration-cutover.v1.json", registration_bytes},
+        {"60-complete.v1.json", compatibility_bootstrap_phase_bytes(
+            "complete", entered_sha256, hash(registration_bytes))}};
+    for (const auto &record : required) {
+      auto bytes = read_epoch_relative_bounded(
+          bootstrap, record.first, kMaximumEpochGenesisRecordBytes);
+      if (!bytes || bytes.value() != record.second)
+        return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+            epoch_recovery("bootstrap native cutover is incomplete or changed",
+                           record.first));
+    }
+    std::vector<fs::path> names;
+    const std::vector<fs::path> complete_names = {
+        "10-clone-entered.v1.json", "20-clone-verified.v1.json",
+        "30-genesis-activated.v1.json", "40-shortcut-cutover.v1.json",
+        "50-registration-cutover.v1.json", "60-complete.v1.json"};
+    if (!bootstrap.list_child_names_bounded(6U, names).ok() ||
+        names != complete_names)
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap completion journal has an unexpected entry"));
+    if (!bootstrap.revalidate().ok() || !coordinator.revalidate().ok())
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap completion changed during selection"));
+  }
   if (epoch.value().epoch.compatibility_epoch)
     return facman::core::Result<std::optional<AuthoritativeActiveState>>::success(
         AuthoritativeActiveState{{}, std::move(epoch.value().active)});
@@ -2818,6 +3056,7 @@ struct EpochHandoff {
   std::string provider_plan_sha256;
   std::string nonce;
   bool shell_integration = true;
+  std::uint64_t deadline_utc_ms = 0;
 };
 
 std::string epoch_handoff_bytes(const EpochHandoff &value) {
@@ -2839,6 +3078,8 @@ std::string epoch_handoff_bytes(const EpochHandoff &value) {
   object.add_string("provider_plan_sha256", value.provider_plan_sha256);
   object.add_string("nonce", value.nonce);
   object.add_string("shell_integration", value.shell_integration ? "enabled" : "disabled");
+  if (value.deadline_utc_ms != 0)
+    object.add_string("deadline_utc_ms", std::to_string(value.deadline_utc_ms));
   return object.serialize() + "\n";
 }
 
@@ -2850,8 +3091,17 @@ facman::core::Result<EpochHandoff> parse_epoch_handoff(const std::string &bytes)
       "retained_package", "retained_package_sha256", "continuation_helper",
       "continuation_helper_sha256", "provider_plan_sha256", "nonce",
       "shell_integration"};
-  if (!document || !exact_keys(document.value(), keys) ||
-      !lifecycle_string_fields(document.value(), keys))
+  const std::initializer_list<const char *> deadline_keys = {"schema", "product_id", "epoch_id",
+      "epoch_manifest_sha256", "operation", "operation_id", "source_generation_id",
+      "source_activation_name", "source_activation_sha256", "target_generation_id",
+      "retained_package", "retained_package_sha256", "continuation_helper",
+      "continuation_helper_sha256", "provider_plan_sha256", "nonce",
+      "shell_integration", "deadline_utc_ms"};
+  const bool has_deadline = document && document.value().find("deadline_utc_ms") != nullptr;
+  if (!document || !(has_deadline ? exact_keys(document.value(), deadline_keys)
+                                   : exact_keys(document.value(), keys)) ||
+      !(has_deadline ? lifecycle_string_fields(document.value(), deadline_keys)
+                     : lifecycle_string_fields(document.value(), keys)))
     return facman::core::Result<EpochHandoff>::failure(epoch_recovery(
         "epoch handoff journal has an incompatible exact schema"));
   EpochHandoff result;
@@ -2871,6 +3121,19 @@ facman::core::Result<EpochHandoff> parse_epoch_handoff(const std::string &bytes)
   result.nonce = string_field(document.value(), "nonce");
   const std::string shell_integration = string_field(document.value(), "shell_integration");
   result.shell_integration = shell_integration == "enabled";
+  if (has_deadline) {
+    const std::string deadline = string_field(document.value(), "deadline_utc_ms");
+    try {
+      result.deadline_utc_ms = std::stoull(deadline);
+      if (result.deadline_utc_ms == 0 ||
+          std::to_string(result.deadline_utc_ms) != deadline)
+        return facman::core::Result<EpochHandoff>::failure(epoch_recovery(
+            "epoch handoff deadline is not canonical"));
+    } catch (...) {
+      return facman::core::Result<EpochHandoff>::failure(epoch_recovery(
+          "epoch handoff deadline is not canonical"));
+    }
+  }
   std::string detail;
   if (string_field(document.value(), "schema") != "facman.self_epoch_handoff.v3" ||
       string_field(document.value(), "product_id") != "facman" || !digest(result.epoch_id) ||
@@ -3182,7 +3445,8 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
         transition.operation_id, transition.source.generation_id,
         transition.previous_activation_name, transition.previous_activation_sha256,
         transition.target.generation_id, retained.take_value(), reviewed.receipt_sha256,
-        generator.next("epoch"), request.shell_integration};
+        generator.next("epoch"), request.shell_integration,
+        request.deadline_utc_ms};
   }
   if (handoff.epoch_id != epoch.epoch_id || handoff.manifest_sha256 != epoch.manifest_sha256 ||
       handoff.operation != transition.operation || handoff.operation_id != request.operation_id ||
@@ -3223,6 +3487,7 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
   response.journal_sha256 = hash(journal);
   response.inputs = std::move(handoff.inputs);
   response.nonce = std::move(handoff.nonce);
+  response.deadline_utc_ms = handoff.deadline_utc_ms;
   return facman::core::Result<EpochTransitionPreparation>::success(std::move(response));
 }
 
@@ -5392,6 +5657,7 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
     candidate.retained_package = retained_package.take_value();
     candidate.retained_inputs = handoff.value().inputs;
     candidate.shell_integration = handoff.value().shell_integration;
+    candidate.deadline_utc_ms = handoff.value().deadline_utc_ms;
     held_retained_inputs.push_back(std::move(retained.take_value()));
     candidate.source_activation_name = handoff.value().source_activation_name;
     candidate.source_activation_sha256 = handoff.value().source_activation_sha256;
@@ -5797,6 +6063,270 @@ facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
     return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
         "epoch directory hierarchy could not be flushed"));
   return discover_lifecycle_epoch_chain_impl(coordinator_root);
+}
+
+facman::core::Result<CompatibilityAuthorityBootstrapResponse>
+bootstrap_compatibility_authority(
+    const CompatibilityAuthorityBootstrapRequest &request,
+    CompatibilityAuthorityBootstrapEffects &effects) {
+  using Result = facman::core::Result<CompatibilityAuthorityBootstrapResponse>;
+  const auto fail = [](facman::core::Error error) {
+    return Result::failure(std::move(error));
+  };
+  if (!request.coordinator_root.is_absolute() ||
+      !digest(request.package_sha256))
+    return fail(failure("self_maintenance_input_invalid",
+        "compatibility bootstrap inputs are incomplete"));
+  auto flat = discover_activation_chain(request.coordinator_root);
+  auto active = flat ? discover_active(request.coordinator_root)
+      : facman::core::Result<std::optional<ActiveState>>::failure(flat.error());
+  auto chain = active ? discover_lifecycle_epoch_chain_impl(request.coordinator_root)
+      : facman::core::Result<LifecycleEpochChain>::failure(active.error());
+  if (!chain || !flat.value().has_value() || !active.value().has_value() ||
+      chain.value().epochs.empty() ||
+      !chain.value().epochs.front().compatibility_epoch)
+    return fail(!chain ? chain.error() : epoch_recovery(
+        "bootstrap requires one active compatibility activation history"));
+  const Generation source = active.value()->active;
+  if (source.generation_id != flat.value()->generations.back().generation_id ||
+      source.package_sha256 != request.package_sha256 ||
+      !same_descriptor(generation_descriptor(source), request.package_descriptor))
+    return fail(failure("self_maintenance_package_incompatible",
+        "bootstrap package does not exactly match the active flat generation"));
+  const std::string handoff_bytes =
+      compatibility_authority_handoff_bytes(*flat.value());
+  LifecycleEpoch epoch;
+  epoch.acceptance_root = source.acceptance_root;
+  epoch.genesis_generation_id = source.generation_id;
+  epoch.logical_root = source.logical_root;
+  epoch.predecessor_epoch_id = kCompatibilityEpochId;
+  epoch.predecessor_manifest_sha256 = chain.value().epochs.front().manifest_sha256;
+  epoch.predecessor_retirement_sha256 = hash(handoff_bytes);
+  epoch.state_root = source.state_root;
+  epoch.epoch_id = hash(lifecycle_identity_bytes(epoch));
+  auto target = make_epoch_genesis_generation(epoch,
+      request.package_descriptor, request.package_sha256);
+  if (!target) return fail(target.error());
+  if (chain.value().epochs.size() > 2U ||
+      (chain.value().epochs.size() == 2U &&
+       chain.value().epochs.back().epoch_id != epoch.epoch_id))
+    return fail(epoch_recovery("a different real lifecycle epoch is already present"));
+  const fs::path journal_path = request.coordinator_root / "authority-bootstrap.v1";
+  const std::string entered_bytes = compatibility_bootstrap_entered_bytes(
+      *flat.value(), epoch, target.value(), request.shell_integration);
+  const std::string entered_sha256 = hash(entered_bytes);
+  ActiveState preview{target.value(), {},
+      epoch_activation_name(target.value().generation_id), {}};
+  if (!request.apply)
+    return Result::success({"planned", epoch, std::move(preview), journal_path});
+  if (chain.value().epochs.size() == 2U) {
+    auto selected = resolve_authoritative_active_state(request.coordinator_root);
+    if (selected && selected.value().has_value() &&
+        selected.value()->epoch.has_value() &&
+        selected.value()->epoch->epoch_id == epoch.epoch_id)
+      return Result::success({"complete", epoch,
+          selected.value()->active, journal_path});
+  }
+
+  {
+    auto admission = admit_coordinator(request.coordinator_root,
+                                       source.acceptance_root, false);
+    if (!admission) return fail(admission.error());
+    auto lock = acquire(admission.take_value(), "compatibility.bootstrap");
+    if (!lock) return fail(lock.error());
+    auto current = discover_activation_chain(request.coordinator_root);
+    if (!current || !current.value().has_value() ||
+        current.value()->activation_name != flat.value()->activation_name ||
+        current.value()->activation_sha256 != flat.value()->activation_sha256)
+      return fail(!current ? current.error() : epoch_recovery(
+          "flat activation head changed before bootstrap entry"));
+    auto current_active = discover_active(request.coordinator_root);
+    auto current_epochs = current_active
+        ? discover_lifecycle_epoch_chain_impl(request.coordinator_root)
+        : facman::core::Result<LifecycleEpochChain>::failure(current_active.error());
+    if (!current_epochs || !current_active.value().has_value() ||
+        current_active.value()->active.install_id != source.install_id ||
+        current_epochs.value().epochs.empty() ||
+        current_epochs.value().epochs.size() > 2U ||
+        (current_epochs.value().epochs.size() == 2U &&
+         current_epochs.value().epochs.back().epoch_id != epoch.epoch_id))
+      return fail(!current_epochs ? current_epochs.error() : epoch_recovery(
+          "compatibility authority changed before bootstrap entry"));
+    auto journal = open_or_create_epoch_child(
+        lock.value().admission.coordinator, "authority-bootstrap.v1");
+    if (!journal) return fail(journal.error());
+    std::vector<fs::path> names;
+    if (!journal.value().list_child_names_bounded(7U, names).ok())
+      return fail(epoch_recovery("bootstrap journal exceeds its record bound"));
+    const std::vector<std::string> phases = {
+        "10-clone-entered.v1.json", "20-clone-verified.v1.json",
+        "30-genesis-activated.v1.json", "40-shortcut-cutover.v1.json",
+        "50-registration-cutover.v1.json", "60-complete.v1.json"};
+    for (std::size_t index = 0; index < names.size(); ++index) {
+      if (index >= phases.size())
+        return fail(epoch_recovery("bootstrap journal exceeds its phase bound"));
+      const std::string staging = phases[index].substr(
+          0, phases[index].size() - 8U) + ".staging.v1.json";
+      if (names[index] != phases[index] &&
+          !(index + 1U == names.size() && names[index] == staging))
+        return fail(epoch_recovery(
+            "bootstrap journal contains a foreign or out-of-order entry"));
+    }
+    auto entered = read_optional_bootstrap_record(
+        journal.value(), phases[0]);
+    if (!entered) return fail(entered.error());
+    if (entered.value().has_value() && *entered.value() != entered_bytes)
+      return fail(epoch_recovery("bootstrap entry belongs to another authority"));
+    if (!entered.value().has_value()) {
+      const EffectResult preexisting = effects.inspect_epoch_clone(
+          source, target.value());
+      if (preexisting.ok || preexisting.outcome_unknown)
+        return fail(epoch_recovery(
+            "epoch clone already exists without a durable bootstrap entry",
+            preexisting.detail));
+      const auto published = publish_epoch_record(journal.value(),
+          "10-clone-entered.staging.v1.json", phases[0], entered_bytes, 6U);
+      if (!published) return fail(published.error());
+      const EffectResult cloned = effects.clone_epoch(source, target.value());
+      if (!cloned.ok || cloned.outcome_unknown)
+        return fail(epoch_recovery("epoch clone entered but its outcome is unknown",
+                                   cloned.detail));
+    }
+    std::string lock_detail;
+    if (!lock.value().admission.revalidate(lock_detail))
+      return fail(epoch_recovery("bootstrap authority changed during clone",
+                                 lock_detail));
+    const EffectResult inspected = effects.inspect_epoch_clone(
+        source, target.value());
+    if (!inspected.ok || inspected.outcome_unknown ||
+        !digest(inspected.receipt_sha256))
+      return fail(epoch_recovery("entered epoch clone is not exactly installed",
+                                 inspected.detail));
+    if (!lock.value().admission.revalidate(lock_detail) ||
+        !journal.value().revalidate().ok())
+      return fail(epoch_recovery("bootstrap authority changed during clone inspection",
+                                 lock_detail));
+    const std::string verified_bytes = compatibility_bootstrap_phase_bytes(
+        "clone_verified", entered_sha256, inspected.receipt_sha256);
+    const auto verified = publish_epoch_record(journal.value(),
+        "20-clone-verified.staging.v1.json", phases[1], verified_bytes, 6U);
+    if (!verified) return fail(verified.error());
+    const auto handoff = publish_epoch_record(
+        lock.value().admission.coordinator,
+        "authority-handoff.staging.v1.json", "authority-handoff.v1.json",
+        handoff_bytes, 256U);
+    if (!handoff) return fail(handoff.error());
+    if (!journal.value().flush_metadata().ok() ||
+        !lock.value().admission.coordinator.flush_metadata().ok())
+      return fail(epoch_recovery("bootstrap handoff directory was not flushed"));
+  }
+
+  auto published = publish_lifecycle_epoch(request.coordinator_root, epoch, true);
+  if (!published) return fail(published.error());
+  auto genesis = activate_lifecycle_epoch_genesis(
+      {request.coordinator_root, epoch.epoch_id, target.value(), true});
+  if (!genesis) return fail(genesis.error());
+
+  auto admission = admit_coordinator(request.coordinator_root,
+                                     source.acceptance_root, false);
+  if (!admission) return fail(admission.error());
+  auto lock = acquire(admission.take_value(), "compatibility.bootstrap.cutover");
+  if (!lock) return fail(lock.error());
+  facman::platform::StableDirectoryObject journal;
+  if (!lock.value().admission.coordinator.open_child_directory_no_follow_for_relative_writes(
+          "authority-bootstrap.v1", journal).ok())
+    return fail(epoch_recovery("bootstrap journal changed before native cutover"));
+  const std::string genesis_bytes = compatibility_bootstrap_phase_bytes(
+      "genesis_activated", entered_sha256, genesis.value().activation_sha256);
+  auto recorded = publish_epoch_record(journal,
+      "30-genesis-activated.staging.v1.json", "30-genesis-activated.v1.json",
+      genesis_bytes, 6U);
+  if (!recorded) return fail(recorded.error());
+  const std::string shortcut_receipt = hash("facman.bootstrap.shortcut.v1\n" +
+      target.value().install_id + "\n" +
+      (request.shell_integration ? "cutover\n" : "disabled\n"));
+  const std::string shortcut_bytes = compatibility_bootstrap_phase_bytes(
+      "shortcut_cutover", entered_sha256, shortcut_receipt);
+  auto prior_shortcut = read_optional_bootstrap_record(
+      journal, "40-shortcut-cutover.v1.json");
+  if (!prior_shortcut || (prior_shortcut.value().has_value() &&
+                          *prior_shortcut.value() != shortcut_bytes))
+    return fail(!prior_shortcut ? prior_shortcut.error() : epoch_recovery(
+        "durable shortcut cutover belongs to another bootstrap"));
+  std::string cutover_detail;
+  if (!lock.value().admission.revalidate(cutover_detail) ||
+      !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed before shortcut cutover",
+                               cutover_detail));
+  const auto shortcut = effects.inspect_epoch_shortcut(source, target.value());
+  if (request.shell_integration) {
+    if (shortcut == ShellState::old_exact || shortcut == ShellState::absent) {
+      if (prior_shortcut.value().has_value())
+        return fail(epoch_recovery("completed epoch shortcut is no longer exact"));
+      auto changed = effects.cutover_epoch_shortcut(source, target.value());
+      if (!changed.ok || changed.outcome_unknown)
+        return fail(epoch_recovery("epoch shortcut cutover is unresolved", changed.detail));
+    } else if (shortcut != ShellState::new_exact) {
+      return fail(epoch_recovery("epoch shortcut is foreign or unreadable"));
+    }
+    if (effects.inspect_epoch_shortcut(source, target.value()) != ShellState::new_exact)
+      return fail(epoch_recovery("epoch shortcut cutover was not verified"));
+  }
+  if (!lock.value().admission.revalidate(cutover_detail) ||
+      !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed during shortcut cutover",
+                               cutover_detail));
+  recorded = publish_epoch_record(journal,
+      "40-shortcut-cutover.staging.v1.json", "40-shortcut-cutover.v1.json",
+      shortcut_bytes, 6U);
+  if (!recorded) return fail(recorded.error());
+  const std::string registration_receipt = hash("facman.bootstrap.registration.v1\n" +
+      target.value().install_id + "\n" +
+      (request.shell_integration ? "cutover\n" : "disabled\n"));
+  const std::string registration_bytes = compatibility_bootstrap_phase_bytes(
+      "registration_cutover", entered_sha256, registration_receipt);
+  auto prior_registration = read_optional_bootstrap_record(
+      journal, "50-registration-cutover.v1.json");
+  if (!prior_registration || (prior_registration.value().has_value() &&
+                              *prior_registration.value() != registration_bytes))
+    return fail(!prior_registration ? prior_registration.error() : epoch_recovery(
+        "durable registration cutover belongs to another bootstrap"));
+  if (!lock.value().admission.revalidate(cutover_detail) ||
+      !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed before registration cutover",
+                               cutover_detail));
+  const auto registration = effects.inspect_epoch_registration(source, target.value());
+  if (request.shell_integration) {
+    if (registration == ShellState::old_exact || registration == ShellState::absent) {
+      if (prior_registration.value().has_value())
+        return fail(epoch_recovery("completed epoch registration is no longer exact"));
+      auto changed = effects.cutover_epoch_registration(source, target.value());
+      if (!changed.ok || changed.outcome_unknown)
+        return fail(epoch_recovery("epoch registration cutover is unresolved", changed.detail));
+    } else if (registration != ShellState::new_exact) {
+      return fail(epoch_recovery("epoch registration is foreign or unreadable"));
+    }
+    if (effects.inspect_epoch_registration(source, target.value()) != ShellState::new_exact)
+      return fail(epoch_recovery("epoch registration cutover was not verified"));
+  }
+  if (!lock.value().admission.revalidate(cutover_detail) ||
+      !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed during registration cutover",
+                               cutover_detail));
+  recorded = publish_epoch_record(journal,
+      "50-registration-cutover.staging.v1.json", "50-registration-cutover.v1.json",
+      registration_bytes, 6U);
+  if (!recorded) return fail(recorded.error());
+  const std::string complete_bytes = compatibility_bootstrap_phase_bytes(
+      "complete", entered_sha256, hash(registration_bytes));
+  recorded = publish_epoch_record(journal,
+      "60-complete.staging.v1.json", "60-complete.v1.json",
+      complete_bytes, 6U);
+  if (!recorded || !journal.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return fail(recorded ? epoch_recovery("bootstrap completion was not flushed")
+                         : recorded.error());
+  return Result::success({"complete", epoch, genesis.take_value(), journal_path});
 }
 
 facman::core::Result<RetirementResponse> retire_active(

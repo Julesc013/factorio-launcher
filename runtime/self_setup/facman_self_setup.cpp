@@ -1636,6 +1636,34 @@ facman::core::Result<Response> execute(const Request &request) {
     held_lock.emplace(acquired.take_value());
   }
 
+  // A direct compatibility install must observe epoch ownership while the
+  // shared setup lock is held. The public Setup preflight alone cannot close
+  // a race with bootstrap or a real epoch created by another process.
+  if (request.operation == Operation::install &&
+      request.install_id == "facman.self") {
+    facman::platform::StableDirectoryObject coordinator_directory;
+    if (!coordinator_directory.open_no_follow(coordinator.value()).ok())
+      return facman::core::Result<Response>::failure(error(
+          "self_maintenance_epoch_recovery_required",
+          "setup coordinator cannot be safely inspected before install"));
+    for (const char *name : {"epochs", "authority-bootstrap.v1",
+                             "authority-handoff.v1.json"}) {
+      const fs::path path = coordinator.value() / name;
+      facman::platform::PathIdentity identity;
+      if (!coordinator_directory.validate_descendant(path, true).ok() ||
+          !facman::platform::inspect_path_no_follow(path, identity).ok() ||
+          identity.exists)
+        return facman::core::Result<Response>::failure(error(
+            "self_maintenance_epoch_recovery_required",
+            "lifecycle epoch authority blocks direct compatibility install",
+            name));
+    }
+    if (!coordinator_directory.revalidate().ok())
+      return facman::core::Result<Response>::failure(error(
+          "self_maintenance_epoch_recovery_required",
+          "setup coordinator changed during epoch exclusion"));
+  }
+
   // Admission runs before reading or hashing a new payload. A caller changing
   // source/version/mode/provider roots therefore cannot bypass an unfinished
   // durable operation for this canonical install root.

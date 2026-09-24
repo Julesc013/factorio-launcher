@@ -2222,8 +2222,12 @@ int main(int argc, char **argv) {
   const bool preview_wrote = fs::exists(preparation.coordinator / "epochs" /
       preparation.epoch.epoch_id / "maintenance") || preparation.effects.retain_calls != 0U;
   preparation.request.apply = true;
+  preparation.request.deadline_utc_ms = 2000000000000ULL;
   auto preparation_apply = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       preparation.request, preparation.effects);
+  // A restarted public caller may propose a later budget. The immutable
+  // handoff must keep the first deadline and the same journal identity.
+  preparation.request.deadline_utc_ms = 2000000600000ULL;
   auto preparation_retry = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       preparation.request, preparation.effects);
   auto ordinary_during_handoff = facman::self_maintenance::discover_lifecycle_epoch_active(
@@ -2246,6 +2250,8 @@ int main(int argc, char **argv) {
                     preparation_apply && preparation_retry &&
                     preparation_apply.value().journal_sha256 == preparation_retry.value().journal_sha256 &&
                     preparation_apply.value().nonce == preparation_retry.value().nonce &&
+                    preparation_apply.value().deadline_utc_ms == 2000000000000ULL &&
+                    preparation_retry.value().deadline_utc_ms == 2000000000000ULL &&
                     !ordinary_during_handoff && exact_handoff &&
                     exact_handoff.value().package == preparation_apply.value().inputs.package &&
                     !wrong_handoff_nonce && !wrong_handoff_digest &&
@@ -2256,6 +2262,7 @@ int main(int argc, char **argv) {
                         preparation_apply.value().transition.target.generation_id &&
                     pending_handoff.value()->nonce == preparation_apply.value().nonce &&
                     pending_handoff.value()->journal_sha256 == preparation_apply.value().journal_sha256 &&
+                    pending_handoff.value()->deadline_utc_ms == 2000000000000ULL &&
                     pending_handoff.value()->retained_package.package_sha256 ==
                         preparation.inspection.package_sha256 &&
                     pending_handoff.value()->retained_package.maintenance_launcher_sha256 ==
