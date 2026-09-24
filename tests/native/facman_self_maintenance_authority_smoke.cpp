@@ -108,6 +108,17 @@ int main() {
                     flat_selected.value()->active.active.install_id == "facman.self",
                 "flat active state was not selected exactly");
 
+  const fs::path guarded_root = root / "adoption-epoch-guard";
+  const fs::path guarded_coordinator = guarded_root / "coordinator";
+  fs::create_directories(guarded_coordinator / "epochs");
+  auto guarded_adoption = facman::self_maintenance::adopt_legacy(
+      guarded_coordinator, flat_generation(guarded_root), true);
+  ok &= require(!guarded_adoption &&
+                    guarded_adoption.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    !fs::exists(guarded_coordinator / "activations"),
+                "direct flat adoption wrote through an epoch namespace");
+
   const fs::path epoch_root = root / "epoch";
   fs::create_directories(epoch_root);
   const fs::path epoch_coordinator = epoch_root / "coordinator";

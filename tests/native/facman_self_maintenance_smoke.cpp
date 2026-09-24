@@ -288,6 +288,9 @@ struct FakeEffects final : facman::self_maintenance::Effects {
   unsigned retire_calls = 0;
   std::string provider_operation;
   std::function<void()> after_review;
+  std::function<void()> after_prepare;
+  std::function<void()> after_install;
+  std::function<void()> after_shortcut;
 
   CandidateState inspect_candidate(const Plan &) override { return candidate; }
   EffectResult review_install_local(const Plan &) override {
@@ -298,6 +301,7 @@ struct FakeEffects final : facman::self_maintenance::Effects {
   }
   EffectResult prepare_install_local(const Plan &) override {
     ++prepare_calls;
+    if (after_prepare) after_prepare();
     return {true, false, sha("prepare"), ""};
   }
   EffectResult install_local(const Plan &plan) override {
@@ -305,6 +309,7 @@ struct FakeEffects final : facman::self_maintenance::Effects {
     provider_operation = plan.provider_operation;
     if (fail_install) return {false, true, {}, "lost receipt"};
     candidate = CandidateState::exact;
+    if (after_install) after_install();
     return {true, false, sha("install"), {}};
   }
   EffectResult inspect_installed(const Plan &) override {
@@ -320,6 +325,7 @@ struct FakeEffects final : facman::self_maintenance::Effects {
   EffectResult cutover_shortcut(const Plan &) override {
     ++shortcut_calls;
     shortcut = ShellState::new_exact;
+    if (after_shortcut) after_shortcut();
     return {true, false, sha("shortcut"), {}};
   }
   EffectResult cutover_registration(const Plan &) override {
@@ -1516,6 +1522,69 @@ int main(int argc, char **argv) {
   ok &= require(!rejected && failed_effects.shortcut_calls == 0 &&
                     failed_effects.registration_calls == 0,
                 "failed verification reached shell cutover");
+
+  // An inserted epoch namespace must fence every flat mutation boundary,
+  // including an insertion after the provider or first native effect.
+  auto epoch_before = request(root / "flat-epoch-before", Operation::update);
+  epoch_before.apply = true;
+  fs::create_directories(epoch_before.coordinator_root / "epochs");
+  FakeEffects epoch_before_effects;
+  auto epoch_before_result = facman::self_maintenance::execute(
+      epoch_before, epoch_before_effects);
+  ok &= require(!epoch_before_result &&
+                    epoch_before_result.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    epoch_before_effects.prepare_calls == 0 &&
+                    epoch_before_effects.install_calls == 0,
+                "flat update crossed an existing epoch namespace");
+
+  auto epoch_after_retention = request(root / "flat-epoch-after-retention",
+                                       Operation::update);
+  epoch_after_retention.apply = true;
+  FakeEffects epoch_after_retention_effects;
+  epoch_after_retention_effects.after_prepare = [&] {
+    fs::create_directories(epoch_after_retention.coordinator_root / "epochs");
+  };
+  auto epoch_after_retention_result = facman::self_maintenance::execute(
+      epoch_after_retention, epoch_after_retention_effects);
+  ok &= require(!epoch_after_retention_result &&
+                    epoch_after_retention_result.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    epoch_after_retention_effects.prepare_calls == 1 &&
+                    epoch_after_retention_effects.install_calls == 0,
+                "flat provider apply crossed an inserted epoch namespace");
+
+  auto epoch_after_provider = request(root / "flat-epoch-after-provider",
+                                      Operation::update);
+  epoch_after_provider.apply = true;
+  FakeEffects epoch_after_provider_effects;
+  epoch_after_provider_effects.after_install = [&] {
+    fs::create_directories(epoch_after_provider.coordinator_root / "epochs");
+  };
+  auto epoch_after_provider_result = facman::self_maintenance::execute(
+      epoch_after_provider, epoch_after_provider_effects);
+  ok &= require(!epoch_after_provider_result &&
+                    epoch_after_provider_result.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    epoch_after_provider_effects.install_calls == 1 &&
+                    epoch_after_provider_effects.shortcut_calls == 0,
+                "flat shell cutover crossed an inserted epoch namespace");
+
+  auto epoch_after_shortcut = request(root / "flat-epoch-after-shortcut",
+                                      Operation::update);
+  epoch_after_shortcut.apply = true;
+  FakeEffects epoch_after_shortcut_effects;
+  epoch_after_shortcut_effects.after_shortcut = [&] {
+    fs::create_directories(epoch_after_shortcut.coordinator_root / "epochs");
+  };
+  auto epoch_after_shortcut_result = facman::self_maintenance::execute(
+      epoch_after_shortcut, epoch_after_shortcut_effects);
+  ok &= require(!epoch_after_shortcut_result &&
+                    epoch_after_shortcut_result.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    epoch_after_shortcut_effects.shortcut_calls == 1 &&
+                    epoch_after_shortcut_effects.registration_calls == 0,
+                "flat registration cutover crossed an inserted epoch namespace");
 
   auto rollback = request(root / "rollback", Operation::rollback);
   rollback.apply = true;
