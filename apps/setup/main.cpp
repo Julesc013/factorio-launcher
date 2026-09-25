@@ -3662,12 +3662,13 @@ int wmain(int argc, wchar_t **argv) {
     }
     auto epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
         coordinator_root);
-    if (!epochs) {
+    if (!epochs && epochs.error().code !=
+                       "self_maintenance_epoch_recovery_required") {
       print_error(epochs.error(), options.json);
       return 4;
     }
-    if (!epochs.value().epochs.empty() &&
-        !epochs.value().epochs.back().compatibility_epoch)
+    if (!epochs || (!epochs.value().epochs.empty() &&
+        !epochs.value().epochs.back().compatibility_epoch))
       successor_install = true;
     resume_bootstrap = flat.value().has_value() && !successor_install;
     if (!resume_bootstrap) {
@@ -3856,6 +3857,7 @@ int wmain(int argc, wchar_t **argv) {
     request.install_id = successor_plan->target.install_id;
     request.install_root = successor_plan->target.install_root;
     request.product_version = successor_plan->target.product_version;
+    request.reserved_successor_epoch_id = successor_plan->epoch.epoch_id;
   }
   if (active_repair_generation.has_value()) {
     request.install_id = active_repair_generation->install_id;
@@ -3878,6 +3880,29 @@ int wmain(int argc, wchar_t **argv) {
     request.qualification_claims = qualification_interrupt->claims;
     if (successor_plan.has_value())
       request.qualification_claims->install_root = request.install_root;
+  }
+  if (successor_plan.has_value() && options.apply) {
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    // A manifest without genesis reserves the exact successor before Setup
+    // can touch its provider or singleton native integration. Interrupted
+    // Setup retries use this same immutable target.
+    if (successor_plan->manifest_staging) {
+      auto recovered =
+          facman::self_maintenance::recover_retired_successor_manifest(
+              coordinator_root, *successor_plan);
+      if (!recovered) {
+        print_error(recovered.error(), options.json);
+        return 4;
+      }
+    }
+    auto reserved = facman::self_maintenance::publish_lifecycle_epoch(
+        coordinator_root, successor_plan->epoch, true);
+    if (!reserved) {
+      print_error(reserved.error(), options.json);
+      return 4;
+    }
   }
   auto response = facman::self_setup::execute(request);
   if (!response) {
@@ -3913,12 +3938,6 @@ int wmain(int argc, wchar_t **argv) {
       print_error({"self_maintenance_epoch_recovery_required",
                    "successor package or native integration is not exactly verified",
                    verified.detail}, options.json);
-      return 4;
-    }
-    auto published = facman::self_maintenance::publish_lifecycle_epoch(
-        coordinator_root, successor_plan->epoch, true);
-    if (!published) {
-      print_error(published.error(), options.json);
       return 4;
     }
     auto activated = facman::self_maintenance::activate_lifecycle_epoch_genesis(

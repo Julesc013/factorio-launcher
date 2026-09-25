@@ -148,6 +148,7 @@ struct RetiredEpochSuccessorPlan {
   Generation source;
   Generation target;
   bool manifest_published = false;
+  bool manifest_staging = false;
 };
 
 class CompatibilityAuthorityBootstrapEffects {
@@ -552,6 +553,9 @@ bootstrap_compatibility_authority(
 facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
     const std::filesystem::path &coordinator_root,
     const PackageDescriptor &descriptor, const std::string &package_sha256);
+facman::core::Result<void> recover_retired_successor_manifest(
+    const std::filesystem::path &coordinator_root,
+    const RetiredEpochSuccessorPlan &plan);
 facman::core::Result<RetirementResponse> retire_active(
     const RetirementRequest &request, RetirementEffects &effects);
 facman::core::Result<ActiveState> adopt_legacy(

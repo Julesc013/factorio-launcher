@@ -370,6 +370,18 @@ int main() {
   }
   if (planned_successor)
     epoch_successor.epoch_id = planned_successor.value().epoch.epoch_id;
+  std::error_code successor_stage_status;
+  const bool successor_stage_created = planned_successor &&
+      fs::create_directory(handoff_coordinator / "epochs" /
+          planned_successor.value().epoch.epoch_id,
+          successor_stage_status);
+  auto staged_successor_plan =
+      facman::self_maintenance::plan_retired_epoch_successor(
+          handoff_coordinator, descriptor(), handoff_source.package_sha256);
+  auto recovered_successor = staged_successor_plan
+      ? facman::self_maintenance::recover_retired_successor_manifest(
+            handoff_coordinator, staged_successor_plan.value())
+      : facman::core::Result<void>::failure(staged_successor_plan.error());
   auto published_successor = facman::self_maintenance::publish_lifecycle_epoch(
       handoff_coordinator, epoch_successor, true);
   auto published_successor_plan =
@@ -382,6 +394,18 @@ int main() {
   auto selected_successor =
       facman::self_maintenance::resolve_authoritative_active_state(
           handoff_coordinator);
+  const auto successor_error = [](const char *label, const auto &result) {
+    if (!result)
+      std::cerr << label << ": " << result.error().code << ": "
+                << result.error().message << ": " << result.error().detail
+                << '\n';
+  };
+  successor_error("planned successor", planned_successor);
+  successor_error("staged successor", staged_successor_plan);
+  successor_error("recovered successor", recovered_successor);
+  successor_error("published successor", published_successor);
+  successor_error("published successor plan", published_successor_plan);
+  successor_error("selected successor", selected_successor);
   ok &= require(retired_epochs && retired_epochs.value().epochs.size() == 2U &&
                     !retired_epochs.value().epochs.back().retirement_sha256.empty() &&
                     planned_successor &&
@@ -390,6 +414,10 @@ int main() {
                         epoch_successor.epoch_id &&
                     planned_successor.value().source.install_id ==
                         epoch_retirement_preview.value().steps.back().generation.install_id &&
+                    successor_stage_created && !successor_stage_status &&
+                    staged_successor_plan &&
+                    staged_successor_plan.value().manifest_staging &&
+                    recovered_successor &&
                     published_successor &&
                     published_successor.value().epochs.size() == 3U &&
                     published_successor_plan &&

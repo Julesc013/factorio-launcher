@@ -210,3 +210,17 @@ checkpoint, not product qualification or authority to publish.
   staging interruption; coordinator ownership across Setup completion and
   epoch publication; and source-distinct external continuation through a
   real installed epoch, including rollback/reapply and final removal.
+- Pushed successor routing `d5ebe6be` and candidate contract correction
+  `0702c4a8`. Candidate `36085551274` stopped at a static contract token;
+  the corrected contract suite passed locally (82 tests). Candidate
+  `36085806957` passed its contract job, while Linux static/native execution
+  reported `facman_self_maintenance_authority_smoke` failure with the
+  successor assertion; Windows and macOS candidate work was still running at
+  the time of this note. The native failure requires exact diagnostic review
+  before any integration claim.
+- The next working diff reserves the successor manifest before Setup effects,
+  rechecks its exact tail under Setup's singleton lock, and narrowly recovers
+  an empty or exact staged successor manifest after interruption. It adds a
+  native empty-directory recovery case and diagnostic errors for the failing
+  successor assertion. Syntax checks, strict check, focused candidate
+  contract tests, and `git diff --check` pass; hosted execution is pending.

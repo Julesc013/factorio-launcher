@@ -2551,7 +2551,8 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
     const Generation *recovery_generation = nullptr,
     const std::string &allowed_maintenance_operation = {},
     const std::string &allowed_maintenance_epoch_id = {},
-    const PendingEpochTransitionState *pending_transition = nullptr) {
+    const PendingEpochTransitionState *pending_transition = nullptr,
+    const std::string &ignored_unpublished_epoch_id = {}) {
   if (!coordinator_root.is_absolute())
     return facman::core::Result<LifecycleEpochChain>::failure(failure(
         "self_maintenance_input_invalid", "coordinator root must be absolute"));
@@ -2619,6 +2620,7 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
   if (!epochs.list_child_names_bounded(kMaximumLifecycleEpochs, epoch_names).ok())
     return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
         "epoch root exceeds its entry limit or changed during enumeration"));
+  bool ignored_unpublished_epoch = false;
   for (const fs::path &entry : epoch_names) {
     const std::string name = entry.string();
     if (!digest(name) || name == kCompatibilityEpochId)
@@ -2628,6 +2630,20 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
     if (!epochs.open_child_directory_no_follow(name, epoch_directory).ok())
       return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
           "epoch directory could not be pinned"));
+    if (!ignored_unpublished_epoch_id.empty() &&
+        name == ignored_unpublished_epoch_id) {
+      std::vector<fs::path> partial_names;
+      if (ignored_unpublished_epoch ||
+          !epoch_directory.list_child_names_bounded(2U, partial_names).ok() ||
+          partial_names.size() > 1U ||
+          (!partial_names.empty() &&
+           partial_names.front() != fs::path("epoch.staging.v1.json")) ||
+          !epoch_directory.revalidate().ok())
+        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+            "unpublished successor epoch contains foreign or changed state"));
+      ignored_unpublished_epoch = true;
+      continue;
+    }
     PinnedLifecycleEpochScope scope;
     auto pinned = scope.open(coordinator_root, name);
     if (!pinned) return facman::core::Result<LifecycleEpochChain>::failure(pinned.error());
@@ -2662,6 +2678,9 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
   if (!epochs.revalidate().ok() || !coordinator.revalidate().ok())
     return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
         "epoch directories changed during discovery"));
+  if (!ignored_unpublished_epoch_id.empty() && !ignored_unpublished_epoch)
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "requested unpublished successor epoch is unavailable"));
 
   facman::platform::PathIdentity retirement_identity;
   const fs::path retirement_root = coordinator_root / "epoch-retirements";
@@ -6801,6 +6820,56 @@ bootstrap_compatibility_authority(
   return Result::success({"complete", epoch, genesis.take_value(), journal_path});
 }
 
+namespace {
+
+facman::core::Result<std::optional<std::string>>
+find_unpublished_successor_directory(const fs::path &coordinator_root) {
+  facman::platform::StableDirectoryObject coordinator, epochs;
+  if (!coordinator.open_no_follow(coordinator_root).ok() ||
+      !coordinator.open_child_directory_no_follow("epochs", epochs).ok())
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("unpublished successor epoch root cannot be pinned"));
+  std::vector<fs::path> names;
+  if (!epochs.list_child_names_bounded(kMaximumLifecycleEpochs, names).ok())
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("unpublished successor epoch namespace is oversized"));
+  std::optional<std::string> missing;
+  for (const fs::path &name : names) {
+    if (!digest(name.string()))
+      return facman::core::Result<std::optional<std::string>>::failure(
+          epoch_recovery("epoch namespace contains a foreign entry"));
+    facman::platform::StableDirectoryObject epoch;
+    if (!epochs.open_child_directory_no_follow(name.string(), epoch).ok())
+      return facman::core::Result<std::optional<std::string>>::failure(
+          epoch_recovery("epoch namespace contains an unsafe directory"));
+    facman::platform::PathIdentity manifest;
+    const auto inspected = facman::platform::inspect_path_no_follow(
+        coordinator_root / "epochs" / name / "epoch.v1.json", manifest);
+    if (!inspected.ok() ||
+        (manifest.exists && (manifest.reparse_or_link ||
+                             manifest.kind !=
+                                 facman::platform::PathObjectKind::regular_file)))
+      return facman::core::Result<std::optional<std::string>>::failure(
+          epoch_recovery("epoch manifest is unsafe during successor recovery"));
+    if (!manifest.exists) {
+      if (missing.has_value())
+        return facman::core::Result<std::optional<std::string>>::failure(
+            epoch_recovery("more than one unpublished successor directory exists"));
+      missing = name.string();
+    }
+    if (!epoch.revalidate().ok())
+      return facman::core::Result<std::optional<std::string>>::failure(
+          epoch_recovery("epoch directory changed during successor inspection"));
+  }
+  if (!epochs.revalidate().ok() || !coordinator.revalidate().ok())
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("epoch namespace changed during successor inspection"));
+  return facman::core::Result<std::optional<std::string>>::success(
+      std::move(missing));
+}
+
+} // namespace
+
 facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
     const fs::path &coordinator_root, const PackageDescriptor &descriptor,
     const std::string &package_sha256) {
@@ -6809,6 +6878,17 @@ facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
     return Result::failure(failure("self_maintenance_input_invalid",
         "retired epoch successor inputs are incomplete"));
   auto discovered = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  std::optional<std::string> staging_epoch_id;
+  if (!discovered &&
+      discovered.error().code == "self_maintenance_epoch_recovery_required") {
+    auto partial = find_unpublished_successor_directory(coordinator_root);
+    if (!partial) return Result::failure(partial.error());
+    if (partial.value().has_value()) {
+      staging_epoch_id = *partial.value();
+      discovered = discover_lifecycle_epoch_chain_impl(
+          coordinator_root, {}, nullptr, {}, {}, nullptr, *staging_epoch_id);
+    }
+  }
   if (!discovered || discovered.value().epochs.empty())
     return Result::failure(!discovered ? discovered.error() : epoch_recovery(
         "successor install requires a completed real lifecycle epoch"));
@@ -6846,6 +6926,9 @@ facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
   epoch.state_root = predecessor.state_root;
   epoch.epoch_id = hash(lifecycle_identity_bytes(epoch));
   epoch.manifest_sha256 = hash(lifecycle_manifest_bytes(epoch));
+  if (staging_epoch_id.has_value() && *staging_epoch_id != epoch.epoch_id)
+    return Result::failure(epoch_recovery(
+        "unpublished successor directory does not bind the supplied package"));
   if (published &&
       (tail.epoch_id != epoch.epoch_id ||
        tail.manifest_sha256 != epoch.manifest_sha256))
@@ -6858,7 +6941,67 @@ facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
     return Result::failure(epoch_recovery(
         "successor provider identity collides with its retired predecessor"));
   return Result::success({std::move(epoch),
-      source.value().active.active, target.take_value(), published});
+      source.value().active.active, target.take_value(), published,
+      staging_epoch_id.has_value()});
+}
+
+facman::core::Result<void> recover_retired_successor_manifest(
+    const fs::path &coordinator_root,
+    const RetiredEpochSuccessorPlan &plan) {
+  if (!plan.manifest_staging || plan.manifest_published ||
+      !digest(plan.epoch.epoch_id) ||
+      !same_path(plan.epoch.acceptance_root, plan.target.acceptance_root))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest recovery requires one exact unpublished epoch"));
+  auto admission = admit_coordinator(
+      coordinator_root, plan.epoch.acceptance_root, false);
+  if (!admission) return facman::core::Result<void>::failure(admission.error());
+  auto lock = acquire(admission.take_value(), "successor.epoch.manifest");
+  if (!lock) return facman::core::Result<void>::failure(lock.error());
+  auto rechecked = plan_retired_epoch_successor(coordinator_root,
+      generation_descriptor(plan.target), plan.target.package_sha256);
+  if (!rechecked ||
+      rechecked.value().epoch.epoch_id != plan.epoch.epoch_id ||
+      rechecked.value().epoch.manifest_sha256 != plan.epoch.manifest_sha256 ||
+      rechecked.value().target.install_id != plan.target.install_id ||
+      !same_path(rechecked.value().target.install_root,
+                 plan.target.install_root))
+    return facman::core::Result<void>::failure(!rechecked ? rechecked.error() :
+        epoch_recovery("successor predecessor changed before manifest recovery"));
+  if (rechecked.value().manifest_published)
+    return facman::core::Result<void>::success();
+  if (!rechecked.value().manifest_staging)
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest staging disappeared before recovery"));
+  facman::platform::StableDirectoryObject epochs, epoch_directory;
+  if (!lock.value().admission.coordinator
+           .open_child_directory_no_follow_for_relative_writes(
+               "epochs", epochs).ok() ||
+      !epochs.open_child_directory_no_follow_for_relative_writes(
+          plan.epoch.epoch_id, epoch_directory).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest directory cannot be pinned for recovery"));
+  std::vector<fs::path> names;
+  if (!epoch_directory.list_child_names_bounded(2U, names).ok() ||
+      names.size() > 1U ||
+      (!names.empty() &&
+       names.front() != fs::path("epoch.staging.v1.json")))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest directory contains foreign state"));
+  const std::string bytes = lifecycle_manifest_bytes(plan.epoch);
+  if (hash(bytes) != plan.epoch.manifest_sha256 ||
+      !lock.value().admission.coordinator.revalidate().ok() ||
+      !epochs.revalidate().ok() || !epoch_directory.revalidate().ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest identity changed before recovery"));
+  auto published = publish_epoch_record(epoch_directory,
+      "epoch.staging.v1.json", "epoch.v1.json", bytes, 1U);
+  if (!published || !epoch_directory.flush_metadata().ok() ||
+      !epochs.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return facman::core::Result<void>::failure(!published ? published.error() :
+        epoch_recovery("successor manifest recovery was not flushed"));
+  return facman::core::Result<void>::success();
 }
 
 facman::core::Result<RetirementResponse> retire_active(

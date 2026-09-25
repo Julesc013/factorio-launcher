@@ -1636,6 +1636,28 @@ facman::core::Result<Response> execute(const Request &request) {
     held_lock.emplace(acquired.take_value());
   }
 
+  if (!request.reserved_successor_epoch_id.empty()) {
+    if (request.operation != Operation::install ||
+        request.reserved_successor_epoch_id.size() != 64U ||
+        !digest_or_empty(request.reserved_successor_epoch_id))
+      return facman::core::Result<Response>::failure(error(
+          "self_maintenance_epoch_recovery_required",
+          "setup successor reservation identity is invalid"));
+    auto epochs = self_maintenance::discover_lifecycle_epoch_chain(
+        coordinator.value());
+    if (!epochs || epochs.value().epochs.size() < 2U ||
+        epochs.value().epochs.back().compatibility_epoch ||
+        epochs.value().epochs.back().epoch_id !=
+            request.reserved_successor_epoch_id ||
+        !epochs.value().epochs.back().retirement_sha256.empty() ||
+        epochs.value().epochs[epochs.value().epochs.size() - 2U]
+            .retirement_sha256.empty())
+      return facman::core::Result<Response>::failure(!epochs
+          ? epochs.error()
+          : error("self_maintenance_epoch_recovery_required",
+              "the reserved successor no longer follows a retired epoch"));
+  }
+
   // A direct compatibility install must observe epoch ownership while the
   // shared setup lock is held. The public Setup preflight alone cannot close
   // a race with bootstrap or a real epoch created by another process.
