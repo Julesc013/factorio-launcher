@@ -510,6 +510,12 @@ facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
     const std::filesystem::path &coordinator_root);
+// Reads the immutable real-epoch genesis under its validated epoch history.
+// This remains available while an epoch retirement journal is incomplete,
+// when normal active-state selection intentionally requires recovery.
+facman::core::Result<Generation> discover_lifecycle_epoch_genesis_generation(
+    const std::filesystem::path &coordinator_root,
+    const std::string &epoch_id);
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
     const std::filesystem::path &coordinator_root);
 // Returns every validated activation target in the authoritative real epoch,

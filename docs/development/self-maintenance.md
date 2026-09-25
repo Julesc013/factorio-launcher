@@ -160,6 +160,12 @@ a new activation. The installed maintenance launcher may be the package's
 embedded executable while the retained repair helper is the self-extracting
 overlay; both identities are checked against the exact package. Reactivation
 does not write provider-apply or uninstall receipts.
+Real-epoch rollback selects the current activation's immediate retained
+predecessor and inspects its exact repair package. It uses the same verified
+reactivation path, without accepting a caller-supplied package. Each new
+activation binds its source activation digest into a distinct operation ID, so
+later rollback and reapply cycles retain the entire immutable history. Empty
+pre-handoff operations written with the earlier ID form remain recoverable.
 
 The public process launches the retained helper with an inherited handle to the
 exact initiating process and reports `handoff_launched`. The helper validates

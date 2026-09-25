@@ -351,6 +351,9 @@ int main() {
   auto retiring_selected =
       facman::self_maintenance::resolve_authoritative_active_state(
           handoff_coordinator);
+  auto retiring_genesis =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          handoff_coordinator, completed_chain.value().epochs.back().epoch_id);
   auto epoch_retirement_final = facman::self_maintenance::retire_active(
       epoch_retirement, epoch_retirement_effects);
   auto epoch_retired_selected =
@@ -372,6 +375,11 @@ int main() {
                     !retiring_selected &&
                     retiring_selected.error().code ==
                         "self_maintenance_retirement_recovery_required" &&
+                    retiring_genesis &&
+                    retiring_genesis.value().generation_id ==
+                        completed_chain.value().epochs.back().genesis_generation_id &&
+                    retiring_genesis.value().package_sha256 ==
+                        handoff_source.package_sha256 &&
                     epoch_retirement_final &&
                     epoch_retirement_final.value().phase == "completed" &&
                     epoch_retired_selected &&

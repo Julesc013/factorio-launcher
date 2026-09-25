@@ -917,6 +917,59 @@ int stage_existing_handoff_fixture(int argc, char **argv) {
   return 0;
 }
 
+bool verify_epoch_rollback_cycle(
+    const EpochPreparationFixture &fixture,
+    const facman::self_maintenance::EpochTransitionRequest &first_target,
+    const facman::self_maintenance::EpochTransitionRequest &second_target) {
+  auto rollback_request = first_target;
+  rollback_request.operation = Operation::rollback;
+  rollback_request.operation_id = "epoch.prepare.five";
+  EpochContinuationFakeEffects rollback_provider;
+  rollback_provider.candidate = CandidateState::exact;
+  EpochShellCutoverFakeEffects rollback_shell;
+  auto rolled_back = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+      rollback_request, rollback_provider, rollback_shell);
+  auto rollback_lineage = facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+      fixture.coordinator);
+  auto rollback_completion = facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
+      fixture.coordinator);
+  if (!rolled_back) std::cerr << "epoch rollback: " << rolled_back.error().code << ": "
+                              << rolled_back.error().message << " (" << rolled_back.error().detail << ")\n";
+  if (!rollback_lineage) std::cerr << "epoch rollback lineage: " << rollback_lineage.error().code
+                                  << ": " << rollback_lineage.error().message << "\n";
+  if (!rollback_completion) std::cerr << "epoch rollback completion: "
+                                     << rollback_completion.error().code << ": "
+                                     << rollback_completion.error().message << "\n";
+  const bool rollback_ok = require(rolled_back && rollback_lineage &&
+                    rollback_completion && rollback_completion.value().has_value() &&
+                    rolled_back.value().phase == "reactivation_complete" &&
+                    rollback_completion.value()->operation == Operation::rollback &&
+                    rollback_lineage.value().generations.size() == 6U &&
+                    rollback_lineage.value().generations[5].generation_id ==
+                        rollback_lineage.value().generations[3].generation_id &&
+                    rollback_provider.bind_calls == 0U &&
+                    rollback_provider.apply_calls == 0U,
+                "rollback did not reactivate the immediate retained predecessor");
+  if (!rollback_ok) return false;
+  auto reapply_request = second_target;
+  reapply_request.operation_id = "epoch.prepare.six";
+  EpochContinuationFakeEffects reapply_provider;
+  reapply_provider.candidate = CandidateState::exact;
+  EpochShellCutoverFakeEffects reapply_shell;
+  auto reapplied = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+      reapply_request, reapply_provider, reapply_shell);
+  auto reapply_lineage = facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+      fixture.coordinator);
+  return require(reapplied && reapply_lineage &&
+                    reapplied.value().phase == "reactivation_complete" &&
+                    reapply_lineage.value().generations.size() == 7U &&
+                    reapply_lineage.value().generations[6].generation_id ==
+                        reapply_lineage.value().generations[4].generation_id &&
+                    reapply_provider.bind_calls == 0U &&
+                    reapply_provider.apply_calls == 0U,
+                "reapply after rollback did not retain linear epoch history");
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -2306,6 +2359,13 @@ int main(int argc, char **argv) {
       preparation.request, preparation.effects);
   auto ordinary_during_handoff = facman::self_maintenance::discover_lifecycle_epoch_active(
       preparation.coordinator);
+  auto genesis_during_handoff =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          preparation.coordinator, preparation.epoch.epoch_id);
+  if (!genesis_during_handoff)
+    std::cerr << "genesis during handoff: "
+              << genesis_during_handoff.error().code << ": "
+              << genesis_during_handoff.error().message << '\n';
   auto wrong_handoff_nonce = facman::self_maintenance::admit_lifecycle_epoch_continuation(
       preparation.coordinator, "epoch.prepare.one", "wrong-nonce",
       preparation_apply ? preparation_apply.value().journal_sha256 : std::string(64, 'a'));
@@ -2326,7 +2386,10 @@ int main(int argc, char **argv) {
                     preparation_apply.value().nonce == preparation_retry.value().nonce &&
                     preparation_apply.value().deadline_utc_ms == 2000000000000ULL &&
                     preparation_retry.value().deadline_utc_ms == 2000000000000ULL &&
-                    !ordinary_during_handoff && exact_handoff &&
+                    !ordinary_during_handoff && genesis_during_handoff &&
+                    genesis_during_handoff.value().generation_id ==
+                        preparation.epoch.genesis_generation_id &&
+                    exact_handoff &&
                     exact_handoff.value().package == preparation_apply.value().inputs.package &&
                     !wrong_handoff_nonce && !wrong_handoff_digest &&
                     pending_handoff && pending_handoff.value() &&
@@ -2544,6 +2607,10 @@ int main(int argc, char **argv) {
   auto pending_publication =
       facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
           provider_continuation.coordinator);
+  auto genesis_after_publication =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          provider_continuation.coordinator,
+          provider_continuation.epoch.epoch_id);
   const fs::path publication_epoch = provider_continuation.coordinator / "epochs" /
       provider_continuation.epoch.epoch_id;
   const auto &publication_target = provider_completed ? provider_completed.value().transition.target
@@ -2554,6 +2621,9 @@ int main(int argc, char **argv) {
                     publication_completed.value().phase == "epoch_activated" &&
                     publication_restarted &&
                     publication_restarted.value().phase == "epoch_activated" &&
+                    genesis_after_publication &&
+                    genesis_after_publication.value().generation_id ==
+                        provider_continuation.epoch.genesis_generation_id &&
                     fs::exists(publication_epoch / "generations" /
                         ("generation." + publication_target.generation_id + ".v2.json")) &&
                     fs::exists(publication_epoch / "activations" /
@@ -2982,6 +3052,9 @@ int main(int argc, char **argv) {
                     fourth_completion && fourth_completion.value().has_value() &&
                     fourth_completion.value()->operation_id == "epoch.prepare.four",
                 "completed reactivation history prevented a later maintenance request");
+  ok &= verify_epoch_rollback_cycle(provider_continuation,
+                                    third_preparation_request,
+                                    second_preparation_request);
 
 
   bool publication_staging_recovered = true;

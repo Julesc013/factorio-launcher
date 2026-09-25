@@ -57,7 +57,8 @@ def ci_length_child_root(parent: Path) -> tuple[Path, int]:
     return parent / ("ci-" + "x" * deficit), required_units
 
 
-def run_command(command: list[str]):
+def run_command(command: list[str], *,
+                wait_for_job_empty_after_primary: bool | None = None):
     if CANARY_TIMEOUT is None:
         return subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
     if str(ROOT) not in sys.path:
@@ -75,7 +76,11 @@ def run_command(command: list[str]):
             raise AssertionError("real current-user qualification exhausted its total deadline")
     result = bounded.command(
         command, cwd=ROOT, timeout=timeout, directory=directory,
-        wait_for_job_empty_after_primary=WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY,
+        wait_for_job_empty_after_primary=(
+            WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY if
+            wait_for_job_empty_after_primary is None else
+            wait_for_job_empty_after_primary
+        ),
     )
     if result.receipt["termination"] != "completed":
         raise bounded.CommandFailure(result)
@@ -87,7 +92,8 @@ def run_command(command: list[str]):
 
 def invoke(executable: Path, *arguments: object, expected: int = 0,
            shell_integration: bool = False, noninteractive: bool = False,
-           qualification: tuple[str, Path] | None = None) -> dict[str, object]:
+           qualification: tuple[str, Path] | None = None,
+           wait_for_job_empty_after_primary: bool | None = None) -> dict[str, object]:
     command = [
         str(executable),
         *(str(value) for value in arguments),
@@ -103,7 +109,10 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
         command.extend(("--qualification-interrupt-after", boundary,
                         "--qualification-interrupt-permit", str(permit)))
     command.append("--json")
-    result = run_command(command)
+    result = run_command(
+        command,
+        wait_for_job_empty_after_primary=wait_for_job_empty_after_primary,
+    )
     global CALL_COUNT
     if CALL_EVIDENCE is not None:
         CALL_COUNT += 1
@@ -549,7 +558,7 @@ def stable_retained_digest(
 def stable_handoff_digest(
         path: Path, state_root: Path, acceptance_root: Path,
         operation_id: str, label: str) -> str:
-    if not re.fullmatch(r"maint\.(?:update|downgrade|rollback)\.[0-9a-f]{8}\.[0-9a-f]{20}",
+    if not re.fullmatch(r"maint\.(?:update|downgrade|rollback)\.[0-9a-f]{8}\.[0-9a-f]{20}(?:\.[0-9a-f]{16})?",
                         operation_id):
         raise AssertionError(f"{label} has an invalid maintenance operation identity")
     handoff_root = state_root / "epoch-handoff" / operation_id
@@ -737,7 +746,8 @@ def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object]
                         version: str, phase: str, *,
                         active_root: Path | None = None,
                         active_package_sha256: str | None = None,
-                        retained_package_sha256s: set[str] | None = None) -> None:
+                        retained_package_sha256s: set[str] | None = None,
+                        maintenance_controller_sha256: str | None = None) -> None:
     active_root = active_root or install
     generation = active_root / "generations" / version
     fields = shortcut.get("fields") if shortcut.get("state") == "present" else None
@@ -800,7 +810,8 @@ def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object]
                 retained_receipt, state_root, acceptance_root,
                 f"{phase} retained maintenance receipt", 4096) != expected_receipt:
             raise AssertionError(f"{phase}: retained maintenance custody receipt is invalid")
-    maintenance = repair_source.with_name(f"{repair_source.stem}.FacManSetup.exe")
+    maintenance_sha256 = maintenance_controller_sha256 or active_package_sha256
+    maintenance = repair_root / f"{maintenance_sha256}.FacManSetup.exe"
     uninstall = (
         f'"{maintenance}" uninstall --root "{active_root}" --state-root "{state_root}" '
         f'--acceptance-root "{acceptance_root}" --yes --noninteractive --shell-integration'
@@ -1830,16 +1841,38 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             "source-distinct epoch genesis",
                             active_root=epoch_genesis_root,
                             active_package_sha256=candidate_package_sha256,
-                            retained_package_sha256s={candidate_package_sha256})
+                            retained_package_sha256s={candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
         installed_helper = epoch_genesis_root / "maintenance" / "FacManSetup.exe"
         if not installed_helper.is_file():
             raise AssertionError("real epoch has no installed maintenance entry point")
+        epoch_verify_args = ("--root", epoch_install, "--state-root", epoch_state,
+                             "--acceptance-root", epoch_fixture)
+        epoch_verified = invoke(
+            installed_helper, "verify", *epoch_verify_args,
+            shell_integration=True, noninteractive=True,
+        )
+        if epoch_verified.get("provider", {}).get("payload", {}).get("status") != "pass":
+            raise AssertionError("ordinary real epoch did not verify its installed package")
         epoch_downgrade_launch = invoke(
             installed_helper, "downgrade", "--package", baseline_payload,
             *epoch_common, shell_integration=True, noninteractive=True,
+            # The owned Windows job stops the external helper immediately
+            # after the initiating Setup exits. This exercises the public
+            # restart path with a genuine installed B epoch and package A.
+            wait_for_job_empty_after_primary=False,
         )
         if epoch_downgrade_launch.get("phase") != "handoff_launched":
             raise AssertionError("real epoch downgrade did not launch external continuation")
+        interrupted_receipt = REAL_COMMANDS[-1]["bounded_process_receipt"]
+        if (not isinstance(interrupted_receipt, dict) or
+                interrupted_receipt.get("active_processes_at_primary_exit", 0) < 1 or
+                interrupted_receipt.get("waited_for_job_empty_after_primary") is not False or
+                interrupted_receipt.get("job_terminated") is not True or
+                interrupted_receipt.get("job_empty_observed") is not True):
+            raise AssertionError(
+                "owned Windows job did not stop a live external helper after parent exit"
+            )
         epoch_downgrade_id = epoch_downgrade_launch.get("operation_id")
         if not isinstance(epoch_downgrade_id, str) or not epoch_downgrade_id:
             raise AssertionError("real epoch downgrade omitted its operation identity")
@@ -1850,8 +1883,20 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                                  "source-distinct epoch continuation helper") != \
                 sha256_path(installed_helper):
             raise AssertionError("epoch downgrade did not retain the executing B Setup")
+        epoch_operation = (epoch_state.parent / "setup-coordinator.v1" / "epochs" /
+                           str(epoch_installed["epoch_id"]) / "maintenance" /
+                           epoch_downgrade_id)
+        if (epoch_operation / "80-registration-cutover.v2.json").exists():
+            raise AssertionError("interrupted external helper already completed cutover")
+        epoch_restart = invoke(
+            installed_helper, "downgrade", "--package", baseline_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if (epoch_restart.get("phase") != "handoff_launched" or
+                epoch_restart.get("operation_id") != epoch_downgrade_id):
+            raise AssertionError("ordinary Setup did not restart the interrupted epoch operation")
         epoch_downgraded = await_external_handoff(
-            executable, epoch_downgrade_launch, "downgrade",
+            executable, epoch_restart, "downgrade",
             ("--package", baseline_payload, "--root", epoch_install,
              "--state-root", epoch_state, "--acceptance-root", epoch_fixture),
             shell_integration=True, noninteractive=True,
@@ -1869,7 +1914,47 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_root=epoch_baseline_root,
                             active_package_sha256=baseline_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,
-                                                     candidate_package_sha256})
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        epoch_baseline_gui = (epoch_baseline_root / "generations" /
+                              baseline_identity["version"] / "FacMan.exe")
+        baseline_gui_sha256 = sha256_path(epoch_baseline_gui)
+        epoch_baseline_gui.write_bytes(b"deliberate real-epoch damage after recovery\n")
+        epoch_controller = (epoch_state / "repair-sources" /
+                            f"{candidate_package_sha256}.FacManSetup.exe")
+        damaged_epoch = invoke(
+            epoch_controller,
+            "verify", *epoch_verify_args, shell_integration=True,
+            noninteractive=True,
+        )
+        if damaged_epoch.get("provider", {}).get("payload", {}).get("status") != "fail":
+            raise AssertionError("ordinary real-epoch verify did not detect package A damage")
+        epoch_repair_result = invoke_registered(
+            registry_text(registry, "ModifyPath"), "--json",
+        )
+        epoch_repair = json.loads(epoch_repair_result.stdout)
+        if (epoch_repair.get("status") != "ok" or
+                epoch_repair.get("operation") != "repair" or
+                epoch_repair.get("phase") != "receipt" or
+                sha256_path(epoch_baseline_gui) != baseline_gui_sha256):
+            raise AssertionError("registered real-epoch repair did not restore exact package A")
+        repaired_epoch = invoke(
+            epoch_controller,
+            "verify", *epoch_verify_args, shell_integration=True,
+            noninteractive=True,
+        )
+        if repaired_epoch.get("provider", {}).get("payload", {}).get("status") != "pass":
+            raise AssertionError("ordinary real-epoch verify did not accept repaired package A")
+        shortcut, registry = observe("source_distinct_epoch_repair_completed",
+                                     epoch_baseline_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "source-distinct epoch repair",
+                            active_root=epoch_baseline_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
         epoch_update_launch = invoke(
             executable, "update", "--package", candidate_payload,
             *epoch_common, shell_integration=True, noninteractive=True,
@@ -1890,7 +1975,57 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_root=epoch_updated_root,
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,
-                                                     candidate_package_sha256})
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        rollback_helper = epoch_updated_root / "maintenance" / "FacManSetup.exe"
+        epoch_rollback = invoke(
+            rollback_helper, "rollback", *epoch_common,
+            shell_integration=True, noninteractive=True,
+        )
+        if (epoch_rollback.get("phase") != "reactivation_complete" or
+                epoch_rollback.get("product_version") != baseline_identity["version"]):
+            raise AssertionError("real epoch rollback did not reactivate retained A")
+        rollback_root = Path(str(epoch_rollback.get("install_root", "")))
+        shortcut, registry = observe("source_distinct_epoch_rollback_completed",
+                                     rollback_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "source-distinct epoch rollback",
+                            active_root=rollback_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        epoch_reapply_after_rollback = invoke(
+            executable, "update", "--package", candidate_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if (epoch_reapply_after_rollback.get("phase") != "reactivation_complete" or
+                epoch_reapply_after_rollback.get("product_version") !=
+                candidate_identity["version"] or
+                epoch_reapply_after_rollback.get("operation_id") ==
+                epoch_update_launch.get("operation_id")):
+            raise AssertionError("real epoch reapply after rollback reused an old operation")
+        epoch_updated_root = Path(str(epoch_reapply_after_rollback.get("install_root", "")))
+        shortcut, registry = observe("source_distinct_epoch_reapply_after_rollback",
+                                     epoch_updated_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, candidate_identity["version"],
+                            "source-distinct epoch reapply after rollback",
+                            active_root=epoch_updated_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        epoch_history = epoch_operation.parent.parent
+        history_before_retirement = {
+            "manifest": sha256_path(epoch_history / "epoch.v1.json"),
+            "generations": tree_snapshot(epoch_history / "generations"),
+            "activations": tree_snapshot(epoch_history / "activations"),
+        }
+        if (len(history_before_retirement["generations"]["files"]) < 2 or
+                len(history_before_retirement["activations"]["files"]) < 5):
+            raise AssertionError("real epoch lacks the durable transition history to retain")
         epoch_uninstall = registry_text(registry, "UninstallString")
         for step in range(5):
             removed = json.loads(invoke_registered(epoch_uninstall, "--json").stdout)
@@ -1903,9 +2038,21 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         shortcut, registry = observe("source_distinct_epoch_retirement_completed",
                                      epoch_updated_root)
         assert_absent_native(shortcut, registry, "source-distinct epoch retirement")
-        if (not epoch_keep.is_file() or not epoch_state.is_dir() or
+        repeated_retirement = json.loads(
+            invoke_registered(epoch_uninstall, "--json").stdout
+        )
+        if repeated_retirement.get("phase") != "completed":
+            raise AssertionError("completed real epoch retirement was not repeatable")
+        if (not epoch_keep.is_file() or
+                epoch_keep.read_text(encoding="utf-8") != "preserve\n" or
+                not epoch_state.is_dir() or
                 epoch_genesis_root.exists() or epoch_baseline_root.exists() or
-                epoch_updated_root.exists()):
+                epoch_updated_root.exists() or
+                history_before_retirement != {
+                    "manifest": sha256_path(epoch_history / "epoch.v1.json"),
+                    "generations": tree_snapshot(epoch_history / "generations"),
+                    "activations": tree_snapshot(epoch_history / "activations"),
+                }):
             raise AssertionError("real epoch retirement did not preserve workspace and history")
         outcome = "passed"
         return 0
