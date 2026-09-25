@@ -124,6 +124,10 @@ verify_generation() {
 
 assert_owned_generation() {
   target="$1"
+  if [ ! -d "$target" ] || [ -L "$target" ]; then
+    echo 'refusing a linked or absent FacMan generation' >&2
+    return 1
+  fi
   [ -f "$state/installed-state.v1.json" ] || {
     echo 'refusing to replace or remove a generation without FacMan installed state' >&2
     return 1
@@ -134,7 +138,12 @@ assert_owned_generation() {
   }
   actual=$(mktemp "${TMPDIR:-/tmp}/facman-actual.XXXXXX")
   expected=$(mktemp "${TMPDIR:-/tmp}/facman-expected.XXXXXX")
-  find "$target" \( -type f -o -type l \) -printf '%P\n' | sort > "$actual"
+  if [ -n "$(find "$target" -type l -print -quit)" ]; then
+    rm -f "$actual" "$expected"
+    echo 'refusing a linked file in FacMan generation' >&2
+    return 1
+  fi
+  find "$target" -type f -printf '%P\n' | sort > "$actual"
   {
     sed -n 's/^[0-9a-fA-F][0-9a-fA-F]*  //p' \
       "$target/share/facman/manifest/MANIFEST.sha256"
@@ -143,6 +152,23 @@ assert_owned_generation() {
   if ! cmp -s "$actual" "$expected"; then
     rm -f "$actual" "$expected"
     echo 'refusing to replace or remove a generation containing foreign files' >&2
+    return 1
+  fi
+  find "$target" -mindepth 1 -type d -printf '%P\n' | sort > "$actual"
+  sed -n 's/^[0-9a-fA-F][0-9a-fA-F]*  //p' \
+    "$target/share/facman/manifest/MANIFEST.sha256" |
+  { cat; echo 'share/facman/manifest/MANIFEST.sha256'; } |
+  while IFS= read -r owned_path; do
+    owned_directory=${owned_path%/*}
+    while [ "$owned_directory" != "$owned_path" ] && [ "$owned_directory" != '.' ]; do
+      printf '%s\n' "$owned_directory"
+      owned_path="$owned_directory"
+      owned_directory=${owned_path%/*}
+    done
+  done | sort -u > "$expected"
+  if ! cmp -s "$actual" "$expected"; then
+    rm -f "$actual" "$expected"
+    echo 'refusing to remove a generation containing foreign directories' >&2
     return 1
   fi
   rm -f "$actual" "$expected"
@@ -231,6 +257,61 @@ assert_setup_copy_safe() {
     fi
   fi
 }
+
+assert_previous_setup_source() (
+  predecessor_source="$1"
+  predecessor_version="$2"
+  predecessor_target="$3"
+  if [ ! -f "$predecessor_source" ] || [ -L "$predecessor_source" ]; then
+    echo 'refusing a missing or linked previous Setup source' >&2
+    exit 1
+  fi
+  declared_version=$(sed -n "s/^version='\([^']*\)'$/\1/p" "$predecessor_source")
+  declared_digest=$(sed -n "s/^payload_sha256='\([0-9a-f]*\)'$/\1/p" "$predecessor_source")
+  declared_line=$(awk '/^__FACMAN_PAYLOAD_BELOW__$/ { print NR + 1; exit }' "$predecessor_source")
+  if [ "$declared_version" != "$predecessor_version" ] ||
+     [ "${#declared_digest}" -ne 64 ] || [ -z "$declared_line" ]; then
+    echo 'refusing a previous Setup source without exact package identity' >&2
+    exit 1
+  fi
+  source_validation=$(mktemp -d "${TMPDIR:-/tmp}/facman-source.XXXXXX")
+  trap 'rm -rf "$source_validation"' EXIT
+  tail -n "+$declared_line" "$predecessor_source" > "$source_validation/payload.tar.gz"
+  if [ "$(sha256sum "$source_validation/payload.tar.gz" | cut -d ' ' -f 1)" != "$declared_digest" ]; then
+    echo 'refusing a damaged previous Setup payload' >&2
+    exit 1
+  fi
+  if gzip -t "$source_validation/payload.tar.gz" >/dev/null 2>&1; then
+    gzip -dc "$source_validation/payload.tar.gz" > "$source_validation/payload.tar"
+  elif zstd -t "$source_validation/payload.tar.gz" >/dev/null 2>&1; then
+    zstd -dc "$source_validation/payload.tar.gz" > "$source_validation/payload.tar"
+  else
+    echo 'refusing unsupported previous Setup compression' >&2
+    exit 1
+  fi
+  if ! tar -tf "$source_validation/payload.tar" |
+      while IFS= read -r entry; do
+        case "$entry" in
+          "FacMan-$predecessor_version"|"FacMan-$predecessor_version/"|"FacMan-$predecessor_version/"*) ;;
+          *) exit 1 ;;
+        esac
+        case "$entry" in
+          *'/../'*|*'/./'*|*'\\'*|*'..') exit 1 ;;
+        esac
+      done; then
+    echo 'refusing an unsafe previous Setup payload' >&2
+    exit 1
+  fi
+  if tar -tvf "$source_validation/payload.tar" | cut -c 1 | grep -Eq '[^d-]'; then
+    echo 'refusing linked previous Setup payload content' >&2
+    exit 1
+  fi
+  tar -xf "$source_validation/payload.tar" -C "$source_validation" --no-same-owner
+  if ! diff -qr "$source_validation/FacMan-$predecessor_version" "$predecessor_target" >/dev/null; then
+    echo 'refusing previous Setup source that differs from the installed generation' >&2
+    exit 1
+  fi
+)
 
 temporary=''
 active_staging=''
@@ -326,12 +407,18 @@ replace_file() {
 
 point_current() {
   target="$1"
+  expected_current="${2:-}"
   current_staging="$install_root/.current-$$"
   if [ -e "$current_staging" ] || [ -L "$current_staging" ]; then
     echo 'refusing a preexisting current staging path' >&2
     return 1
   fi
   ln -s "$target" "$current_staging"
+  if [ -n "$expected_current" ] &&
+     { [ ! -L "$current" ] || [ "$(readlink "$current")" != "$expected_current" ]; }; then
+    echo 'refusing a changed current pointer at cutover' >&2
+    return 1
+  fi
   mv -fT "$current_staging" "$current"
   current_staging=''
 }
@@ -405,7 +492,9 @@ restore_update_record() {
     echo 'refusing a foreign installed setup source' >&2
     return 1
   fi
+  assert_owned_generation "$old_target"
   verify_generation "$old_target"
+  assert_previous_setup_source "$record/old-setup" "$old_version" "$old_target"
   assert_native_integration_owned
   if [ -e "$new_target" ] || [ -L "$new_target" ]; then
     [ -d "$new_target" ] && [ ! -L "$new_target" ] || return 1
@@ -414,11 +503,17 @@ restore_update_record() {
   if [ "$mode" = 'check' ]; then
     return 0
   fi
-  point_current "$old_target"
+  if [ ! -L "$current" ] || [ "$(readlink "$current")" != "$current_now" ]; then
+    echo 'refusing a changed update current pointer at restoration' >&2
+    return 1
+  fi
+  assert_native_integration_owned
+  point_current "$old_target" "$current_now"
   replace_file "$record/old-receipt" "$state/installed-state.v1.json" 0600
   replace_file "$record/old-setup" "$maintenance/FacManSetup.run" 0755
   if [ -e "$new_target" ] || [ -L "$new_target" ]; then
     assert_owned_generation "$new_target"
+    assert_native_integration_owned
     rm -rf "$new_target"
   fi
   archive_record "$record" "restored-${old_version}-to-${version}"
@@ -477,6 +572,9 @@ if [ "$operation" = 'uninstall' ]; then
   fi
   if [ -e "$rollback_record" ] || [ -L "$rollback_record" ]; then
     restore_update_record "$rollback_record" check
+    admitted_previous=$(cat "$rollback_record/old-target")
+  else
+    admitted_previous=''
   fi
   if [ -d "$install_root/generations" ]; then
     hidden_generation=$(find "$install_root/generations" -mindepth 1 -maxdepth 1 -name '.*' -print -quit)
@@ -486,6 +584,11 @@ if [ "$operation" = 'uninstall' ]; then
     fi
     for owned_generation in "$install_root/generations/"*; do
       if [ -e "$owned_generation" ] || [ -L "$owned_generation" ]; then
+        if [ "$owned_generation" != "$generation" ] &&
+           [ "$owned_generation" != "$admitted_previous" ]; then
+          echo 'refusing a generation outside the installed lineage' >&2
+          exit 1
+        fi
         [ -d "$owned_generation" ] && [ ! -L "$owned_generation" ] || exit 1
         assert_owned_generation "$owned_generation"
       fi
@@ -512,17 +615,29 @@ if [ "$operation" = 'uninstall' ]; then
     archive_record "$journal_staging" "retired-${version}"
     journal_staging=''
   fi
+  assert_active_generation
+  assert_native_integration_owned
   for name in facman FacMan; do
     link="$user_bin/$name"
     if [ -L "$link" ]; then
+      assert_native_integration_owned
       rm -f "$link"
     fi
   done
   desktop="$desktop_root/facman.desktop"
-  if [ -f "$desktop" ]; then rm -f "$desktop"; fi
+  if [ -f "$desktop" ]; then
+    assert_native_integration_owned
+    rm -f "$desktop"
+  fi
+  assert_active_generation
   rm -f "$current"
   for owned_generation in "$install_root/generations/"*; do
     if [ -e "$owned_generation" ] || [ -L "$owned_generation" ]; then
+      if [ "$owned_generation" != "$generation" ] &&
+         [ "$owned_generation" != "$admitted_previous" ]; then
+        echo 'refusing a generation outside the installed lineage' >&2
+        exit 1
+      fi
       assert_owned_generation "$owned_generation"
       rm -rf "$owned_generation"
     fi
@@ -572,6 +687,7 @@ if [ "$operation" = 'install' ] && [ -n "${old_target:-}" ]; then
     fi
     source_distinct='true'
     verify_generation "$old_target"
+    assert_previous_setup_source "$maintenance/FacManSetup.run" "$old_version" "$old_target"
     if [ ! -f "$maintenance/FacManSetup.run" ] ||
        [ -L "$maintenance/FacManSetup.run" ]; then
       echo 'refusing update without the previous Setup source' >&2
@@ -602,6 +718,7 @@ assert_update_predecessor() {
     return 1
   fi
   verify_generation "$old_target"
+  assert_previous_setup_source "$maintenance/FacManSetup.run" "$old_version" "$old_target"
 }
 
 temporary=$(mktemp -d "${TMPDIR:-/tmp}/facman-setup.XXXXXX")

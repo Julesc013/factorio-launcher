@@ -108,6 +108,18 @@ def main() -> int:
         if f"revision {revision}" not in output:
             raise SystemExit(f"{label}: installed executable reported the wrong source")
 
+    def assert_native_entries(label: str) -> None:
+        for name in ("facman", "FacMan"):
+            link = home / ".local/bin" / name
+            if not link.is_symlink() or link.readlink() != current / name:
+                raise SystemExit(f"{label}: native {name} entry changed")
+        desktop = home / ".local/share/applications/facman.desktop"
+        expected = ("[Desktop Entry]\nType=Application\nName=FacMan\n"
+                    "Comment=Manage Factorio installations and isolated instances\n"
+                    f"Exec={current}/FacMan\nTerminal=false\nCategories=Game;Utility;\n")
+        if desktop.is_symlink() or desktop.read_text(encoding="utf-8") != expected:
+            raise SystemExit(f"{label}: native desktop entry changed")
+
     old_version = run("previous-version", previous, "--version")
     new_version = run("candidate-version", candidate, "--version")
     if old_version != previous_identity["version"] or new_version != candidate_identity["version"]:
@@ -125,6 +137,7 @@ def main() -> int:
 
     run("install-previous", previous, "install", "--yes", "--quiet")
     run("verify-previous", previous, "verify")
+    assert_native_entries("install-previous")
     assert_installed_version("execute-previous", old_version,
                              str(previous_identity["source_revision"]))
     run("interrupt-update", candidate, "install", "--yes", "--quiet", interrupted=True)
@@ -136,11 +149,13 @@ def main() -> int:
     if sha256(installed_setup) != sha256(previous):
         raise SystemExit("recovery did not restore the previous Setup package")
     run("verify-recovered-previous", previous, "verify")
+    assert_native_entries("recover-update")
     assert_installed_version("execute-recovered-previous", old_version,
                              str(previous_identity["source_revision"]))
 
     run("install-candidate", candidate, "install", "--yes", "--quiet")
     run("verify-candidate", candidate, "verify")
+    assert_native_entries("install-candidate")
     assert_installed_version("execute-candidate", new_version,
                              str(candidate_identity["source_revision"]))
     if sha256(installed_setup) != sha256(candidate):
@@ -153,10 +168,12 @@ def main() -> int:
     if sha256(installed_setup) != sha256(previous):
         raise SystemExit("rollback did not restore the previous Setup package")
     run("verify-rolled-back-previous", previous, "verify")
+    assert_native_entries("rollback-candidate")
     assert_installed_version("execute-rolled-back-previous", old_version,
                              str(previous_identity["source_revision"]))
     run("reapply-candidate", candidate, "install", "--yes", "--quiet")
     run("verify-reapplied-candidate", candidate, "verify")
+    assert_native_entries("reapply-candidate")
     assert_installed_version("execute-reapplied-candidate", new_version,
                              str(candidate_identity["source_revision"]))
     run("uninstall-candidate-from-installed-setup", installed_setup,

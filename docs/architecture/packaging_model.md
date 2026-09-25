@@ -106,11 +106,17 @@ an interrupted cutover. `recover` restores the previous generation;
 `rollback` restores it after a completed update. A further update while this
 rollback source is retained, or a source-distinct replacement under the same
 version, currently refuses. Incomplete staging and changed ownership also
-refuse without deleting their contents. Custom installation roots currently
+refuse without deleting their contents. Before an update, the previous Setup
+copy must contain an intact payload matching the installed generation.
+Removal admits only the active generation and the predecessor named in the
+rollback record; extra files, directories, links, or generation roots refuse.
+Custom installation roots currently
 accept only ASCII letters, digits, `/`, `.`, `_`, `+`, and `-`; other paths
 refuse before effects so receipts and desktop launch commands stay unambiguous.
-Human installation, full interruption coverage, and wider Linux/Wayland claims
-remain unproven.
+An interruption between publishing the update journal and installing the new
+Setup copy still requires the external new Setup package to recover; the old
+installed Setup has no `recover` command. Human installation, full interruption
+coverage, and wider Linux/Wayland claims remain unproven.
 
 ## Release and manifest truth
 

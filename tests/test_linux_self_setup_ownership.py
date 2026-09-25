@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -442,6 +443,86 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertIn("previous Setup source", refused.stderr)
             self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
             self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
+
+    def test_update_refuses_changed_previous_setup_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+            second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+            self.assertEqual(self.invoke(first, home, "install", "--yes").returncode, 0)
+            install = home / ".local/opt/facman"
+            setup_copy = install / "maintenance/FacManSetup.run"
+            setup_copy.write_bytes(b"foreign setup source\n")
+            refused = self.invoke(second, home, "install", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertEqual(setup_copy.read_bytes(), b"foreign setup source\n")
+            self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
+            self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
+
+    def test_recovery_and_rollback_refuse_linked_previous_generation(self) -> None:
+        for operation in ("recover", "rollback"):
+            with self.subTest(operation=operation), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home = root / "home"
+                home.mkdir()
+                first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+                second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+                self.assertEqual(self.invoke(first, home, "install", "--yes").returncode, 0)
+                environment = ({"FACMAN_TEST_LINUX_SETUP_INTERRUPT_AFTER_CURRENT": "1"}
+                               if operation == "recover" else None)
+                updated = self.invoke(second, home, "install", "--yes",
+                                      extra_environment=environment)
+                self.assertEqual(updated.returncode, 75 if environment else 0,
+                                 updated.stderr)
+                install = home / ".local/opt/facman"
+                old = install / "generations/0.1.0-alpha.5"
+                foreign = root / "foreign-old-generation"
+                old.rename(foreign)
+                old.symlink_to(foreign, target_is_directory=True)
+                current = install / "current"
+                original_pointer = current.readlink()
+                refused = self.invoke(second, home, operation, "--yes")
+                self.assertNotEqual(refused.returncode, 0, refused.stdout)
+                self.assertEqual(current.readlink(), original_pointer)
+                self.assertTrue(old.is_symlink())
+                self.assertEqual((foreign / "facman").read_bytes(), b"first executable\n")
+
+    def test_rollback_refuses_foreign_empty_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+            second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+            self.assertEqual(self.invoke(first, home, "install", "--yes").returncode, 0)
+            self.assertEqual(self.invoke(second, home, "install", "--yes").returncode, 0)
+            install = home / ".local/opt/facman"
+            foreign = install / "generations/0.1.0-alpha.6/foreign-empty"
+            foreign.mkdir()
+            current = install / "current"
+            refused = self.invoke(second, home, "rollback", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertTrue(foreign.is_dir())
+            self.assertEqual(current.readlink(), install / "generations/0.1.0-alpha.6")
+
+    def test_uninstall_refuses_generation_outside_receipt_lineage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+            second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+            self.assertEqual(self.invoke(first, home, "install", "--yes").returncode, 0)
+            self.assertEqual(self.invoke(second, home, "install", "--yes").returncode, 0)
+            install = home / ".local/opt/facman"
+            foreign = install / "generations/foreign"
+            shutil.copytree(install / "generations/0.1.0-alpha.5", foreign)
+            refused = self.invoke(second, home, "uninstall", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertEqual((foreign / "facman").read_bytes(), b"first executable\n")
+            self.assertTrue((install / "current").is_symlink())
 
     def test_recovery_refuses_foreign_pointer_and_journal_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
