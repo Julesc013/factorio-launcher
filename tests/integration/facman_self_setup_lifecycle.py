@@ -1494,15 +1494,16 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
     install = programs / "FacMan"
     state_root = root / "SetupState"
 
-    def observe(phase: str) -> tuple[dict[str, object], dict[str, object]]:
+    def observe(phase: str, observed_root: Path | None = None) -> tuple[dict[str, object], dict[str, object]]:
+        observed_root = observed_root or install
         shortcut = inspect_shortcut_no_follow(windows_start_menu_shortcut())
         registry = inspect_registry_64()
         observations.append({
             "phase": phase,
             "shortcut": shortcut,
             "registry": registry,
-            "journal": journal_observation(install),
-            "install_inventory": file_inventory(install),
+            "journal": journal_observation(observed_root),
+            "install_inventory": file_inventory(observed_root),
         })
         return shortcut, registry
 
@@ -1775,6 +1776,118 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         assert_absent_native(shortcut, registry, "chain retirement")
         if install.exists():
             raise AssertionError("chain retirement retained the logical install root")
+
+        # The flat transition above proves compatibility behavior. This
+        # separate ordinary install must create a real epoch before either
+        # source-distinct maintenance operation is admitted.
+        epoch_fixture = root / "EpochSourceDistinct"
+        epoch_fixture.mkdir()
+        epoch_programs = epoch_fixture / "Programs"
+        epoch_programs.mkdir()
+        epoch_install = epoch_programs / "FacMan"
+        epoch_state = epoch_fixture / "SetupState"
+        epoch_workspace = epoch_fixture / "FacManWorkspace"
+        epoch_workspace.mkdir()
+        epoch_keep = epoch_workspace / "keep.txt"
+        epoch_keep.write_text("preserve\n", encoding="utf-8")
+        epoch_common = ("--root", epoch_install, "--state-root", epoch_state,
+                        "--acceptance-root", epoch_fixture, "--yes")
+        epoch_installed = invoke(executable, "install", *epoch_common,
+                                 shell_integration=True, noninteractive=True)
+        if epoch_installed.get("status") != "ok":
+            raise AssertionError("ordinary candidate Setup did not install a real epoch")
+        epoch_genesis_root = epoch_genesis_install_root(
+            epoch_install, epoch_state, epoch_installed.get("epoch_id"),
+            candidate_package_sha256,
+        )
+        shortcut, registry = observe("source_distinct_epoch_genesis_completed",
+                                     epoch_genesis_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, candidate_identity["version"],
+                            "source-distinct epoch genesis",
+                            active_root=epoch_genesis_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={candidate_package_sha256})
+        installed_helper = epoch_genesis_root / "maintenance" / "FacManSetup.exe"
+        if not installed_helper.is_file():
+            raise AssertionError("real epoch has no installed maintenance entry point")
+        epoch_downgrade_launch = invoke(
+            installed_helper, "downgrade", "--package", baseline_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if epoch_downgrade_launch.get("phase") != "handoff_launched":
+            raise AssertionError("real epoch downgrade did not launch external continuation")
+        epoch_downgrade_id = epoch_downgrade_launch.get("operation_id")
+        if not isinstance(epoch_downgrade_id, str) or not epoch_downgrade_id:
+            raise AssertionError("real epoch downgrade omitted its operation identity")
+        retained_helper = (epoch_state / "epoch-handoff" / epoch_downgrade_id /
+                           "FacManContinuation.exe")
+        if stable_retained_digest(retained_helper, epoch_state, epoch_fixture,
+                                  "source-distinct epoch continuation helper") != \
+                sha256_path(installed_helper):
+            raise AssertionError("epoch downgrade did not retain the executing B Setup")
+        epoch_downgraded = await_external_handoff(
+            executable, epoch_downgrade_launch, "downgrade",
+            ("--package", baseline_payload, "--root", epoch_install,
+             "--state-root", epoch_state, "--acceptance-root", epoch_fixture),
+            shell_integration=True, noninteractive=True,
+        )
+        epoch_baseline_root = Path(str(epoch_downgraded.get("install_root", "")))
+        if (epoch_downgraded.get("product_version") != baseline_identity["version"] or
+                not (epoch_baseline_root / "generations" /
+                     baseline_identity["version"] / "FacMan.exe").is_file()):
+            raise AssertionError("external epoch downgrade did not activate package A")
+        shortcut, registry = observe("source_distinct_epoch_downgrade_completed",
+                                     epoch_baseline_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "source-distinct epoch downgrade",
+                            active_root=epoch_baseline_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+        epoch_update_launch = invoke(
+            executable, "update", "--package", candidate_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if epoch_update_launch.get("phase") != "handoff_launched":
+            raise AssertionError("real epoch reapply did not launch external continuation")
+        epoch_updated = await_external_handoff(
+            executable, epoch_update_launch, "update",
+            ("--package", candidate_payload, "--root", epoch_install,
+             "--state-root", epoch_state, "--acceptance-root", epoch_fixture),
+            shell_integration=True, noninteractive=True,
+        )
+        epoch_updated_root = Path(str(epoch_updated.get("install_root", "")))
+        if (epoch_updated.get("product_version") != candidate_identity["version"] or
+                not (epoch_updated_root / "generations" /
+                     candidate_identity["version"] / "FacMan.exe").is_file()):
+            raise AssertionError("external epoch update did not reactivate package B")
+        shortcut, registry = observe("source_distinct_epoch_reapply_completed",
+                                     epoch_updated_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, candidate_identity["version"],
+                            "source-distinct epoch reapply",
+                            active_root=epoch_updated_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+        epoch_uninstall = registry_text(registry, "UninstallString")
+        for step in range(5):
+            removed = json.loads(invoke_registered(epoch_uninstall, "--json").stdout)
+            if removed.get("phase") == "completed":
+                break
+            if removed.get("phase") != "step_completed":
+                raise AssertionError("real epoch retirement stopped without a durable step")
+        else:
+            raise AssertionError("real epoch retirement exceeded its bounded generation count")
+        shortcut, registry = observe("source_distinct_epoch_retirement_completed",
+                                     epoch_updated_root)
+        assert_absent_native(shortcut, registry, "source-distinct epoch retirement")
+        if (not epoch_keep.is_file() or not epoch_state.is_dir() or
+                epoch_genesis_root.exists() or epoch_baseline_root.exists() or
+                epoch_updated_root.exists()):
+            raise AssertionError("real epoch retirement did not preserve workspace and history")
         outcome = "passed"
         return 0
     except BaseException as exc:
