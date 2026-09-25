@@ -1101,10 +1101,18 @@ def completed_retirement_repeat_cli_controls(
             f"{retirement_journals!r}"
         )
     before_repeat = tree_snapshot(case)
-    repeated = invoke(
-        executable, "uninstall", "--root", install,
-        "--state-root", state, "--acceptance-root", case, "--yes",
-    )
+    try:
+        repeated = invoke(
+            executable, "uninstall", "--root", install,
+            "--state-root", state, "--acceptance-root", case, "--yes",
+        )
+    except AssertionError as exc:
+        journal = Path(retirement_journals[0])
+        records = sorted(path.name for path in journal.iterdir())
+        raise AssertionError(
+            f"completed retirement repeat refused with journal records "
+            f"{records!r} at {journal}: {exc}"
+        ) from exc
     if (repeated.get("phase") != "completed" or
             tree_snapshot(case) != before_repeat):
         raise AssertionError("completed activation-chain uninstall was not idempotent")

@@ -206,6 +206,16 @@ int main() {
                     !fs::exists(guarded_coordinator / "activations"),
                 "direct flat adoption wrote through an epoch namespace");
 
+  const fs::path orphan_coordinator = root / "orphan-retirement" / "coordinator";
+  fs::create_directories(orphan_coordinator / "epoch-retirements");
+  auto orphan_selected =
+      facman::self_maintenance::resolve_authoritative_active_state(
+          orphan_coordinator);
+  ok &= require(!orphan_selected &&
+                    orphan_selected.error().code ==
+                        "self_maintenance_epoch_recovery_required",
+                "orphan epoch retirement root was treated as empty state");
+
   // Core persistence only: the production Setup adapter and package are
   // qualified separately. A replay must inspect an entered clone, not apply
   // the provider a second time after an unknown outcome.

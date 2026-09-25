@@ -2578,6 +2578,12 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
   if (!fs::exists(epochs_path, status)) {
     if (status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
         "epoch root could not be observed", status.message()));
+    facman::platform::PathIdentity orphan_retirements;
+    const auto orphan = facman::platform::inspect_path_no_follow(
+        coordinator_root / "epoch-retirements", orphan_retirements);
+    if (!orphan.ok() || orphan_retirements.exists)
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "epoch retirement state exists without an epoch namespace"));
     return facman::core::Result<LifecycleEpochChain>::success(std::move(result));
   }
   facman::platform::StableDirectoryObject epochs;
@@ -6271,6 +6277,7 @@ facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
   next.compatibility_active.reset();
   next.manifest_sha256.clear();
   next.retirement_sha256.clear();
+  next.retirement_journal_name.clear();
   const std::string submitted_id = hash(lifecycle_identity_bytes(next));
   if (!next.epoch_id.empty() && next.epoch_id != submitted_id)
     return facman::core::Result<LifecycleEpochChain>::failure(failure(
@@ -6919,7 +6926,7 @@ facman::core::Result<RetirementResponse> retire_active(
           "retirement journal root is unavailable"));
     for (fs::directory_iterator it(retirement_root, status), end;
          !status && it != end; it.increment(status)) {
-      const bool current = it->path().lexically_normal() ==
+      const bool current_journal = it->path().lexically_normal() ==
           directory.lexically_normal();
       const bool historical = request.epoch_mode &&
           std::any_of(validated_epochs.epochs.begin(),
@@ -6931,7 +6938,7 @@ facman::core::Result<RetirementResponse> retire_active(
                         it->path().filename().string();
               });
       if (it->symlink_status(status).type() != fs::file_type::directory || status ||
-          (!current && !historical))
+          (!current_journal && !historical))
         return facman::core::Result<RetirementResponse>::failure(failure(
             "self_maintenance_retirement_recovery_required",
             "retirement journal root contains a stale, foreign, or unknown chain"));

@@ -1862,11 +1862,16 @@ int main(int argc, char **argv) {
       completed_request, completed_effects);
   auto no_active_after_retirement = facman::self_maintenance::discover_active(
       completed_chain.coordinator_root);
+  auto repeated_retirement = facman::self_maintenance::retire_active(
+      completed_request, completed_effects);
   auto retained_history = facman::self_maintenance::discover_activation_chain(
       completed_chain.coordinator_root);
   ok &= require(completed_result && completed_result.value().phase == "completed" &&
                     no_active_after_retirement &&
                     !no_active_after_retirement.value().has_value() &&
+                    repeated_retirement &&
+                    repeated_retirement.value().phase == "completed" &&
+                    completed_effects.removed.size() == 1U &&
                     retained_history && retained_history.value().has_value() &&
                     retained_history.value()->generations.size() == 1U,
                 "completed retirement did not hide active state while retaining history");
