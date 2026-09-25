@@ -800,10 +800,12 @@ class SaveTransferTests(unittest.TestCase):
             save = workspace / "instances" / "source-world" / "saves" / "world.zip"
             shutil.copyfile(SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save)
             destination = output / "redirected.backup.zip"
+            pause_marker = Path(tmp) / "backup-publication-paused.marker"
             environment = os.environ.copy()
             environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
                 "pause_before_backup_publish"
             )
+            environment["FACMAN_TEST_SAVE_TRANSFER_PAUSE_MARKER"] = str(pause_marker)
             process = subprocess.Popen(
                 [str(facman_executable()), "--workspace", str(workspace), "saves",
                  "backup", "world", "--instance", "source-world", "--to",
@@ -813,10 +815,11 @@ class SaveTransferTests(unittest.TestCase):
             )
             try:
                 deadline = time.monotonic() + 10
-                while process.poll() is None and time.monotonic() < deadline:
-                    if list(output.glob(".facman-save-backup-*.staging.zip")):
-                        break
+                while (process.poll() is None and not pause_marker.exists()
+                       and time.monotonic() < deadline):
                     time.sleep(0.02)
+                self.assertTrue(pause_marker.exists(),
+                                "backup did not reach publication pause")
                 self.assertIsNone(process.poll(), "backup exited before parent swap")
                 output.rename(displaced)
                 output.mkdir()
@@ -824,6 +827,8 @@ class SaveTransferTests(unittest.TestCase):
                 self.assertEqual(process.returncode, 1, stderr + stdout)
                 self.assertFalse(destination.exists())
                 self.assertFalse(Path(str(destination) + ".manifest.json").exists())
+                self.assertFalse((displaced / destination.name).exists())
+                self.assertFalse(Path(str(displaced / destination.name) + ".manifest.json").exists())
                 code, stdout, stderr = invoke([
                     "--workspace", str(workspace), "workspace", "recovery",
                     "inspect", "--json",
@@ -839,9 +844,9 @@ class SaveTransferTests(unittest.TestCase):
                     "--workspace", str(workspace), "workspace", "recovery", "apply",
                     records[0]["transaction_id"], "--json",
                 ])
-                self.assertEqual(code, 1, stderr + stdout)
-                self.assertEqual(json.loads(stdout)["refusal"]["code"],
-                                 "recovery_backup_publication_unsafe")
+                self.assertEqual(code, 0, stderr + stdout)
+                self.assertEqual(json.loads(stdout)["transactions"][0]["state"],
+                                 "rolled_back")
                 self.assertFalse(destination.exists())
             finally:
                 if process.poll() is None:

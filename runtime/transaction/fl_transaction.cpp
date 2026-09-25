@@ -769,8 +769,18 @@ bool publish_save_backup_file(
     }
     const char* fault = std::getenv("FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE");
     if (fault != nullptr && std::string(fault) ==
-            "pause_before_backup_publish")
+            "pause_before_backup_publish") {
+        const char* marker = std::getenv("FACMAN_TEST_SAVE_TRANSFER_PAUSE_MARKER");
+        if (marker != nullptr && *marker != '\0') {
+            if (!facman::base::write_text_new_atomic(marker, "1", detail))
+                return false;
+        }
         std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+    if (!source.revalidate_path().ok() || !bound_parent()) {
+        detail = "backup source or destination changed at publication boundary";
+        return false;
+    }
     const auto published = output.publish_sibling_no_replace(
         record.target.filename());
     if (!published.ok() || !bound_parent()) {
