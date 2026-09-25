@@ -898,6 +898,18 @@ facman::core::Result<void> require_flat_retirement_epoch_absence(
     return facman::core::Result<void>::failure(failure(
         "self_maintenance_epoch_recovery_required",
         "lifecycle epoch namespace blocks flat retirement"));
+  const fs::path epoch_retirements =
+      lock.admission.root / "epoch-retirements";
+  const auto retirement_descendant =
+      lock.admission.coordinator.validate_descendant(epoch_retirements, true);
+  facman::platform::PathIdentity retirement_identity;
+  const auto retirement_observed = facman::platform::inspect_path_no_follow(
+      epoch_retirements, retirement_identity);
+  if (!retirement_descendant.ok() || !retirement_observed.ok() ||
+      retirement_identity.exists)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_epoch_recovery_required",
+        "epoch retirement namespace blocks flat retirement"));
   const fs::path handoff = lock.admission.root / "authority-handoff.v1.json";
   const auto handoff_descendant =
       lock.admission.coordinator.validate_descendant(handoff, true);

@@ -1853,6 +1853,25 @@ int main(int argc, char **argv) {
                     foreign_effects.removed.empty(),
                 "stale or foreign retirement journal was accepted");
 
+  auto mixed_namespace_chain = request(root / "retirement-epoch-namespace",
+                                       Operation::update);
+  fs::create_directories(mixed_namespace_chain.coordinator_root /
+                         "epoch-retirements");
+  RetirementFakeEffects mixed_namespace_effects;
+  facman::self_maintenance::RetirementRequest mixed_namespace_request;
+  mixed_namespace_request.coordinator_root =
+      mixed_namespace_chain.coordinator_root;
+  mixed_namespace_request.apply = true;
+  auto mixed_namespace_result = facman::self_maintenance::retire_active(
+      mixed_namespace_request, mixed_namespace_effects);
+  ok &= require(!mixed_namespace_result &&
+                    mixed_namespace_result.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    mixed_namespace_effects.removed.empty() &&
+                    !fs::exists(mixed_namespace_chain.coordinator_root /
+                                "retirements"),
+                "flat retirement entered an orphan epoch retirement namespace");
+
   auto completed_chain = request(root / "retirement-completed", Operation::update);
   RetirementFakeEffects completed_effects;
   facman::self_maintenance::RetirementRequest completed_request;

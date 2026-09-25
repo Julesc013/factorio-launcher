@@ -1,5 +1,40 @@
 # Epoch bootstrap working checkpoint (2026-09-25)
 
+## Current branch checkpoint after `562ba502`
+
+- Draft PR #333 remains open on `task/facman-epoch-bootstrap-02`; do not merge
+  it yet. The current pushed head is `562ba502dc3a7484541fe30d8c6b1cbe2ecf80bc`.
+- Ordinary shell-integrated Setup now reaches the first real epoch; no-shell
+  compatibility installs stay flat. Active-epoch repair selection, retirement
+  preflight and separate epoch retirement are implemented, with native smoke
+  evidence but no successful produced-package receipt at this head.
+- `336586f1` adds validated real-epoch retirement completion digests and
+  allows a completed predecessor journal when selecting a successor. The
+  `562ba502` correction rejects orphan retirement state, tests idempotent
+  native retirement, and diagnoses the Windows public repeat-uninstall path.
+- CI `36079819746` at `853130b2` built and passed native authority smokes but
+  Windows `facman_self_setup_lifecycle` failed: repeated flat uninstall
+  returned `self_maintenance_retirement_recovery_required`. CI `36081075283`
+  at `336586f1` stopped earlier at a Windows C4456 shadow warning. The
+  `562ba502` head corrects that warning; hosted CI is pending. These source
+  observations are not produced-package qualification.
+- CI `36081612110` at `562ba502` passed Windows compilation and native
+  maintenance smokes. Its lifecycle test failed on the *second* flat uninstall
+  call, before completion: Setup's initial epoch discovery propagated the
+  expected `self_maintenance_retirement_recovery_required` instead of routing
+  the pending flat chain to `retire_active`. The current working edit allows
+  only that exact recovery status through, refuses mixed epoch namespaces in
+  preview, and adds the same orphan-namespace guard at the locked effect
+  boundary. The existing integration test covers the two calls and repeat.
+- The next executable checkpoint is a passing Windows native lifecycle run,
+  followed by a source-exact product candidate. The current edit is
+  syntax-checked but not yet committed or hosted-tested.
+- The production reinstall path after completed real-epoch retirement remains
+  missing even though core successor selection now works. Setup must install
+  the new exact provider identity and publish genesis/native ownership through
+  recoverable phases. Real-epoch rollback/reapply and source-distinct external
+  continuation remain open. The older `b18018cd` candidate is unrelated.
+
 Work item: `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`. This is a local working
 checkpoint, not product qualification or authority to publish.
 

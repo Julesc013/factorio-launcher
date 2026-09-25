@@ -3470,11 +3470,29 @@ int wmain(int argc, wchar_t **argv) {
     if (options.operation == facman::self_setup::Operation::uninstall) {
       auto epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
           coordinator_root);
-      if (!epochs) {
+      const bool epoch_discovery_flat_recovery =
+          !epochs && epochs.error().code ==
+              "self_maintenance_retirement_recovery_required";
+      if (!epochs && !epoch_discovery_flat_recovery) {
         print_error(epochs.error(), options.json);
         return 4;
       }
-      if (!epochs.value().epochs.empty() &&
+      if (epoch_discovery_flat_recovery) {
+        for (const char *name : {"epochs", "epoch-retirements",
+                                 "authority-handoff.v1.json",
+                                 "authority-bootstrap.v1"}) {
+          facman::platform::PathIdentity identity;
+          const auto observed = facman::platform::inspect_path_no_follow(
+              coordinator_root / name, identity);
+          if (!observed.ok() || identity.exists) {
+            print_error({"self_maintenance_epoch_recovery_required",
+                         "flat retirement cannot resume through mixed epoch state",
+                         name}, options.json);
+            return 4;
+          }
+        }
+      }
+      if (epochs && !epochs.value().epochs.empty() &&
           !epochs.value().epochs.back().compatibility_epoch) {
         SetupNativeEffects retirement_native_effects;
         SetupRetirementEffects retirement_effects(
