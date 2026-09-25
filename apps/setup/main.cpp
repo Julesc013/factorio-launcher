@@ -1547,6 +1547,13 @@ public:
         : facman::self_maintenance::CandidateState::unreadable;
   }
 
+  facman::self_maintenance::EffectResult inspect_retained_installed(
+      const facman::self_maintenance::Plan &plan) override {
+    if (!ensure_target_pins(plan))
+      return {false, false, {}, target_pin_detail_};
+    return provider_.inspect_retained_installed(plan);
+  }
+
   facman::self_maintenance::EffectResult review_install_local(
       const facman::self_maintenance::Plan &plan) override {
     return provider_.review_install_local(plan);

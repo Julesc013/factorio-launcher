@@ -1735,7 +1735,7 @@ struct EpochReactivationIntent {
   std::string target_generation_id;
   std::string target_generation_sha256;
   std::string target_package_sha256;
-  std::string target_verification_receipt_sha256;
+  std::string target_installed_identity_sha256;
   std::string target_activation_name;
   std::string target_activation_sha256;
   bool shell_integration = true;
@@ -1755,8 +1755,8 @@ std::string epoch_reactivation_intent_bytes(const EpochReactivationIntent &inten
   record.add_string("target_generation_id", intent.target_generation_id);
   record.add_string("target_generation_sha256", intent.target_generation_sha256);
   record.add_string("target_package_sha256", intent.target_package_sha256);
-  record.add_string("target_verification_receipt_sha256",
-                    intent.target_verification_receipt_sha256);
+  record.add_string("target_installed_identity_sha256",
+                    intent.target_installed_identity_sha256);
   record.add_string("target_activation_name", intent.target_activation_name);
   record.add_string("target_activation_sha256", intent.target_activation_sha256);
   record.add_bool("shell_integration", intent.shell_integration);
@@ -1771,7 +1771,7 @@ facman::core::Result<EpochReactivationIntent> parse_epoch_reactivation_intent(
           "epoch_manifest_sha256", "operation", "operation_id",
           "source_generation_id", "source_activation_name", "source_activation_sha256",
           "target_generation_id", "target_generation_sha256", "target_package_sha256",
-          "target_verification_receipt_sha256",
+          "target_installed_identity_sha256",
           "target_activation_name", "target_activation_sha256", "shell_integration"}))
     return facman::core::Result<EpochReactivationIntent>::failure(epoch_recovery(
         "epoch reactivation intent has a foreign schema"));
@@ -1792,8 +1792,8 @@ facman::core::Result<EpochReactivationIntent> parse_epoch_reactivation_intent(
   intent.target_generation_id = string_field(document.value(), "target_generation_id");
   intent.target_generation_sha256 = string_field(document.value(), "target_generation_sha256");
   intent.target_package_sha256 = string_field(document.value(), "target_package_sha256");
-  intent.target_verification_receipt_sha256 =
-      string_field(document.value(), "target_verification_receipt_sha256");
+  intent.target_installed_identity_sha256 =
+      string_field(document.value(), "target_installed_identity_sha256");
   intent.target_activation_name = string_field(document.value(), "target_activation_name");
   intent.target_activation_sha256 = string_field(document.value(), "target_activation_sha256");
   intent.shell_integration = shell_value.value();
@@ -1809,7 +1809,7 @@ facman::core::Result<EpochReactivationIntent> parse_epoch_reactivation_intent(
       !digest(intent.source_generation_id) || !digest(intent.source_activation_sha256) ||
       !digest(intent.target_generation_id) || !digest(intent.target_generation_sha256) ||
       !digest(intent.target_package_sha256) || !digest(intent.target_activation_sha256) ||
-      !digest(intent.target_verification_receipt_sha256) ||
+      !digest(intent.target_installed_identity_sha256) ||
       intent.source_activation_name.empty() ||
       fs::path(intent.source_activation_name) !=
           fs::path(intent.source_activation_name).filename() ||
@@ -3912,6 +3912,13 @@ facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
     return facman::core::Result<Plan>::failure(failure(
         "self_maintenance_candidate_unsafe",
         "retained epoch installation is absent, foreign, or unreadable"));
+  const EffectResult installed =
+      effects.inspect_retained_installed(planned.value());
+  if (!installed.ok || installed.outcome_unknown ||
+      !digest(installed.receipt_sha256))
+    return facman::core::Result<Plan>::failure(effect_error(
+        "self_maintenance_verify_failed",
+        "retained epoch installed identity is not exact", installed).error());
   const EffectResult verified = effects.verify_installed(planned.value());
   if (!verified.ok || verified.outcome_unknown || !digest(verified.receipt_sha256))
     return facman::core::Result<Plan>::failure(effect_error(
@@ -3920,6 +3927,12 @@ facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
   if (effects.inspect_candidate(planned.value()) != CandidateState::exact)
     return facman::core::Result<Plan>::failure(epoch_recovery(
         "retained epoch installation changed during verification"));
+  const EffectResult final_installed =
+      effects.inspect_retained_installed(planned.value());
+  if (!final_installed.ok || final_installed.outcome_unknown ||
+      final_installed.receipt_sha256 != installed.receipt_sha256)
+    return facman::core::Result<Plan>::failure(epoch_recovery(
+        "retained epoch installed identity changed during review"));
   auto final_package = inspect_package(request.package.package);
   if (!final_package || final_package.value().package_sha256 !=
           request.package.package_sha256)
@@ -4059,12 +4072,31 @@ facman::core::Result<EpochShellCutoverResponse> execute_lifecycle_epoch_reactiva
     auto reviewed = review_lifecycle_epoch_reactivation(preview, provider_effects);
     if (!reviewed) return Result::failure(reviewed.error());
     transition = reviewed.take_value();
+    if (provider_effects.inspect_candidate(transition) != CandidateState::exact)
+      return Result::failure(epoch_recovery(
+          "retained provider ownership changed before reactivation intent"));
+    const EffectResult installed =
+        provider_effects.inspect_retained_installed(transition);
+    if (!installed.ok || installed.outcome_unknown ||
+        !digest(installed.receipt_sha256))
+      return Result::failure(effect_error("self_maintenance_verify_failed",
+          "retained installed identity changed before reactivation intent",
+          installed).error());
     const EffectResult verified = provider_effects.verify_installed(transition);
     if (!verified.ok || verified.outcome_unknown ||
         !digest(verified.receipt_sha256) ||
         provider_effects.inspect_candidate(transition) != CandidateState::exact)
       return Result::failure(effect_error("self_maintenance_verify_failed",
           "retained generation changed before reactivation intent", verified).error());
+    const ShellState shortcut = shell_effects.inspect_shortcut(transition);
+    const ShellState registration = shell_effects.inspect_registration(transition);
+    if (request.shell_integration
+            ? (shortcut != ShellState::old_exact ||
+               registration != ShellState::old_exact)
+            : (shortcut != ShellState::new_exact ||
+               registration != ShellState::new_exact))
+      return Result::failure(epoch_recovery(
+          "reactivation native ownership is not the exact source before intent"));
     intent.epoch_id = epoch.epoch_id;
     intent.epoch_manifest_sha256 = epoch.manifest_sha256;
     intent.operation = transition.operation;
@@ -4076,7 +4108,7 @@ facman::core::Result<EpochShellCutoverResponse> execute_lifecycle_epoch_reactiva
     intent.target_generation_sha256 = hash(epoch_generation_bytes(epoch,
         transition.target));
     intent.target_package_sha256 = transition.target.package_sha256;
-    intent.target_verification_receipt_sha256 = verified.receipt_sha256;
+    intent.target_installed_identity_sha256 = installed.receipt_sha256;
     intent.target_activation_name = "activation." + request.operation_id +
         ".v2.json";
     intent.target_activation_sha256 = hash(epoch_link_activation_bytes(epoch,
@@ -4154,11 +4186,18 @@ facman::core::Result<EpochShellCutoverResponse> execute_lifecycle_epoch_reactiva
           kMaximumEpochGenesisRecordBytes);
       if (!marker || marker.value() != expected_registration) return false;
     }
+    if (!current || current.value() != epoch_reactivation_intent_bytes(intent) ||
+        provider_effects.inspect_candidate(transition) != CandidateState::exact)
+      return false;
+    const EffectResult installed =
+        provider_effects.inspect_retained_installed(transition);
+    if (!installed.ok || installed.outcome_unknown ||
+        installed.receipt_sha256 != intent.target_installed_identity_sha256)
+      return false;
     const EffectResult verified = provider_effects.verify_installed(transition);
-    return current && current.value() == epoch_reactivation_intent_bytes(intent) &&
+    return verified.ok && !verified.outcome_unknown &&
+        digest(verified.receipt_sha256) &&
         provider_effects.inspect_candidate(transition) == CandidateState::exact &&
-        verified.ok && !verified.outcome_unknown &&
-        verified.receipt_sha256 == intent.target_verification_receipt_sha256 &&
         operation.value().revalidate().ok() && maintenance.value().revalidate().ok() &&
         scope.epoch.revalidate().ok() && scope.epochs.revalidate().ok() &&
         scope.coordinator.revalidate().ok();

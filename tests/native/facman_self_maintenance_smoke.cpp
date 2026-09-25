@@ -433,9 +433,17 @@ struct EpochContinuationFakeEffects final
   bool invalid_transaction = false;
   bool contradictory_inspect = false;
   bool contradictory_verify = false;
+  bool retained_inspected = false;
   std::function<void()> after_apply;
 
   CandidateState inspect_candidate(const Plan &) override { return candidate; }
+  EffectResult inspect_retained_installed(const Plan &) override {
+    ++inspect_calls;
+    retained_inspected = candidate == CandidateState::exact;
+    return candidate == CandidateState::exact
+        ? EffectResult{true, false, sha("epoch.retained.identity"), {}}
+        : EffectResult{false, true, {}, "retained candidate not exact"};
+  }
   facman::core::Result<facman::self_maintenance::ProviderApplyBinding>
   bind_install_local(const Plan &, const std::string &expected) override {
     ++bind_calls;
@@ -472,9 +480,18 @@ struct EpochContinuationFakeEffects final
         ? EffectResult{true, false, sha("epoch.inspect"), {}}
         : EffectResult{false, true, {}, "candidate not exact"};
   }
-  EffectResult verify_installed(const Plan &) override {
+  EffectResult verify_installed(const Plan &plan) override {
     ++verify_calls;
     if (contradictory_verify) return {true, true, sha("epoch.verify"), "contradictory"};
+    if (plan.provider_operation == "reactivate") {
+      if (!retained_inspected)
+        return {false, false, {}, "retained identity was not inspected"};
+      retained_inspected = false;
+      return candidate == CandidateState::exact
+          ? EffectResult{true, false,
+              sha("epoch.reactivation.verify." + std::to_string(verify_calls)), {}}
+          : EffectResult{false, true, {}, "candidate not exact"};
+    }
     return candidate == CandidateState::exact
         ? EffectResult{true, false, sha("epoch.verify"), {}}
         : EffectResult{false, true, {}, "candidate not exact"};
@@ -519,6 +536,7 @@ struct EpochShellCutoverFakeEffects final : facman::self_maintenance::EpochShell
   unsigned registration_calls = 0;
   unsigned retire_calls = 0;
   bool fail_retire = false;
+  std::function<void()> after_shortcut;
   EffectResult inspect_installed(
       const Plan &, const facman::self_maintenance::ProviderApplyBinding &) override {
     return {true, false, sha("epoch.inspect"), {}};
@@ -536,6 +554,7 @@ struct EpochShellCutoverFakeEffects final : facman::self_maintenance::EpochShell
   EffectResult cutover_shortcut(const Plan &) override {
     ++shortcut_calls;
     shortcut = ShellState::new_exact;
+    if (after_shortcut) after_shortcut();
     return {true, false, sha("epoch.shortcut"), {}};
   }
   EffectResult cutover_registration(const Plan &) override {
@@ -2871,7 +2890,9 @@ int main(int argc, char **argv) {
   EpochContinuationFakeEffects reactivation_provider;
   reactivation_provider.candidate = CandidateState::exact;
   EpochShellCutoverFakeEffects reactivation_shell;
-  reactivation_shell.registration = ShellState::foreign;
+  reactivation_shell.after_shortcut = [&] {
+    reactivation_shell.registration = ShellState::foreign;
+  };
   auto interrupted_reactivation =
       facman::self_maintenance::execute_lifecycle_epoch_reactivation(
           third_preparation_request, reactivation_provider, reactivation_shell);

@@ -429,6 +429,9 @@ class EpochContinuationEffects : public EpochPublicationEffects {
 public:
   virtual ~EpochContinuationEffects() = default;
   virtual CandidateState inspect_candidate(const Plan &plan) = 0;
+  // Stable installed identity for an already owned retained generation.
+  // This also admits a fresh provider verification without an apply binding.
+  virtual EffectResult inspect_retained_installed(const Plan &plan) = 0;
   virtual facman::core::Result<ProviderApplyBinding> bind_install_local(
       const Plan &plan, const std::string &expected_provider_plan_sha256) = 0;
   virtual facman::core::Result<void> rehydrate_install_local(

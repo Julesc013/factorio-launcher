@@ -45,6 +45,7 @@ public:
   facman::core::Result<InstalledIdentity> inspect_identity(
       const std::string &install_id);
   CandidateState inspect_candidate(const Plan &plan) override;
+  EffectResult inspect_retained_installed(const Plan &plan) override;
   EffectResult review_install_local(const Plan &plan);
   facman::core::Result<ProviderApplyBinding> bind_install_local(
       const Plan &plan,
