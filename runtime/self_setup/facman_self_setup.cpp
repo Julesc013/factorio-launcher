@@ -1636,7 +1636,7 @@ facman::core::Result<Response> execute(const Request &request) {
     held_lock.emplace(acquired.take_value());
   }
 
-  if (!request.reserved_successor_epoch_id.empty()) {
+  if (request.apply && !request.reserved_successor_epoch_id.empty()) {
     if (request.operation != Operation::install ||
         request.reserved_successor_epoch_id.size() != 64U ||
         !digest_or_empty(request.reserved_successor_epoch_id))

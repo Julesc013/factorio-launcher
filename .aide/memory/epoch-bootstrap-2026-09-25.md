@@ -230,3 +230,10 @@ checkpoint, not product qualification or authority to publish.
   invalidated reference. The next one-line fix copies the tail before pop.
   The authority smoke includes both prepublication and published retry and
   will be rerun before a new product candidate.
+- Candidate harness audit after `4022534b` found the successor preview helper
+  had been inserted into the source-distinct function instead of the real
+  current-user reinstall function. The real function would have raised a
+  missing helper error. A second check found Setup previews report phase
+  `plan`, and reserved-epoch validation must run only for apply: previews do
+  not publish a reservation. The next correction moves the helper and fixes
+  both preview conditions before another package run.

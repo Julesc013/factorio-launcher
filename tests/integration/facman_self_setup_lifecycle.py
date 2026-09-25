@@ -1492,7 +1492,6 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         )
 
     install = programs / "FacMan"
-    logical_install = install
     state_root = root / "SetupState"
 
     def observe(phase: str) -> tuple[dict[str, object], dict[str, object]]:
@@ -1519,24 +1518,6 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
 
         common = ("--root", install, "--state-root", state_root,
                   "--acceptance-root", root, "--yes")
-
-        def next_successor_root() -> Path:
-            preview = invoke(executable, "install", "--package", payload,
-                             "--root", logical_install, "--state-root", state_root,
-                             "--acceptance-root", root, shell_integration=True,
-                             noninteractive=True)
-            if preview.get("status") != "ok" or preview.get("phase") != "planned":
-                raise AssertionError("ordinary Setup did not plan a retired-epoch successor")
-            target = preview.get("successor_install_root")
-            epoch_id = preview.get("successor_epoch_id")
-            if not isinstance(target, str) or not isinstance(epoch_id, str) or \
-                    len(epoch_id) != 64:
-                raise AssertionError("successor preview omitted its exact epoch target")
-            result = Path(target)
-            if result.parent != logical_install.parent or \
-                    not result.name.startswith("FacMan.generation.") or result.exists():
-                raise AssertionError("successor preview selected an occupied or foreign target")
-            return result
         installed = invoke(baseline_executable, "install", *common,
                            shell_integration=True, noninteractive=True)
         if installed.get("status") != "ok":
@@ -1861,6 +1842,7 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         return shortcut, registry
 
     install = programs / "FacMan"
+    logical_install = install
     state_root = root / "SetupState"
     workspace = root / "FacManWorkspace"
     try:
@@ -1882,6 +1864,24 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
             raise AssertionError(f"unexpected setup version: {version}")
         common = ("--root", install, "--state-root", state_root,
                   "--acceptance-root", root, "--yes")
+
+        def next_successor_root() -> Path:
+            preview = invoke(executable, "install", "--package", payload,
+                             "--root", logical_install, "--state-root", state_root,
+                             "--acceptance-root", root, shell_integration=True,
+                             noninteractive=True)
+            if preview.get("status") != "ok" or preview.get("phase") != "plan":
+                raise AssertionError("ordinary Setup did not plan a retired-epoch successor")
+            target = preview.get("successor_install_root")
+            epoch_id = preview.get("successor_epoch_id")
+            if not isinstance(target, str) or not isinstance(epoch_id, str) or \
+                    len(epoch_id) != 64:
+                raise AssertionError("successor preview omitted its exact epoch target")
+            result = Path(target)
+            if result.parent != logical_install.parent or \
+                    not result.name.startswith("FacMan.generation.") or result.exists():
+                raise AssertionError("successor preview selected an occupied or foreign target")
+            return result
         workspace.mkdir()
         keep = workspace / "keep.txt"
         keep.write_text("preserve\n", encoding="utf-8")
