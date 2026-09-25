@@ -7,6 +7,7 @@
 #include "fl_result.h"
 
 #include <filesystem>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <utility>
@@ -89,7 +90,9 @@ struct LifecycleEpoch {
   // of the persisted epoch identity document.
   std::string manifest_sha256;
   std::string retirement_sha256;
+  std::string retirement_journal_name;
   std::optional<ActiveState> compatibility_active;
+  bool compatibility_handoff = false;
   bool compatibility_epoch = false;
 };
 
@@ -117,6 +120,56 @@ struct EpochGenesisRequest {
   bool apply = false;
 };
 
+struct EffectResult;
+
+// A bootstrap moves authority from the compatibility activation history to the
+// first epoch without uninstalling that history.  The provider owns the clone
+// operation: the coordinator records an entered edge before it is called and
+// accepts a retry only after the provider can prove the exact epoch target.
+struct CompatibilityAuthorityBootstrapRequest {
+  std::filesystem::path coordinator_root;
+  PackageDescriptor package_descriptor;
+  std::string package_sha256;
+  bool shell_integration = true;
+  bool apply = false;
+};
+
+struct CompatibilityAuthorityBootstrapResponse {
+  std::string phase;
+  LifecycleEpoch epoch;
+  ActiveState active;
+  std::filesystem::path journal_directory;
+};
+
+// Exact read-only target for reinstall after a completed real-epoch removal.
+// The source is retained immutable history; the provider identity is retired.
+struct RetiredEpochSuccessorPlan {
+  LifecycleEpoch epoch;
+  Generation source;
+  Generation target;
+  bool manifest_published = false;
+  bool manifest_staging = false;
+};
+
+class CompatibilityAuthorityBootstrapEffects {
+public:
+  virtual ~CompatibilityAuthorityBootstrapEffects() = default;
+  virtual EffectResult inspect_epoch_clone(const Generation &source,
+                                           const Generation &target) = 0;
+  virtual EffectResult review_epoch_clone(const Generation &source,
+                                          const Generation &target) = 0;
+  virtual EffectResult clone_epoch(const Generation &source,
+                                   const Generation &target) = 0;
+  virtual ShellState inspect_epoch_shortcut(const Generation &source,
+                                            const Generation &target) = 0;
+  virtual ShellState inspect_epoch_registration(const Generation &source,
+                                                const Generation &target) = 0;
+  virtual EffectResult cutover_epoch_shortcut(const Generation &source,
+                                              const Generation &target) = 0;
+  virtual EffectResult cutover_epoch_registration(const Generation &source,
+                                                  const Generation &target) = 0;
+};
+
 struct RetirementStep {
   Generation generation;
   bool active = false;
@@ -125,6 +178,10 @@ struct RetirementStep {
 struct RetirementRequest {
   std::filesystem::path coordinator_root;
   bool apply = false;
+  bool epoch_mode = false;
+  std::filesystem::path logical_root;
+  std::filesystem::path state_root;
+  std::filesystem::path acceptance_root;
 };
 
 struct RetirementResponse {
@@ -160,15 +217,17 @@ private:
   std::string operation_id_;
 };
 
-// The application supplies the provider/native edge.  It must reject any
-// foreign or ambiguous installed identity before uninstalling a step.  The
+// The application supplies the provider/native edge. Its inspection runs
+// under the coordinator lock and must reject a foreign provider uninstall
+// plan or ambiguous installed identity before entering a step. The
 // coordinator persists an entered marker before calling uninstall_generation,
 // which makes an interrupted edge recovery-required rather than replayable.
 class RetirementEffects {
 public:
   virtual ~RetirementEffects() = default;
   virtual facman::core::Result<void> inspect_retirement_generation(
-      const Generation &generation, bool active) = 0;
+      const Generation &generation, bool active,
+      const CoordinatorLockToken &coordinator_lock) = 0;
   virtual facman::core::Result<void> uninstall_generation(
       const Generation &generation, bool active,
       const CoordinatorLockToken &coordinator_lock) = 0;
@@ -231,6 +290,9 @@ struct EpochTransitionRequest {
   std::filesystem::path continuation_helper;
   std::string continuation_helper_sha256;
   bool shell_integration = true;
+  // An absolute UTC deadline supplied by the production caller before the
+  // handoff is first published. Zero retains older journal compatibility.
+  std::uint64_t deadline_utc_ms = 0;
 };
 
 struct EpochTransitionPreparation {
@@ -240,6 +302,7 @@ struct EpochTransitionPreparation {
   std::string journal_sha256;
   RetainedMaintenanceInputs inputs;
   std::string nonce;
+  std::uint64_t deadline_utc_ms = 0;
 };
 
 // The provider review receipt in the handoff is insufficient to replay an
@@ -324,6 +387,7 @@ struct EpochPendingTransition {
   bool completed = false;
   bool pre_handoff = false;
   bool shell_integration = true;
+  std::uint64_t deadline_utc_ms = 0;
   // pre_handoff, handoff_staging, continuation_pending, publication_pending,
   // shell_cutover_pending, or shell_cutover_complete when completed is true.
   std::string phase;
@@ -421,6 +485,11 @@ facman::core::Result<Plan> plan(const Request &request);
 facman::core::Result<Response> execute(const Request &request, Effects &effects);
 facman::core::Result<PackageInspection> inspect_package(
     const std::filesystem::path &package);
+// The maintenance descriptor opts a package into strict epoch bootstrap.
+// Current-generation-only archives remain on the compatibility Setup path.
+// A malformed or partial descriptor is inspected strictly and rejected.
+facman::core::Result<bool> has_self_maintenance_metadata(
+    const std::filesystem::path &package);
 facman::core::Result<void> extract_maintenance_launcher(
     const PackageInspection &package,
     const std::filesystem::path &destination);
@@ -439,6 +508,11 @@ facman::core::Result<std::optional<ActivationChain>> discover_activation_chain(
 facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
+    const std::filesystem::path &coordinator_root);
+// Returns every validated activation target in the authoritative real epoch,
+// including repeated retained generations. Retirement and rollback must use
+// this lineage rather than infer ownership from only the active predecessor.
+facman::core::Result<ActivationChain> discover_lifecycle_epoch_activation_chain(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<std::optional<AuthoritativeActiveState>>
 resolve_authoritative_active_state(const std::filesystem::path &coordinator_root);
@@ -474,6 +548,16 @@ facman::core::Result<Generation> make_epoch_genesis_generation(
     const std::string &package_sha256);
 facman::core::Result<ActiveState> activate_lifecycle_epoch_genesis(
     const EpochGenesisRequest &request);
+facman::core::Result<CompatibilityAuthorityBootstrapResponse>
+bootstrap_compatibility_authority(
+    const CompatibilityAuthorityBootstrapRequest &request,
+    CompatibilityAuthorityBootstrapEffects &effects);
+facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
+    const std::filesystem::path &coordinator_root,
+    const PackageDescriptor &descriptor, const std::string &package_sha256);
+facman::core::Result<void> recover_retired_successor_manifest(
+    const std::filesystem::path &coordinator_root,
+    const RetiredEpochSuccessorPlan &plan);
 facman::core::Result<RetirementResponse> retire_active(
     const RetirementRequest &request, RetirementEffects &effects);
 facman::core::Result<ActiveState> adopt_legacy(

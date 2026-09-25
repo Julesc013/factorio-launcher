@@ -182,6 +182,26 @@ bool same_descriptor(const PackageDescriptor &left,
 
 } // namespace
 
+facman::core::Result<bool> has_self_maintenance_metadata(
+    const fs::path &package) {
+  if (!package.is_absolute())
+    return facman::core::Result<bool>::failure(error(
+        "self_maintenance_package_incompatible",
+        "maintenance package path must be absolute"));
+  archive::Limits limits = archive::PackageArchivePolicy::limits();
+  limits.maximum_archive_bytes = 16ULL * 1024ULL * 1024ULL * 1024ULL;
+  archive::Plan plan;
+  const auto inspected = archive::inspect_archive(package, limits, plan);
+  if (!inspected.ok())
+    return facman::core::Result<bool>::failure(error(
+        "self_maintenance_package_incompatible",
+        "maintenance package archive is unsafe", inspected.detail));
+  for (const auto &entry : plan.entries)
+    if (entry.path == "facman/state/self-maintenance-package.v1.json")
+      return facman::core::Result<bool>::success(true);
+  return facman::core::Result<bool>::success(false);
+}
+
 facman::core::Result<PackageInspection> inspect_package(
     const fs::path &package) {
   if (!package.is_absolute())

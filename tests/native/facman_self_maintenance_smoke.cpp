@@ -345,14 +345,19 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
   std::vector<std::string> inspected;
   std::vector<std::string> removed;
   bool reject_identity = false;
+  bool reject_foreign = false;
   bool interrupt_active = false;
 
   facman::core::Result<void> inspect_retirement_generation(
-      const Generation &generation, bool) override {
+      const Generation &generation, bool,
+      const facman::self_maintenance::CoordinatorLockToken &) override {
     inspected.push_back(generation.install_id);
     if (reject_identity)
       return facman::core::Result<void>::failure(
           {"provider_identity_mismatch", "different install identity", {}});
+    if (reject_foreign)
+      return facman::core::Result<void>::failure(
+          {"self_setup_provider_refused", "foreign_content_review_required", {}});
     return facman::core::Result<void>::success();
   }
 
@@ -1801,11 +1806,37 @@ int main(int argc, char **argv) {
   identity_request.apply = true;
   auto identity_result = facman::self_maintenance::retire_active(
       identity_request, identity_effects);
+  const bool identity_refusal_had_no_effect = identity_effects.removed.empty();
+  const bool identity_refusal_had_no_journal =
+      !fs::exists(identity_chain.coordinator_root / "retirements");
+  identity_effects.reject_identity = false;
+  auto identity_retry = facman::self_maintenance::retire_active(
+      identity_request, identity_effects);
   ok &= require(!identity_result &&
                     identity_result.error().code ==
                         "self_maintenance_retirement_recovery_required" &&
-                    identity_effects.removed.empty(),
-                "retirement accepted a mismatched provider identity");
+                    identity_refusal_had_no_effect && identity_refusal_had_no_journal &&
+                    identity_retry && identity_retry.value().phase == "completed" &&
+                    identity_effects.removed.size() == 1U,
+                "retirement identity refusal entered an irreversible step");
+
+  auto foreign_preflight_chain = request(root / "retirement-foreign-preflight",
+                                         Operation::update);
+  RetirementFakeEffects foreign_preflight_effects;
+  foreign_preflight_effects.reject_foreign = true;
+  facman::self_maintenance::RetirementRequest foreign_preflight_request;
+  foreign_preflight_request.coordinator_root =
+      foreign_preflight_chain.coordinator_root;
+  foreign_preflight_request.apply = true;
+  auto foreign_preflight_result = facman::self_maintenance::retire_active(
+      foreign_preflight_request, foreign_preflight_effects);
+  ok &= require(!foreign_preflight_result &&
+                    foreign_preflight_result.error().code ==
+                        "self_setup_provider_refused" &&
+                    foreign_preflight_effects.removed.empty() &&
+                    !fs::exists(foreign_preflight_chain.coordinator_root /
+                                "retirements"),
+                "foreign uninstall plan refusal wrote a retirement intent");
 
   auto foreign_chain = request(root / "retirement-foreign", Operation::update);
   fs::create_directories(foreign_chain.coordinator_root / "retirements" /
@@ -1822,6 +1853,25 @@ int main(int argc, char **argv) {
                     foreign_effects.removed.empty(),
                 "stale or foreign retirement journal was accepted");
 
+  auto mixed_namespace_chain = request(root / "retirement-epoch-namespace",
+                                       Operation::update);
+  fs::create_directories(mixed_namespace_chain.coordinator_root /
+                         "epoch-retirements");
+  RetirementFakeEffects mixed_namespace_effects;
+  facman::self_maintenance::RetirementRequest mixed_namespace_request;
+  mixed_namespace_request.coordinator_root =
+      mixed_namespace_chain.coordinator_root;
+  mixed_namespace_request.apply = true;
+  auto mixed_namespace_result = facman::self_maintenance::retire_active(
+      mixed_namespace_request, mixed_namespace_effects);
+  ok &= require(!mixed_namespace_result &&
+                    mixed_namespace_result.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    mixed_namespace_effects.removed.empty() &&
+                    !fs::exists(mixed_namespace_chain.coordinator_root /
+                                "retirements"),
+                "flat retirement entered an orphan epoch retirement namespace");
+
   auto completed_chain = request(root / "retirement-completed", Operation::update);
   RetirementFakeEffects completed_effects;
   facman::self_maintenance::RetirementRequest completed_request;
@@ -1831,11 +1881,16 @@ int main(int argc, char **argv) {
       completed_request, completed_effects);
   auto no_active_after_retirement = facman::self_maintenance::discover_active(
       completed_chain.coordinator_root);
+  auto repeated_retirement = facman::self_maintenance::retire_active(
+      completed_request, completed_effects);
   auto retained_history = facman::self_maintenance::discover_activation_chain(
       completed_chain.coordinator_root);
   ok &= require(completed_result && completed_result.value().phase == "completed" &&
                     no_active_after_retirement &&
                     !no_active_after_retirement.value().has_value() &&
+                    repeated_retirement &&
+                    repeated_retirement.value().phase == "completed" &&
+                    completed_effects.removed.size() == 1U &&
                     retained_history && retained_history.value().has_value() &&
                     retained_history.value()->generations.size() == 1U,
                 "completed retirement did not hide active state while retaining history");
@@ -2222,8 +2277,12 @@ int main(int argc, char **argv) {
   const bool preview_wrote = fs::exists(preparation.coordinator / "epochs" /
       preparation.epoch.epoch_id / "maintenance") || preparation.effects.retain_calls != 0U;
   preparation.request.apply = true;
+  preparation.request.deadline_utc_ms = 2000000000000ULL;
   auto preparation_apply = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       preparation.request, preparation.effects);
+  // A restarted public caller may propose a later budget. The immutable
+  // handoff must keep the first deadline and the same journal identity.
+  preparation.request.deadline_utc_ms = 2000000600000ULL;
   auto preparation_retry = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       preparation.request, preparation.effects);
   auto ordinary_during_handoff = facman::self_maintenance::discover_lifecycle_epoch_active(
@@ -2246,6 +2305,8 @@ int main(int argc, char **argv) {
                     preparation_apply && preparation_retry &&
                     preparation_apply.value().journal_sha256 == preparation_retry.value().journal_sha256 &&
                     preparation_apply.value().nonce == preparation_retry.value().nonce &&
+                    preparation_apply.value().deadline_utc_ms == 2000000000000ULL &&
+                    preparation_retry.value().deadline_utc_ms == 2000000000000ULL &&
                     !ordinary_during_handoff && exact_handoff &&
                     exact_handoff.value().package == preparation_apply.value().inputs.package &&
                     !wrong_handoff_nonce && !wrong_handoff_digest &&
@@ -2256,6 +2317,7 @@ int main(int argc, char **argv) {
                         preparation_apply.value().transition.target.generation_id &&
                     pending_handoff.value()->nonce == preparation_apply.value().nonce &&
                     pending_handoff.value()->journal_sha256 == preparation_apply.value().journal_sha256 &&
+                    pending_handoff.value()->deadline_utc_ms == 2000000000000ULL &&
                     pending_handoff.value()->retained_package.package_sha256 ==
                         preparation.inspection.package_sha256 &&
                     pending_handoff.value()->retained_package.maintenance_launcher_sha256 ==
@@ -2800,11 +2862,19 @@ int main(int argc, char **argv) {
             third_prepared.error());
   auto third_active = facman::self_maintenance::discover_lifecycle_epoch_active(
       provider_continuation.coordinator);
+  auto third_lineage =
+      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+          provider_continuation.coordinator);
   auto third_completion =
       facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
           provider_continuation.coordinator);
   ok &= require(third_prepared && third_continued && third_published && third_shell &&
                     third_active && third_completion && third_completion.value() &&
+                    third_lineage && third_lineage.value().generations.size() == 4U &&
+                    third_lineage.value().generations[1].generation_id ==
+                        third_lineage.value().generations[3].generation_id &&
+                    third_lineage.value().generations[1].generation_id !=
+                        third_lineage.value().generations[2].generation_id &&
                     provider_completed &&
                     third_shell.value().generation.generation_id ==
                         provider_completed.value().transition.target.generation_id &&
