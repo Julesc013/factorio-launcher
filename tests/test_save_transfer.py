@@ -482,7 +482,7 @@ class SaveTransferTests(unittest.TestCase):
             try:
                 deadline = time.monotonic() + 10
                 while process.poll() is None and time.monotonic() < deadline:
-                    stages = list(output.glob(
+                    stages = list(workspace.glob(
                         ".facman-save-backup-*/restarted.backup.zip"
                     ))
                     if stages:
@@ -522,10 +522,11 @@ class SaveTransferTests(unittest.TestCase):
                 "--workspace", str(workspace), "workspace", "recovery", "apply",
                 transaction_id, "--json",
             ])
-            self.assertEqual(code, 0, stderr)
+            self.assertEqual(code, 0, stderr + stdout)
             self.assertEqual(
                 json.loads(stdout)["transactions"][0]["state"], "rolled_back"
             )
+            self.assertEqual(list(workspace.glob(".facman-save-backup-*")), [])
             self.assertEqual(list(output.glob(".facman-save-backup-*")), [])
             self.assertFalse(destination.exists())
             code, stdout, stderr = invoke([
@@ -590,7 +591,132 @@ class SaveTransferTests(unittest.TestCase):
             manifest = json.loads(sidecar.read_text(encoding="utf-8"))
             self.assertEqual(manifest["sha256"], hashlib.sha256(save.read_bytes()).hexdigest())
             self.assertEqual(Path(manifest["destination_path"]), destination)
+            self.assertEqual(list(workspace.glob(".facman-save-backup-*")), [])
             self.assertEqual(list(output.glob(".facman-save-backup-*")), [])
+
+    def test_backup_process_loss_during_relative_publication_resumes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            output = Path(tmp) / "output"
+            output.mkdir()
+            self.prepare(workspace)
+            save = workspace / "instances" / "source-world" / "saves" / "world.zip"
+            with zipfile.ZipFile(save, "w", compression=zipfile.ZIP_STORED) as archive:
+                archive.writestr("level-init.dat", b"ready")
+                archive.writestr("filler.bin", bytes(range(250)) * 1000)
+            destination = output / "resumed.backup.zip"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
+                "pause_during_backup_publication"
+            )
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", str(workspace), "saves",
+                 "backup", "world", "--instance", "source-world", "--to",
+                 str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                stages: list[Path] = []
+                while process.poll() is None and time.monotonic() < deadline:
+                    stages = list(output.glob(".facman-save-backup-*.staging.zip"))
+                    if stages and stages[0].stat().st_size > 0:
+                        break
+                    time.sleep(0.02)
+                self.assertIsNone(process.poll(), "backup exited before relative-copy loss")
+                self.assertEqual(len(stages), 1)
+                self.assertLess(stages[0].stat().st_size, save.stat().st_size)
+                self.assertFalse(destination.exists())
+                process.kill()
+                process.communicate(timeout=20)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            records = [
+                record for record in json.loads(stdout)["transactions"]
+                if record["command_id"] == "saves.backup"
+                and Path(record["target"]) == destination
+            ]
+            self.assertEqual(len(records), 1)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                records[0]["transaction_id"], "--json",
+            ])
+            self.assertEqual(code, 0, stderr + stdout)
+            self.assertEqual(json.loads(stdout)["transactions"][0]["state"], "complete")
+            self.assertEqual(destination.read_bytes(), save.read_bytes())
+            sidecar = json.loads(Path(str(destination) + ".manifest.json").read_text(
+                encoding="utf-8"))
+            self.assertEqual(sidecar["sha256"], hashlib.sha256(save.read_bytes()).hexdigest())
+            self.assertEqual(list(output.glob(".facman-save-backup-*.staging.zip")), [])
+            self.assertEqual(list(workspace.glob(".facman-save-backup-*")), [])
+
+    @unittest.skipIf(os.name == "nt", "not_applicable: Windows pins the directory against rename")
+    def test_backup_external_parent_swap_cannot_redirect_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            output = Path(tmp) / "output"
+            output.mkdir()
+            displaced = Path(tmp) / "original-output"
+            self.prepare(workspace)
+            save = workspace / "instances" / "source-world" / "saves" / "world.zip"
+            shutil.copyfile(SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save)
+            destination = output / "redirected.backup.zip"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
+                "pause_before_backup_publish"
+            )
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", str(workspace), "saves",
+                 "backup", "world", "--instance", "source-world", "--to",
+                 str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while process.poll() is None and time.monotonic() < deadline:
+                    if list(output.glob(".facman-save-backup-*.staging.zip")):
+                        break
+                    time.sleep(0.02)
+                self.assertIsNone(process.poll(), "backup exited before parent swap")
+                output.rename(displaced)
+                output.mkdir()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 1, stderr + stdout)
+                self.assertFalse(destination.exists())
+                self.assertFalse(Path(str(destination) + ".manifest.json").exists())
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "workspace", "recovery",
+                    "inspect", "--json",
+                ])
+                self.assertEqual(code, 0, stderr)
+                records = [
+                    record for record in json.loads(stdout)["transactions"]
+                    if record["command_id"] == "saves.backup"
+                    and Path(record["target"]) == destination
+                ]
+                self.assertEqual(len(records), 1)
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "workspace", "recovery", "apply",
+                    records[0]["transaction_id"], "--json",
+                ])
+                self.assertEqual(code, 1, stderr + stdout)
+                self.assertEqual(json.loads(stdout)["refusal"]["code"],
+                                 "recovery_backup_publication_unsafe")
+                self.assertFalse(destination.exists())
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
 
     def test_backup_refuses_run_lock_created_during_staging(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

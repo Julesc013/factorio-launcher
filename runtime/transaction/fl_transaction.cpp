@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
+#include <thread>
 
 namespace facman::transaction {
 namespace fs = std::filesystem;
@@ -218,6 +219,7 @@ std::string record_json(const Record& record)
     }
     document.add_string("commit_strategy", record.commit_strategy);
     document.add_string("operation_context", record.operation_context);
+    document.add_string("effect_parent_identity", record.effect_parent_identity);
     document.add_string("error", record.error);
     document.add_array("recovery_actions", string_array_builder(record.recovery_actions));
     return document.serialize() + "\n";
@@ -300,6 +302,7 @@ bool load_record(const fs::path& workspace, const std::string& id, Record& recor
         !object_string(document.value(), "state", state, true, detail) ||
         !object_string(document.value(), "commit_strategy", record.commit_strategy, false, detail) ||
         !object_string(document.value(), "operation_context", record.operation_context, false, detail) ||
+        !object_string(document.value(), "effect_parent_identity", record.effect_parent_identity, false, detail) ||
         !object_string(document.value(), "error", record.error, false, detail) ||
         !object_string(document.value(), "marker_nonce", record.marker_nonce, schema == "facman.transaction.v2", detail)) {
         if (detail.empty()) detail = "journal schema is unsupported";
@@ -567,6 +570,157 @@ bool complete(const fs::path& workspace, Record& record, std::string& detail)
     return advance(workspace, record, "complete", "journal_closed", detail);
 }
 
+std::string directory_effect_identity(
+    const facman::platform::StableDirectoryObject& directory)
+{
+    const auto& identity = directory.identity();
+    if (!directory.open() || !identity.exists || identity.reparse_or_link ||
+        identity.kind != facman::platform::PathObjectKind::directory)
+        return {};
+    return std::to_string(identity.device) + ":" +
+        std::to_string(identity.object);
+}
+
+bool publish_save_backup_file(
+    const fs::path& workspace, const Record& record, std::string& detail)
+{
+    if (record.command_id != "saves.backup" ||
+        record.state != State::committing ||
+        record.staging_roots.size() != 1U || record.expected_files.size() != 1U ||
+        record.effect_parent_identity.empty() ||
+        record.staging_roots.front().parent_path().lexically_normal() !=
+            workspace.lexically_normal()) {
+        detail = "backup publication lacks a held, journaled staging identity";
+        return false;
+    }
+    const fs::path staging = record.staging_roots.front();
+    const fs::path temporary = fs::path(record.expected_files.front().path.str());
+    if (temporary.empty() || temporary != temporary.filename() ||
+        staging.filename().string().rfind(".facman-save-backup-", 0) != 0 ||
+        !verify_staging_marker(record, staging, detail)) {
+        if (detail.empty()) detail = "backup staging record is unsafe";
+        return false;
+    }
+    facman::platform::StableInputFile source;
+    const auto staged = source.open_no_follow_pinned(
+        staging / record.target.filename());
+    if (!staged.ok() || !source.identity().regular_file ||
+        source.identity().link_count != 1U ||
+        source.size() != record.expected_files.front().size) {
+        detail = staged.ok() ? "backup staged source identity changed" : staged.detail;
+        return false;
+    }
+    facman::base::Sha256Hasher hasher;
+    std::vector<unsigned char> buffer(64U * 1024U);
+    for (std::uint64_t offset = 0; offset < source.size();) {
+        const auto wanted = static_cast<std::size_t>((std::min)(
+            static_cast<std::uint64_t>(buffer.size()), source.size() - offset));
+        if (source.read_at(offset, buffer.data(), wanted) != wanted) {
+            detail = "backup staged source short read";
+            return false;
+        }
+        hasher.update(buffer.data(), wanted);
+        offset += wanted;
+    }
+    if (hasher.finish() != record.expected_files.front().sha256.str() ||
+        !source.revalidate_path().ok()) {
+        detail = "backup staged source differs from its journaled digest";
+        return false;
+    }
+    facman::platform::StableDirectoryObject parent;
+    const auto opened = parent.open_no_follow_for_relative_writes(
+        record.target.parent_path());
+    if (!opened.ok()) { detail = opened.detail; return false; }
+    const auto bound_parent = [&]() {
+        return directory_effect_identity(parent) == record.effect_parent_identity &&
+            parent.revalidate().ok();
+    };
+    if (!bound_parent()) {
+        detail = "backup destination parent differs from its journaled identity";
+        return false;
+    }
+    facman::platform::StableInputFile held_temporary;
+    auto held = parent.open_child_file_no_follow_pinned(temporary, held_temporary);
+    facman::platform::DurableOutputFile output;
+    std::uint64_t offset = 0;
+    if (held.ok()) {
+        if (!held_temporary.identity().regular_file ||
+            held_temporary.identity().link_count != 1U ||
+            held_temporary.size() > source.size()) {
+            detail = "backup temporary output identity is unsafe";
+            return false;
+        }
+        offset = held_temporary.size();
+        for (std::uint64_t position = 0; position < offset;) {
+            const auto wanted = static_cast<std::size_t>((std::min)(
+                static_cast<std::uint64_t>(buffer.size()), offset - position));
+            std::vector<unsigned char> existing(wanted);
+            if (held_temporary.read_at(position, existing.data(), wanted) != wanted ||
+                source.read_at(position, buffer.data(), wanted) != wanted ||
+                !std::equal(existing.begin(), existing.end(), buffer.begin())) {
+                detail = "backup temporary output differs from its staged source";
+                return false;
+            }
+            position += wanted;
+        }
+        const auto identity = held_temporary.identity();
+        held_temporary = facman::platform::StableInputFile();
+        held = parent.reopen_child_file_no_follow_for_relative_publish(
+            temporary, identity, source.size(), output);
+        if (!held.ok()) { detail = held.detail; return false; }
+    } else {
+        facman::platform::PathIdentity existing_identity;
+        const auto inspected = facman::platform::inspect_path_no_follow(
+            record.target.parent_path() / temporary, existing_identity);
+        if (!inspected.ok() || existing_identity.exists || !bound_parent()) {
+            detail = "backup temporary output is foreign or destination changed";
+            return false;
+        }
+        const auto created = parent.create_child_file_exclusive(
+            temporary, source.size(), output);
+        if (!created.ok()) { detail = created.detail; return false; }
+    }
+    while (offset < source.size()) {
+        const auto wanted = static_cast<std::size_t>((std::min)(
+            static_cast<std::uint64_t>(buffer.size()), source.size() - offset));
+        if (source.read_at(offset, buffer.data(), wanted) != wanted) {
+            detail = "backup staged source changed during publication copy";
+            return false;
+        }
+        std::size_t written = 0;
+        while (written < wanted) {
+            const auto count = output.write_at(offset + written,
+                buffer.data() + written, wanted - written);
+            if (count == 0) {
+                detail = "backup relative publication copy was short";
+                return false;
+            }
+            written += count;
+        }
+        offset += wanted;
+        const char* fault = std::getenv("FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE");
+        if (fault != nullptr && std::string(fault) ==
+                "pause_during_backup_publication")
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+    if (!source.revalidate_path().ok() || !bound_parent()) {
+        detail = "backup source or destination changed before publication";
+        return false;
+    }
+    const char* fault = std::getenv("FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE");
+    if (fault != nullptr && std::string(fault) ==
+            "pause_before_backup_publish")
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    const auto published = output.publish_sibling_no_replace(
+        record.target.filename());
+    if (!published.ok() || !bound_parent()) {
+        detail = published.ok() ? "backup destination changed after publication" :
+            published.detail;
+        return false;
+    }
+    return true;
+}
+
 bool finalize_save_backup_sidecar(const Record& record, std::string& detail)
 {
     if (record.command_id != "saves.backup" || record.operation_context.empty() ||
@@ -608,6 +762,15 @@ bool finalize_save_backup_sidecar(const Record& record, std::string& detail)
     const auto opened = parent.open_no_follow_for_relative_writes(
         record.target.parent_path());
     if (!opened.ok()) { detail = opened.detail; return false; }
+    const auto bound_parent = [&]() {
+        return !record.effect_parent_identity.empty() &&
+            directory_effect_identity(parent) == record.effect_parent_identity &&
+            parent.revalidate().ok();
+    };
+    if (!bound_parent()) {
+        detail = "backup destination parent differs from its journaled identity";
+        return false;
+    }
     facman::platform::StableInputFile target;
     const auto pinned = parent.open_child_file_no_follow_pinned(
         record.target.filename(), target);
@@ -635,7 +798,7 @@ bool finalize_save_backup_sidecar(const Record& record, std::string& detail)
         offset += count;
     }
     if (hasher.finish() != sha256 || !target.revalidate_path().ok() ||
-        !parent.revalidate().ok()) {
+        !bound_parent()) {
         detail = "backup target digest or destination custody changed";
         return false;
     }
@@ -653,12 +816,12 @@ bool finalize_save_backup_sidecar(const Record& record, std::string& detail)
             detail = "backup sidecar changed or differs from its journal";
             return false;
         }
-        return parent.revalidate().ok();
+        return bound_parent();
     }
     facman::platform::PathIdentity sidecar_identity;
     const auto inspected = facman::platform::inspect_path_no_follow(
         sidecar, sidecar_identity);
-    if (!inspected.ok() || sidecar_identity.exists || !parent.revalidate().ok()) {
+    if (!inspected.ok() || sidecar_identity.exists || !bound_parent()) {
         detail = "backup sidecar is unsafe or destination custody changed";
         return false;
     }
@@ -671,14 +834,14 @@ bool finalize_save_backup_sidecar(const Record& record, std::string& detail)
     if (!created.ok()) { detail = created.detail; return false; }
     if (output.write_at(0, record.operation_context.data(),
             record.operation_context.size()) != record.operation_context.size() ||
-        !parent.revalidate().ok()) {
+        !bound_parent()) {
         detail = "backup sidecar staging or destination custody changed";
         (void)output.discard_open();
         return false;
     }
     const auto published = output.publish_sibling_no_replace(sidecar.filename());
     if (!published.ok()) { detail = published.detail; return false; }
-    if (!parent.revalidate().ok() || !target.revalidate_path().ok()) {
+    if (!bound_parent() || !target.revalidate_path().ok()) {
         detail = "backup destination changed after sidecar publication";
         return false;
     }
@@ -958,6 +1121,19 @@ Outcome apply(const fs::path& workspace, const std::string& id)
         (void)recovery_lock.remove_exact(ignored);
     };
     auto unlock_checked = [&]() { return recovery_lock.remove_exact(detail); };
+    if (record.command_id == "saves.backup" &&
+        record.state == State::committing && !fs::exists(record.target)) {
+        if (!publish_save_backup_file(workspace, record, detail)) {
+            unlock();
+            return Refusal {"recovery_backup_publication_unsafe",
+                "Backup publication could not be resumed safely", detail, false};
+        }
+        if (!advance(workspace, record, "committed", "backup_file_committed", detail)) {
+            unlock();
+            return Refusal {"recovery_write_refused",
+                "Recovered backup commit could not be recorded", detail, true};
+        }
+    }
     if (fs::exists(record.target)) {
         record.recovery_actions = {"preserved_committed_target"};
         bool commit_recorded = record.state == State::committed || record.state == State::audited ||
@@ -988,8 +1164,13 @@ Outcome apply(const fs::path& workspace, const std::string& id)
                     continue;
                 }
                 std::string link_detail;
-                if (staging.parent_path().lexically_normal() !=
+                const bool parent_bound =
+                    staging.parent_path().lexically_normal() ==
                         record.target.parent_path().lexically_normal() ||
+                    (record.command_id == "saves.backup" &&
+                     staging.parent_path().lexically_normal() ==
+                        workspace.lexically_normal());
+                if (!parent_bound ||
                     facman::base::path_crosses_link_or_reparse_point(staging, link_detail)) {
                     unlock();
                     return Refusal {
@@ -1072,7 +1253,13 @@ Outcome apply(const fs::path& workspace, const std::string& id)
             continue;
         }
         std::string link_detail;
-        if (staging.parent_path().lexically_normal() != record.target.parent_path().lexically_normal() ||
+        const bool parent_bound =
+            staging.parent_path().lexically_normal() ==
+                record.target.parent_path().lexically_normal() ||
+            (record.command_id == "saves.backup" &&
+             staging.parent_path().lexically_normal() ==
+                workspace.lexically_normal());
+        if (!parent_bound ||
             facman::base::path_crosses_link_or_reparse_point(staging, link_detail)) {
             unlock();
             return Refusal {"recovery_staging_unrecognized", "Recovery staging is not bound to the target parent", link_detail, false};

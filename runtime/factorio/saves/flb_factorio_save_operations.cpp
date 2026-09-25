@@ -203,7 +203,8 @@ public:
         const std::string& command,
         const fs::path& target,
         const std::vector<fs::path>& sources,
-        const std::vector<fs::path>& staging)
+        const std::vector<fs::path>& staging,
+        const std::string& effect_parent_identity = {})
     {
         tx::Record record;
         record.command_id = command;
@@ -211,6 +212,7 @@ public:
         record.sources = sources;
         record.staging_roots = staging;
         record.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+        record.effect_parent_identity = effect_parent_identity;
         auto started = tx::TransactionSession::begin(workspace, std::move(record));
         if (!started) { detail_ = started.error().message; return false; }
         session_.emplace(started.take_value());
@@ -732,14 +734,15 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
             "persistent_write_refused", "Insufficient space for a complete backup stage",
             path_string(destination.parent_path()));
     }
-    const fs::path staging = unique_staging(destination.parent_path(), ".facman-save-backup-");
+    const fs::path staging = unique_staging(workspace, ".facman-save-backup-");
     if (staging.empty()) {
         return refuse(command, request.instance_id, save.file_name,
             "save_backup_destination_unsafe", "Backup staging name cannot be reserved",
             path_string(destination.parent_path()));
     }
     OperationJournal journal;
-    if (!journal.start(workspace, command, destination, {save.path}, {staging})) {
+    if (!journal.start(workspace, command, destination, {save.path}, {staging},
+            tx::directory_effect_identity(destination_parent))) {
         return refuse(command, request.instance_id, save.file_name, "recovery_write_refused", "Backup journal preparation failed", journal.detail());
     }
     facman::archive::Status status = facman::archive::create_owned_staging_root(staging);
@@ -793,6 +796,17 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
         utc_now(), copied.sha1, copied.sha256, authority.workspace_id, copied.size,
         "pinned_source_two_pass_sha256_v1"};
     journal.record().operation_context = to_json(result) + "\n";
+    const auto temporary = tx::RelativePath::parse(
+        ".facman-save-backup-" + journal.record().transaction_id +
+        ".staging.zip");
+    const auto expected_sha256 = facman::core::Sha256Digest::parse(copied.sha256);
+    if (!temporary || !expected_sha256) {
+        return refuse(command, request.instance_id, save.file_name,
+            "recovery_write_refused", "Backup publication identity is invalid",
+            temporary ? expected_sha256.error().message : temporary.error().message);
+    }
+    journal.record().expected_files.push_back(
+        {temporary.value(), expected_sha256.value(), copied.size});
     if (!journal.checkpoint("backup_manifest_bound")) {
         return refuse(command, request.instance_id, save.file_name,
             "recovery_write_refused", "Backup manifest journal update failed",
@@ -809,10 +823,10 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
             journal.detail());
     }
     std::string commit_detail;
-    if (!tx::StagedFileCommit::commit(staging, staged, destination, commit_detail)) {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
-        journal.failed(commit_detail);
-        return refuse(command, request.instance_id, save.file_name, "persistent_write_refused", "Backup commit failed", commit_detail);
+    if (!tx::publish_save_backup_file(workspace, journal.record(), commit_detail)) {
+        return refuse(command, request.instance_id, save.file_name,
+            "transaction_recovery_required", "Backup publication requires recovery",
+            commit_detail, false);
     }
     if (!safe_destination() || !source_unchanged()) {
         return refuse(command, request.instance_id, save.file_name,

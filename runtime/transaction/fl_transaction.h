@@ -14,7 +14,7 @@
 #include <variant>
 #include <vector>
 
-namespace facman::platform { struct FileIdentity; }
+namespace facman::platform { struct FileIdentity; class StableDirectoryObject; }
 
 namespace facman::transaction {
 
@@ -82,6 +82,8 @@ struct Record {
     std::vector<ExpectedFile> expected_files;
     std::string commit_strategy;
     std::string operation_context;
+    // Bound to the held parent of an external two-file backup publication.
+    std::string effect_parent_identity;
     std::string error;
     std::vector<std::string> recovery_actions;
 };
@@ -174,6 +176,9 @@ bool fail(
     const std::string& error,
     std::string& detail);
 bool complete(const std::filesystem::path& workspace, Record& record, std::string& detail);
+std::string directory_effect_identity(const facman::platform::StableDirectoryObject& directory);
+bool publish_save_backup_file(
+    const std::filesystem::path& workspace, const Record& record, std::string& detail);
 // Complete or verify the sidecar bound to a committed saves.backup target.
 // The immutable manifest bytes are journaled before ZIP publication.
 bool finalize_save_backup_sidecar(const Record& record, std::string& detail);
