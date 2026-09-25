@@ -3244,6 +3244,10 @@ EffectResult ProviderBridge::inspect_installed(const Plan &transition) {
   return {true, false, provider_hash(identity), {}};
 }
 
+EffectResult ProviderBridge::inspect_retained_installed(const Plan &transition) {
+  return inspect_installed(transition);
+}
+
 EffectResult ProviderBridge::inspect_installed(const Plan &transition,
                                                const ProviderApplyBinding &binding) {
   if (binding.transaction_id.empty() || binding.transaction_id.size() > 128U)
