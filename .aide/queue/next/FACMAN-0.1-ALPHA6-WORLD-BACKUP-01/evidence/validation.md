@@ -59,3 +59,33 @@ save-transfer run had one path-separator-only assertion failure; after fixing
 that assertion, all 11 save-transfer tests passed. `py -3 tools/strict_check.py`
 and generated-metadata checks passed. Current source still needs a clean
 commit and exact-head hosted/package checks.
+
+## 2026-09-26 exact-head publication correction
+
+The branch now contains protected `dev` merge `3723abedf29d038eba05b8f035f857363fa32c1b`
+and commit `07f00ece1a34203b93e07491c86486d0281d44d9` by ancestry.
+Source correction `07ec71592add090bd01eea6895c595d326143418` fixes a
+real POSIX gap found by product candidate `36173342608`: a renamed external
+destination parent could receive the backup after the last pre-publication
+check. That candidate failed its Linux save-transfer CTest and was cancelled;
+it is not qualification. The correction revalidates the held source and parent
+at the publication boundary. A test-only pause marker makes the parent-swap
+case wait until that boundary, then asserts both the original and substituted
+paths contain no published ZIP or sidecar and recovery rolls back safely.
+
+- Windows Debug CLI: `cmake --build .../native-developer --config Debug --target
+  facman_cli --parallel 8`, then `ctest --test-dir .../native-developer -C Debug
+  --output-on-failure -R ^facman_save_transfer_product$`: PASS, 16 cases,
+  including one POSIX-only skip.
+- Ubuntu 24.04 WSL CLI with exact locked local provider checkouts: `cmake
+  --build .../native-linux --target facman_cli --parallel 8`, then `ctest
+  --test-dir .../native-linux --output-on-failure -R
+  ^facman_save_transfer_product$`: PASS, 16 cases including the 2-second
+  publication pause and parent swap.
+- `py -3 tools/strict_check.py`, `git diff --check`, and AIDE compact commit
+  check: PASS. The optional pause signal uses the existing base atomic writer,
+  so the critical-I/O architecture check remains clean.
+- [Product candidate 36175342699](https://github.com/Julesc013/factorio-launcher/actions/runs/36175342699)
+  was dispatched at source correction `07ec7159`, then cancellation was
+  requested before the evidence update. The final combined-head candidate
+  still has to be run; this local evidence is not package qualification.
