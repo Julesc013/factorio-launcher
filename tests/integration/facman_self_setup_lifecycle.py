@@ -1500,6 +1500,7 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         registry = inspect_registry_64()
         observations.append({
             "phase": phase,
+            "observed_install_root": str(observed_root),
             "shortcut": shortcut,
             "registry": registry,
             "journal": journal_observation(observed_root),
@@ -1921,7 +1922,9 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                 "commands": REAL_COMMANDS,
                 "observations": observations,
                 "registry_view": "64-bit",
-                "retained_final_state": "chain retirement completed through public setup",
+                "retained_final_state": (
+                    "flat and real-epoch retirement completed through public setup"
+                ),
             }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         except BaseException as persistence_error:
             note = f"NOTE: real self-maintenance evidence persistence failed: {persistence_error!r}"
@@ -2166,8 +2169,11 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
 
         foreign = install / "operator-note.txt"
         foreign.write_text("retain\n", encoding="utf-8")
+        retirement_root = state_root.parent / "setup-coordinator.v1" / "epoch-retirements"
         before_refusal = {"foreign_sha256": sha256_path(foreign), "shortcut": shortcut,
-                          "registry": registry}
+                          "registry": registry, "journals": journal_observation(install),
+                          "retirement_exists": retirement_root.exists(),
+                          "retirement_state": tree_snapshot(retirement_root)}
         refusal = invoke(executable, "uninstall", *common, expected=4, shell_integration=True,
                          noninteractive=True)
         after_shortcut, after_registry = observe("foreign_uninstall_refusal")
@@ -2177,7 +2183,10 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
                 "foreign_content_review_required" not in str(refusal_error.get("detail")) or \
                 not foreign.is_file() or \
                 before_refusal["foreign_sha256"] != sha256_path(foreign) or \
-                after_shortcut != shortcut or after_registry != registry:
+                after_shortcut != shortcut or after_registry != registry or \
+                journal_observation(install) != before_refusal["journals"] or \
+                retirement_root.exists() != before_refusal["retirement_exists"] or \
+                tree_snapshot(retirement_root) != before_refusal["retirement_state"]:
             raise AssertionError("foreign-file uninstall did not return the exact refusal or preserve its fixture")
         preserved_foreign = root / "foreign-preserved-after-refusal.txt"
         foreign.rename(preserved_foreign)

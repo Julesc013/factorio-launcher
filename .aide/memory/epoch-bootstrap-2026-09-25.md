@@ -243,3 +243,35 @@ checkpoint, not product qualification or authority to publish.
   carries the validated permit through that exact resolver mapping, and the
   real current-user test binds its repair permit to the logical CLI root.
   This correction still requires a produced-package result.
+- Candidate `36087467973` at `596dfda2` reached the first interrupted
+  successor install but the low-level reservation guard read the user-wide
+  coordinator rather than the selected provider state's lifecycle history.
+  Commit `c12c6cb1` checks the local lifecycle reservation while retaining
+  the user-wide Setup effect lock. Candidate `36088824254` at that commit
+  passed Linux/macOS package jobs and Windows native/portable/resource checks,
+  then reached `files_applied`; retry was misrouted to first-epoch bootstrap
+  because the retired logical root retained a legacy descriptor.
+- Commit `91bb5d15` keeps published successor retries on the successor route.
+  Static inspection found a second post-Setup fallthrough into first-epoch
+  bootstrap; commit `96cbd8e9` gates that block to non-successor installs.
+  Candidate `36090196261` is the first dispatched package run including both
+  retry corrections and the new source-distinct real-epoch journey. No
+  success receipt exists yet for the corrected resume or external transition.
+- The new journey starts ordinary Alpha.6 Setup from its own overlay, requires
+  a real genesis epoch, downgrades through its installed helper to the exact
+  Alpha.5 package, reapplies Alpha.6, and retires the epoch. It is expected
+  to expose the still-open retained-generation reapply limitation: epoch
+  preparation currently requires an absent target, and public epoch rollback
+  still refuses. Do not mark maintenance complete until that behavior and
+  interruption/restart are implemented and qualified from produced packages.
+- Candidate `36090196261` at `96cbd8e9` passed Linux/macOS package jobs and
+  Windows native/portable/resource checks. The produced Windows current-user
+  journey passed interrupted successor resume, repeated successor installs,
+  and repair. Its foreign-file uninstall check failed. The retained resource
+  artifact contains `real current-user integration/windows-real-current-user-
+  integration.v1.json`: the foreign note remained and native integration was
+  unchanged, but Setup wrote another journal before provider apply refused
+  with `self_maintenance_retirement_recovery_required`. The planned preflight
+  did not inventory unknown files. The current working correction verifies
+  each generation read-only in retirement preflight and at effect-boundary
+  reinspection, returning `foreign_content_review_required` before intent.

@@ -3198,6 +3198,73 @@ public:
           {"self_maintenance_provider_identity_ambiguous",
            "provider installed identity does not exactly bind the generation",
            inspected ? generation.install_id : inspected.error().detail});
+    // Uninstall planning does not inventory foreign content. Verify the
+    // complete installed root before retirement writes its first intent, and
+    // again at each effect edge through this same inspection callback.
+    facman::self_setup::Request verification;
+    verification.operation = facman::self_setup::Operation::verify;
+    verification.install_id = generation.install_id;
+    verification.state_root = generation.state_root;
+    verification.acceptance_root = generation.acceptance_root;
+    auto verified = facman::self_setup::execute(verification);
+    auto report = verified
+        ? facman::core::json::parse(verified.value().provider_json)
+        : facman::core::Result<facman::core::json::Value>::failure(
+              verified.error());
+    const auto field_equals = [](const facman::core::json::Value *object,
+                                 const char *name,
+                                 const std::string &expected) {
+      const auto *field = object != nullptr && object->is_object()
+          ? object->find(name) : nullptr;
+      if (field == nullptr) return false;
+      auto value = field->string_value();
+      return value && value.value() == expected;
+    };
+    const auto *envelope = report ? &report.value() : nullptr;
+    const auto *response_error = envelope != nullptr && envelope->is_object()
+        ? envelope->find("error") : nullptr;
+    const auto *payload = envelope != nullptr && envelope->is_object()
+        ? envelope->find("payload") : nullptr;
+    const auto *unknown = payload != nullptr && payload->is_object()
+        ? payload->find("unknown_paths") : nullptr;
+    const auto *summary = payload != nullptr && payload->is_object()
+        ? payload->find("summary") : nullptr;
+    const auto *unknown_count = summary != nullptr && summary->is_object()
+        ? summary->find("unknown_paths") : nullptr;
+    const auto *report_digest = payload != nullptr && payload->is_object()
+        ? payload->find("report_digest") : nullptr;
+    const auto digest = report_digest != nullptr
+        ? report_digest->string_value()
+        : facman::core::Result<std::string>::failure(
+              {"self_maintenance_provider_identity_ambiguous",
+               "verification report digest is absent", {}});
+    const auto count = unknown_count != nullptr
+        ? unknown_count->unsigned_integer_value()
+        : facman::core::Result<std::uint64_t>::failure(
+              {"self_maintenance_provider_identity_ambiguous",
+               "verification summary is absent", {}});
+    if (!verified || verified.value().operation != "verify" ||
+        verified.value().phase != "receipt" ||
+        !field_equals(envelope, "schema", "usk.command_response.v1") ||
+        !field_equals(envelope, "status", "ok") ||
+        response_error == nullptr || !response_error->is_null() ||
+        !field_equals(payload, "schema", "usk.verification_report.v1") ||
+        !field_equals(payload, "install_id", generation.install_id) ||
+        (!field_equals(payload, "status", "pass") &&
+         !field_equals(payload, "status", "fail")) ||
+        !digest || !lowercase_hex_64(digest.value()) ||
+        unknown == nullptr || !unknown->is_array() || !count ||
+        count.value() != unknown->size())
+      return facman::core::Result<void>::failure(
+          {"self_maintenance_provider_identity_ambiguous",
+           "provider verification could not inventory the generation before retirement",
+           verified ? "installed.verify returned an incompatible report"
+                    : verified.error().code + ": " + verified.error().message});
+    if (unknown->size() != 0U)
+      return facman::core::Result<void>::failure(
+          {"self_setup_provider_refused",
+           "foreign content requires review before uninstall",
+           "foreign_content_review_required"});
     facman::self_setup::Request preview;
     preview.operation = facman::self_setup::Operation::uninstall;
     preview.install_id = generation.install_id;
