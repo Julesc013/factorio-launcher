@@ -189,7 +189,8 @@ FacMan-<version>-linux-x64-setup.run
 ```
 
 The self-contained RUN package defaults to current-user paths and requires no
-administrator rights:
+administrator rights. It embeds a gzip runtime payload, so installation does
+not require the zstd build tool used for the portable archive:
 
 ```text
 ~/.local/opt/facman/
@@ -200,6 +201,13 @@ administrator rights:
 
 It supports `install`, `verify`, `repair`, and `uninstall`, stores
 installed-state and receipts, and preserves workspaces and Factorio data.
+Verification requires the exact active generation and its installed-state
+receipt; a missing generation is a failure. Maintenance refuses a changed
+`current` pointer, linked effect roots, or foreign terminal/desktop entries
+before removal. First install also refuses preexisting native entries without
+installed ownership state. It replaces its maintenance copy, desktop entry, and state
+receipt through sibling temporary files so hardlinked external content is not
+rewritten in place. Source-distinct Linux update recovery remains an Alpha.6 gate.
 
 ## Current limits
 

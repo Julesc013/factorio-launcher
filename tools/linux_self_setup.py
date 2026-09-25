@@ -7,10 +7,13 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import os
+import shutil
 import subprocess
+import tempfile
 import tomllib
 from pathlib import Path
 
@@ -71,6 +74,8 @@ done
 
 case "$install_root" in
   ''|'/'|"$HOME") echo 'refusing unsafe install root' >&2; exit 3 ;;
+  /*) ;;
+  *) echo 'install root must be an absolute path' >&2; exit 3 ;;
 esac
 
 generation="$install_root/generations/$version"
@@ -79,6 +84,13 @@ state="$install_root/state"
 maintenance="$install_root/maintenance"
 user_bin="${HOME}/.local/bin"
 desktop_root="${HOME}/.local/share/applications"
+
+for protected_root in "$install_root" "$install_root/generations" "$state" "$maintenance" "$user_bin" "$desktop_root"; do
+  if [ -L "$protected_root" ]; then
+    echo 'refusing setup through a linked FacMan effect root' >&2
+    exit 3
+  fi
+done
 
 payload_line=$(awk '/^__FACMAN_PAYLOAD_BELOW__$/ { print NR + 1; exit }' "$0")
 [ -n "$payload_line" ] || { echo 'embedded payload marker is missing' >&2; exit 4; }
@@ -117,8 +129,91 @@ assert_owned_generation() {
   rm -f "$actual" "$expected"
 }
 
+assert_active_generation() {
+  receipt="$state/installed-state.v1.json"
+  expected_receipt=$(printf '{"schema":"facman.installed_state.v1","version":"%s","generation":"%s","workspace_preserved":true}' "$version" "$generation")
+  if [ ! -f "$receipt" ] || [ -L "$receipt" ] ||
+     [ "$(cat "$receipt")" != "$expected_receipt" ]; then
+    echo 'refusing maintenance without this exact FacMan installed state' >&2
+    return 1
+  fi
+  if [ ! -L "$current" ] || [ "$(readlink "$current")" != "$generation" ]; then
+    echo 'refusing maintenance when the active generation is foreign or changed' >&2
+    return 1
+  fi
+}
+
+assert_existing_install_owner() {
+  receipt="$state/installed-state.v1.json"
+  if [ ! -e "$current" ] && [ ! -L "$current" ] &&
+     [ ! -e "$receipt" ] && [ ! -L "$receipt" ]; then
+    return 0
+  fi
+  if [ ! -L "$current" ] || [ ! -f "$receipt" ] || [ -L "$receipt" ]; then
+    echo 'refusing install over incomplete or foreign FacMan state' >&2
+    return 1
+  fi
+  old_target=$(readlink "$current")
+  case "$old_target" in
+    "$install_root/generations/"*) ;;
+    *) echo 'refusing install over foreign active generation' >&2; return 1 ;;
+  esac
+  old_version=${old_target##*/}
+  if [ -z "$old_version" ] ||
+     [ "$old_target" != "$install_root/generations/$old_version" ] ||
+     [ ! -d "$old_target" ] || [ -L "$old_target" ]; then
+    echo 'refusing install over ambiguous active generation' >&2
+    return 1
+  fi
+  expected_receipt=$(printf '{"schema":"facman.installed_state.v1","version":"%s","generation":"%s","workspace_preserved":true}' "$old_version" "$old_target")
+  if [ "$(cat "$receipt")" != "$expected_receipt" ]; then
+    echo 'refusing install over changed FacMan installed state' >&2
+    return 1
+  fi
+  assert_owned_generation "$old_target"
+}
+
+assert_native_integration_owned() {
+  for name in facman FacMan; do
+    link="$user_bin/$name"
+    if [ -e "$link" ] || [ -L "$link" ]; then
+      if { [ "$operation" = 'install' ] && [ ! -L "$current" ]; } ||
+         [ ! -L "$link" ] || [ "$(readlink "$link")" != "$current/$name" ]; then
+        echo 'refusing foreign FacMan terminal link' >&2
+        return 1
+      fi
+    fi
+  done
+  desktop="$desktop_root/facman.desktop"
+  if [ -e "$desktop" ] || [ -L "$desktop" ]; then
+    expected_desktop=$(printf '[Desktop Entry]\nType=Application\nName=FacMan\nComment=Manage Factorio installations and isolated instances\nExec=%s/FacMan\nTerminal=false\nCategories=Game;Utility;\n' "$current")
+    if { [ "$operation" = 'install' ] && [ ! -L "$current" ]; } ||
+       [ ! -f "$desktop" ] || [ -L "$desktop" ] ||
+       [ "$(cat "$desktop")" != "$expected_desktop" ]; then
+      echo 'refusing foreign FacMan desktop entry' >&2
+      return 1
+    fi
+  fi
+}
+
+assert_setup_copy_safe() {
+  setup_copy="$maintenance/FacManSetup.run"
+  if [ -e "$setup_copy" ] || [ -L "$setup_copy" ]; then
+    if [ ! -f "$setup_copy" ] || [ -L "$setup_copy" ] ||
+       { [ "$operation" = 'install' ] && [ ! -L "$current" ]; } ||
+       { [ "$operation" = 'repair' ] && ! cmp -s "$0" "$setup_copy"; }; then
+      echo 'refusing a foreign or changed FacMan setup copy' >&2
+      return 1
+    fi
+  fi
+}
+
 if [ "$operation" = 'verify' ]; then
-  [ -d "$generation" ] && verify_generation "$generation"
+  assert_active_generation
+  [ -d "$generation" ] && [ ! -L "$generation" ] && verify_generation "$generation" || {
+    echo 'FacMan active generation is missing or damaged' >&2
+    exit 1
+  }
   echo "FacMan $version verified"
   exit 0
 fi
@@ -128,25 +223,39 @@ if [ "$operation" = 'uninstall' ]; then
     echo "Plan: remove FacMan $version application files from $install_root; preserve all workspaces."
     exit 0
   fi
-  if [ -e "$generation" ]; then
+  assert_active_generation
+  assert_native_integration_owned
+  if [ -e "$generation" ] || [ -L "$generation" ]; then
     assert_owned_generation "$generation"
   fi
-  for link in "$user_bin/facman" "$user_bin/FacMan"; do
+  setup_copy="$maintenance/FacManSetup.run"
+  if [ -e "$setup_copy" ] || [ -L "$setup_copy" ]; then
+    if [ ! -f "$setup_copy" ] || [ -L "$setup_copy" ] ||
+       ! cmp -s "$0" "$setup_copy"; then
+      echo 'refusing to remove a changed FacMan setup copy' >&2
+      exit 1
+    fi
+  fi
+  for name in facman FacMan; do
+    link="$user_bin/$name"
     if [ -L "$link" ]; then
-      target=$(readlink "$link" || true)
-      case "$target" in "$install_root"/*) rm -f "$link" ;; esac
+      rm -f "$link"
     fi
   done
   desktop="$desktop_root/facman.desktop"
-  if [ -f "$desktop" ] && grep -Fq "$install_root" "$desktop"; then rm -f "$desktop"; fi
+  if [ -f "$desktop" ]; then rm -f "$desktop"; fi
   rm -f "$current"
-  if [ -e "$generation" ]; then
+  if [ -e "$generation" ] || [ -L "$generation" ]; then
     rm -rf "$generation"
   fi
-  rm -f "$maintenance/FacManSetup.run" "$state/installed-state.v1.json"
+  rm -f "$setup_copy" "$state/installed-state.v1.json"
   rmdir "$maintenance" "$state" "$install_root/generations" "$install_root" 2>/dev/null || true
   echo "FacMan $version uninstalled; workspaces were not touched"
   exit 0
+fi
+
+if [ "$operation" = 'repair' ]; then
+  assert_active_generation
 fi
 
 if [ "$apply" != 'true' ] && [ -t 0 ]; then
@@ -160,16 +269,23 @@ if [ "$apply" != 'true' ]; then
   exit 0
 fi
 
+if [ "$operation" = 'install' ]; then
+  assert_existing_install_owner
+fi
+assert_native_integration_owned
+assert_setup_copy_safe
+
 temporary=$(mktemp -d "${TMPDIR:-/tmp}/facman-setup.XXXXXX")
-trap 'rm -rf "$temporary"' EXIT HUP INT TERM
-payload="$temporary/payload.tar.zst"
+active_staging=''
+trap 'rm -rf "$temporary"; if [ -n "$active_staging" ]; then rm -f "$active_staging"; fi' EXIT HUP INT TERM
+payload="$temporary/payload.tar.gz"
 tail -n "+$payload_line" "$0" > "$payload"
 printf '%s  %s\n' "$payload_sha256" "$payload" | sha256sum -c - >/dev/null
-tar --zstd -xf "$payload" -C "$temporary"
+tar -zxf "$payload" -C "$temporary"
 source_root="$temporary/FacMan-$version"
 verify_generation "$source_root"
 
-if [ -e "$generation" ]; then
+if [ -e "$generation" ] || [ -L "$generation" ]; then
   assert_owned_generation "$generation"
 fi
 mkdir -p "$install_root/generations" "$maintenance" "$state" "$user_bin" "$desktop_root"
@@ -177,16 +293,20 @@ staging="$install_root/generations/.install-$version-$$"
 rm -rf "$staging"
 cp -a "$source_root" "$staging"
 verify_generation "$staging"
-if [ -e "$generation" ]; then
+if [ -e "$generation" ] || [ -L "$generation" ]; then
   rm -rf "$generation"
 fi
 mv "$staging" "$generation"
 ln -sfn "$generation" "$current"
 ln -sfn "$current/facman" "$user_bin/facman"
 ln -sfn "$current/FacMan" "$user_bin/FacMan"
-cp "$0" "$maintenance/FacManSetup.run"
-chmod 0755 "$maintenance/FacManSetup.run"
-cat > "$desktop_root/facman.desktop" <<EOF
+active_staging=$(mktemp "$maintenance/.FacManSetup.run.XXXXXX")
+cp "$0" "$active_staging"
+chmod 0755 "$active_staging"
+mv -fT "$active_staging" "$maintenance/FacManSetup.run"
+active_staging=''
+active_staging=$(mktemp "$desktop_root/.facman.desktop.XXXXXX")
+cat > "$active_staging" <<EOF
 [Desktop Entry]
 Type=Application
 Name=FacMan
@@ -195,9 +315,15 @@ Exec=$current/FacMan
 Terminal=false
 Categories=Game;Utility;
 EOF
-cat > "$state/installed-state.v1.json" <<EOF
+chmod 0644 "$active_staging"
+mv -fT "$active_staging" "$desktop_root/facman.desktop"
+active_staging=''
+active_staging=$(mktemp "$state/.installed-state.v1.json.XXXXXX")
+cat > "$active_staging" <<EOF
 {"schema":"facman.installed_state.v1","version":"$version","generation":"$generation","workspace_preserved":true}
 EOF
+mv -fT "$active_staging" "$state/installed-state.v1.json"
+active_staging=''
 verify_generation "$generation"
 [ "$quiet" = 'true' ] || echo "FacMan $version installed for the current user"
 exit 0
@@ -215,7 +341,17 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
         raise ValueError(f"unexpected Linux portable input: {portable.name}")
     output.mkdir(parents=True, exist_ok=True)
     setup = output / f"FacMan-{version}-linux-x64-setup.run"
-    setup.write_bytes(header(version, sha256(portable)) + portable.read_bytes())
+    with tempfile.TemporaryDirectory(prefix="facman-linux-setup-", dir=output) as temporary:
+        raw = Path(temporary) / "payload.tar"
+        compressed = Path(temporary) / "payload.tar.gz"
+        with raw.open("wb") as stream:
+            subprocess.run(["zstd", "-d", "--stdout", str(portable)],
+                           stdout=stream, check=True)
+        with raw.open("rb") as source, compressed.open("wb") as destination:
+            with gzip.GzipFile(filename="", mode="wb", fileobj=destination,
+                               compresslevel=9, mtime=0) as stream:
+                shutil.copyfileobj(source, stream)
+        setup.write_bytes(header(version, sha256(compressed)) + compressed.read_bytes())
     setup.chmod(0o755)
     record = {
         "schema": "facman.linux_self_setup.v1",
@@ -230,6 +366,7 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
             "filename": setup.name,
             "bytes": setup.stat().st_size,
             "sha256": sha256(setup),
+            "embedded_compression": "gzip",
             "self_contained": True,
             "offline": True,
             "default_scope": "per_user_non_administrator",
