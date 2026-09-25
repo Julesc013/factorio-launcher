@@ -3251,10 +3251,13 @@ public:
         !field_equals(payload, "schema", "usk.verification_report.v1") ||
         !field_equals(payload, "install_id", generation.install_id) ||
         (!field_equals(payload, "status", "pass") &&
+         !field_equals(payload, "status", "warn") &&
          !field_equals(payload, "status", "fail")) ||
         !digest || !lowercase_hex_64(digest.value()) ||
         unknown == nullptr || !unknown->is_array() || !count ||
-        count.value() != unknown->size())
+        count.value() != unknown->size() ||
+        (field_equals(payload, "status", "pass") && unknown->size() != 0U) ||
+        (field_equals(payload, "status", "warn") && unknown->size() == 0U))
       return facman::core::Result<void>::failure(
           {"self_maintenance_provider_identity_ambiguous",
            "provider verification could not inventory the generation before retirement",
