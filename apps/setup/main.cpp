@@ -3880,6 +3880,8 @@ int wmain(int argc, wchar_t **argv) {
     request.qualification_claims = qualification_interrupt->claims;
     if (successor_plan.has_value())
       request.qualification_claims->install_root = request.install_root;
+    if (active_repair_generation.has_value())
+      request.qualification_claims->install_root = request.install_root;
   }
   if (successor_plan.has_value() && options.apply) {
     const fs::path coordinator_root =

@@ -2022,7 +2022,8 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         if damaged.get("provider", {}).get("payload", {}).get("status") != "fail":
             raise AssertionError("real-mode owned damage was not detected")
         repair_permit = qualification_permit(
-            root, "provider_plan_reviewed", "repair", version, install, state_root
+            root, "provider_plan_reviewed", "repair", version,
+            logical_install, state_root
         )
         interrupted_repair = invoke(
             executable, "repair", "--package", payload, *common, expected=4,

@@ -237,3 +237,9 @@ checkpoint, not product qualification or authority to publish.
   `plan`, and reserved-epoch validation must run only for apply: previews do
   not publish a reservation. The next correction moves the helper and fixes
   both preview conditions before another package run.
+- A further installed-use audit found qualification permits for public repair
+  are validated against the user's logical root before the authoritative
+  resolver selects the physical active epoch root. The Setup request now
+  carries the validated permit through that exact resolver mapping, and the
+  real current-user test binds its repair permit to the logical CLI root.
+  This correction still requires a produced-package result.
