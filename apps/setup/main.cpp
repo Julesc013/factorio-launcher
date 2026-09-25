@@ -3217,6 +3217,26 @@ public:
               "self_maintenance_provider_identity_ambiguous",
               "provider uninstall preview did not return a plan",
               generation.install_id});
+    if (active && options_.shell_integration) {
+      const facman::self_setup::NativeContext context{
+          facman::self_setup::Operation::uninstall,
+          generation.install_root, generation.state_root,
+          generation.acceptance_root,
+          generation.state_root / "repair-sources" /
+              facman::platform::path_from_utf8(
+                  generation.package_sha256 + ".zip"),
+          generation.product_version};
+      for (const auto effect : {facman::self_setup::NativeEffect::shortcut,
+                                facman::self_setup::NativeEffect::registration}) {
+        const auto ownership = native_effects_.inspect(context, effect);
+        if (ownership != facman::self_setup::NativeOwnership::owned &&
+            ownership != facman::self_setup::NativeOwnership::absent)
+          return facman::core::Result<void>::failure(
+              {"self_maintenance_provider_identity_ambiguous",
+               "active Windows integration is foreign or unreadable before retirement",
+               generation.install_id});
+      }
+    }
     return facman::core::Result<void>::success();
   }
 

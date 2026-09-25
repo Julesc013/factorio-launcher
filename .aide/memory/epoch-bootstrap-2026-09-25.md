@@ -36,6 +36,17 @@ checkpoint, not product qualification or authority to publish.
   for epoch cutover. Strict maintenance metadata is still inspected before
   provider effects. The produced shell-integrated candidate must provide the
   bootstrap proof; the static no-shell package test cannot substitute for it.
+- The next local change preflights every provider uninstall plan and active
+  native identity under the coordinator lock before writing the first epoch
+  retirement intent. A foreign file can then refuse a fresh retirement
+  without entering an irreversible step; each step is inspected again at its
+  effect boundary. This change is syntax-checked but not yet hosted-verified.
+- Source-exact product candidate `36078990622` at `b8a8b443` passed its Linux
+  and Intel macOS jobs but failed Windows in the native test stage, before
+  produced-package installation. The synthetic epoch pre-handoff CLI fixture
+  still expected the old unsupported verify/uninstall codes; real authority
+  selection now reaches provider inspection and refuses the fixture's missing
+  epoch provider state. The working test checks that typed no-effect refusal.
 
 ## Branch and integrated baseline
 

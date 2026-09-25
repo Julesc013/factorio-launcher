@@ -345,6 +345,7 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
   std::vector<std::string> inspected;
   std::vector<std::string> removed;
   bool reject_identity = false;
+  bool reject_foreign = false;
   bool interrupt_active = false;
 
   facman::core::Result<void> inspect_retirement_generation(
@@ -354,6 +355,9 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
     if (reject_identity)
       return facman::core::Result<void>::failure(
           {"provider_identity_mismatch", "different install identity", {}});
+    if (reject_foreign)
+      return facman::core::Result<void>::failure(
+          {"self_setup_provider_refused", "foreign_content_review_required", {}});
     return facman::core::Result<void>::success();
   }
 
@@ -1803,16 +1807,36 @@ int main(int argc, char **argv) {
   auto identity_result = facman::self_maintenance::retire_active(
       identity_request, identity_effects);
   const bool identity_refusal_had_no_effect = identity_effects.removed.empty();
+  const bool identity_refusal_had_no_journal =
+      !fs::exists(identity_chain.coordinator_root / "retirements");
   identity_effects.reject_identity = false;
   auto identity_retry = facman::self_maintenance::retire_active(
       identity_request, identity_effects);
   ok &= require(!identity_result &&
                     identity_result.error().code ==
                         "self_maintenance_retirement_recovery_required" &&
-                    identity_refusal_had_no_effect &&
+                    identity_refusal_had_no_effect && identity_refusal_had_no_journal &&
                     identity_retry && identity_retry.value().phase == "completed" &&
                     identity_effects.removed.size() == 1U,
                 "retirement identity refusal entered an irreversible step");
+
+  auto foreign_preflight_chain = request(root / "retirement-foreign-preflight",
+                                         Operation::update);
+  RetirementFakeEffects foreign_preflight_effects;
+  foreign_preflight_effects.reject_foreign = true;
+  facman::self_maintenance::RetirementRequest foreign_preflight_request;
+  foreign_preflight_request.coordinator_root =
+      foreign_preflight_chain.coordinator_root;
+  foreign_preflight_request.apply = true;
+  auto foreign_preflight_result = facman::self_maintenance::retire_active(
+      foreign_preflight_request, foreign_preflight_effects);
+  ok &= require(!foreign_preflight_result &&
+                    foreign_preflight_result.error().code ==
+                        "self_setup_provider_refused" &&
+                    foreign_preflight_effects.removed.empty() &&
+                    !fs::exists(foreign_preflight_chain.coordinator_root /
+                                "retirements"),
+                "foreign uninstall plan refusal wrote a retirement intent");
 
   auto foreign_chain = request(root / "retirement-foreign", Operation::update);
   fs::create_directories(foreign_chain.coordinator_root / "retirements" /

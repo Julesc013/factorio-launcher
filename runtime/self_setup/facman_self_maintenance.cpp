@@ -6731,6 +6731,32 @@ facman::core::Result<RetirementResponse> retire_active(
         "activation chain changed before retirement could begin"));
   const ActivationChain chain = *current.value();
   const auto steps = retirement_steps(chain);
+  std::error_code preflight_status;
+  const bool existing_journal = fs::exists(directory, preflight_status);
+  if (preflight_status)
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal could not be observed before preflight",
+        preflight_status.message()));
+  if (!existing_journal) {
+    // A foreign file in any retained generation must refuse the entire
+    // uninstall before the first durable retirement intent or provider effect.
+    // Per-step inspection below still revalidates at the actual effect edge.
+    for (const auto &step : steps) {
+      auto ready = require_authority();
+      if (!ready)
+        return facman::core::Result<RetirementResponse>::failure(ready.error());
+      auto inspected = effects.inspect_retirement_generation(
+          step.generation, step.active, coordinator_lock);
+      if (!inspected)
+        return facman::core::Result<RetirementResponse>::failure(
+            inspected.error().code == "self_setup_provider_refused"
+                ? inspected.error()
+                : failure("self_maintenance_retirement_recovery_required",
+                    "provider or native identity is ambiguous before retirement",
+                    inspected.error().code + ": " + inspected.error().message));
+    }
+  }
   const fs::path retirement_root = request.coordinator_root /
       (request.epoch_mode ? "epoch-retirements" : "retirements");
   std::error_code status;

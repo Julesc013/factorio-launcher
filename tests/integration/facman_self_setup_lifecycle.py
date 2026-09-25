@@ -900,8 +900,10 @@ def epoch_prehandoff_cli_controls(
     )
     if (not isinstance(expected_install_id, str) or
             epoch_verify.get("error", {}).get("code") !=
-            "self_maintenance_active_generation_unsupported" or
-            epoch_verify.get("error", {}).get("detail") != expected_install_id or
+            "self_maintenance_active_generation_unavailable" or
+            not epoch_verify.get("error", {}).get("detail", "").startswith(
+                expected_install_id
+            ) or
             epoch_repair.get("error", {}).get("code") !=
             "self_maintenance_active_generation_unavailable" or
             not epoch_repair.get("error", {}).get("detail", "").startswith(
@@ -922,10 +924,10 @@ def epoch_prehandoff_cli_controls(
         expected=4,
     )
     if (epoch_uninstall.get("error", {}).get("code") !=
-            "self_maintenance_epoch_operation_unsupported" or
+            "self_maintenance_retirement_recovery_required" or
             tree_snapshot(case) != before_epoch_uninstall):
         raise AssertionError(
-            "authoritative epoch uninstall did not refuse before flat retirement"
+            "epoch uninstall did not refuse an unproven provider identity"
         )
 
     preview_permit = maintenance_qualification_permit(
