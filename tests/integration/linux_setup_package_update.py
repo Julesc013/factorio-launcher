@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -66,12 +67,20 @@ def main() -> int:
             )
         return result.stdout.strip()
 
+    def assert_installed_version(label: str, version: str, revision: str) -> None:
+        output = run(label, install / "current/facman", "--version")
+        if version not in output:
+            raise SystemExit(f"{label}: installed executable reported the wrong version")
+        if re.fullmatch(r"[0-9a-f]{40}", revision) and f"revision {revision}" not in output:
+            raise SystemExit(f"{label}: installed executable reported the wrong source")
+
     old_version = run("previous-version", previous, "--version")
     new_version = run("candidate-version", candidate, "--version")
     if old_version == new_version:
         raise SystemExit("package update requires distinct product versions")
     install = home / ".local/opt/facman"
     current = install / "current"
+    installed_setup = install / "maintenance/FacManSetup.run"
     workspace = home / "Factorio Worlds"
     workspace.mkdir()
     sentinel = workspace / "world.zip"
@@ -80,27 +89,40 @@ def main() -> int:
 
     run("install-previous", previous, "install", "--yes", "--quiet")
     run("verify-previous", previous, "verify")
-    if run("execute-previous", install / "current/facman", "--version") != old_version:
-        raise SystemExit("installed previous executable reported the wrong version")
+    assert_installed_version("execute-previous", old_version, args.previous_source_revision)
     run("interrupt-update", candidate, "install", "--yes", "--quiet", interrupted=True)
     if not (install / "state/update-pending.v1").is_dir():
         raise SystemExit("interrupted update did not retain its recovery journal")
-    run("recover-update", candidate, "recover", "--yes")
+    if sha256(installed_setup) != sha256(candidate):
+        raise SystemExit("interrupted update did not retain the new Setup package")
+    run("recover-update-from-installed-setup", installed_setup, "recover", "--yes")
+    if sha256(installed_setup) != sha256(previous):
+        raise SystemExit("recovery did not restore the previous Setup package")
     run("verify-recovered-previous", previous, "verify")
-    if run("execute-recovered-previous", install / "current/facman", "--version") != old_version:
-        raise SystemExit("recovered executable reported the wrong version")
+    assert_installed_version("execute-recovered-previous", old_version,
+                             args.previous_source_revision)
 
     run("install-candidate", candidate, "install", "--yes", "--quiet")
     run("verify-candidate", candidate, "verify")
-    if run("execute-candidate", install / "current/facman", "--version") != new_version:
-        raise SystemExit("installed candidate executable reported the wrong version")
-    run("repair-candidate", candidate, "repair", "--yes", "--quiet")
+    assert_installed_version("execute-candidate", new_version, args.candidate_source_revision)
+    if sha256(installed_setup) != sha256(candidate):
+        raise SystemExit("completed update did not install the candidate Setup package")
+    run("repair-candidate-from-installed-setup", installed_setup,
+        "repair", "--yes", "--quiet")
     run("verify-repaired-candidate", candidate, "verify")
-    run("rollback-candidate", candidate, "rollback", "--yes")
+    run("rollback-candidate-from-installed-setup", installed_setup,
+        "rollback", "--yes")
+    if sha256(installed_setup) != sha256(previous):
+        raise SystemExit("rollback did not restore the previous Setup package")
     run("verify-rolled-back-previous", previous, "verify")
+    assert_installed_version("execute-rolled-back-previous", old_version,
+                             args.previous_source_revision)
     run("reapply-candidate", candidate, "install", "--yes", "--quiet")
     run("verify-reapplied-candidate", candidate, "verify")
-    run("uninstall-candidate", candidate, "uninstall", "--yes", "--quiet")
+    assert_installed_version("execute-reapplied-candidate", new_version,
+                             args.candidate_source_revision)
+    run("uninstall-candidate-from-installed-setup", installed_setup,
+        "uninstall", "--yes", "--quiet")
     if current.exists() or current.is_symlink() or install.exists():
         raise SystemExit("uninstall retained the application root")
     if sha256(sentinel) != sentinel_sha:

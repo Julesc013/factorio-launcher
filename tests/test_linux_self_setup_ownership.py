@@ -321,6 +321,13 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertIn("linked ancestor", result.stderr)
             self.assertFalse((foreign / "install").exists())
 
+            result = self.invoke(
+                script, home, "install", "--root", str(root / "install with spaces"), "--yes",
+            )
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn("unsupported characters", result.stderr)
+            self.assertFalse((root / "install with spaces").exists())
+
     def test_embedded_gzip_package_installs_without_zstd(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -394,9 +401,14 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
                 extra_environment={"FACMAN_TEST_LINUX_SETUP_INTERRUPT_AFTER_CURRENT": "1"},
             )
             self.assertNotEqual(interrupted.returncode, 0, interrupted.stdout)
-            recovered = self.invoke(second, home, "recover", "--yes")
+            installed_setup = home / ".local/opt/facman/maintenance/FacManSetup.run"
+            self.assertEqual(self.invoke(installed_setup, home, "--version").stdout.strip(),
+                             "0.1.0-alpha.6")
+            recovered = self.invoke(installed_setup, home, "recover", "--yes")
             self.assertEqual(recovered.returncode, 0, recovered.stderr)
             self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
+            self.assertEqual(self.invoke(installed_setup, home, "--version").stdout.strip(),
+                             "0.1.0-alpha.5")
             self.assertEqual(sentinel.read_bytes(), b"preserved world bytes")
 
             updated = self.invoke(second, home, "install", "--yes")
@@ -414,6 +426,22 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             history = home / ".local/state/facman-setup/history"
             self.assertTrue(any(history.rglob("old-target")))
             self.assertEqual(sentinel.read_bytes(), b"preserved world bytes")
+
+    def test_update_refuses_without_previous_setup_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+            second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+            self.assertEqual(self.invoke(first, home, "install", "--yes").returncode, 0)
+            install = home / ".local/opt/facman"
+            (install / "maintenance/FacManSetup.run").unlink()
+            refused = self.invoke(second, home, "install", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertIn("previous Setup source", refused.stderr)
+            self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
+            self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
 
     def test_recovery_refuses_foreign_pointer_and_journal_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

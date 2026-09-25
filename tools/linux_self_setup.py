@@ -77,6 +77,11 @@ case "$install_root" in
   /*) ;;
   *) echo 'install root must be an absolute path' >&2; exit 3 ;;
 esac
+case "$install_root" in
+  *[!A-Za-z0-9_./+-]*)
+    echo 'refusing unsupported characters in install root' >&2
+    exit 3 ;;
+esac
 canonical_install_root=$(realpath -m -- "$install_root")
 normalized_install_root=$(realpath -ms -- "$install_root")
 canonical_home=$(realpath -m -- "$HOME")
@@ -292,12 +297,14 @@ archive_record() {
 }
 
 assert_no_orphan_staging() {
-  for directory in "$state" "$install_root/generations"; do
+  for directory in "$state" "$install_root/generations" "$maintenance"; do
     [ -d "$directory" ] || continue
     if [ "$directory" = "$state" ]; then
-      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 -name '.update-prepared-*' -print -quit)
-    else
+      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 \( -name '.update-prepared-*' -o -name '.installed-state.v1.json.*' \) -print -quit)
+    elif [ "$directory" = "$install_root/generations" ]; then
       orphan=$(find "$directory" -mindepth 1 -maxdepth 1 -name '.install-*' -print -quit)
+    else
+      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 -name '.FacManSetup.run.*' -print -quit)
     fi
     if [ -n "$orphan" ]; then
       echo "refusing incomplete Linux Setup staging at $orphan" >&2
@@ -310,7 +317,7 @@ replace_file() {
   source="$1"
   destination="$2"
   mode="$3"
-  active_staging=$(mktemp "${destination}.XXXXXX")
+  active_staging=$(mktemp "${destination%/*}/.${destination##*/}.XXXXXX")
   cp "$source" "$active_staging"
   chmod "$mode" "$active_staging"
   mv -fT "$active_staging" "$destination"
@@ -565,6 +572,11 @@ if [ "$operation" = 'install' ] && [ -n "${old_target:-}" ]; then
     fi
     source_distinct='true'
     verify_generation "$old_target"
+    if [ ! -f "$maintenance/FacManSetup.run" ] ||
+       [ -L "$maintenance/FacManSetup.run" ]; then
+      echo 'refusing update without the previous Setup source' >&2
+      exit 1
+    fi
   fi
 fi
 
@@ -578,6 +590,11 @@ assert_update_predecessor() {
   assert_existing_install_owner
   assert_native_integration_owned
   assert_setup_copy_safe
+  if [ ! -f "$maintenance/FacManSetup.run" ] ||
+     [ -L "$maintenance/FacManSetup.run" ]; then
+    echo 'refusing a missing Linux Setup update predecessor' >&2
+    return 1
+  fi
   if [ "$old_target" != "$expected_old_target" ] ||
      [ "$(cat "$state/installed-state.v1.json")" != "$expected_old_receipt" ] ||
      [ "$(sha256sum "$maintenance/FacManSetup.run" | cut -d ' ' -f 1)" != "$expected_old_setup_sha" ]; then
@@ -629,6 +646,8 @@ if [ "$source_distinct" = 'true' ]; then
   mv -T "$journal_staging" "$pending"
   journal_staging=''
   assert_update_predecessor
+  # The installed maintenance entry point must be able to recover the cutover.
+  replace_file "$0" "$maintenance/FacManSetup.run" 0755
 fi
 point_current "$generation"
 if [ "$source_distinct" = 'true' ] &&
@@ -638,11 +657,9 @@ if [ "$source_distinct" = 'true' ] &&
 fi
 ln -sfn "$current/facman" "$user_bin/facman"
 ln -sfn "$current/FacMan" "$user_bin/FacMan"
-active_staging=$(mktemp "$maintenance/.FacManSetup.run.XXXXXX")
-cp "$0" "$active_staging"
-chmod 0755 "$active_staging"
-mv -fT "$active_staging" "$maintenance/FacManSetup.run"
-active_staging=''
+if [ "$source_distinct" != 'true' ]; then
+  replace_file "$0" "$maintenance/FacManSetup.run" 0755
+fi
 active_staging=$(mktemp "$desktop_root/.facman.desktop.XXXXXX")
 cat > "$active_staging" <<EOF
 [Desktop Entry]
