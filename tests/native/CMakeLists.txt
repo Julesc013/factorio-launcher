@@ -4,6 +4,17 @@
 find_package(Threads REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
+if(TARGET facman_cli)
+  add_test(NAME facman_save_transfer_product
+    COMMAND ${Python3_EXECUTABLE} -m unittest discover
+      -s ${PROJECT_SOURCE_DIR}/tests -p test_save_transfer.py)
+  set_tests_properties(facman_save_transfer_product PROPERTIES
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    ENVIRONMENT "FACMAN_CLI_EXE=$<TARGET_FILE:facman_cli>"
+    LABELS "integration;filesystem;transaction;package-runtime"
+    TIMEOUT 120)
+endif()
+
 if(WIN32 AND TARGET facman_setup)
   add_test(NAME facman_self_setup_lifecycle
     COMMAND ${Python3_EXECUTABLE}

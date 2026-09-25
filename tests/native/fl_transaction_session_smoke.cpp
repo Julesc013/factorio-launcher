@@ -219,6 +219,23 @@ int prove_commit_strategies_and_retention(const fs::path& workspace)
     std::string detail;
     if (!digest || !tx::CrossVolumeCopyVerifyCommit::commit(source, target, digest.value(), 12, detail) ||
         read_file(target) != "cross-volume") return 41;
+    const fs::path interrupted = workspace / "copy" / "interrupted.bin";
+    if (tx::CrossVolumeCopyVerifyCommit::commit(
+            source, interrupted, digest.value(), 12, detail, nullptr, true) ||
+        fs::exists(interrupted)) return 47;
+    for (const auto& entry : fs::directory_iterator(source.parent_path())) {
+        if (entry.path().filename().string().rfind(".facman-copy-", 0) == 0)
+            return 48;
+    }
+    facman::platform::StableInputFile pinned_source;
+    if (!pinned_source.open_no_follow(source).ok()) return 45;
+    std::error_code replacement_error;
+    fs::rename(source, workspace / "copy" / "original.bin", replacement_error);
+    if (replacement_error || !write_file(source, "other-source") ||
+        tx::CrossVolumeCopyVerifyCommit::commit(
+            source, workspace / "copy" / "wrong-object.bin", digest.value(),
+            12, detail, &pinned_source.identity()) ||
+        fs::exists(workspace / "copy" / "wrong-object.bin")) return 46;
 
     const fs::path directory_staging = workspace / "directory.stage";
     const fs::path directory_target = workspace / "directory.target";

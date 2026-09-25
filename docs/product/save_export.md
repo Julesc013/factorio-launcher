@@ -15,11 +15,28 @@ manifest, local config, saves, mods, and modset lockfile when present.
 
 Backups are fail-closed:
 
+- the default target is `<workspace>/instances/<instance-id>/backups/<save>.backup.zip`
+- `--to` names a new backup file under an existing directory, including a
+  user-selected directory outside the workspace; relative paths resolve from
+  the workspace root, and linked parents or existing targets are refused
+- an active instance run lock or save-write lock refuses backup before
+  destination changes; a run lock appearing during staging also refuses
+- the source stays pinned through two SHA-256 reads, a verified staged copy,
+  and final publication; a changed source produces `save_source_changed`
+- an available-space preflight and verified staged write refuse incomplete
+  copies; interrupted staging is removed without replacing an existing backup
 - backup targets are never overwritten silently
 - each backup writes a sidecar manifest JSON
-- the manifest records source, destination, creation time, SHA-1, and SHA-256
+- the manifest records workspace identity, source size and path, destination,
+  creation time, SHA-1, SHA-256, and the stated consistency policy
 - malformed save ZIPs return a structured `save_malformed` refusal before any
   backup output is written
+
+The structural save check recognizes Factorio save content in the archive. It
+does not claim that the game can load the save or that its mods are available.
+Explicit external destinations are staged on their own volume and written only
+to the selected new file and sidecar. The source workspace still needs valid
+FacMan ownership.
 
 Clones are also fail-closed. A target save that already exists returns
 `save_clone_target_exists` and leaves the target instance unchanged.

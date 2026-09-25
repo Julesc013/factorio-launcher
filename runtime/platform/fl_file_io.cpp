@@ -1121,6 +1121,32 @@ IoStatus StableDirectoryObject::reopen_child_file_no_follow_for_relative_publish
 #endif
         return IoStatus::failure("relative_publish_identity_changed", name);
     }
+    // write_at tracks a logical offset; the reopened native handle must start
+    // at the same offset before an interrupted relative copy can append.
+    if (actual.size > static_cast<std::uint64_t>(
+            std::numeric_limits<std::int64_t>::max())) {
+#ifdef _WIN32
+        CloseHandle(file); CloseHandle(parent);
+#else
+        ::close(file); ::close(parent);
+#endif
+        return IoStatus::failure("relative_publish_size_invalid", name);
+    }
+#ifdef _WIN32
+    LARGE_INTEGER position {};
+    position.QuadPart = static_cast<LONGLONG>(actual.size);
+    if (!SetFilePointerEx(file, position, nullptr, FILE_BEGIN)) {
+        const std::string detail = windows_error("SetFilePointerEx");
+        CloseHandle(file); CloseHandle(parent);
+        return IoStatus::failure("relative_publish_seek_failed", detail);
+    }
+#else
+    if (::lseek(file, static_cast<off_t>(actual.size), SEEK_SET) < 0) {
+        const std::string detail = std::strerror(errno);
+        ::close(file); ::close(parent);
+        return IoStatus::failure("relative_publish_seek_failed", detail);
+    }
+#endif
     child.impl_->handle = file;
     child.impl_->parent_handle = parent;
     child.impl_->path = impl_->path / leaf;
@@ -1442,6 +1468,7 @@ void DurableOutputFile::close_without_flush() noexcept
         impl_->reset_relative_state();
 }
 const std::filesystem::path& DurableOutputFile::path() const noexcept { return impl_->path; }
+const FileIdentity& DurableOutputFile::identity() const noexcept { return impl_->identity; }
 
 IoStatus commit_no_replace(const std::filesystem::path& source, const std::filesystem::path& destination)
 {
