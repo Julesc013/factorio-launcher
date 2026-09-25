@@ -2714,6 +2714,49 @@ int run_maintenance(Options &options, const fs::path &,
           options.json);
       return 4;
     }
+    if (pending.phase == "reactivation_pending" ||
+        pending.phase == "reactivation_complete") {
+      facman::self_maintenance::EpochTransitionRequest reactivation;
+      reactivation.coordinator_root = coordinator_root;
+      reactivation.epoch_id = pending.epoch_id;
+      reactivation.operation = pending.operation;
+      reactivation.operation_id = pending.operation_id;
+      reactivation.package = package.has_value()
+          ? *package : pending.retained_package;
+      reactivation.apply = options.apply;
+      reactivation.shell_integration = pending.shell_integration;
+      auto result = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          reactivation, effects, effects);
+      if (!result) {
+        print_maintenance_error(result.error(), options.json);
+        return 4;
+      }
+      const fs::path epoch_root = coordinator_root / "epochs" / pending.epoch_id;
+      if (options.json) {
+        facman::core::json::ObjectBuilder output;
+        output.add_string("schema", "facman.self_maintenance_cli.v1");
+        output.add_string("status", "ok");
+        output.add_string("operation", maintenance_operation_text(operation));
+        output.add_string("phase", result.value().phase);
+        output.add_string("operation_id", pending.operation_id);
+        output.add_string("generation_id", result.value().generation.generation_id);
+        output.add_string("product_version", result.value().generation.product_version);
+        output.add_string("install_id", result.value().generation.install_id);
+        output.add_string("install_root", facman::platform::path_to_utf8(
+            result.value().generation.install_root));
+        output.add_string("generation_record", facman::platform::path_to_utf8(
+            epoch_root / "generations" /
+            ("generation." + result.value().generation.generation_id + ".v2.json")));
+        output.add_string("activation_record", facman::platform::path_to_utf8(
+            epoch_root / "activations" /
+            ("activation." + pending.operation_id + ".v2.json")));
+        std::cout << output.serialize() << '\n';
+      } else {
+        std::cout << "FacManSetup " << maintenance_operation_text(operation)
+                  << ' ' << result.value().phase << '\n';
+      }
+      return 0;
+    }
     std::string phase = pending.phase;
     std::string nonce = pending.nonce;
     std::string journal_sha256 = pending.journal_sha256;
@@ -2916,6 +2959,47 @@ int run_maintenance(Options &options, const fs::path &,
           {"self_maintenance_provider_root_unsafe",
            "maintenance authority changed before epoch preparation", authority_detail},
           options.json);
+      return 4;
+    }
+    auto reactivation_review = epoch_request;
+    reactivation_review.apply = false;
+    auto retained = facman::self_maintenance::review_lifecycle_epoch_reactivation(
+        reactivation_review, effects);
+    if (retained) {
+      auto result = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          epoch_request, effects, effects);
+      if (!result) {
+        print_maintenance_error(result.error(), options.json);
+        return 4;
+      }
+      const fs::path epoch_root = coordinator_root / "epochs" / epoch_request.epoch_id;
+      if (options.json) {
+        facman::core::json::ObjectBuilder output;
+        output.add_string("schema", "facman.self_maintenance_cli.v1");
+        output.add_string("status", "ok");
+        output.add_string("operation", maintenance_operation_text(operation));
+        output.add_string("phase", result.value().phase);
+        output.add_string("operation_id", operation_id);
+        output.add_string("generation_id", result.value().generation.generation_id);
+        output.add_string("product_version", result.value().generation.product_version);
+        output.add_string("install_id", result.value().generation.install_id);
+        output.add_string("install_root", facman::platform::path_to_utf8(
+            result.value().generation.install_root));
+        output.add_string("generation_record", facman::platform::path_to_utf8(
+            epoch_root / "generations" /
+            ("generation." + result.value().generation.generation_id + ".v2.json")));
+        output.add_string("activation_record", facman::platform::path_to_utf8(
+            epoch_root / "activations" /
+            ("activation." + operation_id + ".v2.json")));
+        std::cout << output.serialize() << '\n';
+      } else {
+        std::cout << "FacManSetup " << maintenance_operation_text(operation)
+                  << ' ' << result.value().phase << '\n';
+      }
+      return 0;
+    }
+    if (retained.error().code != "self_maintenance_retained_target_invalid") {
+      print_maintenance_error(retained.error(), options.json);
       return 4;
     }
     auto prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(

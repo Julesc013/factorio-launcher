@@ -152,6 +152,11 @@ launcher is used only for A's retained repair source and installed maintenance
 entrypoint. When A is the exact immediate retained predecessor, no provider
 mutation or executable replacement occurs: B may verify and reactivate A in the
 initiating process, and the immutable generation/package checks remain required.
+Reactivation records its own immutable intent, shortcut cutover, and
+registration cutover under the epoch maintenance operation. The intent binds
+the existing generation and provider verification receipt; restart reads the
+retained repair package and resumes the same native cutover before publishing
+a new activation. It does not write provider-apply or uninstall receipts.
 
 The public process launches the retained helper with an inherited handle to the
 exact initiating process and reports `handoff_launched`. The helper validates

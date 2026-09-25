@@ -2862,6 +2862,97 @@ int main(int argc, char **argv) {
                     third_prepared.error().code == "self_maintenance_candidate_unsafe" &&
                     third_preparation_effects.review_calls == 0U,
                 "retained predecessor entered the provider installation path");
+  const fs::path retained_cache = provider_continuation.epoch.state_root /
+      "repair-sources";
+  fs::create_directories(retained_cache);
+  const fs::path first_retained_package = retained_cache /
+      (provider_continuation.inspection.package_sha256 + ".zip");
+  fs::copy_file(provider_continuation.source_package, first_retained_package);
+  EpochContinuationFakeEffects reactivation_provider;
+  reactivation_provider.candidate = CandidateState::exact;
+  EpochShellCutoverFakeEffects reactivation_shell;
+  reactivation_shell.registration = ShellState::foreign;
+  auto interrupted_reactivation =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          third_preparation_request, reactivation_provider, reactivation_shell);
+  auto pending_reactivation =
+      facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
+          provider_continuation.coordinator);
+  auto reactivation_preview_request = third_preparation_request;
+  reactivation_preview_request.apply = false;
+  auto pending_reactivation_preview =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          reactivation_preview_request, reactivation_provider, reactivation_shell);
+  ok &= require(!interrupted_reactivation && pending_reactivation &&
+                    pending_reactivation.value().has_value() &&
+                    pending_reactivation.value()->phase == "reactivation_pending" &&
+                    pending_reactivation_preview &&
+                    pending_reactivation_preview.value().phase ==
+                        "reactivation_pending" &&
+                    reactivation_shell.shortcut_calls == 1U &&
+                    reactivation_shell.registration_calls == 0U &&
+                    reactivation_provider.bind_calls == 0U &&
+                    reactivation_provider.apply_calls == 0U,
+                "interrupted retained reactivation was not durably recoverable");
+  reactivation_shell.registration = ShellState::old_exact;
+  auto completed_reactivation =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          third_preparation_request, reactivation_provider, reactivation_shell);
+  auto third_active = facman::self_maintenance::discover_lifecycle_epoch_active(
+      provider_continuation.coordinator);
+  auto third_lineage =
+      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+          provider_continuation.coordinator);
+  auto third_completion =
+      facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
+          provider_continuation.coordinator);
+  auto completed_reactivation_preview =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          reactivation_preview_request, reactivation_provider, reactivation_shell);
+  auto completed_reactivation_retry =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          third_preparation_request, reactivation_provider, reactivation_shell);
+  ok &= require(completed_reactivation && third_active && third_lineage &&
+                    third_completion && third_completion.value().has_value() &&
+                    completed_reactivation_preview &&
+                    completed_reactivation_preview.value().phase ==
+                        "reactivation_complete" &&
+                    completed_reactivation_retry &&
+                    completed_reactivation_retry.value().phase ==
+                        "reactivation_complete" &&
+                    completed_reactivation.value().phase == "reactivation_complete" &&
+                    third_lineage.value().generations.size() == 4U &&
+                    third_lineage.value().generations[1].generation_id ==
+                        third_lineage.value().generations[3].generation_id &&
+                    third_active.value().active.activation_name ==
+                        "activation.epoch.prepare.three.v2.json" &&
+                    third_completion.value()->completed &&
+                    third_completion.value()->operation_id == "epoch.prepare.three" &&
+                    reactivation_provider.bind_calls == 0U &&
+                    reactivation_provider.apply_calls == 0U &&
+                    reactivation_shell.registration_calls == 1U,
+                "retained predecessor did not reactivate after an interrupted native cutover");
+  const fs::path second_retained_package = retained_cache /
+      (second_inspection.value().package_sha256 + ".zip");
+  fs::copy_file(second_package, second_retained_package);
+  auto fourth_request = second_preparation_request;
+  fourth_request.operation_id = "epoch.prepare.four";
+  EpochContinuationFakeEffects reapply_provider;
+  reapply_provider.candidate = CandidateState::exact;
+  EpochShellCutoverFakeEffects reapply_shell;
+  auto reapplied = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+      fourth_request, reapply_provider, reapply_shell);
+  auto fourth_lineage =
+      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+          provider_continuation.coordinator);
+  ok &= require(reapplied && fourth_lineage &&
+                    reapplied.value().phase == "reactivation_complete" &&
+                    fourth_lineage.value().generations.size() == 5U &&
+                    fourth_lineage.value().generations[2].generation_id ==
+                        fourth_lineage.value().generations[4].generation_id &&
+                    reapply_provider.bind_calls == 0U &&
+                    reapply_provider.apply_calls == 0U,
+                "retained B reapply did not preserve the exact epoch history");
 
 
   bool publication_staging_recovered = true;

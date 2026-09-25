@@ -531,6 +531,9 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
 // provider installation remains owned and is verified before native cutover.
 facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
     const EpochTransitionRequest &request, EpochContinuationEffects &effects);
+facman::core::Result<EpochShellCutoverResponse> execute_lifecycle_epoch_reactivation(
+    const EpochTransitionRequest &request, EpochContinuationEffects &provider_effects,
+    EpochShellCutoverEffects &shell_effects);
 facman::core::Result<Plan> admit_lifecycle_epoch_continuation(
     const std::filesystem::path &coordinator_root,
     const std::string &operation_id, const std::string &nonce,

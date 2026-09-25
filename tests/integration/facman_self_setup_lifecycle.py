@@ -1874,19 +1874,14 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
             executable, "update", "--package", candidate_payload,
             *epoch_common, shell_integration=True, noninteractive=True,
         )
-        if epoch_update_launch.get("phase") != "handoff_launched":
-            raise AssertionError("real epoch reapply did not launch external continuation")
-        epoch_updated = await_external_handoff(
-            executable, epoch_update_launch, "update",
-            ("--package", candidate_payload, "--root", epoch_install,
-             "--state-root", epoch_state, "--acceptance-root", epoch_fixture),
-            shell_integration=True, noninteractive=True,
-        )
+        if epoch_update_launch.get("phase") != "reactivation_complete":
+            raise AssertionError("real epoch reapply did not complete retained activation inline")
+        epoch_updated = epoch_update_launch
         epoch_updated_root = Path(str(epoch_updated.get("install_root", "")))
         if (epoch_updated.get("product_version") != candidate_identity["version"] or
                 not (epoch_updated_root / "generations" /
                      candidate_identity["version"] / "FacMan.exe").is_file()):
-            raise AssertionError("external epoch update did not reactivate package B")
+            raise AssertionError("inline epoch update did not reactivate package B")
         shortcut, registry = observe("source_distinct_epoch_reapply_completed",
                                      epoch_updated_root)
         assert_owned_native(shortcut, registry, epoch_install, epoch_state,

@@ -1716,12 +1716,150 @@ struct CompletedEpochShellCutover {
   std::string source_activation_sha256;
   std::string source_generation_id;
   std::string generation_id;
+  bool reactivation = false;
   std::vector<fs::path> operation_names;
   std::vector<fs::path> record_names;
   facman::platform::StableDirectoryObject maintenance;
   facman::platform::StableDirectoryObject operation;
   std::vector<HeldPublicationRecord> records;
 };
+
+struct EpochReactivationIntent {
+  std::string epoch_id;
+  std::string epoch_manifest_sha256;
+  std::string operation;
+  std::string operation_id;
+  std::string source_generation_id;
+  std::string source_activation_name;
+  std::string source_activation_sha256;
+  std::string target_generation_id;
+  std::string target_generation_sha256;
+  std::string target_package_sha256;
+  std::string target_verification_receipt_sha256;
+  std::string target_activation_name;
+  std::string target_activation_sha256;
+  bool shell_integration = true;
+};
+
+std::string epoch_reactivation_intent_bytes(const EpochReactivationIntent &intent) {
+  json::ObjectBuilder record;
+  record.add_string("schema", "facman.self_epoch_reactivation_intent.v1");
+  record.add_string("product_id", "facman");
+  record.add_string("epoch_id", intent.epoch_id);
+  record.add_string("epoch_manifest_sha256", intent.epoch_manifest_sha256);
+  record.add_string("operation", intent.operation);
+  record.add_string("operation_id", intent.operation_id);
+  record.add_string("source_generation_id", intent.source_generation_id);
+  record.add_string("source_activation_name", intent.source_activation_name);
+  record.add_string("source_activation_sha256", intent.source_activation_sha256);
+  record.add_string("target_generation_id", intent.target_generation_id);
+  record.add_string("target_generation_sha256", intent.target_generation_sha256);
+  record.add_string("target_package_sha256", intent.target_package_sha256);
+  record.add_string("target_verification_receipt_sha256",
+                    intent.target_verification_receipt_sha256);
+  record.add_string("target_activation_name", intent.target_activation_name);
+  record.add_string("target_activation_sha256", intent.target_activation_sha256);
+  record.add_bool("shell_integration", intent.shell_integration);
+  return record.serialize() + "\n";
+}
+
+facman::core::Result<EpochReactivationIntent> parse_epoch_reactivation_intent(
+    const std::string &bytes, const LifecycleEpoch &epoch,
+    const fs::path &operation_name) {
+  auto document = json::parse(bytes);
+  if (!document || !exact_keys(document.value(), {"schema", "product_id", "epoch_id",
+          "epoch_manifest_sha256", "operation", "operation_id",
+          "source_generation_id", "source_activation_name", "source_activation_sha256",
+          "target_generation_id", "target_generation_sha256", "target_package_sha256",
+          "target_verification_receipt_sha256",
+          "target_activation_name", "target_activation_sha256", "shell_integration"}))
+    return facman::core::Result<EpochReactivationIntent>::failure(epoch_recovery(
+        "epoch reactivation intent has a foreign schema"));
+  const json::Value *shell = document.value().find("shell_integration");
+  auto shell_value = shell && shell->is_bool() ? shell->bool_value()
+      : facman::core::Result<bool>::failure(epoch_recovery(
+          "epoch reactivation shell choice is invalid"));
+  if (!shell_value) return facman::core::Result<EpochReactivationIntent>::failure(
+      shell_value.error());
+  EpochReactivationIntent intent;
+  intent.epoch_id = string_field(document.value(), "epoch_id");
+  intent.epoch_manifest_sha256 = string_field(document.value(), "epoch_manifest_sha256");
+  intent.operation = string_field(document.value(), "operation");
+  intent.operation_id = string_field(document.value(), "operation_id");
+  intent.source_generation_id = string_field(document.value(), "source_generation_id");
+  intent.source_activation_name = string_field(document.value(), "source_activation_name");
+  intent.source_activation_sha256 = string_field(document.value(), "source_activation_sha256");
+  intent.target_generation_id = string_field(document.value(), "target_generation_id");
+  intent.target_generation_sha256 = string_field(document.value(), "target_generation_sha256");
+  intent.target_package_sha256 = string_field(document.value(), "target_package_sha256");
+  intent.target_verification_receipt_sha256 =
+      string_field(document.value(), "target_verification_receipt_sha256");
+  intent.target_activation_name = string_field(document.value(), "target_activation_name");
+  intent.target_activation_sha256 = string_field(document.value(), "target_activation_sha256");
+  intent.shell_integration = shell_value.value();
+  std::string identifier_detail;
+  if (string_field(document.value(), "schema") !=
+          "facman.self_epoch_reactivation_intent.v1" ||
+      string_field(document.value(), "product_id") != "facman" ||
+      intent.epoch_id != epoch.epoch_id ||
+      intent.epoch_manifest_sha256 != epoch.manifest_sha256 ||
+      intent.operation_id != operation_name.string() ||
+      !facman::base::validate_identifier(intent.operation_id, identifier_detail) ||
+      (intent.operation != "update" && intent.operation != "downgrade") ||
+      !digest(intent.source_generation_id) || !digest(intent.source_activation_sha256) ||
+      !digest(intent.target_generation_id) || !digest(intent.target_generation_sha256) ||
+      !digest(intent.target_package_sha256) || !digest(intent.target_activation_sha256) ||
+      !digest(intent.target_verification_receipt_sha256) ||
+      intent.source_activation_name.empty() ||
+      fs::path(intent.source_activation_name) !=
+          fs::path(intent.source_activation_name).filename() ||
+      intent.target_activation_name !=
+          "activation." + intent.operation_id + ".v2.json" ||
+      bytes != epoch_reactivation_intent_bytes(intent))
+    return facman::core::Result<EpochReactivationIntent>::failure(epoch_recovery(
+        "epoch reactivation intent does not bind an exact lifecycle operation"));
+  return facman::core::Result<EpochReactivationIntent>::success(std::move(intent));
+}
+
+std::string epoch_reactivation_cutover_bytes(
+    const EpochReactivationIntent &intent, const std::string &phase,
+    const std::string &previous_record_sha256, const std::string &effect) {
+  const std::string ownership_receipt = hash(
+      "facman.self_epoch_reactivation_ownership.v1\n" + intent.epoch_id + "\n" +
+      intent.operation_id + "\n" + intent.source_activation_sha256 + "\n" +
+      intent.target_activation_sha256 + "\n" + effect + "\nnew_exact\n");
+  json::ObjectBuilder record;
+  record.add_string("schema", "facman.self_epoch_reactivation_cutover.v1");
+  record.add_string("product_id", "facman");
+  record.add_string("phase", phase);
+  record.add_string("epoch_id", intent.epoch_id);
+  record.add_string("operation_id", intent.operation_id);
+  record.add_string("intent_sha256", hash(epoch_reactivation_intent_bytes(intent)));
+  record.add_string("previous_record_sha256", previous_record_sha256);
+  record.add_string("effect", effect);
+  record.add_string("target_generation_id", intent.target_generation_id);
+  record.add_string("target_activation_name", intent.target_activation_name);
+  record.add_string("target_activation_sha256", intent.target_activation_sha256);
+  record.add_string("ownership", "new_exact");
+  record.add_string("ownership_receipt_sha256", ownership_receipt);
+  return record.serialize() + "\n";
+}
+
+bool epoch_reactivation_record_names(const std::vector<fs::path> &names) {
+  const std::vector<fs::path> finals = {
+      "00-reactivation-intent.v1.json", "10-shortcut-cutover.v1.json",
+      "20-registration-cutover.v1.json"};
+  const std::vector<fs::path> staging = {
+      "00-reactivation-intent.staging.v1.json",
+      "10-shortcut-cutover.staging.v1.json",
+      "20-registration-cutover.staging.v1.json"};
+  if (names.empty() || names.size() > finals.size()) return false;
+  for (std::size_t index = 0; index < names.size(); ++index)
+    if (names[index] != finals[index] &&
+        !(index + 1U == names.size() && names[index] == staging[index]))
+      return false;
+  return true;
+}
 
 // Defined with the phase-70/80 record parsers below.  Ordinary discovery may
 // pass a maintenance directory only after the complete, immutable shell
@@ -1781,6 +1919,16 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
               !operation.list_child_names_bounded(10U, records).ok() || records.size() > 9U)
             return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
                 "epoch maintenance recovery state is not the exact targeted handoff"));
+          if (!records.empty() && (records.front() ==
+                  fs::path("00-reactivation-intent.v1.json") ||
+              records.front() ==
+                  fs::path("00-reactivation-intent.staging.v1.json"))) {
+            if (pending_transition == nullptr ||
+                !epoch_reactivation_record_names(records))
+              return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+                  "targeted epoch reactivation has foreign or out-of-order records"));
+            continue;
+          }
           for (std::size_t i = 0; i < records.size(); ++i) {
             const std::string final_text = finals[i].string();
             const std::size_t version = final_text.rfind(".v");
@@ -2176,9 +2324,25 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
     for (std::size_t index = 1U; index < ordered.size(); ++index) {
       const auto matches = std::count_if(completed_shell_cutovers.begin(),
           completed_shell_cutovers.end(), [&](const CompletedEpochShellCutover &completed) {
+            const bool appeared_earlier = std::any_of(ordered.begin(),
+                ordered.begin() + index,
+                [&](const Node *node) {
+                  return node->target_generation_id == completed.generation_id;
+                });
             return ordered[index]->name == completed.activation_name &&
                 ordered[index]->digest == completed.activation_sha256 &&
-                ordered[index]->target_generation_id == completed.generation_id;
+                ordered[index]->target_generation_id == completed.generation_id &&
+                ordered[index - 1U]->name == completed.source_activation_name &&
+                ordered[index - 1U]->digest == completed.source_activation_sha256 &&
+                ordered[index - 1U]->target_generation_id ==
+                    completed.source_generation_id &&
+                (completed.reactivation
+                    ? index >= 2U &&
+                      ordered[index - 2U]->target_generation_id ==
+                          completed.generation_id &&
+                      epoch_generation_bytes(epoch, ordered[index - 2U]->target) ==
+                          epoch_generation_bytes(epoch, ordered[index]->target)
+                    : !appeared_earlier);
           });
       const bool pending_match = targeted_activation &&
           ordered[index]->name == pending_transition->activation_name &&
@@ -3769,6 +3933,333 @@ facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
     return facman::core::Result<Plan>::failure(!latest ? latest.error() :
         epoch_recovery("reactivation source changed during read-only review"));
   return planned;
+}
+
+facman::core::Result<EpochShellCutoverResponse> execute_lifecycle_epoch_reactivation(
+    const EpochTransitionRequest &request, EpochContinuationEffects &provider_effects,
+    EpochShellCutoverEffects &shell_effects) {
+  using Result = facman::core::Result<EpochShellCutoverResponse>;
+  std::string identifier_detail;
+  if (!request.coordinator_root.is_absolute() || !digest(request.epoch_id) ||
+      !facman::base::validate_identifier(request.operation_id,
+                                          identifier_detail) ||
+      (request.operation != Operation::update &&
+       request.operation != Operation::downgrade) ||
+      !request.package.package.is_absolute() ||
+      !digest(request.package.package_sha256))
+    return Result::failure(failure("self_maintenance_input_invalid",
+        "epoch reactivation request is incomplete"));
+  auto pending = discover_lifecycle_epoch_pending_transition(request.coordinator_root);
+  if (!pending) return Result::failure(pending.error());
+  if (pending.value().has_value() &&
+      pending.value()->phase != "pre_handoff" &&
+      pending.value()->phase != "reactivation_pending")
+    return Result::failure(epoch_recovery(
+        "a different epoch maintenance transition requires recovery"));
+  if (pending.value().has_value() &&
+      (pending.value()->epoch_id != request.epoch_id ||
+       (!pending.value()->operation_id.empty() &&
+        pending.value()->operation_id != request.operation_id)))
+    return Result::failure(epoch_recovery(
+        "epoch reactivation request does not match the pending operation"));
+  if (!request.apply && pending.value().has_value() &&
+      pending.value()->phase == "reactivation_pending") {
+    if (pending.value()->operation != request.operation ||
+        pending.value()->retained_package.package_sha256 !=
+            request.package.package_sha256 ||
+        pending.value()->shell_integration != request.shell_integration)
+      return Result::failure(epoch_recovery(
+          "reactivation preview differs from its pending intent"));
+    return Result::success({"reactivation_pending", pending.value()->target,
+        request.coordinator_root / "epochs" / request.epoch_id / "maintenance" /
+        request.operation_id / "00-reactivation-intent.v1.json"});
+  }
+  if (!request.apply && !pending.value().has_value()) {
+    auto terminal = discover_lifecycle_epoch_terminal_transition(
+        request.coordinator_root);
+    if (!terminal) return Result::failure(terminal.error());
+    if (terminal.value().has_value() &&
+        terminal.value()->phase == "reactivation_complete" &&
+        terminal.value()->epoch_id == request.epoch_id &&
+        terminal.value()->operation_id == request.operation_id &&
+        terminal.value()->operation == request.operation &&
+        terminal.value()->retained_package.package_sha256 ==
+            request.package.package_sha256 &&
+        terminal.value()->shell_integration == request.shell_integration)
+      return Result::success({"reactivation_complete",
+          terminal.value()->target,
+          request.coordinator_root / "epochs" / request.epoch_id / "maintenance" /
+          request.operation_id / "00-reactivation-intent.v1.json"});
+  }
+  LifecycleEpoch epoch;
+  if (pending.value().has_value() &&
+      pending.value()->phase == "reactivation_pending") {
+    PinnedLifecycleEpochScope pending_scope;
+    auto opened_pending = pending_scope.open(request.coordinator_root,
+                                             request.epoch_id);
+    if (!opened_pending) return Result::failure(opened_pending.error());
+    auto bytes = pending_scope.read("epoch.v1.json");
+    auto parsed = bytes ? parse_lifecycle_manifest(bytes.value(), request.epoch_id)
+        : facman::core::Result<LifecycleEpoch>::failure(bytes.error());
+    if (!parsed || parsed.value().manifest_sha256 !=
+            pending.value()->epoch_manifest_sha256)
+      return Result::failure(!parsed ? parsed.error() : epoch_recovery(
+          "pending reactivation epoch manifest changed"));
+    epoch = parsed.take_value();
+  } else {
+    auto chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root);
+    if (!chain || chain.value().epochs.empty() ||
+        chain.value().epochs.back().compatibility_epoch ||
+        chain.value().epochs.back().epoch_id != request.epoch_id)
+      return Result::failure(!chain ? chain.error() : epoch_recovery(
+          "reactivation does not name the authoritative real epoch"));
+    epoch = chain.value().epochs.back();
+  }
+  if (!request.apply) {
+    auto reviewed = review_lifecycle_epoch_reactivation(request, provider_effects);
+    if (!reviewed) return Result::failure(reviewed.error());
+    return Result::success({"plan", reviewed.value().target, {}});
+  }
+  auto authority = admit_coordinator(request.coordinator_root,
+                                     epoch.acceptance_root, false);
+  if (!authority) return Result::failure(authority.error());
+  auto lock = acquire(authority.take_value(), request.operation_id);
+  if (!lock) return Result::failure(lock.error());
+  auto locked_pending = discover_lifecycle_epoch_pending_transition(
+      request.coordinator_root);
+  if (!locked_pending) return Result::failure(locked_pending.error());
+  if (locked_pending.value().has_value() &&
+      (locked_pending.value()->epoch_id != request.epoch_id ||
+       (!locked_pending.value()->operation_id.empty() &&
+        locked_pending.value()->operation_id != request.operation_id) ||
+       (locked_pending.value()->phase != "pre_handoff" &&
+        locked_pending.value()->phase != "reactivation_pending")))
+    return Result::failure(epoch_recovery(
+        "epoch reactivation pending identity changed under coordinator lock"));
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(request.coordinator_root, request.epoch_id, true);
+  if (!opened) return Result::failure(opened.error());
+  auto maintenance = open_or_create_epoch_child(scope.epoch, "maintenance");
+  if (!maintenance) return Result::failure(maintenance.error());
+  auto operation = open_or_create_epoch_child(maintenance.value(),
+      request.operation_id.c_str());
+  if (!operation) return Result::failure(operation.error());
+  const fs::path journal = operation.value().path() /
+      "00-reactivation-intent.v1.json";
+  std::vector<fs::path> names;
+  if (!operation.value().list_child_names_bounded(4U, names).ok() ||
+      (!names.empty() && !epoch_reactivation_record_names(names)))
+    return Result::failure(epoch_recovery(
+        "reactivation operation contains foreign or out-of-order records"));
+  EpochReactivationIntent intent;
+  Plan transition;
+  if (names.empty()) {
+    auto preview = request;
+    preview.apply = false;
+    auto reviewed = review_lifecycle_epoch_reactivation(preview, provider_effects);
+    if (!reviewed) return Result::failure(reviewed.error());
+    transition = reviewed.take_value();
+    const EffectResult verified = provider_effects.verify_installed(transition);
+    if (!verified.ok || verified.outcome_unknown ||
+        !digest(verified.receipt_sha256) ||
+        provider_effects.inspect_candidate(transition) != CandidateState::exact)
+      return Result::failure(effect_error("self_maintenance_verify_failed",
+          "retained generation changed before reactivation intent", verified).error());
+    intent.epoch_id = epoch.epoch_id;
+    intent.epoch_manifest_sha256 = epoch.manifest_sha256;
+    intent.operation = transition.operation;
+    intent.operation_id = request.operation_id;
+    intent.source_generation_id = transition.source.generation_id;
+    intent.source_activation_name = transition.previous_activation_name;
+    intent.source_activation_sha256 = transition.previous_activation_sha256;
+    intent.target_generation_id = transition.target.generation_id;
+    intent.target_generation_sha256 = hash(epoch_generation_bytes(epoch,
+        transition.target));
+    intent.target_package_sha256 = transition.target.package_sha256;
+    intent.target_verification_receipt_sha256 = verified.receipt_sha256;
+    intent.target_activation_name = "activation." + request.operation_id +
+        ".v2.json";
+    intent.target_activation_sha256 = hash(epoch_link_activation_bytes(epoch,
+        intent.operation, intent.operation_id, intent.source_generation_id,
+        intent.target_generation_id, intent.target_generation_sha256,
+        intent.source_activation_name, intent.source_activation_sha256));
+    intent.shell_integration = request.shell_integration;
+    auto written = publish_epoch_record(operation.value(),
+        "00-reactivation-intent.staging.v1.json",
+        "00-reactivation-intent.v1.json",
+        epoch_reactivation_intent_bytes(intent), 3U);
+    if (!written) return Result::failure(written.error());
+  } else {
+    auto bytes = read_epoch_relative_bounded(operation.value(), names.front(),
+                                             kMaximumEpochGenesisRecordBytes);
+    auto parsed = bytes ? parse_epoch_reactivation_intent(bytes.value(), epoch,
+        request.operation_id) :
+        facman::core::Result<EpochReactivationIntent>::failure(bytes.error());
+    if (!parsed) return Result::failure(parsed.error());
+    intent = parsed.take_value();
+    if (intent.operation != operation_name(request.operation) ||
+        intent.target_package_sha256 != request.package.package_sha256 ||
+        intent.shell_integration != request.shell_integration)
+      return Result::failure(epoch_recovery(
+          "reactivation retry does not match its immutable intent"));
+    auto source = parse_epoch_generation(epoch, scope,
+        intent.source_generation_id);
+    std::string target_bytes;
+    auto target = parse_epoch_generation(epoch, scope,
+        intent.target_generation_id, &target_bytes);
+    if (!source || !target || hash(target_bytes) !=
+            intent.target_generation_sha256 ||
+        target.value().package_sha256 != intent.target_package_sha256)
+      return Result::failure(!source ? source.error() : !target ? target.error() :
+          epoch_recovery("reactivation generation changed after intent"));
+    transition = {intent.operation, intent.operation_id, source.take_value(),
+        target.take_value(), request.package.package, request.package.package_sha256,
+        "reactivate", intent.source_activation_name,
+        intent.source_activation_sha256};
+    auto inspected = inspect_package(request.package.package);
+    if (!inspected || inspected.value().package_sha256 !=
+            intent.target_package_sha256 ||
+        inspected.value().maintenance_launcher_sha256 !=
+            request.package.maintenance_launcher_sha256 ||
+        !same_descriptor(inspected.value().descriptor,
+                         request.package.descriptor) ||
+        !same_descriptor(inspected.value().descriptor,
+                         generation_descriptor(transition.target)))
+      return Result::failure(!inspected ? inspected.error() : epoch_recovery(
+          "reactivation retry package changed after intent"));
+    auto written = publish_epoch_record(operation.value(),
+        "00-reactivation-intent.staging.v1.json",
+        "00-reactivation-intent.v1.json",
+        epoch_reactivation_intent_bytes(intent), 3U);
+    if (!written) return Result::failure(written.error());
+  }
+  const auto exact_custody = [&]() {
+    auto current = read_epoch_relative_bounded(operation.value(),
+        "00-reactivation-intent.v1.json", kMaximumEpochGenesisRecordBytes);
+    std::vector<fs::path> current_names;
+    const std::string expected_shortcut = epoch_reactivation_cutover_bytes(
+        intent, "10-shortcut-cutover", hash(epoch_reactivation_intent_bytes(intent)),
+        "shortcut");
+    const std::string expected_registration = epoch_reactivation_cutover_bytes(
+        intent, "20-registration-cutover", hash(expected_shortcut), "registration");
+    if (!operation.value().list_child_names_bounded(4U, current_names).ok() ||
+        !epoch_reactivation_record_names(current_names)) return false;
+    if (current_names.size() >= 2U) {
+      auto marker = read_epoch_relative_bounded(operation.value(), current_names[1],
+          kMaximumEpochGenesisRecordBytes);
+      if (!marker || marker.value() != expected_shortcut) return false;
+    }
+    if (current_names.size() >= 3U) {
+      auto marker = read_epoch_relative_bounded(operation.value(), current_names[2],
+          kMaximumEpochGenesisRecordBytes);
+      if (!marker || marker.value() != expected_registration) return false;
+    }
+    const EffectResult verified = provider_effects.verify_installed(transition);
+    return current && current.value() == epoch_reactivation_intent_bytes(intent) &&
+        provider_effects.inspect_candidate(transition) == CandidateState::exact &&
+        verified.ok && !verified.outcome_unknown &&
+        verified.receipt_sha256 == intent.target_verification_receipt_sha256 &&
+        operation.value().revalidate().ok() && maintenance.value().revalidate().ok() &&
+        scope.epoch.revalidate().ok() && scope.epochs.revalidate().ok() &&
+        scope.coordinator.revalidate().ok();
+  };
+  if (!exact_custody()) return Result::failure(epoch_recovery(
+      "reactivation provider or intent custody changed before native cutover"));
+  const std::string shortcut_bytes = epoch_reactivation_cutover_bytes(intent,
+      "10-shortcut-cutover", hash(epoch_reactivation_intent_bytes(intent)),
+      "shortcut");
+  const std::string registration_bytes = epoch_reactivation_cutover_bytes(intent,
+      "20-registration-cutover", hash(shortcut_bytes), "registration");
+  auto refreshed = operation.value().list_child_names_bounded(4U, names);
+  if (!refreshed.ok() || !epoch_reactivation_record_names(names))
+    return Result::failure(epoch_recovery(
+        "reactivation records changed before native cutover"));
+  if (names.size() < 2U || names[1] != fs::path("10-shortcut-cutover.v1.json")) {
+    const ShellState shell = shell_effects.inspect_shortcut(transition);
+    if (!exact_custody()) return Result::failure(epoch_recovery(
+        "reactivation custody changed before shortcut cutover"));
+    if (shell == ShellState::old_exact) {
+      const EffectResult changed = shell_effects.cutover_shortcut(transition);
+      if (!changed.ok || changed.outcome_unknown || !exact_custody())
+        return Result::failure(effect_error("self_maintenance_shortcut_failed",
+            "reactivation shortcut cutover failed", changed).error());
+    } else if (shell != ShellState::new_exact) {
+      return Result::failure(epoch_recovery(
+          "reactivation shortcut is not exactly source or target owned"));
+    }
+    if (shell_effects.inspect_shortcut(transition) != ShellState::new_exact ||
+        !exact_custody())
+      return Result::failure(epoch_recovery(
+          "reactivation shortcut did not reach exact target ownership"));
+    auto written = publish_epoch_record(operation.value(),
+        "10-shortcut-cutover.staging.v1.json",
+        "10-shortcut-cutover.v1.json", shortcut_bytes, 3U);
+    if (!written) return Result::failure(written.error());
+  }
+  if (shell_effects.inspect_shortcut(transition) != ShellState::new_exact ||
+      !exact_custody())
+    return Result::failure(epoch_recovery(
+        "reactivation shortcut changed before registration cutover"));
+  if (!operation.value().list_child_names_bounded(4U, names).ok() ||
+      !epoch_reactivation_record_names(names))
+    return Result::failure(epoch_recovery(
+        "reactivation records changed before registration cutover"));
+  if (names.size() < 3U || names[2] !=
+          fs::path("20-registration-cutover.v1.json")) {
+    const ShellState shell = shell_effects.inspect_registration(transition);
+    if (!exact_custody()) return Result::failure(epoch_recovery(
+        "reactivation custody changed before registration cutover"));
+    if (shell == ShellState::old_exact) {
+      const EffectResult changed = shell_effects.cutover_registration(transition);
+      if (!changed.ok || changed.outcome_unknown || !exact_custody())
+        return Result::failure(effect_error("self_maintenance_registration_failed",
+            "reactivation registration cutover failed", changed).error());
+    } else if (shell != ShellState::new_exact) {
+      return Result::failure(epoch_recovery(
+          "reactivation registration is not exactly source or target owned"));
+    }
+    if (shell_effects.inspect_registration(transition) != ShellState::new_exact ||
+        !exact_custody())
+      return Result::failure(epoch_recovery(
+          "reactivation registration did not reach exact target ownership"));
+    auto written = publish_epoch_record(operation.value(),
+        "20-registration-cutover.staging.v1.json",
+        "20-registration-cutover.v1.json", registration_bytes, 3U);
+    if (!written) return Result::failure(written.error());
+  }
+  if (shell_effects.inspect_shortcut(transition) != ShellState::new_exact ||
+      shell_effects.inspect_registration(transition) != ShellState::new_exact ||
+      !exact_custody())
+    return Result::failure(epoch_recovery(
+        "reactivation native ownership changed before activation"));
+  auto activations = open_or_create_epoch_child(scope.epoch, "activations");
+  if (!activations) return Result::failure(activations.error());
+  const std::string activation_bytes = epoch_link_activation_bytes(epoch,
+      intent.operation, intent.operation_id, intent.source_generation_id,
+      intent.target_generation_id, intent.target_generation_sha256,
+      intent.source_activation_name, intent.source_activation_sha256);
+  if (hash(activation_bytes) != intent.target_activation_sha256)
+    return Result::failure(epoch_recovery(
+        "reactivation activation bytes changed after native cutover"));
+  auto written = publish_epoch_record(activations.value(),
+      "activation." + intent.operation_id + ".staging.v2.json",
+      intent.target_activation_name, activation_bytes,
+      kMaximumEpochActivationRecords);
+  if (!written) return Result::failure(written.error());
+  auto active = discover_lifecycle_epoch_active(request.coordinator_root);
+  if (!active || active.value().active.activation_name !=
+          intent.target_activation_name ||
+      active.value().active.activation_sha256 != intent.target_activation_sha256 ||
+      active.value().active.active.generation_id != intent.target_generation_id)
+    return Result::failure(!active ? active.error() : epoch_recovery(
+        "reactivation did not publish an exact active head"));
+  const EffectResult retired = shell_effects.retire_shortcut_backup(transition);
+  if (!retired.ok || retired.outcome_unknown || !digest(retired.receipt_sha256) ||
+      !exact_custody())
+    return Result::failure(effect_error(
+        "self_maintenance_shortcut_backup_retirement_failed",
+        "reactivation shortcut backup retirement failed", retired).error());
+  return Result::success({"reactivation_complete", transition.target, journal});
 }
 
 facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transition(
@@ -5557,6 +6048,74 @@ bool completed_epoch_shell_cutover(const LifecycleEpoch &epoch,
           operation_name, candidate.operation).ok() ||
       !candidate.operation.list_child_names_bounded(
           10U, candidate.record_names).ok()) return false;
+  const std::vector<fs::path> reactivation_names = {
+      "00-reactivation-intent.v1.json", "10-shortcut-cutover.v1.json",
+      "20-registration-cutover.v1.json"};
+  if (candidate.record_names == reactivation_names) {
+    candidate.records.reserve(reactivation_names.size());
+    for (const fs::path &name : reactivation_names) {
+      auto held = hold_publication_record(candidate.operation, name);
+      if (!held) return false;
+      notify_epoch_record_pinned(candidate.operation.path() / name);
+      candidate.records.push_back(held.take_value());
+    }
+    const std::string &intent_bytes = candidate.records[0].bytes;
+    auto intent = parse_epoch_reactivation_intent(intent_bytes, epoch, operation_name);
+    if (!intent) return false;
+    std::string target_bytes;
+    auto target = parse_epoch_generation(epoch, scope,
+        intent.value().target_generation_id, &target_bytes);
+    if (!target || hash(target_bytes) != intent.value().target_generation_sha256 ||
+        target.value().package_sha256 != intent.value().target_package_sha256)
+      return false;
+    std::string source_bytes;
+    auto source = parse_epoch_generation(epoch, scope,
+        intent.value().source_generation_id, &source_bytes);
+    Semver source_version, target_version;
+    if (!source || !semver(source.value().product_version, source_version) ||
+        !semver(target.value().product_version, target_version) ||
+        (intent.value().operation == "update" &&
+            compare(target_version, source_version) <= 0) ||
+        (intent.value().operation == "downgrade" &&
+            compare(target_version, source_version) >= 0))
+      return false;
+    facman::platform::StableDirectoryObject activations;
+    if (!scope.epoch.open_child_directory_no_follow("activations", activations).ok())
+      return false;
+    auto source_activation = read_epoch_relative_bounded(activations,
+        intent.value().source_activation_name, kMaximumEpochGenesisRecordBytes);
+    if (!source_activation || hash(source_activation.value()) !=
+            intent.value().source_activation_sha256) return false;
+    const std::string activation_bytes = epoch_link_activation_bytes(epoch,
+        intent.value().operation, intent.value().operation_id,
+        intent.value().source_generation_id, intent.value().target_generation_id,
+        intent.value().target_generation_sha256,
+        intent.value().source_activation_name,
+        intent.value().source_activation_sha256);
+    auto target_activation = read_epoch_relative_bounded(activations,
+        intent.value().target_activation_name, kMaximumEpochGenesisRecordBytes);
+    if (!target_activation || target_activation.value() != activation_bytes ||
+        hash(activation_bytes) != intent.value().target_activation_sha256 ||
+        !activations.revalidate().ok())
+      return false;
+    const std::string shortcut_bytes = epoch_reactivation_cutover_bytes(
+        intent.value(), "10-shortcut-cutover", hash(intent_bytes), "shortcut");
+    const std::string registration_bytes = epoch_reactivation_cutover_bytes(
+        intent.value(), "20-registration-cutover", hash(shortcut_bytes), "registration");
+    if (candidate.records[1].bytes != shortcut_bytes ||
+        candidate.records[2].bytes != registration_bytes) return false;
+    candidate.operation_id = intent.value().operation_id;
+    candidate.activation_name = intent.value().target_activation_name;
+    candidate.activation_sha256 = intent.value().target_activation_sha256;
+    candidate.source_activation_name = intent.value().source_activation_name;
+    candidate.source_activation_sha256 = intent.value().source_activation_sha256;
+    candidate.source_generation_id = intent.value().source_generation_id;
+    candidate.generation_id = intent.value().target_generation_id;
+    candidate.reactivation = true;
+    if (!revalidate_completed_epoch_shell_cutover(candidate, scope)) return false;
+    completed = std::move(candidate);
+    return true;
+  }
   const std::vector<fs::path> expected_names = {
       "00-handoff-ready.v3.json", "10-provider-apply-bound.v2.json",
       "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
@@ -6092,6 +6651,152 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
         held_unfinished_records.push_back(std::move(snapshot));
         continue;
       }
+    if (records.front() == fs::path("00-reactivation-intent.v1.json") ||
+        records.front() == fs::path("00-reactivation-intent.staging.v1.json")) {
+      if (!epoch_reactivation_record_names(records))
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            epoch_recovery("epoch reactivation records are foreign or out of order"));
+      std::vector<HeldPublicationRecord> held_records;
+      for (const fs::path &record_name : records) {
+        auto held = hold_publication_record(operation, record_name);
+        if (!held)
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              held.error());
+        notify_epoch_record_pinned(operation.path() / record_name);
+        held_records.push_back(held.take_value());
+      }
+      auto intent = parse_epoch_reactivation_intent(held_records.front().bytes,
+          epoch.value(), operation_name);
+      if (!intent)
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            intent.error());
+      const std::string shortcut_bytes = epoch_reactivation_cutover_bytes(
+          intent.value(), "10-shortcut-cutover", hash(held_records.front().bytes),
+          "shortcut");
+      const std::string registration_bytes = epoch_reactivation_cutover_bytes(
+          intent.value(), "20-registration-cutover", hash(shortcut_bytes),
+          "registration");
+      if ((held_records.size() >= 2U && held_records[1].bytes != shortcut_bytes) ||
+          (held_records.size() >= 3U && held_records[2].bytes != registration_bytes) ||
+          !std::all_of(held_records.begin(), held_records.end(),
+              [](HeldPublicationRecord &held) {
+                return held_file_matches_bytes(held.file, held.bytes);
+              }))
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            epoch_recovery("epoch reactivation cutover records changed or are foreign"));
+      std::string target_bytes;
+      auto target = parse_epoch_generation(epoch.value(), scope,
+          intent.value().target_generation_id, &target_bytes);
+      if (!target || hash(target_bytes) !=
+              intent.value().target_generation_sha256 ||
+          target.value().package_sha256 != intent.value().target_package_sha256)
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            !target ? target.error() : epoch_recovery(
+                "reactivation target generation changed after intent"));
+      const fs::path repair_package = epoch.value().state_root / "repair-sources" /
+          (intent.value().target_package_sha256 + ".zip");
+      auto retained_package = inspect_package(repair_package);
+      if (!retained_package || retained_package.value().package_sha256 !=
+              intent.value().target_package_sha256 ||
+          !same_descriptor(retained_package.value().descriptor,
+                           generation_descriptor(target.value())))
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            !retained_package ? retained_package.error() : epoch_recovery(
+                "reactivation retained package changed after intent"));
+      const std::string activation_bytes = epoch_link_activation_bytes(
+          epoch.value(), intent.value().operation, intent.value().operation_id,
+          intent.value().source_generation_id,
+          intent.value().target_generation_id,
+          intent.value().target_generation_sha256,
+          intent.value().source_activation_name,
+          intent.value().source_activation_sha256);
+      if (hash(activation_bytes) != intent.value().target_activation_sha256)
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            epoch_recovery("reactivation intent does not bind its activation"));
+      PendingEpochTransitionState pending_state{target.value(),
+          epoch_generation_staging_name(target.value().generation_id),
+          intent.value().target_activation_name,
+          "activation." + intent.value().operation_id + ".staging.v2.json",
+          activation_bytes};
+      auto active = discover_epoch_genesis_state(epoch.value(), scope, nullptr,
+          false, &intent.value().operation_id, &pending_state);
+      if (!active || !active.value().has_value() ||
+          (active.value()->activation_name != intent.value().source_activation_name &&
+           active.value()->activation_name != intent.value().target_activation_name))
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            !active ? active.error() : epoch_recovery(
+                "reactivation intent is not attached to the current activation head"));
+      EpochPendingTransition candidate;
+      candidate.epoch_id = epoch.value().epoch_id;
+      candidate.epoch_manifest_sha256 = epoch.value().manifest_sha256;
+      candidate.operation = intent.value().operation == "update"
+          ? Operation::update : Operation::downgrade;
+      candidate.operation_id = intent.value().operation_id;
+      candidate.journal_sha256 = hash(held_records.front().bytes);
+      candidate.retained_package = retained_package.take_value();
+      candidate.shell_integration = intent.value().shell_integration;
+      candidate.source_activation_name = intent.value().source_activation_name;
+      candidate.source_activation_sha256 = intent.value().source_activation_sha256;
+      candidate.target = target.take_value();
+      candidate.target_activation_name = intent.value().target_activation_name;
+      candidate.target_activation_sha256 = intent.value().target_activation_sha256;
+      const bool cutover_final = records.size() == 3U &&
+          records.back() == fs::path("20-registration-cutover.v1.json");
+      const bool activation_final =
+          active.value()->activation_name == intent.value().target_activation_name;
+      if ((activation_final && !cutover_final) ||
+          (!activation_final &&
+           (active.value()->activation_name !=
+                intent.value().source_activation_name ||
+            active.value()->activation_sha256 !=
+                intent.value().source_activation_sha256 ||
+            !active.value()->previous.has_value() ||
+            active.value()->previous->generation_id !=
+                intent.value().target_generation_id)) ||
+          (activation_final &&
+           (!active.value()->previous.has_value() ||
+            active.value()->previous->generation_id !=
+                intent.value().source_generation_id)))
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            epoch_recovery("reactivation intent is not the immediate predecessor transition"));
+      candidate.completed = cutover_final && activation_final;
+      candidate.phase = candidate.completed ? "reactivation_complete"
+          : "reactivation_pending";
+      if (candidate.completed) {
+        CompletedEpochShellCutover completed;
+        if (!completed_epoch_shell_cutover(epoch.value(), scope,
+                                           operation_name, completed))
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              epoch_recovery("completed epoch reactivation is not exact"));
+        held_completed_records.push_back(std::move(completed));
+        completions.push_back(std::move(candidate));
+      } else {
+        if (unfinished.has_value())
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              epoch_recovery("more than one unfinished epoch transition exists"));
+        ScanOperationSnapshot snapshot;
+        if (!scope.epoch.open_child_directory_no_follow("maintenance",
+                snapshot.maintenance).ok() ||
+            !snapshot.maintenance.list_child_names_bounded(
+                kMaximumEpochActivationRecords + 1U,
+                snapshot.operation_names).ok() ||
+            snapshot.operation_names != operations ||
+            !snapshot.maintenance.open_child_directory_no_follow(operation_name,
+                snapshot.operation).ok() ||
+            !snapshot.operation.list_child_names_bounded(
+                kMaximumEpochPublicationRecords + 1U,
+                snapshot.record_names).ok() ||
+            snapshot.record_names != records)
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              epoch_recovery("pending reactivation custody changed"));
+        snapshot.operation_present = true;
+        snapshot.records = std::move(held_records);
+        held_unfinished_records.push_back(std::move(snapshot));
+        unfinished_pending_state = std::move(pending_state);
+        unfinished = std::move(candidate);
+      }
+      continue;
+    }
     const bool continuation_records = records.size() <= kMaximumEpochContinuationRecords;
     const auto valid_records = continuation_records
         ? validate_epoch_continuation_names(operation, records)
