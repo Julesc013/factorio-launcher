@@ -67,9 +67,12 @@ def sha256_file(path: Path) -> str:
 
 
 def candidate_payload_path_capacity(package: Path, fixture_root: Path) -> dict[str, object]:
-    """Bind the longest installed package path before the expensive transition."""
+    """Bind both flat and real-epoch package paths before the transition."""
 
-    target_root = fixture_root / "Programs" / CURRENT_GENERATION_DIRECTORY
+    target_roots = (
+        fixture_root / "Programs" / CURRENT_GENERATION_DIRECTORY,
+        fixture_root / "e" / "Programs" / CURRENT_GENERATION_DIRECTORY,
+    )
     longest: tuple[int, str, str] | None = None
     with zipfile.ZipFile(package) as archive:
         for entry in archive.infolist():
@@ -84,10 +87,11 @@ def candidate_payload_path_capacity(package: Path, fixture_root: Path) -> dict[s
                     "candidate setup overlay contains a noncanonical payload path"
                 )
             relative = "/".join(parts[1:])
-            target = target_root.joinpath(*parts[1:])
-            units = len(str(target).encode("utf-16-le")) // 2
-            if longest is None or units > longest[0]:
-                longest = (units, relative, str(target))
+            for target_root in target_roots:
+                target = target_root.joinpath(*parts[1:])
+                units = len(str(target).encode("utf-16-le")) // 2
+                if longest is None or units > longest[0]:
+                    longest = (units, relative, str(target))
     if longest is None:
         raise ValueError("candidate setup overlay contains no payload files")
     units, relative, target = longest
@@ -795,7 +799,7 @@ def execute(args: argparse.Namespace) -> int:
         write_attempt(attempt_path, attempt)
         checkout_root, baseline_root = predecessor_roots(task_root, baseline_revision)
         fixture_root = require_external_new(
-            evidence_root / "maintenance-transition", "transition fixture root"
+            evidence_root / "m", "transition fixture root"
         )
         evidence = fixture_root / "windows-real-self-maintenance-transition.v1.json"
         attempt["candidate_payload_path_capacity"] = candidate_payload_path_capacity(

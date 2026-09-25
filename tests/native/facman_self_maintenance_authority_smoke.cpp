@@ -95,6 +95,15 @@ public:
         : facman::self_maintenance::EffectResult{false, false, {},
             "epoch clone is absent"};
   }
+  facman::self_maintenance::EffectResult review_epoch_clone(
+      const Generation &, const Generation &) override {
+    ++review_calls;
+    return refuse_plan
+        ? facman::self_maintenance::EffectResult{false, false, {},
+            "native_path_limit_exceeded"}
+        : facman::self_maintenance::EffectResult{true, false,
+            digest("epoch-clone-plan\n"), {}};
+  }
   facman::self_maintenance::EffectResult clone_epoch(
       const Generation &, const Generation &) override {
     ++clone_calls;
@@ -131,10 +140,12 @@ public:
   }
   bool interrupt_clone = true;
   bool interrupt_registration = true;
+  bool refuse_plan = false;
   bool installed = false;
   bool shortcut = false;
   bool registration = false;
   int clone_calls = 0;
+  int review_calls = 0;
 };
 
 LifecycleEpoch publish_epoch(const fs::path &root, const Generation &source,
@@ -215,6 +226,27 @@ int main() {
                     orphan_selected.error().code ==
                         "self_maintenance_epoch_recovery_required",
                 "orphan epoch retirement root was treated as empty state");
+
+  const fs::path refused_root = root / "bootstrap-plan-refusal";
+  const fs::path refused_coordinator = refused_root / "coordinator";
+  fs::create_directories(refused_root);
+  const Generation refused_source = flat_generation(refused_root);
+  auto refused_adoption = facman::self_maintenance::adopt_legacy(
+      refused_coordinator, refused_source, true);
+  BootstrapEffects refused_effects;
+  refused_effects.refuse_plan = true;
+  const facman::self_maintenance::CompatibilityAuthorityBootstrapRequest
+      refused_request{refused_coordinator, descriptor(),
+                      refused_source.package_sha256, true, true};
+  auto refused_bootstrap = facman::self_maintenance::bootstrap_compatibility_authority(
+      refused_request, refused_effects);
+  ok &= require(refused_adoption && !refused_bootstrap &&
+                    refused_bootstrap.error().code == "self_maintenance_plan_failed" &&
+                    refused_effects.review_calls == 1 &&
+                    refused_effects.clone_calls == 0 &&
+                    !fs::exists(refused_coordinator / "epochs") &&
+                    !fs::exists(refused_coordinator / "authority-bootstrap.v1"),
+                "provider plan refusal wrote bootstrap state before clone entry");
 
   // Core persistence only: the production Setup adapter and package are
   // qualified separately. A replay must inspect an entered clone, not apply

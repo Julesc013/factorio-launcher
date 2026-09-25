@@ -1781,7 +1781,7 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         # The flat transition above proves compatibility behavior. This
         # separate ordinary install must create a real epoch before either
         # source-distinct maintenance operation is admitted.
-        epoch_fixture = root / "EpochSourceDistinct"
+        epoch_fixture = root / "e"
         epoch_fixture.mkdir()
         epoch_programs = epoch_fixture / "Programs"
         epoch_programs.mkdir()

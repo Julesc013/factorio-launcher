@@ -285,3 +285,19 @@ checkpoint, not product qualification or authority to publish.
   argument, which is `path`, not `detail`. The pending correction uses
   `setup_error_with_detail` for this refusal and the inventory-error diagnostic.
   This candidate did not run the source-distinct external journey.
+- Candidate `36092903174` at `56bcc314` retained a passing Windows current-user
+  receipt in resource artifact `10846443028`; the foreign refusal included
+  `detail=foreign_content_review_required`. Its requested final Alpha.5
+  baseline `a7a518db` had different provider-lock bytes, so the optional
+  source-distinct runner stopped before building the predecessor.
+- Alpha.5 ancestor `94f5eccd822a9076e32310355542b36d707752c9` has the exact
+  current provider lock and self-maintenance package source. Candidate
+  `36093863511` built its source-distinct Alpha.5 package and passed the flat
+  A-to-B-to-A-to-B transition. The separate ordinary real-epoch install then
+  failed with USK `native_path_limit_exceeded`: the candidate fixture had only
+  eight UTF-16 code units of flat-path headroom, while its nested epoch fixture
+  added more than that. Setup had already written `10-clone-entered` and
+  reported recovery-required. Pending corrections shorten the marker-owned
+  disposable fixture, measure the longest epoch path before building the
+  predecessor, and run a read-only provider clone plan before any bootstrap
+  reservation or provider-entry journal. External continuation remains unrun.

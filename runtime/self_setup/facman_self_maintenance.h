@@ -156,6 +156,8 @@ public:
   virtual ~CompatibilityAuthorityBootstrapEffects() = default;
   virtual EffectResult inspect_epoch_clone(const Generation &source,
                                            const Generation &target) = 0;
+  virtual EffectResult review_epoch_clone(const Generation &source,
+                                          const Generation &target) = 0;
   virtual EffectResult clone_epoch(const Generation &source,
                                    const Generation &target) = 0;
   virtual ShellState inspect_epoch_shortcut(const Generation &source,

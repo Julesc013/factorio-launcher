@@ -6586,6 +6586,24 @@ bootstrap_compatibility_authority(
   auto target = make_epoch_genesis_generation(epoch,
       request.package_descriptor, request.package_sha256);
   if (!target) return fail(target.error());
+  // The provider owns the Windows path limit and recipe admission. Run its
+  // read-only plan before publishing even the first bootstrap reservation.
+  // An exact clone on retry has already crossed that boundary and must not
+  // be asked to plan a second install over its existing provider identity.
+  const EffectResult preexisting_clone = effects.inspect_epoch_clone(
+      source, target.value());
+  if (preexisting_clone.outcome_unknown)
+    return fail(epoch_recovery("epoch clone identity is ambiguous before bootstrap",
+                               preexisting_clone.detail));
+  if (!preexisting_clone.ok) {
+    const EffectResult reviewed = effects.review_epoch_clone(
+        source, target.value());
+    if (!reviewed.ok || reviewed.outcome_unknown ||
+        !digest(reviewed.receipt_sha256))
+      return fail(failure("self_maintenance_plan_failed",
+                          "epoch clone provider plan was refused",
+                          reviewed.detail));
+  }
   if (request.apply) {
     auto recovered = recover_bootstrap_epoch_manifest(
         request.coordinator_root, epoch, *flat.value());
@@ -6675,6 +6693,13 @@ bootstrap_compatibility_authority(
         return fail(epoch_recovery(
             "epoch clone already exists without a durable bootstrap entry",
             preexisting.detail));
+      const EffectResult reviewed = effects.review_epoch_clone(
+          source, target.value());
+      if (!reviewed.ok || reviewed.outcome_unknown ||
+          !digest(reviewed.receipt_sha256))
+        return fail(failure("self_maintenance_plan_failed",
+                            "epoch clone provider plan changed before entry",
+                            reviewed.detail));
       const auto published = publish_epoch_record(journal.value(),
           "10-clone-entered.staging.v1.json", phases[0], entered_bytes, 6U);
       if (!published) return fail(published.error());

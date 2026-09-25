@@ -2034,7 +2034,7 @@ public:
         context, target.package_sha256, &pinned);
     if (!retained.ok)
       return {false, retained.recovery_required, {}, retained.detail};
-    const auto reviewed = provider_.review_install_local(plan);
+    const auto reviewed = review_epoch_clone(source, target);
     if (!reviewed.ok || reviewed.outcome_unknown)
       return reviewed;
     std::string detail;
@@ -2046,6 +2046,12 @@ public:
     if (!pinned.revalidate(detail))
       return {false, true, {}, detail};
     return inspect_epoch_clone(source, target);
+  }
+
+  facman::self_maintenance::EffectResult review_epoch_clone(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    return provider_.review_install_local(transition(source, target));
   }
 
   facman::self_maintenance::ShellState inspect_epoch_shortcut(
