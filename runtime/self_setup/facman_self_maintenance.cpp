@@ -6893,7 +6893,7 @@ facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
     return Result::failure(!discovered ? discovered.error() : epoch_recovery(
         "successor install requires a completed real lifecycle epoch"));
   LifecycleEpochChain predecessor_chain = discovered.value();
-  const LifecycleEpoch &tail = predecessor_chain.epochs.back();
+  const LifecycleEpoch tail = predecessor_chain.epochs.back();
   bool published = false;
   if (tail.retirement_sha256.empty()) {
     if (tail.compatibility_epoch || predecessor_chain.epochs.size() < 2U)

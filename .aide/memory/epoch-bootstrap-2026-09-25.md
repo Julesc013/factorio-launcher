@@ -224,3 +224,9 @@ checkpoint, not product qualification or authority to publish.
   native empty-directory recovery case and diagnostic errors for the failing
   successor assertion. Syntax checks, strict check, focused candidate
   contract tests, and `git diff --check` pass; hosted execution is pending.
+- Hosted Linux native at `333e234d` identified the exact successor retry
+  fault: the planner held a reference to the tail of a copied epoch vector,
+  popped that tail for a published successor, then compared through the
+  invalidated reference. The next one-line fix copies the tail before pop.
+  The authority smoke includes both prepublication and published retry and
+  will be rerun before a new product candidate.
