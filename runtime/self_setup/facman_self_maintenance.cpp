@@ -3681,9 +3681,16 @@ facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoc
   target.install_id = epoch_generation_install_id(epoch.epoch_id,
                                                    target.generation_id);
   target.install_root = epoch_generation_install_root(epoch.logical_root, epoch.epoch_id,
-                                                       target.generation_id);
+                                                        target.generation_id);
   target.gui = target.install_root / "generations" / target.product_version / "FacMan.exe";
   target.maintenance_launcher = target.install_root / "maintenance" / "FacManSetup.exe";
+  const bool retained_predecessor = active.previous.has_value() &&
+      active.previous->generation_id == target.generation_id;
+  if (retained_predecessor &&
+      epoch_generation_bytes(epoch, *active.previous) != epoch_generation_bytes(epoch, target))
+    return facman::core::Result<Plan>::failure(failure(
+        "self_maintenance_retained_target_invalid",
+        "epoch package does not match the exact immediate retained predecessor"));
   Semver source_version, target_version;
   if (!exact_epoch_generation_paths(epoch, target) ||
       !semver(active.active.product_version, source_version) ||
@@ -3693,11 +3700,76 @@ facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoc
     return facman::core::Result<Plan>::failure(failure(
         "self_maintenance_version_direction_invalid", "epoch transition direction is invalid"));
   return facman::core::Result<Plan>::success({operation_name(request.operation), request.operation_id,
-      active.active, target, request.package.package, request.package.package_sha256, "install_local",
+      active.active, target, request.package.package, request.package.package_sha256,
+      retained_predecessor ? "reactivate" : "install_local",
       active.activation_name, active.activation_sha256});
 }
 
 } // namespace
+
+facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
+    const EpochTransitionRequest &request, EpochContinuationEffects &effects) {
+  std::string detail;
+  if (request.apply || !request.coordinator_root.is_absolute() ||
+      !digest(request.epoch_id) ||
+      !facman::base::validate_identifier(request.operation_id, detail) ||
+      (request.operation != Operation::update && request.operation != Operation::downgrade))
+    return facman::core::Result<Plan>::failure(failure(
+        "self_maintenance_input_invalid", "epoch reactivation review identifiers are invalid"));
+  auto chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root);
+  if (!chain || chain.value().epochs.empty() ||
+      chain.value().epochs.back().compatibility_epoch ||
+      chain.value().epochs.back().epoch_id != request.epoch_id)
+    return facman::core::Result<Plan>::failure(!chain ? chain.error() :
+        epoch_recovery("reactivation requires the authoritative real lifecycle tail"));
+  const LifecycleEpoch &epoch = chain.value().epochs.back();
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(request.coordinator_root, epoch.epoch_id);
+  if (!opened) return facman::core::Result<Plan>::failure(opened.error());
+  auto active = discover_epoch_genesis_state(epoch, scope);
+  if (!active || !active.value().has_value())
+    return facman::core::Result<Plan>::failure(!active ? active.error() :
+        epoch_recovery("reactivation has no committed active generation"));
+  auto inspected = inspect_package(request.package.package);
+  if (!inspected || inspected.value().package_sha256 != request.package.package_sha256 ||
+      inspected.value().maintenance_launcher_sha256 !=
+          request.package.maintenance_launcher_sha256 ||
+      !same_descriptor(inspected.value().descriptor, request.package.descriptor))
+    return facman::core::Result<Plan>::failure(!inspected ? inspected.error() :
+        failure("self_maintenance_package_changed",
+                "reactivation source package changed after caller inspection"));
+  auto planned = make_epoch_transition_plan(epoch, *active.value(), request);
+  if (!planned || planned.value().provider_operation != "reactivate")
+    return facman::core::Result<Plan>::failure(!planned ? planned.error() :
+        failure("self_maintenance_retained_target_invalid",
+                "package does not identify the exact immediate retained predecessor"));
+  const CandidateState candidate = effects.inspect_candidate(planned.value());
+  if (candidate != CandidateState::exact)
+    return facman::core::Result<Plan>::failure(failure(
+        "self_maintenance_candidate_unsafe",
+        "retained epoch installation is absent, foreign, or unreadable"));
+  const EffectResult verified = effects.verify_installed(planned.value());
+  if (!verified.ok || verified.outcome_unknown || !digest(verified.receipt_sha256))
+    return facman::core::Result<Plan>::failure(effect_error(
+        "self_maintenance_verify_failed",
+        "retained epoch installation did not verify exactly", verified).error());
+  if (effects.inspect_candidate(planned.value()) != CandidateState::exact)
+    return facman::core::Result<Plan>::failure(epoch_recovery(
+        "retained epoch installation changed during verification"));
+  auto final_package = inspect_package(request.package.package);
+  if (!final_package || final_package.value().package_sha256 !=
+          request.package.package_sha256)
+    return facman::core::Result<Plan>::failure(!final_package ? final_package.error() :
+        failure("self_maintenance_package_changed",
+                "reactivation source package changed during verification"));
+  auto latest = discover_epoch_genesis_state(epoch, scope);
+  if (!latest || !latest.value().has_value() ||
+      latest.value()->activation_name != active.value()->activation_name ||
+      latest.value()->activation_sha256 != active.value()->activation_sha256)
+    return facman::core::Result<Plan>::failure(!latest ? latest.error() :
+        epoch_recovery("reactivation source changed during read-only review"));
+  return planned;
+}
 
 facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transition(
     const EpochTransitionRequest &request, EpochPreparationEffects &effects) {
@@ -3742,6 +3814,10 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
               "caller package inspection does not match the exact source package"));
     auto transition = make_epoch_transition_plan(epoch, *active.value(), request);
     if (!transition) return facman::core::Result<EpochTransitionPreparation>::failure(transition.error());
+    if (transition.value().provider_operation != "install_local")
+      return facman::core::Result<EpochTransitionPreparation>::failure(failure(
+          "self_maintenance_candidate_unsafe",
+          "retained predecessor requires verified reactivation, not provider installation"));
     if (effects.inspect_candidate(transition.value()) != CandidateState::absent)
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(
           "self_maintenance_candidate_unsafe", "epoch target generation is not absent"));
@@ -3812,6 +3888,9 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
     auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request);
     if (!planned) return facman::core::Result<EpochTransitionPreparation>::failure(planned.error());
     transition = planned.take_value();
+    if (transition.provider_operation != "install_local")
+      return facman::core::Result<EpochTransitionPreparation>::failure(epoch_recovery(
+          "retained handoff changed into a reactivation request"));
     if (effects.inspect_candidate(transition) != CandidateState::absent)
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(
           "self_maintenance_candidate_unsafe", "epoch target generation is not absent"));
@@ -3828,6 +3907,10 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
               "source package inspection changed under coordinator lock"));
     auto source_plan = make_epoch_transition_plan(epoch, *locked_active.value(), request);
     if (!source_plan) return facman::core::Result<EpochTransitionPreparation>::failure(source_plan.error());
+    if (source_plan.value().provider_operation != "install_local")
+      return facman::core::Result<EpochTransitionPreparation>::failure(failure(
+          "self_maintenance_candidate_unsafe",
+          "retained predecessor requires verified reactivation, not provider installation"));
     if (effects.inspect_candidate(source_plan.value()) != CandidateState::absent)
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(
           "self_maintenance_candidate_unsafe", "epoch target generation is not absent"));
@@ -3859,6 +3942,9 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
     auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request);
     if (!planned) return facman::core::Result<EpochTransitionPreparation>::failure(planned.error());
     transition = planned.take_value();
+    if (transition.provider_operation != "install_local")
+      return facman::core::Result<EpochTransitionPreparation>::failure(epoch_recovery(
+          "retained package changed into a reactivation request"));
     reviewed = effects.review_install_local(transition);
     if (!reviewed.ok || reviewed.outcome_unknown || !digest(reviewed.receipt_sha256))
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(

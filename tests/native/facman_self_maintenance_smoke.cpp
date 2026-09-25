@@ -2834,57 +2834,34 @@ int main(int argc, char **argv) {
       provider_continuation.request.continuation_helper;
   third_preparation_request.continuation_helper_sha256 =
       provider_continuation.request.continuation_helper_sha256;
+  EpochContinuationFakeEffects retained_review_effects;
+  retained_review_effects.candidate = CandidateState::exact;
+  auto retained_review_request = third_preparation_request;
+  retained_review_request.apply = false;
+  auto retained_review = facman::self_maintenance::review_lifecycle_epoch_reactivation(
+      retained_review_request, retained_review_effects);
+  ok &= require(provider_completed && retained_review &&
+                    retained_review.value().provider_operation == "reactivate" &&
+                    retained_review.value().target.generation_id ==
+                        provider_completed.value().transition.target.generation_id &&
+                    retained_review_effects.verify_calls == 1U &&
+                    retained_review_effects.bind_calls == 0U &&
+                    retained_review_effects.apply_calls == 0U,
+                "exact retained predecessor was not admitted without provider mutation");
+  EpochContinuationFakeEffects foreign_retained_effects;
+  foreign_retained_effects.candidate = CandidateState::foreign;
+  auto foreign_retained = facman::self_maintenance::review_lifecycle_epoch_reactivation(
+      retained_review_request, foreign_retained_effects);
+  ok &= require(!foreign_retained &&
+                    foreign_retained.error().code == "self_maintenance_candidate_unsafe" &&
+                    foreign_retained_effects.verify_calls == 0U,
+                "foreign retained predecessor reached provider verification");
   auto third_prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       third_preparation_request, third_preparation_effects);
-  EpochContinuationFakeEffects third_continuation_effects;
-  auto third_continued = third_prepared
-      ? facman::self_maintenance::execute_lifecycle_epoch_continuation(
-            {provider_continuation.coordinator, "epoch.prepare.three",
-             third_prepared.value().nonce, third_prepared.value().journal_sha256, true},
-            third_continuation_effects)
-      : facman::core::Result<facman::self_maintenance::EpochContinuationResponse>::failure(
-            third_prepared.error());
-  EpochPublicationFakeEffects third_publication_effects;
-  auto third_published = third_prepared
-      ? facman::self_maintenance::execute_lifecycle_epoch_publication(
-            {provider_continuation.coordinator, "epoch.prepare.three",
-             third_prepared.value().nonce, third_prepared.value().journal_sha256, true},
-            third_publication_effects)
-      : facman::core::Result<facman::self_maintenance::EpochPublicationResponse>::failure(
-            third_prepared.error());
-  EpochShellCutoverFakeEffects third_shell_effects;
-  auto third_shell = third_prepared
-      ? facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
-            {provider_continuation.coordinator, "epoch.prepare.three",
-             third_prepared.value().nonce, third_prepared.value().journal_sha256, true},
-            third_shell_effects)
-      : facman::core::Result<facman::self_maintenance::EpochShellCutoverResponse>::failure(
-            third_prepared.error());
-  auto third_active = facman::self_maintenance::discover_lifecycle_epoch_active(
-      provider_continuation.coordinator);
-  auto third_lineage =
-      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
-          provider_continuation.coordinator);
-  auto third_completion =
-      facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
-          provider_continuation.coordinator);
-  ok &= require(third_prepared && third_continued && third_published && third_shell &&
-                    third_active && third_completion && third_completion.value() &&
-                    third_lineage && third_lineage.value().generations.size() == 4U &&
-                    third_lineage.value().generations[1].generation_id ==
-                        third_lineage.value().generations[3].generation_id &&
-                    third_lineage.value().generations[1].generation_id !=
-                        third_lineage.value().generations[2].generation_id &&
-                    provider_completed &&
-                    third_shell.value().generation.generation_id ==
-                        provider_completed.value().transition.target.generation_id &&
-                    third_active.value().active.active.generation_id ==
-                        provider_completed.value().transition.target.generation_id &&
-                    third_active.value().active.activation_name ==
-                        "activation.epoch.prepare.three.v2.json" &&
-                    third_completion.value()->operation_id == "epoch.prepare.three" &&
-                    third_completion.value()->completed,
-                "downgrade did not reactivate prior generation with the newest exact terminal history");
+  ok &= require(!third_prepared &&
+                    third_prepared.error().code == "self_maintenance_candidate_unsafe" &&
+                    third_preparation_effects.review_calls == 0U,
+                "retained predecessor entered the provider installation path");
 
 
   bool publication_staging_recovered = true;

@@ -527,6 +527,10 @@ discover_lifecycle_epoch_terminal_transition(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transition(
     const EpochTransitionRequest &request, EpochPreparationEffects &effects);
+// Read-only admission for an exact immediate predecessor. The existing
+// provider installation remains owned and is verified before native cutover.
+facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
+    const EpochTransitionRequest &request, EpochContinuationEffects &effects);
 facman::core::Result<Plan> admit_lifecycle_epoch_continuation(
     const std::filesystem::path &coordinator_root,
     const std::string &operation_id, const std::string &nonce,
