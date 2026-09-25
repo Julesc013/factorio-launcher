@@ -204,7 +204,8 @@ installed-state and receipts, and preserves workspaces and Factorio data.
 Verification requires the exact active generation and its installed-state
 receipt; a missing generation is a failure. Maintenance refuses a changed
 `current` pointer, linked effect roots, or foreign terminal/desktop entries
-before removal. It replaces its maintenance copy, desktop entry, and state
+before removal. First install also refuses preexisting native entries without
+installed ownership state. It replaces its maintenance copy, desktop entry, and state
 receipt through sibling temporary files so hardlinked external content is not
 rewritten in place. Source-distinct Linux update recovery remains an Alpha.6 gate.
 

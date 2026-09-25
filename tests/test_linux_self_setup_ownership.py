@@ -84,6 +84,35 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertEqual(sentinel.read_text(encoding="utf-8"),
                              "preserve foreign bytes\n")
 
+    def test_first_install_refuses_existing_native_entries_without_state(self) -> None:
+        for entry in ("terminal", "desktop"):
+            with self.subTest(entry=entry), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home = root / "home"
+                home.mkdir()
+                install = root / "install"
+                current = install / "current"
+                if entry == "terminal":
+                    user_bin = home / ".local/bin"
+                    user_bin.mkdir(parents=True)
+                    (user_bin / "facman").symlink_to(current / "facman")
+                else:
+                    desktop_root = home / ".local/share/applications"
+                    desktop_root.mkdir(parents=True)
+                    (desktop_root / "facman.desktop").write_text(
+                        "[Desktop Entry]\nType=Application\nName=FacMan\n"
+                        "Comment=Manage Factorio installations and isolated instances\n"
+                        f"Exec={current}/FacMan\nTerminal=false\n"
+                        "Categories=Game;Utility;\n", encoding="utf-8",
+                    )
+                script = self.setup_script(root)
+                result = self.invoke(
+                    script, home, "install", "--root", str(install), "--yes",
+                )
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn("refusing foreign FacMan", result.stderr)
+                self.assertFalse((install / "state").exists())
+
     def test_exact_install_verifies_and_uninstalls_without_touching_workspace(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -275,6 +304,8 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             zstd.chmod(0o755)
             installed = self.invoke(script, home, "install", "--yes", path_prefix=guard)
             self.assertEqual(installed.returncode, 0, installed.stderr)
+            desktop = home / ".local/share/applications/facman.desktop"
+            self.assertEqual(desktop.stat().st_mode & 0o777, 0o644)
             verified = self.invoke(script, home, "verify", path_prefix=guard)
             self.assertEqual(verified.returncode, 0, verified.stderr)
             installed_root = home / ".local/opt/facman"

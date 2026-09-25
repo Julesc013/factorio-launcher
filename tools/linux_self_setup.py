@@ -177,7 +177,8 @@ assert_native_integration_owned() {
   for name in facman FacMan; do
     link="$user_bin/$name"
     if [ -e "$link" ] || [ -L "$link" ]; then
-      if [ ! -L "$link" ] || [ "$(readlink "$link")" != "$current/$name" ]; then
+      if { [ "$operation" = 'install' ] && [ ! -L "$current" ]; } ||
+         [ ! -L "$link" ] || [ "$(readlink "$link")" != "$current/$name" ]; then
         echo 'refusing foreign FacMan terminal link' >&2
         return 1
       fi
@@ -186,7 +187,8 @@ assert_native_integration_owned() {
   desktop="$desktop_root/facman.desktop"
   if [ -e "$desktop" ] || [ -L "$desktop" ]; then
     expected_desktop=$(printf '[Desktop Entry]\nType=Application\nName=FacMan\nComment=Manage Factorio installations and isolated instances\nExec=%s/FacMan\nTerminal=false\nCategories=Game;Utility;\n' "$current")
-    if [ ! -f "$desktop" ] || [ -L "$desktop" ] ||
+    if { [ "$operation" = 'install' ] && [ ! -L "$current" ]; } ||
+       [ ! -f "$desktop" ] || [ -L "$desktop" ] ||
        [ "$(cat "$desktop")" != "$expected_desktop" ]; then
       echo 'refusing foreign FacMan desktop entry' >&2
       return 1
@@ -313,6 +315,7 @@ Exec=$current/FacMan
 Terminal=false
 Categories=Game;Utility;
 EOF
+chmod 0644 "$active_staging"
 mv -fT "$active_staging" "$desktop_root/facman.desktop"
 active_staging=''
 active_staging=$(mktemp "$state/.installed-state.v1.json.XXXXXX")
