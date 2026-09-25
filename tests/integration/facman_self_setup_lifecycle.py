@@ -1843,6 +1843,14 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         installed_helper = epoch_genesis_root / "maintenance" / "FacManSetup.exe"
         if not installed_helper.is_file():
             raise AssertionError("real epoch has no installed maintenance entry point")
+        epoch_verify_args = ("--root", epoch_install, "--state-root", epoch_state,
+                             "--acceptance-root", epoch_fixture)
+        epoch_verified = invoke(
+            installed_helper, "verify", *epoch_verify_args,
+            shell_integration=True, noninteractive=True,
+        )
+        if epoch_verified.get("provider", {}).get("payload", {}).get("status") != "pass":
+            raise AssertionError("ordinary real epoch did not verify its installed package")
         epoch_downgrade_launch = invoke(
             installed_helper, "downgrade", "--package", baseline_payload,
             *epoch_common, shell_integration=True, noninteractive=True,
@@ -1900,6 +1908,42 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         assert_owned_native(shortcut, registry, epoch_install, epoch_state,
                             epoch_fixture, baseline_identity["version"],
                             "source-distinct epoch downgrade",
+                            active_root=epoch_baseline_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+        epoch_baseline_gui = (epoch_baseline_root / "generations" /
+                              baseline_identity["version"] / "FacMan.exe")
+        baseline_gui_sha256 = sha256_path(epoch_baseline_gui)
+        epoch_baseline_gui.write_bytes(b"deliberate real-epoch damage after recovery\n")
+        damaged_epoch = invoke(
+            epoch_baseline_root / "maintenance" / "FacManSetup.exe",
+            "verify", *epoch_verify_args, shell_integration=True,
+            noninteractive=True,
+        )
+        if damaged_epoch.get("provider", {}).get("payload", {}).get("status") != "fail":
+            raise AssertionError("ordinary real-epoch verify did not detect package A damage")
+        epoch_repair_result = invoke_registered(
+            registry_text(registry, "ModifyPath"), "--json",
+        )
+        epoch_repair = json.loads(epoch_repair_result.stdout)
+        if (epoch_repair.get("status") != "ok" or
+                epoch_repair.get("operation") != "repair" or
+                epoch_repair.get("phase") != "receipt" or
+                sha256_path(epoch_baseline_gui) != baseline_gui_sha256):
+            raise AssertionError("registered real-epoch repair did not restore exact package A")
+        repaired_epoch = invoke(
+            epoch_baseline_root / "maintenance" / "FacManSetup.exe",
+            "verify", *epoch_verify_args, shell_integration=True,
+            noninteractive=True,
+        )
+        if repaired_epoch.get("provider", {}).get("payload", {}).get("status") != "pass":
+            raise AssertionError("ordinary real-epoch verify did not accept repaired package A")
+        shortcut, registry = observe("source_distinct_epoch_repair_completed",
+                                     epoch_baseline_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "source-distinct epoch repair",
                             active_root=epoch_baseline_root,
                             active_package_sha256=baseline_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,
@@ -1963,6 +2007,15 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256})
+        epoch_history = epoch_operation.parent.parent
+        history_before_retirement = {
+            "manifest": sha256_path(epoch_history / "epoch.v1.json"),
+            "generations": tree_snapshot(epoch_history / "generations"),
+            "activations": tree_snapshot(epoch_history / "activations"),
+        }
+        if (len(history_before_retirement["generations"]["files"]) < 2 or
+                len(history_before_retirement["activations"]["files"]) < 5):
+            raise AssertionError("real epoch lacks the durable transition history to retain")
         epoch_uninstall = registry_text(registry, "UninstallString")
         for step in range(5):
             removed = json.loads(invoke_registered(epoch_uninstall, "--json").stdout)
@@ -1975,9 +2028,16 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         shortcut, registry = observe("source_distinct_epoch_retirement_completed",
                                      epoch_updated_root)
         assert_absent_native(shortcut, registry, "source-distinct epoch retirement")
-        if (not epoch_keep.is_file() or not epoch_state.is_dir() or
+        if (not epoch_keep.is_file() or
+                epoch_keep.read_text(encoding="utf-8") != "preserve\n" or
+                not epoch_state.is_dir() or
                 epoch_genesis_root.exists() or epoch_baseline_root.exists() or
-                epoch_updated_root.exists()):
+                epoch_updated_root.exists() or
+                history_before_retirement != {
+                    "manifest": sha256_path(epoch_history / "epoch.v1.json"),
+                    "generations": tree_snapshot(epoch_history / "generations"),
+                    "activations": tree_snapshot(epoch_history / "activations"),
+                }):
             raise AssertionError("real epoch retirement did not preserve workspace and history")
         outcome = "passed"
         return 0
