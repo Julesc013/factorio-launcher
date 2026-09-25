@@ -1418,6 +1418,9 @@ facman::self_setup::RetainedSourceResult retain_repair_source(
 
 class SetupNativeEffects final : public facman::self_setup::NativeEffects {
 public:
+  explicit SetupNativeEffects(std::string controller_package_sha256 = {})
+      : controller_package_sha256_(std::move(controller_package_sha256)) {}
+
   facman::self_setup::RetainedSourceResult retain_repair_source(
       const facman::self_setup::NativeContext &context,
       const fs::path &package,
@@ -1443,22 +1446,26 @@ public:
       const facman::self_setup::NativeContext &context,
       facman::self_setup::NativeEffect effect) override {
     PinnedRepairSource pins;
+    PinnedRepairSource controller_pins;
     const auto retained = context.operation == facman::self_setup::Operation::uninstall
         ? ::validate_maintenance_launcher(
               context, context.repair_source.stem().string(), &pins)
         : ::validate_repair_source(
               context, context.repair_source.stem().string(), &pins);
     if (!retained.ok) return facman::self_setup::NativeOwnership::unreadable;
+    const auto controller = validate_controller(context, controller_pins);
+    if (!controller.ok) return facman::self_setup::NativeOwnership::unreadable;
     const auto observed = facman::setup::integration::inspect_windows_effect(
         effect == facman::self_setup::NativeEffect::shortcut
             ? facman::setup::integration::Effect::shortcut
             : facman::setup::integration::Effect::registration,
-        {context.install_root, context.state_root, context.acceptance_root,
-         context.repair_source},
+        integration_context(context),
         context.product_version,
         context.operation == facman::self_setup::Operation::uninstall);
     std::string pin_detail;
-    if (!pins.revalidate(pin_detail))
+    if (!pins.revalidate(pin_detail) ||
+        (!controller_package_sha256_.empty() &&
+         !controller_pins.revalidate(pin_detail)))
       return facman::self_setup::NativeOwnership::unreadable;
     switch (observed) {
     case facman::setup::integration::Ownership::absent:
@@ -1479,28 +1486,58 @@ public:
       const facman::self_setup::NativeContext &context,
       facman::self_setup::NativeEffect effect) override {
     PinnedRepairSource pins;
+    PinnedRepairSource controller_pins;
     const auto retained = context.operation == facman::self_setup::Operation::uninstall
         ? ::validate_maintenance_launcher(
               context, context.repair_source.stem().string(), &pins)
         : ::validate_repair_source(
               context, context.repair_source.stem().string(), &pins);
     if (!retained.ok) return {false, retained.detail, true};
+    const auto controller = validate_controller(context, controller_pins);
+    if (!controller.ok) return {false, controller.detail, true};
     const auto result = facman::setup::integration::apply_windows_effect(
         effect == facman::self_setup::NativeEffect::shortcut
             ? facman::setup::integration::Effect::shortcut
             : facman::setup::integration::Effect::registration,
-        {context.install_root, context.state_root, context.acceptance_root,
-         context.repair_source},
+        integration_context(context),
         context.product_version,
         context.operation == facman::self_setup::Operation::uninstall);
     std::string pin_detail;
-    if (!pins.revalidate(pin_detail)) {
+    if (!pins.revalidate(pin_detail) ||
+        (!controller_package_sha256_.empty() &&
+         !controller_pins.revalidate(pin_detail))) {
       const std::string detail = result.detail.empty()
           ? pin_detail : result.detail + "; cache revalidation: " + pin_detail;
       return {false, detail, true};
     }
     return {result.ok, result.detail, result.recovery_required};
   }
+
+private:
+  facman::setup::integration::MaintenanceContext integration_context(
+      const facman::self_setup::NativeContext &context) const {
+    const fs::path controller = controller_package_sha256_.empty()
+        ? fs::path{}
+        : context.state_root / "repair-sources" /
+            facman::platform::path_from_utf8(
+                controller_package_sha256_ + ".FacManSetup.exe");
+    return {context.install_root, context.state_root, context.acceptance_root,
+            context.repair_source, controller};
+  }
+
+  facman::self_setup::RetainedSourceResult validate_controller(
+      const facman::self_setup::NativeContext &context,
+      PinnedRepairSource &pins) const {
+    if (controller_package_sha256_.empty()) return {true, {}, {}};
+    auto controller_context = context;
+    controller_context.repair_source = context.state_root / "repair-sources" /
+        facman::platform::path_from_utf8(
+            controller_package_sha256_ + ".zip");
+    return ::validate_maintenance_launcher(
+        controller_context, controller_package_sha256_, &pins);
+  }
+
+  std::string controller_package_sha256_;
 };
 
 std::string digest_text(const std::string &value) {
@@ -1509,6 +1546,32 @@ std::string digest_text(const std::string &value) {
 }
 
 bool same_path(const fs::path &left, const fs::path &right);
+
+facman::core::Result<std::string> epoch_controller_package_sha256(
+    const fs::path &coordinator_root, const std::string &epoch_id,
+    const fs::path &state_root, const fs::path &acceptance_root) {
+  auto active = facman::self_maintenance::discover_lifecycle_epoch_active(
+      coordinator_root);
+  if (!active) return facman::core::Result<std::string>::failure(active.error());
+  auto lineage =
+      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+          coordinator_root);
+  if (!lineage)
+    return facman::core::Result<std::string>::failure(lineage.error());
+  if (active.value().epoch.epoch_id != epoch_id ||
+      lineage.value().generations.empty() ||
+      lineage.value().generations.front().generation_id !=
+          active.value().epoch.genesis_generation_id ||
+      !same_path(active.value().epoch.state_root, state_root) ||
+      !same_path(active.value().epoch.acceptance_root, acceptance_root) ||
+      !lowercase_hex_64(lineage.value().generations.front().package_sha256))
+    return facman::core::Result<std::string>::failure(
+        {"self_maintenance_epoch_recovery_required",
+         "real epoch genesis does not bind a retained maintenance controller",
+         epoch_id});
+  return facman::core::Result<std::string>::success(
+      lineage.value().generations.front().package_sha256);
+}
 
 class MaintenanceEffects final : public facman::self_maintenance::Effects,
                                  public facman::self_maintenance::EpochPreparationEffects,
@@ -1519,11 +1582,13 @@ public:
                      fs::path state_root, fs::path acceptance_root,
                      fs::path maintenance_launcher,
                      std::string maintenance_launcher_sha256,
-                     bool shell_integration)
+                     bool shell_integration,
+                     std::string controller_package_sha256 = {})
       : provider_(provider), state_root_(std::move(state_root)),
         acceptance_root_(std::move(acceptance_root)),
         maintenance_launcher_(std::move(maintenance_launcher)),
         maintenance_launcher_sha256_(std::move(maintenance_launcher_sha256)),
+        controller_package_sha256_(std::move(controller_package_sha256)),
         shell_integration_(shell_integration) {}
 
   facman::self_maintenance::CandidateState inspect_candidate(
@@ -1841,10 +1906,15 @@ private:
       const facman::self_maintenance::Plan &plan) const {
     const auto source = native_context(plan.source);
     const auto target = native_context(plan.target);
+    const fs::path controller = controller_package_sha256_.empty()
+        ? fs::path{}
+        : state_root_ / "repair-sources" /
+            facman::platform::path_from_utf8(
+                controller_package_sha256_ + ".FacManSetup.exe");
     return {{source.install_root, source.state_root, source.acceptance_root,
-             source.repair_source},
+             source.repair_source, controller},
             {target.install_root, target.state_root, target.acceptance_root,
-             target.repair_source},
+             target.repair_source, controller},
             plan.source.product_version, plan.target.product_version,
             plan.operation_id};
   }
@@ -1941,6 +2011,7 @@ private:
           "installed maintenance launcher differs from the retained helper";
       return false;
     }
+    if (!ensure_controller_pins(plan)) return false;
     // Legacy installs retained the downloaded self-extracting Setup file as
     // their repair helper, while Universal Setup owned the smaller embedded
     // maintenance entry point under the logical installation root.  The
@@ -1961,6 +2032,12 @@ private:
           ? "retained maintenance inputs are not pinned" : detail;
       return false;
     }
+    if (!controller_package_sha256_.empty() &&
+        (!controller_pins_ready_ || !controller_pins_.revalidate(detail))) {
+      target_pin_detail_ = detail.empty()
+          ? "epoch maintenance controller is not pinned" : detail;
+      return false;
+    }
     if (!target_files_ready_) {
       target_pin_detail_ = "target executable identities are not pinned";
       return false;
@@ -1974,6 +2051,25 @@ private:
     }
     target_pin_detail_.clear();
     return true;
+  }
+
+  bool ensure_controller_pins(const facman::self_maintenance::Plan &plan) {
+    if (controller_package_sha256_.empty()) return true;
+    if (controller_pins_ready_) {
+      std::string detail;
+      if (controller_pins_.revalidate(detail)) return true;
+      target_pin_detail_ = detail;
+      return false;
+    }
+    auto context = native_context(plan.target);
+    context.repair_source = state_root_ / "repair-sources" /
+        facman::platform::path_from_utf8(
+            controller_package_sha256_ + ".zip");
+    const auto controller = ::validate_maintenance_launcher(
+        context, controller_package_sha256_, &controller_pins_);
+    controller_pins_ready_ = controller.ok;
+    if (!controller.ok) target_pin_detail_ = controller.detail;
+    return controller.ok;
   }
 
   bool ensure_target_pins(const facman::self_maintenance::Plan &plan) {
@@ -1994,10 +2090,13 @@ private:
   fs::path acceptance_root_;
   fs::path maintenance_launcher_;
   std::string maintenance_launcher_sha256_;
+  std::string controller_package_sha256_;
   PinnedRepairSource target_pins_;
+  PinnedRepairSource controller_pins_;
   facman::platform::StableInputFile target_gui_;
   facman::platform::StableInputFile target_maintenance_;
   bool target_pins_ready_ = false;
+  bool controller_pins_ready_ = false;
   bool target_files_ready_ = false;
   std::string target_pin_detail_;
   bool shell_integration_ = true;
@@ -2461,10 +2560,14 @@ int run_private_continuation(const ContinuationOptions &options) {
     return 4;
   facman::self_maintenance::ProviderBridge provider(
       transition.target.state_root, transition.target.acceptance_root);
+  auto controller = epoch_controller_package_sha256(
+      coordinator_root, transition.epoch_id, transition.target.state_root,
+      transition.target.acceptance_root);
+  if (!controller) return 4;
   MaintenanceEffects effects(provider, transition.target.state_root,
       transition.target.acceptance_root, target_launcher.path,
       transition.retained_package.maintenance_launcher_sha256,
-      transition.shell_integration);
+      transition.shell_integration, controller.value());
 
   std::string phase = transition.phase;
   if (phase == "continuation_pending") {
@@ -2707,10 +2810,17 @@ int run_maintenance(Options &options, const fs::path &,
           pending.operation_id}, options.json);
       return 4;
     }
+    auto controller = epoch_controller_package_sha256(
+        coordinator_root, pending.epoch_id, pending.target.state_root,
+        pending.target.acceptance_root);
+    if (!controller) {
+      print_maintenance_error(controller.error(), options.json);
+      return 4;
+    }
     MaintenanceEffects effects(provider, options.state_root,
                                options.acceptance_root, {},
                                pending.retained_package.maintenance_launcher_sha256,
-                               pending.shell_integration);
+                               pending.shell_integration, controller.value());
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error({"self_maintenance_provider_root_unsafe",
@@ -2973,10 +3083,17 @@ int run_maintenance(Options &options, const fs::path &,
       epoch_request.continuation_helper = *current_helper;
       epoch_request.continuation_helper_sha256 = *current_helper_sha256;
     }
+    auto controller = epoch_controller_package_sha256(
+        coordinator_root, epoch_active.value().epoch.epoch_id,
+        options.state_root, options.acceptance_root);
+    if (!controller) {
+      print_maintenance_error(controller.error(), options.json);
+      return 4;
+    }
     MaintenanceEffects effects(provider, options.state_root,
                                options.acceptance_root, launcher,
                                package->maintenance_launcher_sha256,
-                               options.shell_integration);
+                               options.shell_integration, controller.value());
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error(
@@ -3647,6 +3764,7 @@ int wmain(int argc, wchar_t **argv) {
 
   std::optional<facman::self_maintenance::Generation>
       active_repair_generation;
+  std::string active_epoch_controller_sha256;
   if (options.operation == facman::self_setup::Operation::verify ||
       options.operation == facman::self_setup::Operation::repair ||
       options.operation == facman::self_setup::Operation::uninstall) {
@@ -3680,7 +3798,20 @@ int wmain(int argc, wchar_t **argv) {
       }
       if (epochs && !epochs.value().epochs.empty() &&
           !epochs.value().epochs.back().compatibility_epoch) {
-        SetupNativeEffects retirement_native_effects;
+        std::string controller_sha256;
+        // A completed retirement has no active controller.  The retirement
+        // coordinator still needs to accept an exact repeated uninstall.
+        if (epochs.value().epochs.back().retirement_sha256.empty()) {
+          auto controller = epoch_controller_package_sha256(
+              coordinator_root, epochs.value().epochs.back().epoch_id,
+              options.state_root, options.acceptance_root);
+          if (!controller) {
+            print_error(controller.error(), options.json);
+            return 4;
+          }
+          controller_sha256 = controller.take_value();
+        }
+        SetupNativeEffects retirement_native_effects(controller_sha256);
         SetupRetirementEffects retirement_effects(
             options, coordinator_root, retirement_native_effects, true);
         facman::self_maintenance::RetirementRequest retirement;
@@ -3811,6 +3942,16 @@ int wmain(int argc, wchar_t **argv) {
             "setup roots do not bind the active activation-chain generation",
             generation.install_id), options.json);
         return 4;
+      }
+      if (selected.value()->epoch.has_value()) {
+        auto controller = epoch_controller_package_sha256(
+            coordinator_root, selected.value()->epoch->epoch_id,
+            options.state_root, options.acceptance_root);
+        if (!controller) {
+          print_error(controller.error(), options.json);
+          return 4;
+        }
+        active_epoch_controller_sha256 = controller.take_value();
       }
       facman::self_maintenance::ProviderBridge provider(
           options.state_root, options.acceptance_root);
@@ -4053,7 +4194,7 @@ int wmain(int argc, wchar_t **argv) {
     request.product_version = active_repair_generation->product_version;
   }
   request.apply = options.apply;
-  SetupNativeEffects native_effects;
+  SetupNativeEffects native_effects(active_epoch_controller_sha256);
   if (options.shell_integration)
     request.native_effects = &native_effects;
   if (options.operation == facman::self_setup::Operation::install ||
