@@ -1115,12 +1115,14 @@ std::string retirement_chain_digest(const ActivationChain &chain) {
 std::vector<RetirementStep> retirement_steps(const ActivationChain &chain) {
   std::vector<RetirementStep> result;
   if (chain.generations.empty()) return result;
-  const std::string active = chain.generations.back().generation_id;
+  const Generation &active = chain.generations.back();
   for (const auto &generation : chain.generations) {
-    if (generation.generation_id == active) continue;
+    if (generation.install_id == active.install_id &&
+        same_path(generation.install_root, active.install_root)) continue;
     const auto duplicate = std::find_if(result.begin(), result.end(),
         [&](const RetirementStep &step) {
-          return step.generation.generation_id == generation.generation_id;
+          return step.generation.install_id == generation.install_id &&
+              same_path(step.generation.install_root, generation.install_root);
         });
     if (duplicate == result.end()) result.push_back({generation, false});
   }
@@ -1230,6 +1232,7 @@ facman::core::Result<void> validate_retirement_directory(
       "retirement journal is missing its immutable intent"));
   std::vector<std::string> allowed{"00-intent.v1.json",
       "99-completed.v1.json"};
+  bool unfinished_predecessor = false;
   for (std::size_t index = 0; index < steps.size(); ++index) {
     allowed.push_back(retirement_step_path(directory, index, "entered").filename().string());
     allowed.push_back(retirement_step_path(directory, index, "completed").filename().string());
@@ -1242,6 +1245,11 @@ facman::core::Result<void> validate_retirement_directory(
     if (done.value() && !entered.value()) return facman::core::Result<void>::failure(failure(
         "self_maintenance_retirement_recovery_required",
         "retirement step completed without an entered marker"));
+    if (unfinished_predecessor && (entered.value() || done.value()))
+      return facman::core::Result<void>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "retirement steps are not in durable execution order"));
+    if (!done.value()) unfinished_predecessor = true;
   }
   for (fs::directory_iterator it(directory, status), end; !status && it != end;
        it.increment(status)) {
@@ -2930,6 +2938,119 @@ facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active_from_chai
       {pinned_epoch.take_value(), std::move(*active.value())});
 }
 
+facman::core::Result<ActivationChain> discover_epoch_retirement_chain(
+    const fs::path &coordinator_root) {
+  auto epochs = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  if (!epochs || epochs.value().epochs.empty() ||
+      epochs.value().epochs.back().compatibility_epoch)
+    return facman::core::Result<ActivationChain>::failure(!epochs
+        ? epochs.error() : epoch_recovery(
+            "epoch retirement requires one authoritative real lifecycle tail"));
+  const LifecycleEpoch &tail = epochs.value().epochs.back();
+  auto selected = discover_lifecycle_epoch_active_from_chain(
+      coordinator_root, epochs.value());
+  if (!selected) return facman::core::Result<ActivationChain>::failure(
+      selected.error());
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(coordinator_root, tail.epoch_id);
+  if (!opened) return facman::core::Result<ActivationChain>::failure(opened.error());
+  std::vector<Generation> epoch_history;
+  auto active = discover_epoch_genesis_state(tail, scope, nullptr, false,
+      nullptr, nullptr, &epoch_history);
+  if (!active || !active.value().has_value() || epoch_history.empty() ||
+      active.value()->activation_sha256 !=
+          selected.value().active.activation_sha256)
+    return facman::core::Result<ActivationChain>::failure(!active
+        ? active.error() : epoch_recovery(
+            "epoch retirement lineage changed during discovery"));
+  ActivationChain combined;
+  if (epochs.value().epochs.front().compatibility_epoch) {
+    if (!epochs.value().epochs.front().compatibility_handoff)
+      return facman::core::Result<ActivationChain>::failure(epoch_recovery(
+          "epoch retirement lacks the exact compatibility authority handoff"));
+    auto flat = discover_activation_chain(coordinator_root);
+    if (!flat || !flat.value().has_value())
+      return facman::core::Result<ActivationChain>::failure(!flat
+          ? flat.error() : epoch_recovery(
+              "epoch retirement lacks its retained compatibility lineage"));
+    combined.generations = flat.value()->generations;
+  }
+  combined.generations.insert(combined.generations.end(),
+      epoch_history.begin(), epoch_history.end());
+  for (std::size_t index = 0; index < combined.generations.size(); ++index) {
+    const Generation &generation = combined.generations[index];
+    if (!same_path(generation.logical_root, tail.logical_root) ||
+        !same_path(generation.state_root, tail.state_root) ||
+        !same_path(generation.acceptance_root, tail.acceptance_root))
+      return facman::core::Result<ActivationChain>::failure(epoch_recovery(
+          "epoch retirement generations do not share one exact authority"));
+    for (std::size_t earlier = 0; earlier < index; ++earlier)
+      if (combined.generations[earlier].install_id == generation.install_id &&
+          (combined.generations[earlier].generation_id != generation.generation_id ||
+           !same_path(combined.generations[earlier].install_root,
+                      generation.install_root)))
+        return facman::core::Result<ActivationChain>::failure(epoch_recovery(
+            "epoch retirement contains a conflicting provider installation identity"));
+  }
+  combined.activation_name = "epoch." + tail.epoch_id + "." +
+      active.value()->activation_name;
+  combined.activation_sha256 = hash("facman.epoch.retirement-head.v1\n" +
+      tail.epoch_id + "\n" + tail.manifest_sha256 + "\n" +
+      active.value()->activation_name + "\n" +
+      active.value()->activation_sha256 + "\n");
+  return facman::core::Result<ActivationChain>::success(std::move(combined));
+}
+
+fs::path epoch_retirement_directory(const fs::path &coordinator_root,
+                                    const ActivationChain &chain) {
+  return coordinator_root / "epoch-retirements" /
+      ("retirement." + chain.activation_sha256.substr(0, 32) + ".v1");
+}
+
+facman::core::Result<std::optional<bool>> epoch_retirement_status(
+    const fs::path &coordinator_root, const ActivationChain &chain,
+    const std::vector<RetirementStep> &steps) {
+  const fs::path root = coordinator_root / "epoch-retirements";
+  const fs::path journal = epoch_retirement_directory(coordinator_root, chain);
+  std::error_code status;
+  if (!fs::exists(root, status)) {
+    if (status) return facman::core::Result<std::optional<bool>>::failure(
+        epoch_recovery("epoch retirement root could not be observed", status.message()));
+    return facman::core::Result<std::optional<bool>>::success({});
+  }
+  if (status || fs::symlink_status(root, status).type() !=
+                    fs::file_type::directory || status)
+    return facman::core::Result<std::optional<bool>>::failure(epoch_recovery(
+        "epoch retirement root is not a plain directory"));
+  bool found = false;
+  for (fs::directory_iterator it(root, status), end; !status && it != end;
+       it.increment(status)) {
+    if (it->symlink_status(status).type() != fs::file_type::directory ||
+        status || it->path().lexically_normal() != journal.lexically_normal() ||
+        found)
+      return facman::core::Result<std::optional<bool>>::failure(epoch_recovery(
+          "epoch retirement root contains foreign or conflicting history"));
+    found = true;
+  }
+  if (status) return facman::core::Result<std::optional<bool>>::failure(
+      epoch_recovery("epoch retirement root changed during enumeration",
+                     status.message()));
+  if (!found)
+    return facman::core::Result<std::optional<bool>>::success(false);
+  const auto first = fs::directory_iterator(journal, status);
+  if (status) return facman::core::Result<std::optional<bool>>::failure(
+      epoch_recovery("epoch retirement journal could not be enumerated",
+                     status.message()));
+  if (first == fs::directory_iterator())
+    return facman::core::Result<std::optional<bool>>::success(false);
+  bool completed = false;
+  auto checked = validate_retirement_directory(journal, chain, steps,
+                                               &completed);
+  if (!checked) return facman::core::Result<std::optional<bool>>::failure(
+      checked.error());
+  return facman::core::Result<std::optional<bool>>::success(completed);
+}
+
 } // namespace
 
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
@@ -3095,6 +3216,22 @@ resolve_authoritative_active_state(const fs::path &coordinator_root) {
   if (epoch.value().epoch.compatibility_epoch)
     return facman::core::Result<std::optional<AuthoritativeActiveState>>::success(
         AuthoritativeActiveState{{}, std::move(epoch.value().active)});
+  auto retirement = discover_epoch_retirement_chain(coordinator_root);
+  if (!retirement)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        retirement.error());
+  auto retirement_state = epoch_retirement_status(coordinator_root,
+      retirement.value(), retirement_steps(retirement.value()));
+  if (!retirement_state)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        retirement_state.error());
+  if (retirement_state.value().has_value()) {
+    if (*retirement_state.value())
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::success({});
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        failure("self_maintenance_retirement_recovery_required",
+                "epoch retirement is incomplete and must be resumed"));
+  }
   return facman::core::Result<std::optional<AuthoritativeActiveState>>::success(
       AuthoritativeActiveState{std::move(epoch.value().epoch),
                                std::move(epoch.value().active)});
@@ -6487,7 +6624,28 @@ bootstrap_compatibility_authority(
 
 facman::core::Result<RetirementResponse> retire_active(
     const RetirementRequest &request, RetirementEffects &effects) {
-  auto reviewed = discover_activation_chain(request.coordinator_root);
+  if (request.epoch_mode) {
+    auto selected = resolve_authoritative_active_state(request.coordinator_root);
+    if (!selected && selected.error().code !=
+                         "self_maintenance_retirement_recovery_required")
+      return facman::core::Result<RetirementResponse>::failure(selected.error());
+    if (selected && selected.value().has_value() &&
+        !selected.value()->epoch.has_value())
+      return facman::core::Result<RetirementResponse>::failure(epoch_recovery(
+          "epoch retirement cannot consume flat compatibility authority"));
+  }
+  const auto inspect_chain = [&]()
+      -> facman::core::Result<std::optional<ActivationChain>> {
+    if (!request.epoch_mode)
+      return discover_activation_chain(request.coordinator_root);
+    auto epoch = discover_epoch_retirement_chain(request.coordinator_root);
+    if (!epoch)
+      return facman::core::Result<std::optional<ActivationChain>>::failure(
+          epoch.error());
+    return facman::core::Result<std::optional<ActivationChain>>::success(
+        std::optional<ActivationChain>(epoch.take_value()));
+  };
+  auto reviewed = inspect_chain();
   if (!reviewed)
     return facman::core::Result<RetirementResponse>::failure(reviewed.error());
   if (!reviewed.value().has_value())
@@ -6500,6 +6658,17 @@ facman::core::Result<RetirementResponse> retire_active(
         "self_maintenance_retirement_recovery_required",
         "retirement has no validated generation steps"));
   const Generation &active = reviewed_steps.back().generation;
+  if (request.epoch_mode &&
+      (!request.logical_root.is_absolute() ||
+       !request.state_root.is_absolute() ||
+       !request.acceptance_root.is_absolute() ||
+       (!same_path(request.logical_root, active.logical_root) &&
+        !same_path(request.logical_root, active.install_root)) ||
+       !same_path(request.state_root, active.state_root) ||
+       !same_path(request.acceptance_root, active.acceptance_root)))
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_lineage_mismatch",
+        "epoch retirement roots do not bind its authoritative generation"));
   for (const auto &step : reviewed_steps) {
     if (!same_path(step.generation.logical_root, active.logical_root) ||
         !same_path(step.generation.state_root, active.state_root) ||
@@ -6508,8 +6677,9 @@ facman::core::Result<RetirementResponse> retire_active(
           "self_maintenance_retirement_recovery_required",
           "activation chain generations do not share one exact authority"));
   }
-  const fs::path directory = retirement_directory(request.coordinator_root,
-                                                   review);
+  const fs::path directory = request.epoch_mode
+      ? epoch_retirement_directory(request.coordinator_root, review)
+      : retirement_directory(request.coordinator_root, review);
   if (!request.apply)
     return facman::core::Result<RetirementResponse>::success(
         {"planned", directory, reviewed_steps});
@@ -6525,15 +6695,31 @@ facman::core::Result<RetirementResponse> retire_active(
     return facman::core::Result<RetirementResponse>::failure(held.error());
   const CoordinatorLockToken coordinator_lock(
       request.coordinator_root.lexically_normal(), lock_operation);
-  auto epochs_absent = require_flat_retirement_epoch_absence(held.value());
-  if (!epochs_absent)
+  const auto require_authority = [&]() -> facman::core::Result<void> {
+    if (!request.epoch_mode)
+      return require_flat_retirement_epoch_absence(held.value());
+    auto current_epoch = discover_epoch_retirement_chain(request.coordinator_root);
+    if (!current_epoch ||
+        retirement_chain_digest(current_epoch.value()) !=
+            retirement_chain_digest(review))
+      return facman::core::Result<void>::failure(!current_epoch
+          ? current_epoch.error() : epoch_recovery(
+              "authoritative epoch lineage changed during retirement"));
+    std::string detail;
+    if (!held.value().admission.revalidate(detail))
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch retirement authority changed at its effect boundary", detail));
+    return facman::core::Result<void>::success();
+  };
+  auto authority_ready = require_authority();
+  if (!authority_ready)
     return facman::core::Result<RetirementResponse>::failure(
-        epochs_absent.error());
+        authority_ready.error());
 
   // Re-read the complete chain under the global coordinator lock.  The
   // journal is intentionally bound to this exact head and all ordered
   // generation records, never to an inferred current install root.
-  auto current = discover_activation_chain(request.coordinator_root);
+  auto current = inspect_chain();
   if (!current || !current.value().has_value() ||
       retirement_chain_digest(*current.value()) != retirement_chain_digest(review))
     return facman::core::Result<RetirementResponse>::failure(failure(
@@ -6541,7 +6727,8 @@ facman::core::Result<RetirementResponse> retire_active(
         "activation chain changed before retirement could begin"));
   const ActivationChain chain = *current.value();
   const auto steps = retirement_steps(chain);
-  const fs::path retirement_root = request.coordinator_root / "retirements";
+  const fs::path retirement_root = request.coordinator_root /
+      (request.epoch_mode ? "epoch-retirements" : "retirements");
   std::error_code status;
   if (fs::exists(retirement_root, status)) {
     if (status || !fs::is_directory(retirement_root, status) || status)
@@ -6602,16 +6789,16 @@ facman::core::Result<RetirementResponse> retire_active(
           "self_maintenance_retirement_recovery_required",
           "a retirement step entered its provider/native boundary without a completion receipt",
           steps[index].generation.install_id));
-    current = discover_activation_chain(request.coordinator_root);
+    current = inspect_chain();
     if (!current || !current.value().has_value() ||
         retirement_chain_digest(*current.value()) != retirement_chain_digest(chain))
       return facman::core::Result<RetirementResponse>::failure(failure(
           "self_maintenance_retirement_recovery_required",
           "activation chain changed before a retirement effect"));
-    epochs_absent = require_flat_retirement_epoch_absence(held.value());
-    if (!epochs_absent)
+    authority_ready = require_authority();
+    if (!authority_ready)
       return facman::core::Result<RetirementResponse>::failure(
-          epochs_absent.error());
+          authority_ready.error());
     auto inspected = effects.inspect_retirement_generation(
         steps[index].generation, steps[index].active);
     if (!inspected)
@@ -6624,10 +6811,10 @@ facman::core::Result<RetirementResponse> retire_active(
         retirement_step_json(steps[index], index, "entered"));
     if (!marked)
       return facman::core::Result<RetirementResponse>::failure(marked.error());
-    epochs_absent = require_flat_retirement_epoch_absence(held.value());
-    if (!epochs_absent)
+    authority_ready = require_authority();
+    if (!authority_ready)
       return facman::core::Result<RetirementResponse>::failure(
-          epochs_absent.error());
+          authority_ready.error());
     auto removed = effects.uninstall_generation(
         steps[index].generation, steps[index].active, coordinator_lock);
     if (!removed)

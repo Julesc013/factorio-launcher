@@ -13,6 +13,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 using facman::self_maintenance::ActiveState;
@@ -72,10 +73,14 @@ public:
     return facman::core::Result<void>::success();
   }
   facman::core::Result<void> uninstall_generation(
-      const Generation &, bool,
+      const Generation &generation, bool active,
       const facman::self_maintenance::CoordinatorLockToken &) override {
+    removed_install_ids.push_back(generation.install_id);
+    active_flags.push_back(active);
     return facman::core::Result<void>::success();
   }
+  std::vector<std::string> removed_install_ids;
+  std::vector<bool> active_flags;
 };
 
 class BootstrapEffects final
@@ -284,6 +289,54 @@ int main() {
   ok &= require(exact_retry && exact_retry.value().phase == "complete" &&
                     bootstrap_effects.clone_calls == 1,
                 "completed bootstrap retry called the provider again");
+
+  facman::self_maintenance::RetirementRequest epoch_retirement;
+  epoch_retirement.coordinator_root = handoff_coordinator;
+  epoch_retirement.epoch_mode = true;
+  epoch_retirement.logical_root = handoff_source.logical_root;
+  epoch_retirement.state_root = handoff_source.state_root;
+  epoch_retirement.acceptance_root = handoff_source.acceptance_root;
+  RetirementEffects epoch_retirement_effects;
+  auto epoch_retirement_preview = facman::self_maintenance::retire_active(
+      epoch_retirement, epoch_retirement_effects);
+  epoch_retirement.apply = true;
+  auto epoch_retirement_first = facman::self_maintenance::retire_active(
+      epoch_retirement, epoch_retirement_effects);
+  auto retiring_selected =
+      facman::self_maintenance::resolve_authoritative_active_state(
+          handoff_coordinator);
+  auto epoch_retirement_final = facman::self_maintenance::retire_active(
+      epoch_retirement, epoch_retirement_effects);
+  auto epoch_retired_selected =
+      facman::self_maintenance::resolve_authoritative_active_state(
+          handoff_coordinator);
+  auto epoch_retirement_repeat = facman::self_maintenance::retire_active(
+      epoch_retirement, epoch_retirement_effects);
+  ok &= require(epoch_retirement_preview &&
+                    epoch_retirement_preview.value().phase == "planned" &&
+                    epoch_retirement_preview.value().steps.size() == 2U &&
+                    epoch_retirement_preview.value().steps[0].generation.generation_id ==
+                        epoch_retirement_preview.value().steps[1].generation.generation_id &&
+                    epoch_retirement_preview.value().steps[0].generation.install_id ==
+                        "facman.self" &&
+                    epoch_retirement_preview.value().steps[1].generation.install_id !=
+                        "facman.self" &&
+                    epoch_retirement_first &&
+                    epoch_retirement_first.value().phase == "step_completed" &&
+                    !retiring_selected &&
+                    retiring_selected.error().code ==
+                        "self_maintenance_retirement_recovery_required" &&
+                    epoch_retirement_final &&
+                    epoch_retirement_final.value().phase == "completed" &&
+                    epoch_retired_selected &&
+                    !epoch_retired_selected.value().has_value() &&
+                    epoch_retirement_repeat &&
+                    epoch_retirement_repeat.value().phase == "completed" &&
+                    epoch_retirement_effects.removed_install_ids.size() == 2U &&
+                    epoch_retirement_effects.active_flags ==
+                        std::vector<bool>({false, true}) &&
+                    fs::exists(handoff_coordinator / "authority-handoff.v1.json"),
+                "epoch retirement lost a provider identity or repeated an effect");
 
   const fs::path partial_root = root / "partial-bootstrap-manifest";
   const fs::path partial_coordinator = partial_root / "coordinator";

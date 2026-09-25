@@ -51,11 +51,19 @@ checkpoint, not product qualification or authority to publish.
   against a maximum of 8; the helper dry run stops on an unmarked old root.
   Direct recursive removal was rejected by automatic approval review. Do not
   work around that rejection by moving builds into unowned roots.
-- Epoch uninstall still explicitly refuses in `apps/setup/main.cpp`; epoch
-  rollback still refuses in Setup and the epoch planner requires an absent
-  target. These consumers must be implemented and tested before bootstrap can
-  be integrated as an ordinary installed path. Existing current-user package
-  lifecycle tests assume flat uninstall and need corresponding updates.
+- Work after `ee27dce7` routes real-epoch uninstall through a separate
+  coordinator retirement journal. The core combines validated flat and epoch
+  installation identities (the genesis package hash is shared, but the
+  provider install IDs differ), blocks ordinary selection during retirement,
+  and returns no active generation after completion. Setup drives bounded
+  per-step retirement to completion in one ordinary uninstall invocation,
+  while retaining shared repair sources. This is still uncommitted and has
+  syntax-only evidence. It needs executable and produced-package validation.
+- Epoch rollback still refuses in Setup and the epoch planner requires an
+  absent target. Reinstall after completed epoch retirement also needs a new
+  successor epoch and genuine installed-use proof. Existing produced-package
+  lifecycle tests exercise reinstall and must be adapted only after the
+  product path exists.
 - A crash after creation of an epoch directory but before its immutable
   manifest publishes was not recoverable through `publish_lifecycle_epoch`.
   Work after the checkpoint adds narrow recovery for the exact empty or
@@ -69,6 +77,13 @@ checkpoint, not product qualification or authority to publish.
   bootstrap refusal. It also exposes the validated real-epoch activation
   lineage (including repeats) for retirement and rollback planning. Those
   edits still need hosted executable validation.
+- The same checkpoint's Windows static lifecycle also failed: its generic
+  Setup archive has no self-maintenance metadata, so the unconditional
+  post-install bootstrap could not retain an exact active package. A later
+  working diff classifies valid generic archives separately and keeps their
+  exact flat install/retry path; archives containing maintenance identity
+  records enter strict bootstrap. This preserves the old generic-package test
+  without claiming it proves the produced-package epoch journey.
 - A public retry currently relaunches the external continuation helper with a
   fresh `GetTickCount64() + budget` in the original patch. The current working
   diff adds an immutable UTC deadline to newly prepared handoffs, carries it

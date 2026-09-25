@@ -196,6 +196,7 @@ class SetupPackageMaterializer final
 public:
   facman::core::Result<fs::path> materialize(
       const fs::path &source) override;
+  const fs::path &materialized_path() const { return materialized_.path; }
 
 private:
   MaterializedPackage materialized_;
@@ -3166,9 +3167,11 @@ class SetupRetirementEffects final
     : public facman::self_maintenance::RetirementEffects {
 public:
   SetupRetirementEffects(const Options &options, fs::path coordinator_root,
-                         SetupNativeEffects &native_effects)
+                         SetupNativeEffects &native_effects,
+                         bool preserve_repair_sources = false)
       : options_(options), coordinator_root_(std::move(coordinator_root)),
-        native_effects_(native_effects) {}
+        native_effects_(native_effects),
+        preserve_repair_sources_(preserve_repair_sources) {}
 
   facman::core::Result<void> inspect_retirement_generation(
       const facman::self_maintenance::Generation &generation,
@@ -3211,7 +3214,7 @@ public:
             facman::platform::path_from_utf8(generation.package_sha256 + ".zip"),
         generation.product_version};
     PinnedRepairSource retirement_pins;
-    if (!active) {
+    if (!active && !preserve_repair_sources_) {
       const auto retained = validate_repair_source(
           retirement_context, generation.package_sha256, &retirement_pins);
       if (!retained.ok)
@@ -3235,7 +3238,7 @@ public:
     auto removed = facman::self_setup::execute(request);
     if (!removed)
       return facman::core::Result<void>::failure(removed.error());
-    if (!active) {
+    if (!active && !preserve_repair_sources_) {
       auto retired = retire_repair_source(
           retirement_context, retirement_pins);
       if (!retired)
@@ -3248,11 +3251,12 @@ private:
   const Options &options_;
   fs::path coordinator_root_;
   SetupNativeEffects &native_effects_;
+  bool preserve_repair_sources_ = false;
 };
 
 facman::core::Result<facman::self_maintenance::CompatibilityAuthorityBootstrapResponse>
 bootstrap_installed_facman(const Options &options, const fs::path &coordinator_root,
-                           bool apply) {
+                           bool apply, const fs::path &materialized_package = {}) {
   using Bootstrap = facman::self_maintenance::CompatibilityAuthorityBootstrapResponse;
   auto flat = facman::self_maintenance::discover_activation_chain(coordinator_root);
   if (!flat) return facman::core::Result<Bootstrap>::failure(flat.error());
@@ -3318,7 +3322,9 @@ bootstrap_installed_facman(const Options &options, const fs::path &coordinator_r
       repair_context, source.package_sha256, &pins);
   if (apply && !retained.ok && !options.package.empty()) {
     SetupPackageMaterializer materializer;
-    auto materialized = materializer.materialize(options.package);
+    auto materialized = materialized_package.empty()
+        ? materializer.materialize(options.package)
+        : facman::core::Result<fs::path>::success(materialized_package);
     auto supplied = materialized
         ? facman::self_maintenance::inspect_package(materialized.value())
         : facman::core::Result<facman::self_maintenance::PackageInspection>::failure(
@@ -3421,6 +3427,69 @@ int wmain(int argc, wchar_t **argv) {
     const fs::path coordinator_root =
         (options.state_root.parent_path() / "setup-coordinator.v1")
             .lexically_normal();
+    if (options.operation == facman::self_setup::Operation::uninstall) {
+      auto epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
+          coordinator_root);
+      if (!epochs) {
+        print_error(epochs.error(), options.json);
+        return 4;
+      }
+      if (!epochs.value().epochs.empty() &&
+          !epochs.value().epochs.back().compatibility_epoch) {
+        SetupNativeEffects retirement_native_effects;
+        SetupRetirementEffects retirement_effects(
+            options, coordinator_root, retirement_native_effects, true);
+        facman::self_maintenance::RetirementRequest retirement;
+        retirement.coordinator_root = coordinator_root;
+        retirement.apply = options.apply;
+        retirement.epoch_mode = true;
+        retirement.logical_root = options.install_root;
+        retirement.state_root = options.state_root;
+        retirement.acceptance_root = options.acceptance_root;
+        auto retired = facman::self_maintenance::retire_active(
+            retirement, retirement_effects);
+        if (!retired) {
+          print_error(retired.error(), options.json);
+          return 4;
+        }
+        if (options.apply) {
+          const std::size_t maximum_steps = retired.value().steps.size();
+          for (std::size_t step = 1U;
+               retired.value().phase == "step_completed" &&
+                   step < maximum_steps; ++step) {
+            auto resumed = facman::self_maintenance::retire_active(
+                retirement, retirement_effects);
+            if (!resumed) {
+              print_error(resumed.error(), options.json);
+              return 4;
+            }
+            retired = std::move(resumed);
+          }
+          if (retired.value().phase != "completed") {
+            print_error({"self_maintenance_retirement_recovery_required",
+                         "epoch retirement did not reach its durable completion",
+                         retired.value().phase}, options.json);
+            return 4;
+          }
+        }
+        if (options.json) {
+          facman::core::json::ObjectBuilder output;
+          output.add_string("schema", "facman.self_setup_cli.v1");
+          output.add_string("status", "ok");
+          output.add_string("operation", "uninstall");
+          output.add_string("phase", retired.value().phase);
+          output.add_string("retirement_journal",
+              facman::platform::path_to_utf8(
+                  retired.value().journal_directory));
+          std::cout << output.serialize() << '\n';
+        } else if (retired.value().phase == "planned") {
+          std::cout << "FacMan epoch retirement is planned. Repeat with --yes to apply it.\n";
+        } else {
+          std::cout << "FacMan epoch retirement " << retired.value().phase << ".\n";
+        }
+        return 0;
+      }
+    }
     auto selected = facman::self_maintenance::resolve_authoritative_active_state(
         coordinator_root);
     const bool resumable_flat_retirement =
@@ -3433,15 +3502,6 @@ int wmain(int argc, wchar_t **argv) {
       return 4;
     }
     if (options.operation == facman::self_setup::Operation::uninstall) {
-      if (selected && selected.value().has_value() &&
-          selected.value()->epoch.has_value()) {
-        print_error(setup_error_with_detail(
-            "self_maintenance_epoch_operation_unsupported",
-            "uninstall of an authoritative lifecycle epoch requires "
-            "chain-aware epoch retirement",
-            selected.value()->epoch->epoch_id), options.json);
-        return 4;
-      }
       auto chain = facman::self_maintenance::discover_activation_chain(
           coordinator_root);
       if (!chain) {
@@ -3589,6 +3649,50 @@ int wmain(int argc, wchar_t **argv) {
   }
 
   if (resume_bootstrap) {
+    SetupPackageMaterializer materializer;
+    auto supplied = materializer.materialize(options.package);
+    auto metadata = supplied
+        ? facman::self_maintenance::has_self_maintenance_metadata(
+            supplied.value())
+        : facman::core::Result<bool>::failure(supplied.error());
+    if (!metadata) {
+      print_error(metadata.error(), options.json);
+      return 4;
+    }
+    if (!metadata.value()) {
+      const fs::path coordinator_root =
+          (options.state_root.parent_path() / "setup-coordinator.v1")
+              .lexically_normal();
+      auto flat = facman::self_maintenance::discover_activation_chain(
+          coordinator_root);
+      std::string package_problem;
+      auto supplied_sha256 = exact_regular_file_digest(
+          supplied.value(), package_problem);
+      facman::self_maintenance::ProviderBridge provider(
+          options.state_root, options.acceptance_root);
+      auto installed = provider.inspect_identity("facman.self");
+      const bool same_flat = flat && flat.value().has_value() &&
+          supplied_sha256 &&
+          flat.value()->generations.back().package_sha256 == *supplied_sha256;
+      const bool same_legacy = flat && !flat.value().has_value() &&
+          supplied_sha256 && installed &&
+          installed.value().source_archive_sha256 == *supplied_sha256 &&
+          same_path(installed.value().install_root, options.install_root);
+      if (!flat || (!same_flat && !same_legacy)) {
+        print_error(!flat ? flat.error() : setup_error_with_detail(
+            "self_maintenance_package_incompatible",
+            "generic Setup retry must match the exact installed flat package",
+            package_problem), options.json);
+        return 4;
+      }
+      // Generic legacy payloads have no maintenance identity to clone.
+      // Their exact repeat install remains on the flat Setup route, whose
+      // coordinator-locked epoch guard still rejects an entered bootstrap.
+      resume_bootstrap = false;
+    }
+  }
+
+  if (resume_bootstrap) {
     const fs::path coordinator_root =
         (options.state_root.parent_path() / "setup-coordinator.v1")
             .lexically_normal();
@@ -3654,12 +3758,30 @@ int wmain(int argc, wchar_t **argv) {
     const fs::path coordinator_root =
         (options.state_root.parent_path() / "setup-coordinator.v1")
             .lexically_normal();
-    auto bootstrap = bootstrap_installed_facman(options, coordinator_root, true);
-    if (!bootstrap) {
-      print_error(bootstrap.error(), options.json);
+    fs::path supplied = package_materializer.materialized_path();
+    if (supplied.empty()) {
+      auto materialized = package_materializer.materialize(options.package);
+      if (!materialized) {
+        print_error(materialized.error(), options.json);
+        return 4;
+      }
+      supplied = materialized.take_value();
+    }
+    auto metadata = facman::self_maintenance::has_self_maintenance_metadata(
+        supplied);
+    if (!metadata) {
+      print_error(metadata.error(), options.json);
       return 4;
     }
-    installed_bootstrap = bootstrap.take_value();
+    if (metadata.value()) {
+      auto bootstrap = bootstrap_installed_facman(
+          options, coordinator_root, true, supplied);
+      if (!bootstrap) {
+        print_error(bootstrap.error(), options.json);
+        return 4;
+      }
+      installed_bootstrap = bootstrap.take_value();
+    }
   }
   const std::string integration = options.shell_integration
       ? "coordinated current-user integration"

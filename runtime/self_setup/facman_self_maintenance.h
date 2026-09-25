@@ -165,6 +165,10 @@ struct RetirementStep {
 struct RetirementRequest {
   std::filesystem::path coordinator_root;
   bool apply = false;
+  bool epoch_mode = false;
+  std::filesystem::path logical_root;
+  std::filesystem::path state_root;
+  std::filesystem::path acceptance_root;
 };
 
 struct RetirementResponse {
@@ -465,6 +469,11 @@ struct Response {
 facman::core::Result<Plan> plan(const Request &request);
 facman::core::Result<Response> execute(const Request &request, Effects &effects);
 facman::core::Result<PackageInspection> inspect_package(
+    const std::filesystem::path &package);
+// False only for a valid generic Setup archive with neither maintenance
+// identity record. A partial or malformed maintenance package is still routed
+// to strict inspection and rejected there.
+facman::core::Result<bool> has_self_maintenance_metadata(
     const std::filesystem::path &package);
 facman::core::Result<void> extract_maintenance_launcher(
     const PackageInspection &package,
