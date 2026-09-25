@@ -17,6 +17,7 @@ import shutil
 import stat
 import struct
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -494,30 +495,34 @@ def _plain_metadata(path: Path, label: str, *, directory: bool) -> os.stat_resul
 
 def _retained_file_metadata(
         path: Path, state_root: Path, acceptance_root: Path,
-        label: str) -> os.stat_result:
-    repair_root = state_root / "repair-sources"
+        label: str, *, expected_parent: Path | None = None) -> os.stat_result:
+    retained_root = expected_parent or state_root / "repair-sources"
     if (os.path.normcase(os.path.abspath(path.parent)) !=
-            os.path.normcase(os.path.abspath(repair_root))):
-        raise AssertionError(f"{label} is outside the exact retained repair directory")
+            os.path.normcase(os.path.abspath(retained_root))):
+        raise AssertionError(f"{label} is outside its exact retained directory")
     authority = Path(os.path.abspath(acceptance_root))
-    repair = Path(os.path.abspath(repair_root))
+    retained = Path(os.path.abspath(retained_root))
     try:
-        relative = Path(os.path.relpath(repair, authority))
+        relative = Path(os.path.relpath(retained, authority))
     except ValueError as exc:
-        raise AssertionError(f"{label} is outside retained repair authority") from exc
+        raise AssertionError(f"{label} is outside retained file authority") from exc
     if relative.is_absolute() or relative == Path("..") or ".." in relative.parts:
-        raise AssertionError(f"{label} is outside retained repair authority")
+        raise AssertionError(f"{label} is outside retained file authority")
     current = authority
-    _plain_metadata(current, "retained repair acceptance root", directory=True)
+    _plain_metadata(current, "retained file acceptance root", directory=True)
     for component in relative.parts:
         current = current / component
-        _plain_metadata(current, "retained repair ancestry", directory=True)
+        _plain_metadata(current, "retained file ancestry", directory=True)
     return _plain_metadata(path, label, directory=False)
 
 
 def stable_retained_digest(
-        path: Path, state_root: Path, acceptance_root: Path, label: str) -> str:
-    metadata = _retained_file_metadata(path, state_root, acceptance_root, label)
+        path: Path, state_root: Path, acceptance_root: Path, label: str,
+        *, expected_parent: Path | None = None) -> str:
+    metadata = _retained_file_metadata(
+        path, state_root, acceptance_root, label,
+        expected_parent=expected_parent,
+    )
     identity = (metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns)
     digest = hashlib.sha256()
     observed = 0
@@ -531,11 +536,28 @@ def stable_retained_digest(
         closed = os.fstat(source.fileno())
         if (closed.st_dev, closed.st_ino, closed.st_size, closed.st_mtime_ns) != identity:
             raise AssertionError(f"{label} changed while it was read")
-    final = _retained_file_metadata(path, state_root, acceptance_root, label)
+    final = _retained_file_metadata(
+        path, state_root, acceptance_root, label,
+        expected_parent=expected_parent,
+    )
     if ((final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns) != identity or
             observed != metadata.st_size):
         raise AssertionError(f"{label} pathname changed while it was read")
     return digest.hexdigest()
+
+
+def stable_handoff_digest(
+        path: Path, state_root: Path, acceptance_root: Path,
+        operation_id: str, label: str) -> str:
+    if not re.fullmatch(r"maint\.(?:update|downgrade|rollback)\.[0-9a-f]{8}\.[0-9a-f]{20}",
+                        operation_id):
+        raise AssertionError(f"{label} has an invalid maintenance operation identity")
+    handoff_root = state_root / "epoch-handoff" / operation_id
+    if path != handoff_root / "FacManContinuation.exe":
+        raise AssertionError(f"{label} is not the exact retained continuation helper")
+    return stable_retained_digest(
+        path, state_root, acceptance_root, label, expected_parent=handoff_root,
+    )
 
 
 def stable_retained_bytes(
@@ -1595,8 +1617,8 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                 raise AssertionError("source-distinct downgrade omitted its handoff operation identity")
             continuation_helper = (state_root / "epoch-handoff" /
                                    downgrade_operation_id / "FacManContinuation.exe")
-            continuation_sha256 = stable_retained_digest(
-                continuation_helper, state_root, root,
+            continuation_sha256 = stable_handoff_digest(
+                continuation_helper, state_root, root, downgrade_operation_id,
                 "downgrade retained continuation helper",
             )
             candidate_setup_sha256 = sha256_path(executable)
@@ -1823,8 +1845,9 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
             raise AssertionError("real epoch downgrade omitted its operation identity")
         retained_helper = (epoch_state / "epoch-handoff" / epoch_downgrade_id /
                            "FacManContinuation.exe")
-        if stable_retained_digest(retained_helper, epoch_state, epoch_fixture,
-                                  "source-distinct epoch continuation helper") != \
+        if stable_handoff_digest(retained_helper, epoch_state, epoch_fixture,
+                                 epoch_downgrade_id,
+                                 "source-distinct epoch continuation helper") != \
                 sha256_path(installed_helper):
             raise AssertionError("epoch downgrade did not retain the executing B Setup")
         epoch_downgraded = await_external_handoff(
