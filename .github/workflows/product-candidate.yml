@@ -397,7 +397,7 @@ jobs:
             --adapter linux_run_embedded_archive_v1 \
             --version "${FACMAN_CANDIDATE_VERSION}" \
             --receipt "${{ env.FACMAN_TASK_ROOT }}/evidence/linux-payload-equivalence.v1.json"
-          python tests/integration/linux_setup_package_ownership.py "$setup" "$test_home"
+          HOME="$test_home" "$setup" repair --yes --quiet
           HOME="$test_home" "$setup" uninstall --yes --quiet
           test ! -e "$test_home/.local/opt/facman"
       - name: Record exact platform asset checksums and authority ceiling

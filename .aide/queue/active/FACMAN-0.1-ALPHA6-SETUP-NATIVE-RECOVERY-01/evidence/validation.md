@@ -154,9 +154,9 @@ The focused WSL test suite passes nine cases: absent generation, foreign current
 pointer, foreign terminal link, foreign desktop entry, linked state root,
 changed setup copy, relative root, exact owned verify/uninstall with preserved
 workspace bytes, and a gzip payload install/verify/uninstall with `zstd`
-deliberately blocked on `PATH`. The strict check passes. The product-candidate
-workflow now exercises a foreign `current` pointer against the produced Linux
-Setup between repair and uninstall. The Setup producer transcodes the portable
-zstd archive to a gzip payload, retaining extracted-stage equivalence. A
-current-head produced-package candidate and hosted Linux package result are
-still required.
+deliberately blocked on `PATH`. The strict check passes. A standalone package
+driver exercises foreign `current` refusal against produced Linux Setup between
+repair and uninstall; the exact downloaded candidate remains to be run through
+that driver. The Setup producer transcodes the portable zstd archive to a gzip
+payload, retaining extracted-stage equivalence. A current-head produced-package
+candidate and hosted Linux package result are still required.
