@@ -2359,6 +2359,13 @@ int main(int argc, char **argv) {
       preparation.request, preparation.effects);
   auto ordinary_during_handoff = facman::self_maintenance::discover_lifecycle_epoch_active(
       preparation.coordinator);
+  auto genesis_during_handoff =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          preparation.coordinator, preparation.epoch.epoch_id);
+  if (!genesis_during_handoff)
+    std::cerr << "genesis during handoff: "
+              << genesis_during_handoff.error().code << ": "
+              << genesis_during_handoff.error().message << '\n';
   auto wrong_handoff_nonce = facman::self_maintenance::admit_lifecycle_epoch_continuation(
       preparation.coordinator, "epoch.prepare.one", "wrong-nonce",
       preparation_apply ? preparation_apply.value().journal_sha256 : std::string(64, 'a'));
@@ -2379,7 +2386,10 @@ int main(int argc, char **argv) {
                     preparation_apply.value().nonce == preparation_retry.value().nonce &&
                     preparation_apply.value().deadline_utc_ms == 2000000000000ULL &&
                     preparation_retry.value().deadline_utc_ms == 2000000000000ULL &&
-                    !ordinary_during_handoff && exact_handoff &&
+                    !ordinary_during_handoff && genesis_during_handoff &&
+                    genesis_during_handoff.value().generation_id ==
+                        preparation.epoch.genesis_generation_id &&
+                    exact_handoff &&
                     exact_handoff.value().package == preparation_apply.value().inputs.package &&
                     !wrong_handoff_nonce && !wrong_handoff_digest &&
                     pending_handoff && pending_handoff.value() &&
@@ -2597,6 +2607,10 @@ int main(int argc, char **argv) {
   auto pending_publication =
       facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
           provider_continuation.coordinator);
+  auto genesis_after_publication =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          provider_continuation.coordinator,
+          provider_continuation.epoch.epoch_id);
   const fs::path publication_epoch = provider_continuation.coordinator / "epochs" /
       provider_continuation.epoch.epoch_id;
   const auto &publication_target = provider_completed ? provider_completed.value().transition.target
@@ -2607,6 +2621,9 @@ int main(int argc, char **argv) {
                     publication_completed.value().phase == "epoch_activated" &&
                     publication_restarted &&
                     publication_restarted.value().phase == "epoch_activated" &&
+                    genesis_after_publication &&
+                    genesis_after_publication.value().generation_id ==
+                        provider_continuation.epoch.genesis_generation_id &&
                     fs::exists(publication_epoch / "generations" /
                         ("generation." + publication_target.generation_id + ".v2.json")) &&
                     fs::exists(publication_epoch / "activations" /

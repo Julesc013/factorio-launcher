@@ -1550,27 +1550,20 @@ bool same_path(const fs::path &left, const fs::path &right);
 facman::core::Result<std::string> epoch_controller_package_sha256(
     const fs::path &coordinator_root, const std::string &epoch_id,
     const fs::path &state_root, const fs::path &acceptance_root) {
-  auto active = facman::self_maintenance::discover_lifecycle_epoch_active(
-      coordinator_root);
-  if (!active) return facman::core::Result<std::string>::failure(active.error());
-  auto lineage =
-      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
-          coordinator_root);
-  if (!lineage)
-    return facman::core::Result<std::string>::failure(lineage.error());
-  if (active.value().epoch.epoch_id != epoch_id ||
-      lineage.value().generations.empty() ||
-      lineage.value().generations.front().generation_id !=
-          active.value().epoch.genesis_generation_id ||
-      !same_path(active.value().epoch.state_root, state_root) ||
-      !same_path(active.value().epoch.acceptance_root, acceptance_root) ||
-      !lowercase_hex_64(lineage.value().generations.front().package_sha256))
+  auto genesis =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          coordinator_root, epoch_id);
+  if (!genesis)
+    return facman::core::Result<std::string>::failure(genesis.error());
+  if (!same_path(genesis.value().state_root, state_root) ||
+      !same_path(genesis.value().acceptance_root, acceptance_root) ||
+      !lowercase_hex_64(genesis.value().package_sha256))
     return facman::core::Result<std::string>::failure(
         {"self_maintenance_epoch_recovery_required",
          "real epoch genesis does not bind a retained maintenance controller",
          epoch_id});
   return facman::core::Result<std::string>::success(
-      lineage.value().generations.front().package_sha256);
+      genesis.value().package_sha256);
 }
 
 class MaintenanceEffects final : public facman::self_maintenance::Effects,
@@ -1588,7 +1581,8 @@ public:
         acceptance_root_(std::move(acceptance_root)),
         maintenance_launcher_(std::move(maintenance_launcher)),
         maintenance_launcher_sha256_(std::move(maintenance_launcher_sha256)),
-        controller_package_sha256_(std::move(controller_package_sha256)),
+        controller_package_sha256_(shell_integration
+            ? std::move(controller_package_sha256) : std::string{}),
         shell_integration_(shell_integration) {}
 
   facman::self_maintenance::CandidateState inspect_candidate(
@@ -2560,14 +2554,18 @@ int run_private_continuation(const ContinuationOptions &options) {
     return 4;
   facman::self_maintenance::ProviderBridge provider(
       transition.target.state_root, transition.target.acceptance_root);
-  auto controller = epoch_controller_package_sha256(
-      coordinator_root, transition.epoch_id, transition.target.state_root,
-      transition.target.acceptance_root);
-  if (!controller) return 4;
+  std::string controller_sha256;
+  if (transition.shell_integration) {
+    auto controller = epoch_controller_package_sha256(
+        coordinator_root, transition.epoch_id, transition.target.state_root,
+        transition.target.acceptance_root);
+    if (!controller) return 4;
+    controller_sha256 = controller.take_value();
+  }
   MaintenanceEffects effects(provider, transition.target.state_root,
       transition.target.acceptance_root, target_launcher.path,
       transition.retained_package.maintenance_launcher_sha256,
-      transition.shell_integration, controller.value());
+      transition.shell_integration, controller_sha256);
 
   std::string phase = transition.phase;
   if (phase == "continuation_pending") {
@@ -2810,17 +2808,21 @@ int run_maintenance(Options &options, const fs::path &,
           pending.operation_id}, options.json);
       return 4;
     }
-    auto controller = epoch_controller_package_sha256(
-        coordinator_root, pending.epoch_id, pending.target.state_root,
-        pending.target.acceptance_root);
-    if (!controller) {
-      print_maintenance_error(controller.error(), options.json);
-      return 4;
+    std::string controller_sha256;
+    if (pending.shell_integration) {
+      auto controller = epoch_controller_package_sha256(
+          coordinator_root, pending.epoch_id, pending.target.state_root,
+          pending.target.acceptance_root);
+      if (!controller) {
+        print_maintenance_error(controller.error(), options.json);
+        return 4;
+      }
+      controller_sha256 = controller.take_value();
     }
     MaintenanceEffects effects(provider, options.state_root,
                                options.acceptance_root, {},
                                pending.retained_package.maintenance_launcher_sha256,
-                               pending.shell_integration, controller.value());
+                               pending.shell_integration, controller_sha256);
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error({"self_maintenance_provider_root_unsafe",
@@ -3083,17 +3085,21 @@ int run_maintenance(Options &options, const fs::path &,
       epoch_request.continuation_helper = *current_helper;
       epoch_request.continuation_helper_sha256 = *current_helper_sha256;
     }
-    auto controller = epoch_controller_package_sha256(
-        coordinator_root, epoch_active.value().epoch.epoch_id,
-        options.state_root, options.acceptance_root);
-    if (!controller) {
-      print_maintenance_error(controller.error(), options.json);
-      return 4;
+    std::string controller_sha256;
+    if (options.shell_integration) {
+      auto controller = epoch_controller_package_sha256(
+          coordinator_root, epoch_active.value().epoch.epoch_id,
+          options.state_root, options.acceptance_root);
+      if (!controller) {
+        print_maintenance_error(controller.error(), options.json);
+        return 4;
+      }
+      controller_sha256 = controller.take_value();
     }
     MaintenanceEffects effects(provider, options.state_root,
                                options.acceptance_root, launcher,
                                package->maintenance_launcher_sha256,
-                               options.shell_integration, controller.value());
+                               options.shell_integration, controller_sha256);
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error(
@@ -3801,7 +3807,8 @@ int wmain(int argc, wchar_t **argv) {
         std::string controller_sha256;
         // A completed retirement has no active controller.  The retirement
         // coordinator still needs to accept an exact repeated uninstall.
-        if (epochs.value().epochs.back().retirement_sha256.empty()) {
+        if (options.shell_integration &&
+            epochs.value().epochs.back().retirement_sha256.empty()) {
           auto controller = epoch_controller_package_sha256(
               coordinator_root, epochs.value().epochs.back().epoch_id,
               options.state_root, options.acceptance_root);
@@ -3943,7 +3950,7 @@ int wmain(int argc, wchar_t **argv) {
             generation.install_id), options.json);
         return 4;
       }
-      if (selected.value()->epoch.has_value()) {
+      if (options.shell_integration && selected.value()->epoch.has_value()) {
         auto controller = epoch_controller_package_sha256(
             coordinator_root, selected.value()->epoch->epoch_id,
             options.state_root, options.acceptance_root);

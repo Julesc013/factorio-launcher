@@ -3252,6 +3252,69 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
   return discover_lifecycle_epoch_chain_impl(coordinator_root);
 }
 
+facman::core::Result<Generation> discover_lifecycle_epoch_genesis_generation(
+    const fs::path &coordinator_root, const std::string &epoch_id) {
+  auto chain = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  std::optional<EpochPendingTransition> pending;
+  if (!chain) {
+    // A validated external handoff deliberately withholds ordinary epoch
+    // discovery. Its pending scanner admits the exact tail and custody while
+    // the target generation and activation are still being published.
+    auto scanned = discover_lifecycle_epoch_pending_transition(
+        coordinator_root);
+    if (!scanned || !scanned.value().has_value())
+      return facman::core::Result<Generation>::failure(
+          !scanned ? scanned.error() : chain.error());
+    pending = scanned.take_value();
+  }
+  if ((chain && (chain.value().epochs.empty() ||
+                 chain.value().epochs.back().compatibility_epoch ||
+                 chain.value().epochs.back().epoch_id != epoch_id)) ||
+      (pending.has_value() && pending->epoch_id != epoch_id))
+    return facman::core::Result<Generation>::failure(epoch_recovery(
+        "requested real epoch is not the validated lifecycle tail"));
+  const std::string manifest_sha256 = pending.has_value()
+      ? pending->epoch_manifest_sha256
+      : chain.value().epochs.back().manifest_sha256;
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(coordinator_root, epoch_id);
+  if (!opened) return facman::core::Result<Generation>::failure(opened.error());
+  auto manifest = scope.read("epoch.v1.json");
+  auto epoch = manifest
+      ? parse_lifecycle_manifest(manifest.value(), epoch_id)
+      : facman::core::Result<LifecycleEpoch>::failure(manifest.error());
+  if (!epoch || epoch.value().manifest_sha256 != manifest_sha256)
+    return facman::core::Result<Generation>::failure(!epoch ? epoch.error() :
+        epoch_recovery("epoch manifest changed before genesis controller selection"));
+  if (!pending.has_value()) {
+    auto active = discover_epoch_genesis_state(epoch.value(), scope);
+    if (!active || !active.value().has_value())
+      return facman::core::Result<Generation>::failure(!active ? active.error() :
+          epoch_recovery("real epoch genesis is not committed"));
+  }
+  auto genesis = parse_epoch_generation(
+      epoch.value(), scope, epoch.value().genesis_generation_id);
+  if (!genesis || !scope.epoch.revalidate().ok() ||
+      !scope.epochs.revalidate().ok() || !scope.coordinator.revalidate().ok())
+    return facman::core::Result<Generation>::failure(!genesis ? genesis.error() :
+        epoch_recovery("epoch genesis controller changed during discovery"));
+  if (pending.has_value()) {
+    auto rechecked = discover_lifecycle_epoch_pending_transition(
+        coordinator_root);
+    if (!rechecked || !rechecked.value().has_value() ||
+        rechecked.value()->epoch_id != pending->epoch_id ||
+        rechecked.value()->epoch_manifest_sha256 != manifest_sha256 ||
+        rechecked.value()->operation_id != pending->operation_id ||
+        rechecked.value()->source_activation_sha256 !=
+            pending->source_activation_sha256 ||
+        rechecked.value()->journal_sha256 != pending->journal_sha256)
+      return facman::core::Result<Generation>::failure(!rechecked
+          ? rechecked.error() : epoch_recovery(
+              "epoch handoff changed during genesis controller selection"));
+  }
+  return genesis;
+}
+
 namespace {
 
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active_from_chain(
