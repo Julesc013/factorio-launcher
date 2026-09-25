@@ -190,6 +190,7 @@ public:
     IoStatus discard_open();
     void close_without_flush() noexcept;
     const std::filesystem::path& path() const noexcept;
+    const FileIdentity& identity() const noexcept;
 
 private:
     friend class StableDirectoryObject;

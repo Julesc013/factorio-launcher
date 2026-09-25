@@ -220,6 +220,7 @@ std::string record_json(const Record& record)
     document.add_string("commit_strategy", record.commit_strategy);
     document.add_string("operation_context", record.operation_context);
     document.add_string("effect_parent_identity", record.effect_parent_identity);
+    document.add_string("effect_file_identity", record.effect_file_identity);
     document.add_string("error", record.error);
     document.add_array("recovery_actions", string_array_builder(record.recovery_actions));
     return document.serialize() + "\n";
@@ -303,6 +304,7 @@ bool load_record(const fs::path& workspace, const std::string& id, Record& recor
         !object_string(document.value(), "commit_strategy", record.commit_strategy, false, detail) ||
         !object_string(document.value(), "operation_context", record.operation_context, false, detail) ||
         !object_string(document.value(), "effect_parent_identity", record.effect_parent_identity, false, detail) ||
+        !object_string(document.value(), "effect_file_identity", record.effect_file_identity, false, detail) ||
         !object_string(document.value(), "error", record.error, false, detail) ||
         !object_string(document.value(), "marker_nonce", record.marker_nonce, schema == "facman.transaction.v2", detail)) {
         if (detail.empty()) detail = "journal schema is unsupported";
@@ -581,8 +583,14 @@ std::string directory_effect_identity(
         std::to_string(identity.object);
 }
 
+std::string file_effect_identity(const facman::platform::FileIdentity& identity)
+{
+    if (!identity.regular_file || identity.link_count != 1U) return {};
+    return std::to_string(identity.device) + ":" + std::to_string(identity.object);
+}
+
 bool publish_save_backup_file(
-    const fs::path& workspace, const Record& record, std::string& detail)
+    const fs::path& workspace, Record& record, std::string& detail)
 {
     if (record.command_id != "saves.backup" ||
         record.state != State::committing ||
@@ -644,6 +652,33 @@ bool publish_save_backup_file(
     facman::platform::DurableOutputFile output;
     std::uint64_t offset = 0;
     if (held.ok()) {
+        if (record.effect_file_identity.empty()) {
+            if (record.recovery_actions.size() >= 16U) {
+                detail = "too many ambiguous backup temporary files require manual audit";
+                return false;
+            }
+            facman::platform::RandomIdGenerator random;
+            auto replacement = RelativePath::parse(
+                ".facman-save-backup-" + record.transaction_id + "-" +
+                random.next("retry") + ".staging.zip");
+            if (!replacement) { detail = replacement.error().message; return false; }
+            const RelativePath previous = record.expected_files.front().path;
+            record.expected_files.front().path = replacement.take_value();
+            record.recovery_actions.push_back(
+                "retained_ambiguous_backup_temporary:" +
+                path_text(record.target.parent_path() / temporary));
+            if (!checkpoint(workspace, record, "backup_unbound_temporary_retained", detail)) {
+                record.expected_files.front().path = previous;
+                record.recovery_actions.pop_back();
+                return false;
+            }
+            held_temporary = facman::platform::StableInputFile();
+            return publish_save_backup_file(workspace, record, detail);
+        }
+        if (file_effect_identity(held_temporary.identity()) != record.effect_file_identity) {
+            detail = "backup temporary output differs from its journaled file identity";
+            return false;
+        }
         if (!held_temporary.identity().regular_file ||
             held_temporary.identity().link_count != 1U ||
             held_temporary.size() > source.size()) {
@@ -669,6 +704,10 @@ bool publish_save_backup_file(
             temporary, identity, source.size(), output);
         if (!held.ok()) { detail = held.detail; return false; }
     } else {
+        if (!record.effect_file_identity.empty()) {
+            detail = "journaled backup temporary output is missing";
+            return false;
+        }
         facman::platform::PathIdentity existing_identity;
         const auto inspected = facman::platform::inspect_path_no_follow(
             record.target.parent_path() / temporary, existing_identity);
@@ -679,6 +718,27 @@ bool publish_save_backup_file(
         const auto created = parent.create_child_file_exclusive(
             temporary, source.size(), output);
         if (!created.ok()) { detail = created.detail; return false; }
+        const char* created_fault = std::getenv("FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE");
+        if (created_fault != nullptr && std::string(created_fault) ==
+                "pause_after_backup_temp_created")
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+    if (record.effect_file_identity.empty()) {
+        if (std::find(record.completed_steps.begin(), record.completed_steps.end(),
+                "backup_file_identity_bound") != record.completed_steps.end()) {
+            detail = "backup journal lost its bound file identity";
+            return false;
+        }
+        record.effect_file_identity = file_effect_identity(output.identity());
+        if (record.effect_file_identity.empty() ||
+            !checkpoint(workspace, record, "backup_file_identity_bound", detail)) {
+            if (detail.empty()) detail = "backup file identity could not be journaled";
+            return false;
+        }
+    }
+    if (file_effect_identity(output.identity()) != record.effect_file_identity) {
+        detail = "backup output handle differs from its journaled file identity";
+        return false;
     }
     while (offset < source.size()) {
         const auto wanted = static_cast<std::size_t>((std::min)(
@@ -777,6 +837,11 @@ bool finalize_save_backup_sidecar(const Record& record, std::string& detail)
     if (!pinned.ok() || !target.identity().regular_file ||
         target.identity().link_count != 1U) {
         detail = pinned.ok() ? "backup target is not an exact regular file" : pinned.detail;
+        return false;
+    }
+    if (!record.effect_file_identity.empty() &&
+        file_effect_identity(target.identity()) != record.effect_file_identity) {
+        detail = "backup target differs from its journaled publication file identity";
         return false;
     }
     const auto* size_field = document.value().find("source_size");
@@ -1135,13 +1200,20 @@ Outcome apply(const fs::path& workspace, const std::string& id)
         }
     }
     if (fs::exists(record.target)) {
-        record.recovery_actions = {"preserved_committed_target"};
+        record.recovery_actions.push_back("preserved_committed_target");
         bool commit_recorded = record.state == State::committed || record.state == State::audited ||
             std::find_if(record.completed_steps.begin(), record.completed_steps.end(), [](const std::string& step) {
                 return step.find("committed") != std::string::npos;
             }) != record.completed_steps.end();
         if (record.command_id == "saves.backup" &&
             (commit_recorded || record.state == State::committing)) {
+            if (record.state == State::committing &&
+                record.effect_file_identity.empty()) {
+                unlock();
+                return Refusal {"recovery_backup_publication_unsafe",
+                    "Backup target lacks publication ownership evidence",
+                    "committing backup has no journaled file identity", false};
+            }
             if (!finalize_save_backup_sidecar(record, detail)) {
                 unlock();
                 return Refusal {"recovery_backup_manifest_unsafe",

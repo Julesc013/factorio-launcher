@@ -594,6 +594,136 @@ class SaveTransferTests(unittest.TestCase):
             self.assertEqual(list(workspace.glob(".facman-save-backup-*")), [])
             self.assertEqual(list(output.glob(".facman-save-backup-*")), [])
 
+    def test_backup_recovery_rejects_foreign_identical_target(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            output = Path(tmp) / "output"
+            output.mkdir()
+            self.prepare(workspace)
+            save = workspace / "instances" / "source-world" / "saves" / "world.zip"
+            shutil.copyfile(SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save)
+            destination = output / "colliding.backup.zip"
+            sidecar = Path(str(destination) + ".manifest.json")
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
+                "pause_before_backup_publish"
+            )
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", str(workspace), "saves",
+                 "backup", "world", "--instance", "source-world", "--to",
+                 str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while process.poll() is None and time.monotonic() < deadline:
+                    stages = list(output.glob(".facman-save-backup-*.staging.zip"))
+                    if stages and stages[0].stat().st_size == save.stat().st_size:
+                        break
+                    time.sleep(0.02)
+                self.assertIsNone(process.poll(), "backup exited before collision")
+                self.assertTrue(stages, "backup did not prepare relative publication")
+                with destination.open("xb") as foreign:
+                    foreign.write(save.read_bytes())
+                foreign_bytes = destination.read_bytes()
+                process.kill()
+                process.communicate(timeout=20)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            records = [
+                record for record in json.loads(stdout)["transactions"]
+                if record["command_id"] == "saves.backup"
+                and Path(record["target"]) == destination
+            ]
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]["state"], "committing")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                records[0]["transaction_id"], "--json",
+            ])
+            self.assertEqual(code, 1, stderr + stdout)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"],
+                             "recovery_backup_manifest_unsafe")
+            self.assertEqual(destination.read_bytes(), foreign_bytes)
+            self.assertFalse(sidecar.exists())
+
+    def test_backup_process_loss_before_temp_identity_checkpoint_rotates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            output = Path(tmp) / "output"
+            output.mkdir()
+            self.prepare(workspace)
+            save = workspace / "instances" / "source-world" / "saves" / "world.zip"
+            shutil.copyfile(SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save)
+            destination = output / "precheckpoint.backup.zip"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
+                "pause_after_backup_temp_created"
+            )
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", str(workspace), "saves",
+                 "backup", "world", "--instance", "source-world", "--to",
+                 str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while process.poll() is None and time.monotonic() < deadline:
+                    stages = list(output.glob(".facman-save-backup-*.staging.zip"))
+                    if stages:
+                        break
+                    time.sleep(0.02)
+                self.assertIsNone(process.poll(), "backup exited before temp checkpoint")
+                self.assertEqual(len(stages), 1)
+                self.assertEqual(stages[0].stat().st_size, 0)
+                process.kill()
+                process.communicate(timeout=20)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+            stages[0].unlink()
+            stages[0].write_bytes(b"foreign temporary file")
+            if os.name != "nt":
+                stages[0].chmod(0o666)
+            records = [
+                json.loads(path.read_text(encoding="utf-8"))
+                for path in (workspace / "transactions").glob("*.transaction.v1.json")
+            ]
+            backups = [
+                record for record in records
+                if record["command_id"] == "saves.backup"
+                and Path(record["target"]) == destination
+            ]
+            self.assertEqual(len(backups), 1)
+            record = backups[0]
+            self.assertEqual(record["state"], "committing")
+            self.assertEqual(record["effect_file_identity"], "")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                record["transaction_id"], "--json",
+            ])
+            self.assertEqual(code, 0, stderr + stdout)
+            self.assertEqual(json.loads(stdout)["transactions"][0]["state"], "complete")
+            self.assertEqual(destination.read_bytes(), save.read_bytes())
+            self.assertTrue(Path(str(destination) + ".manifest.json").is_file())
+            self.assertEqual(stages[0].read_bytes(), b"foreign temporary file")
+            self.assertEqual(list(output.glob(".facman-save-backup-*.staging.zip")), stages)
+            self.assertTrue(any(
+                action.startswith("retained_ambiguous_backup_temporary:")
+                for action in json.loads(stdout)["transactions"][0]["actions"]
+            ))
+
     def test_backup_process_loss_during_relative_publication_resumes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "workspace"

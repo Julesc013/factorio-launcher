@@ -33,6 +33,7 @@
     "commit_strategy": { "type": "string" },
     "operation_context": { "type": "string" },
     "effect_parent_identity": { "type": "string" },
+    "effect_file_identity": { "type": "string" },
     "error": { "type": "string" },
     "recovery_actions": { "type": "array", "items": { "type": "string" } }
   },

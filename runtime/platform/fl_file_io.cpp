@@ -1468,6 +1468,7 @@ void DurableOutputFile::close_without_flush() noexcept
         impl_->reset_relative_state();
 }
 const std::filesystem::path& DurableOutputFile::path() const noexcept { return impl_->path; }
+const FileIdentity& DurableOutputFile::identity() const noexcept { return impl_->identity; }
 
 IoStatus commit_no_replace(const std::filesystem::path& source, const std::filesystem::path& destination)
 {
