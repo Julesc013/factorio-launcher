@@ -98,8 +98,30 @@ FacMan-<version>-linux-x64-portable.tar.zst
 The preview GUI is GTK 3/X11, but the executable and asset names remain
 `FacMan`. The matching self-contained offline setup candidate is
 `FacMan-<version>-linux-x64-setup.run`; it defaults to current-user paths under
-`~/.local` and implements install, verify, repair, and uninstall. Human
-installation and wider Linux/Wayland claims remain unproven.
+`~/.local` and implements install, verify, repair, recover, rollback, and
+uninstall. A version-distinct update retains one previous generation and its
+setup source. The new Setup copy is installed before switching the active
+generation, so the installed maintenance entry point can run `recover` after
+an interrupted cutover. `recover` restores the previous generation;
+`rollback` restores it after a completed update. A further update while this
+rollback source is retained, or a source-distinct replacement under the same
+version, currently refuses. Incomplete staging and changed ownership also
+refuse without deleting their contents. Before an update, the full previous
+Setup copy must match its recorded SHA-256. The two verified Alpha.5 candidate
+packages are admitted by exact digest because Alpha.5 predates that receipt.
+The earlier five-file update journal remains readable for those exact
+Alpha.5 predecessors. This Alpha.6 update path admits only those verified
+Alpha.5 packages as predecessors; a later B-to-C update requires its own
+independently admitted predecessor identity.
+Removal admits only the active generation and the predecessor named in the
+rollback record; extra files, directories, links, or generation roots refuse.
+Custom installation roots currently
+accept only ASCII letters, digits, `/`, `.`, `_`, `+`, and `-`; other paths
+refuse before effects so receipts and desktop launch commands stay unambiguous.
+An interruption between publishing the update journal and installing the new
+Setup copy still requires the external new Setup package to recover; the old
+installed Setup has no `recover` command. Human installation, full interruption
+coverage, and wider Linux/Wayland claims remain unproven.
 
 ## Release and manifest truth
 
