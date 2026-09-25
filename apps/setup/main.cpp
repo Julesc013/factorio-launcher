@@ -3965,7 +3965,7 @@ int wmain(int argc, wchar_t **argv) {
     installed_successor_epoch = successor_plan->epoch.epoch_id;
   }
   if (options.operation == facman::self_setup::Operation::install &&
-      options.apply) {
+      options.apply && !successor_plan.has_value()) {
     const fs::path coordinator_root =
         (options.state_root.parent_path() / "setup-coordinator.v1")
             .lexically_normal();
