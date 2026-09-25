@@ -97,6 +97,11 @@ gate, and the staging receipt labels it `produced_unqualified` until that gate
 passes. A bounded attempt receipt remains available when build or transition
 qualification fails.
 
+This candidate qualifies an epoch external continuation only if package A's
+ordinary Setup created a real active epoch before B is applied. An older flat
+baseline followed by an inline flat update does not establish that result;
+the evidence must name the actual active epoch and parent-exit handoff phase.
+
 The host verifier independently recomputes each domain-separated generation
 identity, the full side-by-side install ID, and the physical generation root
 from the logical root. It accepts `facman.self` only when the complete record is
@@ -123,11 +128,20 @@ matching request continues the immutable operation; a different request is
 refused with recovery guidance. Preview remains read-only and never continues
 or creates an operation.
 
-Epoch bootstrap remains disabled in this checkpoint. A clean or legacy flat
-installation therefore continues through its validated compatibility state;
-the resolver prefers a committed real epoch when one exists and never treats a
-stale flat head as authoritative. Legacy-to-epoch migration and its provider
-root transfer remain a later, separately reviewed change.
+Ordinary shell-integrated Setup now enters a real epoch after installing a
+strict self-maintenance package. It keeps the flat activation history as an
+immutable compatibility predecessor, records a distinct non-destructive
+authority handoff, verifies a clone of that same package at the epoch provider
+identity, activates genesis, and cuts over native integration. Portable Setup
+without shell integration keeps its exact flat route. After a completed real
+epoch retirement, ordinary Setup derives a successor from the supplied package
+and the retired head, reserves its immutable manifest, uses the durable Setup
+transaction at that epoch's physical provider identity, then verifies provider
+and native effects before activating genesis. An exact empty or fully staged
+successor manifest can be recovered; foreign or partial bytes remain refused.
+These production routes still require source-exact produced-package and
+source-distinct external-continuation qualification before the maintenance
+work item can close.
 
 Pre-handoff continuation retains the package and helper through the normal
 FacMan storage edge before provider entry. The helper is the exact current Setup

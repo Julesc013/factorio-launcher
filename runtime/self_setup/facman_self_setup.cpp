@@ -1643,8 +1643,14 @@ facman::core::Result<Response> execute(const Request &request) {
       return facman::core::Result<Response>::failure(error(
           "self_maintenance_epoch_recovery_required",
           "setup successor reservation identity is invalid"));
+    // Public Setup keeps lifecycle history beside the selected provider state
+    // root. The user-wide Setup lock above serializes the singleton effects;
+    // the reservation itself must be checked against that exact history.
+    const fs::path lifecycle_coordinator =
+        (state.value().parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
     auto epochs = self_maintenance::discover_lifecycle_epoch_chain(
-        coordinator.value());
+        lifecycle_coordinator);
     if (!epochs || epochs.value().epochs.size() < 2U ||
         epochs.value().epochs.back().compatibility_epoch ||
         epochs.value().epochs.back().epoch_id !=
