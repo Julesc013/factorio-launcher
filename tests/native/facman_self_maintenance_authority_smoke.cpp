@@ -4,6 +4,7 @@
 #include "facman_self_maintenance.h"
 
 #include "fl_json.h"
+#include "fl_file_io.h"
 #include "fl_sha256.h"
 
 #include <chrono>
@@ -260,6 +261,9 @@ int main() {
   auto handoff_selected =
       facman::self_maintenance::resolve_authoritative_active_state(
           handoff_coordinator);
+  auto handoff_lineage =
+      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+          handoff_coordinator);
   ok &= require(handoff_completed && bootstrap_effects.clone_calls == 1 &&
                     completed_chain && completed_chain.value().epochs.size() == 2U &&
                     completed_chain.value().epochs.front().compatibility_handoff &&
@@ -269,6 +273,9 @@ int main() {
                     handoff_selected.value()->epoch.has_value() &&
                     handoff_selected.value()->active.active.install_id ==
                         handoff_completed.value().active.active.install_id &&
+                    handoff_lineage && handoff_lineage.value().generations.size() == 1U &&
+                    handoff_lineage.value().generations.front().install_id ==
+                        handoff_completed.value().active.active.install_id &&
                     fs::exists(handoff_coordinator / "authority-handoff.v1.json") &&
                     !fs::exists(handoff_coordinator / "retirements"),
                 "real epoch did not inherit non-destructive compatibility handoff");
@@ -277,6 +284,46 @@ int main() {
   ok &= require(exact_retry && exact_retry.value().phase == "complete" &&
                     bootstrap_effects.clone_calls == 1,
                 "completed bootstrap retry called the provider again");
+
+  const fs::path partial_root = root / "partial-bootstrap-manifest";
+  const fs::path partial_coordinator = partial_root / "coordinator";
+  fs::create_directories(partial_root);
+  const Generation partial_source = flat_generation(partial_root);
+  auto partial_adopted = facman::self_maintenance::adopt_legacy(
+      partial_coordinator, partial_source, true);
+  BootstrapEffects partial_effects;
+  partial_effects.interrupt_clone = false;
+  partial_effects.interrupt_registration = false;
+  facman::self_maintenance::CompatibilityAuthorityBootstrapRequest
+      partial_request{partial_coordinator, descriptor(),
+                      partial_source.package_sha256, true, false};
+  auto partial_preview = facman::self_maintenance::bootstrap_compatibility_authority(
+      partial_request, partial_effects);
+  partial_request.apply = true;
+  // The fourth immutable publication is the first epoch manifest. Its
+  // flushed staging file must survive the injected pre-rename interruption.
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(4U);
+  auto partial_interrupted = facman::self_maintenance::bootstrap_compatibility_authority(
+      partial_request, partial_effects);
+  facman::platform::testing::set_relative_publish_pre_rename_fault_countdown(0U);
+  const fs::path partial_epoch = partial_preview
+      ? partial_coordinator / "epochs" / partial_preview.value().epoch.epoch_id
+      : fs::path();
+  const bool staged_manifest = partial_preview && !partial_interrupted &&
+      fs::exists(partial_epoch / "epoch.staging.v1.json") &&
+      !fs::exists(partial_epoch / "epoch.v1.json");
+  auto partial_recovered = facman::self_maintenance::bootstrap_compatibility_authority(
+      partial_request, partial_effects);
+  auto partial_selected = facman::self_maintenance::resolve_authoritative_active_state(
+      partial_coordinator);
+  ok &= require(partial_adopted && staged_manifest && partial_recovered &&
+                    partial_recovered.value().phase == "complete" &&
+                    partial_effects.clone_calls == 1 && partial_selected &&
+                    partial_selected.value().has_value() &&
+                    partial_selected.value()->epoch.has_value() &&
+                    fs::exists(partial_epoch / "epoch.v1.json") &&
+                    !fs::exists(partial_epoch / "epoch.staging.v1.json"),
+                "interrupted epoch manifest did not recover from its verified handoff");
 
   const fs::path foreign_root = root / "foreign-handoff";
   const fs::path foreign_coordinator = foreign_root / "coordinator";

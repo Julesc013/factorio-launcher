@@ -1718,7 +1718,8 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
     const LifecycleEpoch &epoch, const PinnedLifecycleEpochScope &scope,
     const Generation *expected = nullptr, bool allow_incomplete = false,
     const std::string *allowed_maintenance_operation = nullptr,
-    const PendingEpochTransitionState *pending_transition = nullptr) {
+    const PendingEpochTransitionState *pending_transition = nullptr,
+    std::vector<Generation> *validated_history = nullptr) {
   std::vector<CompletedEpochShellCutover> completed_shell_cutovers;
   std::vector<fs::path> children;
   if (!scope.epoch.list_child_names_bounded(4U, children).ok())
@@ -2176,6 +2177,12 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
         "completed epoch shell cutover changed during active discovery"));
   ActiveState state{cursor->target, {}, cursor->name, cursor->digest};
   if (ordered.size() > 1U) state.previous = ordered[ordered.size() - 2U]->target;
+  if (validated_history != nullptr) {
+    validated_history->clear();
+    validated_history->reserve(ordered.size());
+    for (const Node *node : ordered)
+      validated_history->push_back(node->target);
+  }
   return facman::core::Result<std::optional<ActiveState>>::success(
       std::optional<ActiveState>(std::move(state)));
 }
@@ -2928,13 +2935,65 @@ facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active_from_chai
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
     const fs::path &coordinator_root) {
   auto selected = resolve_authoritative_active_state(coordinator_root);
-  if (!selected || !selected.value().has_value() ||
-      !selected.value()->epoch.has_value())
+  if (!selected || !selected.value().has_value())
     return facman::core::Result<EpochActiveState>::failure(!selected
         ? selected.error() : epoch_recovery(
-            "no authoritative real lifecycle epoch is active"));
+            "no authoritative lifecycle epoch is active"));
+  if (selected.value()->epoch.has_value())
+    return facman::core::Result<EpochActiveState>::success(
+        {*selected.value()->epoch, selected.value()->active});
+  // Preserve the public compatibility-epoch view when flat history is still
+  // authoritative. Resolver failure above continues to withhold it during
+  // an entered or incomplete bootstrap.
+  auto chain = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  if (!chain || chain.value().epochs.size() != 1U ||
+      !chain.value().epochs.front().compatibility_epoch ||
+      !chain.value().epochs.front().compatibility_active.has_value())
+    return facman::core::Result<EpochActiveState>::failure(!chain
+        ? chain.error() : epoch_recovery(
+            "authoritative compatibility epoch changed during discovery"));
+  const LifecycleEpoch &compatibility = chain.value().epochs.front();
+  if (compatibility.compatibility_active->activation_sha256 !=
+          selected.value()->active.activation_sha256 ||
+      compatibility.compatibility_active->active.install_id !=
+          selected.value()->active.active.install_id)
+    return facman::core::Result<EpochActiveState>::failure(epoch_recovery(
+        "compatibility activation changed during epoch discovery"));
   return facman::core::Result<EpochActiveState>::success(
-      {*selected.value()->epoch, selected.value()->active});
+      {compatibility, selected.value()->active});
+}
+
+facman::core::Result<ActivationChain> discover_lifecycle_epoch_activation_chain(
+    const fs::path &coordinator_root) {
+  auto selected = discover_lifecycle_epoch_active(coordinator_root);
+  if (!selected) return facman::core::Result<ActivationChain>::failure(
+      selected.error());
+  if (selected.value().epoch.compatibility_epoch)
+    return facman::core::Result<ActivationChain>::failure(epoch_recovery(
+        "no authoritative real lifecycle epoch is active"));
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(coordinator_root, selected.value().epoch.epoch_id);
+  if (!opened) return facman::core::Result<ActivationChain>::failure(opened.error());
+  auto manifest = scope.read("epoch.v1.json");
+  auto epoch = manifest
+      ? parse_lifecycle_manifest(manifest.value(), selected.value().epoch.epoch_id)
+      : facman::core::Result<LifecycleEpoch>::failure(manifest.error());
+  if (!epoch || epoch.value().manifest_sha256 !=
+                    selected.value().epoch.manifest_sha256)
+    return facman::core::Result<ActivationChain>::failure(!epoch ? epoch.error() :
+        epoch_recovery("epoch manifest changed during lineage discovery"));
+  std::vector<Generation> history;
+  auto active = discover_epoch_genesis_state(epoch.value(), scope, nullptr,
+      false, nullptr, nullptr, &history);
+  if (!active || !active.value().has_value() || history.empty() ||
+      active.value()->activation_name != selected.value().active.activation_name ||
+      active.value()->activation_sha256 != selected.value().active.activation_sha256 ||
+      history.back().install_id != selected.value().active.active.install_id)
+    return facman::core::Result<ActivationChain>::failure(!active ? active.error() :
+        epoch_recovery("authoritative epoch lineage changed during discovery"));
+  return facman::core::Result<ActivationChain>::success(
+      {std::move(history), active.value()->activation_name,
+       active.value()->activation_sha256});
 }
 
 facman::core::Result<std::optional<AuthoritativeActiveState>>
@@ -6065,6 +6124,94 @@ facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
   return discover_lifecycle_epoch_chain_impl(coordinator_root);
 }
 
+// An interruption between creating the first epoch directory and publishing
+// its manifest leaves discovery deliberately fail-closed. Only the exact
+// bootstrap that durably verified the clone may finish that publication.
+facman::core::Result<void> recover_bootstrap_epoch_manifest(
+    const fs::path &coordinator_root, const LifecycleEpoch &epoch,
+    const ActivationChain &reviewed_flat) {
+  auto admission = admit_coordinator(coordinator_root, epoch.acceptance_root, false);
+  if (!admission) return facman::core::Result<void>::failure(admission.error());
+  auto lock = acquire(admission.take_value(), "compatibility.bootstrap.manifest");
+  if (!lock) return facman::core::Result<void>::failure(lock.error());
+  facman::platform::StableDirectoryObject epochs;
+  const auto opened_epochs = lock.value().admission.coordinator
+      .open_child_directory_no_follow_for_relative_writes("epochs", epochs);
+  if (!opened_epochs.ok()) {
+    facman::platform::PathIdentity identity;
+    if (!facman::platform::inspect_path_no_follow(
+            coordinator_root / "epochs", identity).ok() || identity.exists)
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "bootstrap epoch root is unsafe during manifest recovery"));
+    return facman::core::Result<void>::success();
+  }
+  std::vector<fs::path> epoch_names;
+  if (!epochs.list_child_names_bounded(kMaximumLifecycleEpochs, epoch_names).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap epoch root changed during manifest recovery"));
+  if (epoch_names.empty()) return facman::core::Result<void>::success();
+  if (epoch_names.size() != 1U || epoch_names.front() != fs::path(epoch.epoch_id))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap manifest recovery found an ambiguous epoch namespace"));
+  facman::platform::StableDirectoryObject epoch_directory;
+  if (!epochs.open_child_directory_no_follow_for_relative_writes(
+          epoch.epoch_id, epoch_directory).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap epoch directory is unsafe during manifest recovery"));
+  std::vector<fs::path> names;
+  if (!epoch_directory.list_child_names_bounded(8U, names).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap epoch directory changed during manifest recovery"));
+  if (std::find(names.begin(), names.end(), fs::path("epoch.v1.json")) !=
+      names.end()) {
+    auto existing = read_epoch_manifest(epoch_directory, "epoch.v1.json");
+    if (!existing || existing.value() != lifecycle_manifest_bytes(epoch))
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "bootstrap epoch manifest has different immutable bytes"));
+    return facman::core::Result<void>::success();
+  }
+  if (names.size() > 1U ||
+      (!names.empty() && names.front() != fs::path("epoch.staging.v1.json") &&
+       names.front() != fs::path("epoch.v1.json")))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap epoch directory contains unexpected state before its manifest"));
+
+  auto flat = discover_activation_chain(coordinator_root);
+  if (!flat || !flat.value().has_value() ||
+      retirement_chain_digest(*flat.value()) !=
+          retirement_chain_digest(reviewed_flat))
+    return facman::core::Result<void>::failure(!flat ? flat.error() : epoch_recovery(
+        "flat authority changed before bootstrap manifest recovery"));
+  LifecycleEpoch compatibility;
+  compatibility.epoch_id = kCompatibilityEpochId;
+  compatibility.compatibility_epoch = true;
+  compatibility.genesis_generation_id = flat.value()->generations.front().generation_id;
+  compatibility.acceptance_root = epoch.acceptance_root;
+  compatibility.logical_root = epoch.logical_root;
+  compatibility.state_root = epoch.state_root;
+  auto validated = validate_epoch_history(compatibility, coordinator_root, true);
+  if (!validated || !compatibility.compatibility_handoff ||
+      compatibility.retirement_sha256 != epoch.predecessor_retirement_sha256 ||
+      hash(compatibility_manifest_bytes(*flat.value())) !=
+          epoch.predecessor_manifest_sha256)
+    return facman::core::Result<void>::failure(!validated ? validated.error() :
+        epoch_recovery("partial epoch manifest lacks its exact verified authority handoff"));
+  std::string lock_detail;
+  if (!lock.value().admission.revalidate(lock_detail) ||
+      !epochs.revalidate().ok() || !epoch_directory.revalidate().ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap authority changed before manifest recovery", lock_detail));
+  const std::string bytes = lifecycle_manifest_bytes(epoch);
+  auto published = publish_epoch_record(epoch_directory,
+      "epoch.staging.v1.json", "epoch.v1.json", bytes, 1U);
+  if (!published || !epoch_directory.flush_metadata().ok() ||
+      !epochs.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return facman::core::Result<void>::failure(!published ? published.error() :
+        epoch_recovery("recovered bootstrap epoch manifest was not flushed"));
+  return facman::core::Result<void>::success();
+}
+
 facman::core::Result<CompatibilityAuthorityBootstrapResponse>
 bootstrap_compatibility_authority(
     const CompatibilityAuthorityBootstrapRequest &request,
@@ -6080,12 +6227,8 @@ bootstrap_compatibility_authority(
   auto flat = discover_activation_chain(request.coordinator_root);
   auto active = flat ? discover_active(request.coordinator_root)
       : facman::core::Result<std::optional<ActiveState>>::failure(flat.error());
-  auto chain = active ? discover_lifecycle_epoch_chain_impl(request.coordinator_root)
-      : facman::core::Result<LifecycleEpochChain>::failure(active.error());
-  if (!chain || !flat.value().has_value() || !active.value().has_value() ||
-      chain.value().epochs.empty() ||
-      !chain.value().epochs.front().compatibility_epoch)
-    return fail(!chain ? chain.error() : epoch_recovery(
+  if (!active || !flat.value().has_value() || !active.value().has_value())
+    return fail(!active ? active.error() : epoch_recovery(
         "bootstrap requires one active compatibility activation history"));
   const Generation source = active.value()->active;
   if (source.generation_id != flat.value()->generations.back().generation_id ||
@@ -6100,13 +6243,26 @@ bootstrap_compatibility_authority(
   epoch.genesis_generation_id = source.generation_id;
   epoch.logical_root = source.logical_root;
   epoch.predecessor_epoch_id = kCompatibilityEpochId;
-  epoch.predecessor_manifest_sha256 = chain.value().epochs.front().manifest_sha256;
+  epoch.predecessor_manifest_sha256 =
+      hash(compatibility_manifest_bytes(*flat.value()));
   epoch.predecessor_retirement_sha256 = hash(handoff_bytes);
   epoch.state_root = source.state_root;
   epoch.epoch_id = hash(lifecycle_identity_bytes(epoch));
   auto target = make_epoch_genesis_generation(epoch,
       request.package_descriptor, request.package_sha256);
   if (!target) return fail(target.error());
+  if (request.apply) {
+    auto recovered = recover_bootstrap_epoch_manifest(
+        request.coordinator_root, epoch, *flat.value());
+    if (!recovered) return fail(recovered.error());
+  }
+  auto chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root);
+  if (!chain || chain.value().epochs.empty() ||
+      !chain.value().epochs.front().compatibility_epoch ||
+      chain.value().epochs.front().manifest_sha256 !=
+          epoch.predecessor_manifest_sha256)
+    return fail(!chain ? chain.error() : epoch_recovery(
+        "bootstrap requires one active compatibility activation history"));
   if (chain.value().epochs.size() > 2U ||
       (chain.value().epochs.size() == 2U &&
        chain.value().epochs.back().epoch_id != epoch.epoch_id))

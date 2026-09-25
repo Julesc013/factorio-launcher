@@ -485,6 +485,11 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
     const std::filesystem::path &coordinator_root);
+// Returns every validated activation target in the authoritative real epoch,
+// including repeated retained generations. Retirement and rollback must use
+// this lineage rather than infer ownership from only the active predecessor.
+facman::core::Result<ActivationChain> discover_lifecycle_epoch_activation_chain(
+    const std::filesystem::path &coordinator_root);
 facman::core::Result<std::optional<AuthoritativeActiveState>>
 resolve_authoritative_active_state(const std::filesystem::path &coordinator_root);
 facman::core::Result<std::optional<EpochPendingTransition>>

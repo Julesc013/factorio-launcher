@@ -2807,11 +2807,19 @@ int main(int argc, char **argv) {
             third_prepared.error());
   auto third_active = facman::self_maintenance::discover_lifecycle_epoch_active(
       provider_continuation.coordinator);
+  auto third_lineage =
+      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+          provider_continuation.coordinator);
   auto third_completion =
       facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
           provider_continuation.coordinator);
   ok &= require(third_prepared && third_continued && third_published && third_shell &&
                     third_active && third_completion && third_completion.value() &&
+                    third_lineage && third_lineage.value().generations.size() == 4U &&
+                    third_lineage.value().generations[1].generation_id ==
+                        third_lineage.value().generations[3].generation_id &&
+                    third_lineage.value().generations[1].generation_id !=
+                        third_lineage.value().generations[2].generation_id &&
                     provider_completed &&
                     third_shell.value().generation.generation_id ==
                         provider_completed.value().transition.target.generation_id &&

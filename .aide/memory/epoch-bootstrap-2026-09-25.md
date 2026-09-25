@@ -14,6 +14,9 @@ checkpoint, not product qualification or authority to publish.
   checks passed; PR #332 merged to `dev` as merge commit
   `9361ada9c502f0ce65e75cd11a20c7837beb569c` (the repository disables
   squash and rebase merges). The merged task branch was retired.
+- Bootstrap checkpoint `5a164b36` is pushed as draft PR #333. Draft status is
+  intentional: the task-to-dev promotion check rejects draft PRs, and this
+  checkpoint does not satisfy product acceptance.
 - The bootstrap source/test work on `task/facman-epoch-bootstrap-02` includes
   Terra's original header stub. Treat it as a checkpoint awaiting full product
   qualification; it is not an integrated maintenance outcome.
@@ -54,8 +57,18 @@ checkpoint, not product qualification or authority to publish.
   be integrated as an ordinary installed path. Existing current-user package
   lifecycle tests assume flat uninstall and need corresponding updates.
 - A crash after creation of an epoch directory but before its immutable
-  manifest publishes may not be recoverable through `publish_lifecycle_epoch`.
-  Review and repair this exact partial-publication edge.
+  manifest publishes was not recoverable through `publish_lifecycle_epoch`.
+  Work after the checkpoint adds narrow recovery for the exact empty or
+  fully staged manifest, under the coordinator lock and only after verified
+  compatibility handoff. A native fault-injection assertion targets the
+  pre-rename edge. Corrupt or foreign partial state still fails closed.
+- Hosted Linux native and coverage jobs for checkpoint `5a164b36` compiled
+  but failed `facman_self_maintenance_smoke`: legacy genesis adoption lost the
+  public compatibility-epoch discovery view. The next working diff restores
+  that view through the authoritative resolver while retaining incomplete
+  bootstrap refusal. It also exposes the validated real-epoch activation
+  lineage (including repeats) for retirement and rollback planning. Those
+  edits still need hosted executable validation.
 - A public retry currently relaunches the external continuation helper with a
   fresh `GetTickCount64() + budget` in the original patch. The current working
   diff adds an immutable UTC deadline to newly prepared handoffs, carries it
