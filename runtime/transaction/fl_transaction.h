@@ -174,6 +174,9 @@ bool fail(
     const std::string& error,
     std::string& detail);
 bool complete(const std::filesystem::path& workspace, Record& record, std::string& detail);
+// Complete or verify the sidecar bound to a committed saves.backup target.
+// The immutable manifest bytes are journaled before ZIP publication.
+bool finalize_save_backup_sidecar(const Record& record, std::string& detail);
 bool read_record(
     const std::filesystem::path& workspace,
     const std::string& transaction_id,

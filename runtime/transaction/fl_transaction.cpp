@@ -567,6 +567,124 @@ bool complete(const fs::path& workspace, Record& record, std::string& detail)
     return advance(workspace, record, "complete", "journal_closed", detail);
 }
 
+bool finalize_save_backup_sidecar(const Record& record, std::string& detail)
+{
+    if (record.command_id != "saves.backup" || record.operation_context.empty() ||
+        record.operation_context.size() > 64U * 1024U ||
+        record.operation_context.back() != '\n' || record.sources.size() != 1U) {
+        detail = "backup journal has no bound sidecar manifest";
+        return false;
+    }
+    json::Limits limits;
+    limits.maximum_bytes = 64U * 1024U;
+    limits.maximum_depth = 8;
+    limits.maximum_nodes = 128;
+    auto document = json::parse(record.operation_context, limits);
+    if (!document || !document.value().is_object()) {
+        detail = "backup sidecar manifest is malformed";
+        return false;
+    }
+    const fs::path sidecar = fs::path(path_text(record.target) + ".manifest.json");
+    std::string schema, command, destination, manifest_path, source, workspace_id, sha256;
+    if (!object_string(document.value(), "schema", schema, true, detail) ||
+        !object_string(document.value(), "command", command, true, detail) ||
+        !object_string(document.value(), "destination_path", destination, true, detail) ||
+        !object_string(document.value(), "manifest_path", manifest_path, true, detail) ||
+        !object_string(document.value(), "source_path", source, true, detail) ||
+        !object_string(document.value(), "workspace_id", workspace_id, true, detail) ||
+        !object_string(document.value(), "sha256", sha256, true, detail) ||
+        schema != "factorio.save_backup.v1" || command != record.command_id ||
+        facman::platform::path_from_utf8(destination).lexically_normal() !=
+            record.target.lexically_normal() ||
+        facman::platform::path_from_utf8(manifest_path).lexically_normal() !=
+            sidecar.lexically_normal() ||
+        facman::platform::path_from_utf8(source).lexically_normal() !=
+            record.sources.front().lexically_normal() ||
+        workspace_id != record.workspace_id || !facman::core::Sha256Digest::parse(sha256)) {
+        if (detail.empty()) detail = "backup manifest differs from its transaction identity";
+        return false;
+    }
+    facman::platform::StableDirectoryObject parent;
+    const auto opened = parent.open_no_follow_for_relative_writes(
+        record.target.parent_path());
+    if (!opened.ok()) { detail = opened.detail; return false; }
+    facman::platform::StableInputFile target;
+    const auto pinned = parent.open_child_file_no_follow_pinned(
+        record.target.filename(), target);
+    if (!pinned.ok() || !target.identity().regular_file ||
+        target.identity().link_count != 1U) {
+        detail = pinned.ok() ? "backup target is not an exact regular file" : pinned.detail;
+        return false;
+    }
+    const auto* size_field = document.value().find("source_size");
+    auto expected_size = size_field != nullptr ? size_field->number_value() :
+        facman::core::Result<double>::failure({"backup_size_missing", "", ""});
+    if (!expected_size || expected_size.value() < 0 ||
+        static_cast<std::uint64_t>(expected_size.value()) != target.size()) {
+        detail = "backup target size differs from its bound manifest";
+        return false;
+    }
+    facman::base::Sha256Hasher hasher;
+    std::vector<unsigned char> buffer(64U * 1024U);
+    for (std::uint64_t offset = 0; offset < target.size();) {
+        const auto wanted = static_cast<std::size_t>((std::min)(
+            static_cast<std::uint64_t>(buffer.size()), target.size() - offset));
+        const auto count = target.read_at(offset, buffer.data(), wanted);
+        if (count != wanted) { detail = "backup target changed during verification"; return false; }
+        hasher.update(buffer.data(), count);
+        offset += count;
+    }
+    if (hasher.finish() != sha256 || !target.revalidate_path().ok() ||
+        !parent.revalidate().ok()) {
+        detail = "backup target digest or destination custody changed";
+        return false;
+    }
+    facman::platform::StableInputFile existing;
+    auto sidecar_opened = parent.open_child_file_no_follow_pinned(
+        sidecar.filename(), existing);
+    if (sidecar_opened.ok()) {
+        if (existing.size() != record.operation_context.size()) {
+            detail = "backup sidecar differs from its bound manifest";
+            return false;
+        }
+        std::string bytes(static_cast<std::size_t>(existing.size()), '\0');
+        if (existing.read_at(0, bytes.data(), bytes.size()) != bytes.size() ||
+            bytes != record.operation_context || !existing.revalidate_path().ok()) {
+            detail = "backup sidecar changed or differs from its journal";
+            return false;
+        }
+        return parent.revalidate().ok();
+    }
+    facman::platform::PathIdentity sidecar_identity;
+    const auto inspected = facman::platform::inspect_path_no_follow(
+        sidecar, sidecar_identity);
+    if (!inspected.ok() || sidecar_identity.exists || !parent.revalidate().ok()) {
+        detail = "backup sidecar is unsafe or destination custody changed";
+        return false;
+    }
+    facman::platform::RandomIdGenerator random;
+    facman::platform::DurableOutputFile output;
+    const fs::path staging_leaf = ".facman-backup-sidecar-" +
+        random.next("stage") + ".json";
+    auto created = parent.create_child_file_exclusive(
+        staging_leaf, record.operation_context.size(), output);
+    if (!created.ok()) { detail = created.detail; return false; }
+    if (output.write_at(0, record.operation_context.data(),
+            record.operation_context.size()) != record.operation_context.size() ||
+        !parent.revalidate().ok()) {
+        detail = "backup sidecar staging or destination custody changed";
+        (void)output.discard_open();
+        return false;
+    }
+    const auto published = output.publish_sibling_no_replace(sidecar.filename());
+    if (!published.ok()) { detail = published.detail; return false; }
+    if (!parent.revalidate().ok() || !target.revalidate_path().ok()) {
+        detail = "backup destination changed after sidecar publication";
+        return false;
+    }
+    return true;
+}
+
 TransactionSession::TransactionSession(fs::path workspace, Record record)
     : workspace_(std::move(workspace)), record_(std::move(record)) {}
 
@@ -842,10 +960,27 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     auto unlock_checked = [&]() { return recovery_lock.remove_exact(detail); };
     if (fs::exists(record.target)) {
         record.recovery_actions = {"preserved_committed_target"};
-        const bool commit_recorded = record.state == State::committed || record.state == State::audited ||
+        bool commit_recorded = record.state == State::committed || record.state == State::audited ||
             std::find_if(record.completed_steps.begin(), record.completed_steps.end(), [](const std::string& step) {
                 return step.find("committed") != std::string::npos;
             }) != record.completed_steps.end();
+        if (record.command_id == "saves.backup" &&
+            (commit_recorded || record.state == State::committing)) {
+            if (!finalize_save_backup_sidecar(record, detail)) {
+                unlock();
+                return Refusal {"recovery_backup_manifest_unsafe",
+                    "Committed backup sidecar could not be verified or recovered",
+                    detail, false};
+            }
+            record.recovery_actions.push_back("verified_backup_sidecar");
+            if (record.state == State::committing &&
+                !advance(workspace, record, "committed", "backup_file_committed", detail)) {
+                unlock();
+                return Refusal {"recovery_write_refused",
+                    "Recovered backup commit could not be recorded", detail, true};
+            }
+            commit_recorded = true;
+        }
         if (commit_recorded) {
             for (const fs::path& staging : record.staging_roots) {
                 if (!fs::exists(staging)) {

@@ -232,6 +232,14 @@ public:
         if (!ok) detail_ = session_->detail();
         return ok;
     }
+    bool checkpoint(const std::string& completed)
+    {
+        if (!session_ || !session_->checkpoint(completed)) {
+            detail_ = session_ ? session_->detail() : "transaction session is unavailable";
+            return false;
+        }
+        return true;
+    }
     bool finish()
     {
         if (!session_ || !session_->complete()) {
@@ -781,6 +789,15 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
             "save_locked", "Save writes became locked during backup",
             path_string(*lock));
     }
+    const BackupResult result {request.instance_id, save, destination, manifest,
+        utc_now(), copied.sha1, copied.sha256, authority.workspace_id, copied.size,
+        "pinned_source_two_pass_sha256_v1"};
+    journal.record().operation_context = to_json(result) + "\n";
+    if (!journal.checkpoint("backup_manifest_bound")) {
+        return refuse(command, request.instance_id, save.file_name,
+            "recovery_write_refused", "Backup manifest journal update failed",
+            journal.detail());
+    }
     if (!journal.step("verified", "staged_save_verified") ||
         !journal.step("committing", "no_clobber_commit_started")) {
         return refuse(
@@ -803,11 +820,10 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
             path_string(destination), false);
     }
     if (!journal.step("committed", "backup_file_committed")) return refuse(command, request.instance_id, save.file_name, "transaction_recovery_required", "Backup committed but journal update failed", journal.detail(), false);
-    const BackupResult result {request.instance_id, save, destination, manifest,
-        utc_now(), copied.sha1, copied.sha256, authority.workspace_id, copied.size,
-        "pinned_source_two_pass_sha256_v1"};
+    if (fault_requested("pause_after_backup_file_committed"))
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     std::string write_detail;
-    if (!facman::base::write_text_new_atomic(manifest, to_json(result) + "\n", write_detail)) {
+    if (!tx::finalize_save_backup_sidecar(journal.record(), write_detail)) {
         return refuse(command, request.instance_id, save.file_name, "transaction_recovery_required", "Backup committed but sidecar requires recovery", write_detail, false);
     }
     status = facman::archive::cleanup_owned_staging_root(staging);

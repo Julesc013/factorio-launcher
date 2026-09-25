@@ -535,6 +535,63 @@ class SaveTransferTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr)
             self.assertEqual(destination.read_bytes(), save.read_bytes())
 
+    def test_backup_process_loss_after_commit_recovers_bound_sidecar(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            output = Path(tmp) / "output"
+            output.mkdir()
+            self.prepare(workspace)
+            save = workspace / "instances" / "source-world" / "saves" / "world.zip"
+            shutil.copyfile(SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save)
+            destination = output / "committed.backup.zip"
+            sidecar = Path(str(destination) + ".manifest.json")
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
+                "pause_after_backup_file_committed"
+            )
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", str(workspace), "saves",
+                 "backup", "world", "--instance", "source-world", "--to",
+                 str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while not destination.exists() and process.poll() is None and time.monotonic() < deadline:
+                    time.sleep(0.02)
+                self.assertIsNone(process.poll(), "backup exited before committed-loss test")
+                self.assertTrue(destination.is_file())
+                self.assertFalse(sidecar.exists())
+                process.kill()
+                process.communicate(timeout=20)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            records = [
+                record for record in json.loads(stdout)["transactions"]
+                if record["command_id"] == "saves.backup"
+                and Path(record["target"]) == destination
+            ]
+            self.assertEqual(len(records), 1)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                records[0]["transaction_id"], "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout)["transactions"][0]["state"], "complete")
+            self.assertEqual(destination.read_bytes(), save.read_bytes())
+            manifest = json.loads(sidecar.read_text(encoding="utf-8"))
+            self.assertEqual(manifest["sha256"], hashlib.sha256(save.read_bytes()).hexdigest())
+            self.assertEqual(Path(manifest["destination_path"]), destination)
+            self.assertEqual(list(output.glob(".facman-save-backup-*")), [])
+
     def test_backup_refuses_run_lock_created_during_staging(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
