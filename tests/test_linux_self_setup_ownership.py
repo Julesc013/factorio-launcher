@@ -8,6 +8,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
 from pathlib import Path
@@ -24,9 +25,12 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
         script.chmod(0o755)
         return script
 
-    def invoke(self, script: Path, home: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    def invoke(self, script: Path, home: Path, *args: str,
+               path_prefix: Path | None = None) -> subprocess.CompletedProcess[str]:
         environment = os.environ.copy()
         environment["HOME"] = str(home)
+        if path_prefix is not None:
+            environment["PATH"] = str(path_prefix) + os.pathsep + environment["PATH"]
         return subprocess.run(
             [str(script), *args], env=environment, capture_output=True,
             text=True, check=False,
@@ -214,6 +218,45 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0, result.stdout)
             self.assertFalse((root / "relative-install").exists())
+
+    def test_embedded_gzip_package_installs_without_zstd(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            product = root / "FacMan-0.1.0-alpha.6"
+            product.mkdir()
+            content = b"#!/bin/sh\nexit 0\n"
+            digest = hashlib.sha256(content).hexdigest()
+            for name in ("FacMan", "facman"):
+                executable = product / name
+                executable.write_bytes(content)
+                executable.chmod(0o755)
+            manifest = product / "share/facman/manifest/MANIFEST.sha256"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text(
+                f"{digest}  FacMan\n{digest}  facman\n", encoding="utf-8",
+            )
+            archive = root / "payload.tar.gz"
+            with tarfile.open(archive, "w:gz") as stream:
+                stream.add(product, arcname=product.name)
+            script = root / "FacManSetup.run"
+            script.write_bytes(
+                linux_self_setup.header("0.1.0-alpha.6", linux_self_setup.sha256(archive))
+                + archive.read_bytes()
+            )
+            script.chmod(0o755)
+            guard = root / "guard"
+            guard.mkdir()
+            zstd = guard / "zstd"
+            zstd.write_text("#!/bin/sh\nexit 83\n", encoding="utf-8")
+            zstd.chmod(0o755)
+            installed = self.invoke(script, home, "install", "--yes", path_prefix=guard)
+            self.assertEqual(installed.returncode, 0, installed.stderr)
+            verified = self.invoke(script, home, "verify", path_prefix=guard)
+            self.assertEqual(verified.returncode, 0, verified.stderr)
+            removed = self.invoke(script, home, "uninstall", "--yes", path_prefix=guard)
+            self.assertEqual(removed.returncode, 0, removed.stderr)
 
 
 if __name__ == "__main__":

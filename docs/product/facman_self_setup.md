@@ -189,7 +189,8 @@ FacMan-<version>-linux-x64-setup.run
 ```
 
 The self-contained RUN package defaults to current-user paths and requires no
-administrator rights:
+administrator rights. It embeds a gzip runtime payload, so installation does
+not require the zstd build tool used for the portable archive:
 
 ```text
 ~/.local/opt/facman/

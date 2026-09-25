@@ -7,10 +7,13 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import os
+import shutil
 import subprocess
+import tempfile
 import tomllib
 from pathlib import Path
 
@@ -259,10 +262,10 @@ assert_native_integration_owned
 
 temporary=$(mktemp -d "${TMPDIR:-/tmp}/facman-setup.XXXXXX")
 trap 'rm -rf "$temporary"' EXIT HUP INT TERM
-payload="$temporary/payload.tar.zst"
+payload="$temporary/payload.tar.gz"
 tail -n "+$payload_line" "$0" > "$payload"
 printf '%s  %s\n' "$payload_sha256" "$payload" | sha256sum -c - >/dev/null
-tar --zstd -xf "$payload" -C "$temporary"
+tar -zxf "$payload" -C "$temporary"
 source_root="$temporary/FacMan-$version"
 verify_generation "$source_root"
 
@@ -312,7 +315,17 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
         raise ValueError(f"unexpected Linux portable input: {portable.name}")
     output.mkdir(parents=True, exist_ok=True)
     setup = output / f"FacMan-{version}-linux-x64-setup.run"
-    setup.write_bytes(header(version, sha256(portable)) + portable.read_bytes())
+    with tempfile.TemporaryDirectory(prefix="facman-linux-setup-", dir=output) as temporary:
+        raw = Path(temporary) / "payload.tar"
+        compressed = Path(temporary) / "payload.tar.gz"
+        with raw.open("wb") as stream:
+            subprocess.run(["zstd", "-d", "--stdout", str(portable)],
+                           stdout=stream, check=True)
+        with raw.open("rb") as source, compressed.open("wb") as destination:
+            with gzip.GzipFile(filename="", mode="wb", fileobj=destination,
+                               compresslevel=9, mtime=0) as stream:
+                shutil.copyfileobj(source, stream)
+        setup.write_bytes(header(version, sha256(compressed)) + compressed.read_bytes())
     setup.chmod(0o755)
     record = {
         "schema": "facman.linux_self_setup.v1",
@@ -327,6 +340,7 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
             "filename": setup.name,
             "bytes": setup.stat().st_size,
             "sha256": sha256(setup),
+            "embedded_compression": "gzip",
             "self_contained": True,
             "offline": True,
             "default_scope": "per_user_non_administrator",
