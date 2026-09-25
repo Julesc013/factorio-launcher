@@ -39,3 +39,23 @@ exact-head candidate result is still required for this follow-up.
 One test invocation from `tests/` failed before test execution because
 `tools` was absent from `PYTHONPATH`; rerunning from the repository root with
 `PYTHONPATH=.;tests` passed both requested cases.
+
+Run `36125970801/1` later passed its Windows, Linux, Intel macOS and six-asset
+bundle jobs at head `73d67389`. The downloaded bundle verified locally and its
+Windows portable CLI passed 11 save-transfer and two affected CLI cases. The
+bundle manifest SHA-256 is
+`0d78a71a236ebfca2837566a24dce56b21dc1be9d37d183e117688345e9caf1f`.
+
+The full macOS portable Python suite for that head then found two public
+journeys that select an existing destination outside the workspace:
+`test_complete_non_execution_journey_across_live_transports` and
+`test_local_content_and_save_lifecycle_is_descriptor_driven_and_replayable`.
+Both failed with `save_backup_destination_unowned`. The current correction
+keeps those selected paths under a pinned existing parent and no-clobber
+publication. A clean-first Windows Release product build passed. Both affected
+journeys, the two affected CLI regressions, and external-destination
+interruption/recovery passed against that built executable. The focused
+save-transfer run had one path-separator-only assertion failure; after fixing
+that assertion, all 11 save-transfer tests passed. `py -3 tools/strict_check.py`
+and generated-metadata checks passed. Current source still needs a clean
+commit and exact-head hosted/package checks.

@@ -678,27 +678,42 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
             "save_backup_destination_unsafe", "Explicit backup parent must already exist",
             path_string(destination.parent_path()), false);
     }
-    const auto owned_destination = [&]() {
+    // An explicit --to authorizes one new backup in this pinned parent. Paths
+    // inside the workspace also retain workspace root authority checks.
+    const auto safe_destination = [&]() {
         const fs::path parent = destination.parent_path();
         const bool root_parent = parent == authority.root_authority->path().lexically_normal();
-        return (root_parent || authority.root_authority->validate_descendant(parent).ok()) &&
-            authority.root_authority->validate_descendant(destination, true).ok() &&
-            authority.root_authority->validate_descendant(manifest, true).ok() &&
+        const bool workspace_parent = root_parent ||
+            authority.root_authority->validate_descendant(parent).ok();
+        if (request.output_path.empty() && !workspace_parent) return false;
+        return (!workspace_parent ||
+                (authority.root_authority->validate_descendant(destination, true).ok() &&
+                 authority.root_authority->validate_descendant(manifest, true).ok())) &&
             destination_parent.revalidate().ok() &&
             facman::workspace::revalidate_workspace_root(authority).ok();
     };
-    if (!owned_destination()) {
+    if (!safe_destination()) {
         return refuse(command, request.instance_id, save.file_name,
-            "save_backup_destination_unowned", "Backup destination is outside owned workspace custody",
+            "save_backup_destination_unsafe", "Backup destination parent is unsafe or changed",
             path_string(destination), false);
     }
-    if (fs::exists(destination) || fs::exists(manifest)) {
+    facman::platform::PathIdentity destination_identity, manifest_identity;
+    const auto destination_status = facman::platform::inspect_path_no_follow(
+        destination, destination_identity);
+    const auto manifest_status = facman::platform::inspect_path_no_follow(
+        manifest, manifest_identity);
+    if (!destination_status.ok() || !manifest_status.ok()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unsafe", "Backup target cannot be safely inspected",
+            path_string(destination), false);
+    }
+    if (destination_identity.exists || manifest_identity.exists) {
         return refuse(command, request.instance_id, save.file_name, "save_backup_target_exists", "Save backup target already exists", path_string(destination));
     }
     constexpr std::uint64_t kSidecarAndFilesystemReserve = 128U * 1024U;
     error.clear();
     const auto capacity = fs::space(destination.parent_path(), error);
-    if (error || !owned_destination()) {
+    if (error || !safe_destination()) {
         return refuse(command, request.instance_id, save.file_name,
             "save_backup_destination_unsafe", "Backup destination capacity or ownership changed",
             error ? error.message() : path_string(destination), false);
@@ -752,7 +767,7 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
             "save_source_changed", "Save changed while its backup was staged",
             path_string(save.path));
     }
-    if (!owned_destination()) {
+    if (!safe_destination()) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
         journal.failed("backup destination ownership changed before publication");
         return refuse(command, request.instance_id, save.file_name,
@@ -782,7 +797,7 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
         journal.failed(commit_detail);
         return refuse(command, request.instance_id, save.file_name, "persistent_write_refused", "Backup commit failed", commit_detail);
     }
-    if (!owned_destination() || !source_unchanged()) {
+    if (!safe_destination() || !source_unchanged()) {
         return refuse(command, request.instance_id, save.file_name,
             "transaction_recovery_required", "Backup committed but source or destination identity changed",
             path_string(destination), false);

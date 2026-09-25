@@ -5,7 +5,7 @@ FacMan keeps saves inside each isolated instance.
 Implemented commands:
 
 - `facman saves list --instance <instance-id>`
-- `facman saves backup <save> --instance <instance-id> [--to <workspace-path>]`
+- `facman saves backup <save> --instance <instance-id> [--to <path>]`
 - `facman saves clone <save> --instance <source-id> --to-instance <target-id>`
 - `facman export instance <instance-id> <pack.zip>`
 - `facman import instance <pack.zip> [--id <instance-id>]`
@@ -16,8 +16,9 @@ manifest, local config, saves, mods, and modset lockfile when present.
 Backups are fail-closed:
 
 - the default target is `<workspace>/instances/<instance-id>/backups/<save>.backup.zip`
-- `--to` names a new backup file under an existing directory inside the owned
-  workspace; relative paths resolve from the workspace root
+- `--to` names a new backup file under an existing directory, including a
+  user-selected directory outside the workspace; relative paths resolve from
+  the workspace root, and linked parents or existing targets are refused
 - an active instance run lock or save-write lock refuses backup before
   destination changes; a run lock appearing during staging also refuses
 - the source stays pinned through two SHA-256 reads, a verified staged copy,
@@ -33,8 +34,9 @@ Backups are fail-closed:
 
 The structural save check recognizes Factorio save content in the archive. It
 does not claim that the game can load the save or that its mods are available.
-Backup targets outside the owned workspace require a future explicit ownership
-workflow.
+Explicit external destinations are staged on their own volume and written only
+to the selected new file and sidecar. The source workspace still needs valid
+FacMan ownership.
 
 Clones are also fail-closed. A target save that already exists returns
 `save_clone_target_exists` and leaves the target instance unchanged.

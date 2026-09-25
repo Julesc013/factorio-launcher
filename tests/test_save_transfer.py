@@ -259,7 +259,7 @@ class SaveTransferTests(unittest.TestCase):
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "save_source_changed")
             self.assertFalse(destination.exists())
 
-    def test_backup_uses_owned_workspace_custody_and_records_consistency(self) -> None:
+    def test_backup_preserves_explicit_destination_and_records_consistency(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             workspace = root / "workspace"
@@ -277,12 +277,60 @@ class SaveTransferTests(unittest.TestCase):
                 "--workspace", str(workspace), "saves", "backup", "world",
                 "--instance", "source-world", "--to", str(outside), "--json",
             ])
-            self.assertEqual(code, 1)
+            self.assertEqual(code, 0)
+            self.assertEqual(outside.read_bytes(), save.read_bytes())
             self.assertEqual(
-                json.loads(stdout)["refusal"]["code"],
-                "save_backup_destination_unowned",
+                Path(json.loads(stdout)["destination_path"]), outside
             )
-            self.assertEqual(list(foreign.iterdir()), [])
+            self.assertTrue(Path(str(outside) + ".manifest.json").is_file())
+            self.assertEqual(
+                sorted(path.name for path in foreign.iterdir()),
+                ["world.backup.zip", "world.backup.zip.manifest.json"],
+            )
+            code, stdout, _stderr = invoke([
+                "--workspace", str(workspace), "saves", "backup", "world",
+                "--instance", "source-world", "--to", str(outside), "--json",
+            ])
+            self.assertEqual(code, 1)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "save_backup_target_exists")
+            self.assertEqual(outside.read_bytes(), save.read_bytes())
+
+            linked_parent = root / "linked-output"
+            try:
+                linked_parent.symlink_to(foreign, target_is_directory=True)
+            except OSError:
+                pass
+            else:
+                linked_target = linked_parent / "linked.backup.zip"
+                code, stdout, _stderr = invoke([
+                    "--workspace", str(workspace), "saves", "backup", "world",
+                    "--instance", "source-world", "--to", str(linked_target),
+                    "--json",
+                ])
+                self.assertEqual(code, 1)
+                self.assertEqual(
+                    json.loads(stdout)["refusal"]["code"],
+                    "save_backup_destination_unsafe",
+                )
+                self.assertFalse((foreign / "linked.backup.zip").exists())
+
+            dangling_target = foreign / "dangling.backup.zip"
+            try:
+                dangling_target.symlink_to(foreign / "missing.zip")
+            except OSError:
+                pass
+            else:
+                code, stdout, _stderr = invoke([
+                    "--workspace", str(workspace), "saves", "backup", "world",
+                    "--instance", "source-world", "--to", str(dangling_target),
+                    "--json",
+                ])
+                self.assertEqual(code, 1)
+                self.assertEqual(
+                    json.loads(stdout)["refusal"]["code"],
+                    "save_backup_target_exists",
+                )
+                self.assertTrue(dangling_target.is_symlink())
 
             missing_parent = workspace / "not-claimed" / "world.backup.zip"
             code, stdout, _stderr = invoke([
@@ -410,19 +458,22 @@ class SaveTransferTests(unittest.TestCase):
 
     def test_backup_process_loss_recovers_owned_stage_and_retries(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            workspace = Path(tmp)
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            output = Path(tmp) / "output"
+            output.mkdir()
             self.prepare(workspace)
             save = workspace / "instances" / "source-world" / "saves" / "world.zip"
             shutil.copyfile(
                 SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save
             )
-            destination = workspace / "restarted.backup.zip"
+            destination = output / "restarted.backup.zip"
             environment = os.environ.copy()
             environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
                 "pause_after_staged_copy"
             )
             process = subprocess.Popen(
-                [str(facman_executable()), "--workspace", tmp, "saves", "backup",
+                [str(facman_executable()), "--workspace", str(workspace), "saves", "backup",
                  "world", "--instance", "source-world", "--to",
                  str(destination), "--json"],
                 cwd=ROOT, env=environment, text=True,
@@ -431,7 +482,7 @@ class SaveTransferTests(unittest.TestCase):
             try:
                 deadline = time.monotonic() + 10
                 while process.poll() is None and time.monotonic() < deadline:
-                    stages = list(workspace.glob(
+                    stages = list(output.glob(
                         ".facman-save-backup-*/restarted.backup.zip"
                     ))
                     if stages:
@@ -447,7 +498,7 @@ class SaveTransferTests(unittest.TestCase):
                     process.communicate()
 
             code, stdout, stderr = invoke([
-                "--workspace", tmp, "workspace", "recovery", "inspect", "--json",
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
             ])
             self.assertEqual(code, 0, stderr)
             records = [
@@ -459,7 +510,7 @@ class SaveTransferTests(unittest.TestCase):
             transaction_id = records[0]["transaction_id"]
             self.assertFalse(records[0]["target_exists"])
             code, stdout, stderr = invoke([
-                "--workspace", tmp, "workspace", "recovery", "plan",
+                "--workspace", str(workspace), "workspace", "recovery", "plan",
                 transaction_id, "--json",
             ])
             self.assertEqual(code, 0, stderr)
@@ -468,17 +519,17 @@ class SaveTransferTests(unittest.TestCase):
                 ["remove_owned_staging"],
             )
             code, stdout, stderr = invoke([
-                "--workspace", tmp, "workspace", "recovery", "apply",
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
                 transaction_id, "--json",
             ])
             self.assertEqual(code, 0, stderr)
             self.assertEqual(
                 json.loads(stdout)["transactions"][0]["state"], "rolled_back"
             )
-            self.assertEqual(list(workspace.glob(".facman-save-backup-*")), [])
+            self.assertEqual(list(output.glob(".facman-save-backup-*")), [])
             self.assertFalse(destination.exists())
             code, stdout, stderr = invoke([
-                "--workspace", tmp, "saves", "backup", "world", "--instance",
+                "--workspace", str(workspace), "saves", "backup", "world", "--instance",
                 "source-world", "--to", str(destination), "--json",
             ])
             self.assertEqual(code, 0, stderr)

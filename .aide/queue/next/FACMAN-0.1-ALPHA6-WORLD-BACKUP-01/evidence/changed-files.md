@@ -3,7 +3,7 @@
 Base: `9361ada9c502f0ce65e75cd11a20c7837beb569c` (`origin/dev`).
 
 - `runtime/factorio/saves/flb_factorio_save_operations.*`: pin the selected save,
-  validate owned workspace destinations, preflight space, check source content
+  validate the owned source workspace and exact selected destination, preflight space, check source content
   and identity around staged publication, honor the production instance run
   lock, and record consistency metadata.
 - `runtime/transaction/fl_transaction.*`: bind verified copies to an optional
@@ -15,7 +15,8 @@ Base: `9361ada9c502f0ce65e75cd11a20c7837beb569c` (`origin/dev`).
   project state: generated from the changed command contract.
 - `tests/native/fl_transaction_session_smoke.cpp` and
   `tests/test_save_transfer.py`: partial-copy cleanup, source substitution,
-  process-loss recovery, owned destination, lock, and package-path tests.
+  process-loss recovery in an external selected directory, destination safety,
+  lock, and package-path tests.
 - `docs/product/save_export.md`: document the reachable behavior and limits.
 
 The queue item remains planned because the canonical plan permits four active
