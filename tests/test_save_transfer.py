@@ -309,6 +309,17 @@ class SaveTransferTests(unittest.TestCase):
             self.assertFalse((save.parent.parent / "backups").exists())
             save_lock.unlink()
 
+            run_lock = save.parent.parent / "locks" / "run.lock"
+            run_lock.write_text("active production run\n", encoding="utf-8")
+            code, stdout, _stderr = invoke([
+                "--workspace", str(workspace), "saves", "backup", "world",
+                "--instance", "source-world", "--json",
+            ])
+            self.assertEqual(code, 1)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "save_locked")
+            self.assertFalse((save.parent.parent / "backups").exists())
+            run_lock.unlink()
+
             interrupted = workspace / "interrupted.backup.zip"
             fault_environment = os.environ.copy()
             fault_environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
@@ -472,6 +483,54 @@ class SaveTransferTests(unittest.TestCase):
             ])
             self.assertEqual(code, 0, stderr)
             self.assertEqual(destination.read_bytes(), save.read_bytes())
+
+    def test_backup_refuses_run_lock_created_during_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.prepare(workspace)
+            save = workspace / "instances" / "source-world" / "saves" / "world.zip"
+            shutil.copyfile(
+                SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save
+            )
+            destination = workspace / "late-lock.backup.zip"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = (
+                "pause_after_staged_copy"
+            )
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "saves", "backup",
+                 "world", "--instance", "source-world", "--to",
+                 str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                stages: list[Path] = []
+                while process.poll() is None and time.monotonic() < deadline:
+                    stages = list(workspace.glob(
+                        ".facman-save-backup-*/late-lock.backup.zip"
+                    ))
+                    if stages:
+                        break
+                    time.sleep(0.02)
+                self.assertIsNone(process.poll(), "backup exited before lock test")
+                self.assertTrue(stages, "backup did not produce a staged file")
+                run_lock = save.parent.parent / "locks" / "run.lock"
+                run_lock.write_text("active production run\n", encoding="utf-8")
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 1, stderr)
+                self.assertEqual(
+                    json.loads(stdout)["payload"]["refusal"]["code"],
+                    "save_locked",
+                )
+                self.assertFalse(destination.exists())
+                self.assertFalse(Path(str(destination) + ".manifest.json").exists())
+                self.assertEqual(list(workspace.glob(".facman-save-backup-*")), [])
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
 
     def test_transaction_state_faults_never_leave_an_apparently_partial_instance(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

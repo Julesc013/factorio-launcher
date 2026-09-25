@@ -18,7 +18,8 @@ Backups are fail-closed:
 - the default target is `<workspace>/instances/<instance-id>/backups/<save>.backup.zip`
 - `--to` names a new backup file under an existing directory inside the owned
   workspace; relative paths resolve from the workspace root
-- an active instance save-write lock refuses backup before destination changes
+- an active instance run lock or save-write lock refuses backup before
+  destination changes; a run lock appearing during staging also refuses
 - the source stays pinned through two SHA-256 reads, a verified staged copy,
   and final publication; a changed source produces `save_source_changed`
 - an available-space preflight and verified staged write refuse incomplete

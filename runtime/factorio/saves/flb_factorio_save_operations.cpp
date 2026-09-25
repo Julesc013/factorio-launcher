@@ -388,9 +388,21 @@ bool resolve_save(const Instance& instance, const std::string& name, SaveRef& sa
     return true;
 }
 
+std::optional<fs::path> save_lock_path(const Instance& instance)
+{
+    for (const char* name : {"run.lock", "save.write.lock"}) {
+        const fs::path path = instance.root / "locks" / name;
+        std::error_code error;
+        const auto status = fs::symlink_status(path, error);
+        if (error == std::errc::no_such_file_or_directory) continue;
+        if (error || status.type() != fs::file_type::not_found) return path;
+    }
+    return std::nullopt;
+}
+
 bool save_locked(const Instance& instance)
 {
-    return fs::exists(instance.root / "locks" / "save.write.lock");
+    return save_lock_path(instance).has_value();
 }
 
 json::ObjectBuilder save_ref_builder(const SaveRef& save)
@@ -576,8 +588,9 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
     if (!load_instance(workspace, request.instance_id, instance)) {
         return refuse(command, request.instance_id, request.save, "unknown_instance", "Instance is not registered", request.instance_id);
     }
-    if (save_locked(instance)) {
-        return refuse(command, request.instance_id, request.save, "save_locked", "Save writes are locked for this instance", path_string(instance.root / "locks/save.write.lock"));
+    if (const auto lock = save_lock_path(instance)) {
+        return refuse(command, request.instance_id, request.save, "save_locked",
+            "Save writes are locked for this instance", path_string(*lock));
     }
     SaveRef save;
     if (!resolve_save(instance, request.save, save)) {
@@ -745,6 +758,13 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
         return refuse(command, request.instance_id, save.file_name,
             "save_backup_destination_unsafe", "Backup destination changed before publication",
             path_string(destination), false);
+    }
+    if (const auto lock = save_lock_path(instance)) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed("instance run ownership appeared during backup");
+        return refuse(command, request.instance_id, save.file_name,
+            "save_locked", "Save writes became locked during backup",
+            path_string(*lock));
     }
     if (!journal.step("verified", "staged_save_verified") ||
         !journal.step("committing", "no_clobber_commit_started")) {

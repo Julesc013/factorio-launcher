@@ -4,7 +4,8 @@ Base: `9361ada9c502f0ce65e75cd11a20c7837beb569c` (`origin/dev`).
 
 - `runtime/factorio/saves/flb_factorio_save_operations.*`: pin the selected save,
   validate owned workspace destinations, preflight space, check source content
-  and identity around staged publication, and record consistency metadata.
+  and identity around staged publication, honor the production instance run
+  lock, and record consistency metadata.
 - `runtime/transaction/fl_transaction.*`: bind verified copies to an optional
   expected source object and support a partial-copy fault at the write boundary.
 - `contracts/command/factorio/saves.backup.v1.toml` and

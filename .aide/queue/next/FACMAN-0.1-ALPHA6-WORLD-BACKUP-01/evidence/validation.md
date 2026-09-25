@@ -27,6 +27,15 @@ evidence; it is not an exact-head product candidate or integration proof.
   planned queue state.
 - `git diff --check`: PASS.
 
+Follow-up on the production run-lock path: launch creates and holds
+`<instance>/locks/run.lock` during supervised execution
+(`runtime/factorio/launch/flb_factorio_launch_plan.cpp`). Backup now checks
+that path before staging and again before publication. The rebuilt Windows
+Debug executable passed 11 focused save-transfer cases, including a run lock
+created during staging, plus the same two affected CLI regression cases.
+`py -3 tools/strict_check.py` passed after this change. A new packaged and
+exact-head candidate result is still required for this follow-up.
+
 One test invocation from `tests/` failed before test execution because
 `tools` was absent from `PYTHONPATH`; rerunning from the repository root with
 `PYTHONPATH=.;tests` passed both requested cases.
