@@ -50,3 +50,14 @@ The optional two-package self-maintenance job is source preparation only until
 it runs against an exact alpha.6 candidate and lower source-distinct alpha.5
 baseline on the declared Windows host. It does not qualify the existing native
 recovery interruption/restart cases, and it does not claim chain-aware removal.
+
+## 2026-09-26 installed-use scope after Windows epoch integration
+
+PRs #330, #331, #333, #337 and #335 now provide source-distinct Windows epoch
+repair, continuation, rollback/reapply and removal evidence; candidate
+`36163129508` passed its real current-user transition. This supersedes the
+earlier Windows source-preparation-only statement above. The WorkUnit remains
+active: Linux `.run` source-distinct replacement still lacks a recoverable
+transaction chain, and the macOS PKG adapter remains installation-only. The
+Linux ownership correction recorded in `validation.md` needs exact-head
+produced-package qualification before integration.

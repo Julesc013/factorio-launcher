@@ -140,3 +140,20 @@ identities qualify the implemented install, repair and uninstall recovery
 checkpoint. The WorkUnit remains active because they do not qualify explicit
 FacMan update/downgrade recovery. They also do not qualify locked-file restart
 handoff or close the self-maintenance WorkUnit.
+
+## 2026-09-26 Linux installed-use ownership correction
+
+At integrated `dev` base `95a9747679193f8bad74b862ab780b9cf3d7a11b`,
+two direct Linux Setup shell tests reproduced false verification of an absent
+generation and removal of a foreign `current` pointer. The current correction
+requires exact installed-state and current-generation identity for verify,
+repair and uninstall; checks existing ownership before install; and refuses
+foreign terminal links, desktop entries and linked effect roots before effects.
+
+The focused WSL test suite passes eight cases: absent generation, foreign current
+pointer, foreign terminal link, foreign desktop entry, linked state root,
+changed setup copy, relative root, and exact owned verify/uninstall with
+preserved workspace bytes. The strict check passes. The product-candidate
+workflow now exercises a foreign `current` pointer against the produced Linux
+Setup between repair and uninstall. A current-head produced-package candidate
+and hosted Linux package result are still required.

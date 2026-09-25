@@ -200,6 +200,10 @@ administrator rights:
 
 It supports `install`, `verify`, `repair`, and `uninstall`, stores
 installed-state and receipts, and preserves workspaces and Factorio data.
+Verification requires the exact active generation and its installed-state
+receipt; a missing generation is a failure. Maintenance refuses a changed
+`current` pointer, linked effect roots, or foreign terminal/desktop entries
+before removal. Source-distinct Linux update recovery remains an Alpha.6 gate.
 
 ## Current limits
 
