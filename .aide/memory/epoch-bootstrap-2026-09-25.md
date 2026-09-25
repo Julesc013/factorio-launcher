@@ -31,6 +31,11 @@ checkpoint, not product qualification or authority to publish.
 - Epoch rollback/reapply, successor epoch after completed retirement, and a
   source-distinct external continuation receipt remain open. Do not merge PR
   #333 or claim maintenance acceptance from the old `b18018cd` candidate.
+- A later working change keeps no-shell portable Setup on the exact flat route:
+  it has neither installed-mode repair-source retention nor native integration
+  for epoch cutover. Strict maintenance metadata is still inspected before
+  provider effects. The produced shell-integrated candidate must provide the
+  bootstrap proof; the static no-shell package test cannot substitute for it.
 
 ## Branch and integrated baseline
 

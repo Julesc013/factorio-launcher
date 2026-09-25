@@ -688,6 +688,28 @@ def same_windows_path(left: object, right: Path) -> bool:
             os.path.normcase(os.path.realpath(right))
 
 
+def epoch_genesis_install_root(install: Path, state_root: Path,
+                               epoch_id: object, package_sha256: str) -> Path:
+    if not isinstance(epoch_id, str) or len(epoch_id) != 64:
+        raise AssertionError("installed Setup did not report a real lifecycle epoch")
+    epoch_dir = state_root.parent / "setup-coordinator.v1" / "epochs" / epoch_id
+    manifest = json.loads((epoch_dir / "epoch.v1.json").read_text(encoding="utf-8"))
+    generation_id = manifest.get("genesis_generation_id")
+    if not isinstance(generation_id, str) or len(generation_id) != 64:
+        raise AssertionError("produced epoch has no exact genesis generation")
+    generation_record = json.loads((
+        epoch_dir / "generations" / f"generation.{generation_id}.v2.json"
+    ).read_text(encoding="utf-8"))
+    active_install = Path(generation_record["install_root"])
+    if (generation_record.get("epoch_id") != epoch_id or
+            generation_record.get("generation_id") != generation_id or
+            generation_record.get("package_sha256") != package_sha256 or
+            active_install.parent != install.parent or
+            not active_install.name.startswith("FacMan.generation.")):
+        raise AssertionError("produced epoch genesis does not bind its package and root")
+    return active_install
+
+
 def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object],
                         install: Path, state_root: Path, acceptance_root: Path,
                         version: str, phase: str, *,
@@ -1830,9 +1852,13 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
                                   shell_integration=True, noninteractive=True)
         if packaged_install.get("status") != "ok":
             raise AssertionError("produced setup executable did not install from its own overlay")
+        active_install = epoch_genesis_install_root(
+            install, state_root, packaged_install.get("epoch_id"),
+            setup_overlay_sha256(payload),
+        )
         shortcut, registry = observe("packaged_argv0_install_completed")
         assert_owned_native(shortcut, registry, install, state_root, root, version,
-                            "packaged argv0 install")
+                            "packaged argv0 install", active_root=active_install)
         first_sources = list((state_root / "repair-sources").glob("*.zip"))
         if len(first_sources) != 1:
             raise AssertionError("packaged install did not retain one repair package")
@@ -1841,7 +1867,7 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         invoke_registered(registry_text(registry, "UninstallString"))
         shortcut, registry = observe("registered_uninstall_without_zip_completed")
         assert_absent_native(shortcut, registry, "registered uninstall")
-        if install.exists():
+        if install.exists() or active_install.exists():
             raise AssertionError("registered uninstall did not remove the managed install")
 
         permit = qualification_permit(root, "files_applied", "install", version, install, state_root)
@@ -2313,23 +2339,10 @@ def main() -> int:
             raise AssertionError("install did not return a receipt")
         active_install = install
         epoch_id = installed.get("epoch_id")
-        if args.payload is not None:
-            if not isinstance(epoch_id, str) or len(epoch_id) != 64:
-                raise AssertionError("produced install did not activate a real lifecycle epoch")
-            epoch_dir = state.parent / "setup-coordinator.v1" / "epochs" / epoch_id
-            manifest = json.loads((epoch_dir / "epoch.v1.json").read_text(encoding="utf-8"))
-            generation_id = manifest.get("genesis_generation_id")
-            if not isinstance(generation_id, str) or len(generation_id) != 64:
-                raise AssertionError("produced epoch has no exact genesis generation")
-            generation_record = json.loads((
-                epoch_dir / "generations" / f"generation.{generation_id}.v2.json"
-            ).read_text(encoding="utf-8"))
-            active_install = Path(generation_record["install_root"])
-            if (generation_record.get("epoch_id") != epoch_id or
-                    generation_record.get("generation_id") != generation_id or
-                    active_install.parent != programs or
-                    not active_install.name.startswith("FacMan.generation.")):
-                raise AssertionError("produced epoch genesis does not bind its installed root")
+        if epoch_id is not None:
+            active_install = epoch_genesis_install_root(
+                install, state, epoch_id, setup_overlay_sha256(package),
+            )
         gui = active_install / "generations" / version / "FacMan.exe"
         if (not gui.is_file() or
                 not (active_install / "maintenance/FacManSetup.exe").is_file() or

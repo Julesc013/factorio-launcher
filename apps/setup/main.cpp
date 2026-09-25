@@ -3679,7 +3679,7 @@ int wmain(int argc, wchar_t **argv) {
       print_error(metadata.error(), options.json);
       return 4;
     }
-    if (!metadata.value()) {
+    if (!metadata.value() || !options.shell_integration) {
       const fs::path coordinator_root =
           (options.state_root.parent_path() / "setup-coordinator.v1")
               .lexically_normal();
@@ -3701,13 +3701,14 @@ int wmain(int argc, wchar_t **argv) {
       if (!flat || (!same_flat && !same_legacy)) {
         print_error(!flat ? flat.error() : setup_error_with_detail(
             "self_maintenance_package_incompatible",
-            "generic Setup retry must match the exact installed flat package",
+            "compatibility Setup retry must match the exact installed flat package",
             package_problem), options.json);
         return 4;
       }
-      // Generic legacy payloads have no maintenance identity to clone.
-      // Their exact repeat install remains on the flat Setup route, whose
-      // coordinator-locked epoch guard still rejects an entered bootstrap.
+      // Portable Setup has no installed-mode offline source or native
+      // integration to cut over. Current-only archives also have no strict
+      // maintenance descriptor. Exact retries stay on the flat Setup route,
+      // whose locked epoch guard still rejects an entered bootstrap.
       resume_bootstrap = false;
     }
   }
@@ -3737,6 +3738,26 @@ int wmain(int argc, wchar_t **argv) {
     return 0;
   }
 
+  SetupPackageMaterializer package_materializer;
+  if (options.operation == facman::self_setup::Operation::install) {
+    auto supplied = package_materializer.materialize(options.package);
+    auto metadata = supplied
+        ? facman::self_maintenance::has_self_maintenance_metadata(
+              supplied.value())
+        : facman::core::Result<bool>::failure(supplied.error());
+    if (!metadata) {
+      print_error(metadata.error(), options.json);
+      return 4;
+    }
+    if (metadata.value()) {
+      auto inspected = facman::self_maintenance::inspect_package(
+          supplied.value());
+      if (!inspected) {
+        print_error(inspected.error(), options.json);
+        return 4;
+      }
+    }
+  }
   facman::self_setup::Request request;
   request.operation = options.operation;
   request.package = options.package;
@@ -3754,7 +3775,6 @@ int wmain(int argc, wchar_t **argv) {
   }
   request.apply = options.apply;
   SetupNativeEffects native_effects;
-  SetupPackageMaterializer package_materializer;
   if (options.shell_integration)
     request.native_effects = &native_effects;
   if (options.operation == facman::self_setup::Operation::install ||
@@ -3793,7 +3813,7 @@ int wmain(int argc, wchar_t **argv) {
       print_error(metadata.error(), options.json);
       return 4;
     }
-    if (metadata.value()) {
+    if (metadata.value() && options.shell_integration) {
       auto bootstrap = bootstrap_installed_facman(
           options, coordinator_root, true, supplied);
       if (!bootstrap) {
