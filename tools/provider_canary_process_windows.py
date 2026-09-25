@@ -188,6 +188,7 @@ def run(command: list[str], cwd: Path, environment: dict[str, str], streams: tup
     result = {"dispatched": False, "resumed": False, "termination": "start_failed",
               "exit_code": None, "process_identity": None, "job_terminated": False,
               "primary_stopped": False, "job_empty_observed": False,
+              "active_processes_at_primary_exit": None,
               "waited_for_job_empty_after_primary": wait_for_job_empty_after_primary,
               "error": None}
     stdin = msvcrt.get_osfhandle(streams[0].fileno())
@@ -251,13 +252,14 @@ def run(command: list[str], cwd: Path, environment: dict[str, str], streams: tup
                     require(False, "WaitForSingleObject")
                 if state == 0:
                     result["primary_stopped"] = True
-                    if not wait_for_job_empty_after_primary:
-                        result["termination"] = "completed"
-                        break
                     accounting = Accounting()
                     require(api.QueryInformationJobObject(job, 1, C.byref(accounting),
                                                           C.sizeof(accounting), None),
                             "QueryInformationJobObject")
+                    result["active_processes_at_primary_exit"] = accounting.active
+                    if not wait_for_job_empty_after_primary:
+                        result["termination"] = "completed"
+                        break
                     result["job_empty_observed"] = accounting.active == 0
                     if result["job_empty_observed"]:
                         result["termination"] = "completed"

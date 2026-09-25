@@ -145,6 +145,8 @@ class CanaryProcessTests(unittest.TestCase):
             "subprocess.Popen([sys.executable,'-c','import time; time.sleep(60)'])\n"
             "print('parent-complete',flush=True)\n", timeout=1)
         self.assertTrue(result.ok, result.receipt)
+        self.assertGreaterEqual(result.receipt["active_processes_at_primary_exit"], 1)
+        self.assertTrue(result.receipt["job_terminated"])
         self.assertTrue(result.receipt["job_empty_observed"])
         self.assertIn(b"parent-complete", result.stdout)
         self.assertLess(result.receipt["elapsed_seconds"], 3)

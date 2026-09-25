@@ -57,7 +57,8 @@ def ci_length_child_root(parent: Path) -> tuple[Path, int]:
     return parent / ("ci-" + "x" * deficit), required_units
 
 
-def run_command(command: list[str]):
+def run_command(command: list[str], *,
+                wait_for_job_empty_after_primary: bool | None = None):
     if CANARY_TIMEOUT is None:
         return subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
     if str(ROOT) not in sys.path:
@@ -75,7 +76,11 @@ def run_command(command: list[str]):
             raise AssertionError("real current-user qualification exhausted its total deadline")
     result = bounded.command(
         command, cwd=ROOT, timeout=timeout, directory=directory,
-        wait_for_job_empty_after_primary=WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY,
+        wait_for_job_empty_after_primary=(
+            WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY if
+            wait_for_job_empty_after_primary is None else
+            wait_for_job_empty_after_primary
+        ),
     )
     if result.receipt["termination"] != "completed":
         raise bounded.CommandFailure(result)
@@ -87,7 +92,8 @@ def run_command(command: list[str]):
 
 def invoke(executable: Path, *arguments: object, expected: int = 0,
            shell_integration: bool = False, noninteractive: bool = False,
-           qualification: tuple[str, Path] | None = None) -> dict[str, object]:
+           qualification: tuple[str, Path] | None = None,
+           wait_for_job_empty_after_primary: bool | None = None) -> dict[str, object]:
     command = [
         str(executable),
         *(str(value) for value in arguments),
@@ -103,7 +109,10 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
         command.extend(("--qualification-interrupt-after", boundary,
                         "--qualification-interrupt-permit", str(permit)))
     command.append("--json")
-    result = run_command(command)
+    result = run_command(
+        command,
+        wait_for_job_empty_after_primary=wait_for_job_empty_after_primary,
+    )
     global CALL_COUNT
     if CALL_EVIDENCE is not None:
         CALL_COUNT += 1
@@ -1837,9 +1846,22 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         epoch_downgrade_launch = invoke(
             installed_helper, "downgrade", "--package", baseline_payload,
             *epoch_common, shell_integration=True, noninteractive=True,
+            # The owned Windows job stops the external helper immediately
+            # after the initiating Setup exits. This exercises the public
+            # restart path with a genuine installed B epoch and package A.
+            wait_for_job_empty_after_primary=False,
         )
         if epoch_downgrade_launch.get("phase") != "handoff_launched":
             raise AssertionError("real epoch downgrade did not launch external continuation")
+        interrupted_receipt = REAL_COMMANDS[-1]["bounded_process_receipt"]
+        if (not isinstance(interrupted_receipt, dict) or
+                interrupted_receipt.get("active_processes_at_primary_exit", 0) < 1 or
+                interrupted_receipt.get("waited_for_job_empty_after_primary") is not False or
+                interrupted_receipt.get("job_terminated") is not True or
+                interrupted_receipt.get("job_empty_observed") is not True):
+            raise AssertionError(
+                "owned Windows job did not stop a live external helper after parent exit"
+            )
         epoch_downgrade_id = epoch_downgrade_launch.get("operation_id")
         if not isinstance(epoch_downgrade_id, str) or not epoch_downgrade_id:
             raise AssertionError("real epoch downgrade omitted its operation identity")
@@ -1850,8 +1872,20 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                                  "source-distinct epoch continuation helper") != \
                 sha256_path(installed_helper):
             raise AssertionError("epoch downgrade did not retain the executing B Setup")
+        epoch_operation = (epoch_state.parent / "setup-coordinator.v1" / "epochs" /
+                           str(epoch_installed["epoch_id"]) / "maintenance" /
+                           epoch_downgrade_id)
+        if (epoch_operation / "80-registration-cutover.v2.json").exists():
+            raise AssertionError("interrupted external helper already completed cutover")
+        epoch_restart = invoke(
+            installed_helper, "downgrade", "--package", baseline_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if (epoch_restart.get("phase") != "handoff_launched" or
+                epoch_restart.get("operation_id") != epoch_downgrade_id):
+            raise AssertionError("ordinary Setup did not restart the interrupted epoch operation")
         epoch_downgraded = await_external_handoff(
-            executable, epoch_downgrade_launch, "downgrade",
+            executable, epoch_restart, "downgrade",
             ("--package", baseline_payload, "--root", epoch_install,
              "--state-root", epoch_state, "--acceptance-root", epoch_fixture),
             shell_integration=True, noninteractive=True,
