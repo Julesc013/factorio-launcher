@@ -141,6 +141,15 @@ struct CompatibilityAuthorityBootstrapResponse {
   std::filesystem::path journal_directory;
 };
 
+// Exact read-only target for reinstall after a completed real-epoch removal.
+// The source is retained immutable history; the provider identity is retired.
+struct RetiredEpochSuccessorPlan {
+  LifecycleEpoch epoch;
+  Generation source;
+  Generation target;
+  bool manifest_published = false;
+};
+
 class CompatibilityAuthorityBootstrapEffects {
 public:
   virtual ~CompatibilityAuthorityBootstrapEffects() = default;
@@ -540,6 +549,9 @@ facman::core::Result<CompatibilityAuthorityBootstrapResponse>
 bootstrap_compatibility_authority(
     const CompatibilityAuthorityBootstrapRequest &request,
     CompatibilityAuthorityBootstrapEffects &effects);
+facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
+    const std::filesystem::path &coordinator_root,
+    const PackageDescriptor &descriptor, const std::string &package_sha256);
 facman::core::Result<RetirementResponse> retire_active(
     const RetirementRequest &request, RetirementEffects &effects);
 facman::core::Result<ActiveState> adopt_legacy(

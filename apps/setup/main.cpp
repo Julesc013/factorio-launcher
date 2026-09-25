@@ -3648,6 +3648,8 @@ int wmain(int argc, wchar_t **argv) {
     }
   }
   bool resume_bootstrap = false;
+  bool successor_install = false;
+  SetupPackageMaterializer package_materializer;
   if (options.operation == facman::self_setup::Operation::install) {
     const fs::path coordinator_root =
         (options.state_root.parent_path() / "setup-coordinator.v1")
@@ -3658,7 +3660,16 @@ int wmain(int argc, wchar_t **argv) {
       print_error(flat.error(), options.json);
       return 4;
     }
-    resume_bootstrap = flat.value().has_value();
+    auto epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
+        coordinator_root);
+    if (!epochs) {
+      print_error(epochs.error(), options.json);
+      return 4;
+    }
+    if (!epochs.value().epochs.empty() &&
+        !epochs.value().epochs.back().compatibility_epoch)
+      successor_install = true;
+    resume_bootstrap = flat.value().has_value() && !successor_install;
     if (!resume_bootstrap) {
       auto legacy = facman::self_maintenance::inspect_legacy_descriptor(
           options.install_root);
@@ -3666,7 +3677,7 @@ int wmain(int argc, wchar_t **argv) {
     }
     auto selected = facman::self_maintenance::resolve_authoritative_active_state(
         coordinator_root);
-    if (!selected && !resume_bootstrap) {
+    if (!selected && !resume_bootstrap && !successor_install) {
       print_error(selected.error(), options.json);
       return 4;
     }
@@ -3692,6 +3703,44 @@ int wmain(int argc, wchar_t **argv) {
       (options.operation == facman::self_setup::Operation::install ||
        options.operation == facman::self_setup::Operation::repair)) {
     options.package = maintenance_launcher;
+  }
+
+  std::optional<facman::self_maintenance::RetiredEpochSuccessorPlan>
+      successor_plan;
+  if (successor_install) {
+    if (!options.shell_integration) {
+      print_error({"self_maintenance_epoch_operation_unsupported",
+                   "epoch successor install requires installed-mode integration",
+                   {}}, options.json);
+      return 4;
+    }
+    auto supplied = package_materializer.materialize(options.package);
+    auto inspected = supplied
+        ? facman::self_maintenance::inspect_package(supplied.value())
+        : facman::core::Result<facman::self_maintenance::PackageInspection>::failure(
+              supplied.error());
+    if (!inspected) {
+      print_error(inspected.error(), options.json);
+      return 4;
+    }
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    auto planned = facman::self_maintenance::plan_retired_epoch_successor(
+        coordinator_root, inspected.value().descriptor,
+        inspected.value().package_sha256);
+    if (!planned ||
+        !same_path(planned.value().epoch.logical_root, options.install_root) ||
+        !same_path(planned.value().epoch.state_root, options.state_root) ||
+        !same_path(planned.value().epoch.acceptance_root,
+                   options.acceptance_root)) {
+      print_error(!planned ? planned.error() :
+          setup_error_with_detail("self_maintenance_lineage_mismatch",
+              "successor install roots do not bind the retired epoch",
+              planned.value().epoch.epoch_id), options.json);
+      return 4;
+    }
+    successor_plan = planned.take_value();
   }
 
   if (options.interactive) {
@@ -3776,7 +3825,6 @@ int wmain(int argc, wchar_t **argv) {
     return 0;
   }
 
-  SetupPackageMaterializer package_materializer;
   if (options.operation == facman::self_setup::Operation::install) {
     auto supplied = package_materializer.materialize(options.package);
     auto metadata = supplied
@@ -3804,6 +3852,11 @@ int wmain(int argc, wchar_t **argv) {
   request.state_root = options.state_root;
   request.acceptance_root = options.acceptance_root;
   request.product_version = FACMAN_VERSION_SEMVER;
+  if (successor_plan.has_value()) {
+    request.install_id = successor_plan->target.install_id;
+    request.install_root = successor_plan->target.install_root;
+    request.product_version = successor_plan->target.product_version;
+  }
   if (active_repair_generation.has_value()) {
     request.install_id = active_repair_generation->install_id;
     request.install_root = active_repair_generation->install_root;
@@ -3823,6 +3876,8 @@ int wmain(int argc, wchar_t **argv) {
     qualification_hook.emplace(qualification_interrupt->boundary);
     request.durable_boundary_hook = &*qualification_hook;
     request.qualification_claims = qualification_interrupt->claims;
+    if (successor_plan.has_value())
+      request.qualification_claims->install_root = request.install_root;
   }
   auto response = facman::self_setup::execute(request);
   if (!response) {
@@ -3831,6 +3886,63 @@ int wmain(int argc, wchar_t **argv) {
   }
   std::optional<facman::self_maintenance::CompatibilityAuthorityBootstrapResponse>
       installed_bootstrap;
+  std::optional<std::string> installed_successor_epoch;
+  if (successor_plan.has_value() && options.apply) {
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    auto inspected = facman::self_maintenance::inspect_package(
+        package_materializer.materialized_path());
+    if (!inspected) {
+      print_error(inspected.error(), options.json);
+      return 4;
+    }
+    facman::self_maintenance::ProviderBridge provider(
+        options.state_root, options.acceptance_root);
+    SetupBootstrapEffects effects(provider, inspected.value(),
+        options.state_root, options.acceptance_root, true);
+    const auto verified = effects.inspect_epoch_clone(
+        successor_plan->source, successor_plan->target);
+    const auto shortcut = effects.inspect_epoch_shortcut(
+        successor_plan->source, successor_plan->target);
+    const auto registration = effects.inspect_epoch_registration(
+        successor_plan->source, successor_plan->target);
+    if (!verified.ok || verified.outcome_unknown ||
+        shortcut != facman::self_maintenance::ShellState::new_exact ||
+        registration != facman::self_maintenance::ShellState::new_exact) {
+      print_error({"self_maintenance_epoch_recovery_required",
+                   "successor package or native integration is not exactly verified",
+                   verified.detail}, options.json);
+      return 4;
+    }
+    auto published = facman::self_maintenance::publish_lifecycle_epoch(
+        coordinator_root, successor_plan->epoch, true);
+    if (!published) {
+      print_error(published.error(), options.json);
+      return 4;
+    }
+    auto activated = facman::self_maintenance::activate_lifecycle_epoch_genesis(
+        {coordinator_root, successor_plan->epoch.epoch_id,
+         successor_plan->target, true});
+    if (!activated) {
+      print_error(activated.error(), options.json);
+      return 4;
+    }
+    auto selected = facman::self_maintenance::resolve_authoritative_active_state(
+        coordinator_root);
+    if (!selected || !selected.value().has_value() ||
+        !selected.value()->epoch.has_value() ||
+        selected.value()->epoch->epoch_id != successor_plan->epoch.epoch_id ||
+        selected.value()->active.active.install_id !=
+            successor_plan->target.install_id) {
+      print_error(!selected ? selected.error() :
+          setup_error_with_detail("self_maintenance_epoch_recovery_required",
+              "successor epoch did not become authoritative",
+              successor_plan->epoch.epoch_id), options.json);
+      return 4;
+    }
+    installed_successor_epoch = successor_plan->epoch.epoch_id;
+  }
   if (options.operation == facman::self_setup::Operation::install &&
       options.apply) {
     const fs::path coordinator_root =
@@ -3881,6 +3993,13 @@ int wmain(int argc, wchar_t **argv) {
       output.add_string("bootstrap_phase", installed_bootstrap->phase);
       output.add_string("epoch_id", installed_bootstrap->epoch.epoch_id);
     }
+    if (installed_successor_epoch.has_value())
+      output.add_string("epoch_id", *installed_successor_epoch);
+    if (successor_plan.has_value()) {
+      output.add_string("successor_epoch_id", successor_plan->epoch.epoch_id);
+      output.add_string("successor_install_root",
+          facman::platform::path_to_utf8(successor_plan->target.install_root));
+    }
     std::cout << output.serialize() << '\n';
   } else {
     std::cout << "FacManSetup " << response.value().operation << ' '
@@ -3889,6 +4008,9 @@ int wmain(int argc, wchar_t **argv) {
     if (installed_bootstrap.has_value())
       std::cout << "Lifecycle epoch " << installed_bootstrap->epoch.epoch_id
                 << " " << installed_bootstrap->phase << '\n';
+    if (installed_successor_epoch.has_value())
+      std::cout << "Lifecycle epoch " << *installed_successor_epoch
+                << " complete\n";
     if (!options.apply &&
         options.operation != facman::self_setup::Operation::verify) {
       std::cout << "Review the plan, then repeat with --yes to apply it.\n";

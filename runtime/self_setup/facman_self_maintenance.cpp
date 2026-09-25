@@ -2509,18 +2509,31 @@ facman::core::Result<void> validate_real_epoch_retirement(
         "real epoch retirement journal is unsafe"));
   if (!journal_identity.exists) return facman::core::Result<void>::success();
   epoch.retirement_journal_name = journal.filename().string();
+  facman::platform::StableDirectoryObject pinned_root, pinned_journal;
+  if (!pinned_root.open_no_follow(root).ok() ||
+      !pinned_root.open_child_directory_no_follow(
+          journal.filename().string(), pinned_journal).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "real epoch retirement journal could not be pinned"));
   std::error_code status;
   const auto first = fs::directory_iterator(journal, status);
   if (status)
     return facman::core::Result<void>::failure(epoch_recovery(
         "real epoch retirement journal cannot be enumerated", status.message()));
-  if (first == fs::directory_iterator())
+  if (first == fs::directory_iterator()) {
+    if (!pinned_journal.revalidate().ok() || !pinned_root.revalidate().ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "empty real epoch retirement journal changed during validation"));
     return facman::core::Result<void>::success();
+  }
   const auto steps = retirement_steps(combined);
   bool completed = false;
   auto validated = validate_retirement_directory(journal, combined, steps,
                                                  &completed);
   if (!validated) return validated;
+  if (!pinned_journal.revalidate().ok() || !pinned_root.revalidate().ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "real epoch retirement journal changed during validation"));
   if (completed)
     epoch.retirement_sha256 = hash(retirement_completed_json(combined,
                                                             steps.size()));
@@ -6786,6 +6799,66 @@ bootstrap_compatibility_authority(
     return fail(recorded ? epoch_recovery("bootstrap completion was not flushed")
                          : recorded.error());
   return Result::success({"complete", epoch, genesis.take_value(), journal_path});
+}
+
+facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
+    const fs::path &coordinator_root, const PackageDescriptor &descriptor,
+    const std::string &package_sha256) {
+  using Result = facman::core::Result<RetiredEpochSuccessorPlan>;
+  if (!coordinator_root.is_absolute() || !digest(package_sha256))
+    return Result::failure(failure("self_maintenance_input_invalid",
+        "retired epoch successor inputs are incomplete"));
+  auto discovered = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  if (!discovered || discovered.value().epochs.empty())
+    return Result::failure(!discovered ? discovered.error() : epoch_recovery(
+        "successor install requires a completed real lifecycle epoch"));
+  LifecycleEpochChain predecessor_chain = discovered.value();
+  const LifecycleEpoch &tail = predecessor_chain.epochs.back();
+  bool published = false;
+  if (tail.retirement_sha256.empty()) {
+    if (tail.compatibility_epoch || predecessor_chain.epochs.size() < 2U)
+      return Result::failure(epoch_recovery(
+          "successor install has no completed real-epoch predecessor"));
+    predecessor_chain.epochs.pop_back();
+    published = true;
+  }
+  const LifecycleEpoch &predecessor = predecessor_chain.epochs.back();
+  if (predecessor.compatibility_epoch ||
+      predecessor.retirement_sha256.empty())
+    return Result::failure(epoch_recovery(
+        "successor install predecessor is active or incompletely retired"));
+  auto source = discover_lifecycle_epoch_active_from_chain(
+      coordinator_root, predecessor_chain);
+  if (!source || source.value().epoch.epoch_id != predecessor.epoch_id)
+    return Result::failure(!source ? source.error() : epoch_recovery(
+        "retired predecessor activation changed during successor planning"));
+  auto seed = make_generation(descriptor, package_sha256, "facman.self",
+      predecessor.logical_root, predecessor.logical_root,
+      predecessor.state_root, predecessor.acceptance_root);
+  if (!seed) return Result::failure(seed.error());
+  LifecycleEpoch epoch;
+  epoch.acceptance_root = predecessor.acceptance_root;
+  epoch.genesis_generation_id = seed.value().generation_id;
+  epoch.logical_root = predecessor.logical_root;
+  epoch.predecessor_epoch_id = predecessor.epoch_id;
+  epoch.predecessor_manifest_sha256 = predecessor.manifest_sha256;
+  epoch.predecessor_retirement_sha256 = predecessor.retirement_sha256;
+  epoch.state_root = predecessor.state_root;
+  epoch.epoch_id = hash(lifecycle_identity_bytes(epoch));
+  epoch.manifest_sha256 = hash(lifecycle_manifest_bytes(epoch));
+  if (published &&
+      (tail.epoch_id != epoch.epoch_id ||
+       tail.manifest_sha256 != epoch.manifest_sha256))
+    return Result::failure(epoch_recovery(
+        "published successor epoch does not match the supplied exact package"));
+  auto target = make_epoch_genesis_generation(epoch, descriptor,
+                                              package_sha256);
+  if (!target) return Result::failure(target.error());
+  if (target.value().install_id == source.value().active.active.install_id)
+    return Result::failure(epoch_recovery(
+        "successor provider identity collides with its retired predecessor"));
+  return Result::success({std::move(epoch),
+      source.value().active.active, target.take_value(), published});
 }
 
 facman::core::Result<RetirementResponse> retire_active(

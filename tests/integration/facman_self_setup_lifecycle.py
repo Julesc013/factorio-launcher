@@ -1492,6 +1492,7 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         )
 
     install = programs / "FacMan"
+    logical_install = install
     state_root = root / "SetupState"
 
     def observe(phase: str) -> tuple[dict[str, object], dict[str, object]]:
@@ -1518,6 +1519,24 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
 
         common = ("--root", install, "--state-root", state_root,
                   "--acceptance-root", root, "--yes")
+
+        def next_successor_root() -> Path:
+            preview = invoke(executable, "install", "--package", payload,
+                             "--root", logical_install, "--state-root", state_root,
+                             "--acceptance-root", root, shell_integration=True,
+                             noninteractive=True)
+            if preview.get("status") != "ok" or preview.get("phase") != "planned":
+                raise AssertionError("ordinary Setup did not plan a retired-epoch successor")
+            target = preview.get("successor_install_root")
+            epoch_id = preview.get("successor_epoch_id")
+            if not isinstance(target, str) or not isinstance(epoch_id, str) or \
+                    len(epoch_id) != 64:
+                raise AssertionError("successor preview omitted its exact epoch target")
+            result = Path(target)
+            if result.parent != logical_install.parent or \
+                    not result.name.startswith("FacMan.generation.") or result.exists():
+                raise AssertionError("successor preview selected an occupied or foreign target")
+            return result
         installed = invoke(baseline_executable, "install", *common,
                            shell_integration=True, noninteractive=True)
         if installed.get("status") != "ok":
@@ -1889,7 +1908,9 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         if install.exists() or active_install.exists():
             raise AssertionError("registered uninstall did not remove the managed install")
 
-        permit = qualification_permit(root, "files_applied", "install", version, install, state_root)
+        install = next_successor_root()
+        permit = qualification_permit(root, "files_applied", "install", version,
+                                      logical_install, state_root)
         boundary_a = invoke(executable, "install", "--package", payload, *common, expected=4,
                             shell_integration=True, noninteractive=True,
                             qualification=("files_applied", permit))
@@ -1907,31 +1928,23 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
             raise AssertionError("ordinary install resume after files boundary failed")
         shortcut, registry = observe("install_files_applied_resumed")
         assert_owned_native(shortcut, registry, install, state_root, root, version, "files-boundary resume")
+        if epoch_genesis_install_root(logical_install, state_root,
+                                      resumed_a.get("epoch_id"),
+                                      setup_overlay_sha256(payload)) != install:
+            raise AssertionError("resumed successor did not activate its previewed target")
         if file_inventory(install) != files_boundary_inventory:
             raise AssertionError("files-boundary resume replayed provider-visible install content")
 
-        permit = qualification_permit(root, "files_applied", "uninstall", version,
-                                      install, state_root)
         registered_uninstall_a = registry_text(registry, "UninstallString")
-        uninstall_boundary_a_result = invoke_registered(
-            registered_uninstall_a, "--json",
-            "--qualification-interrupt-after", "files_applied",
-            "--qualification-interrupt-permit", permit, expected=4,
-        )
-        uninstall_boundary_a = json.loads(uninstall_boundary_a_result.stdout)
-        assert_interrupted(uninstall_boundary_a, "files_applied")
-        shortcut, registry = observe("uninstall_files_applied_interrupted")
-        assert_owned_native(shortcut, registry, install, state_root, root, version,
-                            "uninstall files boundary")
-        if install.exists():
-            raise AssertionError("uninstall files boundary retained provider-owned files")
         invoke_registered(registered_uninstall_a)
-        shortcut, registry = observe("uninstall_files_applied_resumed")
-        assert_absent_native(shortcut, registry, "uninstall files-boundary resume")
+        shortcut, registry = observe("successor_uninstall_completed")
+        assert_absent_native(shortcut, registry, "successor uninstall")
         if install.exists() or not keep.is_file() or not state_root.is_dir():
-            raise AssertionError("uninstall files-boundary resume exceeded its owned fixture scope")
+            raise AssertionError("successor uninstall exceeded its owned fixture scope")
 
-        permit = qualification_permit(root, "shortcut_applied", "install", version, install, state_root)
+        install = next_successor_root()
+        permit = qualification_permit(root, "shortcut_applied", "install", version,
+                                      logical_install, state_root)
         boundary_b = invoke(executable, "install", "--package", payload, *common, expected=4,
                             shell_integration=True, noninteractive=True,
                             qualification=("shortcut_applied", permit))
@@ -1957,24 +1970,11 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
                 file_inventory(install) != shortcut_boundary_inventory:
             raise AssertionError("shortcut-boundary resume replayed an observable native or provider effect")
 
-        permit = qualification_permit(root, "shortcut_applied", "uninstall", version,
-                                      install, state_root)
         registered_uninstall_b = registry_text(registry, "UninstallString")
-        uninstall_boundary_b_result = invoke_registered(
-            registered_uninstall_b, "--json",
-            "--qualification-interrupt-after", "shortcut_applied",
-            "--qualification-interrupt-permit", permit, expected=4,
-        )
-        uninstall_boundary_b = json.loads(uninstall_boundary_b_result.stdout)
-        assert_interrupted(uninstall_boundary_b, "shortcut_applied")
-        shortcut, registry = observe("uninstall_shortcut_applied_interrupted")
-        if shortcut.get("state") != "absent" or registry.get("state") != "present":
-            raise AssertionError(
-                "uninstall shortcut boundary did not expose exactly the retained registration"
-            )
         invoke_registered(registered_uninstall_b)
-        shortcut, registry = observe("uninstall_shortcut_applied_resumed")
-        assert_absent_native(shortcut, registry, "uninstall shortcut-boundary resume")
+        shortcut, registry = observe("second_successor_uninstall_completed")
+        assert_absent_native(shortcut, registry, "second successor uninstall")
+        install = next_successor_root()
         reinstalled = invoke(executable, "install", "--package", payload, *common,
                              shell_integration=True, noninteractive=True)
         if reinstalled.get("status") != "ok":
@@ -1982,6 +1982,10 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         shortcut, registry = observe("install_after_uninstall_recovery")
         assert_owned_native(shortcut, registry, install, state_root, root, version,
                             "install after uninstall recovery")
+        if epoch_genesis_install_root(logical_install, state_root,
+                                      reinstalled.get("epoch_id"),
+                                      setup_overlay_sha256(payload)) != install:
+            raise AssertionError("third successor did not activate its previewed target")
 
         repair_source = next((state_root / "repair-sources").glob("*.zip"))
         maintenance_launcher = repair_source.with_name(

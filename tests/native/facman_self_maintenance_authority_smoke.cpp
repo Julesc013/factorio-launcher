@@ -354,6 +354,8 @@ int main() {
 
   auto retired_epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
       handoff_coordinator);
+  auto planned_successor = facman::self_maintenance::plan_retired_epoch_successor(
+      handoff_coordinator, descriptor(), handoff_source.package_sha256);
   LifecycleEpoch epoch_successor;
   if (retired_epochs && retired_epochs.value().epochs.size() == 2U) {
     const LifecycleEpoch &predecessor = retired_epochs.value().epochs.back();
@@ -366,8 +368,13 @@ int main() {
     epoch_successor.predecessor_retirement_sha256 =
         predecessor.retirement_sha256;
   }
+  if (planned_successor)
+    epoch_successor.epoch_id = planned_successor.value().epoch.epoch_id;
   auto published_successor = facman::self_maintenance::publish_lifecycle_epoch(
       handoff_coordinator, epoch_successor, true);
+  auto published_successor_plan =
+      facman::self_maintenance::plan_retired_epoch_successor(
+          handoff_coordinator, descriptor(), handoff_source.package_sha256);
   ActiveState successor_activation;
   if (published_successor && published_successor.value().epochs.size() == 3U)
     successor_activation = activate_epoch(handoff_coordinator,
@@ -377,8 +384,18 @@ int main() {
           handoff_coordinator);
   ok &= require(retired_epochs && retired_epochs.value().epochs.size() == 2U &&
                     !retired_epochs.value().epochs.back().retirement_sha256.empty() &&
+                    planned_successor &&
+                    !planned_successor.value().manifest_published &&
+                    planned_successor.value().epoch.epoch_id ==
+                        epoch_successor.epoch_id &&
+                    planned_successor.value().source.install_id ==
+                        epoch_retirement_preview.value().steps.back().generation.install_id &&
                     published_successor &&
                     published_successor.value().epochs.size() == 3U &&
+                    published_successor_plan &&
+                    published_successor_plan.value().manifest_published &&
+                    published_successor_plan.value().epoch.epoch_id ==
+                        published_successor.value().epochs.back().epoch_id &&
                     selected_successor &&
                     selected_successor.value().has_value() &&
                     selected_successor.value()->epoch.has_value() &&

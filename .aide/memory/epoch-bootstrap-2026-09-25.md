@@ -185,3 +185,28 @@ checkpoint, not product qualification or authority to publish.
    workspace/history.
 3. Dispatch a source-exact candidate and attach its receipts only to that
    source revision; then integrate the coherent bootstrap slice.
+
+## 2026-09-25 successor-install continuation
+
+- Draft PR #333 on `task/facman-epoch-bootstrap-02` reached pushed head
+  `8f243a74556638ced9413d063e4142c25b24d32b`. Candidate
+  `36083525373` passed its Linux and Intel macOS package jobs and the
+  Windows portable, installed workspace, and resource checks, then failed
+  Windows real-current-user integration at the first reinstall after a
+  registered epoch uninstall. Ordinary Setup had treated retained flat
+  history as a live compatibility bootstrap source and refused with
+  `self_maintenance_repair_source_missing`.
+- The current uncommitted diff plans a content-addressed successor from the
+  completed real-epoch retirement and the exact supplied package. Ordinary
+  Setup directs its existing durable install transaction to that epoch's
+  physical provider identity. It verifies the provider closure and both
+  native effects before publishing the immutable epoch and genesis. The
+  real-current-user package scenario now previews physical targets and checks
+  multiple reinstall/interruption cycles against them. `strict_check.py`,
+  Python compilation, C++ syntax checks, and `git diff --check` passed; no
+  executable or produced-package result has been observed for this diff.
+- Remaining high-risk edges before integration: native and produced-package
+  result for this successor path; exact recovery after a successor manifest
+  staging interruption; coordinator ownership across Setup completion and
+  epoch publication; and source-distinct external continuation through a
+  real installed epoch, including rollback/reapply and final removal.
