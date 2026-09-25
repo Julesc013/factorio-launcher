@@ -194,6 +194,18 @@ assert_native_integration_owned() {
   fi
 }
 
+assert_setup_copy_safe() {
+  setup_copy="$maintenance/FacManSetup.run"
+  if [ -e "$setup_copy" ] || [ -L "$setup_copy" ]; then
+    if [ ! -f "$setup_copy" ] || [ -L "$setup_copy" ] ||
+       { [ "$operation" = 'install' ] && [ ! -L "$current" ]; } ||
+       { [ "$operation" = 'repair' ] && ! cmp -s "$0" "$setup_copy"; }; then
+      echo 'refusing a foreign or changed FacMan setup copy' >&2
+      return 1
+    fi
+  fi
+}
+
 if [ "$operation" = 'verify' ]; then
   assert_active_generation
   [ -d "$generation" ] && [ ! -L "$generation" ] && verify_generation "$generation" || {
@@ -259,9 +271,11 @@ if [ "$operation" = 'install' ]; then
   assert_existing_install_owner
 fi
 assert_native_integration_owned
+assert_setup_copy_safe
 
 temporary=$(mktemp -d "${TMPDIR:-/tmp}/facman-setup.XXXXXX")
-trap 'rm -rf "$temporary"' EXIT HUP INT TERM
+active_staging=''
+trap 'rm -rf "$temporary"; if [ -n "$active_staging" ]; then rm -f "$active_staging"; fi' EXIT HUP INT TERM
 payload="$temporary/payload.tar.gz"
 tail -n "+$payload_line" "$0" > "$payload"
 printf '%s  %s\n' "$payload_sha256" "$payload" | sha256sum -c - >/dev/null
@@ -284,9 +298,13 @@ mv "$staging" "$generation"
 ln -sfn "$generation" "$current"
 ln -sfn "$current/facman" "$user_bin/facman"
 ln -sfn "$current/FacMan" "$user_bin/FacMan"
-cp "$0" "$maintenance/FacManSetup.run"
-chmod 0755 "$maintenance/FacManSetup.run"
-cat > "$desktop_root/facman.desktop" <<EOF
+active_staging=$(mktemp "$maintenance/.FacManSetup.run.XXXXXX")
+cp "$0" "$active_staging"
+chmod 0755 "$active_staging"
+mv -fT "$active_staging" "$maintenance/FacManSetup.run"
+active_staging=''
+active_staging=$(mktemp "$desktop_root/.facman.desktop.XXXXXX")
+cat > "$active_staging" <<EOF
 [Desktop Entry]
 Type=Application
 Name=FacMan
@@ -295,9 +313,14 @@ Exec=$current/FacMan
 Terminal=false
 Categories=Game;Utility;
 EOF
-cat > "$state/installed-state.v1.json" <<EOF
+mv -fT "$active_staging" "$desktop_root/facman.desktop"
+active_staging=''
+active_staging=$(mktemp "$state/.installed-state.v1.json.XXXXXX")
+cat > "$active_staging" <<EOF
 {"schema":"facman.installed_state.v1","version":"$version","generation":"$generation","workspace_preserved":true}
 EOF
+mv -fT "$active_staging" "$state/installed-state.v1.json"
+active_staging=''
 verify_generation "$generation"
 [ "$quiet" = 'true' ] || echo "FacMan $version installed for the current user"
 exit 0

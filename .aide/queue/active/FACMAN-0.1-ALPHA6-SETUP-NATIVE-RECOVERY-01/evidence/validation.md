@@ -150,11 +150,13 @@ requires exact installed-state and current-generation identity for verify,
 repair and uninstall; checks existing ownership before install; and refuses
 foreign terminal links, desktop entries and linked effect roots before effects.
 
-The focused WSL test suite passes nine cases: absent generation, foreign current
+The focused WSL test suite passes ten cases: absent generation, foreign current
 pointer, foreign terminal link, foreign desktop entry, linked state root,
 changed setup copy, relative root, exact owned verify/uninstall with preserved
 workspace bytes, and a gzip payload install/verify/uninstall with `zstd`
-deliberately blocked on `PATH`. The strict check passes. A standalone package
+deliberately blocked on `PATH`. It also rejects a linked maintenance copy
+before payload work and proves repair replaces hardlinked receipt/setup paths
+without changing their foreign inodes. The strict check passes. A standalone package
 driver exercises foreign `current` refusal against produced Linux Setup between
 repair and uninstall; the exact downloaded candidate remains to be run through
 that driver. The Setup producer transcodes the portable zstd archive to a gzip

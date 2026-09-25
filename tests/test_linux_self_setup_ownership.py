@@ -207,6 +207,28 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertTrue(current.is_symlink())
             self.assertEqual(setup_copy.read_bytes(), b"foreign setup bytes\n")
 
+    def test_repair_refuses_foreign_setup_symlink_before_payload_work(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            install = root / "install"
+            generation = self.installed_state(install)
+            current = install / "current"
+            current.symlink_to(generation, target_is_directory=True)
+            maintenance = install / "maintenance"
+            maintenance.mkdir()
+            foreign = root / "foreign-setup"
+            foreign.write_bytes(b"foreign setup bytes\n")
+            (maintenance / "FacManSetup.run").symlink_to(foreign)
+            script = self.setup_script(root)
+            result = self.invoke(
+                script, home, "repair", "--root", str(install), "--yes",
+            )
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn("refusing a foreign or changed FacMan setup copy", result.stderr)
+            self.assertEqual(foreign.read_bytes(), b"foreign setup bytes\n")
+
     def test_relative_root_is_refused_before_effects(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -255,6 +277,19 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertEqual(installed.returncode, 0, installed.stderr)
             verified = self.invoke(script, home, "verify", path_prefix=guard)
             self.assertEqual(verified.returncode, 0, verified.stderr)
+            installed_root = home / ".local/opt/facman"
+            receipt = installed_root / "state/installed-state.v1.json"
+            setup_copy = installed_root / "maintenance/FacManSetup.run"
+            foreign_receipt = root / "foreign-receipt"
+            foreign_setup = root / "foreign-setup"
+            os.link(receipt, foreign_receipt)
+            os.link(setup_copy, foreign_setup)
+            repaired = self.invoke(script, home, "repair", "--yes", path_prefix=guard)
+            self.assertEqual(repaired.returncode, 0, repaired.stderr)
+            self.assertEqual(foreign_receipt.read_bytes(), receipt.read_bytes())
+            self.assertEqual(foreign_setup.read_bytes(), script.read_bytes())
+            self.assertNotEqual(receipt.stat().st_ino, foreign_receipt.stat().st_ino)
+            self.assertNotEqual(setup_copy.stat().st_ino, foreign_setup.stat().st_ino)
             removed = self.invoke(script, home, "uninstall", "--yes", path_prefix=guard)
             self.assertEqual(removed.returncode, 0, removed.stderr)
 
