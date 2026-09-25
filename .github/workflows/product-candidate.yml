@@ -28,6 +28,7 @@ jobs:
         id: release-truth
         env:
           PYTHONPATH: ${{ github.workspace }}
+          FACMAN_SELF_MAINTENANCE_BASELINE_REF: ${{ inputs.self_maintenance_baseline_ref }}
         shell: python
         run: |
           import os
@@ -35,18 +36,15 @@ jobs:
           import tomllib
           from pathlib import Path
           from tools.release_programme_check import SEMVER_PATTERN
+          from tools.self_maintenance_candidate import preflight_baseline_ref
 
-          version = tomllib.loads(
-              Path("release/index/version.v2.toml").read_text(encoding="utf-8")
-          )["semver"]
+          version = tomllib.loads(Path("release/index/version.v2.toml").read_text(encoding="utf-8"))["semver"]
           if not re.fullmatch(SEMVER_PATTERN, str(version)):
               raise SystemExit(f"candidate version is not valid SemVer: {version!r}")
           workspace = tomllib.loads(
               Path("release/index/workspace_lock.v1.toml").read_text(encoding="utf-8")
           )
-          providers = tomllib.loads(
-              Path("release/index/providers.lock.v2.toml").read_text(encoding="utf-8")
-          )
+          providers = tomllib.loads(Path("release/index/providers.lock.v2.toml").read_text(encoding="utf-8"))
           workspace_pins = {
               item["id"]: item["pin"]
               for item in workspace["component"]
@@ -59,6 +57,7 @@ jobs:
               raise SystemExit("workspace lock does not contain exactly both providers")
           if workspace_pins != provider_pins:
               raise SystemExit("workspace and provider locks are not atomically reconciled")
+          preflight_baseline_ref(os.environ["FACMAN_SELF_MAINTENANCE_BASELINE_REF"])
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
               output.write(f"version={version}\n")
       - name: Validate candidate controls and package contracts
