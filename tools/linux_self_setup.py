@@ -77,6 +77,18 @@ case "$install_root" in
   /*) ;;
   *) echo 'install root must be an absolute path' >&2; exit 3 ;;
 esac
+canonical_install_root=$(realpath -m -- "$install_root")
+normalized_install_root=$(realpath -ms -- "$install_root")
+canonical_home=$(realpath -m -- "$HOME")
+if [ "$canonical_install_root" = '/' ] ||
+   [ "$canonical_install_root" = "$canonical_home" ]; then
+  echo 'refusing unsafe resolved install root' >&2
+  exit 3
+fi
+if [ "$canonical_install_root" != "$normalized_install_root" ]; then
+  echo 'refusing install root through a linked ancestor' >&2
+  exit 3
+fi
 
 generation="$install_root/generations/$version"
 current="$install_root/current"
@@ -161,6 +173,11 @@ assert_existing_install_owner() {
     *) echo 'refusing install over foreign active generation' >&2; return 1 ;;
   esac
   old_version=${old_target##*/}
+  case "$old_version" in
+    ''|*[!A-Za-z0-9.+-]*)
+      echo 'refusing install over an invalid active version' >&2
+      return 1 ;;
+  esac
   if [ -z "$old_version" ] ||
      [ "$old_target" != "$install_root/generations/$old_version" ] ||
      [ ! -d "$old_target" ] || [ -L "$old_target" ]; then

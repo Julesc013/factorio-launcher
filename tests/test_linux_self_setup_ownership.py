@@ -297,6 +297,30 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0, result.stdout)
             self.assertFalse((root / "relative-install").exists())
 
+    def test_resolved_root_and_linked_ancestor_are_refused_before_effects(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            script = self.setup_script(root)
+            resolved_home = root / "other" / ".." / "home"
+            result = self.invoke(
+                script, home, "install", "--root", str(resolved_home), "--yes",
+            )
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn("unsafe resolved install root", result.stderr)
+            self.assertFalse((home / "generations").exists())
+
+            foreign = root / "foreign"
+            foreign.mkdir()
+            (root / "linked").symlink_to(foreign, target_is_directory=True)
+            result = self.invoke(
+                script, home, "install", "--root", str(root / "linked/install"), "--yes",
+            )
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn("linked ancestor", result.stderr)
+            self.assertFalse((foreign / "install").exists())
+
     def test_embedded_gzip_package_installs_without_zstd(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
