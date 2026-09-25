@@ -101,6 +101,20 @@ def main() -> int:
             )
         return result.stdout.strip()
 
+    def refuse(label: str, executable: Path, *arguments: str) -> None:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise SystemExit("package update proof exceeded its absolute deadline")
+        result = subprocess.run(
+            [str(executable), *arguments], env=environment,
+            capture_output=True, text=True, check=False, timeout=remaining,
+        )
+        observations.append({"step": label, "exit_code": result.returncode})
+        if result.returncode == 0:
+            raise SystemExit(f"{label}: modified previous Setup source was accepted")
+        if "refusing an unadmitted previous Setup package" not in result.stderr:
+            raise SystemExit(f"{label}: unexpected refusal: {result.stderr[-1200:]}")
+
     def assert_installed_version(label: str, version: str, revision: str) -> None:
         output = run(label, install / "current/facman", "--version")
         if version not in output:
@@ -138,6 +152,21 @@ def main() -> int:
     run("install-previous", previous, "install", "--yes", "--quiet")
     run("verify-previous", previous, "verify")
     assert_native_entries("install-previous")
+    previous_setup_bytes = installed_setup.read_bytes()
+    changed_setup_bytes = previous_setup_bytes.replace(
+        b"operation='install'\n",
+        b"echo injected-header-command >/dev/null\noperation='install'\n", 1,
+    )
+    if changed_setup_bytes == previous_setup_bytes:
+        raise SystemExit("previous Setup package lacks the expected shell header")
+    installed_setup.write_bytes(changed_setup_bytes)
+    refuse("refuse-modified-previous-setup-header", candidate,
+           "install", "--yes", "--quiet")
+    if sha256(installed_setup) == sha256(previous):
+        raise SystemExit("modified previous Setup source was not exercised")
+    installed_setup.write_bytes(previous_setup_bytes)
+    if sha256(installed_setup) != sha256(previous):
+        raise SystemExit("previous Setup package was not restored after refusal")
     assert_installed_version("execute-previous", old_version,
                              str(previous_identity["source_revision"]))
     run("interrupt-update", candidate, "install", "--yes", "--quiet", interrupted=True)

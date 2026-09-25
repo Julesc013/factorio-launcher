@@ -20,6 +20,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKER = "__FACMAN_PAYLOAD_BELOW__"
+ALPHA5_PREDECESSOR_SHA256 = (
+    "8f5b6cf5c3b718504d894a28e74cb6bdfc9a9c95cacfd038d59df96ec74f38a8",
+    "7529b1cc11c9970f13369dd4d38a70456f43c97a31eb9a0a90dea17728d58bd5",
+)
 
 
 def sha256(path: Path) -> str:
@@ -41,7 +45,17 @@ def git(*arguments: str) -> str:
     ).stdout.strip()
 
 
-def header(version: str, payload_sha256: str) -> bytes:
+def header(version: str, payload_sha256: str,
+           test_predecessor_sha256: str | None = None) -> bytes:
+    predecessor_hashes = ALPHA5_PREDECESSOR_SHA256
+    if test_predecessor_sha256 is not None:
+        if len(test_predecessor_sha256) != 64 or any(
+                character not in "0123456789abcdef" for character in test_predecessor_sha256):
+            raise ValueError("invalid test predecessor SHA-256")
+        predecessor_hashes += (test_predecessor_sha256,)
+    predecessor_cases = "|\\\n      ".join(
+        f"'0.1.0-alpha.5:{digest}'" for digest in predecessor_hashes
+    )
     script = r'''#!/bin/sh
 set -eu
 
@@ -103,6 +117,14 @@ user_bin="${HOME}/.local/bin"
 desktop_root="${HOME}/.local/share/applications"
 pending="$state/update-pending.v1"
 rollback_record="$state/rollback.v1"
+setup_authority="$state/installed-setup.sha256"
+
+assert_admitted_predecessor() {
+  case "$1:$2" in
+      @ALPHA5_PREDECESSOR_CASES@) return 0 ;;
+      *) echo 'refusing an unadmitted previous Setup package' >&2; return 1 ;;
+  esac
+}
 
 for protected_root in "$install_root" "$install_root/generations" "$state" "$maintenance" "$user_bin" "$desktop_root"; do
   if [ -L "$protected_root" ]; then
@@ -258,60 +280,38 @@ assert_setup_copy_safe() {
   fi
 }
 
-assert_previous_setup_source() (
+assert_setup_authority_safe() {
+  if [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; then
+    if [ ! -f "$setup_authority" ] || [ -L "$setup_authority" ] ||
+       [ ! -f "$maintenance/FacManSetup.run" ] ||
+       [ -L "$maintenance/FacManSetup.run" ] ||
+       [ "$(cat "$setup_authority")" != "$(sha256sum "$maintenance/FacManSetup.run" | cut -d ' ' -f 1)" ]; then
+      echo 'refusing changed installed Setup authority' >&2
+      return 1
+    fi
+  fi
+}
+
+assert_previous_setup_source() {
   predecessor_source="$1"
   predecessor_version="$2"
-  predecessor_target="$3"
   if [ ! -f "$predecessor_source" ] || [ -L "$predecessor_source" ]; then
     echo 'refusing a missing or linked previous Setup source' >&2
-    exit 1
+    return 1
   fi
-  declared_version=$(sed -n "s/^version='\([^']*\)'$/\1/p" "$predecessor_source")
-  declared_digest=$(sed -n "s/^payload_sha256='\([0-9a-f]*\)'$/\1/p" "$predecessor_source")
-  declared_line=$(awk '/^__FACMAN_PAYLOAD_BELOW__$/ { print NR + 1; exit }' "$predecessor_source")
-  if [ "$declared_version" != "$predecessor_version" ] ||
-     [ "${#declared_digest}" -ne 64 ] || [ -z "$declared_line" ]; then
-    echo 'refusing a previous Setup source without exact package identity' >&2
-    exit 1
-  fi
-  source_validation=$(mktemp -d "${TMPDIR:-/tmp}/facman-source.XXXXXX")
-  trap 'rm -rf "$source_validation"' EXIT
-  tail -n "+$declared_line" "$predecessor_source" > "$source_validation/payload.tar.gz"
-  if [ "$(sha256sum "$source_validation/payload.tar.gz" | cut -d ' ' -f 1)" != "$declared_digest" ]; then
-    echo 'refusing a damaged previous Setup payload' >&2
-    exit 1
-  fi
-  if gzip -t "$source_validation/payload.tar.gz" >/dev/null 2>&1; then
-    gzip -dc "$source_validation/payload.tar.gz" > "$source_validation/payload.tar"
-  elif zstd -t "$source_validation/payload.tar.gz" >/dev/null 2>&1; then
-    zstd -dc "$source_validation/payload.tar.gz" > "$source_validation/payload.tar"
+  predecessor_sha=$(sha256sum "$predecessor_source" | cut -d ' ' -f 1)
+  if [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; then
+    if [ ! -f "$setup_authority" ] || [ -L "$setup_authority" ] ||
+       [ "$(cat "$setup_authority")" != "$predecessor_sha" ]; then
+      echo 'refusing previous Setup source outside recorded package authority' >&2
+      return 1
+    fi
+    predecessor_authority_mode='recorded'
   else
-    echo 'refusing unsupported previous Setup compression' >&2
-    exit 1
+    predecessor_authority_mode='legacy-pinned'
   fi
-  if ! tar -tf "$source_validation/payload.tar" |
-      while IFS= read -r entry; do
-        case "$entry" in
-          "FacMan-$predecessor_version"|"FacMan-$predecessor_version/"|"FacMan-$predecessor_version/"*) ;;
-          *) exit 1 ;;
-        esac
-        case "$entry" in
-          *'/../'*|*'/./'*|*'\\'*|*'..') exit 1 ;;
-        esac
-      done; then
-    echo 'refusing an unsafe previous Setup payload' >&2
-    exit 1
-  fi
-  if tar -tvf "$source_validation/payload.tar" | cut -c 1 | grep -Eq '[^d-]'; then
-    echo 'refusing linked previous Setup payload content' >&2
-    exit 1
-  fi
-  tar -xf "$source_validation/payload.tar" -C "$source_validation" --no-same-owner
-  if ! diff -qr "$source_validation/FacMan-$predecessor_version" "$predecessor_target" >/dev/null; then
-    echo 'refusing previous Setup source that differs from the installed generation' >&2
-    exit 1
-  fi
-)
+  assert_admitted_predecessor "$predecessor_version" "$predecessor_sha"
+}
 
 temporary=''
 active_staging=''
@@ -381,7 +381,7 @@ assert_no_orphan_staging() {
   for directory in "$state" "$install_root/generations" "$maintenance"; do
     [ -d "$directory" ] || continue
     if [ "$directory" = "$state" ]; then
-      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 \( -name '.update-prepared-*' -o -name '.installed-state.v1.json.*' \) -print -quit)
+      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 \( -name '.update-prepared-*' -o -name '.installed-state.v1.json.*' -o -name '.installed-setup.sha256.*' \) -print -quit)
     elif [ "$directory" = "$install_root/generations" ]; then
       orphan=$(find "$directory" -mindepth 1 -maxdepth 1 -name '.install-*' -print -quit)
     else
@@ -437,8 +437,13 @@ restore_update_record() {
     fi
   done
   record_entries=$(find "$record" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)
-  expected_entries=$(printf '%s\n' new-setup-sha256 new-target old-receipt old-setup old-target)
-  if [ "$record_entries" != "$expected_entries" ]; then
+  expected_entries=$(printf '%s\n' new-setup-sha256 new-target old-authority-mode old-receipt old-setup old-setup-sha256 old-target)
+  legacy_entries=$(printf '%s\n' new-setup-sha256 new-target old-receipt old-setup old-target)
+  if [ "$record_entries" = "$expected_entries" ]; then
+    record_schema='current'
+  elif [ "$record_entries" = "$legacy_entries" ]; then
+    record_schema='legacy'
+  else
     echo 'refusing foreign content in Linux Setup update record' >&2
     return 1
   fi
@@ -479,8 +484,26 @@ restore_update_record() {
     return 1
   fi
   previous_setup_sha=$(sha256sum "$record/old-setup" | cut -d ' ' -f 1)
+  if [ "$record_schema" = 'current' ]; then
+    for name in old-setup-sha256 old-authority-mode; do
+      [ -f "$record/$name" ] && [ ! -L "$record/$name" ] || return 1
+    done
+    if [ "$previous_setup_sha" != "$(cat "$record/old-setup-sha256")" ]; then
+      echo 'refusing changed previous Setup source in update record' >&2
+      return 1
+    fi
+    authority_mode=$(cat "$record/old-authority-mode")
+  else
+    authority_mode='legacy-pinned'
+  fi
+  case "$authority_mode" in
+    recorded|legacy-pinned) ;;
+    *) echo 'refusing changed previous Setup authority' >&2; return 1 ;;
+  esac
+  assert_admitted_predecessor "$old_version" "$previous_setup_sha"
   new_setup_sha=$(cat "$record/new-setup-sha256")
-  if [ "$new_setup_sha" != "$(sha256sum "$0" | cut -d ' ' -f 1)" ] ||
+  if { [ "$record_schema" = 'current' ] &&
+       [ "$new_setup_sha" != "$(sha256sum "$0" | cut -d ' ' -f 1)" ]; } ||
      [ ! -f "$maintenance/FacManSetup.run" ] ||
      [ -L "$maintenance/FacManSetup.run" ]; then
     echo 'refusing a changed update source' >&2
@@ -492,9 +515,23 @@ restore_update_record() {
     echo 'refusing a foreign installed setup source' >&2
     return 1
   fi
+  if [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; then
+    if [ ! -f "$setup_authority" ] || [ -L "$setup_authority" ]; then
+      echo 'refusing changed installed Setup authority' >&2
+      return 1
+    fi
+    authority_now=$(cat "$setup_authority")
+    if [ "$authority_now" != "$previous_setup_sha" ] &&
+       [ "$authority_now" != "$new_setup_sha" ]; then
+      echo 'refusing ambiguous installed Setup authority' >&2
+      return 1
+    fi
+  elif [ "$authority_mode" = 'recorded' ]; then
+    echo 'refusing missing recorded Setup authority' >&2
+    return 1
+  fi
   assert_owned_generation "$old_target"
   verify_generation "$old_target"
-  assert_previous_setup_source "$record/old-setup" "$old_version" "$old_target"
   assert_native_integration_owned
   if [ -e "$new_target" ] || [ -L "$new_target" ]; then
     [ -d "$new_target" ] && [ ! -L "$new_target" ] || return 1
@@ -511,6 +548,12 @@ restore_update_record() {
   point_current "$old_target" "$current_now"
   replace_file "$record/old-receipt" "$state/installed-state.v1.json" 0600
   replace_file "$record/old-setup" "$maintenance/FacManSetup.run" 0755
+  if [ "$authority_mode" = 'recorded' ]; then
+    replace_file "$record/old-setup-sha256" "$setup_authority" 0600
+  elif [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; then
+    [ ! -L "$setup_authority" ] && [ "$(cat "$setup_authority")" = "$new_setup_sha" ] || return 1
+    rm -f "$setup_authority"
+  fi
   if [ -e "$new_target" ] || [ -L "$new_target" ]; then
     assert_owned_generation "$new_target"
     assert_native_integration_owned
@@ -525,6 +568,13 @@ if [ "$operation" = 'verify' ]; then
     exit 1
   fi
   assert_active_generation
+  if [ ! -f "$setup_authority" ] || [ -L "$setup_authority" ] ||
+     [ ! -f "$maintenance/FacManSetup.run" ] ||
+     [ -L "$maintenance/FacManSetup.run" ] ||
+     [ "$(cat "$setup_authority")" != "$(sha256sum "$maintenance/FacManSetup.run" | cut -d ' ' -f 1)" ]; then
+    echo 'FacMan installed Setup authority is missing or damaged' >&2
+    exit 1
+  fi
   [ -d "$generation" ] && [ ! -L "$generation" ] && verify_generation "$generation" || {
     echo 'FacMan active generation is missing or damaged' >&2
     exit 1
@@ -575,6 +625,13 @@ if [ "$operation" = 'uninstall' ]; then
     admitted_previous=$(cat "$rollback_record/old-target")
   else
     admitted_previous=''
+  fi
+  if [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; then
+    if [ ! -f "$setup_authority" ] || [ -L "$setup_authority" ] ||
+       [ "$(cat "$setup_authority")" != "$(sha256sum "$0" | cut -d ' ' -f 1)" ]; then
+      echo 'refusing changed installed Setup authority during uninstall' >&2
+      exit 1
+    fi
   fi
   if [ -d "$install_root/generations" ]; then
     hidden_generation=$(find "$install_root/generations" -mindepth 1 -maxdepth 1 -name '.*' -print -quit)
@@ -643,7 +700,7 @@ if [ "$operation" = 'uninstall' ]; then
     fi
   done
   if [ -d "$rollback_record" ]; then rm -rf "$rollback_record"; fi
-  rm -f "$setup_copy" "$state/installed-state.v1.json"
+  rm -f "$setup_copy" "$state/installed-state.v1.json" "$setup_authority"
   rmdir "$maintenance" "$state" "$install_root/generations" "$install_root" 2>/dev/null || true
   echo "FacMan $version uninstalled; workspaces were not touched"
   exit 0
@@ -673,6 +730,7 @@ else
 fi
 assert_native_integration_owned
 assert_setup_copy_safe
+assert_setup_authority_safe
 source_distinct='false'
 if [ "$operation" = 'install' ] && [ -n "${old_target:-}" ]; then
   if [ "$old_target" = "$generation" ]; then
@@ -706,6 +764,7 @@ assert_update_predecessor() {
   assert_existing_install_owner
   assert_native_integration_owned
   assert_setup_copy_safe
+  assert_setup_authority_safe
   if [ ! -f "$maintenance/FacManSetup.run" ] ||
      [ -L "$maintenance/FacManSetup.run" ]; then
     echo 'refusing a missing Linux Setup update predecessor' >&2
@@ -759,6 +818,8 @@ if [ "$source_distinct" = 'true' ]; then
   printf '%s\n' "$generation" > "$journal_staging/new-target"
   cp "$state/installed-state.v1.json" "$journal_staging/old-receipt"
   cp "$maintenance/FacManSetup.run" "$journal_staging/old-setup"
+  printf '%s\n' "$predecessor_sha" > "$journal_staging/old-setup-sha256"
+  printf '%s\n' "$predecessor_authority_mode" > "$journal_staging/old-authority-mode"
   sha256sum "$0" | cut -d ' ' -f 1 > "$journal_staging/new-setup-sha256"
   mv -T "$journal_staging" "$pending"
   journal_staging=''
@@ -796,6 +857,11 @@ cat > "$active_staging" <<EOF
 EOF
 mv -fT "$active_staging" "$state/installed-state.v1.json"
 active_staging=''
+active_staging=$(mktemp "$state/.installed-setup.sha256.XXXXXX")
+sha256sum "$0" | cut -d ' ' -f 1 > "$active_staging"
+chmod 0600 "$active_staging"
+mv -fT "$active_staging" "$setup_authority"
+active_staging=''
 verify_generation "$generation"
 if [ "$source_distinct" = 'true' ]; then
   mv -T "$pending" "$rollback_record"
@@ -805,7 +871,9 @@ exit 0
 
 __FACMAN_PAYLOAD_BELOW__
 '''
-    return script.replace("@VERSION@", version).replace("@PAYLOAD_SHA256@", payload_sha256).encode()
+    return (script.replace("@VERSION@", version)
+            .replace("@PAYLOAD_SHA256@", payload_sha256)
+            .replace("@ALPHA5_PREDECESSOR_CASES@", predecessor_cases).encode())
 
 
 def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:

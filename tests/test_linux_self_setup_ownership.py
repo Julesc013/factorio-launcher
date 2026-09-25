@@ -43,8 +43,13 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
         with tarfile.open(archive, "w:gz") as stream:
             stream.add(product, arcname=product.name)
         script = root / f"FacManSetup-{version}.run"
+        previous = root / "FacManSetup-0.1.0-alpha.5.run"
+        test_predecessor = (linux_self_setup.sha256(previous)
+                            if version == "0.1.0-alpha.6" and previous.is_file()
+                            else None)
         script.write_bytes(
-            linux_self_setup.header(version, linux_self_setup.sha256(archive))
+            linux_self_setup.header(version, linux_self_setup.sha256(archive),
+                                    test_predecessor_sha256=test_predecessor)
             + archive.read_bytes()
         )
         script.chmod(0o755)
@@ -165,6 +170,12 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             sentinel = workspace / "world.zip"
             sentinel.write_bytes(b"preserve this workspace")
             script = self.setup_script(root)
+            maintenance = install / "maintenance"
+            maintenance.mkdir()
+            (maintenance / "FacManSetup.run").write_bytes(script.read_bytes())
+            (install / "state/installed-setup.sha256").write_text(
+                linux_self_setup.sha256(script) + "\n", encoding="utf-8",
+            )
             verified = self.invoke(script, home, "verify", "--root", str(install))
             self.assertEqual(verified.returncode, 0, verified.stderr)
             removed = self.invoke(
@@ -440,8 +451,8 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             (install / "maintenance/FacManSetup.run").unlink()
             refused = self.invoke(second, home, "install", "--yes")
             self.assertNotEqual(refused.returncode, 0, refused.stdout)
-            self.assertIn("previous Setup source", refused.stderr)
-            self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
+            self.assertIn("Setup authority", refused.stderr)
+            self.assertNotEqual(self.invoke(first, home, "verify").returncode, 0)
             self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
 
     def test_update_refuses_changed_previous_setup_bytes(self) -> None:
@@ -458,8 +469,45 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             refused = self.invoke(second, home, "install", "--yes")
             self.assertNotEqual(refused.returncode, 0, refused.stdout)
             self.assertEqual(setup_copy.read_bytes(), b"foreign setup source\n")
-            self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
+            self.assertNotEqual(self.invoke(first, home, "verify").returncode, 0)
             self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
+
+    def test_update_refuses_modified_previous_setup_header(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+            second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+            self.assertEqual(self.invoke(first, home, "install", "--yes").returncode, 0)
+            install = home / ".local/opt/facman"
+            setup_copy = install / "maintenance/FacManSetup.run"
+            original = setup_copy.read_bytes()
+            changed = original.replace(b"operation='install'\n",
+                                       b"echo injected-header-command >/dev/null\noperation='install'\n", 1)
+            self.assertNotEqual(changed, original)
+            setup_copy.write_bytes(changed)
+            refused = self.invoke(second, home, "install", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertEqual(setup_copy.read_bytes(), changed)
+            self.assertNotEqual(self.invoke(first, home, "verify").returncode, 0)
+            self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
+
+    def test_verify_reports_missing_setup_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            package = self.package_script(root, "0.1.0-alpha.6", b"executable\n")
+            self.assertEqual(self.invoke(package, home, "install", "--yes").returncode, 0)
+            authority = home / ".local/opt/facman/state/installed-setup.sha256"
+            authority.unlink()
+            refused = self.invoke(package, home, "verify")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertIn("installed Setup authority", refused.stderr)
+            repaired = self.invoke(package, home, "repair", "--yes")
+            self.assertEqual(repaired.returncode, 0, repaired.stderr)
+            self.assertEqual(self.invoke(package, home, "verify").returncode, 0)
 
     def test_recovery_and_rollback_refuse_linked_previous_generation(self) -> None:
         for operation in ("recover", "rollback"):

@@ -106,8 +106,13 @@ an interrupted cutover. `recover` restores the previous generation;
 `rollback` restores it after a completed update. A further update while this
 rollback source is retained, or a source-distinct replacement under the same
 version, currently refuses. Incomplete staging and changed ownership also
-refuse without deleting their contents. Before an update, the previous Setup
-copy must contain an intact payload matching the installed generation.
+refuse without deleting their contents. Before an update, the full previous
+Setup copy must match its recorded SHA-256. The two verified Alpha.5 candidate
+packages are admitted by exact digest because Alpha.5 predates that receipt.
+The earlier five-file update journal remains readable for those exact
+Alpha.5 predecessors. This Alpha.6 update path admits only those verified
+Alpha.5 packages as predecessors; a later B-to-C update requires its own
+independently admitted predecessor identity.
 Removal admits only the active generation and the predecessor named in the
 rollback record; extra files, directories, links, or generation roots refuse.
 Custom installation roots currently
