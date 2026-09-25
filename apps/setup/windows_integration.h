@@ -64,6 +64,9 @@ struct MaintenanceContext {
   std::filesystem::path state_root;
   std::filesystem::path acceptance_root;
   std::filesystem::path repair_source;
+  // A real epoch keeps its protocol-capable genesis Setup as the registered
+  // maintenance entry point while a retained older package is active.
+  std::filesystem::path maintenance_controller;
 };
 
 struct CutoverContext {

@@ -28,7 +28,7 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
                 archive.writestr("facman/bin/facman.exe", b"facman\n")
                 archive.writestr("facman/release/" + "x" * 40, b"record\n")
             capacity = candidate.candidate_payload_path_capacity(
-                package, root / "maintenance-transition"
+                package, root / "m"
             )
             self.assertEqual(
                 candidate.WINDOWS_PROVIDER_FILE_LIMIT,
@@ -36,6 +36,9 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             )
             self.assertEqual("release/" + "x" * 40, capacity["relative_path"])
             self.assertGreaterEqual(capacity["headroom_utf16_units"], 0)
+            self.assertTrue(Path(str(capacity["target_path"])).is_relative_to(
+                root / "m" / "e" / "Programs"
+            ))
 
             with self.assertRaisesRegex(ValueError, "provider file limit"):
                 candidate.candidate_payload_path_capacity(

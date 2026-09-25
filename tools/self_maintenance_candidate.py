@@ -67,9 +67,12 @@ def sha256_file(path: Path) -> str:
 
 
 def candidate_payload_path_capacity(package: Path, fixture_root: Path) -> dict[str, object]:
-    """Bind the longest installed package path before the expensive transition."""
+    """Bind both flat and real-epoch package paths before the transition."""
 
-    target_root = fixture_root / "Programs" / CURRENT_GENERATION_DIRECTORY
+    target_roots = (
+        fixture_root / "Programs" / CURRENT_GENERATION_DIRECTORY,
+        fixture_root / "e" / "Programs" / CURRENT_GENERATION_DIRECTORY,
+    )
     longest: tuple[int, str, str] | None = None
     with zipfile.ZipFile(package) as archive:
         for entry in archive.infolist():
@@ -84,10 +87,11 @@ def candidate_payload_path_capacity(package: Path, fixture_root: Path) -> dict[s
                     "candidate setup overlay contains a noncanonical payload path"
                 )
             relative = "/".join(parts[1:])
-            target = target_root.joinpath(*parts[1:])
-            units = len(str(target).encode("utf-16-le")) // 2
-            if longest is None or units > longest[0]:
-                longest = (units, relative, str(target))
+            for target_root in target_roots:
+                target = target_root.joinpath(*parts[1:])
+                units = len(str(target).encode("utf-16-le")) // 2
+                if longest is None or units > longest[0]:
+                    longest = (units, relative, str(target))
     if longest is None:
         raise ValueError("candidate setup overlay contains no payload files")
     units, relative, target = longest
@@ -468,6 +472,42 @@ def provider_lock_bytes(root: Path) -> bytes:
     return (root / "release/index/providers.lock.v2.toml").read_bytes()
 
 
+def preflight_baseline_ref(value: str, root: Path = ROOT) -> None:
+    """Reject an incompatible optional predecessor before platform builds."""
+
+    if not value:
+        return
+    if not HEX_REVISION.fullmatch(value):
+        raise ValueError("maintenance baseline must be an exact lowercase revision")
+
+    def git_bytes(*arguments: str) -> bytes:
+        return subprocess.run(
+            git_command(*arguments), cwd=root, check=True,
+            capture_output=True, timeout=30,
+        ).stdout
+
+    resolved = git_bytes("rev-parse", "--verify", f"{value}^{{commit}}")
+    if resolved.decode("ascii").strip() != value:
+        raise ValueError("maintenance baseline did not resolve to itself")
+    ancestor = subprocess.run(
+        git_command("merge-base", "--is-ancestor", value, "HEAD"),
+        cwd=root, check=False, timeout=30,
+    )
+    if ancestor.returncode:
+        raise ValueError("maintenance baseline is not an ancestor")
+    if git_bytes("show", f"{value}:release/index/providers.lock.v2.toml") != \
+            provider_lock_bytes(root):
+        raise ValueError("maintenance baseline provider lock differs")
+    baseline_version = tomllib.loads(git_bytes(
+        "show", f"{value}:release/index/version.v2.toml"
+    ).decode("utf-8"))["semver"]
+    if semver_order(baseline_version, version_at(root)) >= 0:
+        raise ValueError("maintenance baseline must precede candidate version")
+    git_bytes("cat-file", "-e",
+              f"{value}:runtime/self_setup/facman_self_maintenance_package.cpp")
+    print(f"maintenance baseline preflight: {value} ({baseline_version})")
+
+
 def locked_provider_revision(root: Path, provider_id: str) -> str:
     value = tomllib.loads(provider_lock_bytes(root).decode("utf-8"))
     matches = [
@@ -795,7 +835,7 @@ def execute(args: argparse.Namespace) -> int:
         write_attempt(attempt_path, attempt)
         checkout_root, baseline_root = predecessor_roots(task_root, baseline_revision)
         fixture_root = require_external_new(
-            evidence_root / "maintenance-transition", "transition fixture root"
+            evidence_root / "m", "transition fixture root"
         )
         evidence = fixture_root / "windows-real-self-maintenance-transition.v1.json"
         attempt["candidate_payload_path_capacity"] = candidate_payload_path_capacity(

@@ -148,6 +148,9 @@ struct Request {
   std::filesystem::path acceptance_root;
   std::string product_version;
   bool apply = false;
+  // Ordinary successor install reserves an immutable epoch before provider
+  // effects. Recheck that reservation under Setup's singleton effect lock.
+  std::string reserved_successor_epoch_id;
   // Supplied only by retire_active while it owns the exact global coordinator
   // lock. It prevents recursive acquisition around a per-generation uninstall.
   const facman::self_maintenance::CoordinatorLockToken *coordinator_lock =

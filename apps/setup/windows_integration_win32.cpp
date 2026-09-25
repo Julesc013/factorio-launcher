@@ -97,6 +97,8 @@ std::wstring quoted(const fs::path &path) {
 }
 
 fs::path maintenance_launcher(const MaintenanceContext &context) {
+  if (!context.maintenance_controller.empty())
+    return context.maintenance_controller;
   if (context.repair_source.empty() ||
       context.repair_source.extension() != ".zip") return {};
   return context.repair_source.parent_path() /

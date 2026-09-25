@@ -1636,6 +1636,62 @@ facman::core::Result<Response> execute(const Request &request) {
     held_lock.emplace(acquired.take_value());
   }
 
+  if (request.apply && !request.reserved_successor_epoch_id.empty()) {
+    if (request.operation != Operation::install ||
+        request.reserved_successor_epoch_id.size() != 64U ||
+        !digest_or_empty(request.reserved_successor_epoch_id))
+      return facman::core::Result<Response>::failure(error(
+          "self_maintenance_epoch_recovery_required",
+          "setup successor reservation identity is invalid"));
+    // Public Setup keeps lifecycle history beside the selected provider state
+    // root. The user-wide Setup lock above serializes the singleton effects;
+    // the reservation itself must be checked against that exact history.
+    const fs::path lifecycle_coordinator =
+        (state.value().parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    auto epochs = self_maintenance::discover_lifecycle_epoch_chain(
+        lifecycle_coordinator);
+    if (!epochs || epochs.value().epochs.size() < 2U ||
+        epochs.value().epochs.back().compatibility_epoch ||
+        epochs.value().epochs.back().epoch_id !=
+            request.reserved_successor_epoch_id ||
+        !epochs.value().epochs.back().retirement_sha256.empty() ||
+        epochs.value().epochs[epochs.value().epochs.size() - 2U]
+            .retirement_sha256.empty())
+      return facman::core::Result<Response>::failure(!epochs
+          ? epochs.error()
+          : error("self_maintenance_epoch_recovery_required",
+              "the reserved successor no longer follows a retired epoch"));
+  }
+
+  // A direct compatibility install must observe epoch ownership while the
+  // shared setup lock is held. The public Setup preflight alone cannot close
+  // a race with bootstrap or a real epoch created by another process.
+  if (request.operation == Operation::install &&
+      request.install_id == "facman.self") {
+    facman::platform::StableDirectoryObject coordinator_directory;
+    if (!coordinator_directory.open_no_follow(coordinator.value()).ok())
+      return facman::core::Result<Response>::failure(error(
+          "self_maintenance_epoch_recovery_required",
+          "setup coordinator cannot be safely inspected before install"));
+    for (const char *name : {"epochs", "authority-bootstrap.v1",
+                             "authority-handoff.v1.json"}) {
+      const fs::path path = coordinator.value() / name;
+      facman::platform::PathIdentity identity;
+      if (!coordinator_directory.validate_descendant(path, true).ok() ||
+          !facman::platform::inspect_path_no_follow(path, identity).ok() ||
+          identity.exists)
+        return facman::core::Result<Response>::failure(error(
+            "self_maintenance_epoch_recovery_required",
+            "lifecycle epoch authority blocks direct compatibility install",
+            name));
+    }
+    if (!coordinator_directory.revalidate().ok())
+      return facman::core::Result<Response>::failure(error(
+          "self_maintenance_epoch_recovery_required",
+          "setup coordinator changed during epoch exclusion"));
+  }
+
   // Admission runs before reading or hashing a new payload. A caller changing
   // source/version/mode/provider roots therefore cannot bypass an unfinished
   // durable operation for this canonical install root.
@@ -3186,6 +3242,10 @@ EffectResult ProviderBridge::inspect_installed(const Plan &transition) {
   impl_->inspected_ownership_digest = installed.value().ownership_manifest_digest;
   impl_->inspected_recipe_digest = installed.value().recipe_digest;
   return {true, false, provider_hash(identity), {}};
+}
+
+EffectResult ProviderBridge::inspect_retained_installed(const Plan &transition) {
+  return inspect_installed(transition);
 }
 
 EffectResult ProviderBridge::inspect_installed(const Plan &transition,

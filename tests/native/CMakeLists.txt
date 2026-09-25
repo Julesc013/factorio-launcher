@@ -23,7 +23,8 @@ if(WIN32 AND TARGET facman_setup)
       --epoch-fixture-exe $<TARGET_FILE:facman_self_maintenance_smoke>)
   set_tests_properties(facman_self_setup_lifecycle PROPERTIES
     LABELS "integration;filesystem;transaction;setup;package-runtime"
-    TIMEOUT 180)
+    # Debug CI exercises the full synthetic lifecycle and can exceed three minutes.
+    TIMEOUT 360)
 endif()
 
 function(facman_native_test target source labels)
@@ -80,7 +81,12 @@ facman_native_test(facman_self_maintenance_smoke
   facman_self_maintenance_smoke.cpp "fast-unit;setup;security;recovery")
 target_compile_features(facman_self_maintenance_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_self_maintenance_smoke PRIVATE facman_self_setup_static)
-set_tests_properties(facman_self_maintenance_smoke PROPERTIES TIMEOUT 60)
+if(MSVC)
+  # This single smoke aggregates the full epoch fixture and many recovery
+  # scenarios in one main function. Keep its test stack separate from Setup.
+  target_link_options(facman_self_maintenance_smoke PRIVATE /STACK:8388608)
+endif()
+set_tests_properties(facman_self_maintenance_smoke PROPERTIES TIMEOUT 90)
 facman_native_test(facman_self_maintenance_authority_smoke
   facman_self_maintenance_authority_smoke.cpp "setup;security;recovery")
 target_compile_features(facman_self_maintenance_authority_smoke PRIVATE cxx_std_17)

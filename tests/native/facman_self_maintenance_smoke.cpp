@@ -345,14 +345,19 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
   std::vector<std::string> inspected;
   std::vector<std::string> removed;
   bool reject_identity = false;
+  bool reject_foreign = false;
   bool interrupt_active = false;
 
   facman::core::Result<void> inspect_retirement_generation(
-      const Generation &generation, bool) override {
+      const Generation &generation, bool,
+      const facman::self_maintenance::CoordinatorLockToken &) override {
     inspected.push_back(generation.install_id);
     if (reject_identity)
       return facman::core::Result<void>::failure(
           {"provider_identity_mismatch", "different install identity", {}});
+    if (reject_foreign)
+      return facman::core::Result<void>::failure(
+          {"self_setup_provider_refused", "foreign_content_review_required", {}});
     return facman::core::Result<void>::success();
   }
 
@@ -428,9 +433,17 @@ struct EpochContinuationFakeEffects final
   bool invalid_transaction = false;
   bool contradictory_inspect = false;
   bool contradictory_verify = false;
+  bool retained_inspected = false;
   std::function<void()> after_apply;
 
   CandidateState inspect_candidate(const Plan &) override { return candidate; }
+  EffectResult inspect_retained_installed(const Plan &) override {
+    ++inspect_calls;
+    retained_inspected = candidate == CandidateState::exact;
+    return candidate == CandidateState::exact
+        ? EffectResult{true, false, sha("epoch.retained.identity"), {}}
+        : EffectResult{false, true, {}, "retained candidate not exact"};
+  }
   facman::core::Result<facman::self_maintenance::ProviderApplyBinding>
   bind_install_local(const Plan &, const std::string &expected) override {
     ++bind_calls;
@@ -467,9 +480,18 @@ struct EpochContinuationFakeEffects final
         ? EffectResult{true, false, sha("epoch.inspect"), {}}
         : EffectResult{false, true, {}, "candidate not exact"};
   }
-  EffectResult verify_installed(const Plan &) override {
+  EffectResult verify_installed(const Plan &plan) override {
     ++verify_calls;
     if (contradictory_verify) return {true, true, sha("epoch.verify"), "contradictory"};
+    if (plan.provider_operation == "reactivate") {
+      if (!retained_inspected)
+        return {false, false, {}, "retained identity was not inspected"};
+      retained_inspected = false;
+      return candidate == CandidateState::exact
+          ? EffectResult{true, false,
+              sha("epoch.reactivation.verify." + std::to_string(verify_calls)), {}}
+          : EffectResult{false, true, {}, "candidate not exact"};
+    }
     return candidate == CandidateState::exact
         ? EffectResult{true, false, sha("epoch.verify"), {}}
         : EffectResult{false, true, {}, "candidate not exact"};
@@ -514,6 +536,7 @@ struct EpochShellCutoverFakeEffects final : facman::self_maintenance::EpochShell
   unsigned registration_calls = 0;
   unsigned retire_calls = 0;
   bool fail_retire = false;
+  std::function<void()> after_shortcut;
   EffectResult inspect_installed(
       const Plan &, const facman::self_maintenance::ProviderApplyBinding &) override {
     return {true, false, sha("epoch.inspect"), {}};
@@ -531,6 +554,7 @@ struct EpochShellCutoverFakeEffects final : facman::self_maintenance::EpochShell
   EffectResult cutover_shortcut(const Plan &) override {
     ++shortcut_calls;
     shortcut = ShellState::new_exact;
+    if (after_shortcut) after_shortcut();
     return {true, false, sha("epoch.shortcut"), {}};
   }
   EffectResult cutover_registration(const Plan &) override {
@@ -891,6 +915,59 @@ int stage_existing_handoff_fixture(int argc, char **argv) {
       active.value().active.active.install_root));
   std::cout << output.serialize() << '\n';
   return 0;
+}
+
+bool verify_epoch_rollback_cycle(
+    const EpochPreparationFixture &fixture,
+    const facman::self_maintenance::EpochTransitionRequest &first_target,
+    const facman::self_maintenance::EpochTransitionRequest &second_target) {
+  auto rollback_request = first_target;
+  rollback_request.operation = Operation::rollback;
+  rollback_request.operation_id = "epoch.prepare.five";
+  EpochContinuationFakeEffects rollback_provider;
+  rollback_provider.candidate = CandidateState::exact;
+  EpochShellCutoverFakeEffects rollback_shell;
+  auto rolled_back = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+      rollback_request, rollback_provider, rollback_shell);
+  auto rollback_lineage = facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+      fixture.coordinator);
+  auto rollback_completion = facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
+      fixture.coordinator);
+  if (!rolled_back) std::cerr << "epoch rollback: " << rolled_back.error().code << ": "
+                              << rolled_back.error().message << " (" << rolled_back.error().detail << ")\n";
+  if (!rollback_lineage) std::cerr << "epoch rollback lineage: " << rollback_lineage.error().code
+                                  << ": " << rollback_lineage.error().message << "\n";
+  if (!rollback_completion) std::cerr << "epoch rollback completion: "
+                                     << rollback_completion.error().code << ": "
+                                     << rollback_completion.error().message << "\n";
+  const bool rollback_ok = require(rolled_back && rollback_lineage &&
+                    rollback_completion && rollback_completion.value().has_value() &&
+                    rolled_back.value().phase == "reactivation_complete" &&
+                    rollback_completion.value()->operation == Operation::rollback &&
+                    rollback_lineage.value().generations.size() == 6U &&
+                    rollback_lineage.value().generations[5].generation_id ==
+                        rollback_lineage.value().generations[3].generation_id &&
+                    rollback_provider.bind_calls == 0U &&
+                    rollback_provider.apply_calls == 0U,
+                "rollback did not reactivate the immediate retained predecessor");
+  if (!rollback_ok) return false;
+  auto reapply_request = second_target;
+  reapply_request.operation_id = "epoch.prepare.six";
+  EpochContinuationFakeEffects reapply_provider;
+  reapply_provider.candidate = CandidateState::exact;
+  EpochShellCutoverFakeEffects reapply_shell;
+  auto reapplied = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+      reapply_request, reapply_provider, reapply_shell);
+  auto reapply_lineage = facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+      fixture.coordinator);
+  return require(reapplied && reapply_lineage &&
+                    reapplied.value().phase == "reactivation_complete" &&
+                    reapply_lineage.value().generations.size() == 7U &&
+                    reapply_lineage.value().generations[6].generation_id ==
+                        reapply_lineage.value().generations[4].generation_id &&
+                    reapply_provider.bind_calls == 0U &&
+                    reapply_provider.apply_calls == 0U,
+                "reapply after rollback did not retain linear epoch history");
 }
 
 } // namespace
@@ -1801,11 +1878,37 @@ int main(int argc, char **argv) {
   identity_request.apply = true;
   auto identity_result = facman::self_maintenance::retire_active(
       identity_request, identity_effects);
+  const bool identity_refusal_had_no_effect = identity_effects.removed.empty();
+  const bool identity_refusal_had_no_journal =
+      !fs::exists(identity_chain.coordinator_root / "retirements");
+  identity_effects.reject_identity = false;
+  auto identity_retry = facman::self_maintenance::retire_active(
+      identity_request, identity_effects);
   ok &= require(!identity_result &&
                     identity_result.error().code ==
                         "self_maintenance_retirement_recovery_required" &&
-                    identity_effects.removed.empty(),
-                "retirement accepted a mismatched provider identity");
+                    identity_refusal_had_no_effect && identity_refusal_had_no_journal &&
+                    identity_retry && identity_retry.value().phase == "completed" &&
+                    identity_effects.removed.size() == 1U,
+                "retirement identity refusal entered an irreversible step");
+
+  auto foreign_preflight_chain = request(root / "retirement-foreign-preflight",
+                                         Operation::update);
+  RetirementFakeEffects foreign_preflight_effects;
+  foreign_preflight_effects.reject_foreign = true;
+  facman::self_maintenance::RetirementRequest foreign_preflight_request;
+  foreign_preflight_request.coordinator_root =
+      foreign_preflight_chain.coordinator_root;
+  foreign_preflight_request.apply = true;
+  auto foreign_preflight_result = facman::self_maintenance::retire_active(
+      foreign_preflight_request, foreign_preflight_effects);
+  ok &= require(!foreign_preflight_result &&
+                    foreign_preflight_result.error().code ==
+                        "self_setup_provider_refused" &&
+                    foreign_preflight_effects.removed.empty() &&
+                    !fs::exists(foreign_preflight_chain.coordinator_root /
+                                "retirements"),
+                "foreign uninstall plan refusal wrote a retirement intent");
 
   auto foreign_chain = request(root / "retirement-foreign", Operation::update);
   fs::create_directories(foreign_chain.coordinator_root / "retirements" /
@@ -1822,6 +1925,25 @@ int main(int argc, char **argv) {
                     foreign_effects.removed.empty(),
                 "stale or foreign retirement journal was accepted");
 
+  auto mixed_namespace_chain = request(root / "retirement-epoch-namespace",
+                                       Operation::update);
+  fs::create_directories(mixed_namespace_chain.coordinator_root /
+                         "epoch-retirements");
+  RetirementFakeEffects mixed_namespace_effects;
+  facman::self_maintenance::RetirementRequest mixed_namespace_request;
+  mixed_namespace_request.coordinator_root =
+      mixed_namespace_chain.coordinator_root;
+  mixed_namespace_request.apply = true;
+  auto mixed_namespace_result = facman::self_maintenance::retire_active(
+      mixed_namespace_request, mixed_namespace_effects);
+  ok &= require(!mixed_namespace_result &&
+                    mixed_namespace_result.error().code ==
+                        "self_maintenance_epoch_recovery_required" &&
+                    mixed_namespace_effects.removed.empty() &&
+                    !fs::exists(mixed_namespace_chain.coordinator_root /
+                                "retirements"),
+                "flat retirement entered an orphan epoch retirement namespace");
+
   auto completed_chain = request(root / "retirement-completed", Operation::update);
   RetirementFakeEffects completed_effects;
   facman::self_maintenance::RetirementRequest completed_request;
@@ -1831,11 +1953,16 @@ int main(int argc, char **argv) {
       completed_request, completed_effects);
   auto no_active_after_retirement = facman::self_maintenance::discover_active(
       completed_chain.coordinator_root);
+  auto repeated_retirement = facman::self_maintenance::retire_active(
+      completed_request, completed_effects);
   auto retained_history = facman::self_maintenance::discover_activation_chain(
       completed_chain.coordinator_root);
   ok &= require(completed_result && completed_result.value().phase == "completed" &&
                     no_active_after_retirement &&
                     !no_active_after_retirement.value().has_value() &&
+                    repeated_retirement &&
+                    repeated_retirement.value().phase == "completed" &&
+                    completed_effects.removed.size() == 1U &&
                     retained_history && retained_history.value().has_value() &&
                     retained_history.value()->generations.size() == 1U,
                 "completed retirement did not hide active state while retaining history");
@@ -2222,12 +2349,23 @@ int main(int argc, char **argv) {
   const bool preview_wrote = fs::exists(preparation.coordinator / "epochs" /
       preparation.epoch.epoch_id / "maintenance") || preparation.effects.retain_calls != 0U;
   preparation.request.apply = true;
+  preparation.request.deadline_utc_ms = 2000000000000ULL;
   auto preparation_apply = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       preparation.request, preparation.effects);
+  // A restarted public caller may propose a later budget. The immutable
+  // handoff must keep the first deadline and the same journal identity.
+  preparation.request.deadline_utc_ms = 2000000600000ULL;
   auto preparation_retry = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       preparation.request, preparation.effects);
   auto ordinary_during_handoff = facman::self_maintenance::discover_lifecycle_epoch_active(
       preparation.coordinator);
+  auto genesis_during_handoff =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          preparation.coordinator, preparation.epoch.epoch_id);
+  if (!genesis_during_handoff)
+    std::cerr << "genesis during handoff: "
+              << genesis_during_handoff.error().code << ": "
+              << genesis_during_handoff.error().message << '\n';
   auto wrong_handoff_nonce = facman::self_maintenance::admit_lifecycle_epoch_continuation(
       preparation.coordinator, "epoch.prepare.one", "wrong-nonce",
       preparation_apply ? preparation_apply.value().journal_sha256 : std::string(64, 'a'));
@@ -2246,7 +2384,12 @@ int main(int argc, char **argv) {
                     preparation_apply && preparation_retry &&
                     preparation_apply.value().journal_sha256 == preparation_retry.value().journal_sha256 &&
                     preparation_apply.value().nonce == preparation_retry.value().nonce &&
-                    !ordinary_during_handoff && exact_handoff &&
+                    preparation_apply.value().deadline_utc_ms == 2000000000000ULL &&
+                    preparation_retry.value().deadline_utc_ms == 2000000000000ULL &&
+                    !ordinary_during_handoff && genesis_during_handoff &&
+                    genesis_during_handoff.value().generation_id ==
+                        preparation.epoch.genesis_generation_id &&
+                    exact_handoff &&
                     exact_handoff.value().package == preparation_apply.value().inputs.package &&
                     !wrong_handoff_nonce && !wrong_handoff_digest &&
                     pending_handoff && pending_handoff.value() &&
@@ -2256,6 +2399,7 @@ int main(int argc, char **argv) {
                         preparation_apply.value().transition.target.generation_id &&
                     pending_handoff.value()->nonce == preparation_apply.value().nonce &&
                     pending_handoff.value()->journal_sha256 == preparation_apply.value().journal_sha256 &&
+                    pending_handoff.value()->deadline_utc_ms == 2000000000000ULL &&
                     pending_handoff.value()->retained_package.package_sha256 ==
                         preparation.inspection.package_sha256 &&
                     pending_handoff.value()->retained_package.maintenance_launcher_sha256 ==
@@ -2463,6 +2607,10 @@ int main(int argc, char **argv) {
   auto pending_publication =
       facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
           provider_continuation.coordinator);
+  auto genesis_after_publication =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          provider_continuation.coordinator,
+          provider_continuation.epoch.epoch_id);
   const fs::path publication_epoch = provider_continuation.coordinator / "epochs" /
       provider_continuation.epoch.epoch_id;
   const auto &publication_target = provider_completed ? provider_completed.value().transition.target
@@ -2473,6 +2621,9 @@ int main(int argc, char **argv) {
                     publication_completed.value().phase == "epoch_activated" &&
                     publication_restarted &&
                     publication_restarted.value().phase == "epoch_activated" &&
+                    genesis_after_publication &&
+                    genesis_after_publication.value().generation_id ==
+                        provider_continuation.epoch.genesis_generation_id &&
                     fs::exists(publication_epoch / "generations" /
                         ("generation." + publication_target.generation_id + ".v2.json")) &&
                     fs::exists(publication_epoch / "activations" /
@@ -2772,49 +2923,138 @@ int main(int argc, char **argv) {
       provider_continuation.request.continuation_helper;
   third_preparation_request.continuation_helper_sha256 =
       provider_continuation.request.continuation_helper_sha256;
+  EpochContinuationFakeEffects retained_review_effects;
+  retained_review_effects.candidate = CandidateState::exact;
+  auto retained_review_request = third_preparation_request;
+  retained_review_request.apply = false;
+  auto retained_review = facman::self_maintenance::review_lifecycle_epoch_reactivation(
+      retained_review_request, retained_review_effects);
+  ok &= require(provider_completed && retained_review &&
+                    retained_review.value().provider_operation == "reactivate" &&
+                    retained_review.value().target.generation_id ==
+                        provider_completed.value().transition.target.generation_id &&
+                    retained_review_effects.verify_calls == 1U &&
+                    retained_review_effects.bind_calls == 0U &&
+                    retained_review_effects.apply_calls == 0U,
+                "exact retained predecessor was not admitted without provider mutation");
+  EpochContinuationFakeEffects foreign_retained_effects;
+  foreign_retained_effects.candidate = CandidateState::foreign;
+  auto foreign_retained = facman::self_maintenance::review_lifecycle_epoch_reactivation(
+      retained_review_request, foreign_retained_effects);
+  ok &= require(!foreign_retained &&
+                    foreign_retained.error().code == "self_maintenance_candidate_unsafe" &&
+                    foreign_retained_effects.verify_calls == 0U,
+                "foreign retained predecessor reached provider verification");
   auto third_prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
       third_preparation_request, third_preparation_effects);
-  EpochContinuationFakeEffects third_continuation_effects;
-  auto third_continued = third_prepared
-      ? facman::self_maintenance::execute_lifecycle_epoch_continuation(
-            {provider_continuation.coordinator, "epoch.prepare.three",
-             third_prepared.value().nonce, third_prepared.value().journal_sha256, true},
-            third_continuation_effects)
-      : facman::core::Result<facman::self_maintenance::EpochContinuationResponse>::failure(
-            third_prepared.error());
-  EpochPublicationFakeEffects third_publication_effects;
-  auto third_published = third_prepared
-      ? facman::self_maintenance::execute_lifecycle_epoch_publication(
-            {provider_continuation.coordinator, "epoch.prepare.three",
-             third_prepared.value().nonce, third_prepared.value().journal_sha256, true},
-            third_publication_effects)
-      : facman::core::Result<facman::self_maintenance::EpochPublicationResponse>::failure(
-            third_prepared.error());
-  EpochShellCutoverFakeEffects third_shell_effects;
-  auto third_shell = third_prepared
-      ? facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
-            {provider_continuation.coordinator, "epoch.prepare.three",
-             third_prepared.value().nonce, third_prepared.value().journal_sha256, true},
-            third_shell_effects)
-      : facman::core::Result<facman::self_maintenance::EpochShellCutoverResponse>::failure(
-            third_prepared.error());
+  ok &= require(!third_prepared &&
+                    third_prepared.error().code == "self_maintenance_candidate_unsafe" &&
+                    third_preparation_effects.review_calls == 0U,
+                "retained predecessor entered the provider installation path");
+  const fs::path retained_cache = provider_continuation.epoch.state_root /
+      "repair-sources";
+  fs::create_directories(retained_cache);
+  const fs::path first_retained_package = retained_cache /
+      (provider_continuation.inspection.package_sha256 + ".zip");
+  fs::copy_file(provider_continuation.source_package, first_retained_package);
+  EpochContinuationFakeEffects reactivation_provider;
+  reactivation_provider.candidate = CandidateState::exact;
+  EpochShellCutoverFakeEffects reactivation_shell;
+  reactivation_shell.after_shortcut = [&] {
+    reactivation_shell.registration = ShellState::foreign;
+  };
+  auto interrupted_reactivation =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          third_preparation_request, reactivation_provider, reactivation_shell);
+  auto pending_reactivation =
+      facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
+          provider_continuation.coordinator);
+  auto reactivation_preview_request = third_preparation_request;
+  reactivation_preview_request.apply = false;
+  auto pending_reactivation_preview =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          reactivation_preview_request, reactivation_provider, reactivation_shell);
+  ok &= require(!interrupted_reactivation && pending_reactivation &&
+                    pending_reactivation.value().has_value() &&
+                    pending_reactivation.value()->phase == "reactivation_pending" &&
+                    pending_reactivation_preview &&
+                    pending_reactivation_preview.value().phase ==
+                        "reactivation_pending" &&
+                    reactivation_shell.shortcut_calls == 1U &&
+                    reactivation_shell.registration_calls == 0U &&
+                    reactivation_provider.bind_calls == 0U &&
+                    reactivation_provider.apply_calls == 0U,
+                "interrupted retained reactivation was not durably recoverable");
+  reactivation_shell.registration = ShellState::old_exact;
+  auto completed_reactivation =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          third_preparation_request, reactivation_provider, reactivation_shell);
   auto third_active = facman::self_maintenance::discover_lifecycle_epoch_active(
       provider_continuation.coordinator);
+  auto third_lineage =
+      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+          provider_continuation.coordinator);
   auto third_completion =
       facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
           provider_continuation.coordinator);
-  ok &= require(third_prepared && third_continued && third_published && third_shell &&
-                    third_active && third_completion && third_completion.value() &&
-                    provider_completed &&
-                    third_shell.value().generation.generation_id ==
-                        provider_completed.value().transition.target.generation_id &&
-                    third_active.value().active.active.generation_id ==
-                        provider_completed.value().transition.target.generation_id &&
+  auto completed_reactivation_preview =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          reactivation_preview_request, reactivation_provider, reactivation_shell);
+  auto completed_reactivation_retry =
+      facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          third_preparation_request, reactivation_provider, reactivation_shell);
+  ok &= require(completed_reactivation && third_active && third_lineage &&
+                    third_completion && third_completion.value().has_value() &&
+                    completed_reactivation_preview &&
+                    completed_reactivation_preview.value().phase ==
+                        "reactivation_complete" &&
+                    completed_reactivation_retry &&
+                    completed_reactivation_retry.value().phase ==
+                        "reactivation_complete" &&
+                    completed_reactivation.value().phase == "reactivation_complete" &&
+                    third_lineage.value().generations.size() == 4U &&
+                    third_lineage.value().generations[1].generation_id ==
+                        third_lineage.value().generations[3].generation_id &&
                     third_active.value().active.activation_name ==
                         "activation.epoch.prepare.three.v2.json" &&
+                    third_completion.value()->completed &&
                     third_completion.value()->operation_id == "epoch.prepare.three" &&
-                    third_completion.value()->completed,
-                "downgrade did not reactivate prior generation with the newest exact terminal history");
+                    reactivation_provider.bind_calls == 0U &&
+                    reactivation_provider.apply_calls == 0U &&
+                    reactivation_shell.registration_calls == 1U,
+                "retained predecessor did not reactivate after an interrupted native cutover");
+  const fs::path second_retained_package = retained_cache /
+      (second_inspection.value().package_sha256 + ".zip");
+  fs::copy_file(second_package, second_retained_package);
+  auto fourth_request = second_preparation_request;
+  fourth_request.operation_id = "epoch.prepare.four";
+  EpochContinuationFakeEffects reapply_provider;
+  reapply_provider.candidate = CandidateState::exact;
+  EpochShellCutoverFakeEffects reapply_shell;
+  auto reapplied = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+      fourth_request, reapply_provider, reapply_shell);
+  auto fourth_lineage =
+      facman::self_maintenance::discover_lifecycle_epoch_activation_chain(
+          provider_continuation.coordinator);
+  ok &= require(reapplied && fourth_lineage &&
+                    reapplied.value().phase == "reactivation_complete" &&
+                    fourth_lineage.value().generations.size() == 5U &&
+                    fourth_lineage.value().generations[2].generation_id ==
+                        fourth_lineage.value().generations[4].generation_id &&
+                    reapply_provider.bind_calls == 0U &&
+                    reapply_provider.apply_calls == 0U,
+                "retained B reapply did not preserve the exact epoch history");
+  auto fourth_pending = facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
+      provider_continuation.coordinator);
+  auto fourth_completion = facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
+      provider_continuation.coordinator);
+  ok &= require(fourth_pending && !fourth_pending.value().has_value() &&
+                    fourth_completion && fourth_completion.value().has_value() &&
+                    fourth_completion.value()->operation_id == "epoch.prepare.four",
+                "completed reactivation history prevented a later maintenance request");
+  ok &= verify_epoch_rollback_cycle(provider_continuation,
+                                    third_preparation_request,
+                                    second_preparation_request);
 
 
   bool publication_staging_recovered = true;

@@ -50,7 +50,9 @@ std::string current(const std::string &version) {
 
 fs::path package(const fs::path &root, const std::string &name,
                  const std::string &descriptor_version,
-                 const std::string &current_version) {
+                 const std::string &current_version,
+                 bool include_descriptor = true,
+                 bool include_current = true) {
   const fs::path source = root / (name + "-source");
   const fs::path descriptor_path = source / "descriptor.json";
   const fs::path current_path = source / "current.json";
@@ -60,13 +62,17 @@ fs::path package(const fs::path &root, const std::string &name,
       !write(binary_path, "synthetic binary"))
     return {};
   std::vector<facman::archive::WriteEntry> entries{
-      {"facman/state/self-maintenance-package.v1.json", descriptor_path, false},
-      {"facman/state/current-generation.v1.json", current_path, false},
       {"facman/generations/" + descriptor_version + "/FacMan.exe",
        binary_path, false},
       {"facman/generations/" + descriptor_version + "/bin/facman.exe",
        binary_path, false},
       {"facman/maintenance/FacManSetup.exe", binary_path, false}};
+  if (include_descriptor)
+    entries.push_back({"facman/state/self-maintenance-package.v1.json",
+                       descriptor_path, false});
+  if (include_current)
+    entries.push_back({"facman/state/current-generation.v1.json",
+                       current_path, false});
   facman::archive::WriteOptions options;
   options.method = facman::archive::CompressionMethod::stored;
   options.limits = facman::archive::PackageArchivePolicy::limits();
@@ -95,7 +101,9 @@ int main() {
   const fs::path valid = package(root, "valid", "0.1.0-alpha.6",
                                  "0.1.0-alpha.6");
   auto inspected = facman::self_maintenance::inspect_package(valid);
+  auto classified = facman::self_maintenance::has_self_maintenance_metadata(valid);
   ok &= require(inspected && inspected.value().package_sha256.size() == 64U &&
+                    classified && classified.value() &&
                     inspected.value().maintenance_launcher_sha256.size() == 64U &&
                     inspected.value().descriptor.product_version ==
                         "0.1.0-alpha.6",
@@ -111,6 +119,17 @@ int main() {
                                     "0.1.0-alpha.5");
   ok &= require(!facman::self_maintenance::inspect_package(mismatch),
                 "mismatched package metadata was accepted");
+  const fs::path current_only = package(root, "current-only", "0.1.0-alpha.6",
+                                        "0.1.0-alpha.6", false, true);
+  const fs::path descriptor_only = package(root, "descriptor-only", "0.1.0-alpha.6",
+                                           "0.1.0-alpha.6", true, false);
+  auto compatible = facman::self_maintenance::has_self_maintenance_metadata(
+      current_only);
+  auto partial = facman::self_maintenance::has_self_maintenance_metadata(
+      descriptor_only);
+  ok &= require(compatible && !compatible.value() && partial && partial.value() &&
+                    !facman::self_maintenance::inspect_package(descriptor_only),
+                "current-only compatibility or partial descriptor routing changed");
   const fs::path legacy = root / "legacy";
   write(legacy / "state" / "current-generation.v1.json",
         current("0.1.0-alpha.5"));

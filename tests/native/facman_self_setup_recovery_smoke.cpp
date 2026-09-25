@@ -340,8 +340,24 @@ setup::Request request_for(const Tree &tree, Provider &provider, Native *native,
 }
 
 void cases() {
+  Tree epoch_guard{fs::temp_directory_path() /
+                   "facman-self-setup-epoch-install-guard"};
+  std::error_code ignored;
+  fs::remove_all(epoch_guard.root, ignored);
+  fs::create_directories(epoch_guard.root / "coordinator" / "epochs");
+  std::ofstream(epoch_guard.root / "payload.zip", std::ios::binary) << "fixture";
+  Provider guarded_provider;
+  Native guarded_native;
+  auto blocked_install = setup::execute(request_for(
+      epoch_guard, guarded_provider, &guarded_native));
+  require(!blocked_install && blocked_install.error().code ==
+              "self_maintenance_epoch_recovery_required" &&
+              guarded_provider.apply_calls == 0 &&
+              guarded_native.retain_calls == 0,
+          "direct compatibility install did not stop at an epoch namespace");
+
   Tree tree{fs::temp_directory_path() / "facman-self-setup-recovery-smoke"};
-  std::error_code ignored; fs::remove_all(tree.root, ignored); fs::create_directories(tree.root);
+  fs::remove_all(tree.root, ignored); fs::create_directories(tree.root);
   std::ofstream(tree.root / "payload.zip", std::ios::binary) << "fixture";
   Provider provider; Native native;
   std::vector<std::string> initial_events;
