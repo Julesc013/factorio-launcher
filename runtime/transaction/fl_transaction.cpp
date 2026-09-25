@@ -677,7 +677,9 @@ bool CrossVolumeCopyVerifyCommit::commit(
     const fs::path& target,
     const facman::core::Sha256Digest& expected_sha256,
     std::uint64_t expected_size,
-    std::string& detail)
+    std::string& detail,
+    const facman::platform::FileIdentity* expected_source_identity,
+    bool interrupt_after_first_write)
 {
     facman::platform::StableInputFile input;
     auto status = input.open_no_follow(source);
@@ -687,6 +689,11 @@ bool CrossVolumeCopyVerifyCommit::commit(
         else if (!input.identity().regular_file) detail = "cross-volume source is not a regular file";
         else if (input.identity().link_count != 1U) detail = "cross-volume source has multiple links";
         else detail = "cross-volume source size changed";
+        return false;
+    }
+    if (expected_source_identity != nullptr &&
+        !expected_source_identity->unchanged(input.identity())) {
+        detail = "cross-volume source object differs from the pinned source";
         return false;
     }
     facman::platform::RandomIdGenerator random;
@@ -707,8 +714,17 @@ bool CrossVolumeCopyVerifyCommit::commit(
             return false;
         }
         offset += count;
+        if (interrupt_after_first_write) {
+            output.close_without_flush();
+            facman::platform::StableInputFile created;
+            if (created.open_no_follow(staging).ok())
+                (void)facman::platform::remove_exact_object(staging, created.identity());
+            detail = "injected interruption after a partial cross-volume copy";
+            return false;
+        }
     }
-    status = input.revalidate();
+    status = expected_source_identity != nullptr
+        ? input.revalidate_path() : input.revalidate();
     if (!status.ok()) {
         output.close_without_flush();
         facman::platform::StableInputFile created;
@@ -727,6 +743,13 @@ bool CrossVolumeCopyVerifyCommit::commit(
         facman::platform::StableInputFile created;
         if (created.open_no_follow(staging).ok()) (void)facman::platform::remove_exact_object(staging, created.identity());
         detail = "cross-volume staged digest mismatch";
+        return false;
+    }
+    if (expected_source_identity != nullptr && !input.revalidate_path().ok()) {
+        facman::platform::StableInputFile created;
+        if (created.open_no_follow(staging).ok())
+            (void)facman::platform::remove_exact_object(staging, created.identity());
+        detail = "cross-volume pinned source path changed before publication";
         return false;
     }
     status = facman::platform::commit_no_replace(staging, target);

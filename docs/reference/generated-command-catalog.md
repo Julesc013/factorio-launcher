@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428`.
+Source digest: `7b9cce49cbd821d2b58dc3091b4471e724f409aa3f0d80f890a7e48aa3707e13`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -92,7 +92,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `run.execute` | `run.execute` | `run_execute` | yes | - | unavailable_until_isolation_proof | workspace_read, workspace_write, process_execute | `facman play <instance-id> --json` |
 | `run.preview` | `run.preview` | `run_preview` | no | - | available | workspace_read | `facman run <instance-id> --json` |
 | `saves.associate` | `saves.associate` | `saves_associate` | yes | - | available | workspace_read, workspace_write | `facman saves associate <save> --instance <instance-id> [--profile <id>] --json` |
-| `saves.backup` | `saves.backup` | `saves_backup` | yes | - | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> --json` |
+| `saves.backup` | `saves.backup` | `saves_backup` | yes | - | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> [--to <workspace-path>] --json` |
 | `saves.clone` | `saves.clone` | `saves_clone` | yes | - | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> --json` |
 | `saves.diff` | `saves.diff` | `saves_diff` | no | - | available | workspace_read | `facman saves diff <left-save> <right-save> --instance <instance-id> --json` |
 | `saves.index` | `saves.index` | `saves_index` | no | - | available | workspace_read | `facman saves index --instance <instance-id> --json` |

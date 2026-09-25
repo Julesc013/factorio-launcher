@@ -14,6 +14,8 @@
 #include <variant>
 #include <vector>
 
+namespace facman::platform { struct FileIdentity; }
+
 namespace facman::transaction {
 
 enum class State {
@@ -144,7 +146,9 @@ public:
         const std::filesystem::path& target,
         const facman::core::Sha256Digest& expected_sha256,
         std::uint64_t expected_size,
-        std::string& detail);
+        std::string& detail,
+        const facman::platform::FileIdentity* expected_source_identity = nullptr,
+        bool interrupt_after_first_write = false);
 };
 
 struct Refusal { std::string code; std::string reason; std::string detail; bool recoverable = true; };

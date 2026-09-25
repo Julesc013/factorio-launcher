@@ -61,6 +61,9 @@ struct BackupResult {
     std::string created_at;
     std::string sha1;
     std::string sha256;
+    std::string workspace_id;
+    std::uint64_t source_size = 0;
+    std::string consistency_policy;
 };
 struct CloneResult {
     std::string source_instance_id;

@@ -12,6 +12,13 @@ objective: "Back up selected worlds consistently with exact source identity, sta
 source_bundles:
   - "F10"
 allowed_paths:
+  - ".aide/memory/project-state*"
+  - "apps/cli/completions/**"
+  - "apps/cli/generated/command_help.inc"
+  - "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.*"
+  - "apps/gui/windows/winforms/GeneratedCommandCatalog.cs"
+  - "apps/tui/generated_command_catalog.hpp"
+  - "content/factorio/strings/en-US.toml"
   - "runtime/**"
   - "contracts/**"
   - "tests/**"

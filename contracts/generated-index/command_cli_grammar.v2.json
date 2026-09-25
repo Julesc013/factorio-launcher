@@ -6408,7 +6408,7 @@
             "required": true
           }
         ],
-        "usage": "facman saves backup <save> --instance <instance-id> --json"
+        "usage": "facman saves backup <save> --instance <instance-id> [--to <workspace-path>] --json"
       },
       "command_id": "saves.backup",
       "deprecation": "active",
@@ -9494,5 +9494,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428"
+  "source_digest": "7b9cce49cbd821d2b58dc3091b4471e724f409aa3f0d80f890a7e48aa3707e13"
 }
