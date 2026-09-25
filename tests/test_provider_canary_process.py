@@ -164,6 +164,7 @@ class CanaryProcessTests(unittest.TestCase):
         self.assertTrue(result.ok, result.receipt)
         self.assertTrue(result.receipt["waited_for_job_empty_after_primary"])
         self.assertTrue(result.receipt["primary_stopped"])
+        self.assertGreaterEqual(result.receipt["active_processes_at_primary_exit"], 1)
         self.assertTrue(result.receipt["job_empty_observed"])
         self.assertFalse(result.receipt["job_terminated"])
         self.assertEqual(marker.read_text(), "done")
