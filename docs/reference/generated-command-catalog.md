@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `a37688cfc6fb96675640ec2c54939e8a4351a208f0aa1e19dbaee768b8ad6705`.
+Source digest: `d1b0f5092287b5257031724e5b994133ee66e75025ea1b3d325572f6f68a8a7c`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -21,7 +21,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.describe` | `installs.describe` | `installs_describe` | no | - | implemented | workspace_read | `facman installs describe <install-id> --json` |
 | `installs.import` | `install_refs.import` | `install_import` | yes | install-refs.import | available | workspace_read, workspace_write | `facman installs import <factorio-dir> --id <install-id> --json` |
 | `installs.inspect` | `install_refs.inspect` | `install_inspect` | no | install-refs.inspect | available | workspace_read | `facman installs inspect <install-id> --json` |
-| `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs install apply <plan-id> --version <version> --archive <path> --target <path> --id <install-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
 | `installs.install.plan` | `installs.install.plan` | `installs_install_plan` | no | - | implemented | setup_preview | `facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json` |
 | `installs.install_version` | `installs.install_version` | `installs_install_version` | no | installs.install-version | unavailable_until_gateway | setup_preview | `facman installs install-version <version> --archive <path> --json` |
 | `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |

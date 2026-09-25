@@ -111,7 +111,7 @@ work or promote execution, network, credential, signing, or publication authorit
 
 - commands / registered routes: `131` / `129`;
 - schemas / refusal codes: `436` / `290`;
-- command catalog digest: `a37688cfc6fb96675640ec2c54939e8a4351a208f0aa1e19dbaee768b8ad6705`;
+- command catalog digest: `d1b0f5092287b5257031724e5b994133ee66e75025ea1b3d325572f6f68a8a7c`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 

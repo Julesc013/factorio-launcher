@@ -1,5 +1,5 @@
 command_id = "installs.install.apply"
-cli = "facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+cli = "facman installs install apply <plan-id> --version <version> --archive <path> --target <path> --id <install-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json"
 effects = ["workspace_write", "setup_preview"]
 request_schema = "contracts/schema/command/installs.install.apply.request.v1.schema.json"
 response_schema = "contracts/schema/common/result.v1.schema.json"
