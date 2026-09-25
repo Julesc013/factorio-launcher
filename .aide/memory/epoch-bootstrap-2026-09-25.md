@@ -301,3 +301,20 @@ checkpoint, not product qualification or authority to publish.
   disposable fixture, measure the longest epoch path before building the
   predecessor, and run a read-only provider clone plan before any bootstrap
   reservation or provider-entry journal. External continuation remains unrun.
+- Candidate `36095799431` at `167c4bec` passed Linux/macOS packages and the
+  Windows current-user journey. Ordinary Setup created a real epoch and its
+  installed B helper launched a B-to-A external handoff. The source-distinct
+  evidence checker then incorrectly required the retained continuation helper
+  under `repair-sources`; the helper is held under `epoch-handoff/<operation>`.
+  Commit `5ac54603` validates that exact operation directory and stable file
+  identity instead.
+- Candidate `36097526398` at `5ac54603` passed Linux/macOS packages and reached
+  the external helper's terminal record. The observer's Setup query then
+  refused with `self_maintenance_epoch_recovery_required` / `bootstrap
+  completion has a different entered identity`. The resolver compared the
+  immutable bootstrap journal against the epoch's current A head after
+  downgrade instead of its original B genesis. The current correction derives
+  the expected bootstrap identity and activation digest from the validated
+  genesis record and retains comparison with the current selected head. The
+  external terminal result, reapply, interruption/restart, and retirement
+  still require a new produced-package qualification.

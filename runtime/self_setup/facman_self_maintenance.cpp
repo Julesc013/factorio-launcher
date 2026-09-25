@@ -3353,14 +3353,43 @@ resolve_authoritative_active_state(const fs::path &coordinator_root) {
       epoch.value().epoch.predecessor_epoch_id == kCompatibilityEpochId &&
       chain.value().epochs.front().compatibility_handoff) {
     auto flat = discover_activation_chain(coordinator_root);
+    PinnedLifecycleEpochScope genesis_scope;
+    auto opened = genesis_scope.open(coordinator_root, epoch.value().epoch.epoch_id);
+    auto manifest = opened ? genesis_scope.read("epoch.v1.json")
+        : facman::core::Result<std::string>::failure(opened.error());
+    auto pinned_epoch = manifest ? parse_lifecycle_manifest(
+        manifest.value(), epoch.value().epoch.epoch_id)
+        : facman::core::Result<LifecycleEpoch>::failure(manifest.error());
+    std::vector<Generation> history;
+    auto selected = pinned_epoch && pinned_epoch.value().manifest_sha256 ==
+            epoch.value().epoch.manifest_sha256
+        ? discover_epoch_genesis_state(pinned_epoch.value(), genesis_scope,
+            nullptr, false, nullptr, nullptr, &history)
+        : facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+            "bootstrap epoch manifest changed during completion review"));
     facman::platform::StableDirectoryObject coordinator, bootstrap;
-    if (!flat || !flat.value().has_value() ||
+    if (!flat || !flat.value().has_value() || !selected ||
+        !selected.value().has_value() || history.empty() ||
+        history.front().generation_id != epoch.value().epoch.genesis_generation_id ||
+        selected.value()->activation_name != epoch.value().active.activation_name ||
+        selected.value()->activation_sha256 != epoch.value().active.activation_sha256 ||
         !coordinator.open_no_follow(coordinator_root).ok() ||
         !coordinator.open_child_directory_no_follow(
             "authority-bootstrap.v1", bootstrap).ok())
       return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
           epoch_recovery("bootstrap completion cannot be safely observed"));
-    const Generation &target = epoch.value().active.active;
+    // The bootstrap journal binds the immutable genesis clone. Later epoch
+    // activations change the selected head but cannot rewrite that handoff.
+    const Generation &target = history.front();
+    std::string genesis_generation_bytes;
+    auto genesis_generation = parse_epoch_generation(pinned_epoch.value(),
+        genesis_scope, target.generation_id, &genesis_generation_bytes);
+    if (!genesis_generation || genesis_generation_bytes !=
+            epoch_generation_bytes(pinned_epoch.value(), target))
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap genesis generation changed during completion review"));
+    const std::string genesis_activation_sha256 = hash(epoch_activation_bytes(
+        pinned_epoch.value(), target, hash(genesis_generation_bytes)));
     auto entered = read_epoch_relative_bounded(bootstrap,
         "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
     const std::string enabled = compatibility_bootstrap_entered_bytes(
@@ -3373,8 +3402,7 @@ resolve_authoritative_active_state(const fs::path &coordinator_root) {
     const bool shell = entered.value() == enabled;
     const std::string entered_sha256 = hash(entered.value());
     const std::string genesis_bytes = compatibility_bootstrap_phase_bytes(
-        "genesis_activated", entered_sha256,
-        epoch.value().active.activation_sha256);
+        "genesis_activated", entered_sha256, genesis_activation_sha256);
     const std::string shortcut_receipt = hash("facman.bootstrap.shortcut.v1\n" +
         target.install_id + "\n" + (shell ? "cutover\n" : "disabled\n"));
     const std::string registration_receipt = hash(
@@ -3406,7 +3434,10 @@ resolve_authoritative_active_state(const fs::path &coordinator_root) {
         names != complete_names)
       return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
           epoch_recovery("bootstrap completion journal has an unexpected entry"));
-    if (!bootstrap.revalidate().ok() || !coordinator.revalidate().ok())
+    if (!bootstrap.revalidate().ok() || !coordinator.revalidate().ok() ||
+        !genesis_scope.epoch.revalidate().ok() ||
+        !genesis_scope.epochs.revalidate().ok() ||
+        !genesis_scope.coordinator.revalidate().ok())
       return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
           epoch_recovery("bootstrap completion changed during selection"));
   }
