@@ -12,7 +12,8 @@ if(WIN32 AND TARGET facman_setup)
       --epoch-fixture-exe $<TARGET_FILE:facman_self_maintenance_smoke>)
   set_tests_properties(facman_self_setup_lifecycle PROPERTIES
     LABELS "integration;filesystem;transaction;setup;package-runtime"
-    TIMEOUT 180)
+    # Debug CI exercises the full synthetic lifecycle and can exceed three minutes.
+    TIMEOUT 360)
 endif()
 
 function(facman_native_test target source labels)
