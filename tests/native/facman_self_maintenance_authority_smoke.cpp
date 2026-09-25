@@ -342,6 +342,42 @@ int main() {
                     fs::exists(handoff_coordinator / "authority-handoff.v1.json"),
                 "epoch retirement lost a provider identity or repeated an effect");
 
+  auto retired_epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
+      handoff_coordinator);
+  LifecycleEpoch epoch_successor;
+  if (retired_epochs && retired_epochs.value().epochs.size() == 2U) {
+    const LifecycleEpoch &predecessor = retired_epochs.value().epochs.back();
+    epoch_successor.acceptance_root = predecessor.acceptance_root;
+    epoch_successor.logical_root = predecessor.logical_root;
+    epoch_successor.state_root = predecessor.state_root;
+    epoch_successor.genesis_generation_id = handoff_source.generation_id;
+    epoch_successor.predecessor_epoch_id = predecessor.epoch_id;
+    epoch_successor.predecessor_manifest_sha256 = predecessor.manifest_sha256;
+    epoch_successor.predecessor_retirement_sha256 =
+        predecessor.retirement_sha256;
+  }
+  auto published_successor = facman::self_maintenance::publish_lifecycle_epoch(
+      handoff_coordinator, epoch_successor, true);
+  ActiveState successor_activation;
+  if (published_successor && published_successor.value().epochs.size() == 3U)
+    successor_activation = activate_epoch(handoff_coordinator,
+        published_successor.value().epochs.back(), handoff_source);
+  auto selected_successor =
+      facman::self_maintenance::resolve_authoritative_active_state(
+          handoff_coordinator);
+  ok &= require(retired_epochs && retired_epochs.value().epochs.size() == 2U &&
+                    !retired_epochs.value().epochs.back().retirement_sha256.empty() &&
+                    published_successor &&
+                    published_successor.value().epochs.size() == 3U &&
+                    selected_successor &&
+                    selected_successor.value().has_value() &&
+                    selected_successor.value()->epoch.has_value() &&
+                    selected_successor.value()->epoch->epoch_id ==
+                        published_successor.value().epochs.back().epoch_id &&
+                    selected_successor.value()->active.active.install_id ==
+                        successor_activation.active.install_id,
+                "completed real epoch retirement did not admit an active successor");
+
   const fs::path partial_root = root / "partial-bootstrap-manifest";
   const fs::path partial_coordinator = partial_root / "coordinator";
   fs::create_directories(partial_root);

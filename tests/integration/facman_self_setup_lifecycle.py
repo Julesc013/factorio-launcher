@@ -1081,15 +1081,24 @@ def completed_retirement_repeat_cli_controls(
         raise AssertionError("repeat-uninstall update did not complete")
 
     phases = []
+    retirement_journals = []
     for _ in range(2):
         retired = invoke(
             executable, "uninstall", "--root", install,
             "--state-root", state, "--acceptance-root", case, "--yes",
         )
         phases.append(retired.get("phase"))
+        retirement_journals.append(retired.get("retirement_journal"))
     if phases != ["step_completed", "completed"]:
         raise AssertionError(
             f"activation-chain retirement returned unexpected phases: {phases!r}"
+        )
+    if (len(set(retirement_journals)) != 1 or
+            not isinstance(retirement_journals[0], str) or
+            not (Path(retirement_journals[0]) / "99-completed.v1.json").is_file()):
+        raise AssertionError(
+            f"completed retirement lacked one durable completion marker: "
+            f"{retirement_journals!r}"
         )
     before_repeat = tree_snapshot(case)
     repeated = invoke(

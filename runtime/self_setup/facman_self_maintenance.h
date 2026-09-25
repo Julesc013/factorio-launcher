@@ -90,6 +90,7 @@ struct LifecycleEpoch {
   // of the persisted epoch identity document.
   std::string manifest_sha256;
   std::string retirement_sha256;
+  std::string retirement_journal_name;
   std::optional<ActiveState> compatibility_active;
   bool compatibility_handoff = false;
   bool compatibility_epoch = false;
