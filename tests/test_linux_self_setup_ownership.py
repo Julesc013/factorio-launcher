@@ -25,12 +25,39 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
         script.chmod(0o755)
         return script
 
+    def package_script(self, root: Path, version: str, content: bytes) -> Path:
+        product = root / f"FacMan-{version}"
+        product.mkdir()
+        digest = hashlib.sha256(content).hexdigest()
+        for name in ("FacMan", "facman"):
+            executable = product / name
+            executable.write_bytes(content)
+            executable.chmod(0o755)
+        manifest = product / "share/facman/manifest/MANIFEST.sha256"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text(
+            f"{digest}  FacMan\n{digest}  facman\n", encoding="utf-8",
+        )
+        archive = root / f"{version}.tar.gz"
+        with tarfile.open(archive, "w:gz") as stream:
+            stream.add(product, arcname=product.name)
+        script = root / f"FacManSetup-{version}.run"
+        script.write_bytes(
+            linux_self_setup.header(version, linux_self_setup.sha256(archive))
+            + archive.read_bytes()
+        )
+        script.chmod(0o755)
+        return script
+
     def invoke(self, script: Path, home: Path, *args: str,
-               path_prefix: Path | None = None) -> subprocess.CompletedProcess[str]:
+               path_prefix: Path | None = None,
+               extra_environment: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
         environment = os.environ.copy()
         environment["HOME"] = str(home)
         if path_prefix is not None:
             environment["PATH"] = str(path_prefix) + os.pathsep + environment["PATH"]
+        if extra_environment is not None:
+            environment.update(extra_environment)
         return subprocess.run(
             [str(script), *args], env=environment, capture_output=True,
             text=True, check=False,
@@ -323,6 +350,110 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertNotEqual(setup_copy.stat().st_ino, foreign_setup.stat().st_ino)
             removed = self.invoke(script, home, "uninstall", "--yes", path_prefix=guard)
             self.assertEqual(removed.returncode, 0, removed.stderr)
+
+    def test_source_distinct_update_recovers_then_rolls_back_and_reapplies(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+            second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+            workspace = home / "workspace"
+            workspace.mkdir()
+            sentinel = workspace / "world.zip"
+            sentinel.write_bytes(b"preserved world bytes")
+            installed = self.invoke(first, home, "install", "--yes")
+            self.assertEqual(installed.returncode, 0, installed.stderr)
+
+            interrupted = self.invoke(
+                second, home, "install", "--yes",
+                extra_environment={"FACMAN_TEST_LINUX_SETUP_INTERRUPT_AFTER_CURRENT": "1"},
+            )
+            self.assertNotEqual(interrupted.returncode, 0, interrupted.stdout)
+            recovered = self.invoke(second, home, "recover", "--yes")
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
+            self.assertEqual(sentinel.read_bytes(), b"preserved world bytes")
+
+            updated = self.invoke(second, home, "install", "--yes")
+            self.assertEqual(updated.returncode, 0, updated.stderr)
+            self.assertEqual(self.invoke(second, home, "verify").returncode, 0)
+            rolled_back = self.invoke(second, home, "rollback", "--yes")
+            self.assertEqual(rolled_back.returncode, 0, rolled_back.stderr)
+            self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
+            reapplied = self.invoke(second, home, "install", "--yes")
+            self.assertEqual(reapplied.returncode, 0, reapplied.stderr)
+            self.assertEqual(self.invoke(second, home, "verify").returncode, 0)
+            removed = self.invoke(second, home, "uninstall", "--yes")
+            self.assertEqual(removed.returncode, 0, removed.stderr)
+            self.assertFalse((home / ".local/opt/facman").exists())
+            history = home / ".local/state/facman-setup/history"
+            self.assertTrue(any(history.rglob("old-target")))
+            self.assertEqual(sentinel.read_bytes(), b"preserved world bytes")
+
+    def test_recovery_refuses_foreign_pointer_and_journal_content(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+            second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+            self.assertEqual(self.invoke(first, home, "install", "--yes").returncode, 0)
+            interrupted = self.invoke(
+                second, home, "install", "--yes",
+                extra_environment={"FACMAN_TEST_LINUX_SETUP_INTERRUPT_AFTER_CURRENT": "1"},
+            )
+            self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
+            install = home / ".local/opt/facman"
+            current = install / "current"
+            foreign = root / "foreign"
+            foreign.mkdir()
+            sentinel = foreign / "keep.txt"
+            sentinel.write_bytes(b"foreign bytes")
+            current.unlink()
+            current.symlink_to(foreign, target_is_directory=True)
+            refused = self.invoke(second, home, "recover", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertEqual(current.resolve(), foreign)
+            self.assertEqual(sentinel.read_bytes(), b"foreign bytes")
+
+            current.unlink()
+            current.symlink_to(install / "generations/0.1.0-alpha.6")
+            journal = install / "state/update-pending.v1"
+            (journal / "foreign").write_bytes(b"foreign record")
+            refused = self.invoke(second, home, "recover", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertTrue((journal / "foreign").exists())
+            self.assertEqual(current.readlink(), install / "generations/0.1.0-alpha.6")
+
+    def test_update_refuses_orphan_staging_and_preserves_lock_hardlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            first = self.package_script(root, "0.1.0-alpha.5", b"first executable\n")
+            second = self.package_script(root, "0.1.0-alpha.6", b"second executable\n")
+            self.assertEqual(self.invoke(first, home, "install", "--yes").returncode, 0)
+            install = home / ".local/opt/facman"
+            orphan = install / "generations/.install-foreign"
+            orphan.mkdir()
+            sentinel = orphan / "keep.txt"
+            sentinel.write_bytes(b"foreign bytes")
+            refused = self.invoke(second, home, "install", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertEqual(sentinel.read_bytes(), b"foreign bytes")
+            self.assertEqual(self.invoke(first, home, "verify").returncode, 0)
+
+            sentinel.unlink()
+            orphan.rmdir()
+            lock_root = home / ".local/state/facman-setup"
+            lock_file = next(lock_root.glob("*.lock"))
+            lock_file.unlink()
+            foreign = root / "foreign-lock"
+            foreign.write_bytes(b"foreign lock bytes")
+            os.link(foreign, lock_file)
+            self.assertEqual(self.invoke(second, home, "install", "--yes").returncode, 0)
+            self.assertEqual(foreign.read_bytes(), b"foreign lock bytes")
 
 
 if __name__ == "__main__":

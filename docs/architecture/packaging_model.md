@@ -98,8 +98,14 @@ FacMan-<version>-linux-x64-portable.tar.zst
 The preview GUI is GTK 3/X11, but the executable and asset names remain
 `FacMan`. The matching self-contained offline setup candidate is
 `FacMan-<version>-linux-x64-setup.run`; it defaults to current-user paths under
-`~/.local` and implements install, verify, repair, and uninstall. Human
-installation and wider Linux/Wayland claims remain unproven.
+`~/.local` and implements install, verify, repair, recover, rollback, and
+uninstall. A version-distinct update retains one previous generation and its
+setup source. `recover` restores that generation after an interrupted cutover;
+`rollback` restores it after a completed update. A further update while this
+rollback source is retained, or a source-distinct replacement under the same
+version, currently refuses. Incomplete staging and changed ownership also
+refuse without deleting their contents. Human installation, full interruption
+coverage, and wider Linux/Wayland claims remain unproven.
 
 ## Release and manifest truth
 
