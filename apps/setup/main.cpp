@@ -3175,8 +3175,9 @@ public:
 
   facman::core::Result<void> inspect_retirement_generation(
       const facman::self_maintenance::Generation &generation,
-      bool active) override {
-    (void)active;
+      bool active,
+      const facman::self_maintenance::CoordinatorLockToken
+          &coordinator_lock) override {
     auto pending = facman::self_setup::has_pending_operation(
         generation.install_root, coordinator_root_);
     if (!pending)
@@ -3197,6 +3198,25 @@ public:
           {"self_maintenance_provider_identity_ambiguous",
            "provider installed identity does not exactly bind the generation",
            inspected ? generation.install_id : inspected.error().detail});
+    facman::self_setup::Request preview;
+    preview.operation = facman::self_setup::Operation::uninstall;
+    preview.install_id = generation.install_id;
+    preview.maintenance_launcher = generation.maintenance_launcher;
+    preview.install_root = generation.install_root;
+    preview.state_root = generation.state_root;
+    preview.acceptance_root = generation.acceptance_root;
+    preview.product_version = generation.product_version;
+    preview.apply = false;
+    preview.coordinator_lock = &coordinator_lock;
+    if (active && options_.shell_integration)
+      preview.native_effects = &native_effects_;
+    auto planned = facman::self_setup::execute(preview);
+    if (!planned || planned.value().phase != "plan")
+      return facman::core::Result<void>::failure(
+          !planned ? planned.error() : facman::core::Error{
+              "self_maintenance_provider_identity_ambiguous",
+              "provider uninstall preview did not return a plan",
+              generation.install_id});
     return facman::core::Result<void>::success();
   }
 

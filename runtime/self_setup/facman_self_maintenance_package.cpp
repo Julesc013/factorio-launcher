@@ -197,8 +197,7 @@ facman::core::Result<bool> has_self_maintenance_metadata(
         "self_maintenance_package_incompatible",
         "maintenance package archive is unsafe", inspected.detail));
   for (const auto &entry : plan.entries)
-    if (entry.path == "facman/state/self-maintenance-package.v1.json" ||
-        entry.path == "facman/state/current-generation.v1.json")
+    if (entry.path == "facman/state/self-maintenance-package.v1.json")
       return facman::core::Result<bool>::success(true);
   return facman::core::Result<bool>::success(false);
 }

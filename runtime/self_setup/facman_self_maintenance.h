@@ -204,15 +204,17 @@ private:
   std::string operation_id_;
 };
 
-// The application supplies the provider/native edge.  It must reject any
-// foreign or ambiguous installed identity before uninstalling a step.  The
+// The application supplies the provider/native edge. Its inspection runs
+// under the coordinator lock and must reject a foreign provider uninstall
+// plan or ambiguous installed identity before entering a step. The
 // coordinator persists an entered marker before calling uninstall_generation,
 // which makes an interrupted edge recovery-required rather than replayable.
 class RetirementEffects {
 public:
   virtual ~RetirementEffects() = default;
   virtual facman::core::Result<void> inspect_retirement_generation(
-      const Generation &generation, bool active) = 0;
+      const Generation &generation, bool active,
+      const CoordinatorLockToken &coordinator_lock) = 0;
   virtual facman::core::Result<void> uninstall_generation(
       const Generation &generation, bool active,
       const CoordinatorLockToken &coordinator_lock) = 0;
@@ -470,9 +472,9 @@ facman::core::Result<Plan> plan(const Request &request);
 facman::core::Result<Response> execute(const Request &request, Effects &effects);
 facman::core::Result<PackageInspection> inspect_package(
     const std::filesystem::path &package);
-// False only for a valid generic Setup archive with neither maintenance
-// identity record. A partial or malformed maintenance package is still routed
-// to strict inspection and rejected there.
+// The maintenance descriptor opts a package into strict epoch bootstrap.
+// Current-generation-only archives remain on the compatibility Setup path.
+// A malformed or partial descriptor is inspected strictly and rejected.
 facman::core::Result<bool> has_self_maintenance_metadata(
     const std::filesystem::path &package);
 facman::core::Result<void> extract_maintenance_launcher(

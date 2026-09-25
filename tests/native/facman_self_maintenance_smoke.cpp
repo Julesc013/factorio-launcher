@@ -348,7 +348,8 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
   bool interrupt_active = false;
 
   facman::core::Result<void> inspect_retirement_generation(
-      const Generation &generation, bool) override {
+      const Generation &generation, bool,
+      const facman::self_maintenance::CoordinatorLockToken &) override {
     inspected.push_back(generation.install_id);
     if (reject_identity)
       return facman::core::Result<void>::failure(
@@ -1801,11 +1802,17 @@ int main(int argc, char **argv) {
   identity_request.apply = true;
   auto identity_result = facman::self_maintenance::retire_active(
       identity_request, identity_effects);
+  const bool identity_refusal_had_no_effect = identity_effects.removed.empty();
+  identity_effects.reject_identity = false;
+  auto identity_retry = facman::self_maintenance::retire_active(
+      identity_request, identity_effects);
   ok &= require(!identity_result &&
                     identity_result.error().code ==
                         "self_maintenance_retirement_recovery_required" &&
-                    identity_effects.removed.empty(),
-                "retirement accepted a mismatched provider identity");
+                    identity_refusal_had_no_effect &&
+                    identity_retry && identity_retry.value().phase == "completed" &&
+                    identity_effects.removed.size() == 1U,
+                "retirement identity refusal entered an irreversible step");
 
   auto foreign_chain = request(root / "retirement-foreign", Operation::update);
   fs::create_directories(foreign_chain.coordinator_root / "retirements" /

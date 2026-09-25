@@ -69,7 +69,8 @@ Generation flat_generation(const fs::path &root) {
 class RetirementEffects final : public facman::self_maintenance::RetirementEffects {
 public:
   facman::core::Result<void> inspect_retirement_generation(
-      const Generation &, bool) override {
+      const Generation &, bool,
+      const facman::self_maintenance::CoordinatorLockToken &) override {
     return facman::core::Result<void>::success();
   }
   facman::core::Result<void> uninstall_generation(
@@ -231,8 +232,11 @@ int main() {
   auto pending_chain = facman::self_maintenance::discover_lifecycle_epoch_chain(
       handoff_coordinator);
   RetirementEffects handoff_retirement_effects;
+  facman::self_maintenance::RetirementRequest handoff_retirement_request;
+  handoff_retirement_request.coordinator_root = handoff_coordinator;
+  handoff_retirement_request.apply = true;
   auto blocked_retirement = facman::self_maintenance::retire_active(
-      {handoff_coordinator, true}, handoff_retirement_effects);
+      handoff_retirement_request, handoff_retirement_effects);
   ok &= require(handoff_adopted && handoff_chain &&
                     handoff_chain.value().has_value() && !handoff_record.empty() &&
                     !pending_handoff &&
@@ -441,8 +445,11 @@ int main() {
                 "incomplete epoch did not refuse authoritative selection");
 
   RetirementEffects retirement_effects;
+  facman::self_maintenance::RetirementRequest flat_retirement_request;
+  flat_retirement_request.coordinator_root = flat_coordinator;
+  flat_retirement_request.apply = true;
   auto retired = facman::self_maintenance::retire_active(
-      {flat_coordinator, true}, retirement_effects);
+      flat_retirement_request, retirement_effects);
   auto retired_selected =
       facman::self_maintenance::resolve_authoritative_active_state(
           flat_coordinator);

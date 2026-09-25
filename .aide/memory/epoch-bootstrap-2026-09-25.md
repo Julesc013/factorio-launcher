@@ -3,6 +3,35 @@
 Work item: `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`. This is a local working
 checkpoint, not product qualification or authority to publish.
 
+## Current continuation (after the initial checkpoint)
+
+- Draft PR #333 now contains `5a164b36`, `ee27dce7`, and `ec92d144`.
+  These are pushed checkpoint commits. The earlier "uncommitted" sections below
+  describe the initial takeover state and are retained as a chronology.
+- `ec92d144` has syntax and strict-check evidence but hosted native/package
+  validation is incomplete. Its first Linux native and coverage jobs failed
+  during compilation because two test aggregate initializers omitted newly
+  added `RetirementRequest` fields under `-Werror`; the current working diff
+  fixes those call sites. Windows native tests were still running at this
+  checkpoint.
+- The current working diff also previews each provider uninstall under the
+  held coordinator lock before publishing a retirement-step entered marker.
+  This is intended to keep a foreign-file plan refusal retryable. The produced
+  package lifecycle test now reads the real epoch genesis record to locate the
+  active executable and requires complete epoch retirement. It has not yet
+  passed from a produced package.
+- The first Windows native run of `ec92d144` compiled but failed its generic
+  current-generation-only archive: the metadata classifier had treated that
+  compatibility archive as an epoch package and then could not find an offline
+  repair ZIP in no-shell mode. The working diff uses the explicit maintenance
+  descriptor as the epoch opt-in and tests both current-only and descriptor-only
+  archives. The authority smoke also failed on a valid destructive flat
+  retirement predecessor; the working diff excludes already removed flat
+  generations from that successor's epoch retirement chain.
+- Epoch rollback/reapply, successor epoch after completed retirement, and a
+  source-distinct external continuation receipt remain open. Do not merge PR
+  #333 or claim maintenance acceptance from the old `b18018cd` candidate.
+
 ## Branch and integrated baseline
 
 - Takeover branch: `task/facman-epoch-bootstrap-01`; base `origin/dev` was

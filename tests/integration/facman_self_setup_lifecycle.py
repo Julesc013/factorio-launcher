@@ -2311,8 +2311,29 @@ def main() -> int:
         )
         if installed.get("phase") != "receipt":
             raise AssertionError("install did not return a receipt")
-        gui = install / "generations" / version / "FacMan.exe"
-        if not gui.is_file() or not (install / "maintenance/FacManSetup.exe").is_file():
+        active_install = install
+        epoch_id = installed.get("epoch_id")
+        if args.payload is not None:
+            if not isinstance(epoch_id, str) or len(epoch_id) != 64:
+                raise AssertionError("produced install did not activate a real lifecycle epoch")
+            epoch_dir = state.parent / "setup-coordinator.v1" / "epochs" / epoch_id
+            manifest = json.loads((epoch_dir / "epoch.v1.json").read_text(encoding="utf-8"))
+            generation_id = manifest.get("genesis_generation_id")
+            if not isinstance(generation_id, str) or len(generation_id) != 64:
+                raise AssertionError("produced epoch has no exact genesis generation")
+            generation_record = json.loads((
+                epoch_dir / "generations" / f"generation.{generation_id}.v2.json"
+            ).read_text(encoding="utf-8"))
+            active_install = Path(generation_record["install_root"])
+            if (generation_record.get("epoch_id") != epoch_id or
+                    generation_record.get("generation_id") != generation_id or
+                    active_install.parent != programs or
+                    not active_install.name.startswith("FacMan.generation.")):
+                raise AssertionError("produced epoch genesis does not bind its installed root")
+        gui = active_install / "generations" / version / "FacMan.exe"
+        if (not gui.is_file() or
+                not (active_install / "maintenance/FacManSetup.exe").is_file() or
+                not (install / "maintenance/FacManSetup.exe").is_file()):
             raise AssertionError("versioned generation or maintenance shell is missing")
 
         verified = invoke(
@@ -2339,7 +2360,7 @@ def main() -> int:
                 [
                     sys.executable,
                     str(ROOT / "tools/workspace_lifecycle_package_proof.py"),
-                    "--executable", str(install / "generations" / version / "bin/facman.exe"),
+                    "--executable", str(active_install / "generations" / version / "bin/facman.exe"),
                     "--profile", "windows_product_x64",
                     "--package-mode", "installed_stage",
                     "--evidence", str(args.workspace_lifecycle_evidence),
@@ -2355,7 +2376,7 @@ def main() -> int:
                 [
                     sys.executable,
                     str(ROOT / "tools/resource_package_proof.py"),
-                    "--executable", str(install / "generations" / version / "bin/facman.exe"),
+                    "--executable", str(active_install / "generations" / version / "bin/facman.exe"),
                     "--profile", "windows_product_x64",
                     "--package-mode", "installed_stage",
                     "--evidence", str(args.resource_package_evidence),
@@ -2585,9 +2606,12 @@ def main() -> int:
             executable, "uninstall", "--root", install, "--state-root", state,
             "--acceptance-root", root, "--yes",
         )
-        if removed["provider"]["payload"]["status"] != "completed":
+        if epoch_id is not None:
+            if removed.get("phase") != "completed":
+                raise AssertionError("produced epoch retirement did not complete")
+        elif removed["provider"]["payload"]["status"] != "completed":
             raise AssertionError("clean uninstall did not complete")
-        if install.exists() or not keep.is_file() or not state.is_dir():
+        if install.exists() or active_install.exists() or not keep.is_file() or not state.is_dir():
             raise AssertionError("uninstall scope was not ownership bounded")
     return 0
 

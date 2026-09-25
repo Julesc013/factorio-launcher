@@ -2965,15 +2965,19 @@ facman::core::Result<ActivationChain> discover_epoch_retirement_chain(
             "epoch retirement lineage changed during discovery"));
   ActivationChain combined;
   if (epochs.value().epochs.front().compatibility_epoch) {
-    if (!epochs.value().epochs.front().compatibility_handoff)
+    const LifecycleEpoch &compatibility = epochs.value().epochs.front();
+    if (compatibility.compatibility_handoff) {
+      auto flat = discover_activation_chain(coordinator_root);
+      if (!flat || !flat.value().has_value())
+        return facman::core::Result<ActivationChain>::failure(!flat
+            ? flat.error() : epoch_recovery(
+                "epoch retirement lacks its retained compatibility lineage"));
+      combined.generations = flat.value()->generations;
+    } else if (compatibility.retirement_sha256.empty() ||
+               compatibility.compatibility_active.has_value()) {
       return facman::core::Result<ActivationChain>::failure(epoch_recovery(
-          "epoch retirement lacks the exact compatibility authority handoff"));
-    auto flat = discover_activation_chain(coordinator_root);
-    if (!flat || !flat.value().has_value())
-      return facman::core::Result<ActivationChain>::failure(!flat
-          ? flat.error() : epoch_recovery(
-              "epoch retirement lacks its retained compatibility lineage"));
-    combined.generations = flat.value()->generations;
+          "epoch retirement has an active or incomplete compatibility predecessor"));
+    }
   }
   combined.generations.insert(combined.generations.end(),
       epoch_history.begin(), epoch_history.end());
@@ -6800,7 +6804,7 @@ facman::core::Result<RetirementResponse> retire_active(
       return facman::core::Result<RetirementResponse>::failure(
           authority_ready.error());
     auto inspected = effects.inspect_retirement_generation(
-        steps[index].generation, steps[index].active);
+        steps[index].generation, steps[index].active, coordinator_lock);
     if (!inspected)
       return facman::core::Result<RetirementResponse>::failure(failure(
           "self_maintenance_retirement_recovery_required",
