@@ -281,7 +281,7 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             "provider_plan_reviewed",
             "interrupted repair did not resume from its retained source",
             "journal_observation",
-            "uninstall shortcut boundary did not expose exactly the retained registration",
+            "second_successor_uninstall_completed",
             "real current-user integration requires --real-command-timeout",
             "provider_canary_process as bounded",
             "setup-child deadline",
