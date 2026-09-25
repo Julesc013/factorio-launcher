@@ -275,3 +275,13 @@ checkpoint, not product qualification or authority to publish.
   did not inventory unknown files. The current working correction verifies
   each generation read-only in retirement preflight and at effect-boundary
   reinspection, returning `foreign_content_review_required` before intent.
+- Candidate `36091852510` at `e4d35384` passed Linux/macOS package jobs and
+  Windows native/portable/resource checks, then stopped in the Windows
+  current-user foreign-file assertion. The retained Windows resource artifact
+  `10846695252` shows the preflight now returned
+  `self_setup_provider_refused`, kept the foreign note and native state, and
+  left the Setup journal count at two. The CLI response's `detail` was empty
+  because the new refusal constructed `Error` with its third constructor
+  argument, which is `path`, not `detail`. The pending correction uses
+  `setup_error_with_detail` for this refusal and the inventory-error diagnostic.
+  This candidate did not run the source-distinct external journey.

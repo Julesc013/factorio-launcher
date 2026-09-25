@@ -3259,15 +3259,16 @@ public:
         (field_equals(payload, "status", "pass") && unknown->size() != 0U) ||
         (field_equals(payload, "status", "warn") && unknown->size() == 0U))
       return facman::core::Result<void>::failure(
-          {"self_maintenance_provider_identity_ambiguous",
-           "provider verification could not inventory the generation before retirement",
-           verified ? "installed.verify returned an incompatible report"
-                    : verified.error().code + ": " + verified.error().message});
+          setup_error_with_detail(
+              "self_maintenance_provider_identity_ambiguous",
+              "provider verification could not inventory the generation before retirement",
+              verified ? "installed.verify returned an incompatible report"
+                       : verified.error().code + ": " + verified.error().message));
     if (unknown->size() != 0U)
       return facman::core::Result<void>::failure(
-          {"self_setup_provider_refused",
-           "foreign content requires review before uninstall",
-           "foreign_content_review_required"});
+          setup_error_with_detail("self_setup_provider_refused",
+                                  "foreign content requires review before uninstall",
+                                  "foreign_content_review_required"));
     facman::self_setup::Request preview;
     preview.operation = facman::self_setup::Operation::uninstall;
     preview.install_id = generation.install_id;
