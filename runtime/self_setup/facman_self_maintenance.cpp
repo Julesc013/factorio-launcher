@@ -1805,7 +1805,8 @@ facman::core::Result<EpochReactivationIntent> parse_epoch_reactivation_intent(
       intent.epoch_manifest_sha256 != epoch.manifest_sha256 ||
       intent.operation_id != operation_name.string() ||
       !facman::base::validate_identifier(intent.operation_id, identifier_detail) ||
-      (intent.operation != "update" && intent.operation != "downgrade") ||
+      (intent.operation != "update" && intent.operation != "downgrade" &&
+       intent.operation != "rollback") ||
       !digest(intent.source_generation_id) || !digest(intent.source_activation_sha256) ||
       !digest(intent.target_generation_id) || !digest(intent.target_generation_sha256) ||
       !digest(intent.target_package_sha256) || !digest(intent.target_activation_sha256) ||
@@ -2158,7 +2159,8 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
         ? string_field(document.value(), "generation_record_sha256") : std::string();
     const std::string previous_name = previous != nullptr ? string_field(*previous, "name") : std::string();
     const std::string previous_sha = previous != nullptr ? string_field(*previous, "sha256") : std::string();
-    const bool linked_operation = operation == "update" || operation == "downgrade";
+    const bool linked_operation = operation == "update" || operation == "downgrade" ||
+        operation == "rollback";
     Generation genesis_target;
     genesis_target.generation_id = target_id;
     if (!shape || !previous_shape || string_field(document.value(), "schema") !=
@@ -3830,7 +3832,8 @@ facman::core::Result<HeldRetainedInputs> validate_retained_inputs(
 
 facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoch,
     const ActiveState &active, const EpochTransitionRequest &request) {
-  if ((request.operation != Operation::update && request.operation != Operation::downgrade) ||
+  if ((request.operation != Operation::update && request.operation != Operation::downgrade &&
+       request.operation != Operation::rollback) ||
       request.package.package.empty() || !digest(request.package.package_sha256))
     return facman::core::Result<Plan>::failure(failure(
         "self_maintenance_input_invalid", "epoch transition request is incomplete"));
@@ -3860,7 +3863,9 @@ facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoc
       !semver(active.active.product_version, source_version) ||
       !semver(target.product_version, target_version) ||
       (request.operation == Operation::update && compare(target_version, source_version) <= 0) ||
-      (request.operation == Operation::downgrade && compare(target_version, source_version) >= 0))
+      (request.operation == Operation::downgrade && compare(target_version, source_version) >= 0) ||
+      (request.operation == Operation::rollback &&
+       (!retained_predecessor || target.generation_id == active.active.generation_id)))
     return facman::core::Result<Plan>::failure(failure(
         "self_maintenance_version_direction_invalid", "epoch transition direction is invalid"));
   return facman::core::Result<Plan>::success({operation_name(request.operation), request.operation_id,
@@ -3877,7 +3882,8 @@ facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
   if (request.apply || !request.coordinator_root.is_absolute() ||
       !digest(request.epoch_id) ||
       !facman::base::validate_identifier(request.operation_id, detail) ||
-      (request.operation != Operation::update && request.operation != Operation::downgrade))
+      (request.operation != Operation::update && request.operation != Operation::downgrade &&
+       request.operation != Operation::rollback))
     return facman::core::Result<Plan>::failure(failure(
         "self_maintenance_input_invalid", "epoch reactivation review identifiers are invalid"));
   auto chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root);
@@ -3957,7 +3963,8 @@ facman::core::Result<EpochShellCutoverResponse> execute_lifecycle_epoch_reactiva
       !facman::base::validate_identifier(request.operation_id,
                                           identifier_detail) ||
       (request.operation != Operation::update &&
-       request.operation != Operation::downgrade) ||
+       request.operation != Operation::downgrade &&
+       request.operation != Operation::rollback) ||
       !request.package.package.is_absolute() ||
       !digest(request.package.package_sha256))
     return Result::failure(failure("self_maintenance_input_invalid",
@@ -6116,7 +6123,9 @@ bool completed_epoch_shell_cutover(const LifecycleEpoch &epoch,
         (intent.value().operation == "update" &&
             compare(target_version, source_version) <= 0) ||
         (intent.value().operation == "downgrade" &&
-            compare(target_version, source_version) >= 0))
+            compare(target_version, source_version) >= 0) ||
+        (intent.value().operation == "rollback" &&
+            intent.value().source_generation_id == intent.value().target_generation_id))
       return false;
     facman::platform::StableDirectoryObject activations;
     if (!scope.epoch.open_child_directory_no_follow("activations", activations).ok())
@@ -6756,7 +6765,8 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
       candidate.epoch_id = epoch.value().epoch_id;
       candidate.epoch_manifest_sha256 = epoch.value().manifest_sha256;
       candidate.operation = intent.value().operation == "update"
-          ? Operation::update : Operation::downgrade;
+          ? Operation::update : intent.value().operation == "rollback"
+              ? Operation::rollback : Operation::downgrade;
       candidate.operation_id = intent.value().operation_id;
       candidate.journal_sha256 = hash(held_records.front().bytes);
       candidate.retained_package = retained_package.take_value();

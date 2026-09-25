@@ -549,7 +549,7 @@ def stable_retained_digest(
 def stable_handoff_digest(
         path: Path, state_root: Path, acceptance_root: Path,
         operation_id: str, label: str) -> str:
-    if not re.fullmatch(r"maint\.(?:update|downgrade|rollback)\.[0-9a-f]{8}\.[0-9a-f]{20}",
+    if not re.fullmatch(r"maint\.(?:update|downgrade|rollback)\.[0-9a-f]{8}\.[0-9a-f]{20}(?:\.[0-9a-f]{16})?",
                         operation_id):
         raise AssertionError(f"{label} has an invalid maintenance operation identity")
     handoff_root = state_root / "epoch-handoff" / operation_id
@@ -1887,6 +1887,44 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         assert_owned_native(shortcut, registry, epoch_install, epoch_state,
                             epoch_fixture, candidate_identity["version"],
                             "source-distinct epoch reapply",
+                            active_root=epoch_updated_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+        rollback_helper = epoch_updated_root / "maintenance" / "FacManSetup.exe"
+        epoch_rollback = invoke(
+            rollback_helper, "rollback", *epoch_common,
+            shell_integration=True, noninteractive=True,
+        )
+        if (epoch_rollback.get("phase") != "reactivation_complete" or
+                epoch_rollback.get("product_version") != baseline_identity["version"]):
+            raise AssertionError("real epoch rollback did not reactivate retained A")
+        rollback_root = Path(str(epoch_rollback.get("install_root", "")))
+        shortcut, registry = observe("source_distinct_epoch_rollback_completed",
+                                     rollback_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "source-distinct epoch rollback",
+                            active_root=rollback_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+        epoch_reapply_after_rollback = invoke(
+            executable, "update", "--package", candidate_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if (epoch_reapply_after_rollback.get("phase") != "reactivation_complete" or
+                epoch_reapply_after_rollback.get("product_version") !=
+                candidate_identity["version"] or
+                epoch_reapply_after_rollback.get("operation_id") ==
+                epoch_update_launch.get("operation_id")):
+            raise AssertionError("real epoch reapply after rollback reused an old operation")
+        epoch_updated_root = Path(str(epoch_reapply_after_rollback.get("install_root", "")))
+        shortcut, registry = observe("source_distinct_epoch_reapply_after_rollback",
+                                     epoch_updated_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, candidate_identity["version"],
+                            "source-distinct epoch reapply after rollback",
                             active_root=epoch_updated_root,
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,

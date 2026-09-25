@@ -2514,10 +2514,8 @@ int run_maintenance(Options &options, const fs::path &,
       return 4;
     }
   }
-  // This read-side preflight is deliberately before package materialization:
-  // an epoch makes rollback invalid and must not fall through to any legacy
-  // preparation work.  The epoch is discovered again under normal authority
-  // below before it is used.
+  // Discover an epoch before materialization so rollback cannot fall through
+  // to the flat coordinator. The epoch is re-read under authority below.
   auto pending_preflight =
       facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
           coordinator_root);
@@ -2535,13 +2533,6 @@ int run_maintenance(Options &options, const fs::path &,
     }
     epoch_present_preflight = !epoch_preflight.value().epochs.empty() &&
         !epoch_preflight.value().epochs.back().compatibility_epoch;
-  }
-  if (epoch_present_preflight &&
-      operation == facman::self_maintenance::Operation::rollback) {
-    print_maintenance_error({"self_maintenance_rollback_invalid",
-                 "rollback is not defined across an authoritative lifecycle epoch", ""},
-                options.json);
-    return 4;
   }
   if (epoch_present_preflight && !pending_preflight.value().has_value()) {
     auto selected = facman::self_maintenance::resolve_authoritative_active_state(
@@ -2682,9 +2673,11 @@ int run_maintenance(Options &options, const fs::path &,
     pending_epoch = std::move(terminal_epoch);
   }
   const bool pending_is_new_request = pending_epoch.value().has_value() &&
-      pending_epoch.value()->completed && package.has_value() &&
-      (operation != pending_epoch.value()->operation ||
-       !same_epoch_package(*package, pending_epoch.value()->retained_package));
+      pending_epoch.value()->completed &&
+      (operation == facman::self_maintenance::Operation::rollback ||
+       (package.has_value() &&
+        (operation != pending_epoch.value()->operation ||
+         !same_epoch_package(*package, pending_epoch.value()->retained_package))));
   if (pending_epoch.value().has_value() && !pending_epoch.value()->pre_handoff &&
       !pending_is_new_request) {
     const auto &pending = *pending_epoch.value();
@@ -2906,10 +2899,24 @@ int run_maintenance(Options &options, const fs::path &,
       return 4;
     }
     if (operation == facman::self_maintenance::Operation::rollback) {
-      print_maintenance_error({"self_maintenance_rollback_invalid",
-                   "rollback is not defined across an authoritative lifecycle epoch", ""},
-                  options.json);
-      return 4;
+      if (!epoch_active.value().active.previous.has_value()) {
+        print_maintenance_error({"self_maintenance_rollback_invalid",
+            "real epoch has no immediate retained predecessor", ""}, options.json);
+        return 4;
+      }
+      const auto &previous = *epoch_active.value().active.previous;
+      const fs::path retained = previous.state_root / "repair-sources" /
+          (previous.package_sha256 + ".zip");
+      auto inspected = facman::self_maintenance::inspect_package(retained);
+      if (!inspected || inspected.value().package_sha256 != previous.package_sha256) {
+        print_maintenance_error(!inspected ? inspected.error() :
+            setup_error_with_detail("self_maintenance_rollback_invalid",
+                "immediate predecessor repair package changed",
+                facman::platform::path_to_utf8(retained)),
+            options.json);
+        return 4;
+      }
+      package = inspected.take_value();
     }
     if (!package.has_value()) {
       print_maintenance_error({"self_maintenance_input_invalid",
@@ -2917,9 +2924,15 @@ int run_maintenance(Options &options, const fs::path &,
       return 4;
     }
 
-    const std::string operation_id = "maint." + maintenance_operation_text(operation) + "." +
+    const std::string legacy_operation_id = "maint." + maintenance_operation_text(operation) + "." +
         epoch_active.value().active.active.generation_id.substr(0, 8) + "." +
         package->package_sha256.substr(0, 20);
+    const std::string operation_id = pending_epoch.value().has_value() &&
+        pending_epoch.value()->pre_handoff &&
+        pending_epoch.value()->operation_id == legacy_operation_id
+            ? legacy_operation_id
+            : legacy_operation_id + "." +
+                epoch_active.value().active.activation_sha256.substr(0, 16);
     if (pending_epoch.value().has_value() && pending_epoch.value()->pre_handoff &&
         !pending_epoch.value()->operation_id.empty() &&
         pending_epoch.value()->operation_id != operation_id) {
@@ -3009,7 +3022,8 @@ int run_maintenance(Options &options, const fs::path &,
       }
       return 0;
     }
-    if (retained.error().code != "self_maintenance_retained_target_invalid") {
+    if (operation == facman::self_maintenance::Operation::rollback ||
+        retained.error().code != "self_maintenance_retained_target_invalid") {
       print_maintenance_error(retained.error(), options.json);
       return 4;
     }
