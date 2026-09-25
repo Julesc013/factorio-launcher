@@ -156,7 +156,10 @@ Reactivation records its own immutable intent, shortcut cutover, and
 registration cutover under the epoch maintenance operation. The intent binds
 the existing generation and stable provider installed identity; restart reads the
 retained repair package and resumes the same native cutover before publishing
-a new activation. It does not write provider-apply or uninstall receipts.
+a new activation. The installed maintenance launcher may be the package's
+embedded executable while the retained repair helper is the self-extracting
+overlay; both identities are checked against the exact package. Reactivation
+does not write provider-apply or uninstall receipts.
 
 The public process launches the retained helper with an inherited handle to the
 exact initiating process and reports `handoff_launched`. The helper validates

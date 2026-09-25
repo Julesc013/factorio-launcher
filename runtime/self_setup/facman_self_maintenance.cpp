@@ -6752,19 +6752,6 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
       if (hash(activation_bytes) != intent.value().target_activation_sha256)
         return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
             epoch_recovery("reactivation intent does not bind its activation"));
-      PendingEpochTransitionState pending_state{target.value(),
-          epoch_generation_staging_name(target.value().generation_id),
-          intent.value().target_activation_name,
-          "activation." + intent.value().operation_id + ".staging.v2.json",
-          activation_bytes};
-      auto active = discover_epoch_genesis_state(epoch.value(), scope, nullptr,
-          false, &intent.value().operation_id, &pending_state);
-      if (!active || !active.value().has_value() ||
-          (active.value()->activation_name != intent.value().source_activation_name &&
-           active.value()->activation_name != intent.value().target_activation_name))
-        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
-            !active ? active.error() : epoch_recovery(
-                "reactivation intent is not attached to the current activation head"));
       EpochPendingTransition candidate;
       candidate.epoch_id = epoch.value().epoch_id;
       candidate.epoch_manifest_sha256 = epoch.value().manifest_sha256;
@@ -6781,35 +6768,37 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
       candidate.target_activation_sha256 = intent.value().target_activation_sha256;
       const bool cutover_final = records.size() == 3U &&
           records.back() == fs::path("20-registration-cutover.v1.json");
-      const bool activation_final =
-          active.value()->activation_name == intent.value().target_activation_name;
-      if ((activation_final && !cutover_final) ||
-          (!activation_final &&
-           (active.value()->activation_name !=
-                intent.value().source_activation_name ||
-            active.value()->activation_sha256 !=
-                intent.value().source_activation_sha256 ||
-            !active.value()->previous.has_value() ||
-            active.value()->previous->generation_id !=
-                intent.value().target_generation_id)) ||
-          (activation_final &&
-           (!active.value()->previous.has_value() ||
-            active.value()->previous->generation_id !=
-                intent.value().source_generation_id)))
-        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
-            epoch_recovery("reactivation intent is not the immediate predecessor transition"));
-      candidate.completed = cutover_final && activation_final;
-      candidate.phase = candidate.completed ? "reactivation_complete"
-          : "reactivation_pending";
-      if (candidate.completed) {
+      if (cutover_final) {
+        // A historical completion belongs to its recorded source activation,
+        // not necessarily to today's head. The completed record and final
+        // activation are checked here; chain discovery checks their order.
         CompletedEpochShellCutover completed;
         if (!completed_epoch_shell_cutover(epoch.value(), scope,
                                            operation_name, completed))
           return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
               epoch_recovery("completed epoch reactivation is not exact"));
+        candidate.completed = true;
+        candidate.phase = "reactivation_complete";
         held_completed_records.push_back(std::move(completed));
         completions.push_back(std::move(candidate));
       } else {
+        PendingEpochTransitionState pending_state{candidate.target,
+            epoch_generation_staging_name(candidate.target.generation_id),
+            intent.value().target_activation_name,
+            "activation." + intent.value().operation_id + ".staging.v2.json",
+            activation_bytes};
+        auto active = discover_epoch_genesis_state(epoch.value(), scope, nullptr,
+            false, &intent.value().operation_id, &pending_state);
+        if (!active || !active.value().has_value() ||
+            active.value()->activation_name != intent.value().source_activation_name ||
+            active.value()->activation_sha256 != intent.value().source_activation_sha256 ||
+            !active.value()->previous.has_value() ||
+            active.value()->previous->generation_id !=
+                intent.value().target_generation_id)
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              !active ? active.error() : epoch_recovery(
+                  "pending reactivation is not the immediate predecessor transition"));
+        candidate.phase = "reactivation_pending";
         if (unfinished.has_value())
           return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
               epoch_recovery("more than one unfinished epoch transition exists"));

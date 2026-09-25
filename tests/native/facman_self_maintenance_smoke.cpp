@@ -2974,6 +2974,14 @@ int main(int argc, char **argv) {
                     reapply_provider.bind_calls == 0U &&
                     reapply_provider.apply_calls == 0U,
                 "retained B reapply did not preserve the exact epoch history");
+  auto fourth_pending = facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
+      provider_continuation.coordinator);
+  auto fourth_completion = facman::self_maintenance::discover_lifecycle_epoch_terminal_transition(
+      provider_continuation.coordinator);
+  ok &= require(fourth_pending && !fourth_pending.value().has_value() &&
+                    fourth_completion && fourth_completion.value().has_value() &&
+                    fourth_completion.value()->operation_id == "epoch.prepare.four",
+                "completed reactivation history prevented a later maintenance request");
 
 
   bool publication_staging_recovered = true;

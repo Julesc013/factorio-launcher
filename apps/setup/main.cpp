@@ -1926,13 +1926,17 @@ private:
         (plan.operation == "downgrade" || plan.operation == "rollback") &&
         plan.target.install_id == "facman.self" &&
         same_path(plan.target.install_root, plan.target.logical_root);
-    const bool bootstrap_installed_launcher =
-        plan.operation == "bootstrap" &&
+    // A real epoch's installed Setup comes from the package payload. Its
+    // retained repair helper can be the larger self-extracting Setup overlay.
+    // Both are pinned to the same inspected package before reactivation.
+    const bool package_installed_launcher =
+        (plan.operation == "bootstrap" ||
+         plan.provider_operation == "reactivate") &&
         installed_digest.has_value() &&
         *installed_digest == maintenance_launcher_sha256_;
     if (!retained_digest.has_value() || !installed_digest.has_value() ||
         (*retained_digest != *installed_digest &&
-         !legacy_retained_generation && !bootstrap_installed_launcher)) {
+         !legacy_retained_generation && !package_installed_launcher)) {
       target_pin_detail_ =
           "installed maintenance launcher differs from the retained helper";
       return false;
