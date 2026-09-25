@@ -3671,7 +3671,7 @@ int wmain(int argc, wchar_t **argv) {
         !epochs.value().epochs.back().compatibility_epoch))
       successor_install = true;
     resume_bootstrap = flat.value().has_value() && !successor_install;
-    if (!resume_bootstrap) {
+    if (!resume_bootstrap && !successor_install) {
       auto legacy = facman::self_maintenance::inspect_legacy_descriptor(
           options.install_root);
       resume_bootstrap = legacy.ok();
