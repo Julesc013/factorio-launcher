@@ -4199,6 +4199,16 @@ int wmain(int argc, wchar_t **argv) {
     request.state_root = active_repair_generation->state_root;
     request.acceptance_root = active_repair_generation->acceptance_root;
     request.product_version = active_repair_generation->product_version;
+    if (options.operation == facman::self_setup::Operation::repair &&
+        !active_epoch_controller_sha256.empty()) {
+      // The registered genesis controller can execute a repair of an older
+      // active package. Its immutable repair-source pair still belongs to
+      // that older package, so retention must compare that package's helper.
+      request.maintenance_launcher = repair_launcher_path(
+          request.state_root / "repair-sources" /
+          facman::platform::path_from_utf8(
+              active_repair_generation->package_sha256 + ".zip"));
+    }
   }
   request.apply = options.apply;
   SetupNativeEffects native_effects(active_epoch_controller_sha256);
