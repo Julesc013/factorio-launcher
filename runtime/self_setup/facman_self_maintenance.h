@@ -429,6 +429,9 @@ class EpochContinuationEffects : public EpochPublicationEffects {
 public:
   virtual ~EpochContinuationEffects() = default;
   virtual CandidateState inspect_candidate(const Plan &plan) = 0;
+  // Stable installed identity for an already owned retained generation.
+  // This also admits a fresh provider verification without an apply binding.
+  virtual EffectResult inspect_retained_installed(const Plan &plan) = 0;
   virtual facman::core::Result<ProviderApplyBinding> bind_install_local(
       const Plan &plan, const std::string &expected_provider_plan_sha256) = 0;
   virtual facman::core::Result<void> rehydrate_install_local(
@@ -527,6 +530,13 @@ discover_lifecycle_epoch_terminal_transition(
     const std::filesystem::path &coordinator_root);
 facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transition(
     const EpochTransitionRequest &request, EpochPreparationEffects &effects);
+// Read-only admission for an exact immediate predecessor. The existing
+// provider installation remains owned and is verified before native cutover.
+facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
+    const EpochTransitionRequest &request, EpochContinuationEffects &effects);
+facman::core::Result<EpochShellCutoverResponse> execute_lifecycle_epoch_reactivation(
+    const EpochTransitionRequest &request, EpochContinuationEffects &provider_effects,
+    EpochShellCutoverEffects &shell_effects);
 facman::core::Result<Plan> admit_lifecycle_epoch_continuation(
     const std::filesystem::path &coordinator_root,
     const std::string &operation_id, const std::string &nonce,
