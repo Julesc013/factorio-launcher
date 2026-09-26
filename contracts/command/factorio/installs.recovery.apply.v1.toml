@@ -1,6 +1,6 @@
 command_id = "installs.recovery.apply"
 cli = "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json"
-effects = ["workspace_read", "workspace_write", "setup_preview"]
+effects = ["workspace_read", "workspace_write", "setup_preview", "setup_mutation"]
 request_schema = "contracts/schema/command/installs.recovery.apply.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/facman_managed_install_recovery.v1.schema.json"
 result_schema = "contracts/result/result.v1.schema.json"
@@ -11,6 +11,8 @@ executes_process = false
 mutates_workspace = true
 availability = "implemented"
 refusal_codes = [
+  "setup_install_terminal_target_changed",
+  "setup_install_recovery_input_invalid", "setup_install_recovery_response_invalid", "setup_install_recovery_inspection_refused", "install_recovery_projection_conflict", "install_recovery_indeterminate",
   "invalid_identifier", "stale_plan", "recovery_journal_invalid", "recovery_lock_contended",
   "recovery_write_refused", "transaction_recovery_required", "uninstall_recovery_indeterminate",
   "repair_recovery_indeterminate", "uninstall_recovery_projection_conflict",

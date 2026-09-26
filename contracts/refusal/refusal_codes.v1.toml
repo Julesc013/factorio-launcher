@@ -2250,3 +2250,94 @@ severity = "blocked"
 effect = "none"
 retryable = true
 message = "The presentation snapshot changed and must be refreshed before retrying."
+
+[[code]]
+id = "setup_plan_path_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed install source or target path cannot be normalized safely."
+
+[[code]]
+id = "setup_platform_recipe_unavailable"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "No admitted managed install recipe is available on this platform."
+
+[[code]]
+id = "setup_install_terminal_state_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Provider installation does not match the reviewed durable identity."
+
+[[code]]
+id = "setup_install_apply_input_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed installation apply inputs are invalid."
+
+[[code]]
+id = "setup_install_apply_refused"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Provider refused managed installation apply."
+
+[[code]]
+id = "setup_install_terminal_state_inspection_refused"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Installed terminal state cannot be inspected."
+
+[[code]]
+id = "setup_install_terminal_state_changed"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Installed terminal state changed before verification."
+
+[[code]]
+id = "setup_install_recovery_input_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed installation recovery inputs are invalid."
+
+[[code]]
+id = "setup_install_recovery_response_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Provider installation recovery evidence is invalid."
+
+[[code]]
+id = "setup_install_recovery_inspection_refused"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Provider installation recovery cannot be inspected."
+
+[[code]]
+id = "install_recovery_projection_conflict"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Install reference differs from the prepared recovery postimage."
+
+[[code]]
+id = "install_recovery_indeterminate"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Installation recovery has no verified disposition."
+
+[[code]]
+id = "setup_install_terminal_target_changed"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Installed bytes no longer reproduce verified managed ownership."

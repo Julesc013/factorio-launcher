@@ -108,6 +108,26 @@
     ],
     "installs.install.apply": [
       {
+        "kind": "string",
+        "name": "version",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "archive",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "target_root",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      },
+      {
         "kind": "identifier",
         "name": "plan_id",
         "required": true
@@ -115,6 +135,21 @@
       {
         "kind": "sha256",
         "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "utc_timestamp",
+        "name": "plan_created_at",
+        "required": true
+      },
+      {
+        "kind": "transaction_identifier",
+        "name": "transaction_id",
+        "required": true
+      },
+      {
+        "kind": "utc_timestamp",
+        "name": "applied_at",
         "required": true
       },
       {

@@ -666,15 +666,12 @@ int command_installs(const Options& options)
                 "Managed install plan reviewed through Universal Setup.");
         }
         if (phase == "apply") {
-            const std::string digest = option(options.args, "--digest");
-            const std::string confirmation = option(options.args, "--confirm");
-            if (digest.empty() || confirmation != "APPLY") return 2;
+            auto apply = facman::cli::setup_apply_request("install", options.args);
+            if (!apply) return 2;
             return emit_basic(
-                call(options, "installs.install.apply", exact_fields_payload({
-                    {"plan_id", options.args[3]}, {"plan_digest", digest},
-                    {"confirmation", confirmation}}), false),
+                call(options, apply->command, apply->payload, false),
                 flag(options.args, "--json"),
-                "Managed install apply dispatched.");
+                apply->success_message);
         }
         return 2;
     }

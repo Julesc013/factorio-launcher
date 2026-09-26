@@ -1174,6 +1174,13 @@ class CliTests(unittest.TestCase):
                     "install",
                     "apply",
                     "plan.fixture",
+                    "--version", "2.0.77",
+                    "--archive", str(archive),
+                    "--target", str(target),
+                    "--id", "managed-fixture",
+                    "--plan-created-at", "2026-09-26T00:00:00Z",
+                    "--transaction-id", "tx-managed-gated",
+                    "--applied-at", "2026-09-26T00:00:01Z",
                     "--digest",
                     digest,
                     "--confirm",
@@ -1184,7 +1191,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1)
             apply_refusal = json.loads(stdout)
             self.assertEqual(apply_refusal["operation"], "installs.install.apply")
-            self.assertEqual(apply_refusal["refusal"]["code"], "live_target_acceptance_required")
+            self.assertEqual(apply_refusal["refusal"]["code"], "setup_authority_required")
             self.assertFalse(target.exists())
 
             code, _stdout, _stderr = invoke(
@@ -1195,6 +1202,13 @@ class CliTests(unittest.TestCase):
                     "install",
                     "apply",
                     "plan.fixture",
+                    "--version", "2.0.77",
+                    "--archive", str(archive),
+                    "--target", str(target),
+                    "--id", "managed-fixture",
+                    "--plan-created-at", "2026-09-26T00:00:00Z",
+                    "--transaction-id", "tx-managed-gated",
+                    "--applied-at", "2026-09-26T00:00:01Z",
                     "--digest",
                     digest,
                     "--confirm",

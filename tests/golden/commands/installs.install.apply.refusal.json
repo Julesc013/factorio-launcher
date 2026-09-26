@@ -4,8 +4,8 @@
   "status": "refused",
   "refusal": {
     "schema": "common.refusal.v1",
-    "code": "live_target_acceptance_required",
-    "reason": "A human M2 live-target acceptance Pass is required before FacMan setup apply is available.",
+    "code": "setup_authority_required",
+    "reason": "Managed setup apply requires complete accepted Universal Setup mutation configuration.",
     "recoverable": false
   }
 }
