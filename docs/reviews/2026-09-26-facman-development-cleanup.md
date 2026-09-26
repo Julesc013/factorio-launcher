@@ -18,6 +18,13 @@ stopped during inventory; the active managed-install patch was preserved.
   the existing owned lab-input task root under LocalAppData. No game data was
   discarded or executed.
 - Stopped 11 orphaned MSBuild nodes, approximately 800 MiB of working memory.
+- Consolidated 18 FacMan download directories into verified archives in the
+  owned task root, then removed their expanded copies. Each retained file has
+  a SHA-256 relocation manifest; the disposable WSL coverage venv retains its
+  configuration rather than linked interpreter copies.
+- Archived and retired three small inactive task roots, restoring the
+  canonical task-root count to eight. Their clean pinned provider checkouts
+  and metadata remain recoverable from the retained archives.
 
 The combined deleted file inventory was 44.600 GiB. This is a logical file
 size total, rather than a claim about physical allocation or other sessions'
