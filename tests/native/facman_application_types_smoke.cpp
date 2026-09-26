@@ -102,7 +102,10 @@ int main()
                 "install.managed.uninstall.recover") == recovery_policy.capabilities.end() ||
             recovery_policy.capabilities.size() != 1U ||
             recovery_policy.effects.size() !=
-                (recovery_command == CommandId::installs_recovery_apply ? 3U : 2U) ||
+                (recovery_command == CommandId::installs_recovery_apply ? 4U : 2U) ||
+            (std::find(recovery_policy.effects.begin(), recovery_policy.effects.end(),
+                "setup_mutation") != recovery_policy.effects.end()) !=
+                (recovery_command == CommandId::installs_recovery_apply) ||
             (std::find(recovery_policy.effects.begin(), recovery_policy.effects.end(),
                 "workspace_write") != recovery_policy.effects.end()) !=
                 (recovery_command == CommandId::installs_recovery_apply)) return 16;
