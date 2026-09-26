@@ -665,7 +665,7 @@ cli = "facman installs install plan <version> --archive <path> --target <path> -
 id = "installs.install.apply"
 phase = "unavailable"
 backend_id = "install_local.apply"
-cli = "facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+cli = "facman installs install apply <plan-id> --version <version> --archive <path> --target <path> --id <install-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json"
 
 [[commands]]
 id = "installs.verify"

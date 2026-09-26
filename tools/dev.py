@@ -83,6 +83,8 @@ def validate_external_output(path: Path, *, allow_in_tree: bool) -> Path:
             f"generated output must be outside the source checkout: {resolved}; "
             "pass --allow-in-tree-output only for a reviewed legacy workflow"
         )
+    if not allow_in_tree:
+        development_layout.validate_owned_output(resolved, ROOT)
     return resolved
 
 
@@ -146,6 +148,7 @@ def native_tui_executable(
 
 
 def configure_native(build_root: Path, task_root: Path, profile: str = "developer") -> None:
+    native_build.require_disk_reserve(build_root)
     profiles = load_profiles()
     if profile not in profiles:
         raise ValueError(f"unknown developer profile: {profile}")
@@ -158,6 +161,7 @@ def configure_native(build_root: Path, task_root: Path, profile: str = "develope
 
 
 def build_native(build_root: Path, configuration: str, targets: list[str]) -> None:
+    native_build.require_disk_reserve(build_root)
     run(native_build.command(build_root, configuration, targets, NATIVE_BUILD_PREREQUISITES))
 
 
@@ -380,6 +384,8 @@ def package_command(args: argparse.Namespace) -> None:
         output_path(args.dist, task_root, "dist"),
         allow_in_tree=args.allow_in_tree_output,
     )
+    for output in (build_root, out, dist):
+        native_build.require_disk_reserve(output)
     roots = provider_workspace.prepare(task_root)
     command = [
         sys.executable,

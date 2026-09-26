@@ -369,7 +369,8 @@ bool decode_service_request(
     case CommandId::package_verify: allowed = {"path"}; break;
     case CommandId::installs_install_version: allowed = {"version", "archive"}; break;
     case CommandId::installs_install_plan: allowed = {"version", "archive", "target_root", "install_id"}; break;
-    case CommandId::installs_install_apply:
+    case CommandId::installs_install_apply: allowed = {"version", "archive", "target_root", "install_id",
+        "plan_id", "plan_digest", "plan_created_at", "transaction_id", "applied_at", "confirmation"}; break;
     case CommandId::installs_move_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
     case CommandId::installs_repair_plan: allowed = {"install_id", "archive"}; break;
     case CommandId::installs_repair_apply: allowed = {"install_id", "archive", "plan_id", "plan_digest",
@@ -460,6 +461,13 @@ bool decode_service_request(
         (typed.install_id.empty() || typed.archive.empty() || typed.plan_created_at.empty() ||
             typed.install_record_sha256.empty() || typed.transaction_id.empty() || typed.applied_at.empty())) {
         detail = "installs.repair.apply requires install, archive, reviewed record, transaction, and timestamp identities";
+        return false;
+    }
+    if (command == CommandId::installs_install_apply &&
+        (typed.version.empty() || typed.archive.empty() || typed.target_root.empty() ||
+            typed.install_id.empty() || typed.plan_created_at.empty() ||
+            typed.transaction_id.empty() || typed.applied_at.empty())) {
+        detail = "installs.install.apply requires exact reviewed source, target, install, transaction, and timestamp identities";
         return false;
     }
     if (command == CommandId::servers_create && (typed.name.empty() || typed.instance_id.empty())) {

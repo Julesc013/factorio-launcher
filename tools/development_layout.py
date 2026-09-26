@@ -385,6 +385,17 @@ def read_marker(path: Path, source_root: Path | None = None) -> dict[str, object
     return validate_marker_payload(path, payload, source_root)
 
 
+def validate_owned_output(path: Path, source_root: Path) -> None:
+    owner = next((parent for parent in (path, *path.parents)
+                  if (parent / MARKER_NAME).is_file()), None)
+    if owner is None:
+        raise ValueError(f"output must be inside an owned task root: {path}; "
+                         "configure --task-root instead of an unowned output path")
+    marker = read_marker(owner, source_root)
+    if marker['task_id'] != current_task_id(source_root):
+        raise ValueError(f"output belongs to another task: {path}")
+
+
 def validate_marker_payload(
     path: Path, payload: object, source_root: Path | None = None
 ) -> dict[str, object]:

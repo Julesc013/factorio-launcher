@@ -61,12 +61,52 @@ std::optional<std::map<std::string, std::string>> exact_repair_apply_options(
     return values;
 }
 
+std::optional<std::map<std::string, std::string>> exact_install_apply_options(
+    const std::vector<std::string>& args)
+{
+    static const std::set<std::string> value_options {
+        "--version", "--archive", "--target", "--id", "--digest",
+        "--plan-created-at", "--transaction-id", "--applied-at", "--confirm"};
+    if (!positional(args, 3)) return std::nullopt;
+    std::map<std::string, std::string> values;
+    bool json_seen = false;
+    for (std::size_t index = 4; index < args.size(); ++index) {
+        const std::string& token = args[index];
+        if (token == "--json") {
+            if (json_seen) return std::nullopt;
+            json_seen = true;
+            continue;
+        }
+        if (value_options.count(token) == 0U || values.count(token) != 0U ||
+            index + 1U >= args.size() || args[index + 1U].empty() ||
+            args[index + 1U].compare(0, 2, "--") == 0) return std::nullopt;
+        values.emplace(token, args[++index]);
+    }
+    if (values.size() != value_options.size() || values["--confirm"] != "APPLY") {
+        return std::nullopt;
+    }
+    return values;
+}
+
 } // namespace
 
 std::optional<SetupApplyCommand> setup_apply_request(
     const std::string& action,
     const std::vector<std::string>& args)
 {
+    if (action == "install") {
+        auto values = exact_install_apply_options(args);
+        if (!values) return std::nullopt;
+        return SetupApplyCommand {"installs.install.apply", payload({
+            {"version", values->at("--version")}, {"archive", values->at("--archive")},
+            {"target_root", values->at("--target")}, {"install_id", values->at("--id")},
+            {"plan_id", args[3]}, {"plan_digest", values->at("--digest")},
+            {"plan_created_at", values->at("--plan-created-at")},
+            {"transaction_id", values->at("--transaction-id")},
+            {"applied_at", values->at("--applied-at")},
+            {"confirmation", values->at("--confirm")}}),
+            "Managed install apply dispatched."};
+    }
     if (action == "repair") {
         auto values = exact_repair_apply_options(args);
         if (!values) return std::nullopt;

@@ -53,6 +53,25 @@ public:
     {
         return facman::core::Result<InstallPlan>::failure(unavailable_error());
     }
+    facman::core::Result<InstallReport> apply_install(const InstallApplyRequest&) override
+    {
+        return facman::core::Result<InstallReport>::failure(unavailable_error());
+    }
+    facman::core::Result<InstallRecoveryInspection> inspect_install_recovery(
+        const InstallRecoveryRequest&) override
+    {
+        return facman::core::Result<InstallRecoveryInspection>::failure(unavailable_error());
+    }
+    facman::core::Result<InstallRecoveryInspection> rollback_install_recovery(
+        const InstallRecoveryRequest&, const InstallRecoveryInspection&) override
+    {
+        return facman::core::Result<InstallRecoveryInspection>::failure(unavailable_error());
+    }
+    facman::core::Result<InstallRecoveryInspection> replay_install_recovery(
+        const InstallRecoveryRequest&, const InstallRecoveryInspection&, const std::string&) override
+    {
+        return facman::core::Result<InstallRecoveryInspection>::failure(unavailable_error());
+    }
     facman::core::Result<UninstallPlan> plan_uninstall(const UninstallPlanRequest&) override
     {
         return facman::core::Result<UninstallPlan>::failure(unavailable_error());
@@ -446,6 +465,172 @@ facman::core::Result<InspectedInstallState> decode_installed_state(
     result.setup_abi_major = major_value.value();
     result.setup_abi_minor = minor_value.value();
     return facman::core::Result<InspectedInstallState>::success(std::move(result));
+}
+
+facman::core::Result<InstallReport> decode_new_install_state(
+    const std::string& response,
+    const InstallApplyRequest& request,
+    const InstallPlan& plan,
+    const SetupConfiguration& configuration)
+{
+    const auto invalid = [](const char* detail) {
+        return facman::core::Result<InstallReport>::failure({
+            "setup_install_terminal_state_invalid",
+            "Universal Setup returned an invalid installed state for the new install", detail});
+    };
+    std::string expected_audit_chain = "audit." + request.plan_request.install_id;
+    if (request.is_stream_replay) {
+        facman::core::json::ObjectBuilder identity;
+        identity.add_string("install_id", request.plan_request.install_id);
+        identity.add_string("transaction_id", request.transaction_id);
+        auto parsed = facman::core::json::parse(identity.serialize());
+        if (!parsed) return invalid("replay audit identity");
+        auto canonical = facman::core::json::canonical_integer_json(parsed.value());
+        if (!canonical) return invalid("replay audit canonical identity");
+        expected_audit_chain = "replay." + facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(canonical.value().data()), canonical.value().size());
+    }
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 4U * 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 100000;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(response, limits);
+    const facman::core::json::Value* state = nullptr;
+    if (!document || !response_envelope(document.value(), state) ||
+        !exact_members(*state, {"audit_chain_id", "component_selection", "created_at", "entrypoints",
+            "install_id", "last_verification", "lifecycle_status", "ownership_manifest_digest",
+            "ownership_manifest_ref", "product_id", "product_version", "recipe_digest", "schema",
+            "setup_abi", "source_archive_digest", "target_root", "target_scope", "transaction_id"}) ||
+        string_field(*state, "schema") != "usk.installed_state.v1" ||
+        string_field(*state, "install_id") != request.plan_request.install_id ||
+        string_field(*state, "product_id") != "factorio" ||
+        string_field(*state, "product_version") != request.plan_request.version ||
+        string_field(*state, "source_archive_digest") != plan.source_archive_sha256 ||
+        string_field(*state, "target_scope") != "portable" ||
+        string_field(*state, "transaction_id") != request.transaction_id ||
+        string_field(*state, "audit_chain_id") != expected_audit_chain ||
+        string_field(*state, "created_at") != request.applied_at ||
+        string_field(*state, "lifecycle_status") != "installed" ||
+        string_field(*state, "ownership_manifest_ref") !=
+            "ownership/ownership." + request.plan_request.install_id + "." +
+                request.transaction_id + ".json" ||
+        !sha256_field(string_field(*state, "ownership_manifest_digest"))) return invalid("state identity");
+    auto expected_target = absolute_normalized(request.plan_request.target, "target");
+    auto setup_root = absolute_normalized(
+        facman::platform::path_from_utf8(configuration.state_root), "setup state root");
+    if (!expected_target || !setup_root ||
+        !normalized_absolute_path(string_field(*state, "target_root"), expected_target.value())) {
+        return invalid("target identity");
+    }
+    if (string_field(*state, "recipe_digest") != plan.recipe_digest ||
+        !sha256_field(string_field(*state, "recipe_digest"))) return invalid("recipe identity");
+    const auto* verification = state->find("last_verification");
+    const auto* entrypoints = state->find("entrypoints");
+    const auto* abi = state->find("setup_abi");
+    const auto* components = state->find("component_selection");
+    if (verification == nullptr || !exact_members(*verification,
+            {"report_digest", "report_id", "status", "verified_at"}) ||
+        string_field(*verification, "report_id") != "verify." + request.transaction_id ||
+        string_field(*verification, "status") != "pass" ||
+        string_field(*verification, "verified_at") != request.applied_at ||
+        !sha256_field(string_field(*verification, "report_digest")) ||
+        abi == nullptr || !exact_members(*abi, {"major", "minor", "provider_revision"}) ||
+        entrypoints == nullptr || !entrypoints->is_array() || entrypoints->size() != 1U ||
+        components == nullptr || !components->is_array() ||
+        components->serialize() != plan.component_selection) {
+        return invalid("verification or entrypoint evidence");
+    }
+    const auto* entrypoint = entrypoints->at(0);
+    const auto* major = abi->find("major");
+    const auto* minor = abi->find("minor");
+    if (major == nullptr || minor == nullptr) return invalid("setup ABI");
+    const auto major_value = major->unsigned_integer_value();
+    const auto minor_value = minor->unsigned_integer_value();
+    if (!major_value || !minor_value || major_value.value() != 1U || minor_value.value() != 0U)
+        return invalid("setup ABI identity");
+    auto recipe = facman::factorio::setup::portable_windows_zip_recipe();
+    if (!recipe || entrypoint == nullptr ||
+        !exact_members(*entrypoint, {"entrypoint_id", "kind", "relative_path"}) ||
+        string_field(*entrypoint, "entrypoint_id") != "factorio" ||
+        string_field(*entrypoint, "kind") != "application" ||
+        string_field(*entrypoint, "relative_path") != recipe.value().entrypoint ||
+        !safe_relative_path(recipe.value().entrypoint) ||
+        string_field(*abi, "provider_revision") != "facman.factorio.recipe.v1") {
+        return invalid("Factorio recipe entrypoint");
+    }
+    const auto executable = expected_target.value() /
+        facman::platform::path_from_utf8(recipe.value().entrypoint);
+    facman::platform::StableInputFile executable_file;
+    if (!executable_file.open_no_follow(executable).ok() || !executable_file.revalidate().ok()) {
+        return invalid("installed executable");
+    }
+    auto state_digest = installed_state_digest(*state);
+    if (!state_digest || !sha256_field(state_digest.value())) return invalid("installed state digest");
+    InstallReport report;
+    report.target = expected_target.take_value();
+    report.executable = executable;
+    report.source_archive_sha256 = plan.source_archive_sha256;
+    report.setup_state_ref = facman::platform::path_to_utf8(setup_root.value() / "state" /
+        "installed" / (request.plan_request.install_id + "." + request.transaction_id + ".json"));
+    report.last_verification_identity = string_field(*verification, "report_digest");
+    report.state_revision = request.transaction_id + ":" +
+        string_field(*state, "ownership_manifest_digest");
+    report.verification_status = "pass";
+    report.installed_state_digest = state_digest.take_value();
+    return facman::core::Result<InstallReport>::success(std::move(report));
+}
+
+facman::core::Result<InstallReport> verify_new_install_target(
+    const InstallApplyRequest& request, InstallReport terminal, const SetupConfiguration& configuration)
+{
+    const auto invalid = [](const std::string& detail) {
+        return facman::core::Result<InstallReport>::failure({
+            "setup_install_terminal_target_changed",
+            "Installed target no longer reproduces its verified managed ownership", detail,
+            facman::core::OutcomeKind::conflict});
+    };
+    const std::string report_id = "verify." + request.transaction_id + ".facman-projection";
+    facman::core::json::ObjectBuilder payload;
+    payload.add_string("schema", "usk.installed_verify_request.v1");
+    payload.add_string("request_id", request.plan_request.request_id + ".projection-verify");
+    payload.add_string("install_id", request.plan_request.install_id);
+    payload.add_string("report_id", report_id);
+    payload.add_string("verified_at", request.applied_at);
+    auto verified = execute_setup("installed.verify", payload.serialize(), configuration);
+    if (!verified) return invalid(verified.error().code + ": " + verified.error().message);
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 32U * 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 1000000;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(verified.value(), limits);
+    const facman::core::json::Value* report = nullptr;
+    if (!document || !response_envelope(document.value(), report) ||
+        !exact_members(*report, {"directories", "files", "install_id", "installed_state_digest",
+            "ownership_manifest_digest", "report_digest", "report_id", "schema", "status",
+            "summary", "unknown_paths", "verified_at"}) ||
+        string_field(*report, "schema") != "usk.verification_report.v1" ||
+        string_field(*report, "status") != "pass" ||
+        string_field(*report, "install_id") != request.plan_request.install_id ||
+        string_field(*report, "report_id") != report_id ||
+        string_field(*report, "verified_at") != request.applied_at ||
+        string_field(*report, "installed_state_digest") != terminal.installed_state_digest ||
+        terminal.state_revision != request.transaction_id + ":" +
+            string_field(*report, "ownership_manifest_digest") ||
+        !sha256_field(string_field(*report, "report_digest"))) return invalid("current verification identity or status");
+    facman::core::json::ObjectBuilder unsigned_report;
+    for (const auto& key : report->object_keys()) {
+        if (key == "schema" || key == "report_digest") continue;
+        if (!unsigned_report.add_value(key, *report->find(key))) return invalid("verification digest input");
+    }
+    auto unsigned_document = facman::core::json::parse(unsigned_report.serialize(), limits);
+    auto canonical = unsigned_document ? facman::core::json::canonical_integer_json(unsigned_document.value()) :
+        facman::core::Result<std::string>::failure({"invalid_json", "verification report is invalid", ""});
+    if (!canonical || facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(canonical.value().data()), canonical.value().size()) !=
+        string_field(*report, "report_digest")) return invalid("verification digest mismatch");
+    return facman::core::Result<InstallReport>::success(std::move(terminal));
 }
 
 facman::core::Result<UninstallPlan> decode_uninstall_plan(
@@ -1573,11 +1758,15 @@ public:
         const std::string plan_digest = provider_plan != nullptr && provider_plan->is_object()
             ? string_field(*provider_plan, "plan_digest")
             : std::string();
+        const auto* input_identity = provider_plan != nullptr && provider_plan->is_object()
+            ? provider_plan->find("input_identity") : nullptr;
         if (!document || string_field(document.value(), "status") != "ok" ||
             provider_plan == nullptr || !provider_plan->is_object() ||
             string_field(*provider_plan, "schema") != "usk.install_plan.v1" ||
             string_field(*provider_plan, "status") != "planned" ||
-            plan_id != request.request_id || plan_digest.size() != 64) {
+            plan_id != request.request_id || !sha256_field(plan_digest) ||
+            input_identity == nullptr || !input_identity->is_object() ||
+            !sha256_field(string_field(*input_identity, "recipe_digest"))) {
             return facman::core::Result<InstallPlan>::failure({
                 "setup_install_plan_response_invalid",
                 "Universal Setup returned an invalid target-bound install plan",
@@ -1589,8 +1778,398 @@ public:
         plan.inputs_confirmed = true;
         plan.plan_id = plan_id;
         plan.plan_digest = plan_digest;
+        plan.source_archive_sha256 = assessment.value().archive_sha256;
+        plan.recipe_digest = string_field(*input_identity, "recipe_digest");
+        plan.component_selection = components.serialize();
+        plan.plan_request = payload.serialize();
         plan.provider_response = provider_plan->serialize();
         return facman::core::Result<InstallPlan>::success(std::move(plan));
+    }
+
+    facman::core::Result<InstallReport> apply_install(const InstallApplyRequest& request) override
+    {
+        if (configuration_.state_root.empty() || configuration_.acceptance_root.empty() ||
+            request.confirmation != "APPLY" ||
+            !valid_utc_seconds(request.plan_request.created_at) ||
+            !valid_utc_seconds(request.applied_at) ||
+            request.applied_at <= request.plan_request.created_at ||
+            request.transaction_id.empty() ||
+            request.reviewed_plan.plan_id != request.plan_request.request_id ||
+            !sha256_field(request.reviewed_plan.plan_digest)) {
+            return facman::core::Result<InstallReport>::failure({
+                "setup_install_apply_input_invalid",
+                "Managed install apply requires configured provider roots and exact reviewed identities", ""});
+        }
+        auto current_plan = plan_install(request.plan_request);
+        if (!current_plan) return facman::core::Result<InstallReport>::failure(current_plan.error());
+        if (current_plan.value().plan_id != request.reviewed_plan.plan_id ||
+            current_plan.value().plan_digest != request.reviewed_plan.plan_digest ||
+            !sha256_field(current_plan.value().source_archive_sha256)) {
+            return facman::core::Result<InstallReport>::failure({
+                "stale_plan", "Reviewed managed install plan changed before apply", ""});
+        }
+        auto plan_request = facman::core::json::parse(current_plan.value().plan_request);
+        if (!plan_request || !plan_request.value().is_object()) {
+            return facman::core::Result<InstallReport>::failure({
+                "setup_install_apply_input_invalid", "Managed install plan request cannot be bound", ""});
+        }
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.install_local_apply_request.v1");
+        payload.add_value("plan_request", plan_request.value());
+        payload.add_string("reviewed_plan_id", request.reviewed_plan.plan_id);
+        payload.add_string("reviewed_plan_digest", request.reviewed_plan.plan_digest);
+        payload.add_string("transaction_id", request.transaction_id);
+        payload.add_string("applied_at", request.applied_at);
+        payload.add_string("confirmation", request.confirmation);
+        auto applied = execute_setup("install_local.apply", payload.serialize(), configuration_, false);
+        if (!applied) return facman::core::Result<InstallReport>::failure(provider_error(
+            applied.error(), "setup_install_apply_refused", "Universal Setup refused managed install apply"));
+        auto terminal = decode_new_install_state(
+            applied.value(), request, current_plan.value(), configuration_);
+        if (!terminal) return terminal;
+        facman::core::json::ObjectBuilder inspect;
+        inspect.add_string("schema", "usk.installed_inspect_request.v1");
+        inspect.add_string("request_id", request.plan_request.request_id + ".terminal-inspect");
+        inspect.add_string("install_id", request.plan_request.install_id);
+        auto inspected = execute_setup("installed.inspect", inspect.serialize(), configuration_);
+        if (!inspected) return facman::core::Result<InstallReport>::failure(provider_error(
+            inspected.error(), "setup_install_terminal_state_inspection_refused",
+            "Universal Setup could not inspect the committed install"));
+        auto persisted = decode_new_install_state(
+            inspected.value(), request, current_plan.value(), configuration_);
+        if (!persisted || persisted.value().installed_state_digest !=
+            terminal.value().installed_state_digest) {
+            return facman::core::Result<InstallReport>::failure({
+                "setup_install_terminal_state_changed",
+                "Committed managed install state differs from the apply result", ""});
+        }
+        return verify_new_install_target(request, persisted.take_value(), configuration_);
+    }
+
+    facman::core::Result<InstallRecoveryInspection> inspect_install_recovery(
+        const InstallRecoveryRequest& request) override
+    {
+        const auto& apply = request.apply;
+        if (!configuration_.mutation_configured() ||
+            apply.plan_request.request_id != apply.reviewed_plan.plan_id ||
+            apply.plan_request.install_id.empty() || apply.transaction_id.empty() ||
+            !sha256_field(apply.reviewed_plan.plan_digest) ||
+            !sha256_field(apply.reviewed_plan.source_archive_sha256) ||
+            !sha256_field(apply.reviewed_plan.recipe_digest) ||
+            apply.reviewed_plan.component_selection.empty() ||
+            !valid_utc_seconds(apply.plan_request.created_at) ||
+            !valid_utc_seconds(apply.applied_at) ||
+            apply.applied_at <= apply.plan_request.created_at) {
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "setup_install_recovery_input_invalid",
+                "Managed install recovery requires exact durable provider identities", ""});
+        }
+        auto setup_root = absolute_normalized(
+            facman::platform::path_from_utf8(configuration_.state_root), "setup state root");
+        auto target = absolute_normalized(apply.plan_request.target, "target");
+        if (!setup_root || !target) return facman::core::Result<InstallRecoveryInspection>::failure({
+            "setup_install_recovery_input_invalid", "Managed install recovery roots are invalid", ""});
+        const auto provider_journal = setup_root.value() / "state" / "transactions" /
+            (apply.transaction_id + ".journal.json");
+        const auto installed_state = setup_root.value() / "state" / "installed" /
+            (apply.plan_request.install_id + "." + apply.transaction_id + ".json");
+        const auto presence = [](const std::filesystem::path& path, bool directory) -> int {
+            std::error_code error;
+            const auto status = std::filesystem::symlink_status(path, error);
+            if (error == std::errc::no_such_file_or_directory) return 0;
+            if (error || std::filesystem::is_symlink(status)) return -1;
+            if (!std::filesystem::exists(status)) return 0;
+            std::string unsafe;
+            if ((directory ? !std::filesystem::is_directory(status) :
+                    !std::filesystem::is_regular_file(status)) ||
+                facman::base::path_crosses_link_or_reparse_point(path, unsafe)) return -1;
+            return 1;
+        };
+        const int journal = presence(provider_journal, false);
+        const int owned_target = presence(target.value(), true);
+        const int state = presence(installed_state, false);
+        if (journal < 0 || owned_target < 0 || state < 0) {
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "setup_install_recovery_response_invalid",
+                "Provider journal, installed state, or target has unsafe ownership", ""});
+        }
+        InstallRecoveryInspection result;
+        result.provider_journal_present = journal == 1;
+        result.target_exists = owned_target == 1;
+        if (journal == 0) {
+            result.classification = owned_target == 0 && state == 0 ?
+                "no_provider_effect" : "indeterminate";
+            return facman::core::Result<InstallRecoveryInspection>::success(std::move(result));
+        }
+        facman::core::json::ObjectBuilder inspect;
+        inspect.add_string("schema", "usk.recovery_inspect_request.v1");
+        inspect.add_string("request_id", apply.plan_request.request_id + ".facman.install.recovery.inspect");
+        inspect.add_string("install_id", apply.plan_request.install_id);
+        inspect.add_string("transaction_id", apply.transaction_id);
+        inspect.add_string("plan_id", apply.reviewed_plan.plan_id);
+        inspect.add_string("plan_digest", apply.reviewed_plan.plan_digest);
+        inspect.add_string("operation", "install_local");
+        inspect.add_string("target_root", facman::platform::path_to_utf8(target.value()));
+        auto inspected = execute_setup("recovery.inspect", inspect.serialize(), configuration_);
+        if (!inspected) return facman::core::Result<InstallRecoveryInspection>::failure(provider_error(
+            inspected.error(), "setup_install_recovery_inspection_refused",
+            "Universal Setup refused managed install recovery inspection"));
+        facman::core::json::Limits limits;
+        limits.maximum_bytes = 4U * 1024U * 1024U;
+        limits.maximum_depth = 32;
+        limits.maximum_nodes = 100000;
+        limits.maximum_string_bytes = 32768;
+        auto document = facman::core::json::parse(inspected.value(), limits);
+        const facman::core::json::Value* report = nullptr;
+        if (!document || !response_envelope(document.value(), report) ||
+            !exact_members(*report, {"audit_chain_digest", "audit_chain_id", "available_actions",
+                "effects", "journal_digest", "journal_id", "journal_snapshot_sha256",
+                "observed_state", "recorded_at", "report_digest", "report_id", "schema",
+                "selected_action", "status", "transaction_id"}) ||
+            string_field(*report, "schema") != "usk.recovery_report.v1" ||
+            string_field(*report, "status") != "inspection_only" ||
+            string_field(*report, "transaction_id") != apply.transaction_id ||
+            string_field(*report, "journal_id") != "journal." + apply.transaction_id ||
+            string_field(*report, "report_id") != "recovery.inspect." +
+                apply.plan_request.request_id + ".facman.install.recovery.inspect" ||
+            !sha256_field(string_field(*report, "journal_digest")) ||
+            !sha256_field(string_field(*report, "journal_snapshot_sha256")) ||
+            !sha256_field(string_field(*report, "report_digest"))) {
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "setup_install_recovery_response_invalid",
+                "Universal Setup returned an invalid install recovery report", ""});
+        }
+        auto report_digest = recovery_report_digest(*report);
+        if (!report_digest || report_digest.value() != string_field(*report, "report_digest")) {
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "setup_install_recovery_response_invalid",
+                "Universal Setup install recovery report digest is invalid", ""});
+        }
+        result.provider_observed_state = string_field(*report, "observed_state");
+        result.provider_journal_digest = string_field(*report, "journal_digest");
+        result.provider_journal_snapshot_sha256 =
+            string_field(*report, "journal_snapshot_sha256");
+        result.provider_audit_chain_digest = string_field(*report, "audit_chain_digest");
+        const auto* actions = report->find("available_actions");
+        if (actions == nullptr || !actions->is_array() || actions->size() > 4U) {
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "setup_install_recovery_response_invalid", "Provider recovery actions are invalid", ""});
+        }
+        for (std::size_t index = 0; index < actions->size(); ++index) {
+            const auto* action = actions->at(index);
+            if (action == nullptr || !action->is_string()) return facman::core::Result<InstallRecoveryInspection>::failure({
+                "setup_install_recovery_response_invalid", "Provider recovery action is not a string", ""});
+            if (action->string_value().value() == "rollback") result.rollback_available = true;
+        }
+        if (owned_target == 0 && state == 0 && result.provider_observed_state == "rolled_back") {
+            result.classification = "provider_rolled_back";
+            return facman::core::Result<InstallRecoveryInspection>::success(std::move(result));
+        }
+        if (owned_target == 0 && state == 0 && result.rollback_available) {
+            result.classification = "provider_rollback_available";
+            return facman::core::Result<InstallRecoveryInspection>::success(std::move(result));
+        }
+        if (owned_target == 0 && state == 0 && !apply.reviewed_plan.plan_request.empty() &&
+            (result.provider_observed_state == "created" || result.provider_observed_state == "validated" ||
+                result.provider_observed_state == "planned" || result.provider_observed_state == "staging" ||
+                result.provider_observed_state == "staged" || result.provider_observed_state == "verified" ||
+                result.provider_observed_state == "recovery_required")) {
+            // Eligibility only: the public replay call independently validates source,
+            // roots, complete ancestry and the exact reviewed journal/audit snapshots.
+            auto snapshot = read_provider_snapshot(provider_journal);
+            if (!snapshot) return facman::core::Result<InstallRecoveryInspection>::failure(snapshot.error());
+            if (facman::base::sha256_hex_bytes(reinterpret_cast<const unsigned char*>(snapshot.value().data()),
+                    snapshot.value().size()) != result.provider_journal_snapshot_sha256)
+                return facman::core::Result<InstallRecoveryInspection>::failure({
+                    "stale_plan", "Provider journal changed during replay inspection", ""});
+            auto durable = facman::core::json::parse(snapshot.value(), limits);
+            const auto* metadata = durable ? durable.value().find("recovery_metadata") : nullptr;
+            const auto* stream = metadata != nullptr ? metadata->find("stream_journal") : nullptr;
+            const auto* transitions = durable ? durable.value().find("transitions") : nullptr;
+            bool commit_started = transitions == nullptr || !transitions->is_array();
+            if (!commit_started) for (std::size_t index = 0; index < transitions->size(); ++index) {
+                const auto* transition = transitions->at(index);
+                const std::string next = transition != nullptr ? string_field(*transition, "to") : std::string();
+                if (next.empty() || next == "committing" || next == "committed" || next == "completed")
+                    commit_started = true;
+            }
+            const int staged = presence(setup_root.value() / "staging" / (".usk-stage-" + apply.transaction_id), true);
+            const bool retained_staging = staged == 1 || (staged == 0 && stream != nullptr &&
+                string_field(*stream, "publication_root_identity").empty());
+            const std::string source_text = stream != nullptr ? string_field(*stream, "source_context") : std::string();
+            auto source = facman::core::json::parse(source_text);
+            if (!commit_started && retained_staging && source && source.value().is_object() &&
+                string_field(source.value(), "schema") == "usk.install_stream_source.v1" &&
+                string_field(source.value(), "plan_digest") == apply.reviewed_plan.plan_digest &&
+                string_field(source.value(), "archive_sha256") == apply.reviewed_plan.source_archive_sha256) {
+                if (sha256_field(result.provider_audit_chain_digest)) {
+                    result.classification = "provider_replay_available";
+                    return facman::core::Result<InstallRecoveryInspection>::success(std::move(result));
+                }
+                const auto* origin = stream != nullptr ? stream->find("restart_origin") : nullptr;
+                if (result.provider_audit_chain_digest.empty() && origin != nullptr && origin->is_object()) {
+                    result.replay_origin_transaction_id = string_field(*origin, "transaction_id");
+                    result.replay_origin_snapshot_sha256 = string_field(*origin, "snapshot_sha256");
+                    result.replay_genesis_missing = !result.replay_origin_transaction_id.empty() &&
+                        sha256_field(result.replay_origin_snapshot_sha256);
+                }
+            }
+        }
+        if (result.provider_observed_state != "completed" || owned_target != 1 || state != 1) {
+            result.classification = "indeterminate";
+            return facman::core::Result<InstallRecoveryInspection>::success(std::move(result));
+        }
+        facman::core::json::ObjectBuilder terminal_request;
+        terminal_request.add_string("schema", "usk.installed_inspect_request.v1");
+        terminal_request.add_string("request_id", apply.plan_request.request_id + ".install.recovery.terminal");
+        terminal_request.add_string("install_id", apply.plan_request.install_id);
+        auto terminal = execute_setup("installed.inspect", terminal_request.serialize(), configuration_);
+        if (!terminal) return facman::core::Result<InstallRecoveryInspection>::failure(provider_error(
+            terminal.error(), "setup_install_terminal_state_inspection_refused",
+            "Universal Setup could not inspect recovered installed state"));
+        auto bound = decode_new_install_state(
+            terminal.value(), apply, apply.reviewed_plan, configuration_);
+        if (!bound) return facman::core::Result<InstallRecoveryInspection>::failure(bound.error());
+        auto current_target = verify_new_install_target(apply, bound.take_value(), configuration_);
+        if (!current_target) return facman::core::Result<InstallRecoveryInspection>::failure(current_target.error());
+        result.terminal = current_target.take_value();
+        result.classification = "provider_installed";
+        return facman::core::Result<InstallRecoveryInspection>::success(std::move(result));
+    }
+
+    facman::core::Result<InstallRecoveryInspection> replay_install_recovery(
+        const InstallRecoveryRequest& request, const InstallRecoveryInspection& reviewed,
+        const std::string& transaction_id) override
+    {
+        auto current = inspect_install_recovery(request);
+        if (!current) return facman::core::Result<InstallRecoveryInspection>::failure(current.error());
+        if (current.value().classification != "provider_replay_available" ||
+            current.value().provider_journal_snapshot_sha256 != reviewed.provider_journal_snapshot_sha256 ||
+            current.value().provider_audit_chain_digest != reviewed.provider_audit_chain_digest ||
+            transaction_id.empty() || transaction_id == request.apply.transaction_id) {
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "stale_plan", "Reviewed provider replay snapshots changed before apply", ""});
+        }
+        const auto& original = request.apply;
+        auto frozen = facman::core::json::parse(original.reviewed_plan.plan_request);
+        if (!frozen || !frozen.value().is_object()) return facman::core::Result<InstallRecoveryInspection>::failure({
+            "setup_install_recovery_input_invalid", "Durable replay plan request is unavailable", ""});
+        facman::core::json::ObjectBuilder restart;
+        restart.add_string("transaction_id", original.transaction_id);
+        restart.add_string("journal_snapshot_sha256", reviewed.provider_journal_snapshot_sha256);
+        restart.add_string("audit_chain_digest", reviewed.provider_audit_chain_digest);
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.install_local_apply_request.v1");
+        payload.add_value("plan_request", frozen.value());
+        payload.add_string("reviewed_plan_id", original.reviewed_plan.plan_id);
+        payload.add_string("reviewed_plan_digest", original.reviewed_plan.plan_digest);
+        payload.add_string("transaction_id", transaction_id);
+        payload.add_string("applied_at", original.applied_at);
+        payload.add_string("confirmation", "APPLY");
+        payload.add_object("restart_from", restart);
+        auto replayed = execute_setup("install_local.apply", payload.serialize(), configuration_, false);
+        if (!replayed) {
+            const auto nested = provider_error(replayed.error(), "setup_provider_refused", "Universal Setup refused replay");
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "transaction_recovery_required", "Provider replay requires recovery (" + nested.code + "): " + nested.message,
+                replayed.error().detail});
+        }
+        InstallRecoveryRequest after = request;
+        after.apply.transaction_id = transaction_id;
+        after.apply.is_stream_replay = true;
+        auto terminal = inspect_install_recovery(after);
+        if (!terminal || terminal.value().classification != "provider_installed")
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "transaction_recovery_required", "Provider replay terminal state could not be independently verified",
+                terminal ? terminal.value().classification : terminal.error().message});
+        return terminal;
+    }
+
+    facman::core::Result<InstallRecoveryInspection> rollback_install_recovery(
+        const InstallRecoveryRequest& request, const InstallRecoveryInspection& reviewed) override
+    {
+        const auto failure = [](const std::string& detail) {
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "transaction_recovery_required", "Provider install rollback requires recovery", detail,
+                facman::core::OutcomeKind::recovery_required});
+        };
+        auto current = inspect_install_recovery(request);
+        if (!current) return facman::core::Result<InstallRecoveryInspection>::failure(current.error());
+        if (current.value().classification != "provider_rollback_available" ||
+            !current.value().rollback_available || current.value().target_exists ||
+            current.value().provider_journal_digest != reviewed.provider_journal_digest ||
+            current.value().provider_journal_snapshot_sha256 != reviewed.provider_journal_snapshot_sha256) {
+            return facman::core::Result<InstallRecoveryInspection>::failure({
+                "stale_plan", "Reviewed provider rollback disposition changed", "",
+                facman::core::OutcomeKind::refused});
+        }
+        const auto& apply = request.apply;
+        facman::core::json::ObjectBuilder inspection;
+        inspection.add_string("schema", "usk.recovery_inspect_request.v1");
+        inspection.add_string("request_id", apply.plan_request.request_id + ".facman.install.recovery.inspect");
+        inspection.add_string("install_id", apply.plan_request.install_id);
+        inspection.add_string("transaction_id", apply.transaction_id);
+        inspection.add_string("plan_id", apply.reviewed_plan.plan_id);
+        inspection.add_string("plan_digest", apply.reviewed_plan.plan_digest);
+        inspection.add_string("operation", "install_local");
+        inspection.add_string("target_root", facman::platform::path_to_utf8(apply.plan_request.target));
+        const std::string recovery_id = "install-provider-recovery." + apply.transaction_id;
+        facman::core::json::ObjectBuilder plan_request;
+        plan_request.add_string("schema", "usk.recovery_plan_request.v1");
+        plan_request.add_object("inspection", inspection);
+        plan_request.add_string("recovery_plan_id", recovery_id);
+        plan_request.add_string("created_at", apply.applied_at);
+        auto planned = execute_setup("recovery.plan", plan_request.serialize(), configuration_);
+        if (!planned) return failure(planned.error().code + ": " + planned.error().message);
+        facman::core::json::Limits limits;
+        limits.maximum_bytes = 4U * 1024U * 1024U;
+        limits.maximum_depth = 32;
+        limits.maximum_nodes = 100000;
+        limits.maximum_string_bytes = 32768;
+        auto document = facman::core::json::parse(planned.value(), limits);
+        const facman::core::json::Value* plan = nullptr;
+        if (!document || !response_envelope(document.value(), plan) ||
+            !exact_members(*plan, {"available_actions", "created_at", "effects", "install_id",
+                "journal_digest", "journal_snapshot_sha256", "audit_chain_id", "audit_chain_digest",
+                "observed_state", "operation", "plan_digest", "plan_id", "revalidation", "schema",
+                "status", "transaction_id"}) ||
+            string_field(*plan, "schema") != "usk.recovery_plan.v1" ||
+            string_field(*plan, "status") != "planned" ||
+            string_field(*plan, "plan_id") != recovery_id ||
+            string_field(*plan, "transaction_id") != apply.transaction_id ||
+            string_field(*plan, "install_id") != apply.plan_request.install_id ||
+            string_field(*plan, "operation") != "install_local" ||
+            string_field(*plan, "created_at") != apply.applied_at ||
+            string_field(*plan, "observed_state") != reviewed.provider_observed_state ||
+            string_field(*plan, "journal_digest") != reviewed.provider_journal_digest ||
+            string_field(*plan, "journal_snapshot_sha256") != reviewed.provider_journal_snapshot_sha256 ||
+            !sha256_field(string_field(*plan, "plan_digest"))) return failure("provider rollback plan binding");
+        facman::core::json::ObjectBuilder unsigned_plan;
+        for (const auto& key : plan->object_keys()) {
+            if (key != "plan_digest" && !unsigned_plan.add_value(key, *plan->find(key)))
+                return failure("provider rollback digest input");
+        }
+        auto unsigned_document = facman::core::json::parse(unsigned_plan.serialize(), limits);
+        if (!unsigned_document) return failure("provider rollback plan JSON");
+        auto canonical = facman::core::json::canonical_integer_json(unsigned_document.value());
+        if (!canonical || facman::base::sha256_hex_bytes(
+                reinterpret_cast<const unsigned char*>(canonical.value().data()), canonical.value().size()) !=
+            string_field(*plan, "plan_digest")) return failure("provider rollback plan digest");
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.recovery_apply_request.v1");
+        payload.add_object("plan_request", plan_request);
+        payload.add_string("reviewed_plan_id", recovery_id);
+        payload.add_string("reviewed_plan_digest", string_field(*plan, "plan_digest"));
+        payload.add_string("selected_action", "rollback");
+        payload.add_string("applied_at", apply.applied_at);
+        payload.add_string("confirmation", "APPLY");
+        auto recovered = execute_setup("recovery.apply", payload.serialize(), configuration_, false);
+        if (!recovered) return failure(recovered.error().code + ": " + recovered.error().message);
+        // Independently inspect persisted disposition instead of projecting from the mutation response.
+        auto after = inspect_install_recovery(request);
+        if (!after || after.value().classification != "provider_rolled_back" || after.value().target_exists)
+            return failure(after ? "provider rollback has no verified disposition" : after.error().message);
+        return after;
     }
 
     facman::core::Result<UninstallPlan> plan_uninstall(
