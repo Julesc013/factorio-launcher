@@ -179,7 +179,8 @@ add_library(flb_factorio_application_static STATIC
   application/application_configuration.cpp application/application_context.cpp
   application/last_run_provider.cpp application/presentation_service.cpp
   application/command_admission.cpp application/command_dispatch.cpp application/command_result.cpp
-  application/flb_factorio_application.cpp application/setup_gateway.cpp application/handlers/diagnostics.cpp
+  application/flb_factorio_application.cpp application/setup_gateway.cpp
+  application/managed_install_coordinator.cpp application/handlers/diagnostics.cpp
   application/handlers/doctor.cpp application/handlers/installs.cpp application/handlers/instances.cpp
   application/handlers/intelligence.cpp
   application/handlers/launch.cpp application/handlers/mods.cpp application/handlers/modsets.cpp

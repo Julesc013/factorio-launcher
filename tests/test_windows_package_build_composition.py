@@ -229,6 +229,43 @@ class WindowsPackageBuildCompositionTests(unittest.TestCase):
             "candidate projection must not mutate tracked revisions",
         )
 
+    def test_setup_canary_cannot_claim_canonical_or_other_provider_identity(self) -> None:
+        candidate = pipeline.repaired_provider_canary_revisions(
+            REVISIONS, "7" * 40, provider_id="universal_setup"
+        )
+        self.assertEqual(candidate["universal_launcher"], REVISIONS["universal_launcher"])
+        self.assertEqual(REVISIONS["universal_setup"], "3" * 40)
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary) / "static"
+            write_build_root(
+                build, cache_linkage="static", provider_class="repaired_provider_canary",
+                universal_setup=candidate["universal_setup"],
+            )
+            self.validate(
+                "windows_portable_cli_x64", build,
+                source_revisions=candidate, provider_class="repaired_provider_canary",
+            )
+            with self.assertRaisesRegex(ValueError, "differs from package custody"):
+                self.validate("windows_portable_cli_x64", build)
+            with self.assertRaisesRegex(ValueError, "differs from package custody"):
+                self.validate(
+                    "windows_portable_cli_x64", build,
+                    source_revisions={**REVISIONS, "universal_launcher": "7" * 40},
+                    provider_class="repaired_provider_canary",
+                )
+        with self.assertRaisesRegex(ValueError, "differ from the tracked"):
+            pipeline.repaired_provider_canary_revisions(
+                REVISIONS, REVISIONS["universal_setup"], provider_id="universal_setup"
+            )
+
+    def test_canary_cannot_select_both_providers(self) -> None:
+        with self.assertRaisesRegex(ValueError, "exactly one provider"):
+            pipeline.build_profile(
+                "windows_portable_cli_x64", Path("unused-output"), Path("unused-build"),
+                repaired_provider_canary_ulk="7" * 40,
+                repaired_provider_canary_usk="8" * 40,
+            )
+
     def test_canary_source_trees_come_from_exact_candidate_lock(self) -> None:
         candidate = {
             **REVISIONS,

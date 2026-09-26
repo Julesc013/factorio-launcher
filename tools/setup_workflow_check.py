@@ -50,6 +50,7 @@ def validate() -> list[str]:
             "implemented"
             if command_id in {
                 "installs.install.plan",
+                "installs.install.apply",
                 "installs.repair.plan",
                 "installs.repair.apply",
                 "installs.uninstall.plan",
@@ -77,7 +78,7 @@ def validate() -> list[str]:
         command = commands[command_id]
         expected_risk = (
             "setup_mutation"
-            if command_id in {"installs.repair.apply", "installs.uninstall.apply"}
+            if command_id in {"installs.install.apply", "installs.repair.apply", "installs.uninstall.apply", "installs.recovery.apply"}
             else "persistent_local_write"
         )
         if command.get("risk_tier") != expected_risk:
@@ -113,10 +114,18 @@ def validate() -> list[str]:
     for command_id in sorted(expected):
         if f'"{command_id}"' not in cli + handler + installation:
             problems.append(f"{command_id}: explicit CLI/application route is missing")
-    for command_id in {"installs.install.apply", "installs.move.apply"}:
+    for command_id in {"installs.move.apply"}:
         guard = f'live_target_acceptance_required(context, "{command_id}")'
         if guard not in handler:
             problems.append(f"{command_id}: M2 human-verdict guard is missing")
+    install_apply = commands.get("installs.install.apply", {})
+    if set(install_apply.get("effects", [])) != {"workspace_read", "workspace_write", "setup_mutation"}:
+        problems.append("installs.install.apply must disclose workspace and provider mutation effects")
+    admission = (ROOT / "runtime/factorio/application/command_admission.cpp").read_text(encoding="utf-8")
+    if "command == CommandId::installs_install_apply ||" not in admission:
+        problems.append("installs.install.apply must require configured mutation authority before effects")
+    if "context.setup().apply_install(apply)" not in handler or "provider_install_then_durable_install_reference_create" not in handler:
+        problems.append("installs.install.apply must enter the provider through its durable coordinator")
 
     run_execute = commands.get("run.execute")
     if run_execute is None or run_execute.get("availability_refusal_code") != "isolation_not_proven":

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
 """Check resource refusals before launching compilers or cloning providers."""
 from __future__ import annotations
 import os

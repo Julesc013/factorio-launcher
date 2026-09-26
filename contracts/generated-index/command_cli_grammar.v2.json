@@ -691,7 +691,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -864,10 +864,11 @@
         }
       ],
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
-      "risk_tier": "persistent_local_write",
+      "risk_tier": "setup_mutation",
       "runtime_id": "installs.install.apply",
       "schema": "facman.command.v2",
       "visibility": "public"
@@ -1434,9 +1435,10 @@
       "required_capabilities": [
         "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_preview",
+        "setup_mutation"
       ],
-      "risk_tier": "persistent_local_write",
+      "risk_tier": "setup_mutation",
       "runtime_id": "installs.recovery.apply",
       "schema": "facman.command.v2",
       "visibility": "public"
@@ -9592,5 +9594,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "d1b0f5092287b5257031724e5b994133ee66e75025ea1b3d325572f6f68a8a7c"
+  "source_digest": "dd48bf7f0ef82aaaed97ab867aff6b47c594b4f5bfb126fa6d278a7e1c23a63d"
 }

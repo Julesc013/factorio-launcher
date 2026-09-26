@@ -708,8 +708,13 @@ json::ObjectBuilder install_ref_builder(const InstallRef& install)
     discovery.add_string("source_family", install.source);
     output.add_object("discovery", discovery);
     json::ObjectBuilder safe_actions;
-    safe_actions.add_bool("repair", false);
-    safe_actions.add_bool("uninstall", false);
+    const bool managed = install.setup_mutation_allowed && install.ownership == "managed" &&
+        install.provider_id == "universal-setup" && !install.setup_state_ref.empty() &&
+        !install.state_revision.empty() && !install.last_verification_identity.empty() &&
+        install.lifecycle_status == "active" &&
+        (install.verification_status == "pass" || install.verification_status == "warn");
+    safe_actions.add_bool("repair", managed);
+    safe_actions.add_bool("uninstall", managed);
     output.add_object("safe_actions", safe_actions);
     return output;
 }

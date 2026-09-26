@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `d1b0f5092287b5257031724e5b994133ee66e75025ea1b3d325572f6f68a8a7c`.
+Source digest: `dd48bf7f0ef82aaaed97ab867aff6b47c594b4f5bfb126fa6d278a7e1c23a63d`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -21,13 +21,13 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.describe` | `installs.describe` | `installs_describe` | no | - | implemented | workspace_read | `facman installs describe <install-id> --json` |
 | `installs.import` | `install_refs.import` | `install_import` | yes | install-refs.import | available | workspace_read, workspace_write | `facman installs import <factorio-dir> --id <install-id> --json` |
 | `installs.inspect` | `install_refs.inspect` | `install_inspect` | no | install-refs.inspect | available | workspace_read | `facman installs inspect <install-id> --json` |
-| `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs install apply <plan-id> --version <version> --archive <path> --target <path> --id <install-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
+| `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs install apply <plan-id> --version <version> --archive <path> --target <path> --id <install-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
 | `installs.install.plan` | `installs.install.plan` | `installs_install_plan` | no | - | implemented | setup_preview | `facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json` |
 | `installs.install_version` | `installs.install_version` | `installs_install_version` | no | installs.install-version | unavailable_until_gateway | setup_preview | `facman installs install-version <version> --archive <path> --json` |
 | `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.move.plan` | `installs.move.plan` | `installs_move_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs move plan <install-id> --target <path> --json` |
 | `installs.reconcile.plan` | `installs.reconcile.plan` | `installs_reconcile_plan` | no | - | implemented | workspace_read | `facman installs reconcile plan <install-id> [--version <v>] [--source-ref <ref>] [--target <path>] [--management <mode>] [--deployment-style <style>] [--data-policy <policy>] [--integration <mode>] [--update-policy <policy>] --json` |
-| `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | implemented | workspace_read, workspace_write, setup_preview | `facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | implemented | workspace_read, workspace_write, setup_preview, setup_mutation | `facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.recovery.inspect` | `installs.recovery.inspect` | `installs_recovery_inspect` | no | - | implemented | workspace_read, setup_preview | `facman installs recovery inspect <transaction-id> --json` |
 | `installs.repair` | `installs.repair` | `installs_repair` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs repair <install-id> --json` |
 | `installs.repair.apply` | `installs.repair.apply` | `installs_repair_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs repair apply <install-id> <plan-id> --archive <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |

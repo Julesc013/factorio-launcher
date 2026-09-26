@@ -25,6 +25,11 @@ stopped during inventory; the active managed-install patch was preserved.
 - Archived and retired three small inactive task roots, restoring the
   canonical task-root count to eight. Their clean pinned provider checkouts
   and metadata remain recoverable from the retained archives.
+- Corrected the resource-identity worktree's stale path/branch binding, then
+  retired its clean exact-head checkout through the hygiene tool and deleted
+  the merged local branch. PR #259 binds source `fd051e661f036823efaeeaccbfc541cd46b12d73`
+  to `dev`; no open PR uses that branch as its base. The provider-canary
+  checkout remains retained because its head lacks an exact merged task PR.
 
 The combined deleted file inventory was 44.600 GiB. This is a logical file
 size total, rather than a claim about physical allocation or other sessions'
@@ -50,6 +55,22 @@ guard changes; the uncommitted managed-install implementation still needs its
 own runtime and packaged recovery verification.
 
 ## Implementation custody
+
+Two unowned historical task directories were consolidated intact into the
+current marker-owned task's `retained-historical-task-roots` folder. They held
+1,022,518,051 bytes. The operation used same-volume directory renames, verified
+file counts and byte totals, and deleted no files. Linked worktrees and running
+process references were checked before the move. The custody receipt is
+`historical-task-root-consolidation.json` in the current task root.
+
+The measured canonical task store now has six task roots and no unowned roots.
+Three obsolete local task branches were retired after verifying exact merged
+PR heads, dev integration, no unmatched commits, no dependent open PR and no
+linked worktree. The custody receipt is
+`merged-local-branch-retirement-receipt.json`. The abandoned reactivation branch
+and legacy provider canary worktree remain preserved because their exact
+retirement evidence is incomplete. The earlier 44.600 GiB logical cleanup
+total is unchanged; consolidation did not reclaim those preserved bytes.
 
 PR #339 is integrated at `dev@3111b853664b968d82919c79dfdfad9a12839f9e`.
 Requested commit `07f00ece1a34203b93e07491c86486d0281d44d9` is an ancestor.

@@ -45,7 +45,50 @@ struct InstallPlan {
     bool inputs_confirmed = false;
     std::string plan_id;
     std::string plan_digest;
+    std::string source_archive_sha256;
+    std::string recipe_digest;
+    std::string component_selection;
+    std::string plan_request;
     std::string provider_response;
+};
+
+struct InstallApplyRequest {
+    InstallPlanRequest plan_request;
+    InstallPlan reviewed_plan;
+    std::string transaction_id;
+    std::string applied_at;
+    std::string confirmation;
+    bool is_stream_replay = false;
+};
+
+struct InstallReport {
+    std::filesystem::path target;
+    std::filesystem::path executable;
+    std::string source_archive_sha256;
+    std::string setup_state_ref;
+    std::string last_verification_identity;
+    std::string state_revision;
+    std::string verification_status;
+    std::string installed_state_digest;
+};
+
+struct InstallRecoveryInspection {
+    std::string classification;
+    std::string provider_observed_state;
+    std::string provider_journal_digest;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_audit_chain_digest;
+    std::string replay_origin_transaction_id;
+    std::string replay_origin_snapshot_sha256;
+    bool replay_genesis_missing = false;
+    bool provider_journal_present = false;
+    bool target_exists = false;
+    bool rollback_available = false;
+    InstallReport terminal;
+};
+
+struct InstallRecoveryRequest {
+    InstallApplyRequest apply;
 };
 
 struct UninstallPlanRequest {
@@ -298,6 +341,25 @@ struct ManagedUninstallCoordinator {
     std::string projected_record_sha256;
 };
 
+struct ManagedInstallCoordinator {
+    InstallApplyRequest apply;
+    std::string logical_transaction_id;
+    unsigned replay_attempt = 0;
+    std::string replay_origin_transaction_id;
+    std::string replay_origin_snapshot_sha256;
+    std::string replay_origin_audit_digest;
+    std::string phase;
+    std::string projected_record_sha256;
+};
+
+bool decode_managed_install_coordinator(const std::string& text,
+    ManagedInstallCoordinator& output, std::string& detail);
+std::string prepare_managed_install_context(
+    const std::string& text, const std::string& projected_record_sha256);
+std::string prepare_managed_install_replay_context(const std::string& text,
+    const std::string& transaction_id, const std::string& origin_transaction_id,
+    const InstallRecoveryInspection& reviewed);
+
 bool decode_managed_uninstall_coordinator(
     const std::string& text,
     ManagedUninstallCoordinator& output,
@@ -329,6 +391,14 @@ public:
     virtual facman::core::Result<facman::factorio::setup::ArchiveAssessment> inspect_install_archive(
         const FactorioArchiveInspectRequest& request) = 0;
     virtual facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest& request) = 0;
+    virtual facman::core::Result<InstallReport> apply_install(const InstallApplyRequest& request) = 0;
+    virtual facman::core::Result<InstallRecoveryInspection> inspect_install_recovery(
+        const InstallRecoveryRequest& request) = 0;
+    virtual facman::core::Result<InstallRecoveryInspection> rollback_install_recovery(
+        const InstallRecoveryRequest& request, const InstallRecoveryInspection& reviewed) = 0;
+    virtual facman::core::Result<InstallRecoveryInspection> replay_install_recovery(
+        const InstallRecoveryRequest& request, const InstallRecoveryInspection& reviewed,
+        const std::string& transaction_id) = 0;
     virtual facman::core::Result<UninstallPlan> plan_uninstall(
         const UninstallPlanRequest& request) = 0;
     virtual facman::core::Result<RepairPlan> plan_repair(

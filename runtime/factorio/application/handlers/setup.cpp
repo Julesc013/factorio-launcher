@@ -137,6 +137,39 @@ std::string digest_text(const std::string& value)
         reinterpret_cast<const unsigned char*>(value.data()), value.size());
 }
 
+std::string managed_install_record(
+    const InstallApplyRequest& request,
+    const InstallReport& report)
+{
+    auto install = facman::factorio::discovery::inspect_install(
+        report.target, request.plan_request.install_id);
+    if (install.executable.lexically_normal() != report.executable.lexically_normal()) return {};
+    install.provider_id = "universal-setup";
+    install.root = report.target;
+    install.executable = report.executable;
+    install.version = request.plan_request.version;
+    install.ownership = "managed";
+    install.source = "universal-setup";
+    install.source_ref = "archive-sha256:" + report.source_archive_sha256;
+    install.platform = "windows";
+    install.distribution_origin = "local_archive";
+    install.platform_integration = "none_detected";
+    install.installation_layout = "portable_archive";
+    install.setup_state_ref = report.setup_state_ref;
+    install.lifecycle_status = "active";
+    install.last_verification_identity = report.last_verification_identity;
+    install.state_revision = report.state_revision;
+    install.verification_status = report.verification_status;
+    install.diagnostic_code.clear();
+    install.setup_mutation_allowed = true;
+    return facman::factorio::discovery::install_ref_json(install);
+}
+
+std::string prepared_install_context(const std::string& original, const std::string& record_digest)
+{
+    return prepare_managed_install_context(original, record_digest);
+}
+
 std::string checkpointed_uninstall_context(
     const ManagedUninstallCoordinator& context,
     const UninstallRecoveryInspection& inspection,
@@ -251,6 +284,166 @@ std::string read_text(const fs::path& path)
         offset += count;
     }
     return input.revalidate().ok() ? text : std::string();
+}
+
+struct NewInstallRecoveryPlan {
+    facman::transaction::Record journal;
+    InstallRecoveryRequest original;
+    InstallRecoveryInspection inspection;
+    facman::core::InstallId install_id;
+    fs::path record_path;
+    std::string record_text;
+    std::string projected_record;
+    std::string prepared_record_sha256;
+    std::string journal_sha256;
+    std::string action;
+    std::string plan_id;
+    std::string plan_digest;
+    std::string output;
+    unsigned replay_attempt = 0;
+    std::string replay_transaction_id;
+    std::string retained_child_transaction_id;
+    std::string retained_child_snapshot_sha256;
+};
+
+std::string new_install_recovery_document(
+    const NewInstallRecoveryPlan& plan, const std::string& status, const std::string& digest)
+{
+    facman::core::json::ObjectBuilder document;
+    document.add_string("schema", "facman.managed_install_recovery.v1");
+    document.add_string("operation", "install");
+    document.add_string("status", status);
+    document.add_string("transaction_id", plan.journal.transaction_id);
+    document.add_string("install_id", plan.original.apply.plan_request.install_id);
+    document.add_string("plan_id", plan.plan_id);
+    if (!digest.empty()) document.add_string("plan_digest", digest);
+    document.add_string("classification", plan.inspection.classification);
+    document.add_string("action", plan.action);
+    document.add_string("facman_journal_sha256", plan.journal_sha256);
+    document.add_string("pre_record_sha256", digest_text(""));
+    document.add_string("current_record_sha256", digest_text(plan.record_text));
+    document.add_bool("provider_journal_present", plan.inspection.provider_journal_present);
+    document.add_string("provider_observed_state", plan.inspection.provider_observed_state);
+    document.add_string("provider_journal_digest", plan.inspection.provider_journal_digest);
+    document.add_string("provider_journal_snapshot_sha256",
+        plan.inspection.provider_journal_snapshot_sha256);
+    document.add_string("provider_installed_state_sha256",
+        plan.inspection.terminal.installed_state_digest);
+    document.add_string("retained_child_journal_snapshot_sha256", plan.retained_child_snapshot_sha256);
+    document.add_bool("target_exists", plan.inspection.target_exists);
+    document.add_string("projected_record_sha256", digest_text(plan.projected_record));
+    return document.serialize();
+}
+
+facman::core::Result<NewInstallRecoveryPlan> build_new_install_recovery_plan(
+    ApplicationContext& context, const std::string& transaction_id)
+{
+    const auto invalid = [](const std::string& detail) {
+        return facman::core::Result<NewInstallRecoveryPlan>::failure({
+            "recovery_journal_invalid", "Managed install coordinator is not an exact recoverable identity", detail});
+    };
+    NewInstallRecoveryPlan plan;
+    std::string detail;
+    if (!facman::transaction::read_record(context.workspace(), transaction_id, plan.journal, detail) ||
+        plan.journal.schema_version != 2U || plan.journal.command_id != "installs.install.apply" ||
+        plan.journal.commit_strategy != "provider_install_then_durable_install_reference_create" ||
+        plan.journal.transaction_id != transaction_id || plan.journal.sources.size() != 1U) return invalid(detail);
+    ManagedInstallCoordinator coordinator;
+    if (!decode_managed_install_coordinator(plan.journal.operation_context, coordinator, detail))
+        return invalid(detail);
+    const bool prepared = coordinator.phase == "terminal_projection_prepared";
+    const bool replay_pending = coordinator.phase == "provider_replay_prepared";
+    plan.replay_attempt = coordinator.replay_attempt;
+    auto& apply = plan.original.apply;
+    apply = std::move(coordinator.apply);
+    auto parsed_id = facman::core::InstallId::parse(apply.plan_request.install_id);
+    auto parsed_transaction = facman::core::TransactionId::parse(coordinator.logical_transaction_id);
+    auto provider_transaction = facman::core::TransactionId::parse(apply.transaction_id);
+    plan.prepared_record_sha256 = coordinator.projected_record_sha256;
+    auto workspace = context.workspace_repository().load();
+    if (!parsed_id || !parsed_transaction || !provider_transaction ||
+        parsed_transaction.value().str() != transaction_id ||
+        !workspace || workspace.value().id.str() != plan.journal.workspace_id ||
+        apply.plan_request.request_id.empty() || apply.plan_request.version.empty() ||
+        !valid_utc_seconds(apply.plan_request.created_at) || !valid_utc_seconds(apply.applied_at) ||
+        apply.applied_at <= apply.plan_request.created_at ||
+        !apply.plan_request.archive.is_absolute() || !apply.plan_request.target.is_absolute() ||
+        apply.plan_request.archive != apply.plan_request.archive.lexically_normal() ||
+        apply.plan_request.target != apply.plan_request.target.lexically_normal() ||
+        plan.journal.target.lexically_normal() != apply.plan_request.target ||
+        plan.journal.sources.front().lexically_normal() != apply.plan_request.archive) return invalid("durable binding");
+    plan.install_id = parsed_id.take_value();
+    auto record_path = context.layout().install_ref(plan.install_id);
+    auto legacy_path = context.layout().legacy_install_ref(plan.install_id);
+    if (!record_path || !legacy_path) return invalid("install record path");
+    plan.record_path = record_path.take_value();
+    std::error_code path_error;
+    auto legacy = fs::symlink_status(legacy_path.value(), path_error);
+    if ((path_error && path_error != std::errc::no_such_file_or_directory) ||
+        legacy.type() != fs::file_type::not_found) return invalid("legacy record appeared");
+    path_error.clear();
+    auto record = fs::symlink_status(plan.record_path, path_error);
+    if ((path_error && path_error != std::errc::no_such_file_or_directory) ||
+        (record.type() != fs::file_type::not_found && !fs::is_regular_file(record))) return invalid("record ownership");
+    if (fs::is_regular_file(record)) {
+        plan.record_text = read_text(plan.record_path);
+        if (plan.record_text.empty()) return invalid("record cannot be read stably");
+    }
+    auto inspected = context.setup().inspect_install_recovery(plan.original);
+    if (!inspected) return facman::core::Result<NewInstallRecoveryPlan>::failure(inspected.error());
+    if (replay_pending && (inspected.value().classification == "no_provider_effect" ||
+            inspected.value().replay_genesis_missing)) {
+        // An interruption before the child journal is durable must never close
+        // the logical operation as effect-free. Preserve any child audit and
+        // replay the unchanged origin into a new, distinct transaction.
+        if (!facman::core::TransactionId::parse(coordinator.replay_origin_transaction_id))
+            return invalid("replay origin transaction");
+        if (inspected.value().replay_genesis_missing) {
+            if (inspected.value().replay_origin_transaction_id != coordinator.replay_origin_transaction_id ||
+                inspected.value().replay_origin_snapshot_sha256 != coordinator.replay_origin_snapshot_sha256)
+                return invalid("incomplete child does not bind its durable reviewed origin");
+            plan.retained_child_transaction_id = apply.transaction_id;
+            plan.retained_child_snapshot_sha256 = inspected.value().provider_journal_snapshot_sha256;
+        }
+        apply.transaction_id = coordinator.replay_origin_transaction_id;
+        apply.is_stream_replay = apply.transaction_id != coordinator.logical_transaction_id;
+        inspected = context.setup().inspect_install_recovery(plan.original);
+        if (!inspected) return facman::core::Result<NewInstallRecoveryPlan>::failure(inspected.error());
+        if (inspected.value().provider_journal_snapshot_sha256 != coordinator.replay_origin_snapshot_sha256 ||
+            inspected.value().provider_audit_chain_digest != coordinator.replay_origin_audit_digest)
+            return invalid("prepared replay origin changed");
+    }
+    plan.inspection = inspected.take_value();
+    if (plan.inspection.classification == "provider_replay_available" && plan.replay_attempt >= 64U)
+        plan.inspection.classification = "indeterminate";
+    plan.action = plan.inspection.classification == "provider_installed" ? "project_terminal" :
+        plan.inspection.classification == "provider_rollback_available" ? "rollback_provider" :
+        plan.inspection.classification == "provider_rolled_back" ? "close_provider_rollback" :
+        plan.inspection.classification == "provider_replay_available" && plan.replay_attempt < 64U ? "replay_provider" :
+        plan.inspection.classification == "no_provider_effect" ? "close_no_provider_effect" : "none";
+    if (plan.action == "replay_provider") plan.replay_transaction_id = "tx-replay-" +
+        digest_text(transaction_id + "/" + std::to_string(plan.replay_attempt + 1U)).substr(0, 32);
+    if (plan.action == "project_terminal") {
+        plan.projected_record = managed_install_record(apply, plan.inspection.terminal);
+        if (plan.projected_record.empty()) return invalid("terminal record cannot be projected");
+    }
+    if ((!plan.record_text.empty() && plan.record_text != plan.projected_record) ||
+        (prepared && plan.prepared_record_sha256 != digest_text(plan.projected_record))) {
+        return facman::core::Result<NewInstallRecoveryPlan>::failure({
+            "install_recovery_projection_conflict", "Managed install reference differs from its exact prepared postimage", ""});
+    }
+    auto raw_journal = context.transactions().load_journal(parsed_transaction.value());
+    if (!raw_journal) return invalid(raw_journal.error().message);
+    plan.journal_sha256 = digest_text(raw_journal.value());
+    plan.plan_id = "install-recovery." + transaction_id;
+    const std::string unsigned_plan = new_install_recovery_document(
+        plan, plan.action == "none" ? "blocked" : "planned", "");
+    auto canonical = canonicalize_managed_uninstall_recovery_plan(unsigned_plan);
+    if (!canonical) return invalid(canonical.error().message);
+    plan.plan_digest = digest_text(canonical.value());
+    plan.output = new_install_recovery_document(
+        plan, plan.action == "none" ? "blocked" : "planned", plan.plan_digest);
+    return facman::core::Result<NewInstallRecoveryPlan>::success(std::move(plan));
 }
 
 struct ManagedUninstallRecoveryPlan {
@@ -611,8 +804,10 @@ ApplicationResult uninstall_recovery_failure(
         safety_refusal(operation, error.code, error.message, error.detail, true, retryable),
         error.code, error.message,
         conflict ? facman::core::OutcomeKind::conflict :
-            error.code == "uninstall_recovery_indeterminate" ?
-                facman::core::OutcomeKind::recovery_required : error.kind);
+            error.code == "uninstall_recovery_indeterminate" ||
+                error.code == "transaction_recovery_required" || error.code == "recovery_write_refused" ?
+                facman::core::OutcomeKind::recovery_required :
+            retryable ? facman::core::OutcomeKind::refused : error.kind);
 }
 
 ApplicationResult repair_recovery_failure(
@@ -626,8 +821,26 @@ ApplicationResult repair_recovery_failure(
         safety_refusal(operation, error.code, error.message, error.detail, true, retryable),
         error.code, error.message,
         conflict ? facman::core::OutcomeKind::conflict :
-            error.code == "repair_recovery_indeterminate" ?
-                facman::core::OutcomeKind::recovery_required : error.kind);
+            error.code == "repair_recovery_indeterminate" ||
+                error.code == "transaction_recovery_required" || error.code == "recovery_write_refused" ?
+                facman::core::OutcomeKind::recovery_required :
+            retryable ? facman::core::OutcomeKind::refused : error.kind);
+}
+
+ApplicationResult install_recovery_failure(
+    const std::string& operation,
+    const facman::core::Error& error)
+{
+    const bool conflict = error.code == "install_recovery_projection_conflict";
+    const bool pending = error.code == "install_recovery_indeterminate" ||
+        error.code == "transaction_recovery_required" || error.code == "recovery_write_refused";
+    const bool retryable = error.code == "recovery_lock_contended" || error.code == "stale_plan";
+    return refused(
+        safety_refusal(operation, error.code, error.message, error.detail, true, retryable),
+        error.code, error.message,
+        conflict ? facman::core::OutcomeKind::conflict :
+            pending ? facman::core::OutcomeKind::recovery_required :
+            retryable ? facman::core::OutcomeKind::refused : error.kind);
 }
 
 std::string toml_value(const std::string& text, const std::string& key)
@@ -1411,6 +1624,13 @@ ApplicationResult inspect_install_recovery(ApplicationContext& context, const Se
         return uninstall_recovery_failure("installs.recovery.inspect", {
             "recovery_journal_invalid", "Managed install recovery journal is invalid", detail});
     }
+    if (journal.command_id == "installs.install.apply") {
+        auto planned = build_new_install_recovery_plan(context, parsed.value().str());
+        if (!planned) return install_recovery_failure("installs.recovery.inspect", planned.error());
+        ApplicationResult result;
+        result.output = planned.value().output;
+        return result;
+    }
     if (journal.command_id == "installs.repair.apply") {
         auto repair = build_repair_recovery_plan(context, parsed.value().str());
         if (!repair) return repair_recovery_failure("installs.recovery.inspect", repair.error());
@@ -1443,6 +1663,120 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
             context.workspace(), parsed.value().str(), recovery_journal, recovery_detail)) {
         return uninstall_recovery_failure("installs.recovery.apply", {
             "recovery_journal_invalid", "Managed install recovery journal is invalid", recovery_detail});
+    }
+    if (recovery_journal.command_id == "installs.install.apply") {
+        auto planned = build_new_install_recovery_plan(context, parsed.value().str());
+        if (!planned) return install_recovery_failure("installs.recovery.apply", planned.error());
+        auto plan = planned.take_value();
+        if (request.confirmation != "APPLY" || request.plan_id != plan.plan_id ||
+            request.plan_digest != plan.plan_digest) return install_recovery_failure(
+                "installs.recovery.apply", {"stale_plan",
+                    "Reviewed install recovery plan changed before apply", request.plan_id});
+        if (plan.action == "none") return install_recovery_failure("installs.recovery.apply", {
+            "install_recovery_indeterminate", "Provider install is not in a safely projectable terminal state",
+            plan.inspection.provider_observed_state});
+        if (facman::transaction::terminal(plan.journal.state)) {
+            if (plan.action == "rollback_provider" || plan.action == "replay_provider") return install_recovery_failure("installs.recovery.apply", {
+                "install_recovery_indeterminate", "Terminal coordinator conflicts with pending provider effects", request.transaction_id});
+            ApplicationResult result;
+            result.output = new_install_recovery_document(plan, "completed", request.plan_digest);
+            return result;
+        }
+        if (plan.action == "replay_provider") {
+            if (!plan.retained_child_transaction_id.empty()) plan.journal.recovery_actions.push_back(
+                "retained_incomplete_replay:" + plan.retained_child_transaction_id + ":" + plan.retained_child_snapshot_sha256);
+            plan.journal.operation_context = prepare_managed_install_replay_context(
+                plan.journal.operation_context, plan.replay_transaction_id,
+                plan.original.apply.transaction_id, plan.inspection);
+            std::string detail;
+            if (plan.journal.operation_context.empty() || !facman::transaction::checkpoint(
+                    context.workspace(), plan.journal, "provider_replay_prepared", detail))
+                return install_recovery_failure("installs.recovery.apply", {"recovery_write_refused",
+                    "Provider replay intent could not be recorded", detail});
+            const char* before = std::getenv("FACMAN_TEST_INSTALL_RECOVERY_INTERRUPT_BEFORE_REPLAY");
+            if (before != nullptr && std::string(before) == "1") return install_recovery_failure(
+                "installs.recovery.apply", {"transaction_recovery_required",
+                    "Injected interruption after durable replay intent", request.transaction_id});
+            auto replayed = context.setup().replay_install_recovery(
+                plan.original, plan.inspection, plan.replay_transaction_id);
+            if (!replayed) return install_recovery_failure("installs.recovery.apply", replayed.error());
+            const char* after = std::getenv("FACMAN_TEST_INSTALL_RECOVERY_INTERRUPT_AFTER_REPLAY");
+            if (after != nullptr && std::string(after) == "1") return install_recovery_failure(
+                "installs.recovery.apply", {"transaction_recovery_required",
+                    "Injected interruption after verified provider replay", request.transaction_id});
+            auto disposition = build_new_install_recovery_plan(context, parsed.value().str());
+            if (!disposition) return install_recovery_failure("installs.recovery.apply", disposition.error());
+            plan = disposition.take_value();
+            if (plan.action != "project_terminal") return install_recovery_failure("installs.recovery.apply", {
+                "transaction_recovery_required", "Provider replay disposition changed before projection", request.transaction_id});
+            plan.journal.recovery_actions.push_back("replayed_provider_install_into_distinct_staging");
+        }
+        if (plan.action == "rollback_provider") {
+            std::string detail;
+            if (!facman::transaction::checkpoint(context.workspace(), plan.journal,
+                    "provider_rollback_started", detail)) return install_recovery_failure(
+                "installs.recovery.apply", {"recovery_write_refused", "Provider rollback intent could not be recorded", detail});
+            auto rolled_back = context.setup().rollback_install_recovery(plan.original, plan.inspection);
+            if (!rolled_back) return install_recovery_failure("installs.recovery.apply", rolled_back.error());
+            auto disposition = build_new_install_recovery_plan(context, parsed.value().str());
+            if (!disposition) return install_recovery_failure("installs.recovery.apply", disposition.error());
+            plan = disposition.take_value();
+            if (plan.inspection.classification != "provider_rolled_back" || plan.action != "close_provider_rollback")
+                return install_recovery_failure("installs.recovery.apply", {"transaction_recovery_required",
+                    "Provider rollback disposition changed before journal closure", request.transaction_id});
+            plan.journal.recovery_actions.push_back("rolled_back_provider_install_staging");
+            const char* interrupted = std::getenv("FACMAN_TEST_INSTALL_RECOVERY_INTERRUPT_AFTER_ROLLBACK");
+            if (interrupted != nullptr && std::string(interrupted) == "1") return install_recovery_failure(
+                "installs.recovery.apply", {"transaction_recovery_required",
+                    "Injected interruption after provider install rollback", request.transaction_id});
+        }
+        plan.journal.operation_context = prepared_install_context(
+            plan.journal.operation_context, digest_text(plan.projected_record));
+        std::string detail;
+        if (plan.journal.operation_context.empty() || !facman::transaction::checkpoint(
+                context.workspace(), plan.journal, "terminal_projection_prepared", detail)) {
+            return install_recovery_failure("installs.recovery.apply", {
+                "recovery_write_refused", "Install recovery postimage checkpoint failed", detail});
+        }
+        if (plan.action == "project_terminal" && plan.record_text.empty()) {
+            facman::workspace::InstallRecord record;
+            record.id = plan.install_id;
+            auto created = context.installs().create(record, plan.projected_record);
+            if (!created) return install_recovery_failure("installs.recovery.apply", {
+                "install_recovery_projection_conflict", "Recovered managed install reference could not be created",
+                created.error().message});
+        }
+        const char* interrupt = std::getenv("FACMAN_TEST_INSTALL_RECOVERY_INTERRUPT_AFTER_PROJECTION");
+        if (interrupt != nullptr && std::string(interrupt) == "1") return install_recovery_failure(
+            "installs.recovery.apply", {"transaction_recovery_required",
+                "Injected interruption after install recovery projection", request.transaction_id});
+        plan.journal.recovery_actions.push_back(plan.action == "project_terminal" ?
+            "projected_managed_install_reference" : plan.action == "close_provider_rollback" ?
+                "confirmed_provider_install_rollback" : "confirmed_no_provider_effect");
+        if (plan.journal.state == facman::transaction::State::committing) {
+            if (!facman::transaction::advance(context.workspace(), plan.journal,
+                    plan.action == "project_terminal" ? "committed" : "recovery_required",
+                    "install_coordinator_recovered", detail)) return install_recovery_failure(
+                "installs.recovery.apply", {"recovery_write_refused",
+                    "Recovered install disposition could not be recorded", detail});
+        }
+        if (plan.journal.state == facman::transaction::State::audited) {
+            if (!facman::transaction::advance(context.workspace(), plan.journal, "complete",
+                    "journal_closed", detail)) return install_recovery_failure(
+                "installs.recovery.apply", {"recovery_write_refused", "Install recovery journal could not close", detail});
+        } else if (!facman::transaction::terminal(plan.journal.state) &&
+            !facman::transaction::complete(context.workspace(), plan.journal, detail)) {
+            return install_recovery_failure("installs.recovery.apply", {
+                "recovery_write_refused", "Install recovery journal could not close", detail});
+        }
+        auto final_journal = context.transactions().load_journal(parsed.value());
+        if (!final_journal) return install_recovery_failure("installs.recovery.apply", {
+            "recovery_write_refused", "Completed install recovery journal cannot be read", final_journal.error().message});
+        plan.journal_sha256 = digest_text(final_journal.value());
+        plan.record_text = plan.action == "project_terminal" ? read_text(plan.record_path) : std::string();
+        ApplicationResult result;
+        result.output = new_install_recovery_document(plan, "completed", request.plan_digest);
+        return result;
     }
     if (recovery_journal.command_id == "installs.repair.apply") {
         auto planned_repair = build_repair_recovery_plan(context, parsed.value().str());
@@ -1654,9 +1988,207 @@ ApplicationResult plan_install(ApplicationContext& context, const ServiceOperati
     return install_plan_impl(context, request, "installs.install.plan");
 }
 
-ApplicationResult apply_install(ApplicationContext& context, const ServiceOperationRequest&)
+ApplicationResult apply_install(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    return live_target_acceptance_required(context, "installs.install.apply");
+#if FACMAN_WITH_SETUP
+#if !defined(_WIN32)
+    (void)request;
+    return unavailable(context, "installs.install.apply", "setup_platform_recipe_unavailable",
+        "The current managed portable install recipe applies to Windows ZIP packages");
+#else
+    if (!valid_utc_seconds(request.plan_created_at) || !valid_utc_seconds(request.applied_at) ||
+        request.applied_at <= request.plan_created_at || request.confirmation != "APPLY") {
+        return refused(safety_refusal("installs.install.apply", "invalid_timestamp",
+            "Install apply requires exact confirmation and advancing UTC timestamps",
+            "plan_created_at/applied_at", false), "invalid_timestamp",
+            "Install apply requires exact confirmation and advancing UTC timestamps");
+    }
+    auto parsed_id = facman::core::InstallId::parse(request.install_id);
+    auto parsed_transaction = facman::core::TransactionId::parse(request.transaction_id);
+    if (!parsed_id || !parsed_transaction) {
+        const auto& error = !parsed_id ? parsed_id.error() : parsed_transaction.error();
+        return refused(safety_refusal("installs.install.apply", error.code,
+            "Install or transaction id is not portable", error.message, false),
+            error.code, error.message, error.kind);
+    }
+    auto record_path = context.layout().install_ref(parsed_id.value());
+    auto legacy_path = context.layout().legacy_install_ref(parsed_id.value());
+    if (!record_path || !legacy_path) return refused(safety_refusal("installs.install.apply",
+            "invalid_identifier", "Install record path cannot be resolved", request.install_id, false),
+        "invalid_identifier", "Install record path cannot be resolved");
+    std::error_code path_error;
+    const auto current_record = fs::symlink_status(record_path.value(), path_error);
+    if ((path_error && path_error != std::errc::no_such_file_or_directory) ||
+        current_record.type() != fs::file_type::not_found) return refused(safety_refusal(
+            "installs.install.apply", "persistent_target_exists", "Install identity already has a workspace record",
+            request.install_id, true), "persistent_target_exists", "Install identity already has a workspace record");
+    path_error.clear();
+    const auto legacy_record = fs::symlink_status(legacy_path.value(), path_error);
+    if ((path_error && path_error != std::errc::no_such_file_or_directory) ||
+        legacy_record.type() != fs::file_type::not_found) return refused(safety_refusal(
+            "installs.install.apply", "persistent_target_exists", "Install identity already has a legacy record",
+            request.install_id, true), "persistent_target_exists", "Install identity already has a legacy record");
+    facman::transaction::Record existing;
+    std::string existing_detail;
+    if (facman::transaction::read_record(context.workspace(), request.transaction_id,
+            existing, existing_detail)) return refused(safety_refusal(
+        "installs.install.apply", "operation_specific_recovery_required",
+        "Existing managed install transaction must be recovered", request.transaction_id, true),
+        "operation_specific_recovery_required", "Existing managed install transaction must be recovered",
+        facman::core::OutcomeKind::recovery_required);
+    InstallApplyRequest apply;
+    apply.plan_request.request_id = request.plan_id;
+    apply.plan_request.install_id = parsed_id.value().str();
+    apply.plan_request.created_at = request.plan_created_at;
+    apply.plan_request.version = request.version;
+    path_error.clear();
+    apply.plan_request.archive = fs::absolute(
+        facman::platform::path_from_utf8(request.archive), path_error).lexically_normal();
+    if (path_error) return refused(safety_refusal("installs.install.apply", "setup_plan_path_invalid",
+        "Reviewed archive path cannot be resolved", request.archive, false),
+        "setup_plan_path_invalid", "Reviewed archive path cannot be resolved");
+    apply.plan_request.target = fs::absolute(
+        facman::platform::path_from_utf8(request.target_root), path_error).lexically_normal();
+    if (path_error) return refused(safety_refusal("installs.install.apply", "setup_plan_path_invalid",
+        "Reviewed target path cannot be resolved", request.target_root, false),
+        "setup_plan_path_invalid", "Reviewed target path cannot be resolved");
+    apply.reviewed_plan.plan_id = request.plan_id;
+    apply.reviewed_plan.plan_digest = request.plan_digest;
+    apply.transaction_id = parsed_transaction.value().str();
+    apply.applied_at = request.applied_at;
+    apply.confirmation = request.confirmation;
+    auto reviewed = context.setup().plan_install(apply.plan_request);
+    if (!reviewed || reviewed.value().plan_id != request.plan_id ||
+        reviewed.value().plan_digest != request.plan_digest) return refused(safety_refusal(
+            "installs.install.apply", "stale_plan", "Reviewed install plan changed before apply",
+            reviewed ? request.plan_id : reviewed.error().message, true),
+        "stale_plan", "Reviewed install plan changed before apply");
+    auto workspace_ready = context.workspace_repository().ensure();
+    if (!workspace_ready) return refused(safety_refusal("installs.install.apply",
+        "recovery_write_refused", "Workspace cannot prepare managed install coordination",
+        workspace_ready.error().message, true), "recovery_write_refused", workspace_ready.error().message);
+    facman::core::json::ObjectBuilder coordinator;
+    coordinator.add_string("schema", "facman.managed_install_coordinator.v2");
+    coordinator.add_string("phase", "provider_entry_started");
+    coordinator.add_string("install_id", request.install_id);
+    coordinator.add_string("plan_id", request.plan_id);
+    coordinator.add_string("plan_digest", request.plan_digest);
+    coordinator.add_string("plan_created_at", request.plan_created_at);
+    coordinator.add_string("transaction_id", request.transaction_id);
+    coordinator.add_string("applied_at", request.applied_at);
+    coordinator.add_string("version", request.version);
+    coordinator.add_string("archive", facman::platform::path_to_utf8(apply.plan_request.archive));
+    coordinator.add_string("target_root", facman::platform::path_to_utf8(apply.plan_request.target));
+    coordinator.add_string("source_archive_sha256", reviewed.value().source_archive_sha256);
+    coordinator.add_string("recipe_digest", reviewed.value().recipe_digest);
+    coordinator.add_string("component_selection", reviewed.value().component_selection);
+    coordinator.add_string("provider_plan_request", reviewed.value().plan_request);
+    coordinator.add_string("provider_transaction_id", request.transaction_id);
+    coordinator.add_string("replay_attempt", "0");
+    coordinator.add_string("replay_origin_transaction_id", "");
+    coordinator.add_string("replay_origin_snapshot_sha256", "");
+    coordinator.add_string("replay_origin_audit_digest", "");
+    facman::transaction::Record journal;
+    journal.transaction_id = request.transaction_id;
+    journal.command_id = "installs.install.apply";
+    journal.target = apply.plan_request.target;
+    journal.sources = {apply.plan_request.archive};
+    journal.commit_strategy = "provider_install_then_durable_install_reference_create";
+    journal.operation_context = coordinator.serialize();
+    auto started = facman::transaction::TransactionSession::begin(
+        context.workspace(), std::move(journal));
+    if (!started) return refused(safety_refusal("installs.install.apply", "recovery_write_refused",
+        "Install coordinator journal could not be prepared", started.error().message, true),
+        "recovery_write_refused", started.error().message,
+        facman::core::OutcomeKind::recovery_required);
+    auto session = started.take_value();
+    auto lease = ManagedInstallRecoveryLease::acquire(context.workspace(), request.transaction_id, false);
+    if (!lease) return refused(safety_refusal("installs.install.apply", lease.error().code,
+        "Managed install coordinator is already in use", lease.error().message, true),
+        lease.error().code, lease.error().message, facman::core::OutcomeKind::recovery_required);
+    facman::transaction::Record current_journal;
+    std::string current_detail;
+    if (!facman::transaction::read_record(context.workspace(), request.transaction_id,
+            current_journal, current_detail) || current_journal.state != facman::transaction::State::requested ||
+        current_journal.operation_context != session.record().operation_context) return refused(safety_refusal(
+            "installs.install.apply", "operation_specific_recovery_required",
+            "Managed install coordinator changed before provider entry", request.transaction_id, true),
+        "operation_specific_recovery_required", "Managed install coordinator changed before provider entry",
+        facman::core::OutcomeKind::recovery_required);
+    if (!session.validated("reviewed_provider_plan_bound") ||
+        !session.planned("exact_provider_plan_persisted") ||
+        !session.staged("provider_entry_prepared") ||
+        !session.verified("workspace_record_absent")) return refused(safety_refusal(
+            "installs.install.apply", "recovery_write_refused",
+            "Install coordinator journal could not enter provider phase", session.detail(), true),
+        "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
+    if (!session.committing("provider_entry_started")) return refused(safety_refusal(
+        "installs.install.apply", "recovery_write_refused",
+        "Install provider-entry intent could not be recorded", session.detail(), true),
+        "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
+    const char* before_provider = std::getenv("FACMAN_TEST_INSTALL_INTERRUPT_BEFORE_PROVIDER");
+    if (before_provider != nullptr && std::string(before_provider) == "1") {
+        session.failed("Injected interruption before provider install entry");
+        return install_recovery_failure("installs.install.apply", {"transaction_recovery_required",
+            "Injected interruption before provider install entry", request.transaction_id});
+    }
+    auto report = context.setup().apply_install(apply);
+    if (!report) {
+        session.failed(report.error().code + ": " + report.error().message);
+        return refused(safety_refusal("installs.install.apply", "transaction_recovery_required",
+            "Universal Setup install outcome requires recovery", report.error().message, false),
+            "transaction_recovery_required", report.error().message,
+            facman::core::OutcomeKind::recovery_required);
+    }
+    const std::string record_text = managed_install_record(apply, report.value());
+    if (record_text.empty()) {
+        session.failed("Installed Factorio entrypoint could not be projected");
+        return refused(safety_refusal("installs.install.apply", "transaction_recovery_required",
+            "Installed target cannot be projected to a managed record", request.install_id, false),
+            "transaction_recovery_required", "Installed target cannot be projected to a managed record",
+            facman::core::OutcomeKind::recovery_required);
+    }
+    session.record().operation_context = prepared_install_context(
+        session.record().operation_context, digest_text(record_text));
+    if (session.record().operation_context.empty() || !session.checkpoint("terminal_projection_prepared")) {
+        session.failed("Managed install postimage checkpoint failed");
+        return refused(safety_refusal("installs.install.apply", "transaction_recovery_required",
+            "Managed install postimage could not be durably prepared", session.detail(), false),
+            "transaction_recovery_required", session.detail(), facman::core::OutcomeKind::recovery_required);
+    }
+    const char* interrupt = std::getenv("FACMAN_TEST_INSTALL_INTERRUPT_AFTER_PROVIDER");
+    if (interrupt != nullptr && std::string(interrupt) == "1") {
+        session.failed("Injected interruption after provider install");
+        return refused(safety_refusal("installs.install.apply", "transaction_recovery_required",
+            "Injected interruption after provider install", request.transaction_id, false),
+            "transaction_recovery_required", "Injected interruption after provider install",
+            facman::core::OutcomeKind::recovery_required);
+    }
+    facman::workspace::InstallRecord record;
+    record.id = parsed_id.take_value();
+    auto created = context.installs().create(record, record_text);
+    if (!created) {
+        session.failed("Managed install record creation failed: " + created.error().message);
+        return refused(safety_refusal("installs.install.apply", "transaction_recovery_required",
+            "Provider install completed but its workspace record could not be committed",
+            created.error().message, false), "transaction_recovery_required",
+            created.error().message, facman::core::OutcomeKind::recovery_required);
+    }
+    if (!session.committed("managed_install_record_created") || !session.complete()) {
+        return refused(safety_refusal("installs.install.apply", "transaction_recovery_required",
+            "Managed install committed but its coordinator journal could not close",
+            session.detail(), false), "transaction_recovery_required", session.detail(),
+            facman::core::OutcomeKind::recovery_required);
+    }
+    ApplicationResult result;
+    result.output = record_text;
+    return result;
+#endif
+#else
+    (void)request;
+    return unavailable(context, "installs.install.apply", "setup_unavailable",
+        "Universal Setup support is disabled in this build");
+#endif
 }
 
 bool is_setup_command(CommandId command) noexcept

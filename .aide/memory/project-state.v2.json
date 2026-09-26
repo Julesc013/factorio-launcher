@@ -721,9 +721,9 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "d1b0f5092287b5257031724e5b994133ee66e75025ea1b3d325572f6f68a8a7c",
+    "catalog_digest": "dd48bf7f0ef82aaaed97ab867aff6b47c594b4f5bfb126fa6d278a7e1c23a63d",
     "contracts": 131,
-    "refusal_codes": 290,
+    "refusal_codes": 303,
     "registered_routes": 129,
     "schemas": 436
   },
