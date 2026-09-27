@@ -719,7 +719,8 @@ bool consume_qualification_interrupt(Options &options,
     problem = "qualification interruption requires both --qualification-interrupt-after and --qualification-interrupt-permit";
     return false;
   }
-  if (options.operation == facman::self_setup::Operation::verify ||
+  if ((!maintenance_interrupt &&
+       options.operation == facman::self_setup::Operation::verify) ||
       !options.install_root_explicit || !options.state_root_explicit ||
       !options.acceptance_root_explicit || options.install_root_count != 1U ||
       options.state_root_count != 1U || options.acceptance_root_count != 1U ||
