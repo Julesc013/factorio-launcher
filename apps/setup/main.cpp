@@ -69,6 +69,8 @@ struct Options {
   unsigned no_shell_integration_count = 0;
   std::optional<facman::self_setup::DurableBoundary>
       qualification_interrupt_after;
+  bool qualification_interrupt_after_activation = false;
+  bool qualification_activation_interrupt_armed = false;
   fs::path qualification_interrupt_permit;
   bool qualification_interrupt_permit_explicit = false;
   fs::path qualification_fixture_permit;
@@ -407,7 +409,7 @@ void usage() {
       << "  FacManSetup rollback  [--root PATH] [--state-root PATH] "
          "[--acceptance-root PATH] [--yes] [--json]\n\n"
       << "Qualification interruption requires both "
-         "--qualification-interrupt-after provider_plan_reviewed|files_applied|shortcut_applied and "
+         "--qualification-interrupt-after provider_plan_reviewed|files_applied|shortcut_applied|activation_published and "
          "--qualification-interrupt-permit PATH, with explicit noninteractive "
          "installed-operation inputs.\n\n"
       << "Self-maintenance --no-shell-integration requires an exact "
@@ -506,7 +508,8 @@ bool parse(int argc, wchar_t **argv, Options &options, std::string &problem) {
         return false;
       }
       if (argument == L"--qualification-interrupt-after") {
-        if (options.qualification_interrupt_after.has_value()) {
+        if (options.qualification_interrupt_after.has_value() ||
+            options.qualification_interrupt_after_activation) {
           problem = "duplicate option: --qualification-interrupt-after";
           return false;
         }
@@ -517,6 +520,8 @@ bool parse(int argc, wchar_t **argv, Options &options, std::string &problem) {
           options.qualification_interrupt_after = facman::self_setup::DurableBoundary::files_applied;
         else if (value == L"shortcut_applied")
           options.qualification_interrupt_after = facman::self_setup::DurableBoundary::shortcut_applied;
+        else if (value == L"activation_published")
+          options.qualification_interrupt_after_activation = true;
         else {
           problem = "invalid qualification interruption boundary: " + utf8(value);
           return false;
@@ -697,12 +702,17 @@ struct QualificationInterrupt {
 bool consume_qualification_interrupt(Options &options,
                                       std::optional<QualificationInterrupt> &interrupt,
                                       std::string &problem) {
-  const bool after_supplied = options.qualification_interrupt_after.has_value();
+  const bool after_supplied = options.qualification_interrupt_after.has_value() ||
+      options.qualification_interrupt_after_activation;
   const bool permit_supplied = options.qualification_interrupt_permit_explicit;
   if (!after_supplied && !permit_supplied)
     return true;
-  if (options.maintenance_operation.has_value()) {
-    problem = "qualification interruption is not supported for self-maintenance verbs";
+  const bool maintenance_interrupt = options.maintenance_operation.has_value() &&
+      *options.maintenance_operation == facman::self_maintenance::Operation::rollback &&
+      options.qualification_interrupt_after_activation;
+  if (options.maintenance_operation.has_value() != maintenance_interrupt ||
+      options.qualification_interrupt_after_activation != maintenance_interrupt) {
+    problem = "activation_published interruption requires a real-epoch rollback; other maintenance interruption boundaries are unsupported";
     return false;
   }
   if (!after_supplied || !permit_supplied) {
@@ -719,9 +729,11 @@ bool consume_qualification_interrupt(Options &options,
       options.shell_integration_count != 1U || !options.shell_integration ||
       options.no_shell_integration_count != 0U ||
       options.interactive ||
-      ((options.operation == facman::self_setup::Operation::install ||
-        options.operation == facman::self_setup::Operation::repair) &&
-       (!options.package_explicit || options.package_count != 1U)) ||
+      (!maintenance_interrupt &&
+       (options.operation == facman::self_setup::Operation::install ||
+         options.operation == facman::self_setup::Operation::repair) &&
+        (!options.package_explicit || options.package_count != 1U)) ||
+      (maintenance_interrupt && options.package_count != 0U) ||
       (options.operation == facman::self_setup::Operation::uninstall &&
        options.package_count != 0U)) {
     problem = "qualification interruption requires one explicit noninteractive installed operation with --root, --state-root, --acceptance-root, --yes, --json, and --shell-integration";
@@ -820,8 +832,9 @@ bool consume_qualification_interrupt(Options &options,
     problem = "qualification interrupt permit is outside its bounded time window";
     return false;
   }
-  if (operation != operation_text(options.operation) ||
-      boundary != boundary_text(*options.qualification_interrupt_after) ||
+  if (operation != (maintenance_interrupt ? "rollback" : operation_text(options.operation)) ||
+      boundary != (maintenance_interrupt ? "activation_published" :
+                   boundary_text(*options.qualification_interrupt_after)) ||
       product_version != FACMAN_VERSION_SEMVER ||
       permit_install_root != facman::platform::path_to_utf8(install_root) ||
       permit_state_root != facman::platform::path_to_utf8(state_root) ||
@@ -864,6 +877,10 @@ bool consume_qualification_interrupt(Options &options,
   options.install_root = install_root;
   options.state_root = state_root;
   options.acceptance_root = acceptance_root;
+  if (maintenance_interrupt) {
+    options.qualification_activation_interrupt_armed = true;
+    return true;
+  }
   facman::self_setup::QualificationClaims claims;
   claims.operation = options.operation;
   claims.install_root = install_root;
@@ -1576,14 +1593,16 @@ public:
                      fs::path maintenance_launcher,
                      std::string maintenance_launcher_sha256,
                      bool shell_integration,
-                     std::string controller_package_sha256 = {})
+                     std::string controller_package_sha256 = {},
+                     bool qualification_activation_interrupt = false)
       : provider_(provider), state_root_(std::move(state_root)),
         acceptance_root_(std::move(acceptance_root)),
         maintenance_launcher_(std::move(maintenance_launcher)),
         maintenance_launcher_sha256_(std::move(maintenance_launcher_sha256)),
         controller_package_sha256_(shell_integration
             ? std::move(controller_package_sha256) : std::string{}),
-        shell_integration_(shell_integration) {}
+        shell_integration_(shell_integration),
+        qualification_activation_interrupt_(qualification_activation_interrupt) {}
 
   facman::self_maintenance::CandidateState inspect_candidate(
       const facman::self_maintenance::Plan &plan) override {
@@ -1716,6 +1735,13 @@ public:
       const facman::self_maintenance::Plan &plan) override {
     if (!ensure_target_pins(plan))
       return {false, false, {}, target_pin_detail_};
+    if (qualification_activation_interrupt_) {
+      // The one-use qualification permit binds this rollback and its owned
+      // roots. Terminate without unwinding after durable activation publication,
+      // before the actual shortcut backup retirement effect.
+      TerminateProcess(GetCurrentProcess(), 137U);
+      return {false, false, {}, "qualification process termination failed"};
+    }
     const std::string receipt = digest_text(
         plan.operation_id + "\nshortcut-backup-retired\n");
     if (!shell_integration_)
@@ -2094,6 +2120,7 @@ private:
   bool target_files_ready_ = false;
   std::string target_pin_detail_;
   bool shell_integration_ = true;
+  bool qualification_activation_interrupt_ = false;
 };
 
 class SetupBootstrapEffects final
@@ -2635,6 +2662,12 @@ int run_maintenance(Options &options, const fs::path &,
     epoch_present_preflight = !epoch_preflight.value().epochs.empty() &&
         !epoch_preflight.value().epochs.back().compatibility_epoch;
   }
+  if (options.qualification_activation_interrupt_armed && !epoch_present_preflight) {
+    print_maintenance_error({"self_setup_qualification_interrupt_invalid",
+        "activation_published interruption requires an existing real lifecycle epoch", {}},
+        options.json);
+    return 2;
+  }
   if (epoch_present_preflight && !pending_preflight.value().has_value()) {
     auto selected = facman::self_maintenance::resolve_authoritative_active_state(
         coordinator_root);
@@ -2773,7 +2806,22 @@ int run_maintenance(Options &options, const fs::path &,
     }
     pending_epoch = std::move(terminal_epoch);
   }
-  const bool pending_is_new_request = pending_epoch.value().has_value() &&
+  bool activation_backup_pending = false;
+  if (pending_epoch.value().has_value() && pending_epoch.value()->completed &&
+      pending_epoch.value()->phase == "reactivation_complete" &&
+      pending_epoch.value()->shell_integration) {
+    const auto inspected =
+        facman::setup::integration::inspect_windows_shortcut_cutover_backup_presence(
+            pending_epoch.value()->operation_id, activation_backup_pending);
+    if (!inspected.ok) {
+      print_maintenance_error({"self_maintenance_epoch_recovery_required",
+          "published activation has indeterminate shortcut backup retirement",
+          inspected.detail}, options.json);
+      return 4;
+    }
+  }
+  const bool pending_is_new_request = !activation_backup_pending &&
+      pending_epoch.value().has_value() &&
       pending_epoch.value()->completed &&
       (operation == facman::self_maintenance::Operation::rollback ||
        (package.has_value() &&
@@ -2822,7 +2870,8 @@ int run_maintenance(Options &options, const fs::path &,
     MaintenanceEffects effects(provider, options.state_root,
                                options.acceptance_root, {},
                                pending.retained_package.maintenance_launcher_sha256,
-                               pending.shell_integration, controller_sha256);
+                               pending.shell_integration, controller_sha256,
+                               options.qualification_activation_interrupt_armed);
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error({"self_maintenance_provider_root_unsafe",
@@ -2848,12 +2897,14 @@ int run_maintenance(Options &options, const fs::path &,
         return 4;
       }
       const fs::path epoch_root = coordinator_root / "epochs" / pending.epoch_id;
+      const std::string phase = activation_backup_pending && !options.apply
+          ? "reactivation_pending" : result.value().phase;
       if (options.json) {
         facman::core::json::ObjectBuilder output;
         output.add_string("schema", "facman.self_maintenance_cli.v1");
         output.add_string("status", "ok");
         output.add_string("operation", maintenance_operation_text(operation));
-        output.add_string("phase", result.value().phase);
+        output.add_string("phase", phase);
         output.add_string("operation_id", pending.operation_id);
         output.add_string("generation_id", result.value().generation.generation_id);
         output.add_string("product_version", result.value().generation.product_version);
@@ -2869,7 +2920,7 @@ int run_maintenance(Options &options, const fs::path &,
         std::cout << output.serialize() << '\n';
       } else {
         std::cout << "FacManSetup " << maintenance_operation_text(operation)
-                  << ' ' << result.value().phase << '\n';
+                  << ' ' << phase << '\n';
       }
       return 0;
     }
@@ -3099,7 +3150,8 @@ int run_maintenance(Options &options, const fs::path &,
     MaintenanceEffects effects(provider, options.state_root,
                                options.acceptance_root, launcher,
                                package->maintenance_launcher_sha256,
-                               options.shell_integration, controller_sha256);
+                               options.shell_integration, controller_sha256,
+                               options.qualification_activation_interrupt_armed);
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error(
