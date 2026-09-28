@@ -108,6 +108,16 @@ def validate_app_payload(app: Path) -> None:
         folded[key] = relative
 
 
+def verify_native_package_info(package_info: Path, package_version: str) -> None:
+    actual = ET.parse(package_info).getroot()
+    if (
+        actual.tag != "pkg-info"
+        or actual.attrib.get("identifier") != PACKAGE_IDENTIFIER
+        or actual.attrib.get("version") != package_version
+    ):
+        raise ValueError("macOS Installer package identity differs from canonical version truth")
+
+
 def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
     app = app.resolve(strict=True)
     version_record = version_truth()
@@ -132,17 +142,27 @@ def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
             newline="\n",
         )
         shim.chmod(0o755)
-        subprocess.run(
-            [
-                "pkgbuild",
-                "--root", str(payload),
-                "--identifier", PACKAGE_IDENTIFIER,
-                "--version", package_version,
-                "--install-location", "/",
-                str(package),
-            ],
-            check=True,
-        )
+        try:
+            subprocess.run(
+                [
+                    "pkgbuild",
+                    "--root", str(payload),
+                    "--identifier", PACKAGE_IDENTIFIER,
+                    "--version", package_version,
+                    "--install-location", "/",
+                    str(package),
+                ],
+                check=True,
+            )
+            subprocess.run(
+                ["xar", "-x", "-f", str(package.resolve()), "PackageInfo"],
+                cwd=temporary,
+                check=True,
+            )
+            verify_native_package_info(Path(temporary) / "PackageInfo", package_version)
+        except Exception:
+            package.unlink(missing_ok=True)
+            raise
     record = {
         "schema": "facman.macos_self_setup.v1",
         "status": "pass",
@@ -184,13 +204,7 @@ def verify_package_info(package_info: Path, evidence: Path) -> None:
         or record["setup"].get("identifier") != PACKAGE_IDENTIFIER
     ):
         raise ValueError("macOS setup evidence differs from canonical version truth")
-    actual = ET.parse(package_info).getroot()
-    if (
-        actual.tag != "pkg-info"
-        or actual.attrib.get("identifier") != PACKAGE_IDENTIFIER
-        or actual.attrib.get("version") != expected
-    ):
-        raise ValueError("macOS Installer package identity differs from canonical setup evidence")
+    verify_native_package_info(package_info, expected)
 
 
 def main() -> int:
