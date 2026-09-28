@@ -85,6 +85,14 @@ class LinuxSetupPredecessorCatalogTests(unittest.TestCase):
                 linux_self_setup.admitted_predecessors(
                     "0.1.0-alpha.7", self.catalog(root),
                 )
+            self.assertEqual(
+                (("0.1.0-alpha.6+package.1", "c" * 64),),
+                linux_self_setup.admitted_predecessors(
+                    "0.1.0-preview.1+package.2",
+                    self.catalog(root, ("0.1.0-preview.1+package.2",
+                                        "0.1.0-alpha.6+package.1", "c" * 64)),
+                ),
+            )
 
     @unittest.skipUnless(sys.platform.startswith("linux") and shutil.which("zstd"),
                          "not_applicable: Linux package builder needs zstd")
