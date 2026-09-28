@@ -111,6 +111,10 @@ Result apply_windows_cutover_effect(Effect effect,
 // any object that is not the exact reviewed source shortcut is preserved.
 Result retire_windows_shortcut_cutover_backup(
     const CutoverContext &context);
+// Read-only routing probe. Any object, including an unsafe one, keeps the
+// operation on its recovery route. Retirement still verifies exact ownership.
+Result inspect_windows_shortcut_cutover_backup_presence(
+    const std::string &operation_id, bool &present);
 // Native smoke-test helpers bind a shortcut operation to an isolated fixture
 // path; production entry points always resolve the current-user Start Menu.
 Ownership inspect_windows_shortcut_fixture(const std::filesystem::path &shortcut,

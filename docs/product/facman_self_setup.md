@@ -157,6 +157,22 @@ only then may reacquire the global coordinator lock. It never reopens a process
 by PID and is not attached to the product process supervisor's kill-on-close
 job.
 
+Windows package qualification can interrupt a real-epoch `rollback` at
+`activation_published`, immediately before shortcut-backup retirement. This
+requires the existing one-use interruption permit, exact explicit fixture roots,
+current controller version, shell integration, and noninteractive apply. The
+permit is consumed before entry; an unpermitted request is refused. The process
+is terminated without unwinding so the package scenario can inspect the durable
+activation, native ownership, retained shortcut, and same-operation restart.
+This is qualification instrumentation, not an ordinary maintenance option.
+
+If a rollback stops after activation publication while its operation-bound
+shortcut backup remains, ordinary Setup resumes that same operation. Read-only
+rollback reports `reactivation_pending` and preserves the backup. Apply verifies
+the current native ownership and retires the exact source shortcut before
+reporting completion; unreadable or foreign backup objects remain recoverable
+refusals. A published activation alone does not authorize another rollback.
+
 A fresh repair request whose package is absent returns
 `self_setup_package_missing` before a setup journal, provider apply, or native
 integration effect is created. An unfinished installed repair that already
