@@ -149,6 +149,10 @@ target_link_libraries(flb_factorio_content_cache_static PUBLIC
   facman_base_static facman_core_static facman_platform_static facman_transaction_static
   flb_factorio_modsets_static)
 add_library(facman::content_cache ALIAS flb_factorio_content_cache_static)
+target_include_directories(flb_factorio_snapshots_static PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
+target_link_libraries(flb_factorio_snapshots_static PRIVATE
+  flb_factorio_content_cache_static)
 
 add_library(flb_factorio_profiles_static profiles/flb_factorio_profiles.cpp)
 target_compile_features(flb_factorio_profiles_static PUBLIC cxx_std_17)

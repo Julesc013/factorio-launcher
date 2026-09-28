@@ -12,6 +12,7 @@ objective: "Restore and import selected world bundles using validated plans, ato
 source_bundles:
   - "F10"
 allowed_paths:
+  - "apps/gui/windows/winforms/GeneratedCommandCatalog.cs"
   - "runtime/**"
   - "contracts/**"
   - "tests/**"
