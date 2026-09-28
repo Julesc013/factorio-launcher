@@ -93,7 +93,8 @@ def run_command(command: list[str], *,
 def invoke(executable: Path, *arguments: object, expected: int = 0,
            shell_integration: bool = False, noninteractive: bool = False,
            qualification: tuple[str, Path] | None = None,
-           wait_for_job_empty_after_primary: bool | None = None) -> dict[str, object]:
+           wait_for_job_empty_after_primary: bool | None = None,
+           expect_process_loss: bool = False) -> dict[str, object]:
     command = [
         str(executable),
         *(str(value) for value in arguments),
@@ -126,15 +127,20 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
             f"command returned {result.returncode}, expected {expected}: {command}\n"
             f"stdout={result.stdout[-8000:]}\nstderr={result.stderr[-8000:]}"
         )
-    try:
-        response = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise AssertionError(f"command did not return JSON: {command}\n{result.stdout[-8000:]}") from exc
+    if expect_process_loss:
+        if expected != 137 or result.stdout.strip():
+            raise AssertionError("terminated Setup returned an unexpected product response")
+        response = {}
+    else:
+        try:
+            response = json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            raise AssertionError(f"command did not return JSON: {command}\n{result.stdout[-8000:]}") from exc
     if shell_integration:
         REAL_COMMANDS.append({
             "command": command,
             "exit_code": result.returncode,
-            "response": response,
+            "response": None if expect_process_loss else response,
             "stdout_sha256": hashlib.sha256(result.stdout.encode("utf-8")).hexdigest(),
             "stderr_sha256": hashlib.sha256(result.stderr.encode("utf-8")).hexdigest(),
             "bounded_process_receipt": getattr(result, "facman_bounded_receipt", None),
@@ -1977,13 +1983,86 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256},
                             maintenance_controller_sha256=candidate_package_sha256)
+        updated_shortcut_sha256 = shortcut.get("sha256")
+        if not isinstance(updated_shortcut_sha256, str):
+            raise AssertionError("package B shortcut digest is unavailable")
         rollback_helper = epoch_updated_root / "maintenance" / "FacManSetup.exe"
+        rollback_preview = invoke(
+            rollback_helper, "rollback", *epoch_verify_args,
+            shell_integration=True, noninteractive=True,
+        )
+        rollback_operation = str(rollback_preview.get("operation_id", ""))
+        if not rollback_operation:
+            raise AssertionError("ordinary rollback preview has no operation identity")
+        rollback_backup = windows_start_menu_shortcut().with_name(
+            "FacMan.lnk.facman-backup." + rollback_operation)
+        epoch_history = epoch_operation.parent.parent
+        activation_before_rollback = tree_snapshot(epoch_history / "activations")
+        missing_interrupt_permit = invoke(
+            rollback_helper, "rollback", *epoch_common,
+            "--qualification-interrupt-after", "activation_published",
+            shell_integration=True, noninteractive=True, expected=4,
+        )
+        if (missing_interrupt_permit.get("error", {}).get("code") !=
+                "self_setup_qualification_interrupt_invalid" or
+                tree_snapshot(epoch_history / "activations") != activation_before_rollback or
+                rollback_backup.exists()):
+            raise AssertionError("unpermitted rollback interruption changed lifecycle state")
+        interrupted_rollback_permit = qualification_permit(
+            epoch_fixture, "activation_published", "rollback",
+            candidate_identity["version"], epoch_install, epoch_state,
+        )
+        invoke(
+            rollback_helper, "rollback", *epoch_common,
+            shell_integration=True, noninteractive=True,
+            qualification=("activation_published", interrupted_rollback_permit),
+            expected=137, expect_process_loss=True,
+        )
+        activation_after_rollback = tree_snapshot(epoch_history / "activations")
+        if (activation_after_rollback == activation_before_rollback or
+                not rollback_backup.is_file() or rollback_backup.is_symlink()):
+            raise AssertionError("process loss did not occur after activation and before backup retirement")
+        shortcut, registry = observe("epoch_rollback_activation_published_process_loss",
+                                     epoch_baseline_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "interrupted epoch rollback",
+                            active_root=epoch_baseline_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        retained_metadata = os.lstat(rollback_backup)
+        if (not stat.S_ISREG(retained_metadata.st_mode) or
+                getattr(retained_metadata, "st_file_attributes", 0) & 0x400):
+            raise AssertionError("interrupted rollback retained a non-file or reparse backup")
+        backup_before_restart = sha256_path(rollback_backup)
+        if backup_before_restart != updated_shortcut_sha256:
+            raise AssertionError("interrupted rollback changed the exact package B shortcut backup")
+        observations.append({
+            "phase": "epoch_rollback_retained_shortcut_backup",
+            "path": str(rollback_backup),
+            "sha256": backup_before_restart,
+            "matches_active_b": True,
+        })
+        rollback_recovery_preview = invoke(
+            rollback_helper, "rollback", *epoch_verify_args,
+            shell_integration=True, noninteractive=True,
+        )
+        if (rollback_recovery_preview.get("phase") != "reactivation_pending" or
+                rollback_recovery_preview.get("operation_id") != rollback_operation or
+                tree_snapshot(epoch_history / "activations") != activation_after_rollback or
+                sha256_path(rollback_backup) != backup_before_restart):
+            raise AssertionError("rollback recovery preview did not preserve the published operation")
         epoch_rollback = invoke(
             rollback_helper, "rollback", *epoch_common,
             shell_integration=True, noninteractive=True,
         )
         if (epoch_rollback.get("phase") != "reactivation_complete" or
-                epoch_rollback.get("product_version") != baseline_identity["version"]):
+                epoch_rollback.get("product_version") != baseline_identity["version"] or
+                epoch_rollback.get("operation_id") != rollback_operation or
+                tree_snapshot(epoch_history / "activations") != activation_after_rollback or
+                rollback_backup.exists()):
             raise AssertionError("real epoch rollback did not reactivate retained A")
         rollback_root = Path(str(epoch_rollback.get("install_root", "")))
         shortcut, registry = observe("source_distinct_epoch_rollback_completed",
@@ -2017,7 +2096,6 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256},
                             maintenance_controller_sha256=candidate_package_sha256)
-        epoch_history = epoch_operation.parent.parent
         history_before_retirement = {
             "manifest": sha256_path(epoch_history / "epoch.v1.json"),
             "generations": tree_snapshot(epoch_history / "generations"),

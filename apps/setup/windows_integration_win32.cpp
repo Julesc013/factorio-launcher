@@ -980,6 +980,31 @@ Result apply_windows_cutover_effect(Effect effect,
   return cutover_registration(normalized_context);
 }
 
+Result inspect_windows_shortcut_cutover_backup_presence(
+    const std::string &operation_id, bool &present) {
+  present = false;
+  std::string detail;
+  if (!facman::base::validate_identifier(operation_id, detail))
+    return {false, "shortcut backup operation identity is invalid", true};
+  const fs::path link = start_menu_link();
+  if (link.empty())
+    return {false, "Windows could not resolve the current-user Start Menu", true};
+  const fs::path backup = cutover_backup(link, operation_id);
+  Handle file;
+  file.value = CreateFileW(backup.c_str(), FILE_READ_ATTRIBUTES,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+      OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS,
+      nullptr);
+  if (file.value == INVALID_HANDLE_VALUE) {
+    const DWORD error = GetLastError();
+    if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
+      return {true, "operation-bound shortcut backup is absent"};
+    return {false, "operation-bound shortcut backup could not be inspected", true};
+  }
+  present = true;
+  return {true, "operation-bound shortcut backup requires retirement"};
+}
+
 Result retire_windows_shortcut_cutover_backup(
     const CutoverContext &context) {
   std::error_code status;
