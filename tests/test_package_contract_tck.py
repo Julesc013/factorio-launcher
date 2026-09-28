@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -205,6 +206,29 @@ class PackageContractTckTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Installer package identity"):
                     macos_self_setup.build(app, root / "out", root / "evidence.json")
                 self.assertFalse((root / "out/FacMan-0.1.0-alpha.6-macos-x64-setup.pkg").exists())
+
+    @unittest.skipUnless(sys.platform == "darwin", "not_applicable:native pkgbuild is macOS-only")
+    def test_macos_setup_builder_checks_real_pkgbuild_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = root / "FacMan.app"
+            for relative in ("Contents/MacOS/FacMan", "Contents/Helpers/facman"):
+                executable = app / relative
+                executable.parent.mkdir(parents=True, exist_ok=True)
+                executable.write_bytes(b"#!/bin/sh\nexit 0\n")
+                executable.chmod(0o755)
+            (app / "Contents/Info.plist").write_text(
+                '<?xml version="1.0"?><plist version="1.0"><dict>'
+                '<key>CFBundleIdentifier</key><string>io.github.julesc013.facman</string>'
+                '<key>CFBundleExecutable</key><string>FacMan</string>'
+                '<key>CFBundlePackageType</key><string>APPL</string>'
+                '<key>CFBundleVersion</key><string>0.1.0</string>'
+                '</dict></plist>',
+                encoding="utf-8",
+            )
+            record = macos_self_setup.build(app, root / "out", root / "evidence.json")
+            self.assertEqual("0.1.10600", record["package_version"])
+            self.assertTrue((root / "out" / record["setup"]["filename"]).is_file())
 
     def test_macos_product_builder_places_cli_in_helpers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
