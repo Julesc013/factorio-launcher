@@ -34,6 +34,62 @@ class SaveTransferTests(unittest.TestCase):
             )
             self.assertEqual(code, 0, stderr)
 
+    def test_owned_backup_restores_to_new_save_without_clobber(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.prepare(workspace)
+            instance = workspace / "instances" / "source-world"
+            save = instance / "saves" / "world.zip"
+            shutil.copyfile(SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save)
+            code, stdout, stderr = invoke([
+                "--workspace", tmp, "saves", "backup", "world",
+                "--instance", "source-world", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            backup = Path(json.loads(stdout)["destination_path"])
+            unrelated = backup.parent / "unrelated.zip"
+            unrelated.write_bytes(b"not a save")
+            restored = instance / "saves" / "restored.zip"
+            code, stdout, stderr = invoke([
+                "--workspace", tmp, "saves", "restore", backup.name,
+                "--instance", "source-world", "--as", restored.name, "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            restored_receipt = json.loads(stdout)
+            self.assertEqual(restored_receipt["command"], "saves.clone")
+            self.assertEqual(restored_receipt["source_kind"], "owned_backup")
+            self.assertEqual(restored_receipt["destination_save"], restored.name)
+            self.assertEqual(restored.read_bytes(), save.read_bytes())
+            self.assertEqual(backup.read_bytes(), save.read_bytes())
+            self.assertEqual(unrelated.read_bytes(), b"not a save")
+            code, stdout, _ = invoke([
+                "--workspace", tmp, "saves", "restore", backup.name,
+                "--instance", "source-world", "--as", restored.name, "--json",
+            ])
+            self.assertEqual(code, 1)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "save_clone_target_exists")
+            self.assertEqual(restored.read_bytes(), save.read_bytes())
+            (instance / "locks" / "run.lock").write_text("active\n", encoding="utf-8")
+            code, stdout, _ = invoke([
+                "--workspace", tmp, "saves", "restore", backup.name,
+                "--instance", "source-world", "--as", "locked.zip", "--json",
+            ])
+            self.assertEqual(code, 1)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "save_locked")
+            self.assertFalse((instance / "saves" / "locked.zip").exists())
+            (instance / "locks" / "run.lock").unlink()
+            sidecar_path = Path(str(backup) + ".manifest.json")
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            sidecar["sha256"] = "0" * 64
+            sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+            code, stdout, _ = invoke([
+                "--workspace", tmp, "saves", "restore", backup.name,
+                "--instance", "source-world", "--as", "tampered.zip", "--json",
+            ])
+            self.assertEqual(code, 1)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "save_backup_unproven")
+            self.assertFalse((instance / "saves" / "tampered.zip").exists())
+
     def test_deflated_save_recognition_is_structural_and_never_claims_deep_semantics(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
