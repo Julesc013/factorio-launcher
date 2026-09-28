@@ -7,8 +7,10 @@
 #include "fl_archive_platform.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
+#include "fl_system_services.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 #include "fl_workspace_root_authority.h"
@@ -25,6 +27,7 @@
 #include <set>
 #include <sstream>
 #include <system_error>
+#include <thread>
 #include <vector>
 
 namespace facman::factorio::saves::index {
@@ -733,18 +736,70 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
     tx::Record transaction;
     transaction.command_id = "saves.retention.apply";
     for (const auto& record : values.value()) if (candidates.count(record.file_name) != 0) {
+        const fs::path manifest = fs::u8path(path_text(record.path) + ".manifest.json");
+        auto manifest_text = stable_text(manifest);
+        auto backup_name = tx::RelativePath::parse(record.file_name);
+        auto manifest_name = tx::RelativePath::parse(record.file_name + ".manifest.json");
+        auto backup_digest = facman::core::Sha256Digest::parse(record.sha256);
+        if (!record.owned_backup || !manifest_text || !backup_name || !manifest_name || !backup_digest ||
+            !proven_owned_backup(instance.value(), record, authority.value().workspace_id)) return failure<std::string>(
+                "save_backup_identity_changed", "Backup identity changed before retention was journaled", record.path);
+        const std::string manifest_sha = facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(manifest_text.value().data()), manifest_text.value().size());
+        auto manifest_digest = facman::core::Sha256Digest::parse(manifest_sha);
+        if (!manifest_digest) return failure<std::string>(
+            "save_backup_identity_changed", "Backup manifest digest is invalid", manifest);
         transaction.sources.push_back(record.path);
-        transaction.sources.push_back(fs::u8path(path_text(record.path) + ".manifest.json"));
+        transaction.sources.push_back(manifest);
+        transaction.expected_files.push_back({backup_name.take_value(), backup_digest.take_value(), record.size});
+        transaction.expected_files.push_back({manifest_name.take_value(), manifest_digest.take_value(),
+            static_cast<std::uint64_t>(manifest_text.value().size())});
     }
     transaction.commit_strategy = "move_owned_backup_and_manifest_to_trash_no_delete";
+    facman::platform::RandomIdGenerator random;
+    transaction.transaction_id = random.next("tx");
+    transaction.workspace_id = authority.value().workspace_id;
+    transaction.target = workspace / "trash" / "saves" / fs::u8path(
+        transaction.transaction_id + "-" + request.instance_id);
+    transaction.operation_context = tx::retention_selection_digest(transaction);
+    struct ScopedRetentionLock {
+        facman::base::StableLocalLock lock;
+        ~ScopedRetentionLock()
+        {
+            if (lock.open()) {
+                std::string ignored;
+                (void)lock.remove_exact(ignored);
+            }
+        }
+    } operation_lock;
+    std::error_code journal_error;
+    fs::create_directories(workspace / "transactions", journal_error);
+    if (journal_error) return failure<std::string>(
+        "save_transaction_failed", "Retention journal directory could not be prepared", workspace / "transactions");
+    const auto lock_result = operation_lock.lock.create(
+        tx::recovery_lock_path(workspace, transaction.transaction_id));
+    if (!lock_result.acquired()) return failure<std::string>(
+        "save_transaction_failed", "Retention operation lock could not be acquired",
+        tx::recovery_lock_path(workspace, transaction.transaction_id));
+    json::ObjectBuilder lock_document;
+    lock_document.add_string("schema", "facman.recovery_lock.v1");
+    lock_document.add_string("identity", operation_lock.lock.identity_text());
+    std::string lock_detail;
+    if (!operation_lock.lock.write_text(lock_document.serialize() + "\n", lock_detail)) return failure<std::string>(
+        "save_transaction_failed", "Retention operation lock could not be persisted",
+        tx::recovery_lock_path(workspace, transaction.transaction_id));
     auto started = tx::TransactionSession::begin(workspace, std::move(transaction));
     if (!started) return failure<std::string>("save_transaction_failed", started.error().message);
     tx::TransactionSession session = started.take_value();
-    const fs::path trash = workspace / "trash" / "saves" / fs::u8path(
-        session.record().transaction_id + "-" + request.instance_id);
-    session.record().target = trash;
+    const fs::path trash = session.record().target;
+    const char* post_begin_fault = std::getenv("FACMAN_SAVE_RETENTION_FAULT");
+    if (post_begin_fault != nullptr && std::string(post_begin_fault) == "process_exit_after_begin")
+        std::_Exit(93);
     if (!session.validated("retention_policy_and_save_identities_validated") || !session.planned("owned_trash_moves_planned") ||
         !session.staging("owned_trash_prepared")) return failure<std::string>("save_transaction_failed", session.detail());
+    const char* pre_trash_fault = std::getenv("FACMAN_SAVE_RETENTION_FAULT");
+    if (pre_trash_fault != nullptr && std::string(pre_trash_fault) == "process_exit_before_trash")
+        std::_Exit(92);
     auto open_or_create = [](
         const facman::platform::StableDirectoryObject& parent,
         const fs::path& leaf,
@@ -761,11 +816,53 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
         return failure<std::string>("save_retention_failed", "Owned trash directory is unsafe", trash);
     }
     session.record().effect_parent_identity = tx::directory_effect_identity(saves_trash);
-    if (!session.checkpoint("owned_trash_parent_bound") ||
-        !session.staged("retention_candidates_selected") || !session.verified("save_hashes_revalidated") ||
+    if (!session.checkpoint("owned_trash_parent_bound")) {
+        session.failed(session.detail());
+        return failure<std::string>("save_retention_failed", session.detail(), trash);
+    }
+    const std::string selection_marker = session.record().operation_context + "\n";
+    facman::platform::DurableOutputFile marker_output;
+    const auto marker_created = operation_trash.create_child_file_exclusive(
+        ".facman-retention-selection.v1", selection_marker.size(), marker_output);
+    if (marker_created.ok()) {
+        const char* marker_fault = std::getenv("FACMAN_SAVE_RETENTION_FAULT");
+        if (marker_fault != nullptr && std::string(marker_fault) == "process_exit_after_marker_create")
+            std::_Exit(94);
+    }
+    if (!marker_created.ok() ||
+        marker_output.write_at(0, selection_marker.data(), selection_marker.size()) != selection_marker.size() ||
+        !marker_output.flush_file_and_parent().ok() ||
+        !session.checkpoint("retention_selection_marker_durable")) {
+        session.failed(marker_created.ok() ? session.detail() : marker_created.detail);
+        return failure<std::string>("save_retention_failed", "Retention selection could not be durably bound", trash);
+    }
+    if (!session.staged("retention_candidates_selected") ||
+        !session.verified("save_hashes_revalidated") ||
         !session.committing("save_retention_moves_started")) {
         session.failed(session.detail());
         return failure<std::string>("save_retention_failed", session.detail(), trash);
+    }
+    const char* apply_pause = std::getenv("FACMAN_TEST_RETENTION_APPLY_PAUSE");
+    if (apply_pause != nullptr && std::string(apply_pause) == "1") {
+        std::string pause_detail;
+        if (!facman::base::write_text_new_atomic(
+                workspace / ".facman-test-retention-apply-paused", "ready\n", pause_detail)) {
+            session.failed(pause_detail);
+            return failure<std::string>("save_retention_failed", pause_detail, trash);
+        }
+        bool released = false;
+        for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+            std::error_code error;
+            if (fs::exists(workspace / ".facman-test-retention-apply-release", error) && !error) {
+                released = true;
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        if (!released) {
+            session.failed("retention apply test pause timed out");
+            return failure<std::string>("save_retention_failed", session.detail(), trash);
+        }
     }
     for (const auto& record : values.value()) {
         if (candidates.count(record.file_name) == 0) continue;
@@ -817,6 +914,14 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
                 target,
                 facman::core::OutcomeKind::recovery_required);
         }
+        if (status.ok() && fault != nullptr && std::string(fault) == "after_backup_move") {
+            session.failed("interrupted after backup move before manifest move");
+            return failure<std::string>(
+                "save_transaction_recovery_required", "Backup move interrupted before manifest move",
+                target, facman::core::OutcomeKind::recovery_required);
+        }
+        if (status.ok() && fault != nullptr && std::string(fault) == "process_exit_after_backup_move")
+            std::_Exit(91);
         if (status.ok()) status = facman::platform::commit_no_replace(
             manifest, trash / manifest.filename());
         if (!status.ok()) {

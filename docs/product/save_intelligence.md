@@ -25,3 +25,10 @@ save-write locks, revalidates each candidate and its manifest, then moves the
 backup and manifest together into transaction-owned workspace trash. It never
 permanently deletes a save or backup; retained bytes remain available for
 recovery.
+
+If the process exits between the backup and manifest moves, `workspace recovery plan/apply`
+acquires the transaction lock, checks the durable selection marker, verifies the journaled size and digest of every selected pair, and
+resumes the remaining no-replace moves. Recovery refuses changed, missing, or
+duplicated files and an active instance lock; it preserves the partial state
+for audit. A verified pre-effect interruption, including an incomplete marker, closes as rolled back, and
+repeated recovery of a completed transaction is idempotent.
