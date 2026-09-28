@@ -274,6 +274,33 @@ def _followup_import_problems(root: Path) -> list[str]:
         (item.get("system"), item.get("linkage")) for item in profiles if isinstance(item, dict)
     } != expected_profiles:
         problems.append("followup import does not bind six unique profiles")
+    else:
+        receipt_profiles = {
+            (item["system"], item["linkage"]): item.get("manifest_sha256")
+            for item in profiles
+        }
+        try:
+            lock = _load_toml(root / PROVIDER_LOCKED_INPUT_PATHS["providers_lock"])
+            usk_rows = [
+                row for row in lock.get("sdk_package", [])
+                if isinstance(row, dict) and row.get("provider_id") == "universal_setup"
+            ]
+            lock_profiles = {
+                (row.get("system"), row.get("linkage")): row.get("identity_sha256")
+                for row in usk_rows
+            }
+            if len(usk_rows) != 6 or len(lock_profiles) != 6 or receipt_profiles != lock_profiles:
+                problems.append("followup import manifest identities differ from provider lock")
+            if any(
+                row.get("architecture") != "x86_64"
+                or row.get("source_revision") != FOLLOWUP_SOURCE
+                or row.get("source_tree") != FOLLOWUP_TREE
+                or row.get("evidence_facman_revision") != FOLLOWUP_CONTEXT
+                for row in usk_rows
+            ):
+                problems.append("followup import SDK package source binding differs")
+        except (OSError, tomllib.TOMLDecodeError) as exc:
+            problems.append(f"followup import provider lock cannot be read: {exc}")
 
     inputs = {**PROVIDER_LOCKED_INPUT_PATHS, **PRODUCT_VERSION_INPUT_PATHS}
     generated = receipt.get("generated", {})

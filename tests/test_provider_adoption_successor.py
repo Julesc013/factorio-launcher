@@ -57,6 +57,15 @@ class ProviderAdoptionSuccessorTests(unittest.TestCase):
             ))
 
             receipt["source"]["commit"] = successor.FOLLOWUP_SOURCE
+            receipt["profiles"][0]["manifest_sha256"] = "0" * 64
+            receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+            self.assertTrue(any(
+                "manifest identities differ" in problem
+                for problem in successor._followup_import_problems(root)
+            ))
+
+            receipt = json.loads(original)
+            receipt["source"]["commit"] = successor.FOLLOWUP_SOURCE
             receipt["state_formats"]["transaction_journal"]["write_version"] = 2
             receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
             self.assertTrue(any(
