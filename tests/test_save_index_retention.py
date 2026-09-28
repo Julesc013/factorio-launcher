@@ -59,7 +59,10 @@ def retention_selection_digest(document: dict) -> str:
         "sources": document["source_identities"],
         "expected_files": document["expected_files"],
     }
-    encoded = json.dumps(selection, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    # The production picojson serializer escapes forward slashes in paths.
+    encoded = json.dumps(selection, separators=(",", ":"), ensure_ascii=False).replace(
+        "/", "\\/"
+    ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
 
