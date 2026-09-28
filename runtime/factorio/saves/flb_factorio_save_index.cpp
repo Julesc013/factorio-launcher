@@ -344,9 +344,11 @@ facman::core::Result<std::vector<SaveRecord>> backup_records(
     if (!instance) return failure<std::vector<SaveRecord>>(instance.error().code, instance.error().message);
     auto authority = facman::workspace::inspect_workspace_root(workspace);
     if (!authority || authority.value().state != facman::workspace::WorkspaceRootState::facman_owned ||
-        !authority.value().root_authority) return failure<std::vector<SaveRecord>>(
+        !authority.value().mutation_allowed || !authority.value().root_authority) return failure<std::vector<SaveRecord>>(
             "save_backup_root_unowned", "Backup retention requires an owned workspace", workspace);
     const fs::path root = instance.value().record.root / "backups";
+    if (!authority.value().root_authority->validate_descendant(root, true).ok()) return failure<std::vector<SaveRecord>>(
+        "save_backup_root_unowned", "Backup root is outside the owned workspace", root);
     std::error_code error;
     const bool exists = fs::exists(root, error);
     if (error) return failure<std::vector<SaveRecord>>("save_backup_index_failed", error.message(), root);
@@ -719,6 +721,10 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
     auto instance = load_instance(workspace, request.instance_id);
     auto values = backup_records(workspace, request.instance_id);
     if (!instance || !values) return failure<std::string>("unknown_instance", "Instance or saves could not be loaded");
+    auto authority = facman::workspace::inspect_workspace_root(workspace);
+    if (!authority || authority.value().state != facman::workspace::WorkspaceRootState::facman_owned ||
+        !authority.value().mutation_allowed || !authority.value().root_authority) return failure<std::string>(
+            "save_backup_root_unowned", "Backup retention requires an owned workspace", workspace);
     if (const auto lock = save_write_lock(instance.value())) return failure<std::string>(
         "save_locked", "Save retention conflicts with an active instance", *lock);
     const auto candidates = retention_candidates(values.value(), request);
@@ -739,12 +745,27 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
     session.record().target = trash;
     if (!session.validated("retention_policy_and_save_identities_validated") || !session.planned("owned_trash_moves_planned") ||
         !session.staging("owned_trash_prepared")) return failure<std::string>("save_transaction_failed", session.detail());
-    std::error_code error;
-    fs::create_directories(trash, error);
-    if (error || !session.staged("retention_candidates_selected") || !session.verified("save_hashes_revalidated") ||
+    auto open_or_create = [](
+        const facman::platform::StableDirectoryObject& parent,
+        const fs::path& leaf,
+        facman::platform::StableDirectoryObject& child) {
+        const auto opened = parent.open_child_directory_no_follow_for_relative_writes(leaf, child);
+        return opened.ok() || parent.create_child_directory_exclusive(leaf, child).ok();
+    };
+    facman::platform::StableDirectoryObject trash_root, saves_trash, operation_trash;
+    const fs::path operation_leaf = trash.filename();
+    if (!open_or_create(*authority.value().root_authority, "trash", trash_root) ||
+        !open_or_create(trash_root, "saves", saves_trash) ||
+        !saves_trash.create_child_directory_exclusive(operation_leaf, operation_trash).ok()) {
+        session.failed("owned trash directory could not be created without following links");
+        return failure<std::string>("save_retention_failed", "Owned trash directory is unsafe", trash);
+    }
+    session.record().effect_parent_identity = tx::directory_effect_identity(saves_trash);
+    if (!session.checkpoint("owned_trash_parent_bound") ||
+        !session.staged("retention_candidates_selected") || !session.verified("save_hashes_revalidated") ||
         !session.committing("save_retention_moves_started")) {
-        session.failed(error ? error.message() : session.detail());
-        return failure<std::string>("save_retention_failed", error ? error.message() : session.detail(), trash);
+        session.failed(session.detail());
+        return failure<std::string>("save_retention_failed", session.detail(), trash);
     }
     for (const auto& record : values.value()) {
         if (candidates.count(record.file_name) == 0) continue;
@@ -758,10 +779,13 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
         auto digest = stable_sha256(record.path, size);
         if (!digest || digest.value() != record.sha256 || size != record.size) return failure<std::string>(
             "save_source_changed", "Save changed before retention apply", record.path);
-        auto authority = facman::workspace::inspect_workspace_root(workspace);
         const fs::path manifest = fs::u8path(path_text(record.path) + ".manifest.json");
         auto manifest_before = stable_text(manifest);
-        if (!authority || !authority.value().root_authority || !manifest_before ||
+        if (!facman::workspace::revalidate_workspace_root(authority.value()) ||
+            !operation_trash.revalidate().ok() ||
+            !authority.value().root_authority->validate_descendant(record.path).ok() ||
+            !authority.value().root_authority->validate_descendant(manifest).ok() ||
+            !manifest_before ||
             !proven_owned_backup(instance.value(), record, authority.value().workspace_id)) {
             session.failed("backup ownership or manifest changed before retention move");
             return failure<std::string>(

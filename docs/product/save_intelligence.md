@@ -17,7 +17,11 @@ If the save bytes change, verification reports `drifted`; it never silently
 rewrites the association.
 
 `saves retention plan` applies keep-last, daily, weekly, byte, and minimum-age
-policy without mutation. `saves retention apply` revalidates each candidate and
-moves the save and association sidecar into transaction-owned workspace trash.
-It never permanently deletes a save, and retained bytes remain available for
+policy to backups in the selected instance's owned backup directory. A backup
+is eligible only when its FacMan manifest matches the workspace, instance,
+source path, destination path, size, digest, and consistency policy. Unverified
+files and live saves stay in place. `saves retention apply` checks run and
+save-write locks, revalidates each candidate and its manifest, then moves the
+backup and manifest together into transaction-owned workspace trash. It never
+permanently deletes a save or backup; retained bytes remain available for
 recovery.

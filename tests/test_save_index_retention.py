@@ -249,6 +249,28 @@ class SaveIndexRetentionTests(unittest.TestCase):
             self.assertEqual(original, preserved[0].read_bytes())
             self.assertTrue(old.is_file())
 
+    def test_retention_refuses_unowned_trash_parent_without_moving_backup(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman save trash refusal ") as value:
+            workspace = Path(value)
+            instance = setup(workspace)
+            save = instance / "saves" / "original.zip"
+            write_save(save, b"original save")
+            call(workspace, "saves", "backup", "original", "--instance", "save-index")
+            backup = instance / "backups" / "original.backup.zip"
+            original = backup.read_bytes()
+            blocked_trash = workspace / "trash"
+            blocked_trash.write_text("unowned obstruction\n", encoding="utf-8")
+
+            refused = call(
+                workspace, "saves", "retention", "apply", "--instance", "save-index",
+                "--keep-last", "0", "--max-total-bytes", "1", success=False,
+            )
+            self.assertEqual("save_retention_failed", refused["refusal"]["code"])
+            self.assertEqual(original, backup.read_bytes())
+            self.assertTrue((instance / "backups" / "original.backup.zip.manifest.json").is_file())
+            self.assertTrue(save.is_file())
+            self.assertEqual("unowned obstruction\n", blocked_trash.read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()
