@@ -1,4 +1,4 @@
-# generated source-sha256: dd48bf7f0ef82aaaed97ab867aff6b47c594b4f5bfb126fa6d278a7e1c23a63d
+# generated source-sha256: 4bcda469d19c9dd77b541693e088bb408ac1ed9f84e9ab416e64cc1232bd60b9
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -89,6 +89,7 @@
 # path: saves index
 # path: saves inspect
 # path: saves list
+# path: saves restore
 # path: saves retention apply
 # path: saves retention plan
 # path: saves verify

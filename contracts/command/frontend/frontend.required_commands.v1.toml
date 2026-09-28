@@ -480,6 +480,7 @@ id = "saves.clone"
 phase = "optional"
 backend_id = "saves.clone"
 cli = "facman saves clone <save> --instance <source-id> --to-instance <target-id> --json"
+cli_aliases = ["facman saves restore <backup-name.zip> --instance <instance-id> --as <new-save.zip> --json"]
 
 [[commands]]
 id = "saves.index"

@@ -85,6 +85,7 @@ ENUM_CHOICES: dict[str, list[str]] = {
         "launch_deck", "instances", "installations", "content", "saves",
         "activity_recovery", "settings_support",
     ],
+    "source_kind": ["live", "owned_backup"],
 }
 
 
@@ -213,6 +214,7 @@ def digest_source(hasher: Any, path: Path) -> None:
 def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], str]:
     index = load_toml(INDEX)
     version = load_toml(VERSION)
+    frontend = load_toml(FRONTEND)
     if index.get("schema") != "facman.command_catalog_index.v1":
         raise ValueError("command catalog index has the wrong schema")
     if version.get("schema") != "facman.version.v2":
@@ -222,6 +224,20 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
         raise ValueError("command catalog files must be a unique array")
     runtime_ids = index.get("runtime_ids", {})
     registered = set(index.get("registered", []))
+    frontend_aliases: dict[str, list[str]] = {}
+    for entry in frontend.get("commands", []):
+        aliases = entry.get("cli_aliases", [])
+        if not isinstance(aliases, list) or any(
+            not isinstance(alias, str) or not alias.startswith("facman ")
+            for alias in aliases
+        ) or (all(isinstance(alias, str) for alias in aliases) and
+              len(set(aliases)) != len(aliases)):
+            raise ValueError(f"frontend command has invalid cli_aliases: {entry.get('id', '')}")
+        if aliases:
+            backend_id = str(entry.get("backend_id", ""))
+            if backend_id in frontend_aliases:
+                raise ValueError(f"duplicate frontend cli_aliases for {backend_id}")
+            frontend_aliases[backend_id] = aliases
     commands: list[dict[str, Any]] = []
     command_catalog_hasher = hashlib.sha256()
     for path in [Path(__file__).resolve(), INDEX, VERSION, FRONTEND, REQUEST_FIELDS_PATH, SETUP_WORKFLOW_PATH]:
@@ -256,6 +272,7 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
         item["contract_path"] = path.relative_to(ROOT).as_posix()
         item["runtime_id"] = runtime_id
         item["registered"] = runtime_id in registered
+        item["cli_aliases"] = frontend_aliases.get(runtime_id, [])
         commands.append(item)
         digest_source(command_catalog_hasher, path)
     ids = [str(item["command_id"]) for item in commands]
@@ -490,7 +507,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
     mutates_setup = "setup_mutation" in effects
     deprecated = runtime_id in {"setup.operation", "utility.operation"} | LEGACY_SETUP_COMMANDS
     grammar = cli_grammar(item)
-    return {
+    metadata = {
         "schema": "facman.command.v2",
         "owner": str(index["owner"]),
         "binding": str(index["binding"]),
@@ -516,6 +533,9 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
         ],
         "cli_grammar": grammar,
     }
+    if item.get("cli_aliases"):
+        metadata["cli_aliases"] = list(item["cli_aliases"])
+    return metadata
 
 
 def c_string(value: str) -> str:
@@ -1113,6 +1133,9 @@ def render(
         cli = str(item.get("cli", ""))
         if cli.startswith("facman "):
             help_lines.append(f"    {c_string(cli[len('facman '):])},")
+        for alias in item.get("cli_aliases", []):
+            if alias.startswith("facman "):
+                help_lines.append(f"    {c_string(alias[len('facman '):])},")
     help_lines.extend(["};", ""])
     grammars = [descriptor_metadata(index, item) | {
         "command_id": str(item["command_id"]),
@@ -1122,7 +1145,11 @@ def render(
     public_grammars = [value for value in grammars if not value["cli_grammar"]["internal"]]
     top_level = sorted({value["cli_grammar"]["path"][0] for value in public_grammars if value["cli_grammar"]["path"]})
     words = " ".join(top_level)
-    full_paths = sorted({" ".join(value["cli_grammar"]["path"]) for value in public_grammars if value["cli_grammar"]["path"]})
+    alias_paths = {
+        " ".join(cli_grammar({"runtime_id": item["runtime_id"], "cli": alias})["path"])
+        for item in commands for alias in item.get("cli_aliases", [])
+    }
+    full_paths = sorted({" ".join(value["cli_grammar"]["path"]) for value in public_grammars if value["cli_grammar"]["path"]} | alias_paths)
     bash_words = " ".join(sorted(set(top_level + [part for path in full_paths for part in path.split()])))
     completions = {
         "bash": f"# generated source-sha256: {command_catalog_digest}\n# full paths: {' | '.join(full_paths)}\ncomplete -W \"{bash_words}\" facman\n",
@@ -1151,9 +1178,10 @@ def render(
         native_id = application_identifier(str(item["runtime_id"]))
         aliases = ", ".join(runtime_aliases(str(item["runtime_id"]))) or "-"
         writes = "yes" if "workspace_write" in set(item.get("effects", [])) else "no"
+        cli_display = "<br>".join(f"`{usage}`" for usage in [item.get("cli", ""), *item.get("cli_aliases", [])])
         docs.append(
             f"| `{item['command_id']}` | `{item['runtime_id']}` | `{native_id}` | {writes} | "
-            f"{aliases} | {availability} | {effects} | `{item.get('cli', '')}` |"
+            f"{aliases} | {availability} | {effects} | {cli_display} |"
         )
     docs.append("")
     application_ids = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}."]

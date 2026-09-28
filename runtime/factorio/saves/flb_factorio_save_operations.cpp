@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_save_operations.h"
+#include "flb_factorio_save_index.h"
 
 #include "fl_archive.h"
 #include "fl_archive_platform.h"
@@ -859,13 +860,38 @@ CloneOutcome clone_save(const fs::path& workspace, const CloneRequest& request)
         return refuse(command, request.source_instance_id, request.save, "save_locked", "Save writes are locked for source or target instance", request.save);
     }
     SaveRef save;
-    if (!resolve_save(source, request.save, save)) {
-        return refuse(command, source.instance_id, request.save, "save_not_found", "Save is not present in the source instance", request.save);
-    }
+    std::string expected_backup_sha256;
+    std::uint64_t expected_backup_size = 0;
+    if (request.source_kind == "owned_backup") {
+        auto backup = facman::factorio::saves::index::resolve_owned_backup(
+            workspace, source.instance_id, request.save);
+        if (!backup) return refuse(command, source.instance_id, request.save,
+            backup.error().code, backup.error().message, backup.error().path);
+        std::string detail;
+        if (!inspect_save(backup.value().path, save, detail)) return refuse(command,
+            source.instance_id, request.save, "save_backup_unproven", "Backup is not a readable save", detail);
+        expected_backup_sha256 = backup.value().sha256;
+        expected_backup_size = backup.value().size;
+    } else if (request.source_kind == "live") {
+        if (!resolve_save(source, request.save, save)) return refuse(command, source.instance_id,
+            request.save, "save_not_found", "Save is not present in the source instance", request.save);
+    } else return refuse(command, source.instance_id, request.save,
+        "save_source_kind_invalid", "Save source kind is not supported", request.source_kind);
     if (!save.archive_structurally_valid || !save.factorio_save_recognized) {
         return refuse(command, source.instance_id, save.file_name, "save_malformed", "Save archive is not recognized as a Factorio save", "level-init.dat is absent");
     }
-    const fs::path destination = target.root / "saves" / save.file_name;
+    const std::string destination_name = request.destination_save.empty()
+        ? save.file_name : request.destination_save;
+    const fs::path destination_filename = fs::u8path(destination_name);
+    std::string destination_detail;
+    if ((request.source_kind == "owned_backup" && request.destination_save.empty()) ||
+        (!request.destination_save.empty() &&
+         !facman::base::validate_identifier(destination_name, destination_detail)) ||
+        destination_filename != destination_filename.filename() ||
+        destination_filename.extension() != ".zip") return refuse(
+        command, target.instance_id, destination_name, "save_clone_target_invalid",
+        "Destination must be an explicit safe .zip filename for backup restoration", destination_name);
+    const fs::path destination = target.root / "saves" / destination_filename;
     if (fs::exists(destination)) return refuse(command, target.instance_id, save.file_name, "save_clone_target_exists", "Save clone target already exists", path_string(destination));
     const fs::path staging = unique_staging(destination.parent_path(), ".facman-save-clone-");
     OperationJournal journal;
@@ -882,10 +908,30 @@ CloneOutcome clone_save(const fs::path& workspace, const CloneRequest& request)
         journal.failed(copied.detail);
         return refuse(command, source.instance_id, save.file_name, "save_source_changed", "Save source could not be read through one stable handle", copied.detail);
     }
+    if ((!expected_backup_sha256.empty() &&
+            (copied.sha256 != expected_backup_sha256 || copied.size != expected_backup_size)) ||
+        save_locked(source) || save_locked(target)) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed("Backup identity or instance lock changed during copy");
+        return refuse(command, source.instance_id, request.save, "save_source_changed",
+            "Backup identity or instance lock changed during copy", path_string(save.path));
+    }
     if (!journal.step("staged", "stable_source_copied") ||
         !journal.step("verified", "staged_hash_verified") ||
         !journal.step("committing", "no_clobber_commit_started")) {
         return refuse(command, source.instance_id, save.file_name, "recovery_write_refused", "Clone journal update failed", journal.detail());
+    }
+    if (!expected_backup_sha256.empty()) {
+        auto current = facman::factorio::saves::index::resolve_owned_backup(
+            workspace, source.instance_id, request.save);
+        if (!current || current.value().path != save.path ||
+            current.value().sha256 != copied.sha256 || current.value().size != copied.size ||
+            save_locked(source) || save_locked(target)) {
+            (void)facman::archive::cleanup_owned_staging_root(staging);
+            journal.failed("Backup ownership, content, or instance lock changed before publication");
+            return refuse(command, source.instance_id, request.save, "save_backup_unproven",
+                "Backup ownership, content, or instance lock changed before publication", path_string(save.path));
+        }
     }
     std::string commit_detail;
     if (!tx::StagedFileCommit::commit(staging, staged, destination, commit_detail)) {
@@ -897,7 +943,8 @@ CloneOutcome clone_save(const fs::path& workspace, const CloneRequest& request)
     status = facman::archive::cleanup_owned_staging_root(staging);
     if (!status.ok()) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but staging cleanup requires recovery", status.detail, false);
     if (!journal.finish()) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but journal close requires recovery", journal.detail(), false);
-    return CloneResult {source.instance_id, target.instance_id, save, destination, utc_now(), copied.sha1, copied.sha256};
+    return CloneResult {source.instance_id, target.instance_id, save, destination, utc_now(),
+        copied.sha1, copied.sha256, request.source_kind, destination_name};
 }
 
 ExportOutcome export_instance(const fs::path& workspace, const ExportRequest& request)
@@ -1254,6 +1301,8 @@ std::string to_json(const CloneResult& value)
     output.add_string("created_at", value.created_at);
     output.add_string("sha1", value.sha1);
     output.add_string("sha256", value.sha256);
+    output.add_string("source_kind", value.source_kind);
+    output.add_string("destination_save", value.destination_save);
     output.add_bool("archive_structurally_valid", true);
     output.add_bool("factorio_save_recognized", true);
     output.add_bool("deep_save_semantics_inspected", false);

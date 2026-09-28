@@ -1474,6 +1474,16 @@
         "kind": "string",
         "name": "save",
         "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "source_kind",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "destination_save",
+        "required": false
       }
     ],
     "saves.diff": [
