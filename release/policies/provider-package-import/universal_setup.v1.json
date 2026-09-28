@@ -23,20 +23,20 @@
   },
   "inventory": {
     "artifacts_sha256": {
-      "linux/static": "fbe7870cbb5490cebd3dc34311ab21807b081d4028de632a6414708a1ae5df2a",
-      "linux/shared": "fead12c581f8349f58f7851ed0aeb78f483d2c7b820ac5eed6ed87fc96f31b60",
-      "macos/static": "1ef15f347e18d5ebe3d21a21a7c14cab23aac6a3ce60ed69955cd886d62decf4",
-      "macos/shared": "cc52ba956185e3dcbd0a40a8e464bcd49928c51919ac17ef75d2d7d35662142a",
-      "windows/static": "5dc97fbae77eea119112aba244d2fc9bd132a61b174be930b84c25b1430df56e",
-      "windows/shared": "e865a6f602a9059af88caff6e34ac508eef0d04b54e29e114af69047d75449b8"
+      "linux/static": "960cf435df4a295ac8f2103f06f5db95cee0f5f928e1ac12230323a3125dc26d",
+      "linux/shared": "c0a02efa155121813f17f673e2f393724a5053113165d3d238d1680415973bdc",
+      "macos/static": "37f7bf3c7015425ac043fb257c3072f017c01ba59c4913e75a3cbe04b54e5890",
+      "macos/shared": "ed8d8ace471afd8d97d88f0bea44185e9c01d4510587c24aa87086b26645e1b1",
+      "windows/static": "31780c05dffeb72ddb89e306814d6033216e2c6de5f9b25fcff8ea767b044bb9",
+      "windows/shared": "97f145243b7ed09627a927f02adf5d1b0fe9f03fca0030beb1cc7f0ce3537ca6"
     },
     "contracts_sha256": {
       "linux/static": "ce24df66f4912d6a312608cf84de52c8da164df406960444be32275c9a6fdba4",
       "linux/shared": "ce24df66f4912d6a312608cf84de52c8da164df406960444be32275c9a6fdba4",
       "macos/static": "ce24df66f4912d6a312608cf84de52c8da164df406960444be32275c9a6fdba4",
       "macos/shared": "ce24df66f4912d6a312608cf84de52c8da164df406960444be32275c9a6fdba4",
-      "windows/static": "2121d7502db5b4e90c8d8332fb1ae63d8a4e9df8004e33721c4eed8c1e1a9459",
-      "windows/shared": "2121d7502db5b4e90c8d8332fb1ae63d8a4e9df8004e33721c4eed8c1e1a9459"
+      "windows/static": "ce24df66f4912d6a312608cf84de52c8da164df406960444be32275c9a6fdba4",
+      "windows/shared": "ce24df66f4912d6a312608cf84de52c8da164df406960444be32275c9a6fdba4"
     },
     "contract_set": [
       "share/universal-setup/contracts/schema/package/component_manifest.v1.schema.json",
