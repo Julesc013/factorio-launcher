@@ -1,5 +1,5 @@
 command_id = "saves.clone"
-cli = "facman saves clone <save> --instance <source-id> --to-instance <target-id> --json"
+cli = "facman saves clone <save> --instance <source-id> --to-instance <target-id> [--source-kind <kind>] [--as <new-save.zip>] --json"
 effects = ["workspace_read", "workspace_write"]
 request_schema = "contracts/schema/command/saves.clone.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_save_clone.v1.schema.json"
