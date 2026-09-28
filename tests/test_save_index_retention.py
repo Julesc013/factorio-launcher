@@ -49,6 +49,33 @@ def validate(value: dict, schema: str) -> list[str]:
 
 
 class SaveIndexRetentionTests(unittest.TestCase):
+    def test_retention_refuses_active_run_and_save_write_locks(self) -> None:
+        for lock_name in ("run.lock", "save.write.lock"):
+            with self.subTest(lock_name=lock_name), tempfile.TemporaryDirectory(
+                prefix="facman locked save retention "
+            ) as value:
+                workspace = Path(value)
+                instance = setup(workspace)
+                old = instance / "saves" / "old.zip"
+                new = instance / "saves" / "new.zip"
+                write_save(old, b"old save")
+                write_save(new, b"new save")
+                stamp = int(time.time()) - 10 * 24 * 60 * 60
+                os.utime(old, (stamp, stamp))
+                original = old.read_bytes()
+                lock_dir = instance / "locks"
+                lock_dir.mkdir(exist_ok=True)
+                (lock_dir / lock_name).write_text("active\n", encoding="utf-8")
+
+                refused = call(
+                    workspace, "saves", "retention", "apply", "--instance", "save-index",
+                    "--keep-last", "1", "--min-age-days", "1", success=False,
+                )
+                self.assertEqual("save_locked", refused["refusal"]["code"])
+                self.assertEqual(original, old.read_bytes())
+                self.assertTrue(new.is_file())
+                self.assertFalse((workspace / "trash" / "saves").exists())
+
     def test_association_refuses_outside_or_non_exact_version_before_mutation(self) -> None:
         for factorio_version in ("0.18.40", "2.0"):
             with self.subTest(factorio_version=factorio_version):

@@ -20,6 +20,7 @@
 #include <ctime>
 #include <iomanip>
 #include <map>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <system_error>
@@ -129,6 +130,18 @@ facman::core::Result<Instance> load_instance(const fs::path& workspace, const st
     auto record = facman::workspace::InstanceRepository(facman::workspace::WorkspaceLayout(workspace)).load(parsed.value());
     if (!record) return failure<Instance>("unknown_instance", "Instance is not registered");
     return facman::core::Result<Instance>::success({record.take_value()});
+}
+
+std::optional<fs::path> save_write_lock(const Instance& instance)
+{
+    for (const char* name : {"run.lock", "save.write.lock"}) {
+        const fs::path path = instance.record.root / "locks" / name;
+        std::error_code error;
+        const auto status = fs::symlink_status(path, error);
+        if (error == std::errc::no_such_file_or_directory) continue;
+        if (error || status.type() != fs::file_type::not_found) return path;
+    }
+    return std::nullopt;
 }
 
 facman::core::Result<std::string> stable_text(const fs::path& path)
@@ -614,6 +627,8 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
     auto instance = load_instance(workspace, request.instance_id);
     auto values = records(workspace, request.instance_id);
     if (!instance || !values) return failure<std::string>("unknown_instance", "Instance or saves could not be loaded");
+    if (const auto lock = save_write_lock(instance.value())) return failure<std::string>(
+        "save_locked", "Save retention conflicts with an active instance", *lock);
     const auto candidates = retention_candidates(values.value(), request);
     if (candidates.empty()) return facman::core::Result<std::string>::success(retention_report(
         "saves.retention.apply", request, values.value(), candidates, false));
@@ -641,6 +656,12 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
     }
     for (const auto& record : values.value()) {
         if (candidates.count(record.file_name) == 0) continue;
+        if (const auto lock = save_write_lock(instance.value())) {
+            session.failed("instance run or save-write lock appeared during retention");
+            return failure<std::string>(
+                "save_transaction_recovery_required", "Save retention stopped when an instance lock appeared",
+                *lock, facman::core::OutcomeKind::recovery_required);
+        }
         std::uint64_t size = 0;
         auto digest = stable_sha256(record.path, size);
         if (!digest || digest.value() != record.sha256 || size != record.size) return failure<std::string>(
