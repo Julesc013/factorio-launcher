@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -119,6 +120,56 @@ class PackageContractTckTests(unittest.TestCase):
             cli.parent.mkdir(parents=True)
             cli.write_bytes(b"cli")
             macos_self_setup.validate_app_payload(app)
+
+    def test_macos_installer_version_tracks_release_order_and_package_revision(self) -> None:
+        version = macos_self_setup.native_package_version
+        ordered = [
+            version("0.1.0-alpha.5", "0"),
+            version("0.1.0-alpha.6", "0"),
+            version("0.1.0-beta.1", "0"),
+            version("0.1.0-rc.1", "0"),
+            version("0.1.0", "0"),
+            version("0.1.1-alpha.1", "0"),
+        ]
+        numeric = [tuple(map(int, item.split("."))) for item in ordered]
+        self.assertEqual(numeric, sorted(numeric))
+        self.assertEqual(len(numeric), len(set(numeric)))
+        self.assertEqual("0.1.10600", version("0.1.0-alpha.6", "0"))
+        self.assertEqual("0.1.10601", version("0.1.0-alpha.6", "1"))
+        for product, revision in (
+            ("0.1.0-preview.1", "0"),
+            ("0.1.0-alpha.100", "0"),
+            ("0.1.0", "100"),
+            ("0.1.0", "01"),
+        ):
+            with self.subTest(product=product, revision=revision), self.assertRaises(ValueError):
+                version(product, revision)
+
+    def test_macos_installer_package_info_matches_canonical_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            info = root / "PackageInfo"
+            evidence = root / "evidence.json"
+            record = {
+                "schema": "facman.macos_self_setup.v1",
+                "version": "0.1.0-alpha.6",
+                "package_version": "0.1.10600",
+                "setup": {"identifier": macos_self_setup.PACKAGE_IDENTIFIER},
+            }
+            evidence.write_text(json.dumps(record), encoding="utf-8")
+            info.write_text(
+                '<pkg-info identifier="io.github.julesc013.facman" version="0.1.10600"/>',
+                encoding="utf-8",
+            )
+            with patch.object(
+                macos_self_setup,
+                "version_truth",
+                return_value={"semver": "0.1.0-alpha.6", "package_revision": "0"},
+            ):
+                macos_self_setup.verify_package_info(info, evidence)
+                info.write_text('<pkg-info identifier="io.github.julesc013.facman" version="0.1.0"/>', encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "Installer package identity"):
+                    macos_self_setup.verify_package_info(info, evidence)
 
     def test_macos_product_builder_places_cli_in_helpers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

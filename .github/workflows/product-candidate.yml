@@ -328,6 +328,7 @@ jobs:
           pkgutil --expand-full \
             "${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${FACMAN_CANDIDATE_VERSION}-macos-x64-setup.pkg" \
             "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded"
+          python tools/macos_self_setup.py --verify-package-info "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/PackageInfo" --evidence "${{ env.FACMAN_TASK_ROOT }}/evidence/macos-setup.v1.json"
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/Applications/FacMan.app/Contents/MacOS/FacMan"
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/Applications/FacMan.app/Contents/Helpers/facman"
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/usr/local/bin/facman"

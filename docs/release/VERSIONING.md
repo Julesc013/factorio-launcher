@@ -27,6 +27,18 @@ Every release ledger entry binds the exact value of every domain it consumes.
 Compatibility is an explicit matrix and migration law, not a consequence of
 similar version numbers.
 
+The macOS Installer package version is a numeric projection of the canonical
+FacMan SemVer and package revision, separate from the version shown in the
+artifact name. Its last component is `patch * 100000 + phase * 10000 +
+prerelease_number * 100 + package_revision`, with phase 1/2/3/4 for
+alpha/beta/rc/stable. Prerelease numbers and package revisions are each bounded
+to 0–99; the builder refuses values outside that reserved range until a
+reviewed mapping replaces it. Thus alpha.6 maps to `0.1.10600`, beta.1 to
+`0.1.20100`, and final 0.1.0 to `0.1.40000`. The previously built macOS
+packages with native version `0.1.0` remain historical; package identity and
+version can now distinguish subsequent upgrades. The candidate workflow reads
+the produced `PackageInfo` and checks its version against setup evidence.
+
 ## Precedence-correct product identities
 
 FacMan follows SemVer precedence. Development, alpha, beta, and release
