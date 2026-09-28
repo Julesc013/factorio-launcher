@@ -15,15 +15,19 @@
 #include "flb_factorio_launch_plan.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cctype>
+#include <cstdlib>
 #include <ctime>
 #include <exception>
 #include <iomanip>
 #include <map>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <system_error>
+#include <thread>
 
 namespace facman::factorio::snapshots {
 namespace fs = std::filesystem;
@@ -110,6 +114,19 @@ facman::core::Result<workspace_store::InstanceRecord> load_instance(
     return record;
 }
 
+std::optional<fs::path> save_lock_path(const workspace_store::InstanceRecord& instance)
+{
+    for (const char* name : {"run.lock", "save.write.lock"}) {
+        const fs::path path = instance.root / "locks" / name;
+        std::error_code error;
+        const fs::file_status status = fs::symlink_status(path, error);
+        if (error == std::errc::no_such_file_or_directory ||
+            (!error && status.type() == fs::file_type::not_found)) continue;
+        return path;
+    }
+    return std::nullopt;
+}
+
 facman::core::Result<workspace_store::InstallRecord> load_install(
     const fs::path& workspace,
     const std::string& value)
@@ -187,12 +204,39 @@ facman::core::Result<PayloadFile> stable_copy(
              facman::platform::path_to_utf8(source)});
     }
     const std::uint64_t size = input.size();
-    input = facman::platform::StableInputFile {};
-    std::string digest_text;
-    try { digest_text = facman::base::sha256_hex_file(source); }
-    catch (const std::exception& exception) {
-        return facman::core::Result<PayloadFile>::failure(
-            {"snapshot_source_changed", exception.what(), facman::platform::path_to_utf8(source)});
+    const facman::platform::FileIdentity source_identity = input.identity();
+    facman::base::Sha256Hasher hash;
+    std::array<unsigned char, 64U * 1024U> buffer {};
+    for (std::uint64_t offset = 0; offset < size;) {
+        const std::size_t wanted = static_cast<std::size_t>((std::min)(
+            static_cast<std::uint64_t>(buffer.size()), size - offset));
+        if (input.read_at(offset, buffer.data(), wanted) != wanted) {
+            return facman::core::Result<PayloadFile>::failure(
+                {"snapshot_source_changed", "Snapshot source was short-read", facman::platform::path_to_utf8(source)});
+        }
+        hash.update(buffer.data(), wanted);
+        offset += wanted;
+    }
+    if (!input.revalidate_path().ok()) return facman::core::Result<PayloadFile>::failure(
+        {"snapshot_source_changed", "Snapshot source path changed during hashing", facman::platform::path_to_utf8(source)});
+    const std::string digest_text = hash.finish();
+    const char* pause = std::getenv("FACMAN_TEST_SNAPSHOT_SOURCE_HASH_PAUSE");
+    if (pause != nullptr && std::string(pause) == "1") {
+        const fs::path instance = source.parent_path().parent_path();
+        const fs::path marker = instance / ".facman-test-snapshot-source-hashed";
+        const fs::path release = instance / ".facman-test-snapshot-source-release";
+        std::string pause_detail;
+        if (!facman::base::write_text_new_atomic(marker, "ready\n", pause_detail))
+            return facman::core::Result<PayloadFile>::failure(
+                {"snapshot_source_changed", pause_detail, facman::platform::path_to_utf8(source)});
+        bool released = false;
+        for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+            std::error_code pause_error;
+            if (fs::exists(release, pause_error) && !pause_error) { released = true; break; }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        if (!released) return facman::core::Result<PayloadFile>::failure(
+            {"snapshot_source_changed", "Snapshot source test pause timed out", facman::platform::path_to_utf8(source)});
     }
     auto digest = facman::core::Sha256Digest::parse(digest_text);
     if (!digest) return facman::core::Result<PayloadFile>::failure(digest.error());
@@ -200,7 +244,8 @@ facman::core::Result<PayloadFile> stable_copy(
     std::error_code error;
     fs::create_directories(target.parent_path(), error);
     std::string detail;
-    if (error || !tx::CrossVolumeCopyVerifyCommit::commit(source, target, digest.value(), size, detail)) {
+    if (error || !tx::CrossVolumeCopyVerifyCommit::commit(
+            source, target, digest.value(), size, detail, &source_identity)) {
         return facman::core::Result<PayloadFile>::failure(
             {"snapshot_source_changed", error ? error.message() : detail, facman::platform::path_to_utf8(source)});
     }
@@ -741,6 +786,8 @@ facman::core::Result<std::string> create(const fs::path& workspace, const Create
         facman::core::OutcomeKind::recovery_required, false);
     auto instance = load_instance(workspace, request.instance_id);
     if (!instance) return fail(instance.error().code, instance.error().message, instance.error().path);
+    if (const auto lock = save_lock_path(instance.value())) return fail(
+        "save_locked", "Snapshot creation conflicts with an active instance", *lock);
     std::string detail;
     if (!safe_snapshot_id(request.snapshot_id, detail)) return fail("snapshot_id_invalid", detail);
     auto destination = managed_snapshot(workspace, instance.value().id.str(), request.snapshot_id);
@@ -798,17 +845,27 @@ facman::core::Result<std::string> create(const fs::path& workspace, const Create
     }
     std::set<std::string> selected;
     for (const std::string& save : request.saves) {
+        if (const auto lock = save_lock_path(instance.value())) {
+            session.failed("instance run or save-write lock appeared during snapshot creation");
+            return fail("snapshot_transaction_recovery_required",
+                "Snapshot creation stopped when an instance lock appeared", *lock,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
         if (!selected.insert(save).second || save.empty() || save.size() > 255U ||
             save.find('/') != std::string::npos || save.find('\\') != std::string::npos || fs::path(save).extension() != ".zip") {
             session.failed("invalid selected save");
             return fail("snapshot_save_invalid", "Selected save name is invalid", fs::u8path(save));
         }
         const fs::path source = instance.value().root / "saves" / fs::u8path(save);
-        facman::archive::Plan save_plan;
-        status = facman::archive::inspect_archive(source, facman::archive::SaveArchivePolicy::limits(), save_plan);
-        if (!status.ok()) { session.failed(status.detail); return fail("snapshot_save_invalid", status.code + ": " + status.detail, source); }
         auto copied = stable_copy(source, payload, "saves/" + save);
         if (!copied) { session.failed(copied.error().message); return fail(copied.error().code, copied.error().message, copied.error().path); }
+        facman::archive::Plan save_plan;
+        status = facman::archive::inspect_archive(
+            copied.value().source, facman::archive::SaveArchivePolicy::limits(), save_plan);
+        if (!status.ok()) {
+            session.failed(status.detail);
+            return fail("snapshot_save_invalid", status.code + ": " + status.detail, source);
+        }
         files.push_back(copied.take_value());
     }
     std::sort(files.begin(), files.end(), [](const PayloadFile& left, const PayloadFile& right) { return left.path < right.path; });
@@ -832,6 +889,34 @@ facman::core::Result<std::string> create(const fs::path& workspace, const Create
     if (!status.ok()) { session.failed(status.detail); return fail("snapshot_archive_write_failed", status.code + ": " + status.detail, archive_staging); }
     if (!session.verified("deterministic_archive_self_verified") || !session.committing("snapshot_no_clobber_commit_started")) {
         return fail("snapshot_transaction_failed", session.detail(), workspace);
+    }
+    const char* pause = std::getenv("FACMAN_TEST_SNAPSHOT_BEFORE_PUBLICATION_PAUSE");
+    if (pause != nullptr && std::string(pause) == "1") {
+        const fs::path marker = workspace / ".facman-test-snapshot-before-publication";
+        const fs::path release = workspace / ".facman-test-snapshot-publication-release";
+        std::string pause_detail;
+        if (!facman::base::write_text_new_atomic(marker, "ready\n", pause_detail)) {
+            session.failed(pause_detail);
+            return fail("snapshot_transaction_recovery_required", pause_detail, marker,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
+        bool released = false;
+        for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+            std::error_code pause_error;
+            if (fs::exists(release, pause_error) && !pause_error) { released = true; break; }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        if (!released) {
+            session.failed("snapshot publication test pause timed out");
+            return fail("snapshot_transaction_recovery_required", session.detail(), release,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
+    }
+    if (const auto lock = save_lock_path(instance.value())) {
+        session.failed("instance run or save-write lock appeared before snapshot publication");
+        return fail("snapshot_transaction_recovery_required",
+            "Snapshot publication stopped when an instance lock appeared", *lock,
+            facman::core::OutcomeKind::recovery_required, false);
     }
     std::string commit_detail;
     if (!tx::StagedFileCommit::commit(archive_staging, written.archive_path, destination.value(), commit_detail)) {

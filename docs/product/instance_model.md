@@ -63,6 +63,10 @@ the production deterministic ZIP writer (deflate/ZIP64 as required). The
 archive carries a SHA-256 closure over portable instance metadata, generated
 non-secret configuration, a modset lock reference when present, and only saves
 explicitly selected with `--save`.
+Creation refuses an active instance run or save-write lock, pins each selected
+save identity through hashing and staged copy, and rechecks the locks before
+archive publication. An interrupted precommit snapshot remains visible to
+workspace recovery; it is not reported as a completed archive.
 
 Credentials, tokens, machine-local absolute paths, locks, journals, logs,
 crashes, caches, and temporary content are excluded. There is no full-secrets
