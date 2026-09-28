@@ -109,10 +109,18 @@ version, currently refuses. Incomplete staging and changed ownership also
 refuse without deleting their contents. Before an update, the full previous
 Setup copy must match its recorded SHA-256. The two verified Alpha.5 candidate
 packages are admitted by exact digest because Alpha.5 predates that receipt.
+The reviewed predecessor catalog at
+`tools/package/linux_setup_predecessors.v1.toml` selects exact predecessor
+version-and-SHA-256 cases for each target Setup version. These cases are
+embedded in the produced Setup package and recorded in its
+build evidence. Future packages require a reviewed catalog entry for each
+qualified predecessor; the installed Setup receipt alone does not admit an
+arbitrary package.
 The earlier five-file update journal remains readable for those exact
 Alpha.5 predecessors. This Alpha.6 update path admits only those verified
-Alpha.5 packages as predecessors; a later B-to-C update requires its own
-independently admitted predecessor identity.
+Alpha.5 packages as predecessors; a later B-to-C update still requires the
+exact produced B identity in the catalog and a produced-package transition
+proof.
 Removal admits only the active generation and the predecessor named in the
 rollback record; extra files, directories, links, or generation roots refuse.
 Custom installation roots currently
