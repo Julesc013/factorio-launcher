@@ -10,7 +10,7 @@ import argparse
 import gzip
 import hashlib
 import json
-import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -20,10 +20,45 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKER = "__FACMAN_PAYLOAD_BELOW__"
-ALPHA5_PREDECESSOR_SHA256 = (
-    "8f5b6cf5c3b718504d894a28e74cb6bdfc9a9c95cacfd038d59df96ec74f38a8",
-    "7529b1cc11c9970f13369dd4d38a70456f43c97a31eb9a0a90dea17728d58bd5",
+PREDECESSORS = ROOT / "tools/package/linux_setup_predecessors.v1.toml"
+VERSION_PATTERN = re.compile(
+    r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+    r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
 )
+SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
+
+
+def admitted_predecessors(version: str, catalog: Path = PREDECESSORS) -> tuple[tuple[str, str], ...]:
+    if VERSION_PATTERN.fullmatch(version) is None:
+        raise ValueError(f"unsupported Linux Setup version: {version!r}")
+    with catalog.open("rb") as stream:
+        document = tomllib.load(stream)
+    if set(document) != {"schema", "predecessor"} or document["schema"] != "facman.linux_setup_predecessors.v1":
+        raise ValueError("invalid Linux Setup predecessor catalog schema")
+    rows = document["predecessor"]
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("Linux Setup predecessor catalog is empty")
+    entries: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"target_version", "version", "sha256", "qualification"}:
+            raise ValueError("invalid Linux Setup predecessor record")
+        target, old_version = row["target_version"], row["version"]
+        digest, qualification = row["sha256"], row["qualification"]
+        if (not isinstance(target, str) or not isinstance(old_version, str) or
+                not isinstance(digest, str) or
+                not isinstance(qualification, str) or not qualification.strip() or
+                SHA256_PATTERN.fullmatch(digest) is None or
+                VERSION_PATTERN.fullmatch(target) is None or
+                VERSION_PATTERN.fullmatch(old_version) is None or
+                target == old_version or (target, digest) in seen):
+            raise ValueError("unqualified or duplicate Linux Setup predecessor record")
+        seen.add((target, digest))
+        if target == version:
+            entries.append((old_version, digest))
+    return tuple(entries)
 
 
 def sha256(path: Path) -> str:
@@ -46,16 +81,18 @@ def git(*arguments: str) -> str:
 
 
 def header(version: str, payload_sha256: str,
-           test_predecessor_sha256: str | None = None) -> bytes:
-    predecessor_hashes = ALPHA5_PREDECESSOR_SHA256
+           test_predecessor_sha256: str | None = None,
+           predecessor_catalog: Path = PREDECESSORS) -> bytes:
+    if SHA256_PATTERN.fullmatch(payload_sha256) is None:
+        raise ValueError("invalid Linux Setup payload SHA-256")
+    predecessors = admitted_predecessors(version, predecessor_catalog)
     if test_predecessor_sha256 is not None:
-        if len(test_predecessor_sha256) != 64 or any(
-                character not in "0123456789abcdef" for character in test_predecessor_sha256):
+        if SHA256_PATTERN.fullmatch(test_predecessor_sha256) is None:
             raise ValueError("invalid test predecessor SHA-256")
-        predecessor_hashes += (test_predecessor_sha256,)
+        predecessors += (("0.1.0-alpha.5", test_predecessor_sha256),)
     predecessor_cases = "|\\\n      ".join(
-        f"'0.1.0-alpha.5:{digest}'" for digest in predecessor_hashes
-    )
+        f"'{old_version}:{digest}'" for old_version, digest in predecessors
+    ) or "'__no_admitted_predecessor__'"
     script = r'''#!/bin/sh
 set -eu
 
@@ -121,7 +158,7 @@ setup_authority="$state/installed-setup.sha256"
 
 assert_admitted_predecessor() {
   case "$1:$2" in
-      @ALPHA5_PREDECESSOR_CASES@) return 0 ;;
+      @ADMITTED_PREDECESSOR_CASES@) return 0 ;;
       *) echo 'refusing an unadmitted previous Setup package' >&2; return 1 ;;
   esac
 }
@@ -873,7 +910,7 @@ __FACMAN_PAYLOAD_BELOW__
 '''
     return (script.replace("@VERSION@", version)
             .replace("@PAYLOAD_SHA256@", payload_sha256)
-            .replace("@ALPHA5_PREDECESSOR_CASES@", predecessor_cases).encode())
+            .replace("@ADMITTED_PREDECESSOR_CASES@", predecessor_cases).encode())
 
 
 def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
@@ -883,6 +920,8 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
     if portable.name != expected:
         raise ValueError(f"unexpected Linux portable input: {portable.name}")
     output.mkdir(parents=True, exist_ok=True)
+    catalog_sha256 = sha256(PREDECESSORS)
+    predecessors = admitted_predecessors(version)
     setup = output / f"FacMan-{version}-linux-x64-setup.run"
     with tempfile.TemporaryDirectory(prefix="facman-linux-setup-", dir=output) as temporary:
         raw = Path(temporary) / "payload.tar"
@@ -895,6 +934,9 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
                                compresslevel=9, mtime=0) as stream:
                 shutil.copyfileobj(source, stream)
         setup.write_bytes(header(version, sha256(compressed)) + compressed.read_bytes())
+    if catalog_sha256 != sha256(PREDECESSORS) or predecessors != admitted_predecessors(version):
+        setup.unlink(missing_ok=True)
+        raise ValueError("Linux Setup predecessor admission changed during package build")
     setup.chmod(0o755)
     record = {
         "schema": "facman.linux_self_setup.v1",
@@ -904,6 +946,11 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
         "architecture": "x64",
         "source_revision": git("rev-parse", "HEAD"),
         "source_tree": git("rev-parse", "HEAD^{tree}"),
+        "admitted_predecessors": [
+            {"version": old_version, "sha256": digest}
+            for old_version, digest in predecessors
+        ],
+        "predecessor_catalog_sha256": catalog_sha256,
         "portable_input": {"filename": portable.name, "sha256": sha256(portable)},
         "setup": {
             "filename": setup.name,
