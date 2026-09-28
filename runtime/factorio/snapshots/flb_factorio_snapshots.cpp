@@ -13,6 +13,7 @@
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 #include "flb_factorio_launch_plan.h"
+#include "flb_factorio_content_records.h"
 
 #include <algorithm>
 #include <array>
@@ -583,7 +584,9 @@ std::string snapshot_result(
     const std::string& command,
     const SnapshotData& snapshot,
     const std::string& status,
-    bool mutation)
+    bool mutation,
+    const json::Value* world_bundle = nullptr,
+    const std::string& world_bundle_reason = {})
 {
     json::ArrayBuilder saves;
     for (const std::string& save : snapshot.saves) saves.add_string(save);
@@ -600,6 +603,11 @@ std::string snapshot_result(
     output.add_bool("deterministic", true);
     output.add_bool("secret_content_included", false);
     output.add_array("selected_saves", saves);
+    if (command == "snapshots.inspect") {
+        output.add_string("world_bundle_state", world_bundle == nullptr ? "unavailable" : "available");
+        if (world_bundle != nullptr) output.add_value("world_bundle", *world_bundle);
+        else output.add_string("world_bundle_reason_code", world_bundle_reason);
+    }
     output.add_bool("mutation_executed", mutation);
     return output.serialize();
 }
@@ -970,7 +978,25 @@ facman::core::Result<std::string> inspect(const fs::path& workspace, const Snaps
     if (!path) return fail(path.error().code, path.error().message, path.error().path);
     auto snapshot = load_snapshot(path.value());
     if (!snapshot) return fail(snapshot.error().code, snapshot.error().message, snapshot.error().path);
-    return facman::core::Result<std::string>::success(snapshot_result("snapshots.inspect", snapshot.value(), "ok", false));
+    std::string manifest;
+    if (!read_entry(snapshot.value().plan, "manifest/snapshot.v1.json", manifest, kMaximumManifestBytes)) {
+        return facman::core::Result<std::string>::success(snapshot_result(
+            "snapshots.inspect", snapshot.value(), "ok", false, nullptr,
+            "world_bundle_manifest_unavailable"));
+    }
+    auto projection = facman::factorio::content::world_bundle_from_snapshot_manifest_json(manifest);
+    if (!projection) return facman::core::Result<std::string>::success(snapshot_result(
+        "snapshots.inspect", snapshot.value(), "ok", false, nullptr, projection.error().code));
+    json::Limits limits;
+    limits.maximum_bytes = 32U * 1024U * 1024U;
+    limits.maximum_depth = 16U;
+    limits.maximum_nodes = 100000U;
+    auto bundle = json::parse(facman::factorio::content::to_json(projection.value()), limits);
+    if (!bundle) return facman::core::Result<std::string>::success(snapshot_result(
+        "snapshots.inspect", snapshot.value(), "ok", false, nullptr,
+        "world_bundle_projection_invalid"));
+    return facman::core::Result<std::string>::success(snapshot_result(
+        "snapshots.inspect", snapshot.value(), "ok", false, &bundle.value()));
 }
 
 facman::core::Result<std::string> verify(const fs::path& workspace, const SnapshotRequest& request)

@@ -185,7 +185,8 @@ class InstanceSnapshotTests(unittest.TestCase):
                     ["config/config.ini", "instance.v1.json", "manifest/snapshot.v1.json", "saves/starter.zip"],
                     archive.namelist(),
                 )
-                manifest = json.loads(archive.read("manifest/snapshot.v1.json"))
+                manifest_bytes = archive.read("manifest/snapshot.v1.json")
+                manifest = json.loads(manifest_bytes)
                 body = b"\n".join(archive.read(name) for name in archive.namelist())
             self.assertEqual("factorio.instance_snapshot.v1", manifest["schema"])
             self.assertEqual("lock_references_only", manifest["mod_policy"])
@@ -203,6 +204,20 @@ class InstanceSnapshotTests(unittest.TestCase):
             assert_schema(self, listed, "factorio_snapshots.v1.schema.json")
             assert_schema(self, inspected, "factorio_snapshot_report.v1.schema.json")
             assert_schema(self, verified, "factorio_snapshot_report.v1.schema.json")
+            self.assertEqual("available", inspected["world_bundle_state"])
+            world_bundle = inspected["world_bundle"]
+            assert_schema(self, world_bundle, "factorio_world_bundle.v1.schema.json")
+            self.assertEqual("portable", world_bundle["bundle_id"])
+            self.assertEqual("main", world_bundle["source_instance_id"])
+            self.assertEqual(["starter.zip"], world_bundle["selected_saves"])
+            self.assertEqual(
+                hashlib.sha256(manifest_bytes).hexdigest(),
+                world_bundle["source_snapshot_manifest_sha256"],
+            )
+            self.assertEqual(
+                hashlib.sha256(FIXTURE_SAVE.read_bytes()).hexdigest(),
+                world_bundle["world_files"][0]["sha256"],
+            )
             self.assertEqual("pass", verified["status"])
 
             live_difference = call(source, "instances", "diff", "main", "snapshot:portable")

@@ -63,6 +63,10 @@ the production deterministic ZIP writer (deflate/ZIP64 as required). The
 archive carries a SHA-256 closure over portable instance metadata, generated
 non-secret configuration, a modset lock reference when present, and only saves
 explicitly selected with `--save`.
+`snapshots inspect` projects a verified archive manifest into a
+`factorio.world_bundle.v1` record with exact save hashes and content-lock
+identity. Older valid snapshots that cannot be projected remain inspectable
+with an explicit `world_bundle_state` and reason code.
 Creation refuses an active instance run or save-write lock, pins each selected
 save identity through hashing and staged copy, and rechecks the locks before
 archive publication. An interrupted precommit snapshot remains visible to
