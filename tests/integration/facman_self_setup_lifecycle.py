@@ -1983,6 +1983,9 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256},
                             maintenance_controller_sha256=candidate_package_sha256)
+        updated_shortcut_sha256 = shortcut.get("sha256")
+        if not isinstance(updated_shortcut_sha256, str):
+            raise AssertionError("package B shortcut digest is unavailable")
         rollback_helper = epoch_updated_root / "maintenance" / "FacManSetup.exe"
         rollback_preview = invoke(
             rollback_helper, "rollback", *epoch_verify_args,
@@ -2029,13 +2032,19 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256},
                             maintenance_controller_sha256=candidate_package_sha256)
-        retained_shortcut = inspect_shortcut_no_follow(rollback_backup)
-        if (retained_shortcut.get("state") != "present" or
-                not same_windows_path(retained_shortcut.get("fields", {}).get("target"),
-                    epoch_updated_root / "generations" /
-                    candidate_identity["version"] / "FacMan.exe")):
-            raise AssertionError("interrupted rollback did not retain the exact package B shortcut")
+        retained_metadata = os.lstat(rollback_backup)
+        if (not stat.S_ISREG(retained_metadata.st_mode) or
+                getattr(retained_metadata, "st_file_attributes", 0) & 0x400):
+            raise AssertionError("interrupted rollback retained a non-file or reparse backup")
         backup_before_restart = sha256_path(rollback_backup)
+        if backup_before_restart != updated_shortcut_sha256:
+            raise AssertionError("interrupted rollback changed the exact package B shortcut backup")
+        observations.append({
+            "phase": "epoch_rollback_retained_shortcut_backup",
+            "path": str(rollback_backup),
+            "sha256": backup_before_restart,
+            "matches_active_b": True,
+        })
         rollback_recovery_preview = invoke(
             rollback_helper, "rollback", *epoch_verify_args,
             shell_integration=True, noninteractive=True,
