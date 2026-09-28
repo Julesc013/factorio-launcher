@@ -31,14 +31,18 @@ def validate() -> list[str]:
         "StableInputFile", "open_no_follow", "revalidate", "SaveArchivePolicy::limits", "Sha256Hasher",
         "factorio.save_ref.v1", "deep_factorio_save_metadata", "unsupported", "save_content_modified",
         "backup_sidecar_status",
-        "move_save_and_sidecar_to_owned_trash_no_delete", "permanent_delete", "reversible",
+        "move_owned_backup_and_manifest_to_trash_no_delete", "proven_owned_backup",
+        "permanent_delete", "reversible",
     ):
         if anchor not in source + header:
             problems.append(f"save intelligence safety anchor is missing: {anchor}")
     for forbidden in ("map version", "map settings", "DLC state", "recursive_directory_iterator"):
         if forbidden in source:
             problems.append(f"save intelligence crosses its structural truth boundary: {forbidden}")
-    for proof in ("drifted", "save_content_modified", "old_bytes", "trash", "unsupported"):
+    for proof in (
+        "drifted", "save_content_modified", "old_bytes", "trash", "unsupported",
+        "foreign_backup", "tampered_backup", "proven_owned_backup",
+    ):
         if proof not in test:
             problems.append(f"save intelligence acceptance proof is missing: {proof}")
     return problems

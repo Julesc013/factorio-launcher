@@ -60,8 +60,10 @@ class SaveIndexRetentionTests(unittest.TestCase):
                 new = instance / "saves" / "new.zip"
                 write_save(old, b"old save")
                 write_save(new, b"new save")
+                call(workspace, "saves", "backup", "old", "--instance", "save-index")
+                call(workspace, "saves", "backup", "new", "--instance", "save-index")
                 stamp = int(time.time()) - 10 * 24 * 60 * 60
-                os.utime(old, (stamp, stamp))
+                os.utime(instance / "backups" / "old.backup.zip", (stamp, stamp))
                 original = old.read_bytes()
                 lock_dir = instance / "locks"
                 lock_dir.mkdir(exist_ok=True)
@@ -156,7 +158,7 @@ class SaveIndexRetentionTests(unittest.TestCase):
             self.assertIn("sha256", {item["field"] for item in difference["differences"]})
             self.assertEqual("unsupported", difference["deep_factorio_save_metadata"])
 
-    def test_retention_moves_save_and_sidecar_to_owned_reversible_trash(self) -> None:
+    def test_retention_moves_only_proven_backup_and_manifest_to_reversible_trash(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman save retention ") as value:
             workspace = Path(value)
             instance = setup(workspace)
@@ -164,10 +166,29 @@ class SaveIndexRetentionTests(unittest.TestCase):
             new = instance / "saves" / "new.zip"
             write_save(old, b"old save")
             write_save(new, b"new save")
+            call(workspace, "saves", "backup", "old", "--instance", "save-index")
+            call(workspace, "saves", "backup", "new", "--instance", "save-index")
+            old_backup = instance / "backups" / "old.backup.zip"
+            new_backup = instance / "backups" / "new.backup.zip"
+            foreign_backup = instance / "backups" / "foreign.zip"
+            write_save(foreign_backup, b"unowned backup-shaped file")
+            tampered_backup = instance / "backups" / "tampered.zip"
+            tampered_backup.write_bytes(old_backup.read_bytes())
+            tampered_manifest = json.loads(
+                (instance / "backups" / "old.backup.zip.manifest.json").read_text(encoding="utf-8")
+            )
+            tampered_manifest["destination_path"] = tampered_backup.as_posix()
+            tampered_manifest["path"] = tampered_backup.as_posix()
+            tampered_manifest["manifest_path"] = (instance / "backups" / "tampered.zip.manifest.json").as_posix()
+            tampered_manifest["sha256"] = "0" * 64
+            (instance / "backups" / "tampered.zip.manifest.json").write_text(
+                json.dumps(tampered_manifest), encoding="utf-8"
+            )
             stamp = int(time.time()) - 10 * 24 * 60 * 60
-            os.utime(old, (stamp, stamp))
+            os.utime(old_backup, (stamp, stamp))
+            os.utime(foreign_backup, (stamp, stamp))
             call(workspace, "saves", "associate", "old.zip", "--instance", "save-index")
-            old_bytes = old.read_bytes()
+            old_bytes = old_backup.read_bytes()
 
             planned = call(
                 workspace, "saves", "retention", "plan", "--instance", "save-index",
@@ -175,8 +196,12 @@ class SaveIndexRetentionTests(unittest.TestCase):
             )
             self.assertEqual([], validate(planned, "factorio_save_retention_report.v1.schema.json"))
             actions = {item["filename"]: item["action"] for item in planned["saves"]}
-            self.assertEqual("move_to_trash", actions["old.zip"])
-            self.assertEqual("keep", actions["new.zip"])
+            self.assertEqual("move_to_trash", actions["old.backup.zip"])
+            self.assertEqual("keep", actions["new.backup.zip"])
+            self.assertEqual("keep", actions["foreign.zip"])
+            self.assertEqual("keep", actions["tampered.zip"])
+            self.assertFalse(next(item for item in planned["saves"] if item["filename"] == "foreign.zip")["proven_owned_backup"])
+            self.assertFalse(next(item for item in planned["saves"] if item["filename"] == "tampered.zip")["proven_owned_backup"])
             self.assertFalse(planned["permanent_delete"])
             self.assertTrue(planned["reversible"])
 
@@ -186,10 +211,15 @@ class SaveIndexRetentionTests(unittest.TestCase):
             )
             self.assertTrue(applied["mutation_executed"])
             trash = Path(applied["trash_path"])
-            self.assertFalse(old.exists())
+            self.assertFalse(old_backup.exists())
+            self.assertTrue(old.exists())
             self.assertTrue(new.exists())
-            self.assertEqual(old_bytes, (trash / "old.zip").read_bytes())
-            self.assertTrue((trash / "old.zip.save-ref.v1.json").is_file())
+            self.assertTrue(new_backup.exists())
+            self.assertTrue(foreign_backup.exists())
+            self.assertTrue(tampered_backup.exists())
+            self.assertEqual(old_bytes, (trash / "old.backup.zip").read_bytes())
+            self.assertTrue((trash / "old.backup.zip.manifest.json").is_file())
+            self.assertTrue((instance / "metadata" / "save-refs" / "old.zip.save-ref.v1.json").is_file())
             self.assertFalse(applied["save_content_modified"])
 
     def test_retention_target_substitution_enters_recovery_without_losing_original(self) -> None:
@@ -200,9 +230,12 @@ class SaveIndexRetentionTests(unittest.TestCase):
             new = instance / "saves" / "new.zip"
             write_save(old, b"original save")
             write_save(new, b"new save")
+            call(workspace, "saves", "backup", "old", "--instance", "save-index")
+            call(workspace, "saves", "backup", "new", "--instance", "save-index")
+            old_backup = instance / "backups" / "old.backup.zip"
             stamp = int(time.time()) - 10 * 24 * 60 * 60
-            os.utime(old, (stamp, stamp))
-            original = old.read_bytes()
+            os.utime(old_backup, (stamp, stamp))
+            original = old_backup.read_bytes()
             environment = dict(os.environ)
             environment["FACMAN_SAVE_RETENTION_FAULT"] = "target_substitution"
             code, stdout, stderr = invoke([
@@ -211,9 +244,10 @@ class SaveIndexRetentionTests(unittest.TestCase):
             ], env=environment)
             self.assertNotEqual(0, code, stderr or stdout)
             self.assertEqual("save_transaction_recovery_required", json.loads(stdout)["refusal"]["code"])
-            preserved = list((instance / "saves").glob(".facman-retention-preserved-*-old.zip"))
+            preserved = list((instance / "backups").glob(".facman-retention-preserved-*-old.backup.zip"))
             self.assertEqual(1, len(preserved))
             self.assertEqual(original, preserved[0].read_bytes())
+            self.assertTrue(old.is_file())
 
 
 if __name__ == "__main__":
