@@ -5,9 +5,12 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import subprocess
 import sys
+import tempfile
 import unittest
+from pathlib import Path
 
 from tools import provider_adoption_successor_check as successor
 
@@ -25,6 +28,49 @@ class ProviderAdoptionSuccessorTests(unittest.TestCase):
         changed["current_inputs"]["providers_lock"] = "0" * 64
         problems = successor.validate(record=changed)
         self.assertTrue(any("current input closure differs" in item for item in problems))
+
+    def test_followup_import_refuses_source_and_projection_drift(self) -> None:
+        relatives = [
+            successor.FOLLOWUP_RECEIPT.relative_to(successor.ROOT),
+            successor.FOLLOWUP_SCHEMA.relative_to(successor.ROOT),
+            *(Path(path) for path in {
+                **successor.PROVIDER_LOCKED_INPUT_PATHS,
+                **successor.PRODUCT_VERSION_INPUT_PATHS,
+            }.values()),
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for relative in relatives:
+                destination = root / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes((successor.ROOT / relative).read_bytes())
+            self.assertEqual([], successor._followup_import_problems(root))
+
+            receipt_path = root / successor.FOLLOWUP_RECEIPT.relative_to(successor.ROOT)
+            original = receipt_path.read_bytes()
+            receipt = json.loads(original)
+            receipt["source"]["commit"] = "0" * 40
+            receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+            self.assertTrue(any(
+                "source or policy context differs" in problem
+                for problem in successor._followup_import_problems(root)
+            ))
+
+            receipt["source"]["commit"] = successor.FOLLOWUP_SOURCE
+            receipt["state_formats"]["transaction_journal"]["write_version"] = 2
+            receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+            self.assertTrue(any(
+                "state formats differ" in problem
+                for problem in successor._followup_import_problems(root)
+            ))
+
+            receipt_path.write_bytes(original)
+            lock = root / successor.PROVIDER_LOCKED_INPUT_PATHS["providers_lock"]
+            lock.write_bytes(lock.read_bytes() + b"\n# altered after import\n")
+            self.assertTrue(any(
+                "generated projection differs" in problem
+                for problem in successor._followup_import_problems(root)
+            ))
 
     def test_product_only_successor_scope_is_closed(self) -> None:
         changed = copy.deepcopy(self.record)

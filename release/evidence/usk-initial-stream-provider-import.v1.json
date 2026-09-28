@@ -1,0 +1,68 @@
+{
+  "abi_version": "1.0",
+  "authorizing": false,
+  "facman_release_context": "cd26c01453021edc8a43e8febc0ac6c6f60be901",
+  "generated": {
+    "build_manifest.v1.toml": "39ca4c9571e89e013b6a6b5381b697e2601a36cba5316a62dc1b076475696545",
+    "dependency_lock.v1.toml": "838c4ccf908344cd4a490fe41a691764b3866cb111b4e18bad2e3d5737b16f9b",
+    "providers.lock.v2.toml": "efcec90a55ca66c751ebb77d5bd0ae308acc383fbbdcda343777f04c29a83f39",
+    "sbom.components.v1.json": "1ba0fdac666e35a8b9da4512cf99dec21938f180c0aa19aca33636db31571c88",
+    "workspace_lock.v1.toml": "b1fd8273304b58cd48293948189172ea59dcd637d80486fb6977331eeb87c5bb"
+  },
+  "package_version": "1.0.0",
+  "profiles": [
+    {
+      "linkage": "shared",
+      "manifest_sha256": "f6833621ba9535bf807596165184a7f95fffcff8f46f4a8942cd42446bab50c2",
+      "system": "linux"
+    },
+    {
+      "linkage": "static",
+      "manifest_sha256": "5a8d7ee95e087e4346a64c459cf7b8803c23ff3af07006eb07982b7ac0f8cdd1",
+      "system": "linux"
+    },
+    {
+      "linkage": "shared",
+      "manifest_sha256": "867b1f74c8d2b296ca8b67791a3ba0c83aab9c9f862c2b0032fcd1d4052098a0",
+      "system": "macos"
+    },
+    {
+      "linkage": "static",
+      "manifest_sha256": "f406053f5dfe053d76d6d3bf86f8d5f58cf3352e2a8366a133772515037d3824",
+      "system": "macos"
+    },
+    {
+      "linkage": "shared",
+      "manifest_sha256": "2a1e1dc5aeff7876307638feb4053d4d38fef3275a9c45021827b946ca8aa90d",
+      "system": "windows"
+    },
+    {
+      "linkage": "static",
+      "manifest_sha256": "bd466e6cac238ebb3943775187523cf0c326de1ec16192970dfd0de5c906d422",
+      "system": "windows"
+    }
+  ],
+  "provider_id": "universal_setup",
+  "result": "accepted",
+  "schema": "facman.provider_package_import.v1",
+  "source": {
+    "commit": "2749a15b835a6c1c9968598a2b434d85809691ad",
+    "ref": "refs/heads/main",
+    "repository": "Julesc013/universal-setup",
+    "tree": "5cfd42acea5242a5a04fc79140fcfdf7accf6ee4"
+  },
+  "state_formats": {
+    "installed_state": {
+      "read_versions": [
+        1
+      ],
+      "write_version": 1
+    },
+    "transaction_journal": {
+      "read_versions": [
+        1
+      ],
+      "write_version": 1
+    }
+  }
+}

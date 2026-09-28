@@ -131,10 +131,10 @@ M3 existing-portable adoption is authorised backlog after the playable alpha, no
 This tracked checkout enumerates 131 commands, 436 schemas, and 303 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
-- USK `4c766b342e68656a2d4e26a14cfe51ab2209ad41`.
+- USK `2749a15b835a6c1c9968598a2b434d85809691ad`.
 FacMan's exact consumed providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
-- USK `4c766b342e68656a2d4e26a14cfe51ab2209ad41`.
+- USK `2749a15b835a6c1c9968598a2b434d85809691ad`.
 Repository identity is sourced from `release/index/repository_identity.v1.toml`.
 Its FacMan row binds stable role `facman` and numeric ID `1293124404`.
 The canonical slug is `Julesc013/factorio-launcher`; the non-current future slug candidate is `Julesc013/facman`.

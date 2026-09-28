@@ -20,6 +20,11 @@ RECORD = ROOT / "release/index/provider_adoption_successor.v1.json"
 SCHEMA = ROOT / "contracts/schema/release/provider_adoption_successor.v1.schema.json"
 RELEASE_INDEX = ROOT / "release/index/release_index.v1.toml"
 PROJECT_STATUS = ROOT / "release/index/project_status.v2.toml"
+FOLLOWUP_RECEIPT = ROOT / "release/evidence/usk-initial-stream-provider-import.v1.json"
+FOLLOWUP_SCHEMA = ROOT / "contracts/schema/release/provider_package_import.v1.schema.json"
+FOLLOWUP_SOURCE = "2749a15b835a6c1c9968598a2b434d85809691ad"
+FOLLOWUP_TREE = "5cfd42acea5242a5a04fc79140fcfdf7accf6ee4"
+FOLLOWUP_CONTEXT = "cd26c01453021edc8a43e8febc0ac6c6f60be901"
 
 ADOPTION_INPUTS = {
     "workspace_lock": "a43e20c51e6f67a0972f205e55061ed8d67128a19d403f51585e67b6118a7476",
@@ -165,8 +170,8 @@ def _components(rows: Any) -> dict[str, dict[str, Any]]:
     }
 
 
-def _product_version_successor_problems(root: Path) -> list[str]:
-    """Allow only the current product version rebinding after provider adoption.
+def _product_version_successor_problems(root: Path, *, followup: bool = False) -> list[str]:
+    """Check the allocated product version with either exact provider generation.
 
     The successor record preserves the provider-adoption byte closure.  These
     three product manifests necessarily change with the allocated FacMan
@@ -219,15 +224,70 @@ def _product_version_successor_problems(root: Path) -> list[str]:
         provider_id = provider["id"]
         dependency_component = dependency_components.get(provider_id, {})
         sbom_component = sbom_components.get(provider_id, {})
-        if dependency_component.get("pin") != provider["revision"] or dependency_component.get("tree") != provider["tree"]:
+        revision = FOLLOWUP_SOURCE if followup and provider_id == "universal_setup" else provider["revision"]
+        tree = FOLLOWUP_TREE if followup and provider_id == "universal_setup" else provider["tree"]
+        if dependency_component.get("pin") != revision or dependency_component.get("tree") != tree:
             problems.append(f"product-version successor dependency provider differs: {provider_id}")
-        if sbom_component.get("commit") != provider["revision"] or sbom_component.get("tree") != provider["tree"]:
+        if sbom_component.get("commit") != revision or sbom_component.get("tree") != tree:
             problems.append(f"product-version successor SBOM provider differs: {provider_id}")
 
     if manifest.get("canonical_version") != f"facman-{current_version}":
         problems.append("product-version successor build manifest canonical version differs")
     if manifest.get("filename_version") != f"facman-{current_version}":
         problems.append("product-version successor build manifest filename version differs")
+    return problems
+
+
+def _followup_import_problems(root: Path) -> list[str]:
+    """Bind the later package import without changing the original adoption record."""
+
+    problems: list[str] = []
+    try:
+        receipt = _load_json(root / FOLLOWUP_RECEIPT.relative_to(ROOT))
+        schema = _load_json(root / FOLLOWUP_SCHEMA.relative_to(ROOT))
+        jsonschema.Draft202012Validator.check_schema(schema)
+        for error in jsonschema.Draft202012Validator(schema).iter_errors(receipt):
+            location = ".".join(str(part) for part in error.absolute_path) or "$"
+            problems.append(f"followup import schema rejection at {location}: {error.message}")
+    except (OSError, ValueError, json.JSONDecodeError, jsonschema.SchemaError) as exc:
+        return [f"followup import cannot be validated: {exc}"]
+
+    expected_source = {
+        "commit": FOLLOWUP_SOURCE,
+        "tree": FOLLOWUP_TREE,
+        "ref": "refs/heads/main",
+        "repository": "Julesc013/universal-setup",
+    }
+    if receipt.get("source") != expected_source or receipt.get("facman_release_context") != FOLLOWUP_CONTEXT:
+        problems.append("followup import source or policy context differs")
+    if receipt.get("provider_id") != "universal_setup" or receipt.get("package_version") != "1.0.0" or receipt.get("abi_version") != "1.0":
+        problems.append("followup import provider identity differs")
+    expected_formats = {
+        "installed_state": {"read_versions": [1], "write_version": 1},
+        "transaction_journal": {"read_versions": [1], "write_version": 1},
+    }
+    if receipt.get("state_formats") != expected_formats:
+        problems.append("followup import state formats differ")
+    expected_profiles = {(system, linkage) for system in ("linux", "macos", "windows") for linkage in ("static", "shared")}
+    profiles = receipt.get("profiles", [])
+    if not isinstance(profiles, list) or len(profiles) != 6 or {
+        (item.get("system"), item.get("linkage")) for item in profiles if isinstance(item, dict)
+    } != expected_profiles:
+        problems.append("followup import does not bind six unique profiles")
+
+    inputs = {**PROVIDER_LOCKED_INPUT_PATHS, **PRODUCT_VERSION_INPUT_PATHS}
+    generated = receipt.get("generated", {})
+    if not isinstance(generated, dict) or set(generated) != {Path(path).name for path in inputs.values()}:
+        problems.append("followup import generated projection set differs")
+    else:
+        for relative in inputs.values():
+            try:
+                actual = _sha256(root / relative)
+            except OSError as exc:
+                problems.append(f"followup import input cannot be hashed: {relative}: {exc}")
+            else:
+                if actual != generated[Path(relative).name]:
+                    problems.append(f"followup import generated projection differs: {relative}")
     return problems
 
 
@@ -315,15 +375,19 @@ def validate(root: Path = ROOT, record: dict[str, Any] | None = None) -> list[st
         if rows.get(identity) != expected:
             problems.append(f"provider adoption successor invalidation differs: {identity}")
 
-    for name, relative in PROVIDER_LOCKED_INPUT_PATHS.items():
-        path = root / relative
-        try:
-            actual = _sha256(path)
-        except OSError as exc:
-            problems.append(f"current provider input cannot be hashed: {relative}: {exc}")
-        else:
-            if actual != ADOPTION_INPUTS[name]:
-                problems.append(f"current provider input differs: {relative}")
+    followup = (root / FOLLOWUP_RECEIPT.relative_to(ROOT)).exists()
+    if followup:
+        problems.extend(_followup_import_problems(root))
+    else:
+        for name, relative in PROVIDER_LOCKED_INPUT_PATHS.items():
+            path = root / relative
+            try:
+                actual = _sha256(path)
+            except OSError as exc:
+                problems.append(f"current provider input cannot be hashed: {relative}: {exc}")
+            else:
+                if actual != ADOPTION_INPUTS[name]:
+                    problems.append(f"current provider input differs: {relative}")
 
     for name, relative in PRODUCT_VERSION_INPUT_PATHS.items():
         path = root / relative
@@ -334,12 +398,13 @@ def validate(root: Path = ROOT, record: dict[str, Any] | None = None) -> list[st
             continue
         if data.count(b"0.1.0-alpha.6") != PRODUCT_VERSION_OCCURRENCES[name]:
             problems.append(f"product-version successor version occurrence count differs: {relative}")
-        if _sha256(Path(path)) == ADOPTION_INPUTS[name]:
-            problems.append(f"product-version successor did not rebind the product version: {relative}")
-        if hashlib.sha256(_normalise_product_version_successor(data)).hexdigest() != ADOPTION_INPUTS[name]:
-            problems.append(f"product-version successor changes more than product version: {relative}")
+        if not followup:
+            if _sha256(path) == ADOPTION_INPUTS[name]:
+                problems.append(f"product-version successor did not rebind the product version: {relative}")
+            if hashlib.sha256(_normalise_product_version_successor(data)).hexdigest() != ADOPTION_INPUTS[name]:
+                problems.append(f"product-version successor changes more than product version: {relative}")
 
-    problems.extend(_product_version_successor_problems(root))
+    problems.extend(_product_version_successor_problems(root, followup=followup))
 
     try:
         release_index = _load_toml(root / RELEASE_INDEX.relative_to(ROOT))
@@ -354,7 +419,8 @@ def validate(root: Path = ROOT, record: dict[str, Any] | None = None) -> list[st
         convergence = project.get("provider_convergence", {})
         if convergence.get("universal_launcher_consumed_pin") != EXPECTED_PROVIDERS[0]["revision"]:
             problems.append("project truth does not consume the adopted Universal Launcher")
-        if convergence.get("universal_setup_consumed_pin") != EXPECTED_PROVIDERS[1]["revision"]:
+        expected_usk = FOLLOWUP_SOURCE if followup else EXPECTED_PROVIDERS[1]["revision"]
+        if convergence.get("universal_setup_consumed_pin") != expected_usk:
             problems.append("project truth does not consume the adopted Universal Setup")
         if convergence.get("active_route_integration") != (
             "invalidated_by_protected_provider_package_adoption"
@@ -384,7 +450,7 @@ def main() -> int:
         return 1
     print(
         "provider-adoption-successor-check: ok "
-        "(five projections; eight evidence families invalidated; all authority false)"
+        "(historical adoption and exact followup import; all authority false)"
     )
     return 0
 
