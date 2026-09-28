@@ -613,6 +613,53 @@ std::string retention_report(
 
 } // namespace
 
+facman::core::Result<OwnedBackup> resolve_owned_backup(
+    const fs::path& workspace,
+    const std::string& instance_id,
+    const std::string& backup_name)
+{
+    const fs::path name = fs::u8path(backup_name);
+    if (backup_name.empty() || backup_name.size() > 255U ||
+        backup_name.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-") != std::string::npos ||
+        name != name.filename() || name.extension() != ".zip") return failure<OwnedBackup>(
+        "save_backup_name_invalid", "Backup must be an exact .zip filename");
+    auto instance = load_instance(workspace, instance_id);
+    if (!instance) return failure<OwnedBackup>(instance.error().code, instance.error().message);
+    auto authority = facman::workspace::inspect_workspace_root(workspace);
+    if (!authority || authority.value().state != facman::workspace::WorkspaceRootState::facman_owned ||
+        !authority.value().mutation_allowed || !authority.value().root_authority) return failure<OwnedBackup>(
+            "save_backup_root_unowned", "Backup restore requires an owned workspace", workspace);
+    const fs::path root = instance.value().record.root / "backups";
+    std::string link_detail;
+    if (!authority.value().root_authority->validate_descendant(root, true).ok() ||
+        facman::base::path_crosses_link_or_reparse_point(root, link_detail)) return failure<OwnedBackup>(
+            "save_backup_root_unsafe", "Backup root is outside owned storage or linked", root);
+    const fs::path path = root / name;
+    std::error_code error;
+    if (!fs::exists(path, error) || error) return failure<OwnedBackup>(
+        "save_backup_not_found", "Owned backup is not present", path);
+    auto record = read_save(instance.value(), path, false);
+    if (!record) return failure<OwnedBackup>(record.error().code, record.error().message, path);
+    if (!proven_owned_backup(instance.value(), record.value(), authority.value().workspace_id)) return failure<OwnedBackup>(
+        "save_backup_unproven", "Backup manifest or content identity is not proven", path);
+    {
+        const fs::path manifest = fs::u8path(path_text(path) + ".manifest.json");
+        auto sidecar = stable_text(manifest);
+        auto parsed = sidecar ? json::parse(sidecar.value()) : facman::core::Result<json::Value>::failure(
+            {"save_sidecar_read_failed", "Backup manifest is unreadable", path_text(manifest)});
+        if (!parsed || !parsed.value().is_object()) return failure<OwnedBackup>(
+            "save_backup_unproven", "Backup manifest cannot be decoded", manifest);
+        const std::string original = object_string(parsed.value(), "save");
+        const fs::path original_name = fs::u8path(original);
+        std::string detail;
+        if (!facman::base::validate_identifier(original_name.stem().string(), detail) ||
+            original_name != original_name.filename() ||
+            original_name.extension() != ".zip") return failure<OwnedBackup>(
+            "save_backup_unproven", "Backup source save name is invalid", manifest);
+        return facman::core::Result<OwnedBackup>::success({path, original, record.value().sha256, record.value().size});
+    }
+}
+
 facman::core::Result<std::string> list(const fs::path& workspace, const Request& request)
 {
     auto values = records(workspace, request.instance_id);

@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `dd48bf7f0ef82aaaed97ab867aff6b47c594b4f5bfb126fa6d278a7e1c23a63d`.
+Source digest: `4bcda469d19c9dd77b541693e088bb408ac1ed9f84e9ab416e64cc1232bd60b9`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -93,7 +93,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `run.preview` | `run.preview` | `run_preview` | no | - | available | workspace_read | `facman run <instance-id> --json` |
 | `saves.associate` | `saves.associate` | `saves_associate` | yes | - | available | workspace_read, workspace_write | `facman saves associate <save> --instance <instance-id> [--profile <id>] --json` |
 | `saves.backup` | `saves.backup` | `saves_backup` | yes | - | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> [--to <path>] --json` |
-| `saves.clone` | `saves.clone` | `saves_clone` | yes | - | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> --json` |
+| `saves.clone` | `saves.clone` | `saves_clone` | yes | - | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> [--source-kind <kind>] [--as <new-save.zip>] --json`<br>`facman saves restore <backup-name.zip> --instance <instance-id> --as <new-save.zip> --json` |
 | `saves.diff` | `saves.diff` | `saves_diff` | no | - | available | workspace_read | `facman saves diff <left-save> <right-save> --instance <instance-id> --json` |
 | `saves.index` | `saves.index` | `saves_index` | no | - | available | workspace_read | `facman saves index --instance <instance-id> --json` |
 | `saves.inspect` | `saves.inspect` | `saves_inspect` | no | - | available | workspace_read | `facman saves inspect <save> --instance <instance-id> --json` |
