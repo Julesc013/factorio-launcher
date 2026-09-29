@@ -18,6 +18,7 @@
 #include "fl_workspace_root_authority.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -933,11 +934,104 @@ CloneOutcome clone_save(const fs::path& workspace, const CloneRequest& request)
                 "Backup ownership, content, or instance lock changed before publication", path_string(save.path));
         }
     }
-    std::string commit_detail;
-    if (!tx::StagedFileCommit::commit(staging, staged, destination, commit_detail)) {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
-        journal.failed(commit_detail);
-        return refuse(command, source.instance_id, save.file_name, "persistent_write_refused", "Clone commit failed", commit_detail);
+    const auto published = [&]() {
+        facman::platform::StableDirectoryObject stage_parent;
+        facman::platform::StableDirectoryObject target_parent;
+        auto result = stage_parent.open_no_follow_for_relative_writes(staging);
+        if (result.ok()) result = target_parent.open_no_follow_for_relative_writes(destination.parent_path());
+#ifdef _WIN32
+        facman::platform::DurableOutputFile private_copy;
+        if (result.ok()) result = stage_parent.create_child_file_exclusive(
+            "verified-private.tmp", copied.size, private_copy);
+#else
+        facman::platform::PrivatePublicationFile private_copy;
+        if (result.ok()) result = private_copy.create(stage_parent, target_parent, copied.size);
+#endif
+        {
+            facman::platform::StableInputFile staged_input;
+            if (result.ok()) result = stage_parent.open_child_file_no_follow_pinned(staged.filename(), staged_input);
+            if (result.ok() && (!staged_input.identity().regular_file ||
+                staged_input.identity().link_count != 1U || staged_input.size() != copied.size)) {
+                result = facman::platform::IoStatus::failure(
+                    "save_source_changed", "Staged save identity changed before private copy");
+            }
+            facman::base::Sha256Hasher digest;
+            std::array<unsigned char, 65536> block {};
+            for (std::uint64_t offset = 0; result.ok() && offset < copied.size;) {
+                const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(
+                    block.size(), copied.size - offset));
+                if (staged_input.read_at(offset, block.data(), count) != count ||
+                    private_copy.write_at(offset, block.data(), count) != count) {
+                    result = facman::platform::IoStatus::failure(
+                        "save_source_changed", "Private save copy failed");
+                    break;
+                }
+                digest.update(block.data(), count);
+                offset += count;
+            }
+            if (result.ok() &&
+                (!staged_input.revalidate_path().ok() || digest.finish() != copied.sha256)) {
+                result = facman::platform::IoStatus::failure(
+                    "save_source_changed", "Private save copy differs from verified source");
+            }
+        }
+        const char* pause_private = std::getenv("FACMAN_TEST_SAVE_CLONE_PAUSE_AFTER_PRIVATE_COPY");
+        if (result.ok() && pause_private != nullptr && std::string(pause_private) == "1") {
+            std::string marker_detail;
+            if (!facman::base::write_text_new_atomic(
+                    staging / ".facman-save-clone-private-paused", "copied\n", marker_detail)) {
+                result = facman::platform::IoStatus::failure("persistent_write_refused", marker_detail);
+            }
+            const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+            while (result.ok() &&
+                !fs::exists(staging / ".facman-save-clone-private-release") &&
+                std::chrono::steady_clock::now() < deadline) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
+            if (result.ok() && !fs::exists(staging / ".facman-save-clone-private-release")) {
+                result = facman::platform::IoStatus::failure(
+                    "persistent_write_refused", "Private save copy test pause timed out");
+            }
+        }
+        if (result.ok() && (save_locked(source) || save_locked(target))) {
+            result = facman::platform::IoStatus::failure(
+                "save_locked", "Save writes became locked before publication");
+        }
+        if (result.ok() && !expected_backup_sha256.empty()) {
+            auto current = facman::factorio::saves::index::resolve_owned_backup(
+                workspace, source.instance_id, request.save);
+            if (!current || current.value().path != save.path ||
+                current.value().sha256 != copied.sha256 || current.value().size != copied.size) {
+                result = facman::platform::IoStatus::failure(
+                    "save_backup_unproven", "Backup ownership or content changed before publication");
+            }
+        }
+#ifdef _WIN32
+        if (result.ok()) result = private_copy.publish_in_directory_no_replace(
+            target_parent, destination.filename());
+#else
+        if (result.ok()) result = private_copy.publish_no_replace(destination.filename());
+#endif
+        return result;
+    }();
+    if (!published.ok()) {
+        if (published.code == "output_published_unverified") {
+            journal.failed(published.detail);
+            return refuse(command, source.instance_id, save.file_name,
+                "transaction_recovery_required", "Save publication requires recovery", published.detail, false);
+        }
+        const auto cleaned = facman::archive::cleanup_owned_staging_root(staging);
+        if (!cleaned.ok()) {
+            journal.failed(cleaned.detail);
+            return refuse(command, source.instance_id, save.file_name,
+                "transaction_recovery_required", "Save staging cleanup requires recovery", cleaned.detail, false);
+        }
+        journal.failed(published.detail);
+        return refuse(command, source.instance_id, save.file_name,
+            published.code == "save_source_changed" ? "save_source_changed" :
+            published.code == "save_locked" ? "save_locked" :
+            published.code == "save_backup_unproven" ? "save_backup_unproven" : "persistent_write_refused",
+            "Clone publication refused", published.detail);
     }
     if (!journal.step("committed", "clone_file_committed")) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but journal update failed", journal.detail(), false);
     status = facman::archive::cleanup_owned_staging_root(staging);
