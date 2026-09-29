@@ -21,6 +21,12 @@
       "pattern": "^(?:[0-9]{1,8}|100000000)$",
       "type": "string"
     },
+    "expected_manifest_sha256": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
     "graphics_quality": {
       "enum": [
         "low",

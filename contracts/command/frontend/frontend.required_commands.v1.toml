@@ -335,13 +335,13 @@ cli = "facman profiles diff <left-id> <right-id> --json"
 id = "profiles.plan"
 phase = "optional"
 backend_id = "profiles.plan"
-cli = "facman profiles plan <instance-id> <profile-id> --json"
+cli = "facman profiles plan <instance-id> <profile-id> [--expected-revision <sha256>] --json"
 
 [[commands]]
 id = "profiles.apply"
 phase = "optional"
 backend_id = "profiles.apply"
-cli = "facman profiles apply <instance-id> <profile-id> --json"
+cli = "facman profiles apply <instance-id> <profile-id> [--expected-revision <sha256>] --json"
 
 [[commands]]
 id = "profiles.archive"

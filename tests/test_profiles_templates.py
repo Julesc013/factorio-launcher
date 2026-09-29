@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -109,19 +110,31 @@ class ProfileTemplateTests(unittest.TestCase):
             assert_schema(self, planned, "factorio_effective_profile.v1.schema.json")
             self.assertFalse(planned["mutation_executed"])
             self.assertFalse(planned["execution_enabled"])
+            self.assertEqual(hashlib.sha256(before).hexdigest(), planned["source_manifest_sha256"])
             self.assertEqual(before, (instance / "instance.v1.json").read_bytes())
 
             applied = invoke_json(
                 workspace, "profiles", "apply", "main", "quiet",
                 "--window-mode", "fullscreen", "--arg", "--disable-audio",
+                "--expected-revision", planned["source_manifest_sha256"],
             )
             assert_schema(self, applied, "factorio_effective_profile.v1.schema.json")
             self.assertTrue(applied["mutation_executed"])
+            self.assertEqual(planned["source_manifest_sha256"], applied["source_manifest_sha256"])
             self.assertEqual("quiet", json.loads((instance / "instance.v1.json").read_text(encoding="utf-8"))["profile"])
             overrides = json.loads((instance / "instance-overrides.v1.json").read_text(encoding="utf-8"))
             self.assertEqual("factorio.instance_overrides.v1", overrides["schema"])
             assert_schema(self, overrides, "factorio_instance_overrides.v1.schema.json")
             self.assertTrue(any((workspace / "backups" / "profiles").rglob("instance.v1.json")))
+            changed_manifest = (instance / "instance.v1.json").read_bytes()
+            changed_overrides = (instance / "instance-overrides.v1.json").read_bytes()
+            stale = invoke_json(
+                workspace, "profiles", "apply", "main", "quiet",
+                "--expected-revision", planned["source_manifest_sha256"], success=False,
+            )
+            self.assertEqual("profile_instance_revision_changed", stale["refusal"]["code"])
+            self.assertEqual(changed_manifest, (instance / "instance.v1.json").read_bytes())
+            self.assertEqual(changed_overrides, (instance / "instance-overrides.v1.json").read_bytes())
             selected = invoke_json(workspace, "profiles", "inspect", "quiet")
             self.assertEqual("profiles.inspect", selected["command"])
             self.assertFalse(selected["mutation_executed"])
