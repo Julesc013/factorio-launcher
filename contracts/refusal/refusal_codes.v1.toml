@@ -1608,6 +1608,13 @@ retryable = false
 message = "The instance configuration lock is unsafe or has unexpected identity."
 
 [[code]]
+id = "instance_manifest_revision_changed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance manifest changed after inspection; retry from its current revision."
+
+[[code]]
 id = "recovery_write_refused"
 severity = "blocked"
 effect = "workspace_write"

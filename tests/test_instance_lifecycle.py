@@ -32,6 +32,11 @@ def snapshot(root: Path) -> dict[str, str]:
     }
 
 
+def snapshot_without_configuration_lock(root: Path) -> dict[str, str]:
+    return {path: digest for path, digest in snapshot(root).items()
+            if path != "locks/configuration.write.lock"}
+
+
 def create_fixture(workspace: Path, instance_id: str = "main") -> Path:
     code, stdout, stderr = invoke([
         "--workspace", str(workspace), "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture", "--json",
@@ -81,6 +86,48 @@ def hold_configuration_lock(path: Path):
 
 
 class InstanceLifecycleTests(unittest.TestCase):
+    def test_clone_refuses_an_active_or_changed_source_configuration_lock(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman clone source lock ") as temporary:
+            workspace = Path(temporary)
+            source = create_fixture(workspace)
+            marker = source / "locks" / "configuration.write.lock"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "clone", "main", "main", "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("instance_clone_target_exists", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse(marker.exists())
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "gui", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            original_marker = marker.read_bytes()
+            source_manifest = (source / "instance.v1.json").read_bytes()
+            with hold_configuration_lock(marker):
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "instances", "clone", "main", "copy", "--json",
+                ])
+                self.assertNotEqual(0, code, stderr or stdout)
+                self.assertEqual("instance_configuration_lock_contended", json.loads(stdout)["refusal"]["code"])
+                self.assertFalse((workspace / "instances" / "copy").exists())
+                self.assertEqual(source_manifest, (source / "instance.v1.json").read_bytes())
+
+            marker.write_text("unrecognized lock\n", encoding="utf-8")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "clone", "main", "copy", "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("instance_configuration_lock_unsafe", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse((workspace / "instances" / "copy").exists())
+            marker.write_bytes(original_marker)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "clone", "main", "copy", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("preserved\n", (workspace / "instances" / "copy" / "script-output" / "preserved.txt").read_text())
+            self.assertFalse((workspace / "instances" / "copy" / "locks" / "configuration.write.lock").exists())
+
     def test_profile_recovery_waits_for_active_instance_configuration_owner(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman profile recovery lock ") as temporary:
             workspace = Path(temporary)
@@ -312,7 +359,7 @@ class InstanceLifecycleTests(unittest.TestCase):
             copy = workspace / "instances" / "copy"
             self.assertTrue((copy / "script-output" / "preserved.txt").is_file())
             self.assertFalse((copy / "logs" / "volatile.log").exists())
-            self.assertEqual(source_before, snapshot(source))
+            self.assertEqual(source_before, snapshot_without_configuration_lock(source))
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "verify", "copy", "--json",
@@ -422,7 +469,7 @@ class InstanceLifecycleTests(unittest.TestCase):
                 code, _, _ = invoke(args, env=env)
                 self.assertNotEqual(0, code)
                 self.assertTrue(source.is_dir())
-                self.assertEqual(before, snapshot(source))
+                self.assertEqual(before, snapshot_without_configuration_lock(source) if operation == "clone" else snapshot(source))
                 self.assertFalse((workspace / "instances" / "fault-copy").exists())
                 self.assertFalse(any((workspace / "instances").glob("*.staging")))
 
@@ -525,7 +572,7 @@ class InstanceLifecycleTests(unittest.TestCase):
                 "--workspace", str(workspace), "instances", "clone", "main", "copy", "--json",
             ], env=env)
             self.assertNotEqual(0, code)
-            self.assertEqual(source_before, snapshot(source))
+            self.assertEqual(source_before, snapshot_without_configuration_lock(source))
             destination = workspace / "instances" / "copy"
             self.assertTrue((destination / "instance.v1.json").is_file())
             self.assertTrue((destination / ".facman-staging.v1").is_file())
