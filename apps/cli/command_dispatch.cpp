@@ -4,6 +4,7 @@
 #include "command_dispatch.h"
 #include "cli_text.h"
 #include "resource_commands.h"
+#include "report_text.h"
 #include "setup_commands.h"
 #include "workspace_commands.h"
 
@@ -254,29 +255,18 @@ int emit_guidance(const CliResponse& response, bool as_json)
 {
     if (as_json) return emit_json(response);
     if (!response || !response.value().ok() || !response.value().parsed_payload) return emit_basic(response, false, "");
-    const json::Value& report = *response.value().parsed_payload;
-    const auto text = [&report](const char* key) {
-        const json::Value* value = report.find(key);
-        if (value == nullptr) return std::string();
-        auto string = value->string_value();
-        return string ? string.take_value() : std::string();
-    };
-    std::cout << text("command") << "\nStatus: " << text("status") << '\n';
-    const json::Value* reasons = report.find("reasons");
-    if (reasons != nullptr && reasons->is_array()) {
-        for (std::size_t index = 0; index < reasons->size(); ++index) {
-            const json::Value* reason = reasons->at(index);
-            if (reason == nullptr || !reason->is_object()) continue;
-            const auto field = [reason](const char* key) {
-                const json::Value* value = reason->find(key);
-                if (value == nullptr) return std::string();
-                auto string = value->string_value();
-                return string ? string.take_value() : std::string();
-            };
-            std::cout << "- [" << field("code") << "] " << field("summary") << "\n  Evidence: " << field("evidence") << '\n';
-        }
-    }
-    std::cout << "No steps were executed. Use --json for the complete typed report.\n";
+    std::cout << facman::cli::guidance_text(*response.value().parsed_payload);
+    return 0;
+}
+
+int emit_effective_profile(const CliResponse& response, bool as_json)
+{
+    if (as_json) return emit_json(response);
+    if (!response || !response.value().ok()) return emit_basic(response, false, "");
+    if (!response.value().parsed_payload) { std::cerr << "Effective profile response is missing\n"; return 1; }
+    auto report = facman::cli::effective_profile_text(*response.value().parsed_payload);
+    if (!report) { std::cerr << "Effective profile settings or provenance are missing\n"; return 1; }
+    std::cout << *report;
     return 0;
 }
 
@@ -922,10 +912,9 @@ int command_profiles(const Options& options)
         return emit_basic(call(options, "profiles." + action, exact_fields_payload(fields), action == "diff"), as_json,
             "Profile " + action + " completed");
     }
-    if ((action == "plan" || action == "apply") && options.args.size() >= 4) return emit_basic(
+    if ((action == "plan" || action == "apply") && options.args.size() >= 4) return emit_effective_profile(
         call(options, "profiles." + action, profile_payload(options.args,
-            {{"instance_id", options.args[2]}, {"profile_id", options.args[3]}}), action == "plan"),
-        as_json, "Profile " + action + " completed");
+            {{"instance_id", options.args[2]}, {"profile_id", options.args[3]}}), action == "plan"), as_json);
     return 2;
 }
 

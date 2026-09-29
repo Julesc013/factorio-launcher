@@ -447,6 +447,30 @@ std::string effective_report(
     output.add_string("profile_id", effective.profile_id);
     output.add_string("template_id", effective.template_id);
     output.add_object("settings", settings_builder(effective.settings));
+    json::ObjectBuilder setting_sources;
+    for (const auto& field : std::vector<std::pair<const char*, bool>> {
+             {"window_mode", !request.overrides.window_mode.empty()},
+             {"graphics_quality", !request.overrides.graphics_quality.empty()},
+             {"audio", !request.overrides.audio.empty()},
+             {"selection_mode", !request.overrides.selection_mode.empty()},
+             {"selection", !request.overrides.selection.empty()},
+             {"launch_mode", !request.overrides.launch_mode.empty()},
+             {"benchmark_ticks", !request.overrides.benchmark_ticks.empty()},
+         }) setting_sources.add_string(field.first, field.second ? "request_override" : "profile");
+    json::ArrayBuilder argument_sources;
+    for (const std::string& value : effective.settings.additional_arguments) {
+        json::ObjectBuilder item;
+        item.add_string("value", value);
+        item.add_string("source", std::find(effective.base_additional_arguments.begin(),
+            effective.base_additional_arguments.end(), value) != effective.base_additional_arguments.end() ?
+            "profile" : "request_override");
+        argument_sources.add_object(item);
+    }
+    json::ObjectBuilder provenance;
+    provenance.add_string("base_profile_id", effective.profile_id);
+    provenance.add_object("setting_sources", setting_sources);
+    provenance.add_array("additional_argument_sources", argument_sources);
+    output.add_object("provenance", provenance);
     output.add_array("launch_arguments", arguments);
     output.add_bool("reserved_arguments_controlled_by_facman", true);
     output.add_bool("execution_enabled", false);
@@ -469,6 +493,7 @@ facman::core::Result<EffectiveProfile> effective_profile(
     EffectiveProfile output;
     output.profile_id = loaded.value().id;
     output.template_id = loaded.value().template_id;
+    output.base_additional_arguments = loaded.value().settings.additional_arguments;
     output.settings = settings.take_value();
     output.launch_arguments = launch_arguments(output.settings);
     return facman::core::Result<EffectiveProfile>::success(std::move(output));
