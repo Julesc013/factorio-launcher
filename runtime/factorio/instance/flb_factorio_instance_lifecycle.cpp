@@ -776,6 +776,23 @@ facman::core::Result<std::string> clone(const fs::path& root, const CloneRequest
     const std::string install_value = request.install_ref.empty() ? source.value().install_ref.str() : request.install_ref;
     auto install = load_install(root, install_value);
     if (!install) return failure("instance_install_missing", "Clone install reference is not registered", root);
+    auto initial_manifest = stable_text(source.value().source_path, 4U * 1024U * 1024U);
+    if (!initial_manifest) return failure(initial_manifest.error().code, initial_manifest.error().message,
+        initial_manifest.error().path);
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = tx::acquire_instance_configuration_lock(source.value().root, configuration_lock);
+    if (!locked.acquired()) return failure(
+        locked.code == facman::base::StableLockCode::contended ?
+            "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        locked.detail, source.value().root);
+    pending = no_pending_transactions(root);
+    if (!pending) return failure(pending.error().code, pending.error().message, pending.error().path, pending.error().kind);
+    auto locked_manifest = stable_text(source.value().source_path, 4U * 1024U * 1024U);
+    if (!locked_manifest) return failure(locked_manifest.error().code, locked_manifest.error().message,
+        locked_manifest.error().path);
+    if (locked_manifest.value() != initial_manifest.value()) return failure(
+        "instance_manifest_revision_changed", "Instance manifest changed before clone source lock acquisition",
+        source.value().source_path);
     auto source_plan = summarize_tree(source.value().root, true, true);
     if (!source_plan) return failure(source_plan.error().code, source_plan.error().message, source_plan.error().path);
     tx::Record record;
