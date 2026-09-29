@@ -94,6 +94,46 @@ int main()
                 recovery_identity, 1024, recovered_output).ok() ||
             !recovered_output.publish_sibling_no_replace("recovery-published.txt").ok() ||
             !fs::exists(bounded.path() / "recovery-published.txt")) return 59;
+        facman::platform::StableDirectoryObject other_parent;
+        if (!root_authority.create_child_directory_exclusive("other", other_parent).ok()) return 61;
+        facman::platform::DurableOutputFile cross_staging;
+        if (!bounded.create_child_file_exclusive("cross-staging.tmp", 1024, cross_staging).ok() ||
+            cross_staging.write_at(0, bounded_payload.data(), bounded_payload.size()) != bounded_payload.size() ||
+            !facman::platform::testing_close_relative_staging_for_recovery(cross_staging).ok()) return 61;
+        facman::platform::FileIdentity cross_identity;
+        { facman::platform::StableInputFile cross_input;
+          if (!bounded.open_child_file_no_follow_pinned("cross-staging.tmp", cross_input).ok()) return 61;
+          cross_identity = cross_input.identity(); }
+        facman::platform::DurableOutputFile cross_output;
+        if (!bounded.reopen_child_file_no_follow_for_relative_publish(
+                "cross-staging.tmp", cross_identity, 1024, cross_output).ok()) return 61;
+#if defined(__linux__) || defined(__APPLE__)
+        // Cross-parent publication must follow the opened inode, even if its
+        // staged name changes after the exact-identity reopen.
+        error.clear();
+        fs::rename(bounded.path() / "cross-staging.tmp", bounded.path() / "cross-moved.tmp", error);
+        if (error) return 61;
+        std::ofstream(bounded.path() / "cross-staging.tmp", std::ios::binary) << "foreign bytes";
+#endif
+        if (!cross_output.publish_in_directory_no_replace(other_parent, "cross-published.txt").ok()) return 61;
+        std::ifstream cross_input(other_parent.path() / "cross-published.txt", std::ios::binary);
+        const std::string cross_bytes{std::istreambuf_iterator<char>(cross_input), {}};
+        if (cross_bytes != bounded_payload) return 61;
+#if defined(__linux__) || defined(__APPLE__)
+        fs::remove(bounded.path() / "cross-staging.tmp", error);
+        fs::remove(bounded.path() / "cross-moved.tmp", error);
+        if (error) return 61;
+#endif
+#ifndef _WIN32
+        facman::platform::PrivatePublicationFile private_output;
+        if (!private_output.create(bounded, other_parent, 1024).ok() ||
+            private_output.write_at(0, bounded_payload.data(), bounded_payload.size()) !=
+                bounded_payload.size() ||
+            !private_output.publish_no_replace("private-published.txt").ok()) return 62;
+        std::ifstream private_input(other_parent.path() / "private-published.txt", std::ios::binary);
+        const std::string private_bytes{std::istreambuf_iterator<char>(private_input), {}};
+        if (private_bytes != bounded_payload) return 62;
+#endif
         facman::platform::DurableOutputFile substituted_staging;
         if (!bounded.create_child_file_exclusive("substitute-staging.tmp", 1024, substituted_staging).ok() ||
             substituted_staging.write_at(0, bounded_payload.data(), bounded_payload.size()) != bounded_payload.size() ||
