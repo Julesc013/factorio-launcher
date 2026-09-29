@@ -5580,7 +5580,7 @@
             "required": true
           }
         ],
-        "usage": "facman profiles apply <instance-id> <profile-id> [profile options] --json"
+        "usage": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
       },
       "command_id": "profiles.apply",
       "deprecation": "active",
@@ -5609,6 +5609,15 @@
           "request_field": "profile_id",
           "required": true,
           "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_manifest_sha256",
+          "repeatable": false,
+          "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
         },
         {
           "choices": [
@@ -6168,7 +6177,7 @@
             "required": true
           }
         ],
-        "usage": "facman profiles plan <instance-id> <profile-id> [profile options] --json"
+        "usage": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
       },
       "command_id": "profiles.plan",
       "deprecation": "active",
@@ -6197,6 +6206,15 @@
           "request_field": "profile_id",
           "required": true,
           "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_manifest_sha256",
+          "repeatable": false,
+          "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
         },
         {
           "choices": [
@@ -9627,5 +9645,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "7fce90581442131eab4bda995249794a4ca9dd6ab8e28178b763883794726289"
+  "source_digest": "c7c6b8b02c4543f360fc958a3d8618cce8250a4b2edcf114b183c407de967c50"
 }

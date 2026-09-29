@@ -341,7 +341,7 @@ std::string profile_payload(
              {"template_id", option(args, "--template")}, {"window_mode", option(args, "--window-mode")},
              {"graphics_quality", option(args, "--graphics-quality")}, {"audio", option(args, "--audio")},
              {"selection_mode", option(args, "--selection-mode")}, {"selection", option(args, "--selection")},
-             {"launch_mode", option(args, "--launch-mode")}, {"benchmark_ticks", option(args, "--benchmark-ticks")},
+             {"launch_mode", option(args, "--launch-mode")}, {"benchmark_ticks", option(args, "--benchmark-ticks")}, {"expected_manifest_sha256", option(args, "--expected-revision")},
          }) if (!field.second.empty()) output.add_string(field.first, field.second);
     const auto arguments = option_values(args, "--arg");
     if (!arguments.empty()) {

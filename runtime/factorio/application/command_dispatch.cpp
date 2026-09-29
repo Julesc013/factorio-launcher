@@ -886,11 +886,12 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     case CommandId::profiles_plan:
     case CommandId::profiles_apply: {
         const std::set<std::string> allowed = {"instance_id", "profile_id", "window_mode", "graphics_quality", "audio",
-            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments"};
+            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments", "expected_manifest_sha256"};
         if (!validate_fields(payload, allowed, detail)) return false;
         EffectiveProfileRequest typed;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
             !required_string(payload, "profile_id", typed.profile_id, detail) ||
+            !optional_string(payload, "expected_manifest_sha256", typed.expected_manifest_sha256, detail) ||
             !decode_profile_patch(payload, typed.overrides, detail)) return false;
         request.payload = std::move(typed); return true;
     }

@@ -82,6 +82,26 @@ facman::core::Result<std::string> stable_text(const fs::path& path)
     return facman::core::Result<std::string>::success(std::move(text));
 }
 
+std::string text_sha256(const std::string& text)
+{
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(text.data()), text.size());
+}
+
+facman::core::Result<std::string> checked_manifest_revision(
+    const std::string& source,
+    const std::string& expected)
+{
+    const std::string actual = text_sha256(source);
+    if (expected.empty()) return facman::core::Result<std::string>::success(actual);
+    auto digest = facman::core::Sha256Digest::parse(expected);
+    if (!digest) return typed_failure<std::string>(
+        "profile_instance_revision_invalid", "Expected instance revision must be a SHA-256 digest");
+    if (digest.value().str() != actual) return typed_failure<std::string>(
+        "profile_instance_revision_changed", "Instance manifest changed since the profile was planned");
+    return facman::core::Result<std::string>::success(actual);
+}
+
 bool valid_save_name(const std::string& value)
 {
     return !value.empty() && value.size() <= 255U && value.find('/') == std::string::npos &&
@@ -406,6 +426,7 @@ std::string effective_report(
     const EffectiveRequest& request,
     const EffectiveProfile& effective,
     bool mutation,
+    const std::string& source_manifest_sha256,
     const std::string& transaction_id = {})
 {
     json::ArrayBuilder arguments;
@@ -415,6 +436,7 @@ std::string effective_report(
     output.add_string("command", command);
     output.add_string("status", "ok");
     output.add_string("instance_id", request.instance_id);
+    output.add_string("source_manifest_sha256", source_manifest_sha256);
     output.add_string("profile_id", effective.profile_id);
     output.add_string("template_id", effective.template_id);
     output.add_object("settings", settings_builder(effective.settings));
@@ -636,9 +658,14 @@ facman::core::Result<std::string> profiles_plan(const fs::path& workspace, const
     facman::workspace::InstanceRepository repository {facman::workspace::WorkspaceLayout(workspace)};
     auto instance = repository.load(instance_id.value());
     if (!instance) return failure("unknown_instance", "Instance is not registered", workspace);
+    auto manifest = stable_text(instance.value().source_path);
+    if (!manifest) return failure(manifest.error().code, manifest.error().message, instance.value().source_path);
+    auto revision = checked_manifest_revision(manifest.value(), request.expected_manifest_sha256);
+    if (!revision) return failure(revision.error().code, revision.error().message, instance.value().source_path);
     auto effective = effective_profile(workspace, request.profile_id, request.overrides);
     if (!effective) return failure(effective.error().code, effective.error().message, fs::u8path(effective.error().path));
-    return facman::core::Result<std::string>::success(effective_report("profiles.plan", request, effective.value(), false));
+    return facman::core::Result<std::string>::success(effective_report(
+        "profiles.plan", request, effective.value(), false, revision.value()));
 }
 
 facman::core::Result<std::string> profiles_apply(const fs::path& workspace, const EffectiveRequest& request)
@@ -675,6 +702,13 @@ facman::core::Result<std::string> profiles_apply(const fs::path& workspace, cons
             "profile_transaction_failed", session.detail(), workspace);
     auto current = stable_text(instance.value().source_path);
     if (!current) { session.failed(current.error().message); return failure(current.error().code, current.error().message, instance.value().source_path); }
+    auto source_revision = checked_manifest_revision(current.value(), request.expected_manifest_sha256);
+    if (!source_revision) {
+        if (!session.refused(source_revision.error().message)) return failure(
+            "profile_transaction_recovery_required", session.detail(), instance.value().root,
+            facman::core::OutcomeKind::recovery_required, false);
+        return failure(source_revision.error().code, source_revision.error().message, instance.value().source_path);
+    }
     auto updated_manifest = instance_manifest(
         current.value(), instance.value().id.str(), instance.value().install_ref.str(),
         effective.value().profile_id);
@@ -686,18 +720,33 @@ facman::core::Result<std::string> profiles_apply(const fs::path& workspace, cons
     std::error_code error;
     fs::create_directories(backup_root, error);
     if (error) { session.failed(error.message()); return failure("profile_backup_failed", error.message(), backup_root); }
-    auto digest = facman::core::Sha256Digest::parse(facman::base::sha256_hex_bytes(
-        reinterpret_cast<const unsigned char*>(current.value().data()), current.value().size()));
+    auto digest = facman::core::Sha256Digest::parse(source_revision.value());
     std::string detail;
     if (!digest || !tx::CrossVolumeCopyVerifyCommit::commit(
             instance.value().source_path, backup, digest.value(), current.value().size(), detail) ||
         !facman::base::write_text_new_atomic(manifest_stage, updated_manifest.value(), detail) ||
         !facman::base::write_text_new_atomic(overrides_stage, overrides_json(request), detail) ||
         !session.staging("profile_plan_materialized") || !session.staged("backup_and_replacements_staged") ||
-        !session.verified("effective_profile_and_reserved_arguments_verified") ||
-        !session.committing("profile_apply_replace_started")) {
+        !session.verified("effective_profile_and_reserved_arguments_verified")) {
         session.failed(detail.empty() ? session.detail() : detail);
         return failure("profile_apply_failed", detail.empty() ? session.detail() : detail, instance.value().root);
+    }
+    if (!session.committing("profile_apply_replace_started")) return failure(
+        "profile_transaction_recovery_required", session.detail(), instance.value().root,
+        facman::core::OutcomeKind::recovery_required, false);
+    auto before_effect = stable_text(instance.value().source_path);
+    if (!before_effect || text_sha256(before_effect.value()) != source_revision.value()) {
+        std::error_code manifest_error;
+        std::error_code overrides_error;
+        fs::remove(manifest_stage, manifest_error);
+        fs::remove(overrides_stage, overrides_error);
+        const std::string reason = before_effect ?
+            "Instance manifest changed before profile publication" : before_effect.error().message;
+        if (manifest_error || overrides_error || !session.refused(reason)) return failure(
+            "profile_transaction_recovery_required", manifest_error ? manifest_error.message() :
+                overrides_error ? overrides_error.message() : session.detail(), instance.value().root,
+            facman::core::OutcomeKind::recovery_required, false);
+        return failure("profile_instance_revision_changed", reason, instance.value().source_path);
     }
     auto status = facman::platform::replace_existing_durable(manifest_stage, instance.value().source_path);
     if (status.ok()) {
@@ -710,7 +759,8 @@ facman::core::Result<std::string> profiles_apply(const fs::path& workspace, cons
             instance.value().root, facman::core::OutcomeKind::recovery_required, false);
     }
     return facman::core::Result<std::string>::success(effective_report(
-        "profiles.apply", request, effective.value(), true, session.record().transaction_id));
+        "profiles.apply", request, effective.value(), true,
+        source_revision.value(), session.record().transaction_id));
 }
 
 facman::core::Result<std::string> profiles_archive(const fs::path& workspace, const IdRequest& request)
