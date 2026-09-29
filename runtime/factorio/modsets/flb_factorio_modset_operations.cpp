@@ -545,7 +545,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
             facman::archive::cleanup_owned_staging_root(staging);
         if (!cleaned.ok()) closure_error += "; cleanup: " + cleaned.detail;
         session.failed(closure_error);
-        return refuse(command, request.instance_id, "modset_export_integrity_failed",
+        return refuse(command, request.instance_id, "modset_verification_failed",
             "Modset export no longer matches its verified lock", closure_error);
     }
     if (!session.staged("archive_written") ||

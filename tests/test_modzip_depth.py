@@ -590,7 +590,7 @@ class ModZipDepthTests(unittest.TestCase):
                 release.touch()
                 stdout, stderr = process.communicate(timeout=20)
                 self.assertEqual(process.returncode, 1, stderr + stdout)
-                self.assertIn("modset_export_integrity_failed", stdout)
+                self.assertIn("modset_verification_failed", stdout)
                 self.assertFalse(destination.exists())
                 self.assertEqual([], list((workspace / "exports").glob(".facman-modset-export-*")))
             finally:
