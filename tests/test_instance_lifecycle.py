@@ -50,6 +50,122 @@ def create_fixture(workspace: Path, instance_id: str = "main") -> Path:
 
 
 class InstanceLifecycleTests(unittest.TestCase):
+    def test_rename_staged_interruption_rolls_back_verified_file(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rename staged recovery ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            original = (instance / "instance.v1.json").read_bytes()
+            env = os.environ.copy()
+            env["FACMAN_TEST_TRANSACTION_FAIL_STATE"] = "committing"
+            code, _, _ = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Renamed", "--json",
+            ], env=env)
+            self.assertNotEqual(0, code)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "instances.rename")
+            stage = instance / (".instance.rename." + transaction["transaction_id"] + ".staging")
+            self.assertTrue(stage.is_file())
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("rolled_back", json.loads(stdout)["transactions"][0]["state"])
+            self.assertEqual(original, (instance / "instance.v1.json").read_bytes())
+            self.assertFalse(stage.exists())
+
+    def test_rename_recovery_refuses_changed_stage(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rename changed stage ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            original = (instance / "instance.v1.json").read_bytes()
+            env = os.environ.copy()
+            env["FACMAN_TEST_TRANSACTION_FAIL_STATE"] = "committing"
+            code, _, _ = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Renamed", "--json",
+            ], env=env)
+            self.assertNotEqual(0, code)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "instances.rename")
+            stage = instance / (".instance.rename." + transaction["transaction_id"] + ".staging")
+            stage.write_text('{"unowned":true}\n', encoding="utf-8")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("recovery_instance_rename_unsafe", json.loads(stdout)["refusal"]["code"])
+            self.assertEqual(original, (instance / "instance.v1.json").read_bytes())
+            self.assertTrue(stage.exists())
+
+    def test_rename_crash_after_journal_rolls_back_without_effect(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rename journal recovery ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            original = (instance / "instance.v1.json").read_bytes()
+            env = os.environ.copy()
+            env["FACMAN_TEST_INSTANCE_RENAME_EXIT_AFTER_JOURNAL"] = "1"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Renamed", "--json",
+            ], env=env)
+            self.assertEqual(84, code, stderr or stdout)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "instances.rename")
+            self.assertEqual("requested", transaction["state"])
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("rolled_back", json.loads(stdout)["transactions"][0]["state"])
+            self.assertEqual(original, (instance / "instance.v1.json").read_bytes())
+            self.assertEqual("preserved\n", (instance / "script-output" / "preserved.txt").read_text())
+
+    def test_rename_crash_after_replace_closes_verified_journal(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rename published recovery ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            original = (instance / "instance.v1.json").read_bytes()
+            env = os.environ.copy()
+            env["FACMAN_TEST_INSTANCE_RENAME_EXIT_AFTER_REPLACE"] = "1"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Renamed", "--json",
+            ], env=env)
+            self.assertEqual(88, code, stderr or stdout)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "instances.rename")
+            self.assertEqual("committing", transaction["state"])
+            self.assertEqual("Renamed", json.loads((instance / "instance.v1.json").read_text())["display_name"])
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("complete", json.loads(stdout)["transactions"][0]["state"])
+            backup = workspace / "backups" / "instances" / (transaction["transaction_id"] + "-main")
+            self.assertEqual(original, (backup / "instance.v1.json").read_bytes())
+            self.assertEqual("preserved\n", (instance / "script-output" / "preserved.txt").read_text())
+
     def test_clone_rename_archive_restore_is_reversible_and_id_immutable(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman lifecycle ") as temporary:
             workspace = Path(temporary)
@@ -92,6 +208,7 @@ class InstanceLifecycleTests(unittest.TestCase):
             ])
             self.assertEqual(0, code, stderr or stdout)
             revision = json.loads(stdout)["manifest_sha256"]
+            before_rename = json.loads((copy / "instance.v1.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 hashlib.sha256((copy / "instance.v1.json").read_bytes()).hexdigest(), revision,
             )
@@ -104,6 +221,8 @@ class InstanceLifecycleTests(unittest.TestCase):
             manifest = json.loads((copy / "instance.v1.json").read_text(encoding="utf-8"))
             self.assertEqual("copy", manifest["instance_id"])
             self.assertEqual("Renamed Display", manifest["display_name"])
+            before_rename["display_name"] = "Renamed Display"
+            self.assertEqual(before_rename, manifest)
             self.assertTrue(any((workspace / "backups" / "instances").rglob("instance.v1.json")))
 
             renamed_bytes = (copy / "instance.v1.json").read_bytes()

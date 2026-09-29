@@ -1170,6 +1170,9 @@ Outcome plan(const fs::path& workspace, const std::string& id)
     else if (record.command_id == "profiles.apply" &&
              record.commit_strategy == "profile_apply_two_file_v1")
         record.recovery_actions.push_back("verify_and_reconcile_profile_pair");
+    else if (record.command_id == "instances.rename" &&
+             record.commit_strategy == "instance_rename_file_v1")
+        record.recovery_actions.push_back("verify_and_reconcile_instance_rename");
     else if (fs::exists(record.target)) record.recovery_actions.push_back("preserve_committed_target");
     else if (!record.staging_roots.empty()) record.recovery_actions.push_back("remove_owned_staging");
     else record.recovery_actions.push_back("mark_recovery_required");
@@ -1610,6 +1613,87 @@ Outcome recover_profile_pair(const fs::path& workspace, Record& record)
     return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
 }
 
+Outcome recover_instance_rename(const fs::path& workspace, Record& record)
+{
+    std::string detail;
+    auto unsafe = [&](const std::string& reason) -> Outcome {
+        return Refusal {"recovery_instance_rename_unsafe",
+            "Instance rename cannot be reconciled from the transaction evidence", reason, false};
+    };
+    const fs::path root = record.target.parent_path();
+    const std::string instance_id = root.filename().string();
+    const fs::path manifest = root / "instance.v1.json";
+    const fs::path backup_root = workspace / "backups" / "instances" /
+        fs::u8path(record.transaction_id + "-" + instance_id);
+    const fs::path backup = backup_root / "instance.v1.json";
+    if (record.schema_version != 2U || record.operation_context != "instance_rename_file_v1" ||
+        record.expected_files.size() != 2U || record.staging_roots.size() != 1U ||
+        record.sources.size() != 1U || !facman::base::validate_identifier(instance_id, detail) ||
+        record.target != manifest || record.sources[0] != manifest ||
+        root != workspace / "instances" / fs::u8path(instance_id) ||
+        record.staging_roots[0] != root / (".instance.rename." + record.transaction_id + ".staging") ||
+        record.expected_files[0].path.str() != "source/instance.v1.json" ||
+        record.expected_files[1].path.str() != "target/instance.v1.json" ||
+        facman::base::path_crosses_link_or_reparse_point(root, detail) ||
+        facman::base::path_crosses_link_or_reparse_point(backup_root, detail))
+        return unsafe(detail.empty() ? "Instance rename journal paths or format differ" : detail);
+    bool manifest_present = false;
+    bool backup_present = false;
+    bool stage_present = false;
+    if (!retention_file_present(manifest, manifest_present, detail) ||
+        !retention_file_present(backup, backup_present, detail) ||
+        !retention_file_present(record.staging_roots[0], stage_present, detail))
+        return unsafe(detail);
+    auto matches = [&](const fs::path& path, const ExpectedFile& expected) {
+        std::string ignored;
+        return retention_file_matches(path, expected, ignored);
+    };
+    const bool original = manifest_present && matches(manifest, record.expected_files[0]);
+    const bool renamed = manifest_present && matches(manifest, record.expected_files[1]);
+    if ((!original && !renamed) ||
+        (backup_present && !matches(backup, record.expected_files[0])) ||
+        (stage_present && !matches(record.staging_roots[0], record.expected_files[1])))
+        return unsafe("Instance manifest, backup or staging digest differs from the journal");
+    auto remove_stage = [&]() {
+        if (!stage_present) return true;
+        facman::platform::StableInputFile input;
+        const auto opened = input.open_no_follow_pinned(record.staging_roots[0]);
+        if (!opened.ok() || !matches(record.staging_roots[0], record.expected_files[1])) {
+            detail = opened.ok() ? "Instance rename staging changed before cleanup" : opened.detail;
+            return false;
+        }
+        const auto identity = input.identity();
+        input = facman::platform::StableInputFile {};
+        const auto removed = facman::platform::remove_exact_object(record.staging_roots[0], identity);
+        detail = removed.detail;
+        return removed.ok();
+    };
+    if (original && record.state != State::committed && record.state != State::audited) {
+        if (!remove_stage()) return unsafe(detail);
+        if (record.state != State::recovery_required &&
+            !advance(workspace, record, "recovery_required", "instance_rename_no_effect_verified", detail))
+            return Refusal {"recovery_write_refused", "Rename rollback intent could not be recorded", detail, true};
+        if (!advance(workspace, record, "rollback_required", "instance_rename_rollback_selected", detail) ||
+            !advance(workspace, record, "rolled_back", "original_instance_manifest_preserved", detail))
+            return Refusal {"recovery_write_refused", "Rename rollback journal could not be closed", detail, true};
+        record.recovery_actions.push_back("verified_original_instance_manifest_preserved");
+        return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+    }
+    if (!renamed || !backup_present) return unsafe("Published rename lacks a verified original backup");
+    if (!remove_stage()) return unsafe(detail);
+    if (record.state != State::committed && record.state != State::recovery_required &&
+        record.state != State::audited &&
+        !advance(workspace, record, "recovery_required", "renamed_instance_manifest_verified", detail))
+        return Refusal {"recovery_write_refused", "Rename recovery state could not be recorded", detail, true};
+    const bool closed = record.state == State::audited ?
+        advance(workspace, record, "complete", "journal_closed", detail) :
+        complete(workspace, record, detail);
+    if (!closed) return Refusal {
+        "recovery_write_refused", "Rename recovery journal could not be closed", detail, true};
+    record.recovery_actions.push_back("verified_instance_rename_complete");
+    return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+}
+
 } // namespace
 
 Outcome apply(const fs::path& workspace, const std::string& id)
@@ -1676,6 +1760,12 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     auto unlock_checked = [&]() { return recovery_lock.remove_exact(detail); };
     if (record.command_id == "profiles.apply" && record.commit_strategy == "profile_apply_two_file_v1") {
         Outcome result = recover_profile_pair(workspace, record);
+        if (!unlock_checked()) return Refusal {
+            "recovery_write_refused", "Recovery lock identity changed before release", detail, false};
+        return result;
+    }
+    if (record.command_id == "instances.rename" && record.commit_strategy == "instance_rename_file_v1") {
+        Outcome result = recover_instance_rename(workspace, record);
         if (!unlock_checked()) return Refusal {
             "recovery_write_refused", "Recovery lock identity changed before release", detail, false};
         return result;

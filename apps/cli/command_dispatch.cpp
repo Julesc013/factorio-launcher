@@ -794,7 +794,7 @@ int command_instances(const Options& options)
             if (index + 1 >= options.args.size() || (options.args[index] != "--name" && options.args[index] != "--expected-revision")) return 2;
             ++index;
         }
-        return emit_basic(call(options, "instances.rename", exact_fields_payload({
+        return emit_basic(call(options, "instances.rename", fields_payload({
             {"instance_id", options.args[2]}, {"display_name", name}, {"expected_manifest_sha256", option(options.args, "--expected-revision")}}), false),
             flag(options.args, "--json"), "Instance display name updated");
     }
