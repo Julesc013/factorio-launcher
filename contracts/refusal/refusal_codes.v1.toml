@@ -1530,6 +1530,14 @@ message = "The local modset did not pass lock, metadata, dependency, and archive
 suggested_next_command = "facman modsets verify <instance-id> --json"
 
 [[code]]
+id = "modset_export_integrity_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The staged modset export no longer matches its verified source lock."
+suggested_next_command = "facman modsets verify <instance-id> --json"
+
+[[code]]
 id = "dry_run_write_not_executed"
 severity = "blocked"
 effect = "workspace_write"

@@ -8,15 +8,19 @@
 #include "fl_path_safety.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_sha256.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <sstream>
+#include <thread>
 
 namespace facman::factorio::modsets::operations {
 namespace fs = std::filesystem;
@@ -426,6 +430,23 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     if (!verification.empty()) {
         return refuse(command, request.instance_id, "modset_verification_failed", "Modset must verify before export", verification.front());
     }
+    const std::vector<ModRef> mods = instance_mods(instance);
+    const std::string expected_lock = lock_json(instance, mods);
+    if (read_text(instance_lock_path(instance)) != expected_lock) {
+        return refuse(command, request.instance_id, "modset_verification_failed",
+            "Modset lock changed before export", path_string(instance_lock_path(instance)));
+    }
+    std::map<std::string, std::string> expected_archive_digests;
+    expected_archive_digests.emplace("modset-lock.v1.json",
+        facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(expected_lock.data()), expected_lock.size()));
+    for (const ModRef& mod : mods) {
+        if (mod.sha256.size() != 64U ||
+            !expected_archive_digests.emplace("mods/" + mod.file_name, mod.sha256).second) {
+            return refuse(command, request.instance_id, "modset_verification_failed",
+                "Modset contains an ambiguous archive entry", mod.file_name);
+        }
+    }
     if (fs::exists(request.output_path)) {
         return refuse(command, request.instance_id, "persistent_target_exists", "Modset export target already exists", path_string(request.output_path));
     }
@@ -436,7 +457,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     }
     std::vector<facman::archive::WriteEntry> entries;
     entries.push_back({"modset-lock.v1.json", instance_lock_path(instance), false});
-    for (const ModRef& mod : instance_mods(instance)) {
+    for (const ModRef& mod : mods) {
         entries.push_back({"mods/" + mod.file_name, mod.file_path, false});
     }
     const fs::path staging = unique_staging(output_parent, ".facman-modset-export-");
@@ -470,6 +491,62 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     if (!status.ok()) {
         session.failed(status.detail);
         return refuse(command, request.instance_id, "persistent_write_refused", "Modset archive staging failed", status.code + ": " + status.detail);
+    }
+    std::string closure_error;
+    const char* pause_marker = std::getenv("FACMAN_TEST_MODSET_EXPORT_PAUSE_MARKER");
+    const char* pause_release = std::getenv("FACMAN_TEST_MODSET_EXPORT_PAUSE_RELEASE");
+    if (pause_marker != nullptr && pause_release != nullptr &&
+        *pause_marker != '\0' && *pause_release != '\0') {
+        std::string marker_detail;
+        if (!facman::base::write_text_new_atomic(
+                pause_marker, "staged\n", marker_detail)) {
+            closure_error = "modset export test pause marker could not be written: " + marker_detail;
+        }
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+        while (closure_error.empty() && !fs::exists(pause_release) &&
+            std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        if (closure_error.empty() && !fs::exists(pause_release)) {
+            closure_error = "modset export test pause timed out";
+        }
+    }
+    if (closure_error.empty() &&
+        written.verified_plan.entries.size() != expected_archive_digests.size()) {
+        closure_error = "staged archive entry count differs from the verified lock";
+    } else if (closure_error.empty()) {
+        for (const facman::archive::Entry& entry : written.verified_plan.entries) {
+            const auto expected = expected_archive_digests.find(entry.path);
+            if (entry.directory || expected == expected_archive_digests.end()) {
+                closure_error = "staged archive contains an unbound entry: " + entry.path;
+                break;
+            }
+            facman::base::Sha256Hasher digest;
+            status = facman::archive::stream_entry(written.verified_plan, entry.index,
+                options.limits, [&](const unsigned char* bytes, std::size_t size) {
+                    digest.update(bytes, size);
+                    return true;
+                });
+            if (!status.ok() || digest.finish() != expected->second) {
+                closure_error = "staged archive differs from the verified lock: " + entry.path;
+                break;
+            }
+        }
+    }
+    if (closure_error.empty()) {
+        const std::vector<std::string> after_staging = verify_lock(instance);
+        if (!after_staging.empty()) {
+            closure_error = "modset source changed during export: " + after_staging.front();
+        }
+    }
+    if (!closure_error.empty()) {
+        written.verified_plan.reader.reset();
+        const facman::archive::Status cleaned =
+            facman::archive::cleanup_owned_staging_root(staging);
+        if (!cleaned.ok()) closure_error += "; cleanup: " + cleaned.detail;
+        session.failed(closure_error);
+        return refuse(command, request.instance_id, "modset_export_integrity_failed",
+            "Modset export no longer matches its verified lock", closure_error);
     }
     if (!session.staged("archive_written") ||
         !session.verified("archive_self_verified") ||

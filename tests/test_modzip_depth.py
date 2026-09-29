@@ -5,12 +5,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import subprocess
 import tempfile
+import time
 import unittest
 import zipfile
 from pathlib import Path
 
-from native_cli import invoke
+from native_cli import facman_executable, invoke
 from tools import json_contract
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -549,6 +552,51 @@ class ModZipDepthTests(unittest.TestCase):
                     sorted(archive.namelist()),
                     ["mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"],
                 )
+
+    def test_export_refuses_lock_changed_after_archive_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            mod_zip = fixture_zip("valid_simple", "simple_mod_1.0.0.zip")
+            code, _imported, stderr = run_json([
+                "--workspace", tmp, "mods", "import", str(mod_zip),
+                "--instance", "modzip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            code, _lock, stderr = run_json([
+                "--workspace", tmp, "modsets", "lock", "modzip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            lock_path = workspace / "instances/modzip/mods/modset-lock.v1.json"
+            destination = workspace / "exports/changed-lock.zip"
+            marker = workspace / "export-staged.marker"
+            release = workspace / "export-release.marker"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_MODSET_EXPORT_PAUSE_MARKER"] = str(marker)
+            environment["FACMAN_TEST_MODSET_EXPORT_PAUSE_RELEASE"] = str(release)
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "modsets", "export",
+                 "modzip", str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while process.poll() is None and not marker.exists() and time.monotonic() < deadline:
+                    time.sleep(0.02)
+                self.assertTrue(marker.exists(), "export did not reach its staged archive")
+                self.assertIsNone(process.poll())
+                lock_path.write_text(lock_path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+                release.touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 1, stderr + stdout)
+                self.assertIn("modset_export_integrity_failed", stdout)
+                self.assertFalse(destination.exists())
+                self.assertEqual([], list((workspace / "exports").glob(".facman-modset-export-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
 
 
 if __name__ == "__main__":
