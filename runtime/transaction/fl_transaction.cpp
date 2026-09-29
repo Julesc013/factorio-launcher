@@ -1038,6 +1038,13 @@ void TransactionSession::failed(const std::string& error)
     active_ = false;
 }
 
+void TransactionSession::require_recovery(const std::string& error)
+{
+    if (!active_) return;
+    (void)facman::transaction::fail(workspace_, record_, "recovery_required", error, detail_);
+    active_ = false;
+}
+
 bool StagedFileCommit::commit(
     const fs::path& staging_root,
     const fs::path& staged_file,

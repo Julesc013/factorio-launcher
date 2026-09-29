@@ -210,6 +210,29 @@ int prove_marker_substitution_and_raii(const fs::path& workspace)
     return 0;
 }
 
+int prove_precommit_cleanup_recovery(const fs::path& workspace)
+{
+    const fs::path staging = workspace / "recoverable" / ".stage";
+    tx::Record record;
+    record.command_id = "test.cleanup";
+    record.target = workspace / "recoverable" / "target";
+    record.staging_roots = {staging};
+    auto started = tx::TransactionSession::begin(workspace, std::move(record));
+    if (!started) return 50;
+    tx::TransactionSession session = started.take_value();
+    if (!session.validated() || !session.planned() ||
+        !facman::archive::create_owned_staging_root(staging).ok() ||
+        !session.staging() || !write_file(staging / "payload.txt", "retained")) return 51;
+    const std::string operation = session.record().transaction_id;
+    session.require_recovery("owned staging cleanup failed");
+    const tx::Outcome planned = tx::plan(workspace, operation);
+    if (!std::holds_alternative<tx::RecoveryResult>(planned) ||
+        std::get<tx::RecoveryResult>(planned).json.find("remove_owned_staging") == std::string::npos) return 52;
+    const tx::Outcome recovered = tx::apply(workspace, operation);
+    if (!std::holds_alternative<tx::RecoveryResult>(recovered) || fs::exists(staging)) return 53;
+    return 0;
+}
+
 int prove_commit_strategies_and_retention(const fs::path& workspace)
 {
     const fs::path source = workspace / "copy" / "source.bin";
@@ -269,6 +292,7 @@ int main()
         facman::workspace::WorkspaceLayout(root)).ensure();
     if (!workspace) return 3;
     if (result == 0) result = prove_session_and_commit(root);
+    if (result == 0) result = prove_precommit_cleanup_recovery(root);
     if (result == 0) result = prove_marker_substitution_and_raii(root);
     if (result == 0) result = prove_commit_strategies_and_retention(root);
     fs::remove_all(root, error);
