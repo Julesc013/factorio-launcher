@@ -113,6 +113,7 @@ public:
     bool refused(const std::string& error);
     bool complete();
     void failed(const std::string& error);
+    void require_recovery(const std::string& error);
     Record& record() noexcept { return record_; }
     const Record& record() const noexcept { return record_; }
     const std::string& detail() const noexcept { return detail_; }
