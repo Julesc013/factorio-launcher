@@ -212,10 +212,10 @@ not require the zstd build tool used for the portable archive:
 ~/.local/opt/facman/
 ~/.local/bin/FacMan
 ~/.local/bin/facman
-~/.local/share/applications/io.github.julesc013.facman.desktop
+~/.local/share/applications/facman.desktop
 ```
 
-It supports `install`, `verify`, `repair`, and `uninstall`, stores
+It supports `install`, `verify`, `repair`, `recover`, `rollback`, and `uninstall`, stores
 installed-state and receipts, and preserves workspaces and Factorio data.
 Verification requires the exact active generation and its installed-state
 receipt; a missing generation is a failure. Maintenance refuses a changed
@@ -223,7 +223,19 @@ receipt; a missing generation is a failure. Maintenance refuses a changed
 before removal. First install also refuses preexisting native entries without
 installed ownership state. It replaces its maintenance copy, desktop entry, and state
 receipt through sibling temporary files so hardlinked external content is not
-rewritten in place. Source-distinct Linux update recovery remains an Alpha.6 gate.
+rewritten in place.
+Two exact Alpha.5 Setup package identities are admitted as predecessors for
+source-distinct Alpha.6 update, rollback, and reapply. A first-install journal
+lets the installed Setup copy recover an interrupted activation back to prior
+absence. Same-version repair stages a verified replacement, journals the
+generation swap before moving the damaged generation, and can finish through
+the installed Setup copy after interruption. It accepts missing or modified
+owned files when the ownership manifest remains intact; foreign paths, links,
+and special entries are refused. Recovery also handles an interrupted old
+generation backup removal while preserving workspaces and retained history.
+Partial staging before journal publication remains a fail-closed orphan that
+needs a later disposition. The supported-predecessor extension path and
+physical Linux qualification remain open.
 
 ## Current limits
 
