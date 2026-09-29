@@ -38,6 +38,27 @@ def create_instance(workspace: Path) -> Path:
 
 
 class ProfileTemplateTests(unittest.TestCase):
+    def test_apply_preserves_cloned_instance_manifest_provenance(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman profile provenance ") as value:
+            workspace = Path(value)
+            create_instance(workspace)
+            invoke_json(workspace, "instances", "clone", "main", "copy")
+            manifest_path = workspace / "instances" / "copy" / "instance.v1.json"
+            before = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual("main", before["source_instance"])
+            self.assertIn("cloned_at", before)
+            self.assertIn("save_policy", before)
+            self.assertIn("export_policy", before)
+
+            invoke_json(workspace, "profiles", "create", "quiet", "--audio", "disabled")
+            applied = invoke_json(workspace, "profiles", "apply", "copy", "quiet")
+            self.assertTrue(applied["mutation_executed"])
+            after = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual("quiet", after.pop("profile"))
+            before.pop("profile")
+            self.assertEqual(before, after)
+            self.assertEqual("copy", invoke_json(workspace, "instances", "inspect", "copy")["instance_id"])
+
     def test_shipped_template_and_existing_gui_instance_remain_compatible(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman templates ") as value:
             workspace = Path(value)

@@ -353,21 +353,31 @@ facman::core::Result<void> write_profile_new(const fs::path& workspace, const Pr
     return facman::core::Result<void>::success();
 }
 
-std::string instance_manifest(const facman::workspace::InstanceRecord& instance, const std::string& profile_id)
+facman::core::Result<std::string> instance_manifest(
+    const std::string& source,
+    const std::string& instance_id,
+    const std::string& install_ref,
+    const std::string& profile_id)
 {
-    json::ObjectBuilder concurrency;
-    concurrency.add_bool("single_writer", true);
+    auto document = json::parse(source);
+    if (!document || !document.value().is_object() ||
+        object_string(document.value(), "schema") != "factorio.instance.v1" ||
+        object_string(document.value(), "instance_id") != instance_id ||
+        object_string(document.value(), "install_ref") != install_ref ||
+        document.value().find("profile") == nullptr) {
+        return typed_failure<std::string>(
+            "profile_instance_manifest_changed", "Instance manifest changed before profile application");
+    }
     json::ObjectBuilder output;
-    output.add_string("schema", "factorio.instance.v1");
-    output.add_string("instance_id", instance.id.str());
-    output.add_string("display_name", instance.display_name);
-    output.add_string("install_ref", instance.install_ref.str());
-    output.add_string("factorio_version", instance.factorio_version);
-    output.add_string("local_data_root", facman::platform::path_to_utf8(instance.root));
-    output.add_string("profile", profile_id);
-    output.add_string("template", instance.template_id);
-    output.add_object("concurrency", concurrency);
-    return output.serialize() + "\n";
+    for (const std::string& key : document.value().object_keys()) {
+        const json::Value* value = document.value().find(key);
+        const bool added = key == "profile"
+            ? output.add_string(key, profile_id)
+            : value != nullptr && output.add_value(key, *value);
+        if (!added) return typed_failure<std::string>(
+            "profile_instance_manifest_invalid", "Instance manifest fields could not be preserved");
+    }
+    return facman::core::Result<std::string>::success(output.serialize() + "\n");
 }
 
 std::string overrides_json(const EffectiveRequest& request)
@@ -665,6 +675,14 @@ facman::core::Result<std::string> profiles_apply(const fs::path& workspace, cons
             "profile_transaction_failed", session.detail(), workspace);
     auto current = stable_text(instance.value().source_path);
     if (!current) { session.failed(current.error().message); return failure(current.error().code, current.error().message, instance.value().source_path); }
+    auto updated_manifest = instance_manifest(
+        current.value(), instance.value().id.str(), instance.value().install_ref.str(),
+        effective.value().profile_id);
+    if (!updated_manifest) {
+        session.failed(updated_manifest.error().message);
+        return failure(updated_manifest.error().code, updated_manifest.error().message,
+            instance.value().source_path);
+    }
     std::error_code error;
     fs::create_directories(backup_root, error);
     if (error) { session.failed(error.message()); return failure("profile_backup_failed", error.message(), backup_root); }
@@ -673,7 +691,7 @@ facman::core::Result<std::string> profiles_apply(const fs::path& workspace, cons
     std::string detail;
     if (!digest || !tx::CrossVolumeCopyVerifyCommit::commit(
             instance.value().source_path, backup, digest.value(), current.value().size(), detail) ||
-        !facman::base::write_text_new_atomic(manifest_stage, instance_manifest(instance.value(), effective.value().profile_id), detail) ||
+        !facman::base::write_text_new_atomic(manifest_stage, updated_manifest.value(), detail) ||
         !facman::base::write_text_new_atomic(overrides_stage, overrides_json(request), detail) ||
         !session.staging("profile_plan_materialized") || !session.staged("backup_and_replacements_staged") ||
         !session.verified("effective_profile_and_reserved_arguments_verified") ||
