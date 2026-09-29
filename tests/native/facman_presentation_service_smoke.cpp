@@ -859,6 +859,8 @@ int run_smoke()
             std::string::npos ||
         selected_saves.find("\"action_id\":\"saves.backup\"") ==
             std::string::npos ||
+        selected_saves.find("\"action_id\":\"saves.restore\"") ==
+            std::string::npos ||
         selected_saves.find("\"field_id\":\"save\"") ==
             std::string::npos ||
         selected_saves.find("\"field_id\":\"output_path\"") ==

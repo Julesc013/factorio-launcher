@@ -334,6 +334,66 @@ class PresentationServiceTests(unittest.TestCase):
                 hashlib.sha256(source_save.read_bytes()).hexdigest(), source_save_digest
             )
 
+            _, owned_backup, _ = action(
+                "saves", "saves.backup", "backup-owned",
+                ["--save", "starter.zip"], effectful=True,
+            )
+            owned_backup_path = Path(owned_backup["action_payload"]["destination_path"])
+            self.assertEqual(owned_backup_path.parent, instance_root / "backups")
+            source_save.unlink()
+            restore_actions = {
+                item["action_id"]: item
+                for item in query("saves")["available_semantic_actions"]
+            }
+            self.assertEqual(restore_actions["saves.restore"]["availability"], "available")
+            restore_fields = {
+                item["field_id"] for item in restore_actions["saves.restore"]["input_fields"]
+            }
+            self.assertEqual(restore_fields, {"selected_instance_id", "save", "output_path"})
+            _, restored, _ = action(
+                "saves", "saves.restore", "restore-owned",
+                ["--save", owned_backup_path.name, "--output", "restored.zip"],
+                effectful=True,
+            )
+            self.assertIsNotNone(restored["action_payload"], restored)
+            self.assertEqual(restored["action_payload"]["schema"], "factorio.save_clone.v1")
+            self.assertEqual(restored["action_payload"]["source_kind"], "owned_backup")
+            restored_path = instance_root / "saves" / "restored.zip"
+            self.assertEqual(restored_path.read_bytes(), owned_backup_path.read_bytes())
+            self.assertFalse(source_save.exists())
+
+            def refused_restore(identity: str, destination: str) -> str:
+                snapshot = query("saves")
+                code, stdout, stderr = invoke_machine([
+                    "--workspace", str(workspace), "presentation", "action",
+                    "saves.restore", "--scope", "saves",
+                    "--expected-revision", str(snapshot["revision"]),
+                    "--request-id", f"request-{identity}",
+                    "--instance", "fixture-isolated",
+                    "--save", owned_backup_path.name, "--output", destination,
+                    "--idempotency-key", f"idempotency-{identity}",
+                    "--operation-id", f"operation-{identity}",
+                    "--attempt-id", f"attempt-{identity}",
+                    "--confirmation", "explicit", "--json",
+                ])
+                self.assertEqual((code, stderr), (1, ""), stdout)
+                return json.loads(stdout)["error"]["code"]
+
+            self.assertEqual(
+                refused_restore("restore-existing", "restored.zip"),
+                "save_clone_target_exists",
+            )
+            self.assertEqual(restored_path.read_bytes(), owned_backup_path.read_bytes())
+            sidecar = Path(str(owned_backup_path) + ".manifest.json")
+            manifest = json.loads(sidecar.read_text(encoding="utf-8"))
+            manifest["sha256"] = "0" * 64
+            sidecar.write_text(json.dumps(manifest), encoding="utf-8")
+            self.assertEqual(
+                refused_restore("restore-unproven", "tampered.zip"),
+                "save_backup_unproven",
+            )
+            self.assertFalse((instance_root / "saves" / "tampered.zip").exists())
+
     def test_semantic_action_forms_are_schema_backed_and_frontend_consumed(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman-presentation-form-") as temporary:
             workspace = Path(temporary) / "workspace"
