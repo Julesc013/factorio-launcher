@@ -88,14 +88,32 @@ class InstanceLifecycleTests(unittest.TestCase):
             self.assertIn(verified["status"], {"pass", "warning"})
 
             code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "inspect", "copy", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            revision = json.loads(stdout)["manifest_sha256"]
+            self.assertEqual(
+                hashlib.sha256((copy / "instance.v1.json").read_bytes()).hexdigest(), revision,
+            )
+
+            code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "rename", "copy",
-                "--name", "Renamed Display", "--json",
+                "--name", "Renamed Display", "--expected-revision", revision, "--json",
             ])
             self.assertEqual(0, code, stderr or stdout)
             manifest = json.loads((copy / "instance.v1.json").read_text(encoding="utf-8"))
             self.assertEqual("copy", manifest["instance_id"])
             self.assertEqual("Renamed Display", manifest["display_name"])
             self.assertTrue(any((workspace / "backups" / "instances").rglob("instance.v1.json")))
+
+            renamed_bytes = (copy / "instance.v1.json").read_bytes()
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "copy",
+                "--name", "Stale Display", "--expected-revision", revision, "--json",
+            ])
+            self.assertNotEqual(0, code)
+            self.assertIn("instance_manifest_revision_changed", stdout + stderr)
+            self.assertEqual(renamed_bytes, (copy / "instance.v1.json").read_bytes())
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "diff", "main", "copy", "--json",

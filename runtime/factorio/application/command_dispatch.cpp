@@ -777,10 +777,11 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         request.payload = std::move(typed); return true;
     }
     case CommandId::instances_rename: {
-        if (!validate_fields(payload, {"instance_id", "display_name"}, detail)) return false;
+        if (!validate_fields(payload, {"instance_id", "display_name", "expected_manifest_sha256"}, detail)) return false;
         RenameInstanceRequest typed;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
-            !required_string(payload, "display_name", typed.display_name, detail)) return false;
+            !required_string(payload, "display_name", typed.display_name, detail) ||
+            !optional_string(payload, "expected_manifest_sha256", typed.expected_manifest_sha256, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::instances_restore: {

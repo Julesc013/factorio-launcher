@@ -221,7 +221,7 @@ cli = "facman instances clone <source-id> <destination-id> --json"
 id = "instances.rename"
 phase = "optional"
 backend_id = "instances.rename"
-cli = "facman instances rename <instance-id> --name <display-name> --json"
+cli = "facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json"
 
 [[commands]]
 id = "instances.archive"

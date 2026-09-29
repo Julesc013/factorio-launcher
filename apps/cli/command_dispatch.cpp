@@ -791,11 +791,11 @@ int command_instances(const Options& options)
         if (name.empty()) return 2;
         for (std::size_t index = 3; index < options.args.size(); ++index) {
             if (options.args[index] == "--json") continue;
-            if (options.args[index] != "--name" || index + 1 >= options.args.size()) return 2;
+            if (index + 1 >= options.args.size() || (options.args[index] != "--name" && options.args[index] != "--expected-revision")) return 2;
             ++index;
         }
         return emit_basic(call(options, "instances.rename", exact_fields_payload({
-            {"instance_id", options.args[2]}, {"display_name", name}}), false),
+            {"instance_id", options.args[2]}, {"display_name", name}, {"expected_manifest_sha256", option(options.args, "--expected-revision")}}), false),
             flag(options.args, "--json"), "Instance display name updated");
     }
     if (action == "restore" && options.args.size() >= 3) {

@@ -1,5 +1,5 @@
 command_id = "instances.rename"
-cli = "facman instances rename <instance-id> --name <display-name> --json"
+cli = "facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json"
 effects = ["workspace_read", "workspace_write"]
 request_schema = "contracts/schema/command/instances.rename.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_instance_lifecycle.v1.schema.json"

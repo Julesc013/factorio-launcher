@@ -3765,7 +3765,7 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman instances rename <instance-id> --name <display-name> --json",
+      "cli": "facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json",
       "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
@@ -3791,7 +3791,7 @@
             "required": true
           }
         ],
-        "usage": "facman instances rename <instance-id> --name <display-name> --json"
+        "usage": "facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json"
       },
       "command_id": "instances.rename",
       "contract_path": "contracts/command/factorio/instances.rename.v1.toml",
@@ -3834,6 +3834,15 @@
           "request_field": "display_name",
           "required": true,
           "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_manifest_sha256",
+          "repeatable": false,
+          "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
         }
       ],
       "request_schema": "contracts/schema/command/instances.rename.request.v1.schema.json",
@@ -12372,6 +12381,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "4bcda469d19c9dd77b541693e088bb408ac1ed9f84e9ab416e64cc1232bd60b9",
+  "source_digest": "7fce90581442131eab4bda995249794a4ca9dd6ab8e28178b763883794726289",
   "version": "facman-0.1.0-alpha.6"
 }

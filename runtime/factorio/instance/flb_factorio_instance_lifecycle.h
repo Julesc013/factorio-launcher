@@ -19,7 +19,11 @@ struct CloneRequest {
     std::string display_name;
     std::string install_ref;
 };
-struct RenameRequest { std::string instance_id; std::string display_name; };
+struct RenameRequest {
+    std::string instance_id;
+    std::string display_name;
+    std::string expected_manifest_sha256;
+};
 struct ArchiveRequest { std::string instance_id; };
 struct RestoreRequest { std::string archive_id; std::string new_instance_id; };
 
