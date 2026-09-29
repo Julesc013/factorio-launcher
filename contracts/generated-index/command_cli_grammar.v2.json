@@ -2837,7 +2837,7 @@
             "required": true
           }
         ],
-        "usage": "facman instances rename <instance-id> --name <display-name> --json"
+        "usage": "facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json"
       },
       "command_id": "instances.rename",
       "deprecation": "active",
@@ -2866,6 +2866,15 @@
           "request_field": "display_name",
           "required": true,
           "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_manifest_sha256",
+          "repeatable": false,
+          "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
         }
       ],
       "required_capabilities": [
@@ -9618,5 +9627,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "4bcda469d19c9dd77b541693e088bb408ac1ed9f84e9ab416e64cc1232bd60b9"
+  "source_digest": "7fce90581442131eab4bda995249794a4ca9dd6ab8e28178b763883794726289"
 }

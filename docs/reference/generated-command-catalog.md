@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `4bcda469d19c9dd77b541693e088bb408ac1ed9f84e9ab416e64cc1232bd60b9`.
+Source digest: `7fce90581442131eab4bda995249794a4ca9dd6ab8e28178b763883794726289`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -47,7 +47,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `instances.diff` | `instances.diff` | `instances_diff` | no | - | available | workspace_read | `facman instances diff <left-instance-id> <right-instance-or-snapshot> --json` |
 | `instances.inspect` | `instances.inspect` | `instances_inspect` | no | - | available | workspace_read | `facman instances inspect <instance-id> --json` |
 | `instances.readiness` | `instances.readiness` | `instances_readiness` | no | - | implemented | workspace_read | `facman instances readiness <instance-id> [--intent menu] --json` |
-| `instances.rename` | `instances.rename` | `instances_rename` | yes | - | available | workspace_read, workspace_write | `facman instances rename <instance-id> --name <display-name> --json` |
+| `instances.rename` | `instances.rename` | `instances_rename` | yes | - | available | workspace_read, workspace_write | `facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json` |
 | `instances.restore` | `instances.restore` | `instances_restore` | yes | - | available | workspace_read, workspace_write | `facman instances restore <archive-id> [--new-id <instance-id>] --json` |
 | `instances.verify` | `instances.verify` | `instances_verify` | no | - | available | workspace_read | `facman instances verify <instance-id> --json` |
 | `launch.plan` | `launch_plan.build` | `launch_plan_build` | no | launch-plan.build | available | workspace_read | `facman launch plan <instance-id> --json` |
