@@ -683,10 +683,24 @@ facman::core::Result<std::string> profiles_apply(const fs::path& workspace, cons
     auto planned = profiles_plan(workspace, request);
     if (!planned) return planned;
     auto instance_id = facman::core::InstanceId::parse(request.instance_id);
+    if (!instance_id) return failure(instance_id.error().code, instance_id.error().message);
     facman::workspace::InstanceRepository repository {facman::workspace::WorkspaceLayout(workspace)};
     auto instance = repository.load(instance_id.value());
+    if (!instance) return failure("unknown_instance", "Instance is not registered", workspace);
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = tx::acquire_instance_configuration_lock(instance.value().root, configuration_lock);
+    if (!locked.acquired()) return failure(
+        locked.code == facman::base::StableLockCode::contended ?
+            "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        locked.detail, instance.value().root, facman::core::OutcomeKind::refused,
+        locked.code == facman::base::StableLockCode::contended);
+    if (tx::incomplete_count(workspace) != 0U) return failure(
+        "profile_transaction_recovery_required", "Workspace transaction recovery is required", workspace,
+        facman::core::OutcomeKind::recovery_required, false);
+    planned = profiles_plan(workspace, request);
+    if (!planned) return planned;
     auto effective = effective_profile(workspace, request.profile_id, request.overrides);
-    if (!instance || !effective) return failure("profile_apply_invalid", "Effective profile inputs changed during planning", workspace);
+    if (!effective) return failure("profile_apply_invalid", "Effective profile inputs changed during planning", workspace);
     auto current = stable_text(instance.value().source_path);
     if (!current) return failure(current.error().code, current.error().message, instance.value().source_path);
     auto source_revision = checked_manifest_revision(current.value(), request.expected_manifest_sha256);

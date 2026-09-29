@@ -1594,6 +1594,20 @@ retryable = false
 message = "The instance rename cannot be reconciled from verified transaction evidence."
 
 [[code]]
+id = "instance_configuration_lock_contended"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Another operation owns the instance configuration lock."
+
+[[code]]
+id = "instance_configuration_lock_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The instance configuration lock is unsafe or has unexpected identity."
+
+[[code]]
 id = "recovery_write_refused"
 severity = "blocked"
 effect = "workspace_write"
