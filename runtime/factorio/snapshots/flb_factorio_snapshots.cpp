@@ -1095,19 +1095,25 @@ facman::core::Result<std::string> restore(const fs::path& workspace, const Resto
     }
     std::error_code error;
     fs::remove_all(staging / "manifest", error);
-    fs::remove(staging / "instance.v1.json", error);
-    fs::remove(staging / "config" / "config.ini", error);
-    fs::create_directories(staging / "config", error);
+    if (!error) fs::remove(staging / "instance.v1.json", error);
+    if (!error) fs::remove(staging / "config" / "config.ini", error);
+    if (!error) fs::create_directories(staging / "config", error);
+    if (error) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        session.failed(error.message());
+        return fail("snapshot_restore_staging_failed", error.message(), staging);
+    }
     std::string write_detail;
-    if (error || !facman::base::write_text_new_atomic(
+    if (!facman::base::write_text_new_atomic(
             staging / "instance.v1.json", local_manifest(snapshot.value(), target_id.value(), target.path), write_detail) ||
         !facman::base::write_text_new_atomic(
             staging / "config" / "config.ini", effective_config(snapshot.value(), install.value(), target_id.value(), target.path), write_detail) ||
         !session.verified("snapshot_hashes_verified_and_local_metadata_regenerated") ||
         !session.committing("snapshot_restore_commit_started")) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
-        session.failed(error ? error.message() : write_detail.empty() ? session.detail() : write_detail);
-        return fail("snapshot_restore_staging_failed", error ? error.message() : write_detail, staging);
+        const std::string failure_detail = write_detail.empty() ? session.detail() : write_detail;
+        session.failed(failure_detail);
+        return fail("snapshot_restore_staging_failed", failure_detail, staging);
     }
     if (!tx::StagedDirectoryCommit::commit(staging, target.path, write_detail)) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
