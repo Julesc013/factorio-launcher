@@ -73,6 +73,7 @@ facman::core::Result<std::string> failure(
         "instance_archive_hash_mismatch", "instance_archive_manifest_invalid", "instance_archive_target_exists",
         "instance_file_unsafe", "instance_link_refused", "instance_root_unsafe",
         "instance_transaction_recovery_required", "instance_tree_budget_exceeded",
+        "instance_configuration_lock_unsafe",
     };
     error.recoverable = kind != facman::core::OutcomeKind::recovery_required &&
         non_recoverable.count(code) == 0;
@@ -875,6 +876,17 @@ facman::core::Result<std::string> rename_display(const fs::path& root, const Ren
     const std::string source_revision = text_sha256(source_text.value());
     if (!expected_revision.empty() && source_revision != expected_revision) return failure(
         "instance_manifest_revision_changed", "Instance manifest changed since inspection", manifest);
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = tx::acquire_instance_configuration_lock(instance.value().root, configuration_lock);
+    if (!locked.acquired()) return failure(
+        locked.code == facman::base::StableLockCode::contended ?
+            "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        locked.detail, instance.value().root);
+    pending = no_pending_transactions(root);
+    if (!pending) return failure(pending.error().code, pending.error().message, pending.error().path, pending.error().kind);
+    auto locked_source = stable_text(manifest, 4U * 1024U * 1024U);
+    if (!locked_source || text_sha256(locked_source.value()) != source_revision) return failure(
+        "instance_manifest_revision_changed", "Instance manifest changed before rename lock acquisition", manifest);
     auto renamed = renamed_manifest(source_text.value(), instance.value(), request.display_name);
     if (!renamed) return renamed;
     tx::Record record;

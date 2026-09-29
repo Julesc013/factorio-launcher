@@ -8,6 +8,7 @@ import json
 import os
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 
 from native_cli import invoke
@@ -49,7 +50,125 @@ def create_fixture(workspace: Path, instance_id: str = "main") -> Path:
     return root
 
 
+@contextmanager
+def hold_configuration_lock(path: Path):
+    if os.name == "nt":
+        import ctypes
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.CreateFileW.argtypes = [ctypes.c_wchar_p, ctypes.c_uint32, ctypes.c_uint32,
+                                       ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32,
+                                       ctypes.c_void_p]
+        kernel.CreateFileW.restype = ctypes.c_void_p
+        kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+        handle = kernel.CreateFileW(str(path), 0xC0010000, 1, None, 3, 0x00200000, None)
+        if handle in (None, ctypes.c_void_p(-1).value):
+            raise OSError(ctypes.get_last_error(), "Cannot hold instance configuration lock")
+        try:
+            yield
+        finally:
+            kernel.CloseHandle(handle)
+    else:
+        import fcntl
+
+        descriptor = os.open(path, os.O_RDWR | os.O_NOFOLLOW)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            yield
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+            os.close(descriptor)
+
+
 class InstanceLifecycleTests(unittest.TestCase):
+    def test_profile_recovery_waits_for_active_instance_configuration_owner(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman profile recovery lock ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "profiles", "create", "quiet",
+                "--audio", "disabled", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            env = os.environ.copy()
+            env["FACMAN_TEST_PROFILE_APPLY_EXIT_AFTER_MANIFEST"] = "1"
+            code, _, _ = invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "quiet", "--json",
+            ], env=env)
+            self.assertEqual(86, code)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "profiles.apply")
+            marker = instance / "locks" / "configuration.write.lock"
+            with hold_configuration_lock(marker):
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "workspace", "recovery", "apply",
+                    transaction["transaction_id"], "--json",
+                ])
+                self.assertNotEqual(0, code, stderr or stdout)
+                self.assertEqual("instance_configuration_lock_contended",
+                                 json.loads(stdout)["refusal"]["code"])
+                self.assertFalse((instance / "instance-overrides.v1.json").exists())
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("complete", json.loads(stdout)["transactions"][0]["state"])
+            self.assertEqual("quiet", json.loads((instance / "instance-overrides.v1.json").read_text())["profile_id"])
+
+    def test_profile_and_rename_refuse_the_same_active_configuration_lock(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman instance config lock ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            marker = instance / "locks" / "configuration.write.lock"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "missing", "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Stale", "--expected-revision", "0" * 64, "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertFalse(marker.exists())
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "gui", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            manifest = (instance / "instance.v1.json").read_bytes()
+            overrides = (instance / "instance-overrides.v1.json").read_bytes()
+            original_marker = marker.read_bytes()
+            self.assertIn(b"facman.instance_configuration_lock.v1", original_marker)
+            with hold_configuration_lock(marker):
+                for command in (("instances", "rename", "main", "--name", "Blocked"),
+                                ("profiles", "apply", "main", "gui")):
+                    code, stdout, stderr = invoke([
+                        "--workspace", str(workspace), *command, "--json",
+                    ])
+                    self.assertNotEqual(0, code, stderr or stdout)
+                    self.assertEqual("instance_configuration_lock_contended",
+                                     json.loads(stdout)["refusal"]["code"])
+                self.assertEqual(manifest, (instance / "instance.v1.json").read_bytes())
+                self.assertEqual(overrides, (instance / "instance-overrides.v1.json").read_bytes())
+            marker.write_text("unrecognized lock\n", encoding="utf-8")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Blocked", "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("instance_configuration_lock_unsafe", json.loads(stdout)["refusal"]["code"])
+            self.assertEqual(manifest, (instance / "instance.v1.json").read_bytes())
+            marker.write_bytes(original_marker)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Allowed", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+
     def test_rename_staged_interruption_rolls_back_verified_file(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman rename staged recovery ") as temporary:
             workspace = Path(temporary)

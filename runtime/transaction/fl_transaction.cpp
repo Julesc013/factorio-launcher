@@ -609,6 +609,39 @@ fs::path recovery_lock_path(const fs::path& workspace, const std::string& transa
     return path;
 }
 
+facman::base::StableLockResult acquire_instance_configuration_lock(
+    const fs::path& instance_root,
+    facman::base::StableLocalLock& lock)
+{
+    std::string detail;
+    const std::string instance_id = instance_root.filename().string();
+    const fs::path parent = instance_root / "locks";
+    if (!facman::base::validate_identifier(instance_id, detail) ||
+        !fs::is_directory(parent) ||
+        facman::base::path_crosses_link_or_reparse_point(parent, detail))
+        return {facman::base::StableLockCode::unsafe,
+            detail.empty() ? "Instance configuration lock parent is unsafe" : detail};
+    const fs::path path = parent / "configuration.write.lock";
+    const std::string expected = "facman.instance_configuration_lock.v1\ninstance_id=" + instance_id + "\n";
+    auto result = lock.create(path);
+    std::string content;
+    if (result.code == facman::base::StableLockCode::exists)
+        result = lock.open_existing(path, 4096U, content);
+    if (!result.acquired()) return result;
+    if (!content.empty() && content != expected) {
+        lock.close();
+        return {facman::base::StableLockCode::unsafe,
+            "Instance configuration lock content differs from its instance identity"};
+    }
+    if ((content.empty() && !lock.write_text(expected, detail)) ||
+        !lock.identity_matches_path(detail)) {
+        lock.close();
+        return {facman::base::StableLockCode::unsafe,
+            detail.empty() ? "Instance configuration lock identity changed" : detail};
+    }
+    return {facman::base::StableLockCode::acquired, {}};
+}
+
 std::string file_effect_identity(const facman::platform::FileIdentity& identity)
 {
     if (!identity.regular_file || identity.link_count != 1U) return {};
@@ -1522,6 +1555,14 @@ Outcome recover_profile_pair(const fs::path& workspace, Record& record)
         facman::base::path_crosses_link_or_reparse_point(backup_root, detail))
         return unsafe(detail.empty() ? "Profile recovery journal paths or format differ" : detail);
 
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = acquire_instance_configuration_lock(root, configuration_lock);
+    if (!locked.acquired()) return Refusal {
+        locked.code == facman::base::StableLockCode::contended ?
+            "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        "Instance configuration is owned or its lock is unsafe", locked.detail,
+        locked.code == facman::base::StableLockCode::contended};
+
     bool manifest_present = false;
     bool overrides_present = false;
     bool manifest_backup_present = false;
@@ -1637,6 +1678,13 @@ Outcome recover_instance_rename(const fs::path& workspace, Record& record)
         facman::base::path_crosses_link_or_reparse_point(root, detail) ||
         facman::base::path_crosses_link_or_reparse_point(backup_root, detail))
         return unsafe(detail.empty() ? "Instance rename journal paths or format differ" : detail);
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = acquire_instance_configuration_lock(root, configuration_lock);
+    if (!locked.acquired()) return Refusal {
+        locked.code == facman::base::StableLockCode::contended ?
+            "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        "Instance configuration is owned or its lock is unsafe", locked.detail,
+        locked.code == facman::base::StableLockCode::contended};
     bool manifest_present = false;
     bool backup_present = false;
     bool stage_present = false;
