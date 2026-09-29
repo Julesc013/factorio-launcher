@@ -982,11 +982,23 @@ int command_saves(const Options& options)
     }
     if (action == "clone" && options.args.size() >= 3) {
         const std::string payload = exact_fields_payload({{"source_instance_id", option(options.args, "--instance")},
-            {"target_instance_id", option(options.args, "--to-instance")}, {"save", options.args[2]}});
+            {"target_instance_id", option(options.args, "--to-instance")}, {"save", options.args[2]},
+            {"source_kind", option(options.args, "--source-kind").empty()
+                ? "live" : option(options.args, "--source-kind")},
+            {"destination_save", option(options.args, "--as")}});
         return emit_basic(
             call(options, "saves.clone", payload, false),
             flag(options.args, "--json"),
             "Save cloned");
+    }
+    if (action == "restore" && options.args.size() >= 3) {
+        const std::string destination = option(options.args, "--as");
+        if (instance.empty() || destination.empty()) return 2;
+        const std::string payload = exact_fields_payload({{"source_instance_id", instance},
+            {"target_instance_id", instance}, {"save", options.args[2]},
+            {"source_kind", "owned_backup"}, {"destination_save", destination}});
+        return emit_basic(call(options, "saves.clone", payload, false),
+            flag(options.args, "--json"), "Save restored from backup");
     }
     return 2;
 }

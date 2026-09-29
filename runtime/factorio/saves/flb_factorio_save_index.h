@@ -25,6 +25,18 @@ struct Request {
     std::uint32_t minimum_age_days = 0;
 };
 
+struct OwnedBackup {
+    std::filesystem::path path;
+    std::string original_save;
+    std::string sha256;
+    std::uint64_t size = 0;
+};
+
+facman::core::Result<OwnedBackup> resolve_owned_backup(
+    const std::filesystem::path& workspace,
+    const std::string& instance_id,
+    const std::string& backup_name);
+
 facman::core::Result<std::string> list(const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> inspect(const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> verify(const std::filesystem::path& workspace, const Request& request);

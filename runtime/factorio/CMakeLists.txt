@@ -149,6 +149,10 @@ target_link_libraries(flb_factorio_content_cache_static PUBLIC
   facman_base_static facman_core_static facman_platform_static facman_transaction_static
   flb_factorio_modsets_static)
 add_library(facman::content_cache ALIAS flb_factorio_content_cache_static)
+target_include_directories(flb_factorio_snapshots_static PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
+target_link_libraries(flb_factorio_snapshots_static PRIVATE
+  flb_factorio_content_cache_static)
 
 add_library(flb_factorio_profiles_static profiles/flb_factorio_profiles.cpp)
 target_compile_features(flb_factorio_profiles_static PUBLIC cxx_std_17)
@@ -178,6 +182,7 @@ add_library(facman::factorio_model ALIAS facman_factorio_model)
 add_library(flb_factorio_application_static STATIC
   application/application_configuration.cpp application/application_context.cpp
   application/last_run_provider.cpp application/presentation_service.cpp
+  application/presentation_action_support.cpp
   application/command_admission.cpp application/command_dispatch.cpp application/command_result.cpp
   application/flb_factorio_application.cpp application/setup_gateway.cpp
   application/managed_install_coordinator.cpp application/handlers/diagnostics.cpp

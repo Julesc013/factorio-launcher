@@ -89,6 +89,7 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
             '"saves.inspect"',
             '"saves.associate"',
             '"saves.backup"',
+            '"saves.restore"',
         ):
             self.assertIn(action, shell)
         self.assertIn('"content", "mods.inspect"', shell)

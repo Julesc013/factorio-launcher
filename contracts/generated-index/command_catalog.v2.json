@@ -6,6 +6,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman capabilities inspect --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -63,6 +64,7 @@
       "availability_refusal_code": "execution_not_enabled",
       "binding": "flb.factorio",
       "cli": "facman dev benchmark --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -121,6 +123,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman dev bug-report --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -180,6 +183,7 @@
       "availability_refusal_code": "execution_not_enabled",
       "binding": "flb.factorio",
       "cli": "facman dev dump-data --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -238,6 +242,7 @@
       "availability_refusal_code": "execution_not_enabled",
       "binding": "flb.factorio",
       "cli": "facman dev dump-icons --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -296,6 +301,7 @@
       "availability_refusal_code": "execution_not_enabled",
       "binding": "flb.factorio",
       "cli": "facman dev instrument-mod --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -351,6 +357,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman diagnostics export --instance <instance-id> --out <bundle.zip> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -439,6 +446,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman diagnostics redact <path> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -510,6 +518,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman doctor explain --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -566,6 +575,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman doctor --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -631,6 +641,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "FLB command bridge: factorio.product.inspect",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": true,
         "options": [],
@@ -680,6 +691,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs list --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -737,6 +749,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs describe <install-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -810,6 +823,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs import <factorio-dir> --id <install-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -899,6 +913,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs inspect <install-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -971,6 +986,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs install apply <plan-id> --version <version> --archive <path> --target <path> --id <install-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1192,6 +1208,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1309,6 +1326,7 @@
       "availability_refusal_code": "setup_plan_inputs_not_confirmed",
       "binding": "flb.factorio",
       "cli": "facman installs install-version <version> --archive <path> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1394,6 +1412,7 @@
       "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1498,6 +1517,7 @@
       "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs move plan <install-id> --target <path> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1584,6 +1604,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs reconcile plan <install-id> [--version <v>] [--source-ref <ref>] [--target <path>] [--management <mode>] [--deployment-style <style>] [--data-policy <policy>] [--integration <mode>] [--update-policy <policy>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1755,6 +1776,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -1905,6 +1927,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs recovery inspect <transaction-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2000,6 +2023,7 @@
       "availability_refusal_code": "ownership_denied",
       "binding": "flb.factorio",
       "cli": "facman installs repair <install-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2073,6 +2097,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs repair apply <install-id> <plan-id> --archive <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2288,6 +2313,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs repair plan <install-id> --archive <path> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2397,6 +2423,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs scan [--search-root <path>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2466,6 +2493,7 @@
       "availability_refusal_code": "ownership_denied",
       "binding": "flb.factorio",
       "cli": "facman installs uninstall <install-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2539,6 +2567,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs uninstall apply <install-id> <plan-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2723,6 +2752,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs uninstall plan <install-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2803,6 +2833,7 @@
       "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs verify <install-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2873,6 +2904,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman export instance <instance-id> <pack.zip> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -2959,6 +2991,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman import instance <pack.zip> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3041,6 +3074,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances list --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3097,6 +3131,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances archive <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3170,6 +3205,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances clone <source-id> <destination-id> [--name <display-name>] [--install <install-id>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3274,6 +3310,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances create <name> --install <install-id> [--import-data <install-root>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3389,6 +3426,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances describe <instance-id> [--intent menu] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3479,6 +3517,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances diff <left-instance-id> <right-instance-or-snapshot> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3563,6 +3602,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances inspect <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3635,6 +3675,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances readiness <instance-id> [--intent menu] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3725,6 +3766,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances rename <instance-id> --name <display-name> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3812,6 +3854,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances restore <archive-id> [--new-id <instance-id>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3894,6 +3937,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances verify <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3967,6 +4011,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman launch plan <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4040,6 +4085,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman launch explain <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4113,6 +4159,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman launch plan <instance-id> --preflight --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4189,6 +4236,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman mods explain <identity> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4260,6 +4308,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman mods import <mod.zip> --instance <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4347,6 +4396,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman mods index [--root <directory>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4415,6 +4465,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman mods inspect <identity> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4487,6 +4538,7 @@
       "availability_refusal_code": "network_forbidden",
       "binding": "flb.factorio",
       "cli": "facman mods install <name> --instance <id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4571,6 +4623,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman mods list --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4628,6 +4681,7 @@
       "availability_refusal_code": "network_forbidden",
       "binding": "flb.factorio",
       "cli": "facman mods search <query> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4699,6 +4753,7 @@
       "availability_refusal_code": "network_forbidden",
       "binding": "flb.factorio",
       "cli": "facman mods update --instance <id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4769,6 +4824,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman mods verify <identity> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -4840,6 +4896,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman modsets apply <instance-id> [solver options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5003,6 +5060,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman modsets diff <instance-id> [solver options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5164,6 +5222,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman modsets explain <instance-id> [solver options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5325,6 +5384,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman modsets export <instance-id> <pack.zip> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5411,6 +5471,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman modsets lock <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5484,6 +5545,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman modsets plan <instance-id> [solver options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5645,6 +5707,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman modsets rollback <instance-id> <transaction-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5731,6 +5794,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman modsets verify <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5802,6 +5866,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman onboarding plan --preferred-install <install-id> --name <display-name> --template <template-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5911,6 +5976,7 @@
       "availability_refusal_code": "setup_unavailable",
       "binding": "flb.factorio",
       "cli": "facman package verify --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -5976,6 +6042,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman preferences apply --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -6142,6 +6209,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman preferences inspect --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -6198,6 +6266,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman preferences plan --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -6362,6 +6431,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman preferences reset apply --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -6421,6 +6491,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman preferences reset plan --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -6478,6 +6549,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman preferences validate --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -6643,6 +6715,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -6922,6 +6995,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman presentation query <scope> [--instance <id>] [--search <text>] [--known-revision <sha256>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7028,6 +7102,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman product inspect --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7084,6 +7159,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman profiles apply <instance-id> <profile-id> [profile options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7260,6 +7336,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman profiles archive <profile-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7333,6 +7410,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman profiles clone <source-id> <destination-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7419,6 +7497,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman profiles create <profile-id> [profile options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7591,6 +7670,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman profiles diff <left-id> <right-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7675,6 +7755,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman profiles inspect <profile-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7746,6 +7827,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman profiles list --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7802,6 +7884,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman profiles plan <instance-id> <profile-id> [profile options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -7977,6 +8060,7 @@
       "availability_refusal_code": "isolation_not_proven",
       "binding": "flb.factorio",
       "cli": "facman play <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8051,6 +8135,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman run <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8121,6 +8206,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves associate <save> --instance <instance-id> [--profile <id>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8226,6 +8312,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves backup <save> --instance <instance-id> [--to <path>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8321,7 +8408,10 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman saves clone <save> --instance <source-id> --to-instance <target-id> --json",
+      "cli": "facman saves clone <save> --instance <source-id> --to-instance <target-id> [--source-kind <kind>] [--as <new-save.zip>] --json",
+      "cli_aliases": [
+        "facman saves restore <backup-name.zip> --instance <instance-id> --as <new-save.zip> --json"
+      ],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8351,7 +8441,7 @@
             "required": true
           }
         ],
-        "usage": "facman saves clone <save> --instance <source-id> --to-instance <target-id> --json"
+        "usage": "facman saves clone <save> --instance <source-id> --to-instance <target-id> [--source-kind <kind>] [--as <new-save.zip>] --json"
       },
       "command_id": "saves.clone",
       "contract_path": "contracts/command/factorio/saves.clone.v1.toml",
@@ -8403,6 +8493,27 @@
           "request_field": "save",
           "required": true,
           "type": "string"
+        },
+        {
+          "choices": [
+            "live",
+            "owned_backup"
+          ],
+          "default": null,
+          "name": "source_kind",
+          "repeatable": false,
+          "request_field": "source_kind",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "destination_save",
+          "repeatable": false,
+          "request_field": "destination_save",
+          "required": false,
+          "type": "string"
         }
       ],
       "request_schema": "contracts/schema/command/saves.clone.request.v1.schema.json",
@@ -8423,6 +8534,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves diff <left-save> <right-save> --instance <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8521,6 +8633,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves index --instance <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8592,6 +8705,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves inspect <save> --instance <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8677,6 +8791,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves list --instance <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8748,6 +8863,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves retention apply --instance <instance-id> [retention options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8867,6 +8983,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves retention plan --instance <instance-id> [retention options] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -8984,6 +9101,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman saves verify <save> --instance <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9070,6 +9188,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman servers create <name> --instance <id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9166,6 +9285,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman servers diff <left-server-id> <right-server-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9250,6 +9370,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman servers export <server-id> <bundle.zip> [--save <save>] [--include-save] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9354,6 +9475,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman servers inspect <server-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9426,6 +9548,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman servers list --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9482,6 +9605,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman servers plan <server-id> [--save <save>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9563,6 +9687,7 @@
       "availability_refusal_code": "execution_not_enabled",
       "binding": "flb.factorio",
       "cli": "facman servers rcon <server-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9636,6 +9761,7 @@
       "availability_refusal_code": "execution_not_enabled",
       "binding": "flb.factorio",
       "cli": "facman servers start <server-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9709,6 +9835,7 @@
       "availability_refusal_code": "execution_not_enabled",
       "binding": "flb.factorio",
       "cli": "facman servers stop <server-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9781,6 +9908,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman servers validate <server-id> [--save <save>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -9861,6 +9989,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "internal canonical setup route",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": true,
         "options": [],
@@ -9984,6 +10113,7 @@
       "availability_refusal_code": "setup_unavailable",
       "binding": "flb.factorio",
       "cli": "facman setup preview --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10039,6 +10169,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman snapshots create <instance-id> <snapshot-id> [--save <name>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10134,6 +10265,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman snapshots diff <instance-id> <left-id> <right-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10231,6 +10363,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman snapshots inspect <instance-id> <snapshot-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10315,6 +10448,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman snapshots list <instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10386,6 +10520,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman snapshots restore <snapshot-path> <target-instance-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10472,6 +10607,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman snapshots retention apply <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10591,6 +10727,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman snapshots retention plan <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10708,6 +10845,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman snapshots verify <instance-id> <snapshot-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10792,6 +10930,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman templates inspect <template-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10863,6 +11002,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman templates list --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10919,6 +11059,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman templates validate <template-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -10990,6 +11131,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "internal canonical frontend utility route",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": true,
         "options": [],
@@ -11114,6 +11256,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace migration apply --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -11265,6 +11408,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace migration inspect --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -11323,6 +11467,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace migration operation inspect <operation-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -11401,6 +11546,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace migration plan --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -11459,6 +11605,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace migration recover <operation-id> --expected-revision <sha256> --confirmation explicit --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -11607,6 +11754,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace migration resume <operation-id> --expected-revision <sha256> --confirmation explicit --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -11755,6 +11903,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace migration rollback <operation-id> --expected-revision <sha256> --confirmation explicit --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -11902,6 +12051,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace paths --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -11958,6 +12108,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace recovery apply <transaction-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -12035,6 +12186,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace recovery inspect --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -12092,6 +12244,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace recovery plan <transaction-id> --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -12164,6 +12317,7 @@
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace status --json",
+      "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -12218,6 +12372,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "dd48bf7f0ef82aaaed97ab867aff6b47c594b4f5bfb126fa6d278a7e1c23a63d",
+  "source_digest": "4bcda469d19c9dd77b541693e088bb408ac1ed9f84e9ab416e64cc1232bd60b9",
   "version": "facman-0.1.0-alpha.6"
 }

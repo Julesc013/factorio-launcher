@@ -979,11 +979,14 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         request.payload = std::move(typed); return true;
     }
     case CommandId::saves_clone: {
-        if (!validate_fields(payload, {"source_instance_id", "target_instance_id", "save"}, detail)) return false;
+        if (!validate_fields(payload, {"source_instance_id", "target_instance_id", "save", "source_kind", "destination_save"}, detail)) return false;
         CloneSaveRequest typed;
         if (!required_string(payload, "source_instance_id", typed.source_instance_id, detail) ||
             !required_string(payload, "target_instance_id", typed.target_instance_id, detail) ||
-            !required_string(payload, "save", typed.save, detail)) return false;
+            !required_string(payload, "save", typed.save, detail) ||
+            !optional_string(payload, "source_kind", typed.source_kind, detail) ||
+            !optional_string(payload, "destination_save", typed.destination_save, detail)) return false;
+        if (typed.source_kind.empty()) typed.source_kind = "live";
         request.payload = std::move(typed); return true;
     }
     case CommandId::instance_export: {

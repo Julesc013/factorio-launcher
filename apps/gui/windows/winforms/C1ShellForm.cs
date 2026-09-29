@@ -345,7 +345,7 @@ namespace FacMan.WinForms
             page.Controls.Add(layout);
             layout.Controls.Add(Heading(
                 "Saves",
-                "Discover, inspect, associate, and back up saves for the selected instance."), 0, 0);
+                "Discover, inspect, associate, back up, and restore saves for the selected instance."), 0, 0);
             savesSummary = BodyLabel("Save inventory summary");
             layout.Controls.Add(savesSummary, 0, 1);
             savesList = new ListView();
@@ -372,6 +372,8 @@ namespace FacMan.WinForms
                 "&Associate", "Associate selected local save", "saves", "saves.associate"));
             actions.Controls.Add(ScopedActionButton(
                 "&Back up", "Back up selected local save", "saves", "saves.backup"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Restore", "Restore a verified owned backup to a new save", "saves", "saves.restore"));
             layout.Controls.Add(actions, 0, 3);
             return page;
         }

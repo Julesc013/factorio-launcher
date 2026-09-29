@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -119,6 +121,114 @@ class PackageContractTckTests(unittest.TestCase):
             cli.parent.mkdir(parents=True)
             cli.write_bytes(b"cli")
             macos_self_setup.validate_app_payload(app)
+
+    def test_macos_installer_version_tracks_release_order_and_package_revision(self) -> None:
+        version = macos_self_setup.native_package_version
+        ordered = [
+            version("0.1.0-alpha.5", "0"),
+            version("0.1.0-alpha.6", "0"),
+            version("0.1.0-beta.1", "0"),
+            version("0.1.0-rc.1", "0"),
+            version("0.1.0", "0"),
+            version("0.1.1-alpha.1", "0"),
+        ]
+        numeric = [tuple(map(int, item.split("."))) for item in ordered]
+        self.assertEqual(numeric, sorted(numeric))
+        self.assertEqual(len(numeric), len(set(numeric)))
+        self.assertEqual("0.1.10600", version("0.1.0-alpha.6", "0"))
+        self.assertEqual("0.1.10601", version("0.1.0-alpha.6", "1"))
+        for product, revision in (
+            ("0.1.0-preview.1", "0"),
+            ("0.1.0-alpha.100", "0"),
+            ("0.1.0", "100"),
+            ("0.1.0", "01"),
+        ):
+            with self.subTest(product=product, revision=revision), self.assertRaises(ValueError):
+                version(product, revision)
+
+    def test_macos_installer_package_info_matches_canonical_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            info = root / "PackageInfo"
+            evidence = root / "evidence.json"
+            record = {
+                "schema": "facman.macos_self_setup.v1",
+                "version": "0.1.0-alpha.6",
+                "package_version": "0.1.10600",
+                "setup": {"identifier": macos_self_setup.PACKAGE_IDENTIFIER},
+            }
+            evidence.write_text(json.dumps(record), encoding="utf-8")
+            info.write_text(
+                '<pkg-info identifier="io.github.julesc013.facman" version="0.1.10600"/>',
+                encoding="utf-8",
+            )
+            with patch.object(
+                macos_self_setup,
+                "version_truth",
+                return_value={"semver": "0.1.0-alpha.6", "package_revision": "0"},
+            ):
+                macos_self_setup.verify_package_info(info, evidence)
+                info.write_text('<pkg-info identifier="io.github.julesc013.facman" version="0.1.0"/>', encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "Installer package identity"):
+                    macos_self_setup.verify_package_info(info, evidence)
+
+    def test_macos_setup_builder_checks_its_produced_package_info(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = root / "FacMan.app"
+            for relative in ("Contents/MacOS/FacMan", "Contents/Helpers/facman"):
+                executable = app / relative
+                executable.parent.mkdir(parents=True, exist_ok=True)
+                executable.write_bytes(b"facman")
+            observed: list[str] = []
+            native_version = "0.1.10600"
+
+            def fake_run(arguments: list[str], **kwargs: object) -> None:
+                observed.append(arguments[0])
+                if arguments[0] == "pkgbuild":
+                    Path(arguments[-1]).write_bytes(b"package")
+                elif arguments[0] == "xar":
+                    (Path(str(kwargs["cwd"])) / "PackageInfo").write_text(
+                        f'<pkg-info identifier="io.github.julesc013.facman" version="{native_version}"/>',
+                        encoding="utf-8",
+                    )
+
+            with (
+                patch.object(macos_self_setup, "version_truth", return_value={
+                    "semver": "0.1.0-alpha.6", "package_revision": "0"}),
+                patch.object(macos_self_setup, "git", return_value="a" * 40),
+                patch.object(macos_self_setup.subprocess, "run", side_effect=fake_run),
+            ):
+                record = macos_self_setup.build(app, root / "out", root / "evidence.json")
+                self.assertEqual(["pkgbuild", "xar"], observed)
+                self.assertEqual("0.1.10600", record["package_version"])
+                native_version = "0.1.0"
+                with self.assertRaisesRegex(ValueError, "Installer package identity"):
+                    macos_self_setup.build(app, root / "out", root / "evidence.json")
+                self.assertFalse((root / "out/FacMan-0.1.0-alpha.6-macos-x64-setup.pkg").exists())
+
+    @unittest.skipUnless(sys.platform == "darwin", "not_applicable:native pkgbuild is macOS-only")
+    def test_macos_setup_builder_checks_real_pkgbuild_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = root / "FacMan.app"
+            for relative in ("Contents/MacOS/FacMan", "Contents/Helpers/facman"):
+                executable = app / relative
+                executable.parent.mkdir(parents=True, exist_ok=True)
+                executable.write_bytes(b"#!/bin/sh\nexit 0\n")
+                executable.chmod(0o755)
+            (app / "Contents/Info.plist").write_text(
+                '<?xml version="1.0"?><plist version="1.0"><dict>'
+                '<key>CFBundleIdentifier</key><string>io.github.julesc013.facman</string>'
+                '<key>CFBundleExecutable</key><string>FacMan</string>'
+                '<key>CFBundlePackageType</key><string>APPL</string>'
+                '<key>CFBundleVersion</key><string>0.1.0</string>'
+                '</dict></plist>',
+                encoding="utf-8",
+            )
+            record = macos_self_setup.build(app, root / "out", root / "evidence.json")
+            self.assertEqual("0.1.10600", record["package_version"])
+            self.assertTrue((root / "out" / record["setup"]["filename"]).is_file())
 
     def test_macos_product_builder_places_cli_in_helpers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

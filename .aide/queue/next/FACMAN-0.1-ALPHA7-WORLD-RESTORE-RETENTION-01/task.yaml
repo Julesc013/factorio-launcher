@@ -12,10 +12,18 @@ objective: "Restore and import selected world bundles using validated plans, ato
 source_bundles:
   - "F10"
 allowed_paths:
+  - "apps/**"
+  - "content/factorio/strings/en-US.toml"
+  - "README.md"
+  - ".aide/memory/project-state.md"
+  - ".aide/memory/project-state.v2.json"
+  - "release/index/current_state.v1.toml"
+  - "tools/codegen/generate_metadata.py"
   - "runtime/**"
   - "contracts/**"
   - "tests/**"
   - "docs/**"
+  - "tools/save_index_check.py"
   - ".aide/queue/next/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/**"
 forbidden_paths:
   - ".git/**"

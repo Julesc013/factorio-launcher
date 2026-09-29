@@ -7,10 +7,13 @@
 #include "fl_archive_platform.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
+#include "fl_system_services.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
+#include "fl_workspace_root_authority.h"
 #include "flb_factorio_version_family.h"
 
 #include <algorithm>
@@ -20,9 +23,11 @@
 #include <ctime>
 #include <iomanip>
 #include <map>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <system_error>
+#include <thread>
 #include <vector>
 
 namespace facman::factorio::saves::index {
@@ -71,6 +76,7 @@ struct SaveRecord {
     std::uint64_t expanded_bytes = 0;
     std::vector<std::string> member_summary;
     std::string backup_sidecar_status;
+    bool owned_backup = false;
     Association association;
 };
 
@@ -90,6 +96,13 @@ facman::core::Result<T> failure(
 std::string path_text(const fs::path& path)
 {
     return facman::platform::path_to_utf8(path.lexically_normal());
+}
+
+std::string backup_manifest_path_text(const fs::path& path)
+{
+    std::string value = path_text(path);
+    std::replace(value.begin(), value.end(), '\\', '/');
+    return value;
 }
 
 std::string utc_now()
@@ -129,6 +142,18 @@ facman::core::Result<Instance> load_instance(const fs::path& workspace, const st
     auto record = facman::workspace::InstanceRepository(facman::workspace::WorkspaceLayout(workspace)).load(parsed.value());
     if (!record) return failure<Instance>("unknown_instance", "Instance is not registered");
     return facman::core::Result<Instance>::success({record.take_value()});
+}
+
+std::optional<fs::path> save_write_lock(const Instance& instance)
+{
+    for (const char* name : {"run.lock", "save.write.lock"}) {
+        const fs::path path = instance.record.root / "locks" / name;
+        std::error_code error;
+        const auto status = fs::symlink_status(path, error);
+        if (error == std::errc::no_such_file_or_directory) continue;
+        if (error || status.type() != fs::file_type::not_found) return path;
+    }
+    return std::nullopt;
 }
 
 facman::core::Result<std::string> stable_text(const fs::path& path)
@@ -241,7 +266,8 @@ std::string backup_sidecar_status(const Instance& instance, const std::string& s
     return error ? "unreadable" : "absent";
 }
 
-facman::core::Result<SaveRecord> read_save(const Instance& instance, const fs::path& path)
+facman::core::Result<SaveRecord> read_save(
+    const Instance& instance, const fs::path& path, bool include_association = true)
 {
     SaveRecord record;
     record.path = path;
@@ -272,9 +298,88 @@ facman::core::Result<SaveRecord> read_save(const Instance& instance, const fs::p
     if (!confirmed || confirmed.value() != record.sha256 || confirmed_size != record.size ||
         fs::last_write_time(path, error) != record.mtime || error) return failure<SaveRecord>(
             "save_source_changed", "Save changed during structural inspection", path);
-    record.association = load_association(instance, record.file_name);
-    record.backup_sidecar_status = backup_sidecar_status(instance, record.name);
+    if (include_association) {
+        record.association = load_association(instance, record.file_name);
+        record.backup_sidecar_status = backup_sidecar_status(instance, record.name);
+    }
     return facman::core::Result<SaveRecord>::success(std::move(record));
+}
+
+bool proven_owned_backup(
+    const Instance& instance,
+    const SaveRecord& record,
+    const std::string& workspace_id)
+{
+    if (!record.archive_structurally_valid || !record.factorio_save_recognized) return false;
+    const fs::path manifest = fs::u8path(path_text(record.path) + ".manifest.json");
+    auto text = stable_text(manifest);
+    if (!text) return false;
+    auto parsed = json::parse(text.value());
+    if (!parsed || !parsed.value().is_object()) return false;
+    const json::Value& value = parsed.value();
+    const json::Value* source_size = value.find("source_size");
+    bool size_matches = false;
+    if (source_size != nullptr) {
+        auto parsed_size = source_size->unsigned_integer_value();
+        size_matches = parsed_size && parsed_size.value() == record.size;
+    }
+    const std::string save = object_string(value, "save");
+    const fs::path save_name = fs::u8path(save);
+    return object_string(value, "schema") == "factorio.save_backup.v1" &&
+        object_string(value, "command") == "saves.backup" &&
+        object_string(value, "workspace_id") == workspace_id &&
+        object_string(value, "instance_id") == instance.record.id.str() &&
+        !save.empty() && save_name == save_name.filename() &&
+        save_name.extension() == ".zip" &&
+        object_string(value, "source_path") == backup_manifest_path_text(instance.record.root / "saves" / save_name) &&
+        object_string(value, "destination_path") == backup_manifest_path_text(record.path) &&
+        object_string(value, "path") == backup_manifest_path_text(record.path) &&
+        object_string(value, "manifest_path") == backup_manifest_path_text(manifest) &&
+        object_string(value, "sha256") == record.sha256 &&
+        size_matches &&
+        object_string(value, "consistency_policy") == "pinned_source_two_pass_sha256_v1";
+}
+
+facman::core::Result<std::vector<SaveRecord>> backup_records(
+    const fs::path& workspace, const std::string& instance_id)
+{
+    auto instance = load_instance(workspace, instance_id);
+    if (!instance) return failure<std::vector<SaveRecord>>(instance.error().code, instance.error().message);
+    auto authority = facman::workspace::inspect_workspace_root(workspace);
+    if (!authority || authority.value().state != facman::workspace::WorkspaceRootState::facman_owned ||
+        !authority.value().mutation_allowed || !authority.value().root_authority) return failure<std::vector<SaveRecord>>(
+            "save_backup_root_unowned", "Backup retention requires an owned workspace", workspace);
+    const fs::path root = instance.value().record.root / "backups";
+    if (!authority.value().root_authority->validate_descendant(root, true).ok()) return failure<std::vector<SaveRecord>>(
+        "save_backup_root_unowned", "Backup root is outside the owned workspace", root);
+    std::error_code error;
+    const bool exists = fs::exists(root, error);
+    if (error) return failure<std::vector<SaveRecord>>("save_backup_index_failed", error.message(), root);
+    if (!exists) return facman::core::Result<std::vector<SaveRecord>>::success({});
+    std::string link_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(root, link_detail)) return failure<std::vector<SaveRecord>>(
+        "save_backup_root_unsafe", link_detail, root);
+    std::vector<fs::path> paths;
+    for (fs::directory_iterator item(root, error), end; item != end && !error; item.increment(error)) {
+        if (item->is_regular_file(error) && item->path().extension() == ".zip") paths.push_back(item->path());
+    }
+    if (error) return failure<std::vector<SaveRecord>>("save_backup_index_failed", error.message(), root);
+    if (paths.size() > kMaximumSaves) return failure<std::vector<SaveRecord>>(
+        "save_backup_index_budget_exceeded", "Backup count exceeds the index budget", root);
+    std::sort(paths.begin(), paths.end());
+    std::vector<SaveRecord> output;
+    for (const fs::path& path : paths) {
+        auto record = read_save(instance.value(), path, false);
+        if (!record) return failure<std::vector<SaveRecord>>(record.error().code, record.error().message, path);
+        record.value().owned_backup = proven_owned_backup(
+            instance.value(), record.value(), authority.value().workspace_id);
+        output.push_back(record.take_value());
+    }
+    std::sort(output.begin(), output.end(), [](const SaveRecord& left, const SaveRecord& right) {
+        if (left.mtime != right.mtime) return left.mtime > right.mtime;
+        return left.file_name < right.file_name;
+    });
+    return facman::core::Result<std::vector<SaveRecord>>::success(std::move(output));
 }
 
 facman::core::Result<std::vector<SaveRecord>> records(const fs::path& workspace, const std::string& instance_id)
@@ -433,12 +538,15 @@ std::string sidecar_json(const Instance& instance, const SaveRecord& save, const
 std::set<std::string> retention_candidates(const std::vector<SaveRecord>& values, const Request& request)
 {
     std::set<std::string> protected_names;
-    for (std::size_t index = 0; index < values.size() && index < request.keep_last; ++index) {
-        protected_names.insert(values[index].file_name);
+    std::size_t kept = 0;
+    for (const SaveRecord& record : values) {
+        if (!record.owned_backup) continue;
+        if (kept++ < request.keep_last) protected_names.insert(record.file_name);
     }
     std::set<std::string> daily;
     std::set<std::string> weekly;
     for (const SaveRecord& record : values) {
+        if (!record.owned_backup) continue;
         const std::string day = record.mtime_utc.substr(0, std::min<std::size_t>(10, record.mtime_utc.size()));
         const auto days = std::chrono::duration_cast<std::chrono::hours>(
             fs::file_time_type::clock::now() - record.mtime).count() / 24;
@@ -447,9 +555,10 @@ std::set<std::string> retention_candidates(const std::vector<SaveRecord>& values
         if (weekly.size() < request.keep_weekly && weekly.insert(week).second) protected_names.insert(record.file_name);
     }
     std::uint64_t remaining = 0;
-    for (const auto& value : values) remaining += value.size;
+    for (const auto& value : values) if (value.owned_backup) remaining += value.size;
     std::set<std::string> output;
     for (auto iterator = values.rbegin(); iterator != values.rend(); ++iterator) {
+        if (!iterator->owned_backup) continue;
         if (protected_names.count(iterator->file_name) != 0) continue;
         const auto age_hours = std::chrono::duration_cast<std::chrono::hours>(
             fs::file_time_type::clock::now() - iterator->mtime).count();
@@ -476,6 +585,7 @@ std::string retention_report(
         item.add_string("sha256", record.sha256);
         (void)item.add_unsigned_integer("size", record.size);
         item.add_string("mtime", record.mtime_utc);
+        item.add_bool("proven_owned_backup", record.owned_backup);
         item.add_string("action", candidates.count(record.file_name) == 0 ? "keep" : "move_to_trash");
         saves.add_object(item);
     }
@@ -502,6 +612,53 @@ std::string retention_report(
 }
 
 } // namespace
+
+facman::core::Result<OwnedBackup> resolve_owned_backup(
+    const fs::path& workspace,
+    const std::string& instance_id,
+    const std::string& backup_name)
+{
+    const fs::path name = fs::u8path(backup_name);
+    if (backup_name.empty() || backup_name.size() > 255U ||
+        backup_name.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-") != std::string::npos ||
+        name != name.filename() || name.extension() != ".zip") return failure<OwnedBackup>(
+        "save_backup_name_invalid", "Backup must be an exact .zip filename");
+    auto instance = load_instance(workspace, instance_id);
+    if (!instance) return failure<OwnedBackup>(instance.error().code, instance.error().message);
+    auto authority = facman::workspace::inspect_workspace_root(workspace);
+    if (!authority || authority.value().state != facman::workspace::WorkspaceRootState::facman_owned ||
+        !authority.value().mutation_allowed || !authority.value().root_authority) return failure<OwnedBackup>(
+            "save_backup_root_unowned", "Backup restore requires an owned workspace", workspace);
+    const fs::path root = instance.value().record.root / "backups";
+    std::string link_detail;
+    if (!authority.value().root_authority->validate_descendant(root, true).ok() ||
+        facman::base::path_crosses_link_or_reparse_point(root, link_detail)) return failure<OwnedBackup>(
+            "save_backup_root_unsafe", "Backup root is outside owned storage or linked", root);
+    const fs::path path = root / name;
+    std::error_code error;
+    if (!fs::exists(path, error) || error) return failure<OwnedBackup>(
+        "save_backup_not_found", "Owned backup is not present", path);
+    auto record = read_save(instance.value(), path, false);
+    if (!record) return failure<OwnedBackup>(record.error().code, record.error().message, path);
+    if (!proven_owned_backup(instance.value(), record.value(), authority.value().workspace_id)) return failure<OwnedBackup>(
+        "save_backup_unproven", "Backup manifest or content identity is not proven", path);
+    {
+        const fs::path manifest = fs::u8path(path_text(path) + ".manifest.json");
+        auto sidecar = stable_text(manifest);
+        auto parsed = sidecar ? json::parse(sidecar.value()) : facman::core::Result<json::Value>::failure(
+            {"save_sidecar_read_failed", "Backup manifest is unreadable", path_text(manifest)});
+        if (!parsed || !parsed.value().is_object()) return failure<OwnedBackup>(
+            "save_backup_unproven", "Backup manifest cannot be decoded", manifest);
+        const std::string original = object_string(parsed.value(), "save");
+        const fs::path original_name = fs::u8path(original);
+        std::string detail;
+        if (!facman::base::validate_identifier(original_name.stem().string(), detail) ||
+            original_name != original_name.filename() ||
+            original_name.extension() != ".zip") return failure<OwnedBackup>(
+            "save_backup_unproven", "Backup source save name is invalid", manifest);
+        return facman::core::Result<OwnedBackup>::success({path, original, record.value().sha256, record.value().size});
+    }
+}
 
 facman::core::Result<std::string> list(const fs::path& workspace, const Request& request)
 {
@@ -599,7 +756,7 @@ facman::core::Result<std::string> diff(const fs::path& workspace, const Request&
 
 facman::core::Result<std::string> retention_plan(const fs::path& workspace, const Request& request)
 {
-    auto values = records(workspace, request.instance_id);
+    auto values = backup_records(workspace, request.instance_id);
     if (!values) return failure<std::string>(values.error().code, values.error().message, fs::u8path(values.error().path));
     const auto candidates = retention_candidates(values.value(), request);
     return facman::core::Result<std::string>::success(retention_report(
@@ -612,39 +769,173 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
         "save_transaction_recovery_required", "A workspace transaction requires recovery", workspace,
         facman::core::OutcomeKind::recovery_required);
     auto instance = load_instance(workspace, request.instance_id);
-    auto values = records(workspace, request.instance_id);
+    auto values = backup_records(workspace, request.instance_id);
     if (!instance || !values) return failure<std::string>("unknown_instance", "Instance or saves could not be loaded");
+    auto authority = facman::workspace::inspect_workspace_root(workspace);
+    if (!authority || authority.value().state != facman::workspace::WorkspaceRootState::facman_owned ||
+        !authority.value().mutation_allowed || !authority.value().root_authority) return failure<std::string>(
+            "save_backup_root_unowned", "Backup retention requires an owned workspace", workspace);
+    if (const auto lock = save_write_lock(instance.value())) return failure<std::string>(
+        "save_locked", "Save retention conflicts with an active instance", *lock);
     const auto candidates = retention_candidates(values.value(), request);
     if (candidates.empty()) return facman::core::Result<std::string>::success(retention_report(
         "saves.retention.apply", request, values.value(), candidates, false));
     tx::Record transaction;
     transaction.command_id = "saves.retention.apply";
     for (const auto& record : values.value()) if (candidates.count(record.file_name) != 0) {
+        const fs::path manifest = fs::u8path(path_text(record.path) + ".manifest.json");
+        auto manifest_text = stable_text(manifest);
+        auto backup_name = tx::RelativePath::parse(record.file_name);
+        auto manifest_name = tx::RelativePath::parse(record.file_name + ".manifest.json");
+        auto backup_digest = facman::core::Sha256Digest::parse(record.sha256);
+        if (!record.owned_backup || !manifest_text || !backup_name || !manifest_name || !backup_digest ||
+            !proven_owned_backup(instance.value(), record, authority.value().workspace_id)) return failure<std::string>(
+                "save_backup_identity_changed", "Backup identity changed before retention was journaled", record.path);
+        const std::string manifest_sha = facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(manifest_text.value().data()), manifest_text.value().size());
+        auto manifest_digest = facman::core::Sha256Digest::parse(manifest_sha);
+        if (!manifest_digest) return failure<std::string>(
+            "save_backup_identity_changed", "Backup manifest digest is invalid", manifest);
         transaction.sources.push_back(record.path);
-        if (record.association.present) transaction.sources.push_back(record.association.path);
+        transaction.sources.push_back(manifest);
+        transaction.expected_files.push_back({backup_name.take_value(), backup_digest.take_value(), record.size});
+        transaction.expected_files.push_back({manifest_name.take_value(), manifest_digest.take_value(),
+            static_cast<std::uint64_t>(manifest_text.value().size())});
     }
-    transaction.commit_strategy = "move_save_and_sidecar_to_owned_trash_no_delete";
+    transaction.commit_strategy = "move_owned_backup_and_manifest_to_trash_no_delete";
+    facman::platform::RandomIdGenerator random;
+    transaction.transaction_id = random.next("tx");
+    transaction.workspace_id = authority.value().workspace_id;
+    transaction.target = workspace / "trash" / "saves" / fs::u8path(
+        transaction.transaction_id + "-" + request.instance_id);
+    transaction.operation_context = tx::retention_selection_digest(transaction);
+    struct ScopedRetentionLock {
+        facman::base::StableLocalLock lock;
+        ~ScopedRetentionLock()
+        {
+            if (lock.open()) {
+                std::string ignored;
+                (void)lock.remove_exact(ignored);
+            }
+        }
+    } operation_lock;
+    std::error_code journal_error;
+    fs::create_directories(workspace / "transactions", journal_error);
+    if (journal_error) return failure<std::string>(
+        "save_transaction_failed", "Retention journal directory could not be prepared", workspace / "transactions");
+    const auto lock_result = operation_lock.lock.create(
+        tx::recovery_lock_path(workspace, transaction.transaction_id));
+    if (!lock_result.acquired()) return failure<std::string>(
+        "save_transaction_failed", "Retention operation lock could not be acquired",
+        tx::recovery_lock_path(workspace, transaction.transaction_id));
+    json::ObjectBuilder lock_document;
+    lock_document.add_string("schema", "facman.recovery_lock.v1");
+    lock_document.add_string("identity", operation_lock.lock.identity_text());
+    std::string lock_detail;
+    if (!operation_lock.lock.write_text(lock_document.serialize() + "\n", lock_detail)) return failure<std::string>(
+        "save_transaction_failed", "Retention operation lock could not be persisted",
+        tx::recovery_lock_path(workspace, transaction.transaction_id));
     auto started = tx::TransactionSession::begin(workspace, std::move(transaction));
     if (!started) return failure<std::string>("save_transaction_failed", started.error().message);
     tx::TransactionSession session = started.take_value();
-    const fs::path trash = workspace / "trash" / "saves" / fs::u8path(
-        session.record().transaction_id + "-" + request.instance_id);
-    session.record().target = trash;
+    const fs::path trash = session.record().target;
+    const char* post_begin_fault = std::getenv("FACMAN_SAVE_RETENTION_FAULT");
+    if (post_begin_fault != nullptr && std::string(post_begin_fault) == "process_exit_after_begin")
+        std::_Exit(93);
     if (!session.validated("retention_policy_and_save_identities_validated") || !session.planned("owned_trash_moves_planned") ||
         !session.staging("owned_trash_prepared")) return failure<std::string>("save_transaction_failed", session.detail());
-    std::error_code error;
-    fs::create_directories(trash, error);
-    if (error || !session.staged("retention_candidates_selected") || !session.verified("save_hashes_revalidated") ||
+    const char* pre_trash_fault = std::getenv("FACMAN_SAVE_RETENTION_FAULT");
+    if (pre_trash_fault != nullptr && std::string(pre_trash_fault) == "process_exit_before_trash")
+        std::_Exit(92);
+    auto open_or_create = [](
+        const facman::platform::StableDirectoryObject& parent,
+        const fs::path& leaf,
+        facman::platform::StableDirectoryObject& child) {
+        const auto opened = parent.open_child_directory_no_follow_for_relative_writes(leaf, child);
+        return opened.ok() || parent.create_child_directory_exclusive(leaf, child).ok();
+    };
+    facman::platform::StableDirectoryObject trash_root, saves_trash, operation_trash;
+    const fs::path operation_leaf = trash.filename();
+    if (!open_or_create(*authority.value().root_authority, "trash", trash_root) ||
+        !open_or_create(trash_root, "saves", saves_trash) ||
+        !saves_trash.create_child_directory_exclusive(operation_leaf, operation_trash).ok()) {
+        session.failed("owned trash directory could not be created without following links");
+        return failure<std::string>("save_retention_failed", "Owned trash directory is unsafe", trash);
+    }
+    session.record().effect_parent_identity = tx::directory_effect_identity(saves_trash);
+    if (!session.checkpoint("owned_trash_parent_bound")) {
+        session.failed(session.detail());
+        return failure<std::string>("save_retention_failed", session.detail(), trash);
+    }
+    const std::string selection_marker = session.record().operation_context + "\n";
+    facman::platform::DurableOutputFile marker_output;
+    const auto marker_created = operation_trash.create_child_file_exclusive(
+        ".facman-retention-selection.v1", selection_marker.size(), marker_output);
+    if (marker_created.ok()) {
+        const char* marker_fault = std::getenv("FACMAN_SAVE_RETENTION_FAULT");
+        if (marker_fault != nullptr && std::string(marker_fault) == "process_exit_after_marker_create")
+            std::_Exit(94);
+    }
+    if (!marker_created.ok() ||
+        marker_output.write_at(0, selection_marker.data(), selection_marker.size()) != selection_marker.size() ||
+        !marker_output.flush_file_and_parent().ok() ||
+        !session.checkpoint("retention_selection_marker_durable")) {
+        session.failed(marker_created.ok() ? session.detail() : marker_created.detail);
+        return failure<std::string>("save_retention_failed", "Retention selection could not be durably bound", trash);
+    }
+    if (!session.staged("retention_candidates_selected") ||
+        !session.verified("save_hashes_revalidated") ||
         !session.committing("save_retention_moves_started")) {
-        session.failed(error ? error.message() : session.detail());
-        return failure<std::string>("save_retention_failed", error ? error.message() : session.detail(), trash);
+        session.failed(session.detail());
+        return failure<std::string>("save_retention_failed", session.detail(), trash);
+    }
+    const char* apply_pause = std::getenv("FACMAN_TEST_RETENTION_APPLY_PAUSE");
+    if (apply_pause != nullptr && std::string(apply_pause) == "1") {
+        std::string pause_detail;
+        if (!facman::base::write_text_new_atomic(
+                workspace / ".facman-test-retention-apply-paused", "ready\n", pause_detail)) {
+            session.failed(pause_detail);
+            return failure<std::string>("save_retention_failed", pause_detail, trash);
+        }
+        bool released = false;
+        for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+            std::error_code error;
+            if (fs::exists(workspace / ".facman-test-retention-apply-release", error) && !error) {
+                released = true;
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        if (!released) {
+            session.failed("retention apply test pause timed out");
+            return failure<std::string>("save_retention_failed", session.detail(), trash);
+        }
     }
     for (const auto& record : values.value()) {
         if (candidates.count(record.file_name) == 0) continue;
+        if (const auto lock = save_write_lock(instance.value())) {
+            session.failed("instance run or save-write lock appeared during retention");
+            return failure<std::string>(
+                "save_transaction_recovery_required", "Save retention stopped when an instance lock appeared",
+                *lock, facman::core::OutcomeKind::recovery_required);
+        }
         std::uint64_t size = 0;
         auto digest = stable_sha256(record.path, size);
         if (!digest || digest.value() != record.sha256 || size != record.size) return failure<std::string>(
             "save_source_changed", "Save changed before retention apply", record.path);
+        const fs::path manifest = fs::u8path(path_text(record.path) + ".manifest.json");
+        auto manifest_before = stable_text(manifest);
+        if (!facman::workspace::revalidate_workspace_root(authority.value()) ||
+            !operation_trash.revalidate().ok() ||
+            !authority.value().root_authority->validate_descendant(record.path).ok() ||
+            !authority.value().root_authority->validate_descendant(manifest).ok() ||
+            !manifest_before ||
+            !proven_owned_backup(instance.value(), record, authority.value().workspace_id)) {
+            session.failed("backup ownership or manifest changed before retention move");
+            return failure<std::string>(
+                "save_transaction_recovery_required", "Backup ownership changed before retention move",
+                manifest, facman::core::OutcomeKind::recovery_required);
+        }
         const char* fault = std::getenv("FACMAN_SAVE_RETENTION_FAULT");
         if (fault != nullptr && std::string(fault) == "target_substitution") {
             const fs::path preserved = record.path.parent_path() /
@@ -670,12 +961,27 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
                 target,
                 facman::core::OutcomeKind::recovery_required);
         }
-        if (status.ok() && record.association.present) status = facman::platform::commit_no_replace(
-            record.association.path, trash / record.association.path.filename());
+        if (status.ok() && fault != nullptr && std::string(fault) == "after_backup_move") {
+            session.failed("interrupted after backup move before manifest move");
+            return failure<std::string>(
+                "save_transaction_recovery_required", "Backup move interrupted before manifest move",
+                target, facman::core::OutcomeKind::recovery_required);
+        }
+        if (status.ok() && fault != nullptr && std::string(fault) == "process_exit_after_backup_move")
+            std::_Exit(91);
+        if (status.ok()) status = facman::platform::commit_no_replace(
+            manifest, trash / manifest.filename());
         if (!status.ok()) {
             session.failed(status.detail);
             return failure<std::string>("save_transaction_recovery_required", status.detail, trash,
                 facman::core::OutcomeKind::recovery_required);
+        }
+        auto manifest_after = stable_text(trash / manifest.filename());
+        if (!manifest_after || manifest_after.value() != manifest_before.value()) {
+            session.failed("retained backup manifest changed during move");
+            return failure<std::string>(
+                "save_transaction_recovery_required", "Retained backup manifest identity changed",
+                trash / manifest.filename(), facman::core::OutcomeKind::recovery_required);
         }
     }
     if (!session.committed("save_retention_trash_moves_committed") || !session.complete()) return failure<std::string>(

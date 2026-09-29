@@ -10,7 +10,7 @@ import argparse
 import gzip
 import hashlib
 import json
-import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -20,10 +20,45 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKER = "__FACMAN_PAYLOAD_BELOW__"
-ALPHA5_PREDECESSOR_SHA256 = (
-    "8f5b6cf5c3b718504d894a28e74cb6bdfc9a9c95cacfd038d59df96ec74f38a8",
-    "7529b1cc11c9970f13369dd4d38a70456f43c97a31eb9a0a90dea17728d58bd5",
+PREDECESSORS = ROOT / "tools/package/linux_setup_predecessors.v1.toml"
+VERSION_PATTERN = re.compile(
+    r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+    r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
 )
+SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
+
+
+def admitted_predecessors(version: str, catalog: Path = PREDECESSORS) -> tuple[tuple[str, str], ...]:
+    if VERSION_PATTERN.fullmatch(version) is None:
+        raise ValueError(f"unsupported Linux Setup version: {version!r}")
+    with catalog.open("rb") as stream:
+        document = tomllib.load(stream)
+    if set(document) != {"schema", "predecessor"} or document["schema"] != "facman.linux_setup_predecessors.v1":
+        raise ValueError("invalid Linux Setup predecessor catalog schema")
+    rows = document["predecessor"]
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("Linux Setup predecessor catalog is empty")
+    entries: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"target_version", "version", "sha256", "qualification"}:
+            raise ValueError("invalid Linux Setup predecessor record")
+        target, old_version = row["target_version"], row["version"]
+        digest, qualification = row["sha256"], row["qualification"]
+        if (not isinstance(target, str) or not isinstance(old_version, str) or
+                not isinstance(digest, str) or
+                not isinstance(qualification, str) or not qualification.strip() or
+                SHA256_PATTERN.fullmatch(digest) is None or
+                VERSION_PATTERN.fullmatch(target) is None or
+                VERSION_PATTERN.fullmatch(old_version) is None or
+                target == old_version or (target, digest) in seen):
+            raise ValueError("unqualified or duplicate Linux Setup predecessor record")
+        seen.add((target, digest))
+        if target == version:
+            entries.append((old_version, digest))
+    return tuple(entries)
 
 
 def sha256(path: Path) -> str:
@@ -46,16 +81,18 @@ def git(*arguments: str) -> str:
 
 
 def header(version: str, payload_sha256: str,
-           test_predecessor_sha256: str | None = None) -> bytes:
-    predecessor_hashes = ALPHA5_PREDECESSOR_SHA256
+           test_predecessor_sha256: str | None = None,
+           predecessor_catalog: Path = PREDECESSORS) -> bytes:
+    if SHA256_PATTERN.fullmatch(payload_sha256) is None:
+        raise ValueError("invalid Linux Setup payload SHA-256")
+    predecessors = admitted_predecessors(version, predecessor_catalog)
     if test_predecessor_sha256 is not None:
-        if len(test_predecessor_sha256) != 64 or any(
-                character not in "0123456789abcdef" for character in test_predecessor_sha256):
+        if SHA256_PATTERN.fullmatch(test_predecessor_sha256) is None:
             raise ValueError("invalid test predecessor SHA-256")
-        predecessor_hashes += (test_predecessor_sha256,)
+        predecessors += (("0.1.0-alpha.5", test_predecessor_sha256),)
     predecessor_cases = "|\\\n      ".join(
-        f"'0.1.0-alpha.5:{digest}'" for digest in predecessor_hashes
-    )
+        f"'{old_version}:{digest}'" for old_version, digest in predecessors
+    ) or "'__no_admitted_predecessor__'"
     script = r'''#!/bin/sh
 set -eu
 
@@ -116,12 +153,14 @@ maintenance="$install_root/maintenance"
 user_bin="${HOME}/.local/bin"
 desktop_root="${HOME}/.local/share/applications"
 pending="$state/update-pending.v1"
+first_pending="$state/first-install-pending.v1"
+repair_pending="$state/repair-pending.v1"
 rollback_record="$state/rollback.v1"
 setup_authority="$state/installed-setup.sha256"
 
 assert_admitted_predecessor() {
   case "$1:$2" in
-      @ALPHA5_PREDECESSOR_CASES@) return 0 ;;
+      @ADMITTED_PREDECESSOR_CASES@) return 0 ;;
       *) echo 'refusing an unadmitted previous Setup package' >&2; return 1 ;;
   esac
 }
@@ -150,7 +189,7 @@ assert_owned_generation() {
     echo 'refusing a linked or absent FacMan generation' >&2
     return 1
   fi
-  [ -f "$state/installed-state.v1.json" ] || {
+  [ "${2:-}" = 'first-install-pending' ] || [ -f "$state/installed-state.v1.json" ] || {
     echo 'refusing to replace or remove a generation without FacMan installed state' >&2
     return 1
   }
@@ -160,9 +199,9 @@ assert_owned_generation() {
   }
   actual=$(mktemp "${TMPDIR:-/tmp}/facman-actual.XXXXXX")
   expected=$(mktemp "${TMPDIR:-/tmp}/facman-expected.XXXXXX")
-  if [ -n "$(find "$target" -type l -print -quit)" ]; then
+  if [ -n "$(find "$target" -mindepth 1 ! -type f ! -type d -print -quit)" ]; then
     rm -f "$actual" "$expected"
-    echo 'refusing a linked file in FacMan generation' >&2
+    echo 'refusing a linked or special entry in FacMan generation' >&2
     return 1
   fi
   find "$target" -type f -printf '%P\n' | sort > "$actual"
@@ -171,7 +210,12 @@ assert_owned_generation() {
       "$target/share/facman/manifest/MANIFEST.sha256"
     echo 'share/facman/manifest/MANIFEST.sha256'
   } | sort > "$expected"
-  if ! cmp -s "$actual" "$expected"; then
+  if [ "${2:-}" = 'repair-damaged' ]; then
+    unexpected=$(comm -23 "$actual" "$expected")
+  else
+    unexpected=$(cmp -s "$actual" "$expected" || echo changed)
+  fi
+  if [ -n "$unexpected" ]; then
     rm -f "$actual" "$expected"
     echo 'refusing to replace or remove a generation containing foreign files' >&2
     return 1
@@ -188,7 +232,12 @@ assert_owned_generation() {
       owned_directory=${owned_path%/*}
     done
   done | sort -u > "$expected"
-  if ! cmp -s "$actual" "$expected"; then
+  if [ "${2:-}" = 'repair-damaged' ]; then
+    unexpected=$(comm -23 "$actual" "$expected")
+  else
+    unexpected=$(cmp -s "$actual" "$expected" || echo changed)
+  fi
+  if [ -n "$unexpected" ]; then
     rm -f "$actual" "$expected"
     echo 'refusing to remove a generation containing foreign directories' >&2
     return 1
@@ -365,6 +414,21 @@ archive_record() {
     echo 'refusing existing Linux Setup history identity' >&2
     return 1
   fi
+  # On the ordinary same-filesystem layout, retire the journal with one
+  # rename. A process loss then leaves either the live record or its exact
+  # history entry, rather than a partially removed live record.
+  if [ "$(stat -c %d "$record")" = "$(stat -c %d "$history_root")" ]; then
+    record_identity=$(stat -c '%d:%i' "$record")
+    mv --no-copy -nT "$record" "$history_target"
+    if [ -e "$record" ] || [ -L "$record" ] ||
+       [ ! -d "$history_target" ] || [ -L "$history_target" ] ||
+       [ "$(stat -c '%d:%i' "$history_target")" != "$record_identity" ]; then
+      echo 'refusing incomplete Linux Setup history retirement' >&2
+      return 1
+    fi
+    return 0
+  fi
+  # A separately mounted history root retains the older checked-copy path.
   archive_staging=$(mktemp -d "$history_root/.archive-XXXXXX")
   cp -a "$record/." "$archive_staging/"
   diff -qr "$record" "$archive_staging" >/dev/null
@@ -378,14 +442,20 @@ archive_record() {
 }
 
 assert_no_orphan_staging() {
-  for directory in "$state" "$install_root/generations" "$maintenance"; do
+  for directory in "$state" "$install_root/generations" "$maintenance" "$desktop_root"; do
     [ -d "$directory" ] || continue
     if [ "$directory" = "$state" ]; then
-      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 \( -name '.update-prepared-*' -o -name '.installed-state.v1.json.*' -o -name '.installed-setup.sha256.*' \) -print -quit)
+      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 \( \
+        -name '.update-prepared-*' -o -name '.first-install-prepared-*' -o \
+        -name '.repair-prepared-*' -o -name '.installed-state.v1.json.*' -o \
+        -name '.installed-setup.sha256.*' -o -name '.repair-receipt-*' -o \
+        -name '.repair-authority-*' \) -print -quit)
     elif [ "$directory" = "$install_root/generations" ]; then
-      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 -name '.install-*' -print -quit)
+      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 \( -name '.install-*' -o -name '.repair-previous-*' \) -print -quit)
+    elif [ "$directory" = "$maintenance" ]; then
+      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 \( -name '.FacManSetup.run.*' -o -name '.repair-setup-*' \) -print -quit)
     else
-      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 -name '.FacManSetup.run.*' -print -quit)
+      orphan=$(find "$directory" -mindepth 1 -maxdepth 1 \( -name '.facman.desktop.*' -o -name '.repair-desktop-*' \) -print -quit)
     fi
     if [ -n "$orphan" ]; then
       echo "refusing incomplete Linux Setup staging at $orphan" >&2
@@ -562,9 +632,381 @@ restore_update_record() {
   archive_record "$record" "restored-${old_version}-to-${version}"
 }
 
+restore_first_install_record() {
+  record="$first_pending"
+  record_entries=$(find "$record" -mindepth 1 -maxdepth 1 -printf '%f\n' 2>/dev/null | sort)
+  expected_entries=$(printf '%s\n' new-setup-sha256 new-target staging-target | sort)
+  if [ ! -d "$record" ] || [ -L "$record" ] ||
+     [ "$record_entries" != "$expected_entries" ] ||
+     [ ! -f "$record/new-target" ] || [ -L "$record/new-target" ] ||
+     [ ! -f "$record/new-setup-sha256" ] || [ -L "$record/new-setup-sha256" ] ||
+     [ ! -f "$record/staging-target" ] || [ -L "$record/staging-target" ]; then
+    echo 'refusing an invalid first-install recovery record' >&2
+    return 1
+  fi
+  expected_setup_sha=$(sha256sum "$0" | cut -d ' ' -f 1)
+  if [ "$(cat "$record/new-target")" != "$generation" ] ||
+     [ "$(cat "$record/new-setup-sha256")" != "$expected_setup_sha" ] ||
+     [ -e "$pending" ] || [ -L "$pending" ] ||
+     [ -e "$rollback_record" ] || [ -L "$rollback_record" ]; then
+    echo 'refusing changed or mixed first-install recovery state' >&2
+    return 1
+  fi
+  staging_target=$(cat "$record/staging-target")
+  staging_name=${staging_target##*/}
+  staging_suffix=${staging_name#".install-$version-"}
+  case "$staging_suffix" in
+    ''|*[!0-9]*) echo 'refusing changed first-install staging identity' >&2; return 1 ;;
+  esac
+  if [ "$staging_name" != ".install-$version-$staging_suffix" ] ||
+     [ "$staging_target" != "$install_root/generations/$staging_name" ]; then
+    echo 'refusing foreign first-install staging path' >&2
+    return 1
+  fi
+  for directory in "$install_root" "$install_root/generations" "$state" "$maintenance"; do
+    [ -d "$directory" ] && [ ! -L "$directory" ] || return 1
+  done
+  foreign=$(find "$install_root" -mindepth 1 -maxdepth 1 ! -name generations ! -name state ! -name maintenance ! -name current -print -quit)
+  [ -z "$foreign" ] || { echo 'refusing foreign installation content' >&2; return 1; }
+  foreign=$(find "$install_root/generations" -mindepth 1 -maxdepth 1 ! -name "$version" ! -name "$staging_name" -print -quit)
+  [ -z "$foreign" ] || { echo 'refusing foreign generation content' >&2; return 1; }
+  if { [ -e "$staging_target" ] || [ -L "$staging_target" ]; } &&
+     { [ -e "$generation" ] || [ -L "$generation" ]; }; then
+    echo 'refusing simultaneous first-install staging and generation' >&2
+    return 1
+  fi
+  foreign=$(find "$state" -mindepth 1 -maxdepth 1 ! -name first-install-pending.v1 ! -name installed-state.v1.json ! -name installed-setup.sha256 -print -quit)
+  [ -z "$foreign" ] || { echo 'refusing foreign first-install state' >&2; return 1; }
+  foreign=$(find "$maintenance" -mindepth 1 -maxdepth 1 ! -name FacManSetup.run -print -quit)
+  [ -z "$foreign" ] || { echo 'refusing foreign maintenance content' >&2; return 1; }
+  expected_receipt=$(printf '{"schema":"facman.installed_state.v1","version":"%s","generation":"%s","workspace_preserved":true}' "$version" "$generation")
+  receipt="$state/installed-state.v1.json"
+  if { [ -e "$current" ] || [ -L "$current" ]; } &&
+     { [ ! -L "$current" ] || [ "$(readlink "$current")" != "$generation" ]; }; then
+    echo 'refusing changed first-install current pointer' >&2
+    return 1
+  fi
+  if { [ -e "$receipt" ] || [ -L "$receipt" ]; } &&
+     { [ ! -f "$receipt" ] || [ -L "$receipt" ] ||
+       [ "$(cat "$receipt")" != "$expected_receipt" ]; }; then
+    echo 'refusing changed first-install receipt' >&2
+    return 1
+  fi
+  setup_copy="$maintenance/FacManSetup.run"
+  if { [ -e "$setup_copy" ] || [ -L "$setup_copy" ]; } &&
+     { [ ! -f "$setup_copy" ] || [ -L "$setup_copy" ] ||
+       [ "$(sha256sum "$setup_copy" | cut -d ' ' -f 1)" != "$expected_setup_sha" ]; }; then
+    echo 'refusing changed first-install Setup source' >&2
+    return 1
+  fi
+  if { [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; } &&
+     { [ ! -f "$setup_authority" ] || [ -L "$setup_authority" ] ||
+       [ "$(cat "$setup_authority")" != "$expected_setup_sha" ]; }; then
+    echo 'refusing changed first-install Setup authority' >&2
+    return 1
+  fi
+  assert_native_integration_owned
+  if [ -e "$staging_target" ] || [ -L "$staging_target" ]; then
+    assert_owned_generation "$staging_target" first-install-pending
+    verify_generation "$staging_target"
+    if [ -L "$current" ] || [ -e "$receipt" ] || [ -L "$receipt" ]; then
+      echo 'refusing published state with first-install staging' >&2
+      return 1
+    fi
+  fi
+  if [ -e "$generation" ] || [ -L "$generation" ]; then
+    assert_owned_generation "$generation" first-install-pending
+    verify_generation "$generation"
+  elif [ -L "$current" ] ||
+       [ -e "$user_bin/facman" ] || [ -L "$user_bin/facman" ] ||
+       [ -e "$user_bin/FacMan" ] || [ -L "$user_bin/FacMan" ] ||
+       [ -e "$desktop_root/facman.desktop" ] ||
+       [ -L "$desktop_root/facman.desktop" ]; then
+    echo 'refusing missing active first-install generation' >&2
+    return 1
+  fi
+  for owned_name in facman FacMan; do
+    if [ -L "$user_bin/$owned_name" ]; then
+      assert_native_integration_owned
+      rm -f "$user_bin/$owned_name"
+    fi
+  done
+  desktop="$desktop_root/facman.desktop"
+  if [ -f "$desktop" ]; then
+    assert_native_integration_owned
+    rm -f "$desktop"
+  fi
+  if [ -L "$current" ]; then
+    [ "$(readlink "$current")" = "$generation" ] || return 1
+    rm -f "$current"
+  fi
+  if [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_RECOVERY_AFTER_CURRENT:-}" = '1' ]; then
+    echo 'injected interruption during first-install recovery' >&2
+    return 75
+  fi
+  if [ -e "$staging_target" ] || [ -L "$staging_target" ]; then
+    assert_owned_generation "$staging_target" first-install-pending
+    verify_generation "$staging_target"
+    rm -rf "$staging_target"
+  fi
+  if [ -e "$generation" ] || [ -L "$generation" ]; then
+    assert_owned_generation "$generation" first-install-pending
+    verify_generation "$generation"
+    rm -rf "$generation"
+  fi
+  if [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_RECOVERY_AFTER_GENERATION:-}" = '1' ]; then
+    echo 'injected interruption after first-install generation removal' >&2
+    return 75
+  fi
+  if { [ -e "$receipt" ] || [ -L "$receipt" ]; } &&
+     { [ ! -f "$receipt" ] || [ -L "$receipt" ] ||
+       [ "$(cat "$receipt")" != "$expected_receipt" ]; }; then
+    echo 'refusing changed first-install receipt at removal' >&2
+    return 1
+  fi
+  if { [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; } &&
+     { [ ! -f "$setup_authority" ] || [ -L "$setup_authority" ] ||
+       [ "$(cat "$setup_authority")" != "$expected_setup_sha" ]; }; then
+    echo 'refusing changed first-install Setup authority at removal' >&2
+    return 1
+  fi
+  if { [ -e "$setup_copy" ] || [ -L "$setup_copy" ]; } &&
+     { [ ! -f "$setup_copy" ] || [ -L "$setup_copy" ] ||
+       [ "$(sha256sum "$setup_copy" | cut -d ' ' -f 1)" != "$expected_setup_sha" ]; }; then
+    echo 'refusing changed first-install Setup source at removal' >&2
+    return 1
+  fi
+  rm -f "$receipt" "$setup_authority" "$setup_copy"
+  archive_record "$record" "restored-first-install-${version}"
+  rmdir "$maintenance" "$state" "$install_root/generations" "$install_root" 2>/dev/null || true
+}
+
+assert_repair_backup_owned() {
+  if [ ! -d "$repair_backup" ] || [ -L "$repair_backup" ] ||
+     [ -n "$(find "$repair_backup" -mindepth 1 ! -type f ! -type d -print -quit)" ]; then
+    echo 'refusing foreign Linux Setup repair backup entry' >&2
+    return 1
+  fi
+  repair_actual=$(mktemp "${TMPDIR:-/tmp}/facman-repair-actual.XXXXXX")
+  repair_expected=$(mktemp "${TMPDIR:-/tmp}/facman-repair-expected.XXXXXX")
+  find "$repair_backup" -type f -printf '%P\n' | sort > "$repair_actual"
+  {
+    sed -n 's/^[0-9a-fA-F][0-9a-fA-F]*  //p' "$repair_record/manifest-copy"
+    echo 'share/facman/manifest/MANIFEST.sha256'
+  } | sort > "$repair_expected"
+  repair_unexpected=$(comm -23 "$repair_actual" "$repair_expected")
+  if [ -n "$repair_unexpected" ]; then
+    rm -f "$repair_actual" "$repair_expected"
+    echo 'refusing foreign file in Linux Setup repair backup' >&2
+    return 1
+  fi
+  find "$repair_backup" -mindepth 1 -type d -printf '%P\n' | sort > "$repair_actual"
+  sed -n 's/^[0-9a-fA-F][0-9a-fA-F]*  //p' "$repair_record/manifest-copy" |
+  { cat; echo 'share/facman/manifest/MANIFEST.sha256'; } |
+  while IFS= read -r repair_path; do
+    repair_directory=${repair_path%/*}
+    while [ "$repair_directory" != "$repair_path" ] && [ "$repair_directory" != '.' ]; do
+      printf '%s\n' "$repair_directory"
+      repair_path="$repair_directory"
+      repair_directory=${repair_path%/*}
+    done
+  done | sort -u > "$repair_expected"
+  repair_unexpected=$(comm -23 "$repair_actual" "$repair_expected")
+  rm -f "$repair_actual" "$repair_expected"
+  if [ -n "$repair_unexpected" ]; then
+    echo 'refusing foreign directory in Linux Setup repair backup' >&2
+    return 1
+  fi
+}
+
+repair_cleanup_stage() {
+  repair_stage_file="$1"
+  repair_expected_file="$2"
+  if [ -e "$repair_stage_file" ] || [ -L "$repair_stage_file" ]; then
+    if [ ! -f "$repair_stage_file" ] || [ -L "$repair_stage_file" ]; then
+      echo 'refusing foreign Linux Setup repair staging entry' >&2
+      return 1
+    fi
+    repair_stage_bytes=$(wc -c < "$repair_stage_file")
+    repair_expected_bytes=$(wc -c < "$repair_expected_file")
+    if [ "$repair_stage_bytes" -gt "$repair_expected_bytes" ] ||
+       ! cmp -s -n "$repair_stage_bytes" "$repair_stage_file" "$repair_expected_file"; then
+      echo 'refusing changed Linux Setup repair staging bytes' >&2
+      return 1
+    fi
+    rm -f "$repair_stage_file"
+  fi
+}
+
+repair_replace_file() {
+  repair_source="$1"
+  repair_destination="$2"
+  repair_stage_file="$3"
+  repair_mode="$4"
+  repair_cleanup_stage "$repair_stage_file" "$repair_source"
+  (umask 077; set -C; cat "$repair_source" > "$repair_stage_file")
+  chmod "$repair_mode" "$repair_stage_file"
+  if [ ! -f "$repair_stage_file" ] || [ -L "$repair_stage_file" ] ||
+     ! cmp -s "$repair_source" "$repair_stage_file"; then
+    echo 'refusing changed Linux Setup repair staged file' >&2
+    return 1
+  fi
+  mv -fT "$repair_stage_file" "$repair_destination"
+}
+
+finish_repair_record() {
+  repair_record="$repair_pending"
+  if [ ! -d "$repair_record" ] || [ -L "$repair_record" ]; then
+    echo 'refusing an invalid Linux Setup repair record' >&2
+    return 1
+  fi
+  repair_entries=$(find "$repair_record" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)
+  repair_expected_entries=$(printf '%s\n' backup-target desktop-copy manifest-copy manifest-sha256 new-target setup-sha256 staging-target | sort)
+  if [ "$repair_entries" != "$repair_expected_entries" ]; then
+    echo 'refusing foreign Linux Setup repair record content' >&2
+    return 1
+  fi
+  for repair_name in backup-target desktop-copy manifest-copy manifest-sha256 new-target setup-sha256 staging-target; do
+    if [ ! -f "$repair_record/$repair_name" ] || [ -L "$repair_record/$repair_name" ]; then
+      echo 'refusing incomplete Linux Setup repair record' >&2
+      return 1
+    fi
+  done
+  repair_stage=$(cat "$repair_record/staging-target")
+  repair_backup=$(cat "$repair_record/backup-target")
+  repair_target=$(cat "$repair_record/new-target")
+  repair_manifest_sha=$(cat "$repair_record/manifest-sha256")
+  repair_stage_name=${repair_stage##*/}
+  repair_suffix=${repair_stage_name#".install-$version-"}
+  repair_receipt_stage="$state/.repair-receipt-$repair_suffix"
+  repair_setup_stage="$maintenance/.repair-setup-$repair_suffix"
+  repair_authority_stage="$state/.repair-authority-$repair_suffix"
+  repair_desktop_stage="$desktop_root/.repair-desktop-$repair_suffix"
+  case "$repair_suffix" in
+    ''|*[!0-9]*) echo 'refusing changed Linux Setup repair staging identity' >&2; return 1 ;;
+  esac
+  if [ "$repair_target" != "$generation" ] ||
+     [ "$repair_stage" != "$install_root/generations/.install-$version-$repair_suffix" ] ||
+     [ "$repair_backup" != "$install_root/generations/.repair-previous-$version-$repair_suffix" ] ||
+     { ! printf '%s\n' "$repair_manifest_sha" | grep -Eq '^[0-9a-f]{64}$'; } ||
+     [ "$(cat "$repair_record/setup-sha256")" != "$(sha256sum "$0" | cut -d ' ' -f 1)" ] ||
+     [ -e "$pending" ] || [ -L "$pending" ] ||
+     [ -e "$first_pending" ] || [ -L "$first_pending" ]; then
+    echo 'refusing changed or mixed Linux Setup repair state' >&2
+    return 1
+  fi
+  if [ "$(sha256sum "$repair_record/manifest-copy" | cut -d ' ' -f 1)" != "$repair_manifest_sha" ]; then
+    echo 'refusing changed Linux Setup repair ownership manifest' >&2
+    return 1
+  fi
+  repair_expected_desktop_sha=$(printf \
+    '[Desktop Entry]\nType=Application\nName=FacMan\nComment=Manage Factorio installations and isolated instances\nExec=%s/FacMan\nTerminal=false\nCategories=Game;Utility;\n' \
+    "$current" | sha256sum | cut -d ' ' -f 1)
+  if [ "$(sha256sum "$repair_record/desktop-copy" | cut -d ' ' -f 1)" != "$repair_expected_desktop_sha" ]; then
+    echo 'refusing changed Linux Setup repair desktop identity' >&2
+    return 1
+  fi
+  assert_active_generation
+  assert_native_integration_owned
+  if [ ! -f "$maintenance/FacManSetup.run" ] ||
+     [ -L "$maintenance/FacManSetup.run" ] ||
+     [ "$(sha256sum "$maintenance/FacManSetup.run" | cut -d ' ' -f 1)" != \
+       "$(cat "$repair_record/setup-sha256")" ]; then
+    echo 'refusing changed installed Linux Setup repair source' >&2
+    return 1
+  fi
+  assert_setup_authority_safe
+  repair_cleanup_stage "$repair_receipt_stage" "$state/installed-state.v1.json"
+  repair_cleanup_stage "$repair_setup_stage" "$0"
+  repair_cleanup_stage "$repair_authority_stage" "$repair_record/setup-sha256"
+  repair_cleanup_stage "$repair_desktop_stage" "$repair_record/desktop-copy"
+  repair_hidden=$(find "$install_root/generations" -mindepth 1 -maxdepth 1 -name '.*' \
+    ! -name "$repair_stage_name" ! -name ".repair-previous-$version-$repair_suffix" -print -quit)
+  if [ -n "$repair_hidden" ]; then
+    echo 'refusing foreign hidden Linux Setup generation during repair' >&2
+    return 1
+  fi
+  if [ -e "$repair_stage" ] || [ -L "$repair_stage" ]; then
+    assert_owned_generation "$repair_stage"
+    verify_generation "$repair_stage"
+    [ "$(sha256sum "$repair_stage/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1)" = "$repair_manifest_sha" ] || return 1
+    if [ -e "$repair_backup" ] || [ -L "$repair_backup" ]; then
+      if [ -e "$generation" ] || [ -L "$generation" ]; then
+        echo 'refusing ambiguous Linux Setup repair generations' >&2
+        return 1
+      fi
+      assert_repair_backup_owned
+    else
+      assert_owned_generation "$generation" repair-damaged
+      [ "$(sha256sum "$generation/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1)" = "$repair_manifest_sha" ] || return 1
+      assert_active_generation
+      mv -T "$generation" "$repair_backup"
+      if [ "$operation" = 'repair' ] &&
+         [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_OLD_MOVE:-}" = '1' ]; then
+        echo 'injected interruption after Linux Setup repair old-generation move' >&2
+        return 75
+      fi
+    fi
+    assert_owned_generation "$repair_stage"
+    verify_generation "$repair_stage"
+    mv -T "$repair_stage" "$generation"
+    if [ "$operation" = 'repair' ] &&
+       [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_NEW_MOVE:-}" = '1' ]; then
+      echo 'injected interruption after Linux Setup repair new-generation move' >&2
+      return 75
+    fi
+  fi
+  if [ -e "$repair_stage" ] || [ -L "$repair_stage" ] ||
+     [ ! -d "$generation" ] || [ -L "$generation" ]; then
+    echo 'refusing incomplete Linux Setup repair generation' >&2
+    return 1
+  fi
+  assert_owned_generation "$generation"
+  verify_generation "$generation"
+  [ "$(sha256sum "$generation/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1)" = "$repair_manifest_sha" ] || return 1
+  assert_active_generation
+  assert_native_integration_owned
+  mkdir -p "$user_bin" "$desktop_root"
+  for repair_name in facman FacMan; do
+    if [ ! -L "$user_bin/$repair_name" ]; then
+      [ ! -e "$user_bin/$repair_name" ] || return 1
+      ln -s "$current/$repair_name" "$user_bin/$repair_name"
+    fi
+  done
+  if [ ! -e "$desktop_root/facman.desktop" ] &&
+     [ ! -L "$desktop_root/facman.desktop" ]; then
+    (umask 077; set -C; cat "$repair_record/desktop-copy" > "$repair_desktop_stage")
+    chmod 0644 "$repair_desktop_stage"
+    [ -f "$repair_desktop_stage" ] && [ ! -L "$repair_desktop_stage" ] &&
+      cmp -s "$repair_record/desktop-copy" "$repair_desktop_stage" || return 1
+    mv -nT "$repair_desktop_stage" "$desktop_root/facman.desktop"
+    [ ! -e "$repair_desktop_stage" ] || { echo 'refusing changed desktop destination during repair' >&2; return 1; }
+  fi
+  assert_native_integration_owned
+  repair_replace_file "$state/installed-state.v1.json" \
+    "$state/installed-state.v1.json" "$repair_receipt_stage" 0600
+  repair_replace_file "$0" "$maintenance/FacManSetup.run" "$repair_setup_stage" 0755
+  repair_replace_file "$repair_record/setup-sha256" \
+    "$setup_authority" "$repair_authority_stage" 0600
+  assert_setup_authority_safe
+  if [ -e "$repair_backup" ] || [ -L "$repair_backup" ]; then
+    assert_repair_backup_owned
+    assert_native_integration_owned
+    rm -rf "$repair_backup"
+    if [ "$operation" = 'repair' ] &&
+       [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_BACKUP_REMOVAL:-}" = '1' ]; then
+      echo 'injected interruption after Linux Setup repair backup removal' >&2
+      return 75
+    fi
+  fi
+  archive_record "$repair_record" "completed-repair-${version}"
+}
+
 if [ "$operation" = 'verify' ]; then
-  if [ -e "$pending" ] || [ -L "$pending" ]; then
-    echo 'Linux Setup update recovery is required before verification' >&2
+  if [ -e "$pending" ] || [ -L "$pending" ] ||
+     [ -e "$first_pending" ] || [ -L "$first_pending" ] ||
+     [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
+    echo 'Linux Setup recovery is required before verification' >&2
     exit 1
   fi
   assert_active_generation
@@ -589,13 +1031,24 @@ if [ "$operation" = 'recover' ] || [ "$operation" = 'rollback' ]; then
     exit 0
   fi
   lock_setup
-  assert_no_orphan_staging
   if [ "$operation" = 'recover' ]; then
-    restore_update_record "$pending"
-    echo 'Interrupted Linux Setup update restored the preceding generation'
+    if [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
+      finish_repair_record
+      echo 'Interrupted Linux Setup repair completed'
+    elif [ -e "$first_pending" ] || [ -L "$first_pending" ]; then
+      restore_first_install_record
+      echo 'Interrupted first Linux Setup install restored the prior absence'
+    else
+      assert_no_orphan_staging
+      restore_update_record "$pending"
+      echo 'Interrupted Linux Setup update restored the preceding generation'
+    fi
   else
-    if [ -e "$pending" ] || [ -L "$pending" ]; then
-      echo 'recover the interrupted update before rollback' >&2
+    assert_no_orphan_staging
+    if [ -e "$pending" ] || [ -L "$pending" ] ||
+       [ -e "$first_pending" ] || [ -L "$first_pending" ] ||
+       [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
+      echo 'recover the interrupted Setup operation before rollback' >&2
       exit 1
     fi
     restore_update_record "$rollback_record"
@@ -610,11 +1063,13 @@ if [ "$operation" = 'uninstall' ]; then
     exit 0
   fi
   lock_setup
-  assert_no_orphan_staging
-  if [ -e "$pending" ] || [ -L "$pending" ]; then
-    echo 'recover the interrupted update before uninstall' >&2
+  if [ -e "$pending" ] || [ -L "$pending" ] ||
+     [ -e "$first_pending" ] || [ -L "$first_pending" ] ||
+     [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
+    echo 'recover the interrupted Setup operation before uninstall' >&2
     exit 1
   fi
+  assert_no_orphan_staging
   assert_active_generation
   assert_native_integration_owned
   if [ -e "$generation" ] || [ -L "$generation" ]; then
@@ -674,11 +1129,10 @@ if [ "$operation" = 'uninstall' ]; then
   fi
   assert_active_generation
   assert_native_integration_owned
-  for name in facman FacMan; do
-    link="$user_bin/$name"
-    if [ -L "$link" ]; then
+  for owned_name in facman FacMan; do
+    if [ -L "$user_bin/$owned_name" ]; then
       assert_native_integration_owned
-      rm -f "$link"
+      rm -f "$user_bin/$owned_name"
     fi
   done
   desktop="$desktop_root/facman.desktop"
@@ -718,11 +1172,13 @@ if [ "$apply" != 'true' ]; then
 fi
 
 lock_setup
-assert_no_orphan_staging
-if [ -e "$pending" ] || [ -L "$pending" ]; then
-  echo 'recover the interrupted update before install or repair' >&2
+if [ -e "$pending" ] || [ -L "$pending" ] ||
+   [ -e "$first_pending" ] || [ -L "$first_pending" ] ||
+   [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
+  echo 'recover the interrupted Setup operation before install or repair' >&2
   exit 1
 fi
+assert_no_orphan_staging
 if [ "$operation" = 'install' ]; then
   assert_existing_install_owner
 else
@@ -731,6 +1187,21 @@ fi
 assert_native_integration_owned
 assert_setup_copy_safe
 assert_setup_authority_safe
+first_install='false'
+if [ "$operation" = 'install' ] && [ -z "${old_target:-}" ]; then
+  first_install='true'
+  if [ -d "$install_root" ]; then
+    foreign=$(find "$install_root" -mindepth 1 -maxdepth 1 ! -name generations ! -name state ! -name maintenance -print -quit)
+    [ -z "$foreign" ] || { echo 'refusing foreign first-install content' >&2; exit 1; }
+  fi
+  for directory in "$install_root/generations" "$state" "$maintenance"; do
+    if [ -d "$directory" ] &&
+       [ -n "$(find "$directory" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+      echo 'refusing nonempty first-install effect root' >&2
+      exit 1
+    fi
+  done
+fi
 source_distinct='false'
 if [ "$operation" = 'install' ] && [ -n "${old_target:-}" ]; then
   if [ "$old_target" = "$generation" ]; then
@@ -791,6 +1262,60 @@ if [ "$source_distinct" = 'true' ]; then
   assert_update_predecessor
 fi
 
+if [ "$operation" = 'repair' ]; then
+  assert_owned_generation "$generation" repair-damaged
+  if ! cmp -s "$generation/share/facman/manifest/MANIFEST.sha256" \
+                "$source_root/share/facman/manifest/MANIFEST.sha256"; then
+    echo 'refusing repair over changed generation ownership manifest' >&2
+    exit 1
+  fi
+  mkdir -p "$maintenance" "$state" "$install_root/generations"
+  if [ ! -e "$maintenance/FacManSetup.run" ] &&
+     [ ! -L "$maintenance/FacManSetup.run" ]; then
+    replace_file "$0" "$maintenance/FacManSetup.run" 0755
+  fi
+  repair_stage="$install_root/generations/.install-$version-$$"
+  repair_backup="$install_root/generations/.repair-previous-$version-$$"
+  if [ -e "$repair_stage" ] || [ -L "$repair_stage" ] ||
+     [ -e "$repair_backup" ] || [ -L "$repair_backup" ]; then
+    echo 'refusing preexisting Linux Setup repair effects' >&2
+    exit 1
+  fi
+  cp -a "$source_root" "$repair_stage"
+  assert_owned_generation "$repair_stage"
+  verify_generation "$repair_stage"
+  assert_active_generation
+  assert_owned_generation "$generation" repair-damaged
+  assert_native_integration_owned
+  assert_setup_authority_safe
+  journal_staging="$state/.repair-prepared-$$"
+  if [ -e "$journal_staging" ] || [ -L "$journal_staging" ]; then
+    echo 'refusing preexisting Linux Setup repair journal staging' >&2
+    exit 1
+  fi
+  mkdir "$journal_staging"
+  printf '%s\n' "$generation" > "$journal_staging/new-target"
+  printf '%s\n' "$repair_stage" > "$journal_staging/staging-target"
+  printf '%s\n' "$repair_backup" > "$journal_staging/backup-target"
+  cp "$source_root/share/facman/manifest/MANIFEST.sha256" "$journal_staging/manifest-copy"
+  printf '[Desktop Entry]\nType=Application\nName=FacMan\nComment=Manage Factorio installations and isolated instances\nExec=%s/FacMan\nTerminal=false\nCategories=Game;Utility;\n' "$current" > "$journal_staging/desktop-copy"
+  sha256sum "$source_root/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1 > "$journal_staging/manifest-sha256"
+  sha256sum "$0" | cut -d ' ' -f 1 > "$journal_staging/setup-sha256"
+  if [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
+    echo 'refusing changed Linux Setup repair journal destination' >&2
+    exit 1
+  fi
+  mv -T "$journal_staging" "$repair_pending"
+  journal_staging=''
+  if [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_JOURNAL:-}" = '1' ]; then
+    echo 'injected interruption after Linux Setup repair journal publication' >&2
+    exit 75
+  fi
+  finish_repair_record
+  [ "$quiet" = 'true' ] || echo "FacMan $version repaired for the current user"
+  exit 0
+fi
+
 if [ -e "$generation" ] || [ -L "$generation" ]; then
   assert_owned_generation "$generation"
 fi
@@ -804,6 +1329,27 @@ cp -a "$source_root" "$staging"
 verify_generation "$staging"
 if [ -e "$generation" ] || [ -L "$generation" ]; then
   rm -rf "$generation"
+fi
+if [ "$first_install" = 'true' ]; then
+  journal_staging="$state/.first-install-prepared-$$"
+  if [ -e "$journal_staging" ] || [ -L "$journal_staging" ]; then
+    echo 'refusing a preexisting first-install staging record' >&2
+    exit 1
+  fi
+  mkdir "$journal_staging"
+  printf '%s\n' "$generation" > "$journal_staging/new-target"
+  printf '%s\n' "$staging" > "$journal_staging/staging-target"
+  sha256sum "$0" | cut -d ' ' -f 1 > "$journal_staging/new-setup-sha256"
+  if [ -e "$first_pending" ] || [ -L "$first_pending" ]; then
+    echo 'refusing a changed first-install recovery destination' >&2
+    exit 1
+  fi
+  mv -T "$journal_staging" "$first_pending"
+  journal_staging=''
+  if [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_AFTER_JOURNAL:-}" = '1' ]; then
+    echo 'injected interruption after first Linux Setup recovery publication' >&2
+    exit 75
+  fi
 fi
 mv "$staging" "$generation"
 if [ "$source_distinct" = 'true' ]; then
@@ -827,15 +1373,29 @@ if [ "$source_distinct" = 'true' ]; then
   # The installed maintenance entry point must be able to recover the cutover.
   replace_file "$0" "$maintenance/FacManSetup.run" 0755
 fi
+if [ "$first_install" = 'true' ]; then
+  replace_file "$0" "$maintenance/FacManSetup.run" 0755
+fi
+if [ "$first_install" = 'true' ] &&
+   { [ -e "$current" ] || [ -L "$current" ]; }; then
+  echo 'refusing a changed first-install current pointer at cutover' >&2
+  exit 1
+fi
 point_current "$generation"
 if [ "$source_distinct" = 'true' ] &&
    [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_AFTER_CURRENT:-}" = '1' ]; then
   echo 'injected interruption after Linux Setup current cutover' >&2
   exit 75
 fi
+if [ "$first_install" = 'true' ] &&
+   [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_AFTER_CURRENT:-}" = '1' ]; then
+  echo 'injected interruption after first Linux Setup current cutover' >&2
+  exit 75
+fi
+assert_native_integration_owned
 ln -sfn "$current/facman" "$user_bin/facman"
 ln -sfn "$current/FacMan" "$user_bin/FacMan"
-if [ "$source_distinct" != 'true' ]; then
+if [ "$source_distinct" != 'true' ] && [ "$first_install" != 'true' ]; then
   replace_file "$0" "$maintenance/FacManSetup.run" 0755
 fi
 active_staging=$(mktemp "$desktop_root/.facman.desktop.XXXXXX")
@@ -849,14 +1409,31 @@ Terminal=false
 Categories=Game;Utility;
 EOF
 chmod 0644 "$active_staging"
+assert_native_integration_owned
 mv -fT "$active_staging" "$desktop_root/facman.desktop"
 active_staging=''
+if [ "$first_install" = 'true' ] &&
+   { [ -e "$state/installed-state.v1.json" ] ||
+     [ -L "$state/installed-state.v1.json" ]; }; then
+  echo 'refusing a changed first-install receipt destination' >&2
+  exit 1
+fi
 active_staging=$(mktemp "$state/.installed-state.v1.json.XXXXXX")
 cat > "$active_staging" <<EOF
 {"schema":"facman.installed_state.v1","version":"$version","generation":"$generation","workspace_preserved":true}
 EOF
 mv -fT "$active_staging" "$state/installed-state.v1.json"
 active_staging=''
+if [ "$first_install" = 'true' ] &&
+   [ "${FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_AFTER_RECEIPT:-}" = '1' ]; then
+  echo 'injected interruption after first Linux Setup receipt publication' >&2
+  exit 75
+fi
+if [ "$first_install" = 'true' ] &&
+   { [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; }; then
+  echo 'refusing a changed first-install Setup authority destination' >&2
+  exit 1
+fi
 active_staging=$(mktemp "$state/.installed-setup.sha256.XXXXXX")
 sha256sum "$0" | cut -d ' ' -f 1 > "$active_staging"
 chmod 0600 "$active_staging"
@@ -866,6 +1443,9 @@ verify_generation "$generation"
 if [ "$source_distinct" = 'true' ]; then
   mv -T "$pending" "$rollback_record"
 fi
+if [ "$first_install" = 'true' ]; then
+  archive_record "$first_pending" "completed-first-install-${version}"
+fi
 [ "$quiet" = 'true' ] || echo "FacMan $version installed for the current user"
 exit 0
 
@@ -873,7 +1453,7 @@ __FACMAN_PAYLOAD_BELOW__
 '''
     return (script.replace("@VERSION@", version)
             .replace("@PAYLOAD_SHA256@", payload_sha256)
-            .replace("@ALPHA5_PREDECESSOR_CASES@", predecessor_cases).encode())
+            .replace("@ADMITTED_PREDECESSOR_CASES@", predecessor_cases).encode())
 
 
 def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
@@ -883,6 +1463,8 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
     if portable.name != expected:
         raise ValueError(f"unexpected Linux portable input: {portable.name}")
     output.mkdir(parents=True, exist_ok=True)
+    catalog_sha256 = sha256(PREDECESSORS)
+    predecessors = admitted_predecessors(version)
     setup = output / f"FacMan-{version}-linux-x64-setup.run"
     with tempfile.TemporaryDirectory(prefix="facman-linux-setup-", dir=output) as temporary:
         raw = Path(temporary) / "payload.tar"
@@ -895,6 +1477,9 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
                                compresslevel=9, mtime=0) as stream:
                 shutil.copyfileobj(source, stream)
         setup.write_bytes(header(version, sha256(compressed)) + compressed.read_bytes())
+    if catalog_sha256 != sha256(PREDECESSORS) or predecessors != admitted_predecessors(version):
+        setup.unlink(missing_ok=True)
+        raise ValueError("Linux Setup predecessor admission changed during package build")
     setup.chmod(0o755)
     record = {
         "schema": "facman.linux_self_setup.v1",
@@ -904,6 +1489,11 @@ def build(portable: Path, output: Path, evidence: Path) -> dict[str, object]:
         "architecture": "x64",
         "source_revision": git("rev-parse", "HEAD"),
         "source_tree": git("rev-parse", "HEAD^{tree}"),
+        "admitted_predecessors": [
+            {"version": old_version, "sha256": digest}
+            for old_version, digest in predecessors
+        ],
+        "predecessor_catalog_sha256": catalog_sha256,
         "portable_input": {"filename": portable.name, "sha256": sha256(portable)},
         "setup": {
             "filename": setup.name,

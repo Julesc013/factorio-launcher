@@ -12,12 +12,14 @@
 #include "fl_sha256.h"
 #include "fl_system_services.h"
 #include "fl_workspace_store.h"
+#include "fl_workspace_root_authority.h"
 
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
+#include <set>
 #include <thread>
 
 namespace facman::transaction {
@@ -583,6 +585,30 @@ std::string directory_effect_identity(
         std::to_string(identity.object);
 }
 
+std::string retention_selection_digest(const Record& record)
+{
+    std::vector<std::string> sources;
+    for (const fs::path& source : record.sources) sources.push_back(path_text(source));
+    json::ObjectBuilder selection;
+    selection.add_string("schema", "facman.retention_selection.v1");
+    selection.add_string("transaction_id", record.transaction_id);
+    selection.add_string("command_id", record.command_id);
+    selection.add_string("workspace_id", record.workspace_id);
+    selection.add_string("target", path_text(record.target));
+    selection.add_array("sources", string_array_builder(sources));
+    selection.add_array("expected_files", expected_files_builder(record.expected_files));
+    const std::string bytes = selection.serialize();
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(bytes.data()), bytes.size());
+}
+
+fs::path recovery_lock_path(const fs::path& workspace, const std::string& transaction_id)
+{
+    fs::path path = journal_path(workspace, transaction_id);
+    path += ".recovery.lock";
+    return path;
+}
+
 std::string file_effect_identity(const facman::platform::FileIdentity& identity)
 {
     if (!identity.regular_file || identity.link_count != 1U) return {};
@@ -1132,11 +1158,326 @@ Outcome plan(const fs::path& workspace, const std::string& id)
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
     record.recovery_actions.clear();
     if (terminal(record.state)) record.recovery_actions.push_back("none");
+    else if (record.command_id == "saves.retention.apply")
+        record.recovery_actions.push_back("verify_and_resume_owned_backup_moves");
     else if (fs::exists(record.target)) record.recovery_actions.push_back("preserve_committed_target");
     else if (!record.staging_roots.empty()) record.recovery_actions.push_back("remove_owned_staging");
     else record.recovery_actions.push_back("mark_recovery_required");
     return RecoveryResult {recovery_json("workspace.recovery.plan", {record})};
 }
+
+namespace {
+
+bool retention_file_present(const fs::path& path, bool& present, std::string& detail)
+{
+    std::error_code error;
+    const fs::file_status status = fs::symlink_status(path, error);
+    if (error == std::errc::no_such_file_or_directory ||
+        (!error && status.type() == fs::file_type::not_found)) {
+        present = false;
+        return true;
+    }
+    if (error || status.type() != fs::file_type::regular) {
+        detail = error ? error.message() : "retention file is not an exact regular file";
+        return false;
+    }
+    present = true;
+    return true;
+}
+
+bool retention_file_matches(
+    const fs::path& path, const ExpectedFile& expected, std::string& detail)
+{
+    facman::platform::StableInputFile input;
+    const auto opened = input.open_no_follow_pinned(path);
+    if (!opened.ok() || !input.identity().regular_file ||
+        input.identity().link_count != 1U || input.size() != expected.size) {
+        detail = opened.ok() ? "retention file identity or size changed" : opened.detail;
+        return false;
+    }
+    facman::base::Sha256Hasher hash;
+    std::vector<unsigned char> buffer(64U * 1024U);
+    for (std::uint64_t offset = 0; offset < input.size();) {
+        const auto wanted = static_cast<std::size_t>((std::min)(
+            static_cast<std::uint64_t>(buffer.size()), input.size() - offset));
+        if (input.read_at(offset, buffer.data(), wanted) != wanted) {
+            detail = "retention file short read";
+            return false;
+        }
+        hash.update(buffer.data(), wanted);
+        offset += wanted;
+    }
+    if (hash.finish() != expected.sha256.str() || !input.revalidate_path().ok()) {
+        detail = "retention file differs from its journaled digest";
+        return false;
+    }
+    return true;
+}
+
+bool retention_instance_unlocked(const fs::path& instance)
+{
+    for (const char* name : {"run.lock", "save.write.lock"}) {
+        std::error_code error;
+        const fs::file_status status = fs::symlink_status(instance / "locks" / name, error);
+        if (error == std::errc::no_such_file_or_directory ||
+            (!error && status.type() == fs::file_type::not_found)) continue;
+        return false;
+    }
+    return true;
+}
+
+bool retention_manifest_matches(
+    const fs::path& path,
+    const fs::path& source_backup,
+    const fs::path& source_manifest,
+    const ExpectedFile& backup,
+    const std::string& workspace_id,
+    const std::string& instance_id,
+    std::string& detail)
+{
+    facman::platform::StableInputFile input;
+    const auto opened = input.open_no_follow_pinned(path);
+    if (!opened.ok() || !input.identity().regular_file ||
+        input.identity().link_count != 1U || input.size() > 1024U * 1024U) {
+        detail = opened.ok() ? "retention manifest is not a bounded exact file" : opened.detail;
+        return false;
+    }
+    std::string text(static_cast<std::size_t>(input.size()), '\0');
+    for (std::uint64_t offset = 0; offset < input.size();) {
+        const auto count = input.read_at(offset, text.data() + offset,
+            text.size() - static_cast<std::size_t>(offset));
+        if (count == 0) { detail = "retention manifest short read"; return false; }
+        offset += count;
+    }
+    if (!input.revalidate_path().ok()) {
+        detail = "retention manifest changed during inspection";
+        return false;
+    }
+    json::Limits limits;
+    limits.maximum_bytes = 1024U * 1024U;
+    limits.maximum_depth = 8;
+    limits.maximum_nodes = 128;
+    auto parsed = json::parse(text, limits);
+    if (!parsed || !parsed.value().is_object()) {
+        detail = "retention manifest is malformed";
+        return false;
+    }
+    const json::Value& value = parsed.value();
+    const auto field = [&](const char* name) {
+        const json::Value* item = value.find(name);
+        auto text_value = item == nullptr ? facman::core::Result<std::string>::failure(
+            {"missing", "", ""}) : item->string_value();
+        return text_value ? text_value.take_value() : std::string {};
+    };
+    const std::string save = field("save");
+    const fs::path save_name = fs::u8path(save);
+    const auto path_matches = [&](const char* name, const fs::path& expected) {
+        const std::string value_text = field(name);
+        return !value_text.empty() &&
+            facman::platform::path_from_utf8(value_text).lexically_normal() == expected.lexically_normal();
+    };
+    const json::Value* source_size = value.find("source_size");
+    auto size = source_size == nullptr ? facman::core::Result<std::uint64_t>::failure(
+        {"missing", "", ""}) : source_size->unsigned_integer_value();
+    if (field("schema") != "factorio.save_backup.v1" || field("command") != "saves.backup" ||
+        field("workspace_id") != workspace_id || field("instance_id") != instance_id ||
+        save.empty() || save_name != save_name.filename() || save_name.extension() != ".zip" ||
+        !path_matches("source_path", source_backup.parent_path().parent_path() / "saves" / save_name) ||
+        !path_matches("destination_path", source_backup) ||
+        !path_matches("path", source_backup) ||
+        !path_matches("manifest_path", source_manifest) ||
+        field("sha256") != backup.sha256.str() || !size || size.value() != backup.size ||
+        field("consistency_policy") != "pinned_source_two_pass_sha256_v1") {
+        detail = "retention manifest does not prove the journaled backup identity";
+        return false;
+    }
+    return true;
+}
+
+bool retention_selection_marker_matches(
+    const fs::path& path, const std::string& digest, std::string& detail)
+{
+    facman::platform::StableInputFile input;
+    const auto opened = input.open_no_follow_pinned(path);
+    if (!opened.ok() || !input.identity().regular_file ||
+        input.identity().link_count != 1U || input.size() != digest.size() + 1U) {
+        detail = opened.ok() ? "retention selection marker is not exact" : opened.detail;
+        return false;
+    }
+    std::string text(static_cast<std::size_t>(input.size()), '\0');
+    if (input.read_at(0, text.data(), text.size()) != text.size() ||
+        text != digest + "\n" || !input.revalidate_path().ok()) {
+        detail = "retention selection marker differs from its journaled identity";
+        return false;
+    }
+    return true;
+}
+
+Outcome recover_owned_backup_retention(const fs::path& workspace, Record& record)
+{
+    const auto unsafe = [](const std::string& detail) -> Outcome {
+        return Refusal {"recovery_retention_unsafe",
+            "Backup retention needs manual audit before recovery can continue", detail, false};
+    };
+    const fs::path root = fs::absolute(workspace).lexically_normal();
+    const fs::path target = fs::absolute(record.target).lexically_normal();
+    if (record.commit_strategy != "move_owned_backup_and_manifest_to_trash_no_delete" ||
+        !record.staging_roots.empty() || record.sources.empty() ||
+        record.sources.size() % 2U != 0U ||
+        record.expected_files.size() != record.sources.size() ||
+        target.parent_path() != root / "trash" / "saves" ||
+        path_text(target.filename()).rfind(record.transaction_id + "-", 0) != 0U)
+        return unsafe("retention journal shape or destination is invalid");
+    if (!facman::core::Sha256Digest::parse(record.operation_context) ||
+        record.operation_context != retention_selection_digest(record))
+        return unsafe("retention selection differs from its journaled digest");
+    auto authority = facman::workspace::inspect_workspace_root(root);
+    if (!authority || authority.value().state != facman::workspace::WorkspaceRootState::facman_owned ||
+        !authority.value().mutation_allowed || !authority.value().root_authority ||
+        authority.value().workspace_id != record.workspace_id)
+        return unsafe("workspace authority differs from the retention journal");
+    const fs::path backups = record.sources.front().parent_path().lexically_normal();
+    const fs::path instance = backups.parent_path();
+    if (backups.filename() != "backups" || instance.parent_path() != root / "instances" ||
+        target.filename() != fs::u8path(record.transaction_id + "-" + path_text(instance.filename())) ||
+        !authority.value().root_authority->validate_descendant(backups).ok())
+        return unsafe("backup or trash path is outside the owned workspace");
+    std::error_code target_error;
+    const fs::file_status target_status = fs::symlink_status(target, target_error);
+    const bool target_exists = !target_error && target_status.type() == fs::file_type::directory;
+    if ((target_error && target_error != std::errc::no_such_file_or_directory) ||
+        (!target_error && target_status.type() != fs::file_type::directory &&
+         target_status.type() != fs::file_type::not_found) ||
+        (target_exists && !authority.value().root_authority->validate_descendant(target).ok()) ||
+        (!target_exists && !record.effect_parent_identity.empty()))
+        return unsafe("retention trash directory is missing or unsafe");
+    if (!retention_instance_unlocked(instance)) return Refusal {
+        "recovery_retention_locked", "Instance has an active or unsafe save-write lock",
+        path_text(instance / "locks"), true};
+    std::vector<bool> at_source;
+    at_source.reserve(record.sources.size());
+    std::set<fs::path> seen_sources;
+    bool any_target = false;
+    for (std::size_t index = 0; index < record.sources.size(); ++index) {
+        const fs::path source = record.sources[index].lexically_normal();
+        const fs::path leaf = fs::u8path(record.expected_files[index].path.str());
+        const fs::path destination = target / leaf;
+        if (!seen_sources.insert(source).second ||
+            source.parent_path() != backups || source.filename() != leaf ||
+            leaf != leaf.filename() ||
+            !authority.value().root_authority->validate_descendant(source, true).ok() ||
+            (target_exists && !authority.value().root_authority->validate_descendant(destination, true).ok()))
+            return unsafe("retention source or destination differs from its journaled leaf");
+        if (index % 2U == 1U &&
+            source.filename() != fs::u8path(path_text(record.sources[index - 1].filename()) + ".manifest.json"))
+            return unsafe("retention backup and manifest are not a pair");
+        bool source_present = false, target_present = false;
+        std::string detail;
+        if (!retention_file_present(source, source_present, detail) ||
+            !retention_file_present(destination, target_present, detail) ||
+            source_present == target_present)
+            return unsafe(detail.empty() ? "retention file is missing or duplicated" : detail);
+        if (!retention_file_matches(source_present ? source : destination,
+                record.expected_files[index], detail)) return unsafe(detail);
+        at_source.push_back(source_present);
+        any_target = any_target || target_present;
+    }
+    std::string detail;
+    bool marker_present = false;
+    if (target_exists) {
+        facman::platform::StableDirectoryObject directory;
+        std::vector<fs::path> names;
+        if (!directory.open_no_follow(target).ok() ||
+            !directory.list_child_names_bounded(record.sources.size() + 2U, names).ok())
+            return unsafe("retention trash inventory is unsafe");
+        std::set<fs::path> allowed;
+        for (const ExpectedFile& expected : record.expected_files)
+            allowed.insert(fs::u8path(expected.path.str()));
+        for (const fs::path& name : names) {
+            if (name == ".facman-retention-selection.v1") marker_present = true;
+            else if (allowed.count(name) == 0U) return unsafe("retention trash contains an unselected object");
+        }
+        if (!directory.revalidate().ok()) return unsafe("retention trash changed during inventory");
+        if (marker_present && any_target && !retention_selection_marker_matches(
+                target / ".facman-retention-selection.v1", record.operation_context, detail))
+            return unsafe(detail);
+    }
+    if (any_target && !marker_present)
+        return unsafe("retention selection marker is missing after a move");
+    for (std::size_t index = 0; index < record.sources.size(); index += 2U) {
+        const fs::path backup_path = at_source[index]
+            ? record.sources[index]
+            : target / fs::u8path(record.expected_files[index].path.str());
+        facman::archive::Plan archive;
+        const auto inspected = facman::archive::inspect_archive(
+            backup_path, facman::archive::SaveArchivePolicy::limits(), archive);
+        const bool recognized = inspected.ok() && archive.entries.size() <= 100000U &&
+            std::any_of(archive.entries.begin(), archive.entries.end(), [](const facman::archive::Entry& entry) {
+                return !entry.directory && (entry.path == "level-init.dat" ||
+                    (entry.path.size() > 15U &&
+                     entry.path.compare(entry.path.size() - 15U, 15U, "/level-init.dat") == 0));
+            });
+        if (!recognized || !retention_file_matches(backup_path, record.expected_files[index], detail))
+            return unsafe("retention backup is not an unchanged recognized Factorio save");
+        const fs::path manifest = at_source[index + 1U]
+            ? record.sources[index + 1U]
+            : target / fs::u8path(record.expected_files[index + 1U].path.str());
+        if (!retention_manifest_matches(manifest, record.sources[index],
+                record.sources[index + 1U], record.expected_files[index],
+                record.workspace_id, path_text(instance.filename()), detail)) return unsafe(detail);
+    }
+    if (!any_target) {
+        if (!advance(workspace, record, "recovery_required", "retention_no_effect_verified", detail) ||
+            !advance(workspace, record, "rollback_required", "retention_rollback_selected", detail) ||
+            !advance(workspace, record, "rolled_back", "retention_sources_preserved", detail))
+            return Refusal {"recovery_write_refused", "Retention rollback journal could not be closed", detail, true};
+        record.recovery_actions.push_back("all_backups_remained_at_source");
+        return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+    }
+    facman::platform::StableDirectoryObject trash_parent, trash;
+    if (record.effect_parent_identity.empty() ||
+        !trash_parent.open_no_follow_for_relative_writes(target.parent_path()).ok() ||
+        directory_effect_identity(trash_parent) != record.effect_parent_identity ||
+        !trash_parent.open_child_directory_no_follow_for_relative_writes(target.filename(), trash).ok())
+        return unsafe("retention trash parent differs from its journaled identity");
+    bool paused_before_recovery_move = false;
+    for (std::size_t index = 0; index < record.sources.size(); ++index) {
+        if (!at_source[index]) continue;
+        const fs::path source = record.sources[index];
+        const fs::path destination = target / fs::u8path(record.expected_files[index].path.str());
+        if (!facman::workspace::revalidate_workspace_root(authority.value()) ||
+            !trash_parent.revalidate().ok() || !trash.revalidate().ok() ||
+            !retention_file_matches(source, record.expected_files[index], detail))
+            return unsafe(detail.empty() ? "retention authority or source changed before move" : detail);
+        const char* pause = std::getenv("FACMAN_TEST_RETENTION_RECOVERY_PAUSE");
+        if (!paused_before_recovery_move && pause != nullptr && std::string(pause) == "1") {
+            paused_before_recovery_move = true;
+            const fs::path marker = root / ".facman-test-retention-recovery-paused";
+            const fs::path release = root / ".facman-test-retention-recovery-release";
+            if (!facman::base::write_text_new_atomic(marker, "ready\n", detail)) return unsafe(detail);
+            bool released = false;
+            for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+                std::error_code error;
+                if (fs::exists(release, error) && !error) { released = true; break; }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            if (!released) return unsafe("retention recovery test pause timed out");
+        }
+        if (!retention_instance_unlocked(instance)) return Refusal {
+            "recovery_retention_locked", "Instance save-write lock appeared before recovery move",
+            path_text(instance / "locks"), true};
+        const auto moved = facman::platform::commit_no_replace(source, destination);
+        if (!moved.ok() || !retention_file_matches(destination, record.expected_files[index], detail))
+            return unsafe(moved.ok() ? detail : moved.detail);
+    }
+    if (!advance(workspace, record, "recovery_required", "retention_pairs_verified_in_trash", detail) ||
+        !complete(workspace, record, detail))
+        return Refusal {"recovery_write_refused", "Retention recovery journal could not be closed", detail, true};
+    record.recovery_actions.push_back("verified_backup_and_manifest_pairs_retained_in_trash");
+    return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+}
+
+} // namespace
 
 Outcome apply(const fs::path& workspace, const std::string& id)
 {
@@ -1144,8 +1485,7 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     std::string detail;
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
     if (terminal(record.state)) return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
-    fs::path lock_path = journal_path(workspace, id);
-    lock_path += ".recovery.lock";
+    const fs::path lock_path = recovery_lock_path(workspace, id);
     facman::base::StableLocalLock recovery_lock;
     facman::base::StableLockResult lock_result = recovery_lock.create(lock_path);
     if (lock_result.code == facman::base::StableLockCode::exists) {
@@ -1153,21 +1493,26 @@ Outcome apply(const fs::path& workspace, const std::string& id)
         std::string existing_content;
         facman::base::StableLockResult existing_result =
             existing.open_existing(lock_path, 4096, existing_content);
-        if (existing_result.code == facman::base::StableLockCode::contended ||
-            existing_result.acquired()) {
+        json::ObjectBuilder expected_lock;
+        expected_lock.add_string("schema", "facman.recovery_lock.v1");
+        expected_lock.add_string("identity", existing.identity_text());
+        if (existing_result.acquired() && record.command_id == "saves.retention.apply" &&
+            (existing_content.empty() || existing_content == expected_lock.serialize() + "\n")) {
+            recovery_lock = std::move(existing);
+            lock_result = existing_result;
+        } else if (existing_result.code == facman::base::StableLockCode::contended ||
+                   existing_result.acquired()) {
             return Refusal {
                 "recovery_lock_contended",
-                "Another recovery attempt owns this transaction",
+                "Another operation owns this transaction or its lock cannot be adopted",
                 existing_result.detail,
                 true,
             };
+        } else {
+            return Refusal {
+                "recovery_write_refused", "Recovery lock is unsafe or unsupported",
+                existing_result.detail, false};
         }
-        return Refusal {
-            "recovery_write_refused",
-            "Recovery lock is unsafe or unsupported",
-            existing_result.detail,
-            false,
-        };
     }
     if (!lock_result.acquired()) {
         return Refusal {
@@ -1196,6 +1541,12 @@ Outcome apply(const fs::path& workspace, const std::string& id)
         (void)recovery_lock.remove_exact(ignored);
     };
     auto unlock_checked = [&]() { return recovery_lock.remove_exact(detail); };
+    if (record.command_id == "saves.retention.apply") {
+        Outcome result = recover_owned_backup_retention(workspace, record);
+        if (!unlock_checked()) return Refusal {
+            "recovery_write_refused", "Recovery lock identity changed before release", detail, false};
+        return result;
+    }
     if (record.command_id == "saves.backup" &&
         record.state == State::committing && !fs::exists(record.target)) {
         if (!publish_save_backup_file(workspace, record, detail)) {

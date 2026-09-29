@@ -15,7 +15,9 @@
     "path": { "type": "string", "minLength": 1 },
     "created_at": { "type": "string", "minLength": 1 },
     "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_kind": { "enum": ["live", "owned_backup"] },
+    "destination_save": { "type": "string", "minLength": 5, "pattern": "\\.zip$" }
   },
   "additionalProperties": true
 }

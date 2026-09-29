@@ -33,6 +33,8 @@ struct CloneRequest {
     std::string source_instance_id;
     std::string target_instance_id;
     std::string save;
+    std::string source_kind = "live";
+    std::string destination_save;
 };
 struct ExportRequest {
     std::string instance_id;
@@ -73,6 +75,8 @@ struct CloneResult {
     std::string created_at;
     std::string sha1;
     std::string sha256;
+    std::string source_kind = "live";
+    std::string destination_save;
 };
 struct ExportResult {
     std::string instance_id;

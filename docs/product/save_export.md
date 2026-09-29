@@ -7,6 +7,8 @@ Implemented commands:
 - `facman saves list --instance <instance-id>`
 - `facman saves backup <save> --instance <instance-id> [--to <path>]`
 - `facman saves clone <save> --instance <source-id> --to-instance <target-id>`
+- `facman saves clone <backup-name.zip> --instance <source-id> --to-instance <target-id> --source-kind owned_backup --as <new-save.zip>`
+- `facman saves restore <backup-name.zip> --instance <instance-id> --as <new-save.zip>`
 - `facman export instance <instance-id> <pack.zip>`
 - `facman import instance <pack.zip> [--id <instance-id>]`
 
@@ -40,6 +42,12 @@ FacMan ownership.
 
 Clones are also fail-closed. A target save that already exists returns
 `save_clone_target_exists` and leaves the target instance unchanged.
+Restore uses the same recoverable, no-clobber clone operation, but accepts only
+a backup in the source instance's owned backup directory whose sidecar, workspace
+identity, size and SHA-256 match. It requires an explicit new `.zip` destination
+name and refuses active run or save-write locks. It preserves the backup and any
+existing save. A structurally recognized save is not a guarantee that Factorio
+can load it.
 
 Export redactions:
 

@@ -394,6 +394,170 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             removed = self.invoke(script, home, "uninstall", "--yes", path_prefix=guard)
             self.assertEqual(removed.returncode, 0, removed.stderr)
 
+    def test_same_version_repair_recovers_each_generation_swap_boundary(self) -> None:
+        boundaries = (
+            "FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_JOURNAL",
+            "FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_OLD_MOVE",
+            "FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_NEW_MOVE",
+            "FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_BACKUP_REMOVAL",
+        )
+        for boundary in boundaries:
+            with self.subTest(boundary=boundary), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home = root / "home"
+                home.mkdir()
+                payload = b"exact repaired executable bytes\n"
+                setup = self.package_script(root, "0.1.0-alpha.6", payload)
+                workspace = home / "workspace"
+                workspace.mkdir()
+                sentinel = workspace / "world.zip"
+                sentinel.write_bytes(b"preserved workspace bytes")
+                installed = self.invoke(setup, home, "install", "--yes")
+                self.assertEqual(installed.returncode, 0, installed.stderr)
+                install = home / ".local/opt/facman"
+                generation = install / "generations/0.1.0-alpha.6"
+                (generation / "facman").unlink()
+                installed_setup = install / "maintenance/FacManSetup.run"
+                interrupted = self.invoke(
+                    installed_setup, home, "repair", "--yes",
+                    extra_environment={boundary: "1"},
+                )
+                self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
+                repair_record = install / "state/repair-pending.v1"
+                self.assertTrue(repair_record.is_dir())
+                record_identity = (repair_record.stat().st_dev, repair_record.stat().st_ino)
+                self.assertNotEqual(self.invoke(installed_setup, home, "verify").returncode, 0)
+                self.assertNotEqual(self.invoke(installed_setup, home, "uninstall", "--yes").returncode, 0)
+                recovered = self.invoke(installed_setup, home, "recover", "--yes")
+                self.assertEqual(recovered.returncode, 0, recovered.stderr)
+                verified = self.invoke(installed_setup, home, "verify")
+                self.assertEqual(verified.returncode, 0, verified.stderr)
+                self.assertEqual((generation / "facman").read_bytes(), payload)
+                self.assertFalse((install / "state/repair-pending.v1").exists())
+                self.assertFalse(any((install / "generations").glob(".install-*")))
+                self.assertFalse(any((install / "generations").glob(".repair-previous-*")))
+                for name in ("facman", "FacMan"):
+                    self.assertEqual((home / ".local/bin" / name).readlink(), install / "current" / name)
+                self.assertEqual(sentinel.read_bytes(), b"preserved workspace bytes")
+                history = home / ".local/state/facman-setup/history"
+                archived = list(history.rglob("completed-repair-0.1.0-alpha.6-*"))
+                self.assertEqual(len(archived), 1)
+                self.assertTrue((archived[0] / "new-target").is_file())
+                self.assertEqual((archived[0].stat().st_dev, archived[0].stat().st_ino),
+                                 record_identity)
+                removed = self.invoke(installed_setup, home, "uninstall", "--yes")
+                self.assertEqual(removed.returncode, 0, removed.stderr)
+
+    def test_repair_refuses_foreign_generation_file_before_journaling(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            setup = self.package_script(root, "0.1.0-alpha.6", b"owned executable\n")
+            self.assertEqual(self.invoke(setup, home, "install", "--yes").returncode, 0)
+            install = home / ".local/opt/facman"
+            foreign = install / "generations/0.1.0-alpha.6/foreign.txt"
+            foreign.write_bytes(b"preserve foreign bytes")
+            refused = self.invoke(setup, home, "repair", "--yes")
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertEqual(foreign.read_bytes(), b"preserve foreign bytes")
+            self.assertFalse((install / "state/repair-pending.v1").exists())
+
+    def test_repair_refuses_special_generation_entry_before_journaling(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            setup = self.package_script(root, "0.1.0-alpha.6", b"owned executable\n")
+            self.assertEqual(self.invoke(setup, home, "install", "--yes").returncode, 0)
+            install = home / ".local/opt/facman"
+            special = install / "generations/0.1.0-alpha.6/foreign.pipe"
+            os.mkfifo(special)
+            refused = self.invoke(setup, home, "repair", "--yes")
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertTrue(special.exists())
+            self.assertFalse((install / "state/repair-pending.v1").exists())
+            self.assertFalse(any((install / "generations").glob(".repair-previous-*")))
+
+    def test_repair_recovery_handles_partial_backup_retirement_and_foreign_refusal(self) -> None:
+        for foreign_backup in (False, True):
+            with self.subTest(foreign_backup=foreign_backup), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home = root / "home"
+                home.mkdir()
+                payload = b"repaired package bytes\n"
+                setup = self.package_script(root, "0.1.0-alpha.6", payload)
+                self.assertEqual(self.invoke(setup, home, "install", "--yes").returncode, 0)
+                install = home / ".local/opt/facman"
+                generation = install / "generations/0.1.0-alpha.6"
+                (generation / "facman").write_bytes(b"damaged bytes\n")
+                installed_setup = install / "maintenance/FacManSetup.run"
+                interrupted = self.invoke(
+                    installed_setup, home, "repair", "--yes",
+                    extra_environment={
+                        "FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_NEW_MOVE": "1",
+                    },
+                )
+                self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
+                backup = next((install / "generations").glob(".repair-previous-*"))
+                if foreign_backup:
+                    foreign = backup / "foreign.txt"
+                    foreign.write_bytes(b"foreign bytes")
+                    refused = self.invoke(installed_setup, home, "recover", "--yes")
+                    self.assertNotEqual(refused.returncode, 0)
+                    self.assertEqual(foreign.read_bytes(), b"foreign bytes")
+                    foreign.unlink()
+                else:
+                    (backup / "share/facman/manifest/MANIFEST.sha256").unlink()
+                recovered = self.invoke(installed_setup, home, "recover", "--yes")
+                self.assertEqual(recovered.returncode, 0, recovered.stderr)
+                self.assertEqual((generation / "facman").read_bytes(), payload)
+                self.assertEqual(self.invoke(installed_setup, home, "verify").returncode, 0)
+
+    def test_repair_recovery_preserves_foreign_stage_and_retries_owned_prefix(self) -> None:
+        locations = (
+            ("receipt", "state", ".repair-receipt-"),
+            ("setup", "maintenance", ".repair-setup-"),
+            ("authority", "state", ".repair-authority-"),
+            ("desktop", None, ".repair-desktop-"),
+        )
+        for label, directory, prefix in locations:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home = root / "home"
+                home.mkdir()
+                payload = b"repair stage package bytes\n"
+                setup = self.package_script(root, "0.1.0-alpha.6", payload)
+                self.assertEqual(self.invoke(setup, home, "install", "--yes").returncode, 0)
+                install = home / ".local/opt/facman"
+                generation = install / "generations/0.1.0-alpha.6"
+                (generation / "facman").unlink()
+                installed_setup = install / "maintenance/FacManSetup.run"
+                interrupted = self.invoke(
+                    installed_setup, home, "repair", "--yes",
+                    extra_environment={
+                        "FACMAN_TEST_LINUX_SETUP_INTERRUPT_REPAIR_AFTER_JOURNAL": "1",
+                    },
+                )
+                self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
+                journal = install / "state/repair-pending.v1"
+                stage_name = Path((journal / "staging-target").read_text().strip()).name
+                suffix = stage_name.removeprefix(".install-0.1.0-alpha.6-")
+                parent = (install / directory) if directory else home / ".local/share/applications"
+                foreign = parent / f"{prefix}{suffix}"
+                foreign.write_bytes(b"foreign stage bytes")
+                refused = self.invoke(installed_setup, home, "recover", "--yes")
+                self.assertNotEqual(refused.returncode, 0)
+                self.assertEqual(foreign.read_bytes(), b"foreign stage bytes")
+                self.assertFalse((install / "generations" / f".repair-previous-0.1.0-alpha.6-{suffix}").exists())
+                foreign.unlink()
+                if label == "receipt":
+                    foreign.write_bytes((install / "state/installed-state.v1.json").read_bytes()[:8])
+                recovered = self.invoke(installed_setup, home, "recover", "--yes")
+                self.assertEqual(recovered.returncode, 0, recovered.stderr)
+                self.assertFalse(foreign.exists())
+                self.assertEqual((generation / "facman").read_bytes(), payload)
+
     def test_source_distinct_update_recovers_then_rolls_back_and_reapplies(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -434,10 +598,143 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertEqual(self.invoke(second, home, "verify").returncode, 0)
             removed = self.invoke(second, home, "uninstall", "--yes")
             self.assertEqual(removed.returncode, 0, removed.stderr)
+            self.assertFalse((home / ".local/bin/facman").is_symlink())
+            self.assertFalse((home / ".local/bin/FacMan").is_symlink())
             self.assertFalse((home / ".local/opt/facman").exists())
             history = home / ".local/state/facman-setup/history"
             self.assertTrue(any(history.rglob("old-target")))
             self.assertEqual(sentinel.read_bytes(), b"preserved world bytes")
+
+    def test_first_install_cutover_recovers_to_absence_and_can_retry(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            setup = self.package_script(root, "0.1.0-alpha.6", b"first install\n")
+            workspace = home / "workspace"
+            workspace.mkdir()
+            sentinel = workspace / "world.zip"
+            sentinel.write_bytes(b"preserved world bytes")
+            interrupted = self.invoke(
+                setup, home, "install", "--yes",
+                extra_environment={"FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_AFTER_CURRENT": "1"},
+            )
+            self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
+            install = home / ".local/opt/facman"
+            installed_setup = install / "maintenance/FacManSetup.run"
+            self.assertTrue(installed_setup.is_file())
+            self.assertTrue((install / "current").is_symlink())
+            self.assertFalse((install / "state/installed-state.v1.json").exists())
+            self.assertNotEqual(self.invoke(setup, home, "verify").returncode, 0)
+            self.assertNotEqual(self.invoke(setup, home, "install", "--yes").returncode, 0)
+            interrupted_recovery = self.invoke(
+                installed_setup, home, "recover", "--yes",
+                extra_environment={
+                    "FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_RECOVERY_AFTER_CURRENT": "1",
+                },
+            )
+            self.assertEqual(interrupted_recovery.returncode, 75,
+                             interrupted_recovery.stderr)
+            self.assertFalse((install / "current").is_symlink())
+            self.assertTrue((install / "state/first-install-pending.v1").is_dir())
+            recovered = self.invoke(installed_setup, home, "recover", "--yes")
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertFalse((install / "current").exists())
+            self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
+            self.assertFalse((home / ".local/bin/facman").is_symlink())
+            self.assertFalse((home / ".local/share/applications/facman.desktop").exists())
+            self.assertEqual(sentinel.read_bytes(), b"preserved world bytes")
+            history = home / ".local/state/facman-setup/history"
+            self.assertTrue(any(history.rglob("restored-first-install-0.1.0-alpha.6-*/new-target")))
+            self.assertEqual(self.invoke(setup, home, "install", "--yes").returncode, 0)
+            self.assertEqual(self.invoke(setup, home, "verify").returncode, 0)
+            self.assertEqual(self.invoke(setup, home, "uninstall", "--yes").returncode, 0)
+            self.assertFalse((home / ".local/bin/facman").is_symlink())
+            self.assertFalse((home / ".local/bin/FacMan").is_symlink())
+
+    def test_first_install_recovery_refuses_foreign_effects(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            setup = self.package_script(root, "0.1.0-alpha.6", b"first install\n")
+            interrupted = self.invoke(
+                setup, home, "install", "--yes",
+                extra_environment={"FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_AFTER_CURRENT": "1"},
+            )
+            self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
+            install = home / ".local/opt/facman"
+            foreign = root / "foreign"
+            foreign.write_text("leave this alone", encoding="utf-8")
+            link = home / ".local/bin/facman"
+            link.symlink_to(foreign)
+            refused = self.invoke(setup, home, "recover", "--yes")
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertEqual(link.readlink(), foreign)
+            self.assertEqual(foreign.read_text(encoding="utf-8"), "leave this alone")
+            self.assertTrue((install / "current").is_symlink())
+            link.unlink()
+            tamper = install / "generations/0.1.0-alpha.6/foreign.txt"
+            tamper.write_text("foreign", encoding="utf-8")
+            refused = self.invoke(setup, home, "recover", "--yes")
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertTrue(tamper.exists())
+            tamper.unlink()
+            recovered = self.invoke(setup, home, "recover", "--yes")
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertFalse((home / ".local/opt/facman").exists())
+
+    def test_first_install_journal_precedes_final_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            setup = self.package_script(root, "0.1.0-alpha.6", b"first install\n")
+            interrupted = self.invoke(
+                setup, home, "install", "--yes",
+                extra_environment={"FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_AFTER_JOURNAL": "1"},
+            )
+            self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
+            install = home / ".local/opt/facman"
+            self.assertFalse((install / "current").is_symlink())
+            self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
+            self.assertEqual(len(list((install / "generations").glob(".install-0.1.0-alpha.6-*"))), 1)
+            self.assertTrue((install / "state/first-install-pending.v1").is_dir())
+            recovered = self.invoke(setup, home, "recover", "--yes")
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertFalse(install.exists())
+            self.assertEqual(self.invoke(setup, home, "install", "--yes").returncode, 0)
+            self.assertEqual(self.invoke(setup, home, "uninstall", "--yes").returncode, 0)
+
+    def test_first_install_recovery_restarts_after_generation_removal(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            home.mkdir()
+            setup = self.package_script(root, "0.1.0-alpha.6", b"first install\n")
+            interrupted = self.invoke(
+                setup, home, "install", "--yes",
+                extra_environment={"FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_AFTER_RECEIPT": "1"},
+            )
+            self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
+            install = home / ".local/opt/facman"
+            installed_setup = install / "maintenance/FacManSetup.run"
+            receipt = install / "state/installed-state.v1.json"
+            self.assertTrue(receipt.is_file())
+            interrupted_recovery = self.invoke(
+                installed_setup, home, "recover", "--yes",
+                extra_environment={
+                    "FACMAN_TEST_LINUX_SETUP_INTERRUPT_FIRST_RECOVERY_AFTER_GENERATION": "1",
+                },
+            )
+            self.assertEqual(interrupted_recovery.returncode, 75,
+                             interrupted_recovery.stderr)
+            self.assertFalse((install / "current").is_symlink())
+            self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
+            self.assertTrue(receipt.is_file())
+            recovered = self.invoke(installed_setup, home, "recover", "--yes")
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertFalse(install.exists())
 
     def test_update_refuses_without_previous_setup_source(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

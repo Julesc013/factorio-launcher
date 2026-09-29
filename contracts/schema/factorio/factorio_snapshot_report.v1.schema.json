@@ -17,6 +17,9 @@
     "deterministic": {"const": true},
     "secret_content_included": {"const": false},
     "selected_saves": {"type": "array", "items": {"type": "string"}},
+    "world_bundle_state": {"type": "string", "enum": ["available", "unavailable"]},
+    "world_bundle_reason_code": {"type": "string", "minLength": 1},
+    "world_bundle": {"type": "object"},
     "mutation_executed": {"type": "boolean"}
   },
   "required": ["schema", "command", "status", "snapshot_id", "instance_id", "path", "file_count", "archive_bytes", "portable", "deterministic", "secret_content_included", "selected_saves", "mutation_executed"]
