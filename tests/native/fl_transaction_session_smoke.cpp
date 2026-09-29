@@ -213,6 +213,9 @@ int prove_marker_substitution_and_raii(const fs::path& workspace)
 int prove_precommit_cleanup_recovery(const fs::path& workspace)
 {
     const fs::path staging = workspace / "recoverable" / ".stage";
+    std::error_code error;
+    fs::create_directories(staging.parent_path(), error);
+    if (error) return 50;
     tx::Record record;
     record.command_id = "test.cleanup";
     record.target = workspace / "recoverable" / "target";
