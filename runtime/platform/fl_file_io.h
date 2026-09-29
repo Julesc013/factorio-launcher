@@ -164,6 +164,7 @@ public:
 
 private:
     friend class DurableOutputFile;
+    friend class PrivatePublicationFile;
     IoStatus open_no_follow_impl(const std::filesystem::path& path, bool relative_writes);
     IoStatus open_child_directory_no_follow_impl(
         const std::filesystem::path& leaf,
@@ -172,6 +173,28 @@ private:
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
+
+#ifndef _WIN32
+// An unpublished, pathname-free copy of verified bytes. Publication is a
+// no-replace link (Linux) or descriptor-source clone (macOS).
+class PrivatePublicationFile {
+public:
+    PrivatePublicationFile();
+    ~PrivatePublicationFile();
+    PrivatePublicationFile(const PrivatePublicationFile&) = delete;
+    PrivatePublicationFile& operator=(const PrivatePublicationFile&) = delete;
+
+    IoStatus create(const StableDirectoryObject& staging_parent,
+        const StableDirectoryObject& destination_parent,
+        std::uint64_t maximum_size);
+    std::size_t write_at(std::uint64_t offset, const void* data, std::size_t size);
+    IoStatus publish_no_replace(const std::filesystem::path& destination_leaf);
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+#endif
 
 class DurableOutputFile {
 public:
@@ -187,6 +210,9 @@ public:
     IoStatus flush_file_and_parent();
     IoStatus publish_no_replace(const std::filesystem::path& destination);
     IoStatus publish_sibling_no_replace(const std::filesystem::path& destination_leaf);
+    IoStatus publish_in_directory_no_replace(
+        const StableDirectoryObject& destination_parent,
+        const std::filesystem::path& destination_leaf);
     IoStatus discard_open();
     void close_without_flush() noexcept;
     const std::filesystem::path& path() const noexcept;
@@ -195,6 +221,9 @@ public:
 private:
     friend class StableDirectoryObject;
     friend IoStatus testing_close_relative_staging_for_recovery(DurableOutputFile& output);
+    IoStatus publish_relative_no_replace(
+        const StableDirectoryObject* destination_parent,
+        const std::filesystem::path& destination_leaf);
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };

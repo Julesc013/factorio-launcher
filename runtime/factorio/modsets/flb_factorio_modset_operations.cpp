@@ -493,10 +493,10 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         return refuse(command, request.instance_id, "persistent_write_refused", "Modset archive staging failed", status.code + ": " + status.detail);
     }
     std::string closure_error;
-    const char* pause_marker = std::getenv("FACMAN_TEST_MODSET_EXPORT_PAUSE_MARKER");
-    const char* pause_release = std::getenv("FACMAN_TEST_MODSET_EXPORT_PAUSE_RELEASE");
-    if (pause_marker != nullptr && pause_release != nullptr &&
-        *pause_marker != '\0' && *pause_release != '\0') {
+    const char* pause_after_stage = std::getenv("FACMAN_TEST_MODSET_EXPORT_PAUSE_AFTER_STAGE");
+    if (pause_after_stage != nullptr && std::string(pause_after_stage) == "1") {
+        const fs::path pause_marker = staging / ".facman-modset-export-paused";
+        const fs::path pause_release = staging / ".facman-modset-export-release";
         std::string marker_detail;
         if (!facman::base::write_text_new_atomic(
                 pause_marker, "staged\n", marker_detail)) {
@@ -539,6 +539,39 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
             closure_error = "modset source changed during export: " + after_staging.front();
         }
     }
+    std::string archive_digest;
+    if (closure_error.empty()) {
+        status = facman::archive::archive_sha256(written.verified_plan, options.limits, archive_digest);
+        if (!status.ok()) closure_error = "staged archive digest failed: " + status.detail;
+    }
+    facman::platform::FileIdentity exact_archive_identity;
+    if (closure_error.empty()) {
+        facman::platform::StableInputFile staged_archive;
+        const auto opened = staged_archive.open_no_follow_pinned(written.archive_path);
+        if (!opened.ok() || !staged_archive.identity().regular_file ||
+            staged_archive.identity().link_count != 1U ||
+            staged_archive.size() != written.verified_plan.archive_size) {
+            closure_error = opened.ok() ? "staged archive identity changed" : opened.detail;
+        } else {
+            facman::base::Sha256Hasher digest;
+            std::array<unsigned char, 65536> block {};
+            for (std::uint64_t offset = 0; offset < staged_archive.size();) {
+                const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(
+                    block.size(), staged_archive.size() - offset));
+                if (staged_archive.read_at(offset, block.data(), count) != count) {
+                    closure_error = "staged archive changed during final identity check";
+                    break;
+                }
+                digest.update(block.data(), count);
+                offset += count;
+            }
+            if (closure_error.empty() &&
+                (!staged_archive.revalidate_path().ok() || digest.finish() != archive_digest)) {
+                closure_error = "staged archive differs from verified bytes";
+            }
+            if (closure_error.empty()) exact_archive_identity = staged_archive.identity();
+        }
+    }
     if (!closure_error.empty()) {
         written.verified_plan.reader.reset();
         const facman::archive::Status cleaned =
@@ -553,11 +586,86 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         !session.committing("no_clobber_commit_started")) {
         return refuse(command, request.instance_id, "recovery_write_refused", "Modset export journal update failed", session.detail());
     }
-    std::string commit_detail;
-    if (!tx::StagedFileCommit::commit(staging, written.archive_path, request.output_path, commit_detail)) {
+    written.verified_plan.reader.reset();
+    const auto opened = [&]() {
+        facman::platform::StableDirectoryObject source_parent;
+        facman::platform::StableDirectoryObject target_parent;
+        auto result = source_parent.open_no_follow_for_relative_writes(staging);
+        if (result.ok()) result = target_parent.open_no_follow_for_relative_writes(output_parent);
+#ifdef _WIN32
+        facman::platform::DurableOutputFile exact_archive;
+        if (result.ok()) result = source_parent.reopen_child_file_no_follow_for_relative_publish(
+            written.archive_path.filename(), exact_archive_identity,
+            options.limits.maximum_archive_bytes, exact_archive);
+        if (result.ok()) result = exact_archive.publish_in_directory_no_replace(
+            target_parent, request.output_path.filename());
+#else
+        facman::platform::StableInputFile staged_archive;
+        if (result.ok()) result = staged_archive.open_no_follow_pinned(written.archive_path);
+        if (result.ok() &&
+            (!staged_archive.identity().same_object(exact_archive_identity) ||
+             staged_archive.size() != written.verified_plan.archive_size))
+            result = facman::platform::IoStatus::failure(
+                "modset_verification_failed", "staged archive identity changed before private copy");
+        facman::platform::PrivatePublicationFile private_copy;
+        if (result.ok()) result = private_copy.create(
+            source_parent, target_parent, options.limits.maximum_archive_bytes);
+        facman::base::Sha256Hasher private_digest;
+        std::array<unsigned char, 65536> block {};
+        for (std::uint64_t offset = 0; result.ok() && offset < staged_archive.size();) {
+            const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(
+                block.size(), staged_archive.size() - offset));
+            if (staged_archive.read_at(offset, block.data(), count) != count ||
+                private_copy.write_at(offset, block.data(), count) != count) {
+                result = facman::platform::IoStatus::failure(
+                    "modset_verification_failed", "private archive copy failed");
+                break;
+            }
+            private_digest.update(block.data(), count);
+            offset += count;
+        }
+        if (result.ok() &&
+            (!staged_archive.revalidate_path().ok() || private_digest.finish() != archive_digest))
+            result = facman::platform::IoStatus::failure(
+                "modset_verification_failed", "private archive copy differs from verified bytes");
+        if (result.ok()) {
+            const std::vector<std::string> after_copy = verify_lock(instance);
+            if (!after_copy.empty()) result = facman::platform::IoStatus::failure(
+                "modset_verification_failed", after_copy.front());
+        }
+        const char* pause_private = std::getenv("FACMAN_TEST_MODSET_EXPORT_PAUSE_AFTER_PRIVATE_COPY");
+        if (result.ok() && pause_private != nullptr && std::string(pause_private) == "1") {
+            std::string marker_detail;
+            if (!facman::base::write_text_new_atomic(
+                    staging / ".facman-modset-private-copy-paused", "copied\n", marker_detail))
+                result = facman::platform::IoStatus::failure(
+                    "modset_verification_failed", marker_detail);
+            const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+            while (result.ok() &&
+                !fs::exists(staging / ".facman-modset-private-copy-release") &&
+                std::chrono::steady_clock::now() < deadline)
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            if (result.ok() && !fs::exists(staging / ".facman-modset-private-copy-release"))
+                result = facman::platform::IoStatus::failure(
+                    "modset_verification_failed", "private archive copy test pause timed out");
+        }
+        if (result.ok()) result = private_copy.publish_no_replace(request.output_path.filename());
+#endif
+        return result;
+    }();
+    if (!opened.ok()) {
+        if (opened.code == "output_published_unverified") {
+            session.require_recovery(opened.detail);
+            return refuse(command, request.instance_id, "transaction_recovery_required",
+                "Modset archive publication requires recovery", opened.detail, false);
+        }
         (void)facman::archive::cleanup_owned_staging_root(staging);
-        session.failed(commit_detail);
-        return refuse(command, request.instance_id, "persistent_write_refused", "Modset archive commit failed", commit_detail);
+        session.failed(opened.detail);
+        const bool verification_failed = opened.code == "modset_verification_failed";
+        return refuse(command, request.instance_id,
+            verification_failed ? "modset_verification_failed" : "persistent_write_refused",
+            verification_failed ? "Modset export no longer matches its verified lock" : "Modset archive commit failed",
+            opened.detail);
     }
     if (!session.committed("modset_archive_committed")) {
         return refuse(
