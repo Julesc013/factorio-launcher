@@ -1084,30 +1084,47 @@ facman::core::Result<std::string> restore(const fs::path& workspace, const Resto
     auto started = tx::TransactionSession::begin(workspace, std::move(transaction));
     if (!started) return fail("snapshot_transaction_failed", started.error().message, workspace);
     tx::TransactionSession session = started.take_value();
+    const auto abort_staging = [&](const std::string& reason) {
+        std::error_code probe_error;
+        const auto staging_status = fs::symlink_status(staging, probe_error);
+        if (staging_status.type() == fs::file_type::not_found &&
+            (!probe_error || probe_error == std::errc::no_such_file_or_directory)) {
+            session.failed(reason);
+            return fail("snapshot_restore_staging_failed", reason, staging);
+        }
+        const auto cleanup = facman::archive::cleanup_owned_staging_root(staging);
+        if (!cleanup.ok()) {
+            const std::string detail = reason + "; staging cleanup: " + cleanup.detail;
+            session.require_recovery(detail);
+            return fail("snapshot_transaction_recovery_required", detail, staging,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
+        session.failed(reason);
+        return fail("snapshot_restore_staging_failed", reason, staging);
+    };
     if (!session.validated("snapshot_schema_hashes_install_profile_template_validated") ||
         !session.planned("restore_target_and_archive_plan_validated") ||
         !session.staging("owned_restore_staging_selected")) return fail("snapshot_transaction_failed", session.detail(), workspace);
     auto status = facman::archive::extract_to_new_owned_staging(
         snapshot.value().plan, staging, facman::archive::InstanceSnapshotPolicy::limits());
     if (!status.ok() || !session.staged("snapshot_archive_extracted")) {
-        session.failed(status.ok() ? session.detail() : status.detail);
-        return fail("snapshot_restore_staging_failed", status.ok() ? session.detail() : status.code + ": " + status.detail, staging);
+        return abort_staging(status.ok() ? session.detail() : status.code + ": " + status.detail);
     }
     std::error_code error;
     fs::remove_all(staging / "manifest", error);
-    fs::remove(staging / "instance.v1.json", error);
-    fs::remove(staging / "config" / "config.ini", error);
-    fs::create_directories(staging / "config", error);
+    if (!error) fs::remove(staging / "instance.v1.json", error);
+    if (!error) fs::remove(staging / "config" / "config.ini", error);
+    if (!error) fs::create_directories(staging / "config", error);
+    if (error) return abort_staging(error.message());
     std::string write_detail;
-    if (error || !facman::base::write_text_new_atomic(
+    if (!facman::base::write_text_new_atomic(
             staging / "instance.v1.json", local_manifest(snapshot.value(), target_id.value(), target.path), write_detail) ||
         !facman::base::write_text_new_atomic(
             staging / "config" / "config.ini", effective_config(snapshot.value(), install.value(), target_id.value(), target.path), write_detail) ||
         !session.verified("snapshot_hashes_verified_and_local_metadata_regenerated") ||
         !session.committing("snapshot_restore_commit_started")) {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
-        session.failed(error ? error.message() : write_detail.empty() ? session.detail() : write_detail);
-        return fail("snapshot_restore_staging_failed", error ? error.message() : write_detail, staging);
+        const std::string failure_detail = write_detail.empty() ? session.detail() : write_detail;
+        return abort_staging(failure_detail);
     }
     if (!tx::StagedDirectoryCommit::commit(staging, target.path, write_detail)) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
