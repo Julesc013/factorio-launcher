@@ -50,6 +50,7 @@ struct EffectiveProfile {
     std::string profile_id;
     std::string template_id;
     Settings settings;
+    std::vector<std::string> base_additional_arguments;
     std::vector<std::string> launch_arguments;
 };
 

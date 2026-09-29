@@ -40,6 +40,34 @@ def create_instance(workspace: Path) -> Path:
 
 
 class ProfileTemplateTests(unittest.TestCase):
+    def test_human_profile_plan_and_apply_show_effective_values_and_sources(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman profile human ") as value:
+            workspace = Path(value)
+            instance = create_instance(workspace)
+            invoke_json(workspace, "profiles", "create", "quiet", "--audio", "disabled",
+                        "--arg", "--low-vram")
+            before = (instance / "instance.v1.json").read_bytes()
+            commands = ("profiles", "plan", "main", "quiet", "--window-mode", "fullscreen",
+                        "--arg", "--disable-audio")
+            code, output, error = invoke(["--workspace", str(workspace), *commands])
+            self.assertEqual(0, code, error)
+            self.assertIn("Planned profile quiet for instance main", output)
+            self.assertIn("window_mode: fullscreen [request override]", output)
+            self.assertIn("audio: disabled [profile]", output)
+            self.assertIn("--low-vram [profile]", output)
+            self.assertIn("--disable-audio [request override]", output)
+            self.assertIn("No files changed.", output)
+            self.assertEqual(before, (instance / "instance.v1.json").read_bytes())
+
+            code, output, error = invoke(["--workspace", str(workspace), "profiles", "apply",
+                                          "main", "quiet", "--window-mode", "fullscreen",
+                                          "--arg", "--disable-audio"])
+            self.assertEqual(0, code, error)
+            self.assertIn("Applied profile quiet for instance main", output)
+            self.assertIn("Source manifest SHA-256:", output)
+            self.assertNotIn("No files changed.", output)
+            self.assertEqual("quiet", json.loads((instance / "instance.v1.json").read_text(encoding="utf-8"))["profile"])
+
     def test_profile_apply_crash_after_journal_recovers_without_effect(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman profile journal recovery ") as value:
             workspace = Path(value)
@@ -247,12 +275,19 @@ class ProfileTemplateTests(unittest.TestCase):
 
             planned = invoke_json(
                 workspace, "profiles", "plan", "main", "quiet",
-                "--window-mode", "fullscreen", "--arg", "--disable-audio",
+                "--window-mode", "fullscreen", "--arg", "--low-vram", "--arg", "--disable-audio",
             )
             assert_schema(self, planned, "factorio_effective_profile.v1.schema.json")
             self.assertFalse(planned["mutation_executed"])
             self.assertFalse(planned["execution_enabled"])
             self.assertEqual(hashlib.sha256(before).hexdigest(), planned["source_manifest_sha256"])
+            self.assertEqual("quiet", planned["provenance"]["base_profile_id"])
+            self.assertEqual("request_override", planned["provenance"]["setting_sources"]["window_mode"])
+            self.assertEqual("profile", planned["provenance"]["setting_sources"]["audio"])
+            self.assertEqual([
+                {"value": "--low-vram", "source": "profile"},
+                {"value": "--disable-audio", "source": "request_override"},
+            ], planned["provenance"]["additional_argument_sources"])
             self.assertEqual(before, (instance / "instance.v1.json").read_bytes())
 
             applied = invoke_json(
@@ -263,6 +298,7 @@ class ProfileTemplateTests(unittest.TestCase):
             assert_schema(self, applied, "factorio_effective_profile.v1.schema.json")
             self.assertTrue(applied["mutation_executed"])
             self.assertEqual(planned["source_manifest_sha256"], applied["source_manifest_sha256"])
+            self.assertEqual(planned["provenance"], applied["provenance"])
             self.assertEqual("quiet", json.loads((instance / "instance.v1.json").read_text(encoding="utf-8"))["profile"])
             overrides = json.loads((instance / "instance-overrides.v1.json").read_text(encoding="utf-8"))
             self.assertEqual("factorio.instance_overrides.v1", overrides["schema"])
