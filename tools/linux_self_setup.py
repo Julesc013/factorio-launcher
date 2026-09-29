@@ -414,6 +414,21 @@ archive_record() {
     echo 'refusing existing Linux Setup history identity' >&2
     return 1
   fi
+  # On the ordinary same-filesystem layout, retire the journal with one
+  # rename. A process loss then leaves either the live record or its exact
+  # history entry, rather than a partially removed live record.
+  if [ "$(stat -c %d "$record")" = "$(stat -c %d "$history_root")" ]; then
+    record_identity=$(stat -c '%d:%i' "$record")
+    mv --no-copy -nT "$record" "$history_target"
+    if [ -e "$record" ] || [ -L "$record" ] ||
+       [ ! -d "$history_target" ] || [ -L "$history_target" ] ||
+       [ "$(stat -c '%d:%i' "$history_target")" != "$record_identity" ]; then
+      echo 'refusing incomplete Linux Setup history retirement' >&2
+      return 1
+    fi
+    return 0
+  fi
+  # A separately mounted history root retains the older checked-copy path.
   archive_staging=$(mktemp -d "$history_root/.archive-XXXXXX")
   cp -a "$record/." "$archive_staging/"
   diff -qr "$record" "$archive_staging" >/dev/null

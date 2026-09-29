@@ -233,6 +233,10 @@ the installed Setup copy after interruption. It accepts missing or modified
 owned files when the ownership manifest remains intact; foreign paths, links,
 and special entries are refused. Recovery also handles an interrupted old
 generation backup removal while preserving workspaces and retained history.
+On the ordinary same-filesystem layout, completed Linux Setup journals enter
+retained history with one no-copy rename, so process loss cannot leave a
+partially deleted live journal. A separately mounted history directory still
+uses the checked copy-and-removal path and retains its interruption limit.
 Partial staging before journal publication remains a fail-closed orphan that
 needs a later disposition. The supported-predecessor extension path and
 physical Linux qualification remain open.

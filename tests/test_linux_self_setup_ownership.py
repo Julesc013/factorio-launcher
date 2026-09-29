@@ -423,7 +423,9 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
                     extra_environment={boundary: "1"},
                 )
                 self.assertEqual(interrupted.returncode, 75, interrupted.stderr)
-                self.assertTrue((install / "state/repair-pending.v1").is_dir())
+                repair_record = install / "state/repair-pending.v1"
+                self.assertTrue(repair_record.is_dir())
+                record_identity = (repair_record.stat().st_dev, repair_record.stat().st_ino)
                 self.assertNotEqual(self.invoke(installed_setup, home, "verify").returncode, 0)
                 self.assertNotEqual(self.invoke(installed_setup, home, "uninstall", "--yes").returncode, 0)
                 recovered = self.invoke(installed_setup, home, "recover", "--yes")
@@ -438,7 +440,11 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
                     self.assertEqual((home / ".local/bin" / name).readlink(), install / "current" / name)
                 self.assertEqual(sentinel.read_bytes(), b"preserved workspace bytes")
                 history = home / ".local/state/facman-setup/history"
-                self.assertTrue(any(history.rglob("completed-repair-0.1.0-alpha.6-*/new-target")))
+                archived = list(history.rglob("completed-repair-0.1.0-alpha.6-*"))
+                self.assertEqual(len(archived), 1)
+                self.assertTrue((archived[0] / "new-target").is_file())
+                self.assertEqual((archived[0].stat().st_dev, archived[0].stat().st_ino),
+                                 record_identity)
                 removed = self.invoke(installed_setup, home, "uninstall", "--yes")
                 self.assertEqual(removed.returncode, 0, removed.stderr)
 
