@@ -43,11 +43,18 @@ def validate() -> list[str]:
         "inspect_archive(",
         "stream_entry(",
         "write_to_new_owned_staging(",
-        "tx::StagedFileCommit::commit(",
     ):
         combined = operations + mods
         if anchor not in combined:
             problems.append(f"production mod route is missing archive anchor: {anchor}")
+    import_route = function_slice(operations, "ImportOutcome import_mod(", "LockOutcome lock_modset(")
+    for anchor in (
+        "create_child_file_exclusive(",
+        "private_copy.publish_in_directory_no_replace(",
+        "private_copy.publish_no_replace(",
+    ):
+        if anchor not in import_route:
+            problems.append(f"production mod import is missing exact publication anchor: {anchor}")
     if "read_stored_zip(" in mods:
         problems.append("stored-only mod ZIP parser returned")
 

@@ -236,6 +236,29 @@ bool stream_copy(const fs::path& source, const fs::path& destination)
     return output.flush_file_and_parent().ok();
 }
 
+facman::platform::IoStatus pause_after_private_import_copy(const fs::path& staging)
+{
+    const char* enabled = std::getenv("FACMAN_TEST_MOD_IMPORT_PAUSE_AFTER_PRIVATE_COPY");
+    if (enabled == nullptr || std::string(enabled) != "1") {
+        return facman::platform::IoStatus::success();
+    }
+    std::string detail;
+    if (!facman::base::write_text_new_atomic(
+            staging / ".facman-mod-import-private-paused", "copied\n", detail)) {
+        return facman::platform::IoStatus::failure("mod_staging_verification_failed", detail);
+    }
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+    while (!fs::exists(staging / ".facman-mod-import-private-release") &&
+        std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    if (!fs::exists(staging / ".facman-mod-import-private-release")) {
+        return facman::platform::IoStatus::failure(
+            "mod_staging_verification_failed", "Private mod copy test pause timed out");
+    }
+    return facman::platform::IoStatus::success();
+}
+
 } // namespace
 
 ImportOutcome import_mod(const fs::path& workspace, const ImportRequest& request)
@@ -314,7 +337,13 @@ ImportOutcome import_mod(const fs::path& workspace, const ImportRequest& request
     if (!session.staging("owned_staging_created")) return refuse(command, request.instance_id, "recovery_write_refused", "Mod import staging journal update failed", session.detail());
     const fs::path staged_file = staging / request.source_path.filename();
     auto fail_staging = [&](const std::string& code, const std::string& reason, const std::string& detail) -> ImportOutcome {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
+        const auto cleaned = facman::archive::cleanup_owned_staging_root(staging);
+        if (!cleaned.ok()) {
+            const std::string recovery_detail = detail + "; staging cleanup: " + cleaned.detail;
+            session.require_recovery(recovery_detail);
+            return refuse(command, request.instance_id, "transaction_recovery_required",
+                "Mod import staging requires recovery", recovery_detail, false);
+        }
         session.failed(detail);
         return refuse(command, request.instance_id, code, reason, detail);
     };
@@ -328,19 +357,152 @@ ImportOutcome import_mod(const fs::path& workspace, const ImportRequest& request
     if (!staged_mod.valid || staged_mod.name != mod.name || staged_mod.version != mod.version) {
         return fail_staging("mod_staging_verification_failed", "Staged mod did not match inspected source", staged_mod.refusal_detail);
     }
+    const char* pause_after_stage = std::getenv("FACMAN_TEST_MOD_IMPORT_PAUSE_AFTER_STAGE");
+    if (pause_after_stage != nullptr && std::string(pause_after_stage) == "1") {
+        std::string marker_detail;
+        if (!facman::base::write_text_new_atomic(
+                staging / ".facman-mod-import-paused", "staged\n", marker_detail)) {
+            return fail_staging("mod_staging_verification_failed", "Import test pause failed", marker_detail);
+        }
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+        while (!fs::exists(staging / ".facman-mod-import-release") &&
+            std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        if (!fs::exists(staging / ".facman-mod-import-release")) {
+            return fail_staging("mod_staging_verification_failed", "Import test pause timed out", path_string(staging));
+        }
+    }
+    facman::platform::FileIdentity staged_identity;
+    const auto staged_check = [&]() {
+        facman::platform::StableInputFile staged_input;
+        const auto opened = staged_input.open_no_follow_pinned(staged_file);
+        if (!opened.ok() || !staged_input.identity().regular_file ||
+            staged_input.identity().link_count != 1U || staged_input.size() != source_size) {
+            return facman::platform::IoStatus::failure("mod_staging_verification_failed",
+                opened.ok() ? "Staged mod identity changed" : opened.detail);
+        }
+        facman::base::Sha256Hasher digest;
+        std::array<unsigned char, 65536> block {};
+        for (std::uint64_t offset = 0; offset < staged_input.size();) {
+            const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(
+                block.size(), staged_input.size() - offset));
+            if (staged_input.read_at(offset, block.data(), count) != count) {
+                return facman::platform::IoStatus::failure(
+                    "mod_staging_verification_failed", "Staged mod read changed");
+            }
+            digest.update(block.data(), count);
+            offset += count;
+        }
+        if (!staged_input.revalidate_path().ok() || digest.finish() != source_sha256) {
+            return facman::platform::IoStatus::failure(
+                "mod_staging_verification_failed", "Staged mod differs from inspected source");
+        }
+        staged_identity = staged_input.identity();
+        return facman::platform::IoStatus::success();
+    }();
+    if (!staged_check.ok()) {
+        return fail_staging("mod_staging_verification_failed", "Staged mod no longer matches inspected source",
+            staged_check.detail);
+    }
     if (!session.staged("source_copied") ||
         !session.verified("staged_mod_verified") ||
         !session.committing("no_clobber_commit_started")) {
         return fail_staging("recovery_write_refused", "Mod import journal update failed", session.detail());
     }
-    std::string commit_detail;
-    if (!tx::StagedFileCommit::commit(staging, staged_file, destination, commit_detail)) {
-        return fail_staging("persistent_write_refused", "Mod no-clobber commit failed", commit_detail);
+    const auto published = [&]() {
+        facman::platform::StableDirectoryObject stage_parent;
+        facman::platform::StableDirectoryObject target_parent;
+        auto result = stage_parent.open_no_follow_for_relative_writes(staging);
+        if (result.ok()) result = target_parent.open_no_follow_for_relative_writes(mods_root);
+#ifdef _WIN32
+        facman::platform::DurableOutputFile private_copy;
+        if (result.ok()) result = stage_parent.create_child_file_exclusive(
+            "verified-private.zip", static_cast<std::uint64_t>(source_size), private_copy);
+        if (result.ok()) {
+            facman::platform::StableInputFile staged_input;
+            result = stage_parent.open_child_file_no_follow_pinned(
+                staged_file.filename(), staged_input);
+            if (result.ok() &&
+                (!staged_input.identity().unchanged(staged_identity) || staged_input.size() != source_size)) {
+                result = facman::platform::IoStatus::failure(
+                    "mod_staging_verification_failed", "Staged mod identity changed before private copy");
+            }
+            facman::base::Sha256Hasher digest;
+            std::array<unsigned char, 65536> block {};
+            for (std::uint64_t offset = 0; result.ok() && offset < staged_input.size();) {
+                const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(
+                    block.size(), staged_input.size() - offset));
+                if (staged_input.read_at(offset, block.data(), count) != count ||
+                    private_copy.write_at(offset, block.data(), count) != count) {
+                    result = facman::platform::IoStatus::failure(
+                        "mod_staging_verification_failed", "Private mod copy failed");
+                    break;
+                }
+                digest.update(block.data(), count);
+                offset += count;
+            }
+            if (result.ok() &&
+                (!staged_input.revalidate_path().ok() || digest.finish() != source_sha256)) {
+                result = facman::platform::IoStatus::failure(
+                    "mod_staging_verification_failed", "Private mod copy differs from inspected source");
+            }
+        }
+        if (result.ok()) result = pause_after_private_import_copy(staging);
+        if (result.ok()) result = private_copy.publish_in_directory_no_replace(
+            target_parent, destination.filename());
+#else
+        facman::platform::StableInputFile staged_input;
+        if (result.ok()) result = staged_input.open_no_follow_pinned(staged_file);
+        if (result.ok() &&
+            (!staged_input.identity().unchanged(staged_identity) || staged_input.size() != source_size)) {
+            result = facman::platform::IoStatus::failure(
+                "mod_staging_verification_failed", "Staged mod identity changed before private copy");
+        }
+        facman::platform::PrivatePublicationFile private_copy;
+        if (result.ok()) result = private_copy.create(
+            stage_parent, target_parent, static_cast<std::uint64_t>(source_size));
+        facman::base::Sha256Hasher digest;
+        std::array<unsigned char, 65536> block {};
+        for (std::uint64_t offset = 0; result.ok() && offset < staged_input.size();) {
+            const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(
+                block.size(), staged_input.size() - offset));
+            if (staged_input.read_at(offset, block.data(), count) != count ||
+                private_copy.write_at(offset, block.data(), count) != count) {
+                result = facman::platform::IoStatus::failure(
+                    "mod_staging_verification_failed", "Private mod copy failed");
+                break;
+            }
+            digest.update(block.data(), count);
+            offset += count;
+        }
+        if (result.ok() &&
+            (!staged_input.revalidate_path().ok() || digest.finish() != source_sha256)) {
+            result = facman::platform::IoStatus::failure(
+                "mod_staging_verification_failed", "Private mod copy differs from inspected source");
+        }
+        if (result.ok()) result = pause_after_private_import_copy(staging);
+        if (result.ok()) result = private_copy.publish_no_replace(destination.filename());
+#endif
+        return result;
+    }();
+    if (!published.ok()) {
+        if (published.code == "output_published_unverified") {
+            session.require_recovery(published.detail);
+            return refuse(command, request.instance_id, "transaction_recovery_required",
+                "Mod publication requires recovery", published.detail, false);
+        }
+        const bool verification_failed = published.code == "mod_staging_verification_failed";
+        return fail_staging(verification_failed ? "mod_staging_verification_failed" : "persistent_write_refused",
+            verification_failed ? "Staged mod no longer matches inspected source" : "Mod no-clobber commit failed",
+            published.detail);
     }
     if (!session.committed("mod_file_committed")) return refuse(command, request.instance_id, "transaction_recovery_required", "Mod committed but journal update failed", session.detail(), false);
     status = facman::archive::cleanup_owned_staging_root(staging);
     if (!status.ok()) {
-        return refuse(command, request.instance_id, "persistent_write_refused", "Committed mod but staging cleanup requires review", status.code + ": " + status.detail, false);
+        session.require_recovery(status.code + ": " + status.detail);
+        return refuse(command, request.instance_id, "transaction_recovery_required",
+            "Committed mod but staging cleanup requires recovery", status.code + ": " + status.detail, false);
     }
     if (!session.complete()) return refuse(command, request.instance_id, "transaction_recovery_required", "Mod committed but journal close requires recovery", session.detail(), false);
     mod.file_path = destination;

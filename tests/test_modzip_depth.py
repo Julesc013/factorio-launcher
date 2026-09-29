@@ -94,6 +94,92 @@ def write_mod_zip(
 
 
 class ModZipDepthTests(unittest.TestCase):
+    def test_import_refuses_replaced_staged_mod(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            source = workspace / "sources" / "exact_import_1.0.0.zip"
+            write_mod_zip(source, {
+                "name": "exact_import", "version": "1.0.0", "factorio_version": "2.0",
+                "title": "Original",
+            })
+            original = source.read_bytes()
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_MOD_IMPORT_PAUSE_AFTER_STAGE"] = "1"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "mods", "import",
+                 str(source), "--instance", "modzip", "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            mods = workspace / "instances" / "modzip" / "mods"
+            try:
+                deadline = time.monotonic() + 10
+                staging = None
+                while process.poll() is None and staging is None and time.monotonic() < deadline:
+                    staging = next((path for path in mods.glob(".facman-mod-import-*")
+                        if (path / ".facman-mod-import-paused").exists()), None)
+                    time.sleep(0.02)
+                self.assertIsNotNone(staging, "import did not reach staged verification")
+                self.assertIsNone(process.poll())
+                replacement = staging / "replacement.zip"
+                write_mod_zip(replacement, {
+                    "name": "exact_import", "version": "1.0.0", "factorio_version": "2.0",
+                    "title": "Changed after staging",
+                }, prefix="exact_import_1.0.0")
+                os.replace(replacement, staging / source.name)
+                (staging / ".facman-mod-import-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 1, stderr + stdout)
+                self.assertEqual(json.loads(stdout)["payload"]["refusal"]["code"],
+                    "mod_staging_verification_failed")
+                self.assertFalse((mods / source.name).exists())
+                self.assertEqual(source.read_bytes(), original)
+                self.assertEqual([], list(mods.glob(".facman-mod-import-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
+    def test_import_publishes_private_verified_bytes_after_staged_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            source = workspace / "sources" / "private_import_1.0.0.zip"
+            write_mod_zip(source, {
+                "name": "private_import", "version": "1.0.0", "factorio_version": "2.0",
+            })
+            original = source.read_bytes()
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_MOD_IMPORT_PAUSE_AFTER_PRIVATE_COPY"] = "1"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "mods", "import",
+                 str(source), "--instance", "modzip", "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            mods = workspace / "instances" / "modzip" / "mods"
+            try:
+                deadline = time.monotonic() + 10
+                staging = None
+                while process.poll() is None and staging is None and time.monotonic() < deadline:
+                    staging = next((path for path in mods.glob(".facman-mod-import-*")
+                        if (path / ".facman-mod-import-private-paused").exists()), None)
+                    time.sleep(0.02)
+                self.assertIsNotNone(staging, "private import did not reach publication")
+                self.assertIsNone(process.poll())
+                (staging / source.name).write_bytes(b"tampered staged content")
+                (staging / ".facman-mod-import-private-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 0, stderr + stdout)
+                self.assertEqual((mods / source.name).read_bytes(), original)
+                self.assertEqual(source.read_bytes(), original)
+                self.assertEqual([], list(mods.glob(".facman-mod-import-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
     def test_unsafe_and_over_budget_archives_refuse_before_import_copy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
