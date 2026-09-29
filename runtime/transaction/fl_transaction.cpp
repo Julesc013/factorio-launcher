@@ -1167,6 +1167,9 @@ Outcome plan(const fs::path& workspace, const std::string& id)
     if (terminal(record.state)) record.recovery_actions.push_back("none");
     else if (record.command_id == "saves.retention.apply")
         record.recovery_actions.push_back("verify_and_resume_owned_backup_moves");
+    else if (record.command_id == "profiles.apply" &&
+             record.commit_strategy == "profile_apply_two_file_v1")
+        record.recovery_actions.push_back("verify_and_reconcile_profile_pair");
     else if (fs::exists(record.target)) record.recovery_actions.push_back("preserve_committed_target");
     else if (!record.staging_roots.empty()) record.recovery_actions.push_back("remove_owned_staging");
     else record.recovery_actions.push_back("mark_recovery_required");
@@ -1484,6 +1487,129 @@ Outcome recover_owned_backup_retention(const fs::path& workspace, Record& record
     return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
 }
 
+Outcome recover_profile_pair(const fs::path& workspace, Record& record)
+{
+    std::string detail;
+    auto unsafe = [&](const std::string& reason) -> Outcome {
+        return Refusal {"recovery_profile_pair_unsafe",
+            "Profile files cannot be reconciled from the transaction evidence", reason, false};
+    };
+    const fs::path root = record.target.parent_path();
+    const std::string instance_id = root.filename().string();
+    const fs::path manifest = root / "instance.v1.json";
+    const fs::path overrides = root / "instance-overrides.v1.json";
+    const fs::path backup_root = workspace / "backups" / "profiles" /
+        fs::u8path(record.transaction_id + "-" + instance_id);
+    const fs::path manifest_backup = backup_root / "instance.v1.json";
+    const fs::path overrides_backup = backup_root / "instance-overrides.v1.json";
+    if (record.schema_version != 2U || record.operation_context != "profile_apply_two_file_v1" ||
+        (record.expected_files.size() != 3U && record.expected_files.size() != 4U) ||
+        record.staging_roots.size() != 2U || record.sources.empty() ||
+        !facman::base::validate_identifier(instance_id, detail) ||
+        record.target != manifest || record.sources.front() != manifest ||
+        root != workspace / "instances" / fs::u8path(instance_id) ||
+        record.staging_roots[0] != root / (".profile-apply-" + record.transaction_id + ".json") ||
+        record.staging_roots[1] != root / (".profile-overrides-" + record.transaction_id + ".json") ||
+        record.expected_files[0].path.str() != "source/instance.v1.json" ||
+        record.expected_files[1].path.str() != "target/instance.v1.json" ||
+        record.expected_files[2].path.str() != "target/instance-overrides.v1.json" ||
+        (record.expected_files.size() == 4U &&
+         record.expected_files[3].path.str() != "source/instance-overrides.v1.json") ||
+        facman::base::path_crosses_link_or_reparse_point(root, detail) ||
+        facman::base::path_crosses_link_or_reparse_point(backup_root, detail))
+        return unsafe(detail.empty() ? "Profile recovery journal paths or format differ" : detail);
+
+    bool manifest_present = false;
+    bool overrides_present = false;
+    bool manifest_backup_present = false;
+    bool overrides_backup_present = false;
+    bool manifest_stage_present = false;
+    bool overrides_stage_present = false;
+    if (!retention_file_present(manifest, manifest_present, detail) ||
+        !retention_file_present(overrides, overrides_present, detail) ||
+        !retention_file_present(manifest_backup, manifest_backup_present, detail) ||
+        !retention_file_present(overrides_backup, overrides_backup_present, detail) ||
+        !retention_file_present(record.staging_roots[0], manifest_stage_present, detail) ||
+        !retention_file_present(record.staging_roots[1], overrides_stage_present, detail))
+        return unsafe(detail);
+    auto matches = [&](const fs::path& path, const ExpectedFile& expected) {
+        std::string ignored;
+        return retention_file_matches(path, expected, ignored);
+    };
+    const bool old_manifest = manifest_present && matches(manifest, record.expected_files[0]);
+    const bool new_manifest = manifest_present && matches(manifest, record.expected_files[1]);
+    const bool old_overrides = record.expected_files.size() == 3U ? !overrides_present :
+        overrides_present && matches(overrides, record.expected_files[3]);
+    const bool new_overrides = overrides_present && matches(overrides, record.expected_files[2]);
+    if ((!old_manifest && !new_manifest) || (!old_overrides && !new_overrides) ||
+        (manifest_backup_present && !matches(manifest_backup, record.expected_files[0])) ||
+        (overrides_backup_present && (record.expected_files.size() != 4U ||
+            !matches(overrides_backup, record.expected_files[3]))) ||
+        (manifest_stage_present && !matches(record.staging_roots[0], record.expected_files[1])) ||
+        (overrides_stage_present && !matches(record.staging_roots[1], record.expected_files[2])))
+        return unsafe("Profile source, target, backup or staged digest differs from the journal");
+    auto remove_stage = [&](std::size_t index, bool present) {
+        if (!present) return true;
+        facman::platform::StableInputFile input;
+        const auto opened = input.open_no_follow_pinned(record.staging_roots[index]);
+        if (!opened.ok() || !matches(record.staging_roots[index], record.expected_files[index + 1U])) {
+            detail = opened.ok() ? "Profile staging changed before cleanup" : opened.detail;
+            return false;
+        }
+        const auto identity = input.identity();
+        input = facman::platform::StableInputFile {};
+        const auto removed = facman::platform::remove_exact_object(record.staging_roots[index], identity);
+        detail = removed.detail;
+        return removed.ok();
+    };
+    if (old_manifest && old_overrides && record.state != State::committed &&
+        record.state != State::audited) {
+        if (!remove_stage(0U, manifest_stage_present) || !remove_stage(1U, overrides_stage_present))
+            return unsafe(detail);
+        if (record.state != State::recovery_required &&
+            !advance(workspace, record, "recovery_required", "profile_pair_no_effect_verified", detail))
+            return Refusal {"recovery_write_refused", "Profile rollback intent could not be recorded", detail, true};
+        if (!advance(workspace, record, "rollback_required", "profile_pair_rollback_selected", detail) ||
+            !advance(workspace, record, "rolled_back", "profile_pair_originals_preserved", detail))
+            return Refusal {"recovery_write_refused", "Profile rollback journal could not be closed", detail, true};
+        record.recovery_actions.push_back("verified_original_profile_pair_preserved");
+        return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+    }
+    if (!new_manifest || (!old_overrides && !new_overrides))
+        return unsafe("Profile publication has an ambiguous file pair");
+    if (!manifest_backup_present ||
+        (record.expected_files.size() == 4U && !overrides_backup_present))
+        return unsafe("Published profile files lack verified original backups");
+    if (old_overrides && !new_overrides) {
+        if (!overrides_stage_present || record.state == State::committed ||
+            !matches(manifest, record.expected_files[1]) ||
+            (overrides_present && !matches(overrides, record.expected_files[3])))
+            return unsafe("Profile continuation source or staged overrides changed");
+        if (record.state != State::recovery_required &&
+            !advance(workspace, record, "recovery_required", "profile_pair_replay_started", detail))
+            return Refusal {"recovery_write_refused", "Profile continuation intent could not be recorded", detail, true};
+        const auto published = overrides_present ?
+            facman::platform::replace_existing_durable(record.staging_roots[1], overrides) :
+            facman::platform::commit_no_replace(record.staging_roots[1], overrides);
+        if (!published.ok() || !matches(overrides, record.expected_files[2]))
+            return unsafe(published.ok() ? "Recovered overrides digest differs" : published.detail);
+        overrides_stage_present = false;
+        record.recovery_actions.push_back("verified_profile_overrides_published");
+    }
+    if (!remove_stage(0U, manifest_stage_present) || !remove_stage(1U, overrides_stage_present))
+        return unsafe(detail);
+    if (record.state != State::committed && record.state != State::recovery_required &&
+        !advance(workspace, record, "recovery_required", "profile_pair_verified", detail))
+        return Refusal {"recovery_write_refused", "Profile recovery state could not be recorded", detail, true};
+    const bool closed = record.state == State::audited ?
+        advance(workspace, record, "complete", "journal_closed", detail) :
+        complete(workspace, record, detail);
+    if (!closed)
+        return Refusal {"recovery_write_refused", "Profile recovery journal could not be closed", detail, true};
+    record.recovery_actions.push_back("verified_profile_pair_complete");
+    return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+}
+
 } // namespace
 
 Outcome apply(const fs::path& workspace, const std::string& id)
@@ -1548,6 +1674,12 @@ Outcome apply(const fs::path& workspace, const std::string& id)
         (void)recovery_lock.remove_exact(ignored);
     };
     auto unlock_checked = [&]() { return recovery_lock.remove_exact(detail); };
+    if (record.command_id == "profiles.apply" && record.commit_strategy == "profile_apply_two_file_v1") {
+        Outcome result = recover_profile_pair(workspace, record);
+        if (!unlock_checked()) return Refusal {
+            "recovery_write_refused", "Recovery lock identity changed before release", detail, false};
+        return result;
+    }
     if (record.command_id == "saves.retention.apply") {
         Outcome result = recover_owned_backup_retention(workspace, record);
         if (!unlock_checked()) return Refusal {

@@ -1580,6 +1580,13 @@ retryable = false
 message = "The transaction staging root does not carry its expected ownership marker."
 
 [[code]]
+id = "recovery_profile_pair_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The profile manifest and overrides cannot be reconciled from verified transaction evidence."
+
+[[code]]
 id = "recovery_write_refused"
 severity = "blocked"
 effect = "workspace_write"

@@ -12,6 +12,7 @@
 #include "fl_workspace_store.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <set>
 #include <system_error>
 
@@ -86,6 +87,12 @@ std::string text_sha256(const std::string& text)
 {
     return facman::base::sha256_hex_bytes(
         reinterpret_cast<const unsigned char*>(text.data()), text.size());
+}
+
+tx::ExpectedFile expected_profile_file(const char* name, const std::string& text)
+{
+    return {tx::RelativePath::parse(name).take_value(),
+        facman::core::Sha256Digest::parse(text_sha256(text)).take_value(), text.size()};
 }
 
 facman::core::Result<std::string> checked_manifest_revision(
@@ -680,52 +687,74 @@ facman::core::Result<std::string> profiles_apply(const fs::path& workspace, cons
     auto instance = repository.load(instance_id.value());
     auto effective = effective_profile(workspace, request.profile_id, request.overrides);
     if (!instance || !effective) return failure("profile_apply_invalid", "Effective profile inputs changed during planning", workspace);
+    auto current = stable_text(instance.value().source_path);
+    if (!current) return failure(current.error().code, current.error().message, instance.value().source_path);
+    auto source_revision = checked_manifest_revision(current.value(), request.expected_manifest_sha256);
+    if (!source_revision) return failure(source_revision.error().code, source_revision.error().message, instance.value().source_path);
+    auto updated_manifest = instance_manifest(
+        current.value(), instance.value().id.str(), instance.value().install_ref.str(),
+        effective.value().profile_id);
+    if (!updated_manifest) return failure(updated_manifest.error().code, updated_manifest.error().message,
+        instance.value().source_path);
+    const std::string new_overrides = overrides_json(request);
+    const fs::path overrides_target = instance.value().root / "instance-overrides.v1.json";
+    std::error_code old_overrides_error;
+    const fs::file_status old_overrides_status = fs::symlink_status(overrides_target, old_overrides_error);
+    const bool had_old_overrides = !old_overrides_error && fs::is_regular_file(old_overrides_status);
+    if (old_overrides_error != std::errc::no_such_file_or_directory && old_overrides_error) return failure(
+        "profile_overrides_invalid", old_overrides_error.message(), overrides_target);
+    if (!had_old_overrides && old_overrides_error != std::errc::no_such_file_or_directory &&
+        old_overrides_status.type() != fs::file_type::not_found) return failure(
+        "profile_overrides_invalid", "Existing overrides are not a regular file", overrides_target);
+    auto old_overrides = had_old_overrides ? stable_text(overrides_target) :
+        facman::core::Result<std::string>::success(std::string {});
+    if (!old_overrides) return failure(old_overrides.error().code, old_overrides.error().message, overrides_target);
     tx::Record record;
+    facman::platform::RandomIdGenerator random;
+    record.transaction_id = random.next("tx");
     record.command_id = "profiles.apply";
     record.target = instance.value().source_path;
     record.sources = {instance.value().source_path};
     if (effective.value().profile_id != "gui") record.sources.push_back(
         workspace / "profiles" / effective.value().profile_id);
-    record.commit_strategy = "plan_backup_stage_replace_instance_profile_and_overrides";
+    record.commit_strategy = "profile_apply_two_file_v1";
+    record.operation_context = "profile_apply_two_file_v1";
+    record.expected_files = {
+        expected_profile_file("source/instance.v1.json", current.value()),
+        expected_profile_file("target/instance.v1.json", updated_manifest.value()),
+        expected_profile_file("target/instance-overrides.v1.json", new_overrides),
+    };
+    if (had_old_overrides) record.expected_files.push_back(
+        expected_profile_file("source/instance-overrides.v1.json", old_overrides.value()));
+    record.staging_roots = {
+        instance.value().root / (".profile-apply-" + record.transaction_id + ".json"),
+        instance.value().root / (".profile-overrides-" + record.transaction_id + ".json"),
+    };
     auto started = tx::TransactionSession::begin(workspace, std::move(record));
     if (!started) return failure("profile_transaction_failed", started.error().message, workspace);
     tx::TransactionSession session = started.take_value();
+    if (std::getenv("FACMAN_TEST_PROFILE_APPLY_EXIT_AFTER_JOURNAL") != nullptr) std::_Exit(85);
     const fs::path backup_root = workspace / "backups" / "profiles" /
         fs::u8path(session.record().transaction_id + "-" + request.instance_id);
     const fs::path backup = backup_root / "instance.v1.json";
-    const fs::path manifest_stage = instance.value().root / (".profile-apply-" + session.record().transaction_id + ".json");
-    const fs::path overrides_stage = instance.value().root / (".profile-overrides-" + session.record().transaction_id + ".json");
-    const fs::path overrides_target = instance.value().root / "instance-overrides.v1.json";
-    session.record().staging_roots = {manifest_stage, overrides_stage};
+    const fs::path overrides_backup = backup_root / "instance-overrides.v1.json";
+    const fs::path manifest_stage = session.record().staging_roots[0];
+    const fs::path overrides_stage = session.record().staging_roots[1];
     if (!session.validated("profile_plan_and_reserved_argument_policy_validated") ||
         !session.planned("backup_manifest_and_overrides_replace_planned")) return failure(
             "profile_transaction_failed", session.detail(), workspace);
-    auto current = stable_text(instance.value().source_path);
-    if (!current) { session.failed(current.error().message); return failure(current.error().code, current.error().message, instance.value().source_path); }
-    auto source_revision = checked_manifest_revision(current.value(), request.expected_manifest_sha256);
-    if (!source_revision) {
-        if (!session.refused(source_revision.error().message)) return failure(
-            "profile_transaction_recovery_required", session.detail(), instance.value().root,
-            facman::core::OutcomeKind::recovery_required, false);
-        return failure(source_revision.error().code, source_revision.error().message, instance.value().source_path);
-    }
-    auto updated_manifest = instance_manifest(
-        current.value(), instance.value().id.str(), instance.value().install_ref.str(),
-        effective.value().profile_id);
-    if (!updated_manifest) {
-        session.failed(updated_manifest.error().message);
-        return failure(updated_manifest.error().code, updated_manifest.error().message,
-            instance.value().source_path);
-    }
     std::error_code error;
     fs::create_directories(backup_root, error);
     if (error) { session.failed(error.message()); return failure("profile_backup_failed", error.message(), backup_root); }
-    auto digest = facman::core::Sha256Digest::parse(source_revision.value());
     std::string detail;
-    if (!digest || !tx::CrossVolumeCopyVerifyCommit::commit(
-            instance.value().source_path, backup, digest.value(), current.value().size(), detail) ||
+    if (!tx::CrossVolumeCopyVerifyCommit::commit(
+            instance.value().source_path, backup, session.record().expected_files[0].sha256,
+            current.value().size(), detail) ||
+        (had_old_overrides && !tx::CrossVolumeCopyVerifyCommit::commit(
+            overrides_target, overrides_backup, session.record().expected_files[3].sha256,
+            old_overrides.value().size(), detail)) ||
         !facman::base::write_text_new_atomic(manifest_stage, updated_manifest.value(), detail) ||
-        !facman::base::write_text_new_atomic(overrides_stage, overrides_json(request), detail) ||
+        !facman::base::write_text_new_atomic(overrides_stage, new_overrides, detail) ||
         !session.staging("profile_plan_materialized") || !session.staged("backup_and_replacements_staged") ||
         !session.verified("effective_profile_and_reserved_arguments_verified")) {
         session.failed(detail.empty() ? session.detail() : detail);
@@ -749,10 +778,12 @@ facman::core::Result<std::string> profiles_apply(const fs::path& workspace, cons
         return failure("profile_instance_revision_changed", reason, instance.value().source_path);
     }
     auto status = facman::platform::replace_existing_durable(manifest_stage, instance.value().source_path);
+    if (status.ok() && std::getenv("FACMAN_TEST_PROFILE_APPLY_EXIT_AFTER_MANIFEST") != nullptr) std::_Exit(86);
     if (status.ok()) {
         if (fs::exists(overrides_target)) status = facman::platform::replace_existing_durable(overrides_stage, overrides_target);
         else status = facman::platform::commit_no_replace(overrides_stage, overrides_target);
     }
+    if (status.ok() && std::getenv("FACMAN_TEST_PROFILE_APPLY_EXIT_AFTER_PAIR") != nullptr) std::_Exit(87);
     if (!status.ok() || !session.committed("instance_profile_and_overrides_committed") || !session.complete()) {
         session.failed(status.ok() ? session.detail() : status.detail);
         return failure("profile_transaction_recovery_required", status.ok() ? session.detail() : status.detail,
