@@ -1344,7 +1344,8 @@ IoStatus DurableOutputFile::publish_relative_no_replace(
         return IoStatus::failure("output_pre_rename_fault_injected", "test seam");
     BY_HANDLE_FILE_INFORMATION source_info {};
     if (!GetFileInformationByHandle(impl_->handle, &source_info) ||
-        (impl_->relative_reopened && !impl_->identity.unchanged(identity_from_info(source_info))) ||
+        (destination_parent != nullptr && impl_->relative_reopened &&
+         !impl_->identity.unchanged(identity_from_info(source_info))) ||
         !identity_from_info(source_info).regular_file || source_info.nNumberOfLinks != 1U)
         return IoStatus::failure("commit_source_identity_changed", impl_->staging_leaf);
     std::wstring name(destination.begin(), destination.end());
@@ -1416,7 +1417,8 @@ IoStatus DurableOutputFile::publish_relative_no_replace(
          (::fstatat(impl_->parent_handle, impl_->staging_leaf.c_str(), &named, AT_SYMLINK_NOFOLLOW) != 0 ||
           held.st_dev != named.st_dev || held.st_ino != named.st_ino ||
           !S_ISREG(named.st_mode) || named.st_nlink != 1)) ||
-        (impl_->relative_reopened && !impl_->identity.unchanged(identity_from_stat(held))))
+        (destination_parent != nullptr && impl_->relative_reopened &&
+         !impl_->identity.unchanged(identity_from_stat(held))))
         return IoStatus::failure("commit_source_identity_changed", impl_->staging_leaf);
 #if defined(__linux__) && defined(SYS_renameat2)
     if (destination_parent != nullptr) {
