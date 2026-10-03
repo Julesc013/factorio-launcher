@@ -20,6 +20,170 @@ from tests.integration import facman_self_setup_lifecycle as lifecycle
 
 
 class SelfMaintenanceCandidateTests(unittest.TestCase):
+    def test_external_handoff_observes_real_long_terminal_without_apply_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            state = root / "SetupState"
+            epochs = root / "setup-coordinator.v1/epochs"
+            operation = "maint.downgrade.12345678." + "b" * 20 + "." + "c" * 16
+            terminal = epochs / ("a" * 64) / "maintenance" / operation / "80-registration-cutover.v2.json"
+            # Create actual filesystem bytes with the supported Windows API
+            # spelling; this must work independently of LongPathsEnabled.
+            if lifecycle.utf16_units(terminal) <= 260:
+                root = root / ("long-" + "x" * (261 - lifecycle.utf16_units(terminal)))
+                state = root / "SetupState"
+                epochs = root / "setup-coordinator.v1/epochs"
+                terminal = epochs / ("a" * 64) / "maintenance" / operation / terminal.name
+            observed_path = lifecycle.observation_path(terminal)
+            observed_path.parent.mkdir(parents=True)
+            observed_path.write_bytes(b"real filesystem observation marker\n")
+            self.assertGreater(lifecycle.utf16_units(terminal), 260)
+            if os.name == "nt":
+                self.assertTrue(str(observed_path).startswith("\\\\?\\"))
+            self.assertEqual([observed_path], lifecycle.external_handoff_terminals(epochs, operation))
+            self.assertEqual(hashlib.sha256(observed_path.read_bytes()).hexdigest(),
+                             lifecycle.sha256_path(terminal))
+            self.assertEqual({"80-registration-cutover.v2.json": lifecycle.sha256_path(terminal)},
+                             lifecycle.tree_snapshot(terminal.parent)["files"])
+
+            class TerminalObserved(Exception):
+                pass
+
+            # Stop at the actual read-only product dispatch instead of
+            # fabricating a successful SDK/product response for this test.
+            with mock.patch.object(lifecycle, "invoke", side_effect=TerminalObserved) as invoke:
+                with self.assertRaises(TerminalObserved):
+                    lifecycle.await_external_handoff(
+                        root / "unused.exe", {"phase": "handoff_launched", "operation_id": operation},
+                        "downgrade", ("--state-root", state, "--root", root / "Programs/FacMan"),
+                        shell_integration=True, noninteractive=True,
+                    )
+                self.assertNotIn("--yes", invoke.call_args.args)
+                self.assertNotIn("--apply", invoke.call_args.args)
+            duplicate = epochs / ("d" * 64) / "maintenance" / operation / terminal.name
+            lifecycle.observation_path(duplicate.parent).mkdir(parents=True)
+            lifecycle.observation_path(duplicate).write_bytes(b"second real terminal marker\n")
+            with mock.patch.object(lifecycle, "invoke") as invoke:
+                with self.assertRaisesRegex(AssertionError, "duplicate terminal records"):
+                    lifecycle.await_external_handoff(
+                        root / "unused.exe", {"phase": "handoff_launched", "operation_id": operation},
+                        "downgrade", ("--state-root", state), shell_integration=True, noninteractive=True,
+                    )
+                invoke.assert_not_called()
+            with mock.patch.object(lifecycle, "REAL_DEADLINE", time.monotonic() - 1), \
+                    mock.patch.object(lifecycle, "invoke") as invoke:
+                with self.assertRaisesRegex(AssertionError, "did not complete in time"):
+                    lifecycle.await_external_handoff(
+                        root / "unused.exe", {"phase": "handoff_launched", "operation_id": operation},
+                        "downgrade", ("--state-root", state), shell_integration=True, noninteractive=True,
+                    )
+                invoke.assert_not_called()
+
+    def test_epoch_record_observation_binds_original_archive_and_distinct_creator(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            logical, state = root / "Programs/FacMan", root / "SetupState"
+            epoch_id, archive_sha = "a" * 64, "b" * 64
+            identity = {"version": "0.1.0-alpha.5", "source_revision": "c" * 40,
+                        "provider_revision": "d" * 40}
+            creator = "e" * 40
+            generation_id = lifecycle.generation_identity(identity, archive_sha)
+            logical_id = hashlib.sha256((
+                "facman.self.logical-root.v1\n" + str(logical) + "\n"
+            ).encode()).hexdigest()
+            physical_id = hashlib.sha256((
+                "facman.self.physical-generation-root.v2\n" + logical_id + "\n" +
+                epoch_id + "\n" + generation_id + "\n"
+            ).encode()).hexdigest()
+            physical = logical.parent / ("FacMan.generation." + physical_id)
+            generation = {
+                "schema": "facman.self_generation.v2", "product_id": "facman", "epoch_id": epoch_id,
+                "generation_id": generation_id, "product_version": identity["version"],
+                "package_sha256": archive_sha, "facman_source_revision": identity["source_revision"],
+                "universal_setup_revision": identity["provider_revision"],
+                "install_id": "facman.self.eg." + hashlib.sha256((
+                    "facman.self.epoch-generation-install.v1\n" + epoch_id + "\n" + generation_id + "\n"
+                ).encode()).hexdigest(),
+                "install_root": str(physical), "logical_root": str(logical), "state_root": str(state),
+                "acceptance_root": str(root),
+                "gui": str(physical / "generations" / identity["version"] / "FacMan.exe"),
+                "maintenance_launcher": str(physical / "maintenance/FacManSetup.exe"),
+                "creating_provider_revision": creator,
+            }
+            path = (root / "setup-coordinator.v1/epochs" / epoch_id / "generations" /
+                    f"generation.{generation_id}.v2.json")
+            observed_path = lifecycle.observation_path(path)
+            observed_path.parent.mkdir(parents=True)
+
+            def check(value: dict[str, object], expected_creator: str = creator) -> dict[str, object]:
+                observed_path.write_text(json.dumps(value) + "\n", encoding="utf-8")
+                return lifecycle.require_epoch_generation_record(
+                    epoch_id, identity, archive_sha, expected_creator, logical, state, root,
+                )
+
+            self.assertEqual(generation, check(generation))
+            operation = "maint.downgrade.12345678." + "b" * 20 + "." + "c" * 16
+            activation_path = path.parent.parent / "activations" / f"activation.{operation}.v2.json"
+            lifecycle.observation_path(activation_path.parent).mkdir()
+            predecessor_path = activation_path.parent / "activation.fixture.v2.json"
+            lifecycle.observation_path(predecessor_path).write_text(json.dumps({
+                "schema": "facman.self_activation.v2", "product_id": "facman", "epoch_id": epoch_id,
+                "operation": "genesis", "operation_id": "epoch.genesis." + "f" * 64,
+                "generation_id": "f" * 64, "generation_record_sha256": "c" * 64,
+                "previous": {"name": "", "sha256": ""},
+            }) + "\n")
+            activation = {
+                "schema": "facman.self_activation.v2", "product_id": "facman", "epoch_id": epoch_id,
+                "operation": "downgrade", "operation_id": operation,
+                "source_generation_id": "f" * 64, "target_generation_id": generation_id,
+                "generation_record_sha256": lifecycle.sha256_path(path),
+                "previous": {"name": predecessor_path.name, "sha256": lifecycle.sha256_path(predecessor_path)},
+            }
+            lifecycle.observation_path(activation_path).write_text(json.dumps(activation) + "\n")
+            # Fixture records exercise the observer's receipt checks; no SDK
+            # or product command is dispatched or given a successful response.
+            receipt = {
+                "schema": "facman.self_maintenance_cli.v1", "status": "ok", "operation": "downgrade",
+                "phase": "shell_cutover_complete", "operation_id": operation,
+                "generation_id": generation_id, "product_version": identity["version"],
+                "install_id": generation["install_id"], "install_root": str(physical),
+                "generation_record": str(path), "activation_record": str(activation_path),
+            }
+            self.assertEqual(physical, lifecycle.require_epoch_transition_receipt(
+                receipt, "downgrade", epoch_id, identity, archive_sha, creator, logical, state, root,
+            ))
+            for altered in (dict(receipt, install_id="facman.self.eg." + "f" * 64),
+                            dict(receipt, generation_record=str(root / path.name)),
+                            dict(receipt, activation_record=str(root / activation_path.name)),
+                            dict(receipt, phase="handoff_launched")):
+                with self.assertRaises(AssertionError):
+                    lifecycle.require_epoch_transition_receipt(
+                        altered, "downgrade", epoch_id, identity, archive_sha, creator, logical, state, root,
+                    )
+            lifecycle.observation_path(activation_path).write_text(json.dumps(dict(
+                activation, generation_record_sha256="f" * 64)) + "\n")
+            with self.assertRaisesRegex(AssertionError, "exact generation bytes"):
+                lifecycle.require_epoch_transition_receipt(
+                    receipt, "downgrade", epoch_id, identity, archive_sha, creator, logical, state, root,
+                )
+            legacy_creator = dict(generation)
+            del legacy_creator["creating_provider_revision"]
+            self.assertEqual(legacy_creator, check(legacy_creator, identity["provider_revision"]))
+            for field, value in (
+                    ("creating_provider_revision", None), ("creating_provider_revision", ""),
+                    ("creating_provider_revision", identity["provider_revision"]),
+                    ("creating_provider_revision", "f" * 40), ("universal_setup_revision", creator),
+                    ("facman_source_revision", "f" * 40), ("package_sha256", "f" * 64),
+                    ("generation_id", "f" * 64), ("install_id", "facman.self.eg." + "f" * 64)):
+                with self.subTest(field=field, value=value), self.assertRaises(AssertionError):
+                    check(dict(generation, **{field: value}))
+            with self.assertRaises(AssertionError):
+                check(legacy_creator)
+            with self.assertRaises(AssertionError):
+                check(dict(generation, unknown_creator=creator))
+            with self.assertRaises(AssertionError):
+                check(generation, identity["provider_revision"])
+
     def test_real_ancestor_with_distinct_provider_lock_passes_baseline_admission(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary)

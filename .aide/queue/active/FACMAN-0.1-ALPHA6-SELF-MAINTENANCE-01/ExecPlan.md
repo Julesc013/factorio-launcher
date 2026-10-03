@@ -551,3 +551,33 @@ receipts are retained alongside `epoch-creator-final-validation.json`.
 A new exact-source produced B, genuine external continuation and the remaining
 supported-host and product gates are still required. PR #343's exact-head
 protected-control owner gate remains external. This WorkUnit stays active.
+
+
+## 2026-10-04 produced epoch continuation observation
+
+Qualified source `7096f28d976151ff7f77cbae898ce6b93055d5a2` produced a genuine
+Alpha.6 B package. Its 54 product CTests, runtime smoke, 115-file payload
+equivalence and independent delivery review passed. The unchanged Alpha.5 A
+archive retains source `203321188f88cc5587bd95ff6b4da4a602c745d2` and its
+original provider pin. Exact package and source receipts remain in the owned
+`task-facman-u-507ecf4b41/evidence` root.
+
+The actual disposable Windows guest completed classic update, downgrade,
+rollback, repair and retirement, then ordinary epoch genesis. Its external
+epoch downgrade reached the native terminal cutover record after interruption
+and resumption, but the public Python observer missed the 264-unit Windows
+record path and timed out. Complete fixture custody and the native records
+are preserved in `epoch-creator-pair-sandbox-output`; this failed campaign does
+not qualify the remaining epoch lifecycle steps.
+
+The observer correction uses explicit Windows long paths only for filesystem
+reads. It retains deadline, duplicate-terminal refusal and read-only product
+queries, and checks original archive/source/provider identity separately from
+the actual creating SDK, derived epoch install/root identities, exact activated
+generation bytes and predecessor activation. Flat compatibility record
+admission remains unchanged. Frozen-source validation and independent review
+are retained as `epoch-observer-validation-rx2.json` and
+`epoch-observer-source.review.json`. The next campaign reuses the qualified B
+application bytes and records its newer committed harness source separately;
+neither package is relabeled. Full epoch runtime qualification, supported-host
+and human gates remain due. This WorkUnit remains active.
