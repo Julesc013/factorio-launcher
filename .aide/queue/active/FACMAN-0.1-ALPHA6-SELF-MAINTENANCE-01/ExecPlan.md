@@ -376,6 +376,36 @@ fixtures, and 134 candidate/package Python tests pass. The WorkUnit remains
 active for clean committed hosted requalification, chain-aware active repair,
 supported-platform qualification and human/product acceptance.
 
+## 2026-10-03 predecessor provider custody
+
+The independent continuation slice uses `task/facman-cross-provider-maintenance-01`
+from integrated dev `cf82d7ebb5598021f4371fc116b8e0ddd158c576`. Read-only admission
+of Alpha.5 `203321188f88cc5587bd95ff6b4da4a602c745d2` reproduced the differing-lock
+refusal before any package build. The predecessor builder also supplied the
+candidate's provider roots to historical production.
+
+The existing provider workspace materializer now accepts an explicit consumer
+checkout through its internal API. Differing-lock baseline production uses that
+checkout's lock, source-owned output marker, exact detached provider revisions
+and trees. Its provider manifest is retained before later qualification gates.
+Package identity admission binds baseline and candidate to their respective
+Setup pins; source-distinct ancestry, strict SemVer ordering, exact package
+metadata and payload-equivalence gates remain required.
+
+54 focused provider-workspace, maintenance-candidate and product-candidate tests
+passed, including real local Git histories with distinct provider commits and
+source ownership. The strict check and unchanged engineering complexity budget
+passed. Full logs are retained in the marker-owned external task root
+`task-facman-c-e6a6a8453f/evidence`. The original static assertion for mandatory
+same-provider rejection was removed because the behavioral regression now
+covers differing-lock admission with exact historical inputs.
+
+This source correction is pending independent review and integration. It does
+not qualify a cross-provider runtime transition or epoch external continuation.
+Those require genuine produced-package observations, compatible installed-state
+handling, interruption/recovery, rollback, repair/removal and the remaining
+supported-host and human gates. This WorkUnit remains active.
+
 ## 2026-09-22 authoritative maintenance-state selection
 
 Hosted product-candidate run `35724336883` passed at exact merged source
