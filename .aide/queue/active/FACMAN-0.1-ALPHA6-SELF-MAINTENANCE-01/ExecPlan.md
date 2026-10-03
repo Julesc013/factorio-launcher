@@ -406,6 +406,16 @@ Those require genuine produced-package observations, compatible installed-state
 handling, interruption/recovery, rollback, repair/removal and the remaining
 supported-host and human gates. This WorkUnit remains active.
 
+PR #367's required Windows run `37117983856`, job `111188395977`, exposed a
+fixture-path assertion failure: the temporary directory used its `RUNNER~1`
+alias while the materializer correctly recorded the canonical `runneradmin`
+path. The regression now resolves its fixture root before deriving the consumer,
+lock and output paths. Exact provider revision/tree and source ownership checks
+remain intact. All four provider-workspace tests pass; the historical-consumer
+case also passes through a real Windows 8.3 temporary-directory alias. The
+original hosted failure and local observations are retained in the owned
+`task-facman-c-e6a6a8453f/evidence` root. Required successor-head CI remains due.
+
 ## 2026-09-22 authoritative maintenance-state selection
 
 Hosted product-candidate run `35724336883` passed at exact merged source

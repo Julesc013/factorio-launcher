@@ -14,7 +14,7 @@ from tools import development_layout, provider_workspace
 class ProviderWorkspaceTests(unittest.TestCase):
     def test_selected_consumer_owns_exact_historical_provider_inputs(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             consumer = root / "predecessor"
             (consumer / "release/index").mkdir(parents=True)
             repositories = {}
