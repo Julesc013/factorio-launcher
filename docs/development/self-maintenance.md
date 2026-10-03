@@ -45,6 +45,11 @@ whole-root `update.*` authority. Activation occurs only after the candidate and
 its installed files verify, followed by coordinated Start Menu and uninstall
 registration cutover.
 
+Historical installed-state reads support the exact Universal Setup ABI 1.0
+shape and preserve the original provider revision. Inspection and verification
+bind that revision and the recipe to the recorded package generation. New
+installation plans and apply bindings require the executing provider's exact pin.
+
 This checkpoint keeps completed generations for rollback. Repair accepts only
 the exact active generation after its chain roots and provider-installed
 identity bind. It routes the ordinary repair coordinator to that generation's

@@ -376,6 +376,35 @@ fixtures, and 134 candidate/package Python tests pass. The WorkUnit remains
 active for clean committed hosted requalification, chain-aware active repair,
 supported-platform qualification and human/product acceptance.
 
+## 2026-10-03 genuine cross-provider installed-state failure
+
+Independently reviewed packages A (`203321188f88cc5587bd95ff6b4da4a602c745d2`,
+Alpha.5, Setup `4c766b342e68656a2d4e26a14cfe51ab2209ad41`) and B
+(`426a42429a1e4cfe58011bd9b9b3b51274d1d116`, Alpha.6, Setup
+`2749a15b835a6c1c9968598a2b434d85809691ad`) reproduced a production rejection in
+a disposable Windows Sandbox account. A installed and native ownership checks
+passed. B refused A's installed-state response before provider planning with
+`self_maintenance_provider_response_invalid`: the ABI 1.0 response retained A's
+original pin, while the decoder demanded B's executing pin. Full failed fixture,
+command receipts, guest identity and package bindings are retained under
+`task-facman-u-507ecf4b41/evidence/produced-pair-sandbox-rx4-output`.
+Earlier PATH, guest-lifetime and omitted-helper-input failures remain preserved;
+none qualifies a successful product transition.
+
+The bounded correction reads the exact supported ABI 1.0 shape with a valid
+original revision, binds candidate and retained inspections to their recorded
+generation pin, and derives historical recipe identity from that pin. Legacy
+and bootstrap admission keep the package-descriptor equality. New install
+planning/apply retain executing-pin equality, and the flat compatibility retry
+keeps its existing current-pin restriction. Independent decision review required
+the explicit candidate-pin binder and audited that retry before implementation.
+Native regressions cover successful historical inspection/verification and
+refusal of wrong generation pins, malformed revisions, unsupported ABI versions
+and historical install authority. The affected developer test run and strict
+validation pass, with full logs retained in the owned evidence root. Independent
+snapshot review and genuine A/B update/recovery remain due; epoch external
+continuation remains unqualified.
+
 ## 2026-09-22 authoritative maintenance-state selection
 
 Hosted product-candidate run `35724336883` passed at exact merged source

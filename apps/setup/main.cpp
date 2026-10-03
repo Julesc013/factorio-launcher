@@ -3291,9 +3291,7 @@ int run_maintenance(Options &options, const fs::path &,
     if (!same_path(identity.value().install_root, options.install_root) ||
         identity.value().product_version != descriptor.value().product_version ||
         identity.value().provider_revision !=
-            descriptor.value().universal_setup_revision ||
-        identity.value().provider_revision !=
-            facman::self_setup::provider_revision()) {
+            descriptor.value().universal_setup_revision) {
       print_maintenance_error({"self_maintenance_legacy_invalid",
                    "legacy package and provider identities do not agree", ""},
                   options.json);
@@ -3676,9 +3674,7 @@ bootstrap_installed_facman(const Options &options, const fs::path &coordinator_r
         !same_path(installed.value().install_root, options.install_root) ||
         installed.value().product_version != descriptor.value().product_version ||
         installed.value().provider_revision !=
-            descriptor.value().universal_setup_revision ||
-        installed.value().provider_revision !=
-            facman::self_setup::provider_revision())
+            descriptor.value().universal_setup_revision)
       return facman::core::Result<Bootstrap>::failure(
           !descriptor ? descriptor.error() : !installed ? installed.error() :
           facman::core::Error{"self_maintenance_legacy_invalid",
@@ -4171,6 +4167,7 @@ int wmain(int argc, wchar_t **argv) {
           flat.value()->generations.back().package_sha256 == *supplied_sha256;
       const bool same_legacy = flat && !flat.value().has_value() &&
           supplied_sha256 && installed &&
+          installed.value().provider_revision == facman::self_setup::provider_revision() &&
           installed.value().source_archive_sha256 == *supplied_sha256 &&
           same_path(installed.value().install_root, options.install_root);
       if (!flat || (!same_flat && !same_legacy)) {

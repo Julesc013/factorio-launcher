@@ -2330,6 +2330,19 @@ bool provider_uint(const json::Value &object, const char *key,
   return true;
 }
 
+bool installed_setup_abi(const json::Value &value) {
+  std::uint64_t major = 0, minor = 0;
+  const std::string revision = provider_string(value, "provider_revision");
+  return provider_exact_keys(value, {"major", "minor", "provider_revision"}) &&
+      provider_uint(value, "major", &major) && major == 1U &&
+      provider_uint(value, "minor", &minor) && minor == 0U &&
+      revision.size() == 40U &&
+      std::all_of(revision.begin(), revision.end(), [](unsigned char character) {
+        return (character >= '0' && character <= '9') ||
+            (character >= 'a' && character <= 'f');
+      });
+}
+
 bool provider_exact_string_array(const json::Value &value,
                                  std::initializer_list<const char *> expected) {
   if (!value.is_array() || value.size() != expected.size()) return false;
@@ -2411,10 +2424,7 @@ facman::core::Result<InstalledIdentity> decode_installed_identity(
            "source_archive_digest", "target_root", "target_scope",
            "transaction_id"}) ||
       setup_abi == nullptr ||
-      !provider_exact_keys(*setup_abi,
-          {"major", "minor", "provider_revision"}) ||
-      !provider_uint(*setup_abi, "major") ||
-      !provider_uint(*setup_abi, "minor") ||
+      !installed_setup_abi(*setup_abi) ||
       components == nullptr ||
       !provider_exact_string_array(*components,
           {"facman.product", "facman.maintenance"}) ||
@@ -2442,9 +2452,7 @@ facman::core::Result<InstalledIdentity> decode_installed_identity(
       provider_string(*payload, "ownership_manifest_ref").empty() ||
       provider_string(*payload, "audit_chain_id").empty() ||
       provider_string(*payload, "transaction_id").empty() ||
-      !self_setup::valid_timestamp(provider_string(*payload, "created_at")) ||
-      provider_string(*setup_abi, "provider_revision") !=
-          self_setup::provider_revision())
+      !self_setup::valid_timestamp(provider_string(*payload, "created_at")))
     return facman::core::Result<InstalledIdentity>::failure(provider_error(
         "self_maintenance_provider_response_invalid",
         "Universal Setup installed-state response is incompatible",
@@ -2520,7 +2528,7 @@ std::string maintenance_recipe_digest(const Plan &transition) {
   recipe_identity.add_string("product_version",
                              transition.target.product_version);
   recipe_identity.add_string("provider_revision",
-                             self_setup::provider_revision());
+                             transition.target.universal_setup_revision);
   recipe_identity.add_string("source_sha256", transition.target.package_sha256);
   recipe_identity.add_string("target_layout",
                              "versioned_generation_with_maintenance_v1");
@@ -2908,6 +2916,7 @@ CandidateState ProviderBridge::inspect_candidate(const Plan &transition) {
   return installed &&
       installed.value().product_version == transition.target.product_version &&
       installed.value().source_archive_sha256 == transition.package_sha256 &&
+      installed.value().provider_revision == transition.target.universal_setup_revision &&
       installed.value().recipe_digest == maintenance_recipe_digest(transition) &&
       provider_same_path(installed.value().install_root,
                          transition.target.install_root)
