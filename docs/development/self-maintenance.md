@@ -97,9 +97,9 @@ The manually dispatched Windows product-candidate workflow can receive an exact
 40-character lowercase `self_maintenance_baseline_ref`. The workflow transfers
 that value through the process environment rather than interpolating it into a
 shell program. It builds that clean ancestor outside the
-checkout and accepts it only when its provider lock is byte-identical to the
-candidate's, its produced package records its own exact source revision, and
-its SemVer is strictly lower than the candidate package. The gated lifecycle
+checkout and accepts it only when its produced package records its own exact
+source revision and its SemVer is strictly lower than the candidate package.
+The gated lifecycle
 then uses package A for install, package B for update, A for downgrade, and
 rollback for the final B cutover. It records the two package identities,
 exact generation and activation record contents, and actual current-user Start
@@ -110,6 +110,17 @@ baseline artifact is staged immediately, before the later payload-equivalence
 gate, and the staging receipt labels it `produced_unqualified` until that gate
 passes. A bounded attempt receipt remains available when build or transition
 qualification fails.
+
+When provider locks differ, the existing locked-provider workspace materializer
+uses the predecessor checkout's own lock and owns its detached provider inputs
+under that predecessor's output marker. Production and checkout observations
+use those exact roots; the baseline package must record its own locked Setup
+revision, while the candidate package must record the candidate's revision.
+The provider workspace manifest is retained with baseline evidence. Matching
+locks continue to reuse the supplied provider roots. This admits production of
+source-distinct inputs across a provider change; a successful real transition,
+recovery and rollback remains required before claiming cross-provider lifecycle
+qualification.
 
 This candidate qualifies an epoch external continuation only if package A's
 ordinary Setup created a real active epoch before B is applied. An older flat
