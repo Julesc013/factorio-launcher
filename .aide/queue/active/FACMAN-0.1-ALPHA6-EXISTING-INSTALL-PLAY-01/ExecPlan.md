@@ -57,3 +57,34 @@ This is source fixture qualification only. Actual Factorio, human experience,
 and final packaged Play remain separate admitted acceptance. Source validation
 and independent review receipts accompany this work before commit; task closure
 still requires exact checked integration.
+
+## Current-image launch preflight continuation
+
+After PR #368 integrated at `af9bcaaa39188ee8d734580da364e047ee4b1cde`,
+a native consumer reproduced a distinct remaining missing-file defect:
+launch preflight still passed after `data/base/info.json` was removed from
+the selected installation. A fresh build of the new runtime regression also
+failed with exit 51 before the implementation correction.
+
+Launch preflight now requires the current base identity to be a regular file.
+The regression covers deletion, a directory replacing the identity, a moved
+base directory, and successful restoration. Each observation compares the
+complete fixture directory/file inventory, including foreign save, mod and
+configuration sentinels. This preflight remains read-only and supplies no
+game-execution authority. The historical engineering menu receipt retains its
+original classification; real packaged Play still needs its approved input,
+host, exact delivery and separate acceptance.
+
+This continuation reuses the existing owned task root and developer build;
+it allocates no new task root or candidate campaign. The original readiness
+and integration receipts remain immutable. Current source validation, failure
+and custody receipts are recorded separately before qualified integration.
+
+The required broad developer run exposed legacy-provider path-limit refusals
+in deep owned temporary roots. All failure receipts are retained. The Setup
+test fixtures use shorter local names so their journal paths fit the same
+provider limits; no timeout, assertion, provider policy or deliberate CI-length
+control is changed. Windows native fixture names include the process id and
+skip existing directories, preserving residue from earlier failed runs.
+The attempted stable-root drive mapping was refused by the provider's local
+filesystem gate and removed; qualification uses the original local volume.
