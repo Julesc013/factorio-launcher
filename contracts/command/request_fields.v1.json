@@ -507,6 +507,11 @@
         "kind": "string",
         "name": "display_name",
         "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_manifest_sha256",
+        "required": false
       }
     ],
     "instances.restore": [
@@ -1094,6 +1099,11 @@
         "required": true
       },
       {
+        "kind": "sha256",
+        "name": "expected_manifest_sha256",
+        "required": false
+      },
+      {
         "kind": "enum",
         "name": "window_mode",
         "required": false
@@ -1364,6 +1374,11 @@
         "kind": "identifier",
         "name": "profile_id",
         "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_manifest_sha256",
+        "required": false
       },
       {
         "kind": "enum",

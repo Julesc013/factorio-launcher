@@ -3528,7 +3528,7 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman instances rename <instance-id> --name <display-name> --json",
+      "cli": "facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json",
       "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
@@ -3554,7 +3554,7 @@
             "required": true
           }
         ],
-        "usage": "facman instances rename <instance-id> --name <display-name> --json"
+        "usage": "facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json"
       },
       "command_id": "instances.rename",
       "contract_path": "contracts/command/factorio/instances.rename.v1.toml",
@@ -3597,6 +3597,15 @@
           "request_field": "display_name",
           "required": true,
           "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_manifest_sha256",
+          "repeatable": false,
+          "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
         }
       ],
       "request_schema": "contracts/schema/command/instances.rename.request.v1.schema.json",
@@ -6921,7 +6930,7 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman profiles apply <instance-id> <profile-id> [profile options] --json",
+      "cli": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json",
       "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
@@ -6946,7 +6955,7 @@
             "required": true
           }
         ],
-        "usage": "facman profiles apply <instance-id> <profile-id> [profile options] --json"
+        "usage": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
       },
       "command_id": "profiles.apply",
       "contract_path": "contracts/command/factorio/profiles.apply.v1.toml",
@@ -6989,6 +6998,15 @@
           "request_field": "profile_id",
           "required": true,
           "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_manifest_sha256",
+          "repeatable": false,
+          "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
         },
         {
           "choices": [
@@ -7646,7 +7664,7 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman profiles plan <instance-id> <profile-id> [profile options] --json",
+      "cli": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json",
       "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
@@ -7671,7 +7689,7 @@
             "required": true
           }
         ],
-        "usage": "facman profiles plan <instance-id> <profile-id> [profile options] --json"
+        "usage": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
       },
       "command_id": "profiles.plan",
       "contract_path": "contracts/command/factorio/profiles.plan.v1.toml",
@@ -7713,6 +7731,15 @@
           "request_field": "profile_id",
           "required": true,
           "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_manifest_sha256",
+          "repeatable": false,
+          "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
         },
         {
           "choices": [
@@ -11888,7 +11915,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "4bcda469d19c9dd77b541693e088bb408ac1ed9f84e9ab416e64cc1232bd60b9",
+  "source_digest": "c7c6b8b02c4543f360fc958a3d8618cce8250a4b2edcf114b183c407de967c50",
   "workflows": [
     {
       "always_visible_fields": [

@@ -1580,6 +1580,41 @@ retryable = false
 message = "The transaction staging root does not carry its expected ownership marker."
 
 [[code]]
+id = "recovery_profile_pair_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The profile manifest and overrides cannot be reconciled from verified transaction evidence."
+
+[[code]]
+id = "recovery_instance_rename_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The instance rename cannot be reconciled from verified transaction evidence."
+
+[[code]]
+id = "instance_configuration_lock_contended"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Another operation owns the instance configuration lock."
+
+[[code]]
+id = "instance_configuration_lock_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The instance configuration lock is unsafe or has unexpected identity."
+
+[[code]]
+id = "instance_manifest_revision_changed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance manifest changed after inspection; retry from its current revision."
+
+[[code]]
 id = "recovery_write_refused"
 severity = "blocked"
 effect = "workspace_write"

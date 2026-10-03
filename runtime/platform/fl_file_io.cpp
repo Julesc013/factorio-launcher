@@ -3,6 +3,7 @@
 
 #include "fl_file_io.h"
 
+#include "fl_system_services.h"
 #include "fl_windows_path.h"
 
 #include <algorithm>
@@ -27,6 +28,8 @@
 #include <unistd.h>
 #if defined(__linux__)
 #include <sys/syscall.h>
+#elif defined(__APPLE__)
+#include <sys/clonefile.h>
 #endif
 #endif
 
@@ -914,12 +917,14 @@ struct DurableOutputFile::Impl {
     std::string staging_leaf;
     FileIdentity identity;
     bool relative_created = false;
+    bool relative_reopened = false;
     RelativeNamespaceState relative_state = RelativeNamespaceState::none;
     std::uint64_t next_offset = 0;
     std::uint64_t maximum_size = 0;
     void reset_relative_state() noexcept
     {
         relative_created = false;
+        relative_reopened = false;
         relative_state = RelativeNamespaceState::none;
         staging_leaf.clear();
         parent_handle = kInvalidHandle;
@@ -1104,7 +1109,11 @@ IoStatus StableDirectoryObject::reopen_child_file_no_follow_for_relative_publish
     }
     actual = identity_from_info(info);
 #else
+#ifdef __APPLE__
+    file = ::openat(parent, name.c_str(), O_RDWR | O_NOFOLLOW | O_CLOEXEC);
+#else
     file = ::openat(parent, name.c_str(), O_WRONLY | O_NOFOLLOW | O_CLOEXEC);
+#endif
     if (file < 0) { const std::string detail = std::strerror(errno); ::close(parent);
         return IoStatus::failure("relative_publish_reopen_failed", detail); }
     struct stat info {};
@@ -1155,6 +1164,7 @@ IoStatus StableDirectoryObject::reopen_child_file_no_follow_for_relative_publish
     child.impl_->next_offset = actual.size;
     child.impl_->maximum_size = maximum_size;
     child.impl_->relative_created = true;
+    child.impl_->relative_reopened = true;
     child.impl_->relative_state = DurableOutputFile::Impl::RelativeNamespaceState::staging;
     return IoStatus::success();
 }
@@ -1297,6 +1307,20 @@ IoStatus DurableOutputFile::publish_no_replace(
 IoStatus DurableOutputFile::publish_sibling_no_replace(
     const std::filesystem::path& destination_leaf)
 {
+    return publish_relative_no_replace(nullptr, destination_leaf);
+}
+
+IoStatus DurableOutputFile::publish_in_directory_no_replace(
+    const StableDirectoryObject& destination_parent,
+    const std::filesystem::path& destination_leaf)
+{
+    return publish_relative_no_replace(&destination_parent, destination_leaf);
+}
+
+IoStatus DurableOutputFile::publish_relative_no_replace(
+    const StableDirectoryObject* destination_parent,
+    const std::filesystem::path& destination_leaf)
+{
     std::string destination;
     if (!portable_leaf(destination_leaf, destination))
         return IoStatus::failure("relative_leaf_invalid", path_to_utf8(destination_leaf));
@@ -1304,6 +1328,14 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
         impl_->relative_state != Impl::RelativeNamespaceState::staging ||
         impl_->parent_handle == kInvalidHandle)
         return IoStatus::failure("relative_output_not_open", destination);
+    if (destination_parent != nullptr &&
+        (!destination_parent->open() || !destination_parent->revalidate().ok()))
+        return IoStatus::failure("relative_destination_parent_changed", destination);
+    const NativeHandle target_parent = destination_parent == nullptr
+        ? impl_->parent_handle : destination_parent->impl_->handle;
+    const std::filesystem::path target_path = destination_parent == nullptr
+        ? impl_->path.parent_path() / destination_leaf
+        : destination_parent->path() / destination_leaf;
 #ifdef _WIN32
     if (!FlushFileBuffers(impl_->handle))
         return IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
@@ -1312,7 +1344,8 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
         return IoStatus::failure("output_pre_rename_fault_injected", "test seam");
     BY_HANDLE_FILE_INFORMATION source_info {};
     if (!GetFileInformationByHandle(impl_->handle, &source_info) ||
-        !impl_->identity.same_object(identity_from_info(source_info)) ||
+        (destination_parent != nullptr && impl_->relative_reopened &&
+         !impl_->identity.unchanged(identity_from_info(source_info))) ||
         !identity_from_info(source_info).regular_file || source_info.nNumberOfLinks != 1U)
         return IoStatus::failure("commit_source_identity_changed", impl_->staging_leaf);
     std::wstring name(destination.begin(), destination.end());
@@ -1320,7 +1353,7 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
     std::vector<unsigned char> storage(sizeof(FILE_RENAME_INFO) + name_bytes, 0U);
     auto* rename = reinterpret_cast<FILE_RENAME_INFO*>(storage.data());
     rename->ReplaceIfExists = FALSE;
-    rename->RootDirectory = impl_->parent_handle;
+    rename->RootDirectory = target_parent;
     if (name_bytes > std::numeric_limits<DWORD>::max())
         return IoStatus::failure("relative_publish_unavailable", "destination leaf is too large");
     rename->FileNameLength = static_cast<DWORD>(name_bytes);
@@ -1337,7 +1370,7 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
     if (rename_status < 0) return nt_rename_status(rename_status);
     impl_->relative_state = Impl::RelativeNamespaceState::published_unverified;
     impl_->staging_leaf = destination;
-    impl_->path = impl_->path.parent_path() / destination_leaf;
+    impl_->path = target_path;
     const auto fail_after_namespace_rename = [&](IoStatus failure) {
         impl_->close_owned_handles_noexcept();
         return published_unverified_failure(failure);
@@ -1353,7 +1386,7 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
     const IoStatus file_closed = close_native_handle(impl_->handle, "output_close_failed");
     if (!file_closed.ok()) return fail_after_namespace_rename(file_closed);
     HANDLE published = kInvalidHandle;
-    IoStatus published_status = open_relative_windows(impl_->parent_handle, destination,
+    IoStatus published_status = open_relative_windows(target_parent, destination,
         FILE_READ_ATTRIBUTES, 1, 0x00200040, published);
     if (!published_status.ok()) return fail_after_namespace_rename(published_status);
     BY_HANDLE_FILE_INFORMATION published_info {};
@@ -1378,25 +1411,43 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
         return IoStatus::failure("output_pre_rename_fault_injected", "test seam");
     struct stat held {};
     struct stat named {};
-    if (::fstat(impl_->handle, &held) != 0 ||
-        ::fstatat(impl_->parent_handle, impl_->staging_leaf.c_str(), &named, AT_SYMLINK_NOFOLLOW) != 0 ||
-        held.st_dev != named.st_dev || held.st_ino != named.st_ino || !S_ISREG(named.st_mode) ||
-        held.st_nlink != 1 || named.st_nlink != 1)
+    const bool by_open_inode = destination_parent != nullptr;
+    if (::fstat(impl_->handle, &held) != 0 || !S_ISREG(held.st_mode) || held.st_nlink != 1 ||
+        (!by_open_inode &&
+         (::fstatat(impl_->parent_handle, impl_->staging_leaf.c_str(), &named, AT_SYMLINK_NOFOLLOW) != 0 ||
+          held.st_dev != named.st_dev || held.st_ino != named.st_ino ||
+          !S_ISREG(named.st_mode) || named.st_nlink != 1)) ||
+        (destination_parent != nullptr && impl_->relative_reopened &&
+         !impl_->identity.unchanged(identity_from_stat(held))))
         return IoStatus::failure("commit_source_identity_changed", impl_->staging_leaf);
 #if defined(__linux__) && defined(SYS_renameat2)
-    if (::syscall(SYS_renameat2, impl_->parent_handle, impl_->staging_leaf.c_str(),
-            impl_->parent_handle, destination.c_str(), 1U) != 0)
+    if (destination_parent != nullptr) {
+        // Follow the proc descriptor symlink to the opened inode. AT_EMPTY_PATH
+        // requires CAP_DAC_READ_SEARCH and cannot serve ordinary users.
+        const std::string held_source = "/proc/self/fd/" + std::to_string(impl_->handle);
+        if (::linkat(AT_FDCWD, held_source.c_str(), target_parent,
+                destination.c_str(), AT_SYMLINK_FOLLOW) != 0)
+            return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
+    } else if (::syscall(SYS_renameat2, impl_->parent_handle, impl_->staging_leaf.c_str(),
+            target_parent, destination.c_str(), 1U) != 0) {
         return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
+    }
 #elif defined(__APPLE__)
-    if (::renameatx_np(impl_->parent_handle, impl_->staging_leaf.c_str(),
-            impl_->parent_handle, destination.c_str(), RENAME_EXCL) != 0)
+    if (destination_parent != nullptr) {
+        // APFS creates the target atomically from the opened source descriptor.
+        // A source-name rename here would reintroduce the substitution race.
+        if (::fclonefileat(impl_->handle, target_parent, destination.c_str(), 0) != 0)
+            return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
+    } else if (::renameatx_np(impl_->parent_handle, impl_->staging_leaf.c_str(),
+            target_parent, destination.c_str(), RENAME_EXCL) != 0) {
         return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
+    }
 #else
     return IoStatus::failure("commit_no_replace_unsupported", "atomic relative no-replace rename unavailable");
 #endif
     impl_->relative_state = Impl::RelativeNamespaceState::published_unverified;
     impl_->staging_leaf = destination;
-    impl_->path = impl_->path.parent_path() / destination_leaf;
+    impl_->path = target_path;
     const auto fail_after_namespace_rename = [&](IoStatus failure) {
         impl_->close_owned_handles_noexcept();
         return published_unverified_failure(failure);
@@ -1406,9 +1457,19 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
             IoStatus::failure("output_post_rename_fault_injected", "test seam"));
     }
     struct stat published {};
-    if (::fstatat(impl_->parent_handle, destination.c_str(), &published, AT_SYMLINK_NOFOLLOW) != 0 ||
-        held.st_dev != published.st_dev || held.st_ino != published.st_ino || !S_ISREG(published.st_mode) ||
-        published.st_nlink != 1) {
+    nlink_t expected_links = 1;
+#ifdef __linux__
+    if (destination_parent != nullptr) expected_links = 2;
+#endif
+    bool cloned_output = false;
+#ifdef __APPLE__
+    cloned_output = destination_parent != nullptr;
+#endif
+    if (::fstatat(target_parent, destination.c_str(), &published, AT_SYMLINK_NOFOLLOW) != 0 ||
+        held.st_dev != published.st_dev ||
+        (cloned_output ? held.st_size != published.st_size : held.st_ino != published.st_ino) ||
+        !S_ISREG(published.st_mode) ||
+        published.st_nlink != expected_links) {
         return fail_after_namespace_rename(
             IoStatus::failure("commit_destination_identity_changed", destination));
     }
@@ -1416,6 +1477,10 @@ IoStatus DurableOutputFile::publish_sibling_no_replace(
     if (!file_closed.ok()) return fail_after_namespace_rename(file_closed);
     IoStatus flushed = flush_directory_handle(impl_->parent_handle);
     if (!flushed.ok()) return fail_after_namespace_rename(flushed);
+    if (target_parent != impl_->parent_handle) {
+        flushed = flush_directory_handle(target_parent);
+        if (!flushed.ok()) return fail_after_namespace_rename(flushed);
+    }
     const IoStatus parent_closed = close_native_handle(impl_->parent_handle, "output_parent_close_failed");
     if (!parent_closed.ok()) return fail_after_namespace_rename(parent_closed);
     impl_->reset_relative_state();
@@ -1469,6 +1534,104 @@ void DurableOutputFile::close_without_flush() noexcept
 }
 const std::filesystem::path& DurableOutputFile::path() const noexcept { return impl_->path; }
 const FileIdentity& DurableOutputFile::identity() const noexcept { return impl_->identity; }
+
+#ifndef _WIN32
+struct PrivatePublicationFile::Impl {
+    int file = -1;
+    int target_parent = -1;
+    std::uint64_t next_offset = 0;
+    std::uint64_t maximum_size = 0;
+    bool published_unverified = false;
+    ~Impl()
+    {
+        if (file >= 0) ::close(file);
+        if (target_parent >= 0) ::close(target_parent);
+    }
+};
+
+PrivatePublicationFile::PrivatePublicationFile() : impl_(std::make_unique<Impl>()) {}
+PrivatePublicationFile::~PrivatePublicationFile() = default;
+
+IoStatus PrivatePublicationFile::create(
+    const StableDirectoryObject& staging_parent,
+    const StableDirectoryObject& destination_parent,
+    std::uint64_t maximum_size)
+{
+    if (impl_->file >= 0 || impl_->target_parent >= 0)
+        return IoStatus::failure("private_output_already_open", "");
+    if (!staging_parent.open() || !staging_parent.revalidate().ok() ||
+        !destination_parent.open() || !destination_parent.revalidate().ok())
+        return IoStatus::failure("private_output_parent_changed", "");
+    if (!duplicate_handle(destination_parent.impl_->handle, impl_->target_parent))
+        return IoStatus::failure("private_output_parent_duplicate_failed", std::strerror(errno));
+#ifdef __linux__
+    impl_->file = ::openat(impl_->target_parent, ".", O_TMPFILE | O_RDWR | O_CLOEXEC, 0600);
+    if (impl_->file < 0)
+        return IoStatus::failure("private_output_create_failed", std::strerror(errno));
+#elif defined(__APPLE__)
+    RandomIdGenerator random;
+    const std::string name = ".facman-private-" + random.next("archive");
+    impl_->file = ::openat(staging_parent.impl_->handle, name.c_str(),
+        O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0600);
+    if (impl_->file < 0)
+        return IoStatus::failure("private_output_create_failed", std::strerror(errno));
+    if (::unlinkat(staging_parent.impl_->handle, name.c_str(), 0) != 0)
+        return IoStatus::failure("private_output_unlink_failed", std::strerror(errno));
+    const IoStatus removed = staging_parent.flush_metadata();
+    if (!removed.ok()) return removed;
+#endif
+    impl_->next_offset = 0;
+    impl_->maximum_size = maximum_size;
+    return IoStatus::success();
+}
+
+std::size_t PrivatePublicationFile::write_at(
+    std::uint64_t offset, const void* data, std::size_t size)
+{
+    if (impl_->file < 0 || impl_->published_unverified ||
+        offset != impl_->next_offset || offset > impl_->maximum_size ||
+        size > impl_->maximum_size - offset) return 0;
+    const ssize_t written = ::pwrite(impl_->file, data, size, static_cast<off_t>(offset));
+    if (written > 0) impl_->next_offset += static_cast<std::uint64_t>(written);
+    return written > 0 ? static_cast<std::size_t>(written) : 0;
+}
+
+IoStatus PrivatePublicationFile::publish_no_replace(const std::filesystem::path& destination_leaf)
+{
+    std::string destination;
+    if (!portable_leaf(destination_leaf, destination) || impl_->file < 0 ||
+        impl_->target_parent < 0 || impl_->published_unverified)
+        return IoStatus::failure("private_output_not_ready", path_to_utf8(destination_leaf));
+    if (::fsync(impl_->file) != 0)
+        return IoStatus::failure("private_output_flush_failed", std::strerror(errno));
+    struct stat held {};
+    if (::fstat(impl_->file, &held) != 0 || !S_ISREG(held.st_mode) ||
+        held.st_nlink != 0 || held.st_size != static_cast<off_t>(impl_->next_offset))
+        return IoStatus::failure("private_output_identity_changed", destination);
+#ifdef __linux__
+    if (::linkat(impl_->file, "", impl_->target_parent, destination.c_str(), AT_EMPTY_PATH) != 0)
+        return IoStatus::failure("private_output_publish_failed", std::strerror(errno));
+#elif defined(__APPLE__)
+    if (::fclonefileat(impl_->file, impl_->target_parent, destination.c_str(), 0) != 0)
+        return IoStatus::failure("private_output_publish_failed", std::strerror(errno));
+#endif
+    impl_->published_unverified = true;
+    struct stat published {};
+    if (::fstatat(impl_->target_parent, destination.c_str(), &published, AT_SYMLINK_NOFOLLOW) != 0 ||
+        !S_ISREG(published.st_mode) || published.st_nlink != 1 ||
+        published.st_size != held.st_size ||
+#ifdef __linux__
+        published.st_dev != held.st_dev || published.st_ino != held.st_ino ||
+#endif
+        false)
+        return published_unverified_failure(
+            IoStatus::failure("private_output_destination_changed", destination));
+    const IoStatus flushed = flush_directory_handle(impl_->target_parent);
+    if (!flushed.ok()) return published_unverified_failure(flushed);
+    impl_->published_unverified = false;
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+}
+#endif
 
 IoStatus commit_no_replace(const std::filesystem::path& source, const std::filesystem::path& destination)
 {

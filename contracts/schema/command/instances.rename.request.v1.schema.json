@@ -7,6 +7,12 @@
       "minLength": 1,
       "type": "string"
     },
+    "expected_manifest_sha256": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
     "instance_id": {
       "minLength": 1,
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",

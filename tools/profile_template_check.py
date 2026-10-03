@@ -36,7 +36,7 @@ def validate() -> list[str]:
             problems.append(f"customization model is missing: {model}")
     for anchor in (
         "safe_arguments", "--config", "--mod-directory", "arbitrary_execution", "execution_enabled",
-        "profile_plan_and_reserved_argument_policy_validated", "plan_backup_stage", "owned_trash_move_no_delete",
+        "profile_plan_and_reserved_argument_policy_validated", "profile_apply_two_file_v1", "owned_trash_move_no_delete",
         "permanent_delete", "profile_shipped_immutable", "effective_profile_for_instance",
     ):
         combined = source + header + launch

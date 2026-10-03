@@ -14,7 +14,11 @@ R3.7 provides a typed, reversible lifecycle for managed Factorio instances:
   while omitting locks, caches, logs, crash files, and transaction material;
 - `instances.clone <source> <destination>` performs stable, singly-linked file
   reads, cross-volume copy/hash verification, regenerated destination config,
-  owned staging, and a no-clobber transaction commit;
+  owned staging, and a no-clobber transaction commit. It holds the source
+  instance configuration lock through planning and copying, so overlapping
+  profile apply or rename operations refuse rather than mix manifest states.
+  The small identity lock file remains in the source `locks` directory after
+  the operation; the destination does not inherit it;
 - `instances.rename <id> --name <display-name>` changes only the display name.
   The immutable instance ID and managed directory do not change;
 - `instances.archive <id>` refuses unresolved run locks and transactions, then

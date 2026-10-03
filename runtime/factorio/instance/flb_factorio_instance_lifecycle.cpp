@@ -8,6 +8,7 @@
 #include "fl_json.h"
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
+#include "fl_system_services.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 #include "flb_factorio_launch_plan.h"
@@ -72,6 +73,7 @@ facman::core::Result<std::string> failure(
         "instance_archive_hash_mismatch", "instance_archive_manifest_invalid", "instance_archive_target_exists",
         "instance_file_unsafe", "instance_link_refused", "instance_root_unsafe",
         "instance_transaction_recovery_required", "instance_tree_budget_exceeded",
+        "instance_configuration_lock_unsafe",
     };
     error.recoverable = kind != facman::core::OutcomeKind::recovery_required &&
         non_recoverable.count(code) == 0;
@@ -120,6 +122,12 @@ facman::core::Result<std::string> stable_text(const fs::path& path, std::uint64_
     status = input.revalidate();
     if (!status.ok()) return failure(status.code, status.detail, path);
     return facman::core::Result<std::string>::success(std::move(text));
+}
+
+std::string text_sha256(const std::string& text)
+{
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(text.data()), text.size());
 }
 
 facman::core::Result<void> durable_new(const fs::path& path, const std::string& text)
@@ -368,6 +376,41 @@ std::string object_string(const json::Value& value, const char* key)
     return text ? text.take_value() : std::string {};
 }
 
+bool manifest_matches_instance(
+    const std::string& text,
+    const workspace::InstanceRecord& instance)
+{
+    auto document = json::parse(text);
+    return document && document.value().is_object() &&
+        object_string(document.value(), "instance_id") == instance.id.str() &&
+        object_string(document.value(), "display_name") == instance.display_name &&
+        object_string(document.value(), "install_ref") == instance.install_ref.str() &&
+        object_string(document.value(), "factorio_version") == instance.factorio_version &&
+        object_string(document.value(), "profile") == instance.profile &&
+        object_string(document.value(), "template") == instance.template_id;
+}
+
+facman::core::Result<std::string> renamed_manifest(
+    const std::string& source,
+    const workspace::InstanceRecord& instance,
+    const std::string& display_name)
+{
+    auto document = json::parse(source);
+    if (!document || !document.value().is_object() ||
+        object_string(document.value(), "schema") != "factorio.instance.v1" ||
+        !manifest_matches_instance(source, instance)) return failure(
+            "instance_manifest_changed", "Instance manifest changed before rename", instance.source_path);
+    json::ObjectBuilder output;
+    for (const std::string& key : document.value().object_keys()) {
+        const json::Value* value = document.value().find(key);
+        const bool added = key == "display_name" ? output.add_string(key, display_name) :
+            value != nullptr && output.add_value(key, *value);
+        if (!added) return failure("instance_rename_failed",
+            "Instance manifest fields could not be preserved", instance.source_path);
+    }
+    return facman::core::Result<std::string>::success(output.serialize() + "\n");
+}
+
 facman::core::Result<void> rewrite_restored_modset_identity(
     const fs::path& instance_root,
     const std::string& instance_id)
@@ -510,6 +553,13 @@ facman::core::Result<std::string> inspect(const fs::path& root, const InspectReq
 {
     auto instance = load_instance(root, request.instance_id);
     if (!instance) return failure(instance.error().code, instance.error().message, instance.error().path);
+    auto manifest_text = stable_text(instance.value().source_path, 4U * 1024U * 1024U);
+    if (!manifest_text) return failure(
+        manifest_text.error().code, manifest_text.error().message, manifest_text.error().path);
+    if (!manifest_matches_instance(manifest_text.value(), instance.value())) {
+        return failure("instance_manifest_changed", "Instance manifest changed during inspection",
+            instance.value().source_path);
+    }
     auto install = load_install(root, instance.value().install_ref.str());
     auto summary = summarize_tree(instance.value().root, false, false);
     if (!summary) return failure(summary.error().code, summary.error().message, summary.error().path);
@@ -546,6 +596,7 @@ facman::core::Result<std::string> inspect(const fs::path& root, const InspectReq
     output.add_string("command", "instances.inspect");
     output.add_string("status", "ok");
     output.add_string("instance_id", instance.value().id.str());
+    output.add_string("manifest_sha256", text_sha256(manifest_text.value()));
     output.add_string("display_name", instance.value().display_name);
     output.add_string("install_ref", instance.value().install_ref.str());
     output.add_string("factorio_version", instance.value().factorio_version);
@@ -725,6 +776,23 @@ facman::core::Result<std::string> clone(const fs::path& root, const CloneRequest
     const std::string install_value = request.install_ref.empty() ? source.value().install_ref.str() : request.install_ref;
     auto install = load_install(root, install_value);
     if (!install) return failure("instance_install_missing", "Clone install reference is not registered", root);
+    auto initial_manifest = stable_text(source.value().source_path, 4U * 1024U * 1024U);
+    if (!initial_manifest) return failure(initial_manifest.error().code, initial_manifest.error().message,
+        initial_manifest.error().path);
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = tx::acquire_instance_configuration_lock(source.value().root, configuration_lock);
+    if (!locked.acquired()) return failure(
+        locked.code == facman::base::StableLockCode::contended ?
+            "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        locked.detail, source.value().root);
+    pending = no_pending_transactions(root);
+    if (!pending) return failure(pending.error().code, pending.error().message, pending.error().path, pending.error().kind);
+    auto locked_manifest = stable_text(source.value().source_path, 4U * 1024U * 1024U);
+    if (!locked_manifest) return failure(locked_manifest.error().code, locked_manifest.error().message,
+        locked_manifest.error().path);
+    if (locked_manifest.value() != initial_manifest.value()) return failure(
+        "instance_manifest_revision_changed", "Instance manifest changed before clone source lock acquisition",
+        source.value().source_path);
     auto source_plan = summarize_tree(source.value().root, true, true);
     if (!source_plan) return failure(source_plan.error().code, source_plan.error().message, source_plan.error().path);
     tx::Record record;
@@ -806,6 +874,13 @@ facman::core::Result<std::string> rename_display(const fs::path& root, const Ren
 {
     if (request.display_name.empty() || request.display_name.size() > 256U) return failure(
         "instance_display_name_invalid", "Display name must contain 1 to 256 bytes");
+    std::string expected_revision;
+    if (!request.expected_manifest_sha256.empty()) {
+        auto parsed = facman::core::Sha256Digest::parse(request.expected_manifest_sha256);
+        if (!parsed) return failure("instance_manifest_revision_invalid",
+            "Expected manifest revision must be a SHA-256 digest");
+        expected_revision = parsed.value().str();
+    }
     auto pending = no_pending_transactions(root);
     if (!pending) return failure(pending.error().code, pending.error().message, pending.error().path, pending.error().kind);
     auto instance = load_instance(root, request.instance_id);
@@ -813,50 +888,82 @@ facman::core::Result<std::string> rename_display(const fs::path& root, const Ren
     const fs::path manifest = instance.value().source_path;
     auto source_text = stable_text(manifest, 4U * 1024U * 1024U);
     if (!source_text) return failure(source_text.error().code, source_text.error().message, source_text.error().path);
+    if (!manifest_matches_instance(source_text.value(), instance.value())) return failure(
+        "instance_manifest_changed", "Instance manifest changed before rename", manifest);
+    const std::string source_revision = text_sha256(source_text.value());
+    if (!expected_revision.empty() && source_revision != expected_revision) return failure(
+        "instance_manifest_revision_changed", "Instance manifest changed since inspection", manifest);
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = tx::acquire_instance_configuration_lock(instance.value().root, configuration_lock);
+    if (!locked.acquired()) return failure(
+        locked.code == facman::base::StableLockCode::contended ?
+            "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        locked.detail, instance.value().root);
+    pending = no_pending_transactions(root);
+    if (!pending) return failure(pending.error().code, pending.error().message, pending.error().path, pending.error().kind);
+    auto locked_source = stable_text(manifest, 4U * 1024U * 1024U);
+    if (!locked_source || text_sha256(locked_source.value()) != source_revision) return failure(
+        "instance_manifest_revision_changed", "Instance manifest changed before rename lock acquisition", manifest);
+    auto renamed = renamed_manifest(source_text.value(), instance.value(), request.display_name);
+    if (!renamed) return renamed;
     tx::Record record;
+    facman::platform::RandomIdGenerator random;
+    record.transaction_id = random.next("tx");
     record.command_id = "instances.rename";
     record.target = manifest;
     record.sources = {manifest};
-    record.commit_strategy = "backup_then_durable_manifest_replace";
+    record.commit_strategy = "instance_rename_file_v1";
+    record.operation_context = "instance_rename_file_v1";
+    record.staging_roots = {manifest.parent_path() /
+        (".instance.rename." + record.transaction_id + ".staging")};
+    record.expected_files = {
+        {tx::RelativePath::parse("source/instance.v1.json").take_value(),
+            facman::core::Sha256Digest::parse(source_revision).take_value(), source_text.value().size()},
+        {tx::RelativePath::parse("target/instance.v1.json").take_value(),
+            facman::core::Sha256Digest::parse(text_sha256(renamed.value())).take_value(), renamed.value().size()},
+    };
     auto started = tx::TransactionSession::begin(root, std::move(record));
     if (!started) return failure("instance_transaction_failed", started.error().message, root);
     tx::TransactionSession session = started.take_value();
+    if (std::getenv("FACMAN_TEST_INSTANCE_RENAME_EXIT_AFTER_JOURNAL") != nullptr) std::_Exit(84);
     const fs::path backup_root = root / "backups" / "instances" /
         fs::u8path(session.record().transaction_id + "-" + instance.value().id.str());
     const fs::path backup = backup_root / "instance.v1.json";
-    const fs::path staging = manifest.parent_path() /
-        (".instance.rename." + session.record().transaction_id + ".staging");
-    session.record().staging_roots = {staging};
+    const fs::path staging = session.record().staging_roots[0];
     if (!session.validated("display_name_and_immutable_id_validated") || !session.planned("manifest_backup_and_replace_planned")) {
         return failure("instance_transaction_failed", session.detail(), root);
     }
     std::error_code error;
     fs::create_directories(backup_root, error);
     if (error) { session.failed(error.message()); return failure("instance_backup_failed", error.message(), backup_root); }
-    const auto* source_bytes = reinterpret_cast<const unsigned char*>(source_text.value().data());
-    auto digest = facman::core::Sha256Digest::parse(
-        facman::base::sha256_hex_bytes(source_bytes, source_text.value().size()));
     std::string detail;
-    if (!digest || !tx::CrossVolumeCopyVerifyCommit::commit(manifest, backup, digest.value(), source_text.value().size(), detail)) {
+    if (!tx::CrossVolumeCopyVerifyCommit::commit(manifest, backup,
+            session.record().expected_files[0].sha256, source_text.value().size(), detail)) {
         session.failed(detail); return failure("instance_backup_failed", detail, backup);
     }
-    workspace::InstanceRecord renamed = instance.value();
-    renamed.display_name = request.display_name;
-    std::string source_instance;
-    std::string cloned_at;
-    auto prior_manifest = json::parse(source_text.value());
-    if (prior_manifest && prior_manifest.value().is_object()) {
-        source_instance = object_string(prior_manifest.value(), "source_instance");
-        cloned_at = object_string(prior_manifest.value(), "cloned_at");
-    }
-    auto written = durable_new(staging, manifest_json(renamed, source_instance, cloned_at));
+    auto written = durable_new(staging, renamed.value());
     if (!written || !session.staging("manifest_backup_preserved") || !session.staged("renamed_manifest_staged") ||
-        !session.verified("renamed_manifest_validated") || !session.committing("manifest_replace_started")) {
+        !session.verified("renamed_manifest_validated")) {
         session.failed(written ? session.detail() : written.error().message);
         return failure("instance_rename_failed", written ? session.detail() : written.error().message, manifest);
     }
+    auto current_text = stable_text(manifest, 4U * 1024U * 1024U);
+    if (!current_text || text_sha256(current_text.value()) != source_revision) {
+        const std::string reason = current_text ?
+            "Instance manifest changed before rename publication" :
+            current_text.error().message;
+        fs::remove(staging, error);
+        if (error || !session.refused(reason)) return failure(
+            "instance_transaction_recovery_required", error ? error.message() : session.detail(),
+            staging, facman::core::OutcomeKind::recovery_required);
+        return failure("instance_manifest_revision_changed", reason, manifest);
+    }
+    if (!session.committing("manifest_replace_started")) return failure(
+        "instance_transaction_recovery_required", session.detail(), manifest,
+        facman::core::OutcomeKind::recovery_required);
     auto status = facman::platform::replace_existing_durable(staging, manifest);
     if (!status.ok()) { session.failed(status.detail); return failure(status.code, status.detail, manifest); }
+    if (std::getenv("FACMAN_TEST_INSTANCE_RENAME_EXIT_AFTER_REPLACE") != nullptr) std::_Exit(88);
     if (!session.committed("display_name_manifest_committed") || !session.complete()) return failure(
         "instance_transaction_recovery_required", session.detail(), manifest, facman::core::OutcomeKind::recovery_required);
     return facman::core::Result<std::string>::success(lifecycle_report(

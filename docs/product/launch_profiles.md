@@ -28,6 +28,15 @@ typed instance-safe overrides. `profiles apply` always materializes the same
 effective-profile plan first, backs up the instance manifest, and keeps
 `run.execute` quarantined.
 
+`profiles plan` and `profiles apply` report the source manifest revision and
+the effective value of each supported setting. Their provenance identifies
+which values came from the stored profile and which were supplied by the
+current request. Extra arguments carry individual origins, including when a
+request repeats an argument already present in the profile. The ordinary CLI
+prints these values and origins; `--json` retains the typed response. The
+stored profile is the base layer, so its own historical template-versus-edit
+origins are not inferred from current values.
+
 Safe fields cover window/fullscreen preference, graphics quality, audio,
 instance-local save selection, headless or benchmark planning modes, bounded
 benchmark ticks, and an explicit argument allowlist. FacMan always owns

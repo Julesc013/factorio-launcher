@@ -5,6 +5,7 @@
 #define FACMAN_RUNTIME_TRANSACTION_FL_TRANSACTION_H
 
 #include "fl_identity.h"
+#include "fl_local_operation_lock.h"
 #include "fl_result.h"
 
 #include <cstdint>
@@ -183,6 +184,9 @@ std::string directory_effect_identity(const facman::platform::StableDirectoryObj
 std::string retention_selection_digest(const Record& record);
 std::filesystem::path recovery_lock_path(
     const std::filesystem::path& workspace, const std::string& transaction_id);
+facman::base::StableLockResult acquire_instance_configuration_lock(
+    const std::filesystem::path& instance_root,
+    facman::base::StableLocalLock& lock);
 bool publish_save_backup_file(
     const std::filesystem::path& workspace, Record& record, std::string& detail);
 // Complete or verify the sidecar bound to a committed saves.backup target.

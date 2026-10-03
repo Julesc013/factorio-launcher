@@ -39,12 +39,18 @@ struct IdRequest { std::string id; };
 struct CreateRequest { std::string profile_id; std::string template_id = "vanilla"; Patch values; };
 struct CloneRequest { std::string source_profile_id; std::string destination_profile_id; };
 struct DiffRequest { std::string left_profile_id; std::string right_profile_id; };
-struct EffectiveRequest { std::string instance_id; std::string profile_id; Patch overrides; };
+struct EffectiveRequest {
+    std::string instance_id;
+    std::string profile_id;
+    std::string expected_manifest_sha256;
+    Patch overrides;
+};
 
 struct EffectiveProfile {
     std::string profile_id;
     std::string template_id;
     Settings settings;
+    std::vector<std::string> base_additional_arguments;
     std::vector<std::string> launch_arguments;
 };
 

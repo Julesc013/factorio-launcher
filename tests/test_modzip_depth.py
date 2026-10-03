@@ -5,12 +5,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import subprocess
 import tempfile
+import time
 import unittest
 import zipfile
 from pathlib import Path
 
-from native_cli import invoke
+from native_cli import facman_executable, invoke
 from tools import json_contract
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -91,6 +94,92 @@ def write_mod_zip(
 
 
 class ModZipDepthTests(unittest.TestCase):
+    def test_import_refuses_replaced_staged_mod(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            source = workspace / "sources" / "exact_import_1.0.0.zip"
+            write_mod_zip(source, {
+                "name": "exact_import", "version": "1.0.0", "factorio_version": "2.0",
+                "title": "Original",
+            })
+            original = source.read_bytes()
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_MOD_IMPORT_PAUSE_AFTER_STAGE"] = "1"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "mods", "import",
+                 str(source), "--instance", "modzip", "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            mods = workspace / "instances" / "modzip" / "mods"
+            try:
+                deadline = time.monotonic() + 10
+                staging = None
+                while process.poll() is None and staging is None and time.monotonic() < deadline:
+                    staging = next((path for path in mods.glob(".facman-mod-import-*")
+                        if (path / ".facman-mod-import-paused").exists()), None)
+                    time.sleep(0.02)
+                self.assertIsNotNone(staging, "import did not reach staged verification")
+                self.assertIsNone(process.poll())
+                replacement = staging / "replacement.zip"
+                write_mod_zip(replacement, {
+                    "name": "exact_import", "version": "1.0.0", "factorio_version": "2.0",
+                    "title": "Changed after staging",
+                }, prefix="exact_import_1.0.0")
+                os.replace(replacement, staging / source.name)
+                (staging / ".facman-mod-import-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 1, stderr + stdout)
+                self.assertEqual(json.loads(stdout)["payload"]["refusal"]["code"],
+                    "mod_staging_verification_failed")
+                self.assertFalse((mods / source.name).exists())
+                self.assertEqual(source.read_bytes(), original)
+                self.assertEqual([], list(mods.glob(".facman-mod-import-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
+    def test_import_publishes_private_verified_bytes_after_staged_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            source = workspace / "sources" / "private_import_1.0.0.zip"
+            write_mod_zip(source, {
+                "name": "private_import", "version": "1.0.0", "factorio_version": "2.0",
+            })
+            original = source.read_bytes()
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_MOD_IMPORT_PAUSE_AFTER_PRIVATE_COPY"] = "1"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "mods", "import",
+                 str(source), "--instance", "modzip", "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            mods = workspace / "instances" / "modzip" / "mods"
+            try:
+                deadline = time.monotonic() + 10
+                staging = None
+                while process.poll() is None and staging is None and time.monotonic() < deadline:
+                    staging = next((path for path in mods.glob(".facman-mod-import-*")
+                        if (path / ".facman-mod-import-private-paused").exists()), None)
+                    time.sleep(0.02)
+                self.assertIsNotNone(staging, "private import did not reach publication")
+                self.assertIsNone(process.poll())
+                (staging / source.name).write_bytes(b"tampered staged content")
+                (staging / ".facman-mod-import-private-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 0, stderr + stdout)
+                self.assertEqual((mods / source.name).read_bytes(), original)
+                self.assertEqual(source.read_bytes(), original)
+                self.assertEqual([], list(mods.glob(".facman-mod-import-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
     def test_unsafe_and_over_budget_archives_refuse_before_import_copy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
@@ -549,6 +638,160 @@ class ModZipDepthTests(unittest.TestCase):
                     sorted(archive.namelist()),
                     ["mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"],
                 )
+
+    def test_export_refuses_lock_changed_after_archive_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            mod_zip = fixture_zip("valid_simple", "simple_mod_1.0.0.zip")
+            code, _imported, stderr = run_json([
+                "--workspace", tmp, "mods", "import", str(mod_zip),
+                "--instance", "modzip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            code, _lock, stderr = run_json([
+                "--workspace", tmp, "modsets", "lock", "modzip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            lock_path = workspace / "instances/modzip/mods/modset-lock.v1.json"
+            destination = workspace / "exports/changed-lock.zip"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_MODSET_EXPORT_PAUSE_AFTER_STAGE"] = "1"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "modsets", "export",
+                 "modzip", str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                marker = None
+                while process.poll() is None and marker is None and time.monotonic() < deadline:
+                    marker = next((path / ".facman-modset-export-paused"
+                        for path in (workspace / "exports").glob(".facman-modset-export-*")
+                        if (path / ".facman-modset-export-paused").exists()), None)
+                    time.sleep(0.02)
+                self.assertIsNotNone(marker, "export did not reach its staged archive")
+                self.assertIsNone(process.poll())
+                lock_path.write_text(lock_path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+                (marker.parent / ".facman-modset-export-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 1, stderr + stdout)
+                self.assertIn("modset_verification_failed", stdout)
+                self.assertFalse(destination.exists())
+                self.assertEqual([], list((workspace / "exports").glob(".facman-modset-export-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
+    def test_export_refuses_replaced_archive_after_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            mod_zip = fixture_zip("valid_simple", "simple_mod_1.0.0.zip")
+            code, _imported, stderr = run_json([
+                "--workspace", tmp, "mods", "import", str(mod_zip),
+                "--instance", "modzip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            code, _lock, stderr = run_json([
+                "--workspace", tmp, "modsets", "lock", "modzip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            destination = workspace / "exports/swapped.zip"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_MODSET_EXPORT_PAUSE_AFTER_STAGE"] = "1"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "modsets", "export",
+                 "modzip", str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                staging = None
+                while process.poll() is None and staging is None and time.monotonic() < deadline:
+                    staging = next((path for path in (workspace / "exports").glob(
+                        ".facman-modset-export-*")
+                        if (path / ".facman-modset-export-paused").exists()), None)
+                    time.sleep(0.02)
+                self.assertIsNotNone(staging, "export did not reach its staged archive")
+                self.assertIsNone(process.poll())
+                replacement = staging / "replacement.zip"
+                with zipfile.ZipFile(replacement, "w") as archive:
+                    archive.writestr("foreign.txt", "unverified content")
+                try:
+                    os.replace(replacement, staging / destination.name)
+                    replaced = True
+                except PermissionError:
+                    # Windows holds the source reader open across the pause.
+                    replaced = False
+                (staging / ".facman-modset-export-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                if replaced:
+                    self.assertEqual(process.returncode, 1, stderr + stdout)
+                    self.assertIn("modset_verification_failed", stdout)
+                    self.assertFalse(destination.exists())
+                else:
+                    self.assertEqual(process.returncode, 0, stderr + stdout)
+                    with zipfile.ZipFile(destination) as archive:
+                        self.assertEqual(sorted(archive.namelist()),
+                            ["mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"])
+                self.assertEqual([], list((workspace / "exports").glob(".facman-modset-export-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
+    @unittest.skipIf(os.name == "nt", "not_applicable: private POSIX publication only")
+    def test_export_publishes_private_verified_copy_after_staged_file_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            mod_zip = fixture_zip("valid_simple", "simple_mod_1.0.0.zip")
+            code, _imported, stderr = run_json([
+                "--workspace", tmp, "mods", "import", str(mod_zip),
+                "--instance", "modzip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            code, _lock, stderr = run_json([
+                "--workspace", tmp, "modsets", "lock", "modzip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            destination = workspace / "exports/private-copy.zip"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_MODSET_EXPORT_PAUSE_AFTER_PRIVATE_COPY"] = "1"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "modsets", "export",
+                 "modzip", str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                staging = None
+                while process.poll() is None and staging is None and time.monotonic() < deadline:
+                    staging = next((path for path in (workspace / "exports").glob(
+                        ".facman-modset-export-*")
+                        if (path / ".facman-modset-private-copy-paused").exists()), None)
+                    time.sleep(0.02)
+                self.assertIsNotNone(staging, "private publication did not reach its pause")
+                self.assertIsNone(process.poll())
+                with (staging / destination.name).open("r+b") as archive:
+                    archive.write(b"X")
+                (staging / ".facman-modset-private-copy-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 0, stderr + stdout)
+                with zipfile.ZipFile(destination) as archive:
+                    self.assertEqual(sorted(archive.namelist()),
+                        ["mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"])
+                    self.assertEqual(archive.read("mods/simple_mod_1.0.0.zip"), mod_zip.read_bytes())
+                self.assertEqual([], list((workspace / "exports").glob(".facman-modset-export-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
 
 
 if __name__ == "__main__":

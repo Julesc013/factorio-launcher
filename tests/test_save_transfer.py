@@ -62,6 +62,12 @@ class SaveTransferTests(unittest.TestCase):
             self.assertEqual(restored.read_bytes(), save.read_bytes())
             self.assertEqual(backup.read_bytes(), save.read_bytes())
             self.assertEqual(unrelated.read_bytes(), b"not a save")
+            code, stdout, stderr = invoke([
+                "--workspace", tmp, "saves", "restore", backup.name,
+                "--instance", "source-world", "--as", "verified-private.zip", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual((instance / "saves" / "verified-private.zip").read_bytes(), save.read_bytes())
             code, stdout, _ = invoke([
                 "--workspace", tmp, "saves", "restore", backup.name,
                 "--instance", "source-world", "--as", restored.name, "--json",
@@ -89,6 +95,48 @@ class SaveTransferTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "save_backup_unproven")
             self.assertFalse((instance / "saves" / "tampered.zip").exists())
+
+    def test_owned_backup_restore_publishes_verified_private_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.prepare(workspace)
+            saves = workspace / "instances" / "source-world" / "saves"
+            original = (SAVE_FIXTURES / "valid_simple_save" / "starter.zip").read_bytes()
+            (saves / "world.zip").write_bytes(original)
+            code, stdout, stderr = invoke([
+                "--workspace", tmp, "saves", "backup", "world",
+                "--instance", "source-world", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            backup = Path(json.loads(stdout)["destination_path"])
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_SAVE_CLONE_PAUSE_AFTER_PRIVATE_COPY"] = "1"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "saves", "restore",
+                 backup.name, "--instance", "source-world", "--as", "restored.zip", "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                staging = None
+                while process.poll() is None and staging is None and time.monotonic() < deadline:
+                    staging = next((path for path in saves.glob(".facman-save-clone-*")
+                        if (path / ".facman-save-clone-private-paused").exists()), None)
+                    time.sleep(0.02)
+                self.assertIsNotNone(staging, "restore did not reach private publication")
+                self.assertIsNone(process.poll())
+                (staging / "restored.zip").write_bytes(b"changed staged save")
+                (staging / ".facman-save-clone-private-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertEqual(process.returncode, 0, stderr + stdout)
+                self.assertEqual((saves / "restored.zip").read_bytes(), original)
+                self.assertEqual(backup.read_bytes(), original)
+                self.assertEqual([], list(saves.glob(".facman-save-clone-*")))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
 
     def test_deflated_save_recognition_is_structural_and_never_claims_deep_semantics(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
