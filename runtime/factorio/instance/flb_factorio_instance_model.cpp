@@ -397,7 +397,8 @@ void inspect_installation(Projection& projection, const fs::path& workspace)
     projection.version_matches = projection.version_recorded &&
         projection.instance.factorio_version == projection.install->version;
     projection.content_present = root &&
-        fs::is_directory(projection.install->root / "data" / "base", error) && !error;
+        fs::is_directory(projection.install->root / "data" / "base", error) && !error &&
+        fs::is_regular_file(projection.install->root / "data" / "base" / "info.json", error) && !error;
 }
 
 void inspect_root_and_content(Projection& projection, const fs::path& workspace)
