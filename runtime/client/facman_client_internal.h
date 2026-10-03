@@ -6,8 +6,11 @@
 
 #include "facman_client_model.h"
 
+namespace facman::platform { struct ProcessResult; }
+
 namespace facman::client::detail {
 
+OperationOutcome process_failure_outcome(const facman::platform::ProcessResult& result) noexcept;
 bool cancelled(const CommandRequest& request) noexcept;
 void progress(
     const CommandRequest& request,

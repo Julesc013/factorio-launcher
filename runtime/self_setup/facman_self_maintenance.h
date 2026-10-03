@@ -46,6 +46,9 @@ struct Generation {
   std::filesystem::path acceptance_root;
   std::filesystem::path gui;
   std::filesystem::path maintenance_launcher;
+  // Epoch-only creator provenance. Empty preserves historical records where
+  // the creating SDK equals the package's original Universal Setup revision.
+  std::string creating_provider_revision = {};
 };
 
 struct PackageInspection {
@@ -193,9 +196,9 @@ struct RetirementResponse {
 class RetirementEffects;
 
 // An unforgeable, call-scoped proof that retire_active owns the exact global
-// coordinator lock.  The setup runtime accepts this proof only for the same
-// coordinator, avoiding a recursive acquisition without trusting a caller-set
-// boolean.
+// lifecycle coordinator lock and this exact validated retirement step. Setup
+// reuses it only for the same coordinator; a distinct user-wide coordinator
+// still requires its own lock. No caller-set boolean grants either authority.
 class CoordinatorLockToken {
 public:
   CoordinatorLockToken(const CoordinatorLockToken &) = delete;
@@ -204,17 +207,20 @@ public:
     return coordinator_root_;
   }
   const std::string &operation_id() const { return operation_id_; }
+  bool binds_generation(const Generation &generation) const;
 
 private:
   CoordinatorLockToken(std::filesystem::path coordinator_root,
-                       std::string operation_id)
+                        std::string operation_id, std::string generation_sha256)
       : coordinator_root_(std::move(coordinator_root)),
-        operation_id_(std::move(operation_id)) {}
+        operation_id_(std::move(operation_id)),
+        generation_sha256_(std::move(generation_sha256)) {}
   friend facman::core::Result<RetirementResponse> retire_active(
       const RetirementRequest &request, RetirementEffects &effects);
 
   std::filesystem::path coordinator_root_;
   std::string operation_id_;
+  std::string generation_sha256_;
 };
 
 // The application supplies the provider/native edge. Its inspection runs
@@ -597,6 +603,8 @@ void set_epoch_handoff_operation_pinned_hook(
 std::filesystem::path global_lock_path(
     const std::filesystem::path &coordinator_root);
 std::string generation_record_bytes(const Generation &generation);
+const std::string &generation_creating_provider_revision(
+    const Generation &generation);
 
 } // namespace facman::self_maintenance
 

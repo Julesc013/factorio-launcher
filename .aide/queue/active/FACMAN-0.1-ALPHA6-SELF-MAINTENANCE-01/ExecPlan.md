@@ -376,6 +376,75 @@ fixtures, and 134 candidate/package Python tests pass. The WorkUnit remains
 active for clean committed hosted requalification, chain-aware active repair,
 supported-platform qualification and human/product acceptance.
 
+## 2026-10-03 genuine cross-provider installed-state failure
+
+Independently reviewed packages A (`203321188f88cc5587bd95ff6b4da4a602c745d2`,
+Alpha.5, Setup `4c766b342e68656a2d4e26a14cfe51ab2209ad41`) and B
+(`426a42429a1e4cfe58011bd9b9b3b51274d1d116`, Alpha.6, Setup
+`2749a15b835a6c1c9968598a2b434d85809691ad`) reproduced a production rejection in
+a disposable Windows Sandbox account. A installed and native ownership checks
+passed. B refused A's installed-state response before provider planning with
+`self_maintenance_provider_response_invalid`: the ABI 1.0 response retained A's
+original pin, while the decoder demanded B's executing pin. Full failed fixture,
+command receipts, guest identity and package bindings are retained under
+`task-facman-u-507ecf4b41/evidence/produced-pair-sandbox-rx4-output`.
+Earlier PATH, guest-lifetime and omitted-helper-input failures remain preserved;
+none qualifies a successful product transition.
+
+The bounded correction reads the exact supported ABI 1.0 shape with a valid
+original revision, binds candidate and retained inspections to their recorded
+generation pin, and derives historical recipe identity from that pin. Legacy
+and bootstrap admission keep the package-descriptor equality. New install
+planning/apply retain executing-pin equality, and the flat compatibility retry
+keeps its existing current-pin restriction. Independent decision review required
+the explicit candidate-pin binder and audited that retry before implementation.
+Native regressions cover successful historical inspection/verification and
+refusal of wrong generation pins, malformed revisions, unsupported ABI versions
+and historical install authority. The affected developer test run and strict
+validation pass, with full logs retained in the owned evidence root. Independent
+snapshot review passed before commit `366da90e9b1db4bd95deff2cba15a0d1d919a61c`.
+The genuine cross-pin runtime continuation below supersedes the remaining
+update/recovery uncertainty; epoch external continuation remains unqualified.
+
+## 2026-10-03 genuine cross-provider retirement admission failure
+
+A corrected, source-exact Alpha.6 package from `366da90e9b1db4bd95deff2cba15a0d1d919a61c`
+passed production metadata, runtime/hash smoke and payload-equivalence checks.
+Its disposable-account run with the existing genuine Alpha.5 predecessor passed
+update A to B, downgrade to retained A, reapplication of B and active repair,
+including refusal of a missing repair payload. Registered chain removal then
+refused retained A's historical installed-state pin before retirement intent:
+`self_maintenance_retirement_recovery_required` wrapped `self_setup_response_invalid`.
+The complete failed fixture remains in the owned evidence root. Its transition
+receipt SHA-256 is `70078cff7658f3cc08457f22cfa60a6f0229439e8a6a00b8afb59a271a47f448`;
+`retirement-witness-reproduction.json` binds the guest result, exact package
+hashes, commands and observed phases. This is partial runtime qualification,
+not successful removal or epoch external-continuation evidence.
+
+Generic Setup retirement now admits verify/uninstall through a call-scoped
+generation witness and a private coordinator-lock proof minted for that exact
+validated retirement step. Lifecycle authority and user-wide Windows integration
+may have different coordinators: exact-root reuse remains permitted, otherwise
+Setup acquires its own global lock and refuses contention before dispatch. This
+preserves the existing two-lock behavior for isolated and selected-root installs.
+Historical
+installed state and uninstall plans bind original pin, source, recipe and state/
+ownership digests before preview or apply. A namespaced synthetic uninstall
+source digest binds exact generation-record bytes into durable intent, without
+changing ordinary intent bytes or journal schema. Missing or substituted witness
+refuses before request adoption, rollback inspection or native continuation.
+Execution uses the current SDK and records its current pin. Install/repair
+authority, native ownership, retained-source custody and outer entered-marker
+refusal remain unchanged. Focused qualification combines 53 unchanged passing
+native CTests with the corrected recovery test's 129 passing checks. All 145
+selected Python tests and strict validation pass. Full failed receipts remain
+preserved, including the existing mock's refusal envelope assigned to `Error.path`
+instead of `detail`, and a packaging fixture that regenerated timestamped input
+ZIPs while asserting identical output. That fixture now fixes input timestamps;
+production still binds the exact original archive checksum. Exact snapshot
+review precedes committing this correction. Genuine produced-package removal
+and epoch continuation remain open until the next runtime proof completes.
+
 ## 2026-10-03 predecessor provider custody
 
 The independent continuation slice uses `task/facman-cross-provider-maintenance-01`
@@ -453,3 +522,62 @@ formatting, diff checks and the complete strict repository check also pass. The 
 remains active for journaled classic-to-first-epoch bootstrap, actual external
 continuation from produced packages, epoch repair/rollback/retirement,
 supported-platform qualification and human/product acceptance.
+
+
+## 2026-10-04 cross-provider epoch creator and interrupted apply
+
+The genuine A/B campaign at local source `f362c0b2b0805cf9060355233045bca565b70f61`
+completed both classic retirement steps and fresh epoch genesis. Its epoch
+downgrade stopped before external continuation because A's original package
+provider differs from the executing B SDK. That failed campaign also had an
+incomplete long-path fixture copy; it is diagnosis, not full runtime custody or
+qualification. Original packages, receipts and failed operations are preserved
+in the owned `task-facman-u-507ecf4b41/evidence` root.
+
+The correction preserves original archive identity and generation IDs, records
+the actual creating SDK in exact additive epoch shapes, and binds recipes,
+recovery and retirement to that frozen creator. Historical record bytes and
+ordinary install admission stay exact. Reactivation retains the complete
+original generation; conflicting creator provenance is refused.
+
+The real SDK regression exposed a second boundary: after interrupted apply
+has completed, install planning refuses its occupied target. Completion recovery
+therefore validates the original immutable request through provider-owned
+`recovery.inspect`, with exact installed identity and completed inspection-only
+journal/report evidence. It grants no apply authority; absent targets retain the
+original reviewed-plan checks. Independent review and exact-source validation
+receipts are retained alongside `epoch-creator-final-validation.json`.
+
+A new exact-source produced B, genuine external continuation and the remaining
+supported-host and product gates are still required. PR #343's exact-head
+protected-control owner gate remains external. This WorkUnit stays active.
+
+
+## 2026-10-04 produced epoch continuation observation
+
+Qualified source `7096f28d976151ff7f77cbae898ce6b93055d5a2` produced a genuine
+Alpha.6 B package. Its 54 product CTests, runtime smoke, 115-file payload
+equivalence and independent delivery review passed. The unchanged Alpha.5 A
+archive retains source `203321188f88cc5587bd95ff6b4da4a602c745d2` and its
+original provider pin. Exact package and source receipts remain in the owned
+`task-facman-u-507ecf4b41/evidence` root.
+
+The actual disposable Windows guest completed classic update, downgrade,
+rollback, repair and retirement, then ordinary epoch genesis. Its external
+epoch downgrade reached the native terminal cutover record after interruption
+and resumption, but the public Python observer missed the 264-unit Windows
+record path and timed out. Complete fixture custody and the native records
+are preserved in `epoch-creator-pair-sandbox-output`; this failed campaign does
+not qualify the remaining epoch lifecycle steps.
+
+The observer correction uses explicit Windows long paths only for filesystem
+reads. It retains deadline, duplicate-terminal refusal and read-only product
+queries, and checks original archive/source/provider identity separately from
+the actual creating SDK, derived epoch install/root identities, exact activated
+generation bytes and predecessor activation. Flat compatibility record
+admission remains unchanged. Frozen-source validation and independent review
+are retained as `epoch-observer-validation-rx2.json` and
+`epoch-observer-source.review.json`. The next campaign reuses the qualified B
+application bytes and records its newer committed harness source separately;
+neither package is relabeled. Full epoch runtime qualification, supported-host
+and human gates remain due. This WorkUnit remains active.

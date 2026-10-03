@@ -3291,9 +3291,7 @@ int run_maintenance(Options &options, const fs::path &,
     if (!same_path(identity.value().install_root, options.install_root) ||
         identity.value().product_version != descriptor.value().product_version ||
         identity.value().provider_revision !=
-            descriptor.value().universal_setup_revision ||
-        identity.value().provider_revision !=
-            facman::self_setup::provider_revision()) {
+            descriptor.value().universal_setup_revision) {
       print_maintenance_error({"self_maintenance_legacy_invalid",
                    "legacy package and provider identities do not agree", ""},
                   options.json);
@@ -3484,7 +3482,8 @@ public:
         !same_path(inspected.value().install_root, generation.install_root) ||
         inspected.value().product_version != generation.product_version ||
         inspected.value().source_archive_sha256 != generation.package_sha256 ||
-        inspected.value().provider_revision != generation.universal_setup_revision)
+        inspected.value().provider_revision !=
+            facman::self_maintenance::generation_creating_provider_revision(generation))
       return facman::core::Result<void>::failure(
           {"self_maintenance_provider_identity_ambiguous",
            "provider installed identity does not exactly bind the generation",
@@ -3495,8 +3494,12 @@ public:
     facman::self_setup::Request verification;
     verification.operation = facman::self_setup::Operation::verify;
     verification.install_id = generation.install_id;
+    verification.install_root = generation.install_root;
+    verification.product_version = generation.product_version;
     verification.state_root = generation.state_root;
     verification.acceptance_root = generation.acceptance_root;
+    verification.coordinator_lock = &coordinator_lock;
+    verification.retirement_generation = &generation;
     auto verified = facman::self_setup::execute(verification);
     auto report = verified
         ? facman::core::json::parse(verified.value().provider_json)
@@ -3570,6 +3573,7 @@ public:
     preview.product_version = generation.product_version;
     preview.apply = false;
     preview.coordinator_lock = &coordinator_lock;
+    preview.retirement_generation = &generation;
     if (active && options_.shell_integration)
       preview.native_effects = &native_effects_;
     auto planned = facman::self_setup::execute(preview);
@@ -3635,6 +3639,7 @@ public:
     request.product_version = generation.product_version;
     request.apply = true;
     request.coordinator_lock = &coordinator_lock;
+    request.retirement_generation = &generation;
     if (active && options_.shell_integration)
       request.native_effects = &native_effects_;
     auto removed = facman::self_setup::execute(request);
@@ -3676,9 +3681,7 @@ bootstrap_installed_facman(const Options &options, const fs::path &coordinator_r
         !same_path(installed.value().install_root, options.install_root) ||
         installed.value().product_version != descriptor.value().product_version ||
         installed.value().provider_revision !=
-            descriptor.value().universal_setup_revision ||
-        installed.value().provider_revision !=
-            facman::self_setup::provider_revision())
+            descriptor.value().universal_setup_revision)
       return facman::core::Result<Bootstrap>::failure(
           !descriptor ? descriptor.error() : !installed ? installed.error() :
           facman::core::Error{"self_maintenance_legacy_invalid",
@@ -4171,6 +4174,7 @@ int wmain(int argc, wchar_t **argv) {
           flat.value()->generations.back().package_sha256 == *supplied_sha256;
       const bool same_legacy = flat && !flat.value().has_value() &&
           supplied_sha256 && installed &&
+          installed.value().provider_revision == facman::self_setup::provider_revision() &&
           installed.value().source_archive_sha256 == *supplied_sha256 &&
           same_path(installed.value().install_root, options.install_root);
       if (!flat || (!same_flat && !same_legacy)) {

@@ -43,6 +43,24 @@ def utf16_units(path: Path | str) -> int:
     return len(str(path).encode("utf-16-le")) // 2
 
 
+def observation_path(path: Path) -> Path:
+    """Use Windows' explicit long-path spelling only for filesystem observation."""
+    if os.name != "nt":
+        return path
+    absolute = os.path.abspath(path)
+    if absolute.startswith("\\\\?\\"):
+        return Path(absolute)
+    if absolute.startswith("\\\\"):
+        return Path("\\\\?\\UNC\\" + absolute[2:])
+    return Path("\\\\?\\" + absolute)
+
+
+def external_handoff_terminals(operation_root: Path, operation_id: str) -> list[Path]:
+    return list(observation_path(operation_root).glob(
+        f"*/maintenance/{operation_id}/80-registration-cutover.v2.json"
+    ))
+
+
 def provider_payload_path(root: Path, version: str, *, predecessor: bool) -> Path:
     physical = "FacMan.generation." + "0" * 64
     if predecessor:
@@ -173,11 +191,8 @@ def await_external_handoff(
     except (ValueError, IndexError) as exc:
         raise AssertionError("external handoff observation omitted its state root") from exc
     operation_root = state_root.parent / "setup-coordinator.v1" / "epochs"
-    terminal_name = "80-registration-cutover.v2.json"
     while time.monotonic() < local_deadline:
-        terminal = list(operation_root.glob(
-            f"*/maintenance/{operation_id}/{terminal_name}"
-        ))
+        terminal = external_handoff_terminals(operation_root, operation_id)
         if len(terminal) > 1:
             raise AssertionError(f"{operation} handoff produced duplicate terminal records")
         if terminal:
@@ -203,8 +218,9 @@ def await_external_handoff(
 def tree_snapshot(root: Path) -> dict[str, object]:
     directories: list[str] = []
     files: dict[str, str] = {}
-    for path in sorted(root.rglob("*")):
-        relative = path.relative_to(root).as_posix()
+    observed_root = observation_path(root)
+    for path in sorted(observed_root.rglob("*")):
+        relative = path.relative_to(observed_root).as_posix()
         if path.is_dir():
             directories.append(relative)
         elif path.is_file():
@@ -487,7 +503,7 @@ def damaged_archive_controls(root: Path, executable: Path, package: Path) -> Non
 
 def sha256_path(path: Path) -> str:
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
+    with observation_path(path).open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
@@ -730,11 +746,11 @@ def epoch_genesis_install_root(install: Path, state_root: Path,
     if not isinstance(epoch_id, str) or len(epoch_id) != 64:
         raise AssertionError("installed Setup did not report a real lifecycle epoch")
     epoch_dir = state_root.parent / "setup-coordinator.v1" / "epochs" / epoch_id
-    manifest = json.loads((epoch_dir / "epoch.v1.json").read_text(encoding="utf-8"))
+    manifest = json.loads(observation_path(epoch_dir / "epoch.v1.json").read_text(encoding="utf-8"))
     generation_id = manifest.get("genesis_generation_id")
     if not isinstance(generation_id, str) or len(generation_id) != 64:
         raise AssertionError("produced epoch has no exact genesis generation")
-    generation_record = json.loads((
+    generation_record = json.loads(observation_path(
         epoch_dir / "generations" / f"generation.{generation_id}.v2.json"
     ).read_text(encoding="utf-8"))
     active_install = Path(generation_record["install_root"])
@@ -1243,18 +1259,20 @@ def semver_order(left: str, right: str) -> int:
         raise AssertionError(str(exc)) from exc
 
 
-def exact_json_record(path: Path, expected: Path, keys: set[str], label: str) -> dict[str, object]:
+def exact_json_record(path: Path, expected: Path, keys: set[str] | tuple[set[str], ...],
+                      label: str) -> dict[str, object]:
     if not path.is_absolute() or os.path.normcase(os.path.abspath(path)) != \
             os.path.normcase(os.path.abspath(expected)):
         raise AssertionError(f"{label} path does not bind its exact coordinator location")
-    metadata = os.lstat(path)
+    observed_path = observation_path(path)
+    metadata = os.lstat(observed_path)
     reparse = bool(getattr(metadata, "st_file_attributes", 0) & 0x400)
     if (stat.S_ISLNK(metadata.st_mode) or reparse or not stat.S_ISREG(metadata.st_mode) or
             metadata.st_nlink != 1 or metadata.st_size > 64 * 1024):
         raise AssertionError(f"{label} is not a bounded single-link regular file")
     identity = (metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns)
-    raw = path.read_bytes()
-    observed = os.lstat(path)
+    raw = observed_path.read_bytes()
+    observed = os.lstat(observed_path)
     if (len(raw) != metadata.st_size or
             (observed.st_dev, observed.st_ino, observed.st_size, observed.st_mtime_ns) != identity):
         raise AssertionError(f"{label} changed while it was read")
@@ -1262,7 +1280,8 @@ def exact_json_record(path: Path, expected: Path, keys: set[str], label: str) ->
         value = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise AssertionError(f"{label} is not JSON") from exc
-    if not isinstance(value, dict) or set(value) != keys:
+    alternatives = (keys,) if isinstance(keys, set) else keys
+    if not isinstance(value, dict) or not any(set(value) == shape for shape in alternatives):
         raise AssertionError(f"{label} does not have its exact record schema")
     return value
 
@@ -1352,6 +1371,126 @@ def expected_generation_record(
         "gui": str(install_root / "generations" / identity["version"] / "FacMan.exe"),
         "maintenance_launcher": str(install_root / "maintenance" / "FacManSetup.exe"),
     }
+
+
+_EPOCH_GENERATION_KEYS = GENERATION_RECORD_KEYS | {"epoch_id"}
+
+
+def require_epoch_generation_record(
+        epoch_id: str, identity: dict[str, str], package_sha256: str,
+        creating_provider_revision: str, logical_root: Path, state_root: Path,
+        acceptance_root: Path) -> dict[str, object]:
+    """Check original archive provenance separately from its actual creator."""
+    if (not re.fullmatch(r"[0-9a-f]{64}", epoch_id) or
+            not re.fullmatch(r"[0-9a-f]{40}", creating_provider_revision)):
+        raise AssertionError("epoch generation has an invalid epoch or creating provider")
+    generation_id = generation_identity(identity, package_sha256)
+    expected = expected_generation_record(
+        identity, package_sha256, logical_root, state_root, acceptance_root, legacy=False,
+    )
+    logical = normalized_path(logical_root)
+    logical_id = hashlib.sha256(
+        ("facman.self.logical-root.v1\n" + str(logical) + "\n").encode("utf-8")
+    ).hexdigest()
+    physical_id = hashlib.sha256((
+        "facman.self.physical-generation-root.v2\n" + logical_id + "\n" +
+        epoch_id + "\n" + generation_id + "\n"
+    ).encode("utf-8")).hexdigest()
+    install_root = logical.parent / ("FacMan.generation." + physical_id)
+    expected.update({
+        "schema": "facman.self_generation.v2", "epoch_id": epoch_id,
+        "install_id": "facman.self.eg." + hashlib.sha256((
+            "facman.self.epoch-generation-install.v1\n" + epoch_id + "\n" +
+            generation_id + "\n"
+        ).encode("utf-8")).hexdigest(),
+        "install_root": str(install_root),
+        "gui": str(install_root / "generations" / identity["version"] / "FacMan.exe"),
+        "maintenance_launcher": str(install_root / "maintenance" / "FacManSetup.exe"),
+    })
+    if creating_provider_revision != identity["provider_revision"]:
+        expected["creating_provider_revision"] = creating_provider_revision
+    record_path = (state_root.parent / "setup-coordinator.v1" / "epochs" / epoch_id /
+                   "generations" / f"generation.{generation_id}.v2.json")
+    observed = exact_json_record(
+        record_path, record_path,
+        (_EPOCH_GENERATION_KEYS, _EPOCH_GENERATION_KEYS | {"creating_provider_revision"}),
+        "epoch generation record",
+    )
+    if (set(observed) != set(expected) or
+            any(observed[key] != expected[key]
+                for key in set(expected) - GENERATION_RECORD_PATH_KEYS) or
+            any(not same_windows_path(observed[key], Path(str(expected[key])))
+                for key in GENERATION_RECORD_PATH_KEYS)):
+        raise AssertionError("epoch generation does not bind original package, creator and root")
+    return observed
+
+
+def require_epoch_transition_receipt(
+        response: dict[str, object], operation: str, epoch_id: str,
+        identity: dict[str, str], package_sha256: str, creating_provider_revision: str,
+        logical_root: Path, state_root: Path, acceptance_root: Path) -> Path:
+    generation = require_epoch_generation_record(
+        epoch_id, identity, package_sha256, creating_provider_revision,
+        logical_root, state_root, acceptance_root,
+    )
+    operation_id = response.get("operation_id")
+    if (set(response) != {
+            "schema", "status", "operation", "phase", "operation_id",
+            "generation_id", "product_version", "install_id", "install_root",
+            "generation_record", "activation_record"} or
+            response.get("schema") != "facman.self_maintenance_cli.v1" or
+            response.get("status") != "ok" or response.get("operation") != operation or
+            response.get("phase") not in {"shell_cutover_complete", "reactivation_complete"} or
+            not isinstance(operation_id, str) or
+            not re.fullmatch(r"maint\.(?:update|downgrade|rollback)\.[0-9a-f]{8}\.[0-9a-f]{20}(?:\.[0-9a-f]{16})?",
+                             operation_id) or
+            any(response.get(key) != generation[key]
+                for key in {"generation_id", "product_version", "install_id"}) or
+            not same_windows_path(response.get("install_root"), Path(str(generation["install_root"])))):
+        raise AssertionError(f"{operation} has no exact completed epoch receipt")
+    epoch_root = state_root.parent / "setup-coordinator.v1" / "epochs" / epoch_id
+    generation_path = epoch_root / "generations" / f"generation.{generation['generation_id']}.v2.json"
+    if (not same_windows_path(response.get("generation_record"), generation_path) or
+            not same_windows_path(response.get("activation_record"),
+                epoch_root / "activations" / f"activation.{operation_id}.v2.json")):
+        raise AssertionError(f"{operation} epoch receipt changed its exact record locations")
+    activation_path = epoch_root / "activations" / f"activation.{operation_id}.v2.json"
+    activation = exact_json_record(
+        activation_path, activation_path,
+        {"schema", "product_id", "epoch_id", "operation", "operation_id",
+         "source_generation_id", "target_generation_id", "generation_record_sha256", "previous"},
+        f"{operation} epoch activation",
+    )
+    if (activation.get("schema") != "facman.self_activation.v2" or
+            activation.get("product_id") != "facman" or activation.get("epoch_id") != epoch_id or
+            activation.get("operation") != operation or activation.get("operation_id") != operation_id or
+            activation.get("target_generation_id") != generation["generation_id"] or
+            activation.get("generation_record_sha256") != sha256_path(generation_path)):
+        raise AssertionError(f"{operation} epoch activation does not bind the exact generation bytes")
+    previous = activation.get("previous")
+    if (not isinstance(previous, dict) or set(previous) != {"name", "sha256"} or
+            not isinstance(previous.get("name"), str) or
+            not re.fullmatch(r"activation\.[A-Za-z0-9_.-]+\.v2\.json", previous["name"]) or
+            not isinstance(previous.get("sha256"), str) or
+            not re.fullmatch(r"[0-9a-f]{64}", previous["sha256"]) or
+            not isinstance(activation.get("source_generation_id"), str) or
+            not re.fullmatch(r"[0-9a-f]{64}", activation["source_generation_id"])):
+        raise AssertionError(f"{operation} epoch activation has no exact predecessor")
+    predecessor_path = epoch_root / "activations" / previous["name"]
+    base_keys = {"schema", "product_id", "epoch_id", "operation", "operation_id",
+                 "generation_record_sha256", "previous"}
+    predecessor = exact_json_record(
+        predecessor_path, predecessor_path,
+        (base_keys | {"generation_id"}, base_keys | {"source_generation_id", "target_generation_id"}),
+        f"{operation} epoch predecessor activation",
+    )
+    if (sha256_path(predecessor_path) != previous["sha256"] or
+            predecessor.get("schema") != "facman.self_activation.v2" or
+            predecessor.get("product_id") != "facman" or predecessor.get("epoch_id") != epoch_id or
+            predecessor.get("target_generation_id", predecessor.get("generation_id")) !=
+            activation["source_generation_id"]):
+        raise AssertionError(f"{operation} epoch activation does not extend its exact predecessor")
+    return Path(str(generation["install_root"]))
 
 
 def require_transition_receipt(
@@ -1840,6 +1979,13 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
             epoch_install, epoch_state, epoch_installed.get("epoch_id"),
             candidate_package_sha256,
         )
+        epoch_id = str(epoch_installed["epoch_id"])
+        genesis_record = require_epoch_generation_record(
+            epoch_id, candidate_identity, candidate_package_sha256,
+            candidate_identity["provider_revision"], epoch_install, epoch_state, epoch_fixture,
+        )
+        if not same_windows_path(genesis_record["install_root"], epoch_genesis_root):
+            raise AssertionError("ordinary Setup genesis changed its independently derived root")
         shortcut, registry = observe("source_distinct_epoch_genesis_completed",
                                      epoch_genesis_root)
         assert_owned_native(shortcut, registry, epoch_install, epoch_state,
@@ -1892,7 +2038,7 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         epoch_operation = (epoch_state.parent / "setup-coordinator.v1" / "epochs" /
                            str(epoch_installed["epoch_id"]) / "maintenance" /
                            epoch_downgrade_id)
-        if (epoch_operation / "80-registration-cutover.v2.json").exists():
+        if observation_path(epoch_operation / "80-registration-cutover.v2.json").exists():
             raise AssertionError("interrupted external helper already completed cutover")
         epoch_restart = invoke(
             installed_helper, "downgrade", "--package", baseline_payload,
@@ -1907,7 +2053,10 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
              "--state-root", epoch_state, "--acceptance-root", epoch_fixture),
             shell_integration=True, noninteractive=True,
         )
-        epoch_baseline_root = Path(str(epoch_downgraded.get("install_root", "")))
+        epoch_baseline_root = require_epoch_transition_receipt(
+            epoch_downgraded, "downgrade", epoch_id, baseline_identity, baseline_package_sha256,
+            candidate_identity["provider_revision"], epoch_install, epoch_state, epoch_fixture,
+        )
         if (epoch_downgraded.get("product_version") != baseline_identity["version"] or
                 not (epoch_baseline_root / "generations" /
                      baseline_identity["version"] / "FacMan.exe").is_file()):
@@ -1968,7 +2117,10 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
         if epoch_update_launch.get("phase") != "reactivation_complete":
             raise AssertionError("real epoch reapply did not complete retained activation inline")
         epoch_updated = epoch_update_launch
-        epoch_updated_root = Path(str(epoch_updated.get("install_root", "")))
+        epoch_updated_root = require_epoch_transition_receipt(
+            epoch_updated, "update", epoch_id, candidate_identity, candidate_package_sha256,
+            candidate_identity["provider_revision"], epoch_install, epoch_state, epoch_fixture,
+        )
         if (epoch_updated.get("product_version") != candidate_identity["version"] or
                 not (epoch_updated_root / "generations" /
                      candidate_identity["version"] / "FacMan.exe").is_file()):
@@ -2064,7 +2216,10 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                 tree_snapshot(epoch_history / "activations") != activation_after_rollback or
                 rollback_backup.exists()):
             raise AssertionError("real epoch rollback did not reactivate retained A")
-        rollback_root = Path(str(epoch_rollback.get("install_root", "")))
+        rollback_root = require_epoch_transition_receipt(
+            epoch_rollback, "rollback", epoch_id, baseline_identity, baseline_package_sha256,
+            candidate_identity["provider_revision"], epoch_install, epoch_state, epoch_fixture,
+        )
         shortcut, registry = observe("source_distinct_epoch_rollback_completed",
                                      rollback_root)
         assert_owned_native(shortcut, registry, epoch_install, epoch_state,
@@ -2085,7 +2240,11 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                 epoch_reapply_after_rollback.get("operation_id") ==
                 epoch_update_launch.get("operation_id")):
             raise AssertionError("real epoch reapply after rollback reused an old operation")
-        epoch_updated_root = Path(str(epoch_reapply_after_rollback.get("install_root", "")))
+        epoch_updated_root = require_epoch_transition_receipt(
+            epoch_reapply_after_rollback, "update", epoch_id, candidate_identity,
+            candidate_package_sha256, candidate_identity["provider_revision"],
+            epoch_install, epoch_state, epoch_fixture,
+        )
         shortcut, registry = observe("source_distinct_epoch_reapply_after_rollback",
                                      epoch_updated_root)
         assert_owned_native(shortcut, registry, epoch_install, epoch_state,
