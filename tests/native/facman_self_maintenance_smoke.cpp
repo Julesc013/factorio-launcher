@@ -350,8 +350,11 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
 
   facman::core::Result<void> inspect_retirement_generation(
       const Generation &generation, bool,
-      const facman::self_maintenance::CoordinatorLockToken &) override {
+      const facman::self_maintenance::CoordinatorLockToken &token) override {
     inspected.push_back(generation.install_id);
+    if (!token.binds_generation(generation))
+      return facman::core::Result<void>::failure(
+          {"retirement_token_mismatch", "private token does not bind inspected generation", {}});
     if (reject_identity)
       return facman::core::Result<void>::failure(
           {"provider_identity_mismatch", "different install identity", {}});
@@ -363,8 +366,11 @@ struct RetirementFakeEffects final : facman::self_maintenance::RetirementEffects
 
   facman::core::Result<void> uninstall_generation(
       const Generation &generation, bool active,
-      const facman::self_maintenance::CoordinatorLockToken &) override {
+      const facman::self_maintenance::CoordinatorLockToken &token) override {
     removed.push_back(generation.install_id);
+    if (!token.binds_generation(generation))
+      return facman::core::Result<void>::failure(
+          {"retirement_token_mismatch", "private token does not bind removed generation", {}});
     if (active && interrupt_active)
       return facman::core::Result<void>::failure(
           {"self_setup_interrupted", "active native boundary interrupted", {}});

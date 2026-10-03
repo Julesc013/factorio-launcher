@@ -67,7 +67,16 @@ identity is recovery-required. Once the retirement intent exists, ordinary
 update, downgrade, rollback, verify, and repair discovery is blocked until the
 same retirement is resumed. Nested setup skips its own lock only when given the
 coordinator's call-scoped proof for that exact lock root; isolated fixtures with
-a different setup coordinator acquire both locks. Completed retirement hides
+a different setup coordinator acquire both locks. A historical verify/uninstall
+request additionally carries the exact generation witness under a private token
+bound to that validated retirement step. A separate user-wide Setup coordinator
+still requires its own lock; lifecycle authority never substitutes for it.
+Installed state and uninstall plan input bind the generation's original pin,
+archive, recipe and installed/ownership digests; the executing SDK and journal
+revision retain the current provider pin. The witness binds the durable uninstall
+intent, so omission or substitution refuses before recovery or native continuation.
+Ordinary Setup intent bytes and current-pin admission remain unchanged.
+Completed retirement hides
 the active chain but preserves activation and generation history. After a
 retained generation is removed, its exact digest-bound package, maintenance
 launcher, and custody receipt are removed from the pinned repair cache before

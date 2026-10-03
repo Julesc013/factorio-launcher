@@ -3493,8 +3493,12 @@ public:
     facman::self_setup::Request verification;
     verification.operation = facman::self_setup::Operation::verify;
     verification.install_id = generation.install_id;
+    verification.install_root = generation.install_root;
+    verification.product_version = generation.product_version;
     verification.state_root = generation.state_root;
     verification.acceptance_root = generation.acceptance_root;
+    verification.coordinator_lock = &coordinator_lock;
+    verification.retirement_generation = &generation;
     auto verified = facman::self_setup::execute(verification);
     auto report = verified
         ? facman::core::json::parse(verified.value().provider_json)
@@ -3568,6 +3572,7 @@ public:
     preview.product_version = generation.product_version;
     preview.apply = false;
     preview.coordinator_lock = &coordinator_lock;
+    preview.retirement_generation = &generation;
     if (active && options_.shell_integration)
       preview.native_effects = &native_effects_;
     auto planned = facman::self_setup::execute(preview);
@@ -3633,6 +3638,7 @@ public:
     request.product_version = generation.product_version;
     request.apply = true;
     request.coordinator_lock = &coordinator_lock;
+    request.retirement_generation = &generation;
     if (active && options_.shell_integration)
       request.native_effects = &native_effects_;
     auto removed = facman::self_setup::execute(request);

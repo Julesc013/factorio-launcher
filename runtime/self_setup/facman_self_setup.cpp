@@ -1244,9 +1244,80 @@ facman::core::Result<Response> verify(const Request &request,
       {"verify", "receipt", response.take_value(), {}});
 }
 
+std::string generation_recipe_digest(
+    const self_maintenance::Generation &generation) {
+  json::ObjectBuilder identity;
+  identity.add_string("schema", "facman.self_setup_recipe.v1");
+  identity.add_string("product_id", "facman");
+  identity.add_string("product_version", generation.product_version);
+  identity.add_string("provider_revision", generation.universal_setup_revision);
+  identity.add_string("source_sha256", generation.package_sha256);
+  identity.add_string("target_layout", "versioned_generation_with_maintenance_v1");
+  return digest_text(identity.serialize());
+}
+
+std::string uninstall_intent_source(
+    const self_maintenance::Generation *generation,
+    const std::string &root_text) {
+  return generation == nullptr
+      ? digest_text("facman.setup.uninstall.v1\n" + root_text)
+      : digest_text("facman.setup.retirement.uninstall.v1\n" +
+          self_maintenance::generation_record_bytes(*generation));
+}
+
+facman::core::Result<void> validate_retirement_witness(const Request &request) {
+  if (request.retirement_generation == nullptr)
+    return facman::core::Result<void>::success();
+  const auto &generation = *request.retirement_generation;
+  auto requested_root = canonical_install_root(request.install_root);
+  auto generation_root = canonical_install_root(generation.install_root);
+  auto state = absolute_path(request.state_root, "state root");
+  auto acceptance = absolute_path(request.acceptance_root, "acceptance root");
+  if ((request.operation != Operation::verify &&
+       request.operation != Operation::uninstall) ||
+      request.coordinator_lock == nullptr ||
+      request.coordinator_lock->operation_id().empty() ||
+      !request.coordinator_lock->binds_generation(generation) ||
+      request.install_id != generation.install_id ||
+      request.product_version != generation.product_version ||
+      !requested_root || !generation_root ||
+      requested_root.value() != generation_root.value() || !state || !acceptance ||
+      state.value() != generation.state_root.lexically_normal() ||
+      acceptance.value() != generation.acceptance_root.lexically_normal())
+    return facman::core::Result<void>::failure(error(
+        "self_setup_retirement_witness_invalid",
+        "retirement witness does not bind this request and held coordinator"));
+  return facman::core::Result<void>::success();
+}
+
 facman::core::Result<std::string> inspect_installed_source(
     const Request &request, const fs::path &state_root,
-    const fs::path &acceptance_root, const std::string &request_id) {
+    const fs::path &acceptance_root, const std::string &request_id,
+    self_maintenance::InstalledIdentity *retirement_identity = nullptr) {
+  if (request.retirement_generation != nullptr) {
+    const auto &generation = *request.retirement_generation;
+    self_maintenance::ProviderBridge bridge(
+        state_root, acceptance_root, request.provider_effects, request.clock);
+    auto inspected = bridge.inspect_identity(request.install_id);
+    auto expected_root = canonical_install_root(generation.install_root);
+    auto actual_root = inspected
+        ? canonical_install_root(inspected.value().install_root)
+        : facman::core::Result<std::string>::failure(inspected.error());
+    if (!inspected || !expected_root || !actual_root ||
+        actual_root.value() != expected_root.value() ||
+        inspected.value().install_id != generation.install_id ||
+        inspected.value().product_version != generation.product_version ||
+        inspected.value().provider_revision != generation.universal_setup_revision ||
+        inspected.value().source_archive_sha256 != generation.package_sha256 ||
+        inspected.value().recipe_digest != generation_recipe_digest(generation))
+      return facman::core::Result<std::string>::failure(error(
+          "self_setup_response_invalid",
+          "Universal Setup installed identity does not bind the retirement generation",
+          inspected ? generation.install_id : inspected.error().detail));
+    if (retirement_identity != nullptr) *retirement_identity = inspected.value();
+    return facman::core::Result<std::string>::success(
+        inspected.value().source_archive_sha256);
+  }
   json::ObjectBuilder inspection;
   inspection.add_string("schema", "usk.installed_inspect_request.v1");
   inspection.add_string("request_id", request_id + ".installed");
@@ -1319,10 +1390,11 @@ facman::core::Result<Response> uninstall(const Request &request,
   plan.add_string("plan_id", plan_id);
   plan.add_string("install_id", request.install_id);
   plan.add_string("created_at", created_at);
+  self_maintenance::InstalledIdentity retirement_identity;
   auto inspected_source = inspect_installed_source(
       request, state_root, acceptance_root,
       identity == nullptr ? identifier("request.facman.uninstall")
-                          : identity->provider_request_id);
+                          : identity->provider_request_id, &retirement_identity);
   if (!inspected_source)
     return facman::core::Result<Response>::failure(inspected_source.error());
   if (identity != nullptr) {
@@ -1339,14 +1411,10 @@ facman::core::Result<Response> uninstall(const Request &request,
                          acceptance_root, true);
   if (!planned)
     return facman::core::Result<Response>::failure(planned.error());
-  if (!request.apply) {
-    return facman::core::Result<Response>::success(
-        {"uninstall", "plan", planned.take_value(), {}});
-  }
   auto reviewed = plan_identity(planned.value(), &request.install_id);
   if (!reviewed)
     return facman::core::Result<Response>::failure(reviewed.error());
-  if (identity != nullptr) {
+  if (identity != nullptr || request.retirement_generation != nullptr) {
     auto envelope = json::parse(planned.value());
     const json::Value *payload = envelope && envelope.value().is_object()
         ? envelope.value().find("payload") : nullptr;
@@ -1360,13 +1428,34 @@ facman::core::Result<Response> uninstall(const Request &request,
         string_field(*payload, "status") != "planned" ||
         string_field(*payload, "install_id") != request.install_id ||
         input_identity == nullptr || !input_identity->is_object() ||
-        string_field(*input_identity, "provider_revision") != provider_revision() ||
+        string_field(*input_identity, "provider_revision") !=
+            (request.retirement_generation == nullptr ? provider_revision()
+                : request.retirement_generation->universal_setup_revision) ||
         installed_source.size() != 64U || !digest_or_empty(installed_source) ||
-        installed_source != inspected_source.value())
+        installed_source != inspected_source.value() ||
+        (request.retirement_generation != nullptr &&
+         (!exact_keys(envelope.value(), {"error", "payload", "schema", "status"}) ||
+          string_field(envelope.value(), "schema") != "usk.command_response.v1" ||
+          envelope.value().find("error") == nullptr || !envelope.value().find("error")->is_null() ||
+          !exact_keys(*input_identity, {"installed_state_digest", "ownership_manifest_digest",
+             "policy_digest", "provider_revision", "recipe_digest", "source_digest"}) ||
+          string_field(*input_identity, "installed_state_digest") !=
+              retirement_identity.installed_state_digest ||
+          string_field(*input_identity, "ownership_manifest_digest") !=
+              retirement_identity.ownership_manifest_digest ||
+          string_field(*input_identity, "recipe_digest") != retirement_identity.recipe_digest ||
+          string_field(*input_identity, "policy_digest").size() != 64U ||
+          !digest_or_empty(string_field(*input_identity, "policy_digest")))))
       return facman::core::Result<Response>::failure(error(
           "self_setup_response_invalid",
           "Universal Setup uninstall plan has no exact installed source identity",
            planned.value()));
+  }
+  if (!request.apply)
+    return facman::core::Result<Response>::success(
+        {"uninstall", "plan", planned.take_value(), {}});
+  if (identity != nullptr) {
+    const std::string installed_source = inspected_source.value();
     if (reviewed.value().plan_id != identity->provider_plan_id)
       return facman::core::Result<Response>::failure(error(
           "self_setup_recovery_required", "provider plan identity differs from durable intent"));
@@ -1575,11 +1664,18 @@ facman::core::Result<Response> execute(const Request &request) {
   if (!bounded_identifier(request.install_id))
     return facman::core::Result<Response>::failure(error(
         "self_setup_install_id_invalid", "The setup install identity is invalid"));
+  auto witness = validate_retirement_witness(request);
+  if (!witness) return facman::core::Result<Response>::failure(witness.error());
   if (request.operation == Operation::verify) {
     auto state = absolute_path(request.state_root, "state root");
     auto acceptance = absolute_path(request.acceptance_root, "acceptance root");
     if (!state || !acceptance)
       return facman::core::Result<Response>::failure(!state ? state.error() : acceptance.error());
+    if (request.retirement_generation != nullptr) {
+      auto inspected = inspect_installed_source(
+          request, state.value(), acceptance.value(), identifier("request.facman.retirement"));
+      if (!inspected) return facman::core::Result<Response>::failure(inspected.error());
+    }
     return verify(request, state.value(), acceptance.value());
   }
   auto install = canonical_install_root(request.install_root);
@@ -1710,6 +1806,20 @@ facman::core::Result<Response> execute(const Request &request) {
     journal = discovered.value()->journal;
     record_path = discovered.value()->path;
     record_exists = true;
+    // Check the generation-bound uninstall intent before adopting caller
+    // fields, inspecting rollback or continuing already-applied native effects.
+    // Ordinary uninstall intent bytes and legacy journals remain unchanged.
+    if ((journal.operation == "uninstall" && journal.provider_source_digest !=
+            uninstall_intent_source(request.retirement_generation, journal.install_root)) ||
+        (request.retirement_generation != nullptr &&
+         (journal.operation != "uninstall" || journal.install_id != request.install_id ||
+          journal.product_version != request.product_version ||
+          journal.provider_state_root != facman::platform::path_to_utf8(state.value()) ||
+          journal.provider_acceptance_root != facman::platform::path_to_utf8(acceptance.value()))))
+      return facman::core::Result<Response>::failure(error(
+          "self_setup_recovery_required",
+          "unfinished setup intent requires its exact retirement generation witness",
+          record_path.string()));
     auto old_root = absolute_path(fs::path(journal.install_root), "journal install root");
     auto old_identity = old_root ? canonical_install_root(old_root.value())
         : facman::core::Result<std::string>::failure(old_root.error());
@@ -1819,7 +1929,7 @@ facman::core::Result<Response> execute(const Request &request) {
         return facman::core::Result<Response>::failure(digest.error());
       source_digest = digest.take_value();
     } else {
-      source_digest = digest_text("facman.setup.uninstall.v1\n" + root_text);
+      source_digest = uninstall_intent_source(active.retirement_generation, root_text);
     }
     operation = operation_name(active.operation);
     mode = active.native_effects == nullptr ? "portable" : "installed";
@@ -2522,17 +2632,7 @@ std::string bridge_key(const Plan &plan) {
 }
 
 std::string maintenance_recipe_digest(const Plan &transition) {
-  json::ObjectBuilder recipe_identity;
-  recipe_identity.add_string("schema", "facman.self_setup_recipe.v1");
-  recipe_identity.add_string("product_id", "facman");
-  recipe_identity.add_string("product_version",
-                             transition.target.product_version);
-  recipe_identity.add_string("provider_revision",
-                             transition.target.universal_setup_revision);
-  recipe_identity.add_string("source_sha256", transition.target.package_sha256);
-  recipe_identity.add_string("target_layout",
-                             "versioned_generation_with_maintenance_v1");
-  return provider_hash(recipe_identity.serialize());
+  return self_setup::generation_recipe_digest(transition.target);
 }
 
 std::string maintenance_review_receipt(const Plan &transition,

@@ -402,8 +402,48 @@ Native regressions cover successful historical inspection/verification and
 refusal of wrong generation pins, malformed revisions, unsupported ABI versions
 and historical install authority. The affected developer test run and strict
 validation pass, with full logs retained in the owned evidence root. Independent
-snapshot review and genuine A/B update/recovery remain due; epoch external
-continuation remains unqualified.
+snapshot review passed before commit `366da90e9b1db4bd95deff2cba15a0d1d919a61c`.
+The genuine cross-pin runtime continuation below supersedes the remaining
+update/recovery uncertainty; epoch external continuation remains unqualified.
+
+## 2026-10-03 genuine cross-provider retirement admission failure
+
+A corrected, source-exact Alpha.6 package from `366da90e9b1db4bd95deff2cba15a0d1d919a61c`
+passed production metadata, runtime/hash smoke and payload-equivalence checks.
+Its disposable-account run with the existing genuine Alpha.5 predecessor passed
+update A to B, downgrade to retained A, reapplication of B and active repair,
+including refusal of a missing repair payload. Registered chain removal then
+refused retained A's historical installed-state pin before retirement intent:
+`self_maintenance_retirement_recovery_required` wrapped `self_setup_response_invalid`.
+The complete failed fixture remains in the owned evidence root. Its transition
+receipt SHA-256 is `70078cff7658f3cc08457f22cfa60a6f0229439e8a6a00b8afb59a271a47f448`;
+`retirement-witness-reproduction.json` binds the guest result, exact package
+hashes, commands and observed phases. This is partial runtime qualification,
+not successful removal or epoch external-continuation evidence.
+
+Generic Setup retirement now admits verify/uninstall through a call-scoped
+generation witness and a private coordinator-lock proof minted for that exact
+validated retirement step. Lifecycle authority and user-wide Windows integration
+may have different coordinators: exact-root reuse remains permitted, otherwise
+Setup acquires its own global lock and refuses contention before dispatch. This
+preserves the existing two-lock behavior for isolated and selected-root installs.
+Historical
+installed state and uninstall plans bind original pin, source, recipe and state/
+ownership digests before preview or apply. A namespaced synthetic uninstall
+source digest binds exact generation-record bytes into durable intent, without
+changing ordinary intent bytes or journal schema. Missing or substituted witness
+refuses before request adoption, rollback inspection or native continuation.
+Execution uses the current SDK and records its current pin. Install/repair
+authority, native ownership, retained-source custody and outer entered-marker
+refusal remain unchanged. Focused qualification combines 53 unchanged passing
+native CTests with the corrected recovery test's 129 passing checks. All 145
+selected Python tests and strict validation pass. Full failed receipts remain
+preserved, including the existing mock's refusal envelope assigned to `Error.path`
+instead of `detail`, and a packaging fixture that regenerated timestamped input
+ZIPs while asserting identical output. That fixture now fixes input timestamps;
+production still binds the exact original archive checksum. Exact snapshot
+review precedes committing this correction. Genuine produced-package removal
+and epoch continuation remain open until the next runtime proof completes.
 
 ## 2026-09-22 authoritative maintenance-state selection
 

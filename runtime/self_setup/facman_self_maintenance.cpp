@@ -2973,6 +2973,10 @@ std::string generation_record_bytes(const Generation &generation) {
   return serialize_generation(generation);
 }
 
+bool CoordinatorLockToken::binds_generation(const Generation &generation) const {
+  return generation_sha256_ == hash(generation_record_bytes(generation));
+}
+
 facman::core::Result<Generation> make_generation(
     const PackageDescriptor &descriptor, const std::string &package_sha256,
     const std::string &install_id, const fs::path &install_root,
@@ -8023,8 +8027,6 @@ facman::core::Result<RetirementResponse> retire_active(
   auto held = acquire(authority.take_value(), lock_operation);
   if (!held)
     return facman::core::Result<RetirementResponse>::failure(held.error());
-  const CoordinatorLockToken coordinator_lock(
-      request.coordinator_root.lexically_normal(), lock_operation);
   const auto require_authority = [&]() -> facman::core::Result<void> {
     if (!request.epoch_mode)
       return require_flat_retirement_epoch_absence(held.value());
@@ -8072,6 +8074,9 @@ facman::core::Result<RetirementResponse> retire_active(
       auto ready = require_authority();
       if (!ready)
         return facman::core::Result<RetirementResponse>::failure(ready.error());
+      const CoordinatorLockToken coordinator_lock(
+          request.coordinator_root.lexically_normal(), lock_operation,
+          hash(generation_record_bytes(step.generation)));
       auto inspected = effects.inspect_retirement_generation(
           step.generation, step.active, coordinator_lock);
       if (!inspected)
@@ -8175,6 +8180,9 @@ facman::core::Result<RetirementResponse> retire_active(
     if (!authority_ready)
       return facman::core::Result<RetirementResponse>::failure(
           authority_ready.error());
+    const CoordinatorLockToken coordinator_lock(
+        request.coordinator_root.lexically_normal(), lock_operation,
+        hash(generation_record_bytes(steps[index].generation)));
     auto inspected = effects.inspect_retirement_generation(
         steps[index].generation, steps[index].active, coordinator_lock);
     if (!inspected)
