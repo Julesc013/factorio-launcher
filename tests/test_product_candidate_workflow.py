@@ -336,7 +336,6 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             "--no-checkout",
             "--no-local",
             "baseline source must be an ancestor of the candidate source",
-            "baseline provider lock differs from the candidate provider lock",
             "current_checkout_observation.py",
             "facman_release.py",
             "--source-observation",

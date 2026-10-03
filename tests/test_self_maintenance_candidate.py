@@ -20,6 +20,53 @@ from tests.integration import facman_self_setup_lifecycle as lifecycle
 
 
 class SelfMaintenanceCandidateTests(unittest.TestCase):
+    def test_real_ancestor_with_distinct_provider_lock_passes_baseline_admission(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary)
+            (source / "release/index").mkdir(parents=True)
+            (source / "runtime/self_setup").mkdir(parents=True)
+            (source / "runtime/self_setup/facman_self_maintenance_package.cpp").write_text(
+                "// self-maintenance package producer\n"
+            )
+
+            def git(*arguments: str) -> str:
+                return subprocess.run(
+                    ["git", "-c", "user.name=FacMan Fixture",
+                     "-c", "user.email=fixture@example.invalid", *arguments],
+                    cwd=source, check=True, capture_output=True, text=True,
+                ).stdout.strip()
+
+            def write_inputs(version: str, setup_revision: str) -> None:
+                (source / "release/index/version.v2.toml").write_text(
+                    f'semver = "{version}"\n'
+                )
+                (source / "release/index/providers.lock.v2.toml").write_text(
+                    '[[provider]]\nid = "universal_launcher"\n'
+                    f'source_revision = "{"a" * 40}"\n'
+                    '[[provider]]\nid = "universal_setup"\n'
+                    f'source_revision = "{setup_revision}"\n'
+                )
+
+            git("init")
+            write_inputs("0.1.0-alpha.5", "b" * 40)
+            git("add", ".")
+            git("commit", "-m", "Produced baseline source")
+            baseline = git("rev-parse", "HEAD")
+            write_inputs("0.1.0-alpha.6", "c" * 40)
+            git("commit", "-am", "Candidate source and provider successor")
+            candidate.preflight_baseline_ref(baseline, source)
+            self.assertEqual("b" * 40, candidate.provider_revision_from_lock(
+                {"provider": [{"id": "universal_setup", "source_revision": "b" * 40}]},
+                "universal_setup",
+            ))
+            with self.assertRaisesRegex(ValueError, "must precede"):
+                candidate.preflight_baseline_ref(git("rev-parse", "HEAD"), source)
+            with self.assertRaisesRegex(ValueError, "no exact"):
+                candidate.provider_revision_from_lock(
+                    {"provider": [{"id": "universal_setup", "source_revision": "floating"}]},
+                    "universal_setup",
+                )
+
     def test_candidate_payload_capacity_binds_exact_fixture_path(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
