@@ -10,6 +10,18 @@
 namespace facman::client {
 namespace json = facman::core::json;
 
+OperationOutcome detail::process_failure_outcome(const facman::platform::ProcessResult& result) noexcept
+{
+    // Pending is post-fork uncertainty; an absent confirmed identity cannot
+    // turn it into evidence that no process effects occurred.
+    if (result.termination == facman::platform::ProcessTermination::pending)
+        return OperationOutcome::outcome_unknown;
+    return result.termination == facman::platform::ProcessTermination::start_failed ||
+            result.identity.process_id == 0
+        ? OperationOutcome::refused_before_effects
+        : OperationOutcome::outcome_unknown;
+}
+
 CliProcessTransport::CliProcessTransport(std::filesystem::path executable, std::filesystem::path workspace)
     : executable_(std::move(executable)), workspace_(std::move(workspace))
 {
@@ -62,11 +74,7 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
     process.timeout = request.timeout;
     process.cancellation_requested = [&request]() { return detail::cancelled(request); };
     auto result = facman::platform::supervise_process(process);
-    const OperationOutcome process_failure_outcome =
-        result.termination == facman::platform::ProcessTermination::start_failed ||
-            result.identity.process_id == 0
-        ? OperationOutcome::refused_before_effects
-        : OperationOutcome::outcome_unknown;
+    const OperationOutcome process_failure_outcome = detail::process_failure_outcome(result);
     const auto terminal_process_failure = [&](const auto& error) {
         return detail::terminal_response(
             request, 1, facman::core::OutcomeKind::internal_error, "internal_error",
@@ -98,10 +106,12 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
                 ? OperationOutcome::refused_before_effects
                 : OperationOutcome::outcome_unknown);
     }
-    if (!result.error.empty()) {
+    if (result.termination == facman::platform::ProcessTermination::pending || !result.error.empty()) {
         return detail::terminal_response(
             request, 1, facman::core::OutcomeKind::unavailable, "unavailable",
-            "cli_process_start_failed", result.error,
+            result.termination == facman::platform::ProcessTermination::pending
+                ? "cli_process_outcome_unknown" : "cli_process_start_failed",
+            result.error.empty() ? "CLI process completion is unconfirmed; effects may have occurred" : result.error,
             process_failure_outcome);
     }
     detail::progress(request, "decoding_cli_response", 2, 3);

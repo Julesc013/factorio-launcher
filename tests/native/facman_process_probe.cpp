@@ -181,6 +181,13 @@ int main(int argc, char** argv)
     }
     if (child < 0) return 3;
 #endif
+    const char* ready = std::getenv("FACMAN_PROCESS_PROBE_READY");
+    if (ready != nullptr && *ready != '\0') {
+        std::ofstream notification(ready);
+        notification << "child-created";
+        notification.close();
+        if (!notification) return 4;
+    }
     std::this_thread::sleep_for(std::chrono::seconds(30));
     return 0;
 }
