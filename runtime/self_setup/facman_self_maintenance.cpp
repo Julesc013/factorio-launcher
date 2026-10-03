@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_self_maintenance.h"
+#include "facman_self_setup.h"
 
 #include "fl_json.h"
 #include "fl_local_operation_lock.h"
@@ -411,6 +412,14 @@ bool exact_keys(const json::Value &value,
   if (!value.is_object() || value.size() != keys.size()) return false;
   return std::all_of(keys.begin(), keys.end(),
                      [&](const char *key) { return value.find(key) != nullptr; });
+}
+
+bool exact_keys_with_creator(const json::Value &value,
+                            std::initializer_list<const char *> keys) {
+  const bool creator = value.find("creating_provider_revision") != nullptr;
+  return value.is_object() && value.size() == keys.size() + (creator ? 1U : 0U) &&
+      std::all_of(keys.begin(), keys.end(),
+          [&](const char *key) { return value.find(key) != nullptr; });
 }
 
 bool activation_operation(const std::string &value) {
@@ -1496,6 +1505,8 @@ std::string epoch_generation_bytes(const LifecycleEpoch &epoch,
   object.add_string("acceptance_root", facman::platform::path_to_utf8(generation.acceptance_root));
   object.add_string("gui", facman::platform::path_to_utf8(generation.gui));
   object.add_string("maintenance_launcher", facman::platform::path_to_utf8(generation.maintenance_launcher));
+  if (!generation.creating_provider_revision.empty())
+    object.add_string("creating_provider_revision", generation.creating_provider_revision);
   return object.serialize() + "\n";
 }
 
@@ -1662,7 +1673,7 @@ facman::core::Result<Generation> parse_epoch_generation(
       "generation_id", "product_version", "package_sha256", "facman_source_revision",
       "universal_setup_revision", "install_id", "install_root", "logical_root", "state_root",
       "acceptance_root", "gui", "maintenance_launcher"};
-  if (!document || !exact_keys(document.value(), keys) ||
+  if (!document || !exact_keys_with_creator(document.value(), keys) ||
       !lifecycle_string_fields(document.value(), keys) ||
       string_field(document.value(), "schema") != "facman.self_generation.v2" ||
       string_field(document.value(), "product_id") != "facman" ||
@@ -1676,6 +1687,7 @@ facman::core::Result<Generation> parse_epoch_generation(
   result.package_sha256 = string_field(document.value(), "package_sha256");
   result.facman_source_revision = string_field(document.value(), "facman_source_revision");
   result.universal_setup_revision = string_field(document.value(), "universal_setup_revision");
+  result.creating_provider_revision = string_field(document.value(), "creating_provider_revision");
   result.install_id = string_field(document.value(), "install_id");
   result.install_root = facman::platform::path_from_utf8(string_field(document.value(), "install_root"));
   result.logical_root = facman::platform::path_from_utf8(string_field(document.value(), "logical_root"));
@@ -1686,6 +1698,9 @@ facman::core::Result<Generation> parse_epoch_generation(
   Semver version;
   if (!digest(result.package_sha256) || !revision(result.facman_source_revision) ||
       !revision(result.universal_setup_revision) || !semver(result.product_version, version) ||
+      (document.value().find("creating_provider_revision") != nullptr &&
+       (!revision(result.creating_provider_revision) ||
+        result.creating_provider_revision == result.universal_setup_revision)) ||
       generation_identity(generation_descriptor(result), result.package_sha256) != generation_id ||
       !exact_epoch_generation_paths(epoch, result) || bytes != epoch_generation_bytes(epoch, result))
     return facman::core::Result<Generation>::failure(epoch_recovery(
@@ -2970,7 +2985,17 @@ fs::path global_lock_path(const fs::path &coordinator_root) {
 }
 
 std::string generation_record_bytes(const Generation &generation) {
-  return serialize_generation(generation);
+  const std::string original = serialize_generation(generation);
+  if (generation.creating_provider_revision.empty()) return original;
+  // This is an internal binding projection, not an admitted flat-v1 record.
+  return "facman.self_generation_binding.v2\n" + original +
+      generation.creating_provider_revision + "\n";
+}
+
+const std::string &generation_creating_provider_revision(
+    const Generation &generation) {
+  return generation.creating_provider_revision.empty()
+      ? generation.universal_setup_revision : generation.creating_provider_revision;
 }
 
 bool CoordinatorLockToken::binds_generation(const Generation &generation) const {
@@ -3714,6 +3739,7 @@ struct EpochHandoff {
   std::string nonce;
   bool shell_integration = true;
   std::uint64_t deadline_utc_ms = 0;
+  std::string creating_provider_revision = {};
 };
 
 std::string epoch_handoff_bytes(const EpochHandoff &value) {
@@ -3737,6 +3763,8 @@ std::string epoch_handoff_bytes(const EpochHandoff &value) {
   object.add_string("shell_integration", value.shell_integration ? "enabled" : "disabled");
   if (value.deadline_utc_ms != 0)
     object.add_string("deadline_utc_ms", std::to_string(value.deadline_utc_ms));
+  if (!value.creating_provider_revision.empty())
+    object.add_string("creating_provider_revision", value.creating_provider_revision);
   return object.serialize() + "\n";
 }
 
@@ -3755,8 +3783,8 @@ facman::core::Result<EpochHandoff> parse_epoch_handoff(const std::string &bytes)
       "continuation_helper_sha256", "provider_plan_sha256", "nonce",
       "shell_integration", "deadline_utc_ms"};
   const bool has_deadline = document && document.value().find("deadline_utc_ms") != nullptr;
-  if (!document || !(has_deadline ? exact_keys(document.value(), deadline_keys)
-                                   : exact_keys(document.value(), keys)) ||
+  if (!document || !(has_deadline ? exact_keys_with_creator(document.value(), deadline_keys)
+                                   : exact_keys_with_creator(document.value(), keys)) ||
       !(has_deadline ? lifecycle_string_fields(document.value(), deadline_keys)
                      : lifecycle_string_fields(document.value(), keys)))
     return facman::core::Result<EpochHandoff>::failure(epoch_recovery(
@@ -3776,6 +3804,7 @@ facman::core::Result<EpochHandoff> parse_epoch_handoff(const std::string &bytes)
   result.inputs.helper_sha256 = string_field(document.value(), "continuation_helper_sha256");
   result.provider_plan_sha256 = string_field(document.value(), "provider_plan_sha256");
   result.nonce = string_field(document.value(), "nonce");
+  result.creating_provider_revision = string_field(document.value(), "creating_provider_revision");
   const std::string shell_integration = string_field(document.value(), "shell_integration");
   result.shell_integration = shell_integration == "enabled";
   if (has_deadline) {
@@ -3802,6 +3831,8 @@ facman::core::Result<EpochHandoff> parse_epoch_handoff(const std::string &bytes)
       !digest(result.target_generation_id) || !result.inputs.package.is_absolute() ||
       !digest(result.inputs.package_sha256) || !result.inputs.helper.is_absolute() ||
       !digest(result.inputs.helper_sha256) || !digest(result.provider_plan_sha256) ||
+      (document.value().find("creating_provider_revision") != nullptr &&
+       !revision(result.creating_provider_revision)) ||
       !facman::base::validate_identifier(result.nonce, detail) ||
       (shell_integration != "enabled" && shell_integration != "disabled") ||
       bytes != epoch_handoff_bytes(result))
@@ -3898,7 +3929,8 @@ facman::core::Result<HeldRetainedInputs> validate_retained_inputs(
 }
 
 facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoch,
-    const ActiveState &active, const EpochTransitionRequest &request) {
+    const ActiveState &active, const EpochTransitionRequest &request,
+    const std::optional<std::string> &frozen_creator = std::nullopt) {
   if ((request.operation != Operation::update && request.operation != Operation::downgrade &&
        request.operation != Operation::rollback) ||
       request.package.package.empty() || !digest(request.package.package_sha256))
@@ -3912,6 +3944,17 @@ facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoc
       epoch.logical_root, epoch.logical_root, epoch.state_root, epoch.acceptance_root);
   if (!base) return facman::core::Result<Plan>::failure(base.error());
   Generation target = base.take_value();
+  const std::string creating_provider_revision = frozen_creator.has_value()
+      ? *frozen_creator : self_setup::provider_revision();
+  if (!creating_provider_revision.empty()) {
+    if (!revision(creating_provider_revision) ||
+        (frozen_creator.has_value() &&
+         creating_provider_revision == target.universal_setup_revision))
+      return facman::core::Result<Plan>::failure(epoch_recovery(
+          "epoch creating provider revision is invalid"));
+    if (creating_provider_revision != target.universal_setup_revision)
+      target.creating_provider_revision = creating_provider_revision;
+  }
   target.install_id = epoch_generation_install_id(epoch.epoch_id,
                                                    target.generation_id);
   target.install_root = epoch_generation_install_root(epoch.logical_root, epoch.epoch_id,
@@ -3920,11 +3963,15 @@ facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoc
   target.maintenance_launcher = target.install_root / "maintenance" / "FacManSetup.exe";
   const bool retained_predecessor = active.previous.has_value() &&
       active.previous->generation_id == target.generation_id;
-  if (retained_predecessor &&
-      epoch_generation_bytes(epoch, *active.previous) != epoch_generation_bytes(epoch, target))
-    return facman::core::Result<Plan>::failure(failure(
-        "self_maintenance_retained_target_invalid",
-        "epoch package does not match the exact immediate retained predecessor"));
+  if (retained_predecessor) {
+    if (!same_descriptor(generation_descriptor(*active.previous), request.package.descriptor) ||
+        active.previous->package_sha256 != target.package_sha256 ||
+        !exact_epoch_generation_paths(epoch, *active.previous))
+      return facman::core::Result<Plan>::failure(failure(
+          "self_maintenance_retained_target_invalid",
+          "epoch package does not match the exact immediate retained predecessor"));
+    target = *active.previous;
+  }
   Semver source_version, target_version;
   if (!exact_epoch_generation_paths(epoch, target) ||
       !semver(active.active.product_version, source_version) ||
@@ -4489,7 +4536,8 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
           "retained handoff input changed during preparation"));
     EpochTransitionRequest retained_request{request.coordinator_root, epoch.epoch_id, request.operation,
         request.operation_id, retained_inspection.take_value(), false, {}, {}, true};
-    auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request);
+    auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request,
+        handoff.creating_provider_revision);
     if (!planned) return facman::core::Result<EpochTransitionPreparation>::failure(planned.error());
     transition = planned.take_value();
     if (transition.provider_operation != "install_local")
@@ -4543,7 +4591,8 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
           "retained handoff input changed during preparation"));
     EpochTransitionRequest retained_request{request.coordinator_root, epoch.epoch_id, request.operation,
         request.operation_id, retained_inspection.take_value(), false, {}, {}, true};
-    auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request);
+    auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request,
+        source_plan.value().target.creating_provider_revision);
     if (!planned) return facman::core::Result<EpochTransitionPreparation>::failure(planned.error());
     transition = planned.take_value();
     if (transition.provider_operation != "install_local")
@@ -4560,7 +4609,7 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
         transition.previous_activation_name, transition.previous_activation_sha256,
         transition.target.generation_id, retained.take_value(), reviewed.receipt_sha256,
         generator.next("epoch"), request.shell_integration,
-        request.deadline_utc_ms};
+        request.deadline_utc_ms, transition.target.creating_provider_revision};
   }
   if (handoff.epoch_id != epoch.epoch_id || handoff.manifest_sha256 != epoch.manifest_sha256 ||
       handoff.operation != transition.operation || handoff.operation_id != request.operation_id ||
@@ -4568,6 +4617,7 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
       handoff.source_activation_name != transition.previous_activation_name ||
       handoff.source_activation_sha256 != transition.previous_activation_sha256 ||
       handoff.target_generation_id != transition.target.generation_id ||
+      handoff.creating_provider_revision != transition.target.creating_provider_revision ||
       handoff.provider_plan_sha256 != reviewed.receipt_sha256 ||
       handoff.shell_integration != request.shell_integration)
     return facman::core::Result<EpochTransitionPreparation>::failure(epoch_recovery(
@@ -4708,7 +4758,8 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation_impl(
   EpochTransitionRequest request{coordinator_root, epoch.epoch_id,
       handoff.value().operation == "update" ? Operation::update : Operation::downgrade,
       operation_id, inspected.take_value(), false, {}, {}, true};
-  auto plan = make_epoch_transition_plan(epoch, *active.value(), request);
+  auto plan = make_epoch_transition_plan(epoch, *active.value(), request,
+      handoff.value().creating_provider_revision);
   if (!plan || plan.value().target.generation_id != handoff.value().target_generation_id)
     return facman::core::Result<Plan>::failure(!plan ? plan.error() : epoch_recovery(
         "epoch continuation target changed from its immutable handoff journal"));
@@ -5090,7 +5141,8 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
         epoch_recovery("epoch custody changed during provider binding rehydration"));
     if (!reconstructed)
       return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
-          "provider apply identity could not be rehydrated from its durable binding"));
+          "provider apply identity could not be rehydrated from its durable binding",
+          reconstructed.error().message + ": " + reconstructed.error().detail));
   } else {
     if (!custody_valid() || effects.inspect_candidate(transition) != CandidateState::absent ||
         !custody_valid())
@@ -5645,7 +5697,7 @@ facman::core::Result<EpochPublicationAdmission> load_epoch_publication(
                                            : Operation::downgrade,
       request.operation_id, package.take_value(), false, {}, {}, true};
   auto transition = make_epoch_transition_plan(
-      state.epoch, source_state, transition_request);
+      state.epoch, source_state, transition_request, state.handoff.creating_provider_revision);
   if (!transition ||
       transition.value().target.generation_id !=
           state.handoff.target_generation_id ||
@@ -6287,7 +6339,9 @@ bool completed_epoch_shell_cutover(const LifecycleEpoch &epoch,
   std::string generation_bytes;
   auto target = parse_epoch_generation(epoch, scope, handoff.value().target_generation_id,
                                        &generation_bytes);
-  if (!target || hash(generation_bytes).empty()) return false;
+  if (!target || hash(generation_bytes).empty() ||
+      target.value().creating_provider_revision != handoff.value().creating_provider_revision)
+    return false;
   const std::string activation_name = "activation." + handoff.value().operation_id + ".v2.json";
   const std::string activation_bytes = epoch_link_activation_bytes(epoch,
       handoff.value().operation,
@@ -6970,6 +7024,9 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
                                            retained.error());
     if (!retained || !retained_package ||
         retained_package.value().package_sha256 != handoff.value().inputs.package_sha256 ||
+        (!handoff.value().creating_provider_revision.empty() &&
+         handoff.value().creating_provider_revision ==
+             retained_package.value().descriptor.universal_setup_revision) ||
         !revalidate_retained_inputs(retained.value()))
       return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
           !retained ? retained.error() : (!retained_package ? retained_package.error() :
@@ -7014,7 +7071,7 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
           candidate.operation, candidate.operation_id, candidate.retained_package,
           false, {}, {}, true};
       auto target_plan = make_epoch_transition_plan(
-          epoch.value(), *source.value(), target_request);
+          epoch.value(), *source.value(), target_request, handoff.value().creating_provider_revision);
       if (!target_plan || target_plan.value().target.generation_id !=
               handoff.value().target_generation_id)
         return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
@@ -8239,6 +8296,7 @@ facman::core::Result<ActiveState> adopt_legacy(
       !digest(legacy.generation_id) || !digest(legacy.package_sha256) ||
       !revision(legacy.facman_source_revision) ||
       !revision(legacy.universal_setup_revision) ||
+      !legacy.creating_provider_revision.empty() ||
       generation_identity(generation_descriptor(legacy),
                           legacy.package_sha256) != legacy.generation_id ||
       !exact_generation_paths(legacy))
@@ -8342,6 +8400,7 @@ facman::core::Result<Plan> plan(const Request &request) {
       !digest(request.active.generation_id) || !digest(request.active.package_sha256) ||
       !revision(request.active.facman_source_revision) ||
       !revision(request.active.universal_setup_revision) ||
+      !request.active.creating_provider_revision.empty() ||
       (request.active.install_id != "facman.self" &&
        request.active.install_id !=
             generation_install_id(request.active.generation_id)) ||
@@ -8372,6 +8431,7 @@ facman::core::Result<Plan> plan(const Request &request) {
         !digest(result.target.package_sha256) ||
         !revision(result.target.facman_source_revision) ||
         !revision(result.target.universal_setup_revision) ||
+        !result.target.creating_provider_revision.empty() ||
         !exact_generation_paths(result.target) ||
         same_path(result.target.install_root, result.source.install_root) ||
         (result.target.install_id != "facman.self" &&

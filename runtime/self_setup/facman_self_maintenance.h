@@ -46,6 +46,9 @@ struct Generation {
   std::filesystem::path acceptance_root;
   std::filesystem::path gui;
   std::filesystem::path maintenance_launcher;
+  // Epoch-only creator provenance. Empty preserves historical records where
+  // the creating SDK equals the package's original Universal Setup revision.
+  std::string creating_provider_revision = {};
 };
 
 struct PackageInspection {
@@ -600,6 +603,8 @@ void set_epoch_handoff_operation_pinned_hook(
 std::filesystem::path global_lock_path(
     const std::filesystem::path &coordinator_root);
 std::string generation_record_bytes(const Generation &generation);
+const std::string &generation_creating_provider_revision(
+    const Generation &generation);
 
 } // namespace facman::self_maintenance
 

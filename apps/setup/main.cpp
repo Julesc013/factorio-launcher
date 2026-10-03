@@ -3482,7 +3482,8 @@ public:
         !same_path(inspected.value().install_root, generation.install_root) ||
         inspected.value().product_version != generation.product_version ||
         inspected.value().source_archive_sha256 != generation.package_sha256 ||
-        inspected.value().provider_revision != generation.universal_setup_revision)
+        inspected.value().provider_revision !=
+            facman::self_maintenance::generation_creating_provider_revision(generation))
       return facman::core::Result<void>::failure(
           {"self_maintenance_provider_identity_ambiguous",
            "provider installed identity does not exactly bind the generation",

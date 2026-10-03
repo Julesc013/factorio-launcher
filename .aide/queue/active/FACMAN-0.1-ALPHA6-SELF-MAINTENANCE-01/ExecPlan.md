@@ -522,3 +522,32 @@ formatting, diff checks and the complete strict repository check also pass. The 
 remains active for journaled classic-to-first-epoch bootstrap, actual external
 continuation from produced packages, epoch repair/rollback/retirement,
 supported-platform qualification and human/product acceptance.
+
+
+## 2026-10-04 cross-provider epoch creator and interrupted apply
+
+The genuine A/B campaign at local source `f362c0b2b0805cf9060355233045bca565b70f61`
+completed both classic retirement steps and fresh epoch genesis. Its epoch
+downgrade stopped before external continuation because A's original package
+provider differs from the executing B SDK. That failed campaign also had an
+incomplete long-path fixture copy; it is diagnosis, not full runtime custody or
+qualification. Original packages, receipts and failed operations are preserved
+in the owned `task-facman-u-507ecf4b41/evidence` root.
+
+The correction preserves original archive identity and generation IDs, records
+the actual creating SDK in exact additive epoch shapes, and binds recipes,
+recovery and retirement to that frozen creator. Historical record bytes and
+ordinary install admission stay exact. Reactivation retains the complete
+original generation; conflicting creator provenance is refused.
+
+The real SDK regression exposed a second boundary: after interrupted apply
+has completed, install planning refuses its occupied target. Completion recovery
+therefore validates the original immutable request through provider-owned
+`recovery.inspect`, with exact installed identity and completed inspection-only
+journal/report evidence. It grants no apply authority; absent targets retain the
+original reviewed-plan checks. Independent review and exact-source validation
+receipts are retained alongside `epoch-creator-final-validation.json`.
+
+A new exact-source produced B, genuine external continuation and the remaining
+supported-host and product gates are still required. PR #343's exact-head
+protected-control owner gate remains external. This WorkUnit stays active.
