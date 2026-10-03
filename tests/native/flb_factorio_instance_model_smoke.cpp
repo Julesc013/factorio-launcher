@@ -242,5 +242,55 @@ int main()
     if (!unresolved_result || !unresolved_json ||
         !has_blocker(unresolved_json.value(), "instance_installation_missing")) return 7;
 
+    // Registration survives loss of application files. Readiness must inspect
+    // the current image and leave the foreign tree and instance untouched.
+    make_workspace(workspace, install, true);
+    write_text(install / "saves" / "foreign.zip", "foreign-save");
+    write_text(install / "mods" / "foreign.zip", "foreign-mod");
+    write_text(install / "config" / "config.ini", "foreign-config");
+    const auto blocked_without_effects = [&](const std::string& code,
+                                            const std::string& dimension_id) {
+        const auto inventory = snapshot(fixture.path);
+        auto result = instance::instance_readiness(workspace, request);
+        if (!result) return false;
+        auto parsed = json::parse(result.value());
+        return parsed && has_blocker(parsed.value(), code) &&
+            dimension_state_is(parsed.value(), dimension_id, "blocked") &&
+            bool_is(parsed.value().find("mutation_executed"), false) &&
+            bool_is(parsed.value().find("execution_started"), false) &&
+            bool_is(parsed.value().find("permit_issued"), false) &&
+            inventory == snapshot(fixture.path);
+    };
+    fs::remove(executable_path(install));
+    if (!blocked_without_effects("instance_installation_unhealthy", "installation")) return 11;
+    make_install(install);
+    fs::remove(install / "data" / "base" / "info.json");
+    if (!blocked_without_effects("instance_required_content_missing", "content")) return 12;
+    make_install(install);
+    fs::rename(install / "data" / "base", install / "data" / "hidden-base");
+    if (!blocked_without_effects("instance_required_content_missing", "content")) return 15;
+    fs::rename(install / "data" / "hidden-base", install / "data" / "base");
+    fs::remove(workspace / "instances" / "main" / "config" / "config.ini");
+    if (!blocked_without_effects("instance_effective_config_invalid", "configuration")) return 13;
+    make_workspace(workspace, install, true);
+    const auto restored_inventory = snapshot(fixture.path);
+    auto restored = instance::instance_readiness(workspace, request);
+    auto restored_json = restored ? json::parse(restored.value())
+        : facman::core::Result<json::Value>::failure(restored.error());
+    if (!restored_json ||
+        !dimension_state_is(restored_json.value(), "installation", "satisfied") ||
+        !dimension_state_is(restored_json.value(), "content", "satisfied") ||
+        !dimension_state_is(restored_json.value(), "configuration", "satisfied") ||
+        !has_blocker(restored_json.value(), "real_play_gate_not_passed") ||
+        restored_inventory != snapshot(fixture.path)) return 16;
+
+    // An executable outside the supported layout cannot acquire structural
+    // installation identity by being present somewhere under the source root.
+    const fs::path unsupported_install = fixture.path / "unsupported-install";
+    make_install(unsupported_install);
+    fs::rename(executable_path(unsupported_install), unsupported_install / "factorio-custom");
+    make_workspace(workspace, unsupported_install, true);
+    if (!blocked_without_effects("instance_installation_unhealthy", "installation")) return 14;
+
     return 0;
 }

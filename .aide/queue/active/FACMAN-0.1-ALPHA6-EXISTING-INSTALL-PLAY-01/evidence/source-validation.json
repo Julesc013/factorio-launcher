@@ -1,0 +1,18 @@
+{
+  "schema": "facman.existing_install_source_validation.v1",
+  "status": "pass",
+  "base_revision": "c574267afd06e05eb39b829da75ab1ecc68bbff8",
+  "source_files": {
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "6d56d61770dc59d598c5d7ad0e994ad4836d5e3d9a61d54716082a6cf489de14",
+    "tests/native/flb_factorio_instance_model_smoke.cpp": "bde0e303eb03dd666b263e08c497f90d913aa33616089a7d85432baaa8ef6714"
+  },
+  "validation_receipt": "source-validation-custody.zip:existing-install-final-validation-rx2.json",
+  "custody_sha256": "1a2090aa465663b3daf2b8732c86c2e48e3fe52b929be49f30b3350ea7080faa",
+  "native_tests": 8,
+  "reused_prechange_seams": 3,
+  "python_modules": 27,
+  "python_tests": 245,
+  "python_skipped": 3,
+  "real_game_or_human_claim": false,
+  "integration_pending": true
+}

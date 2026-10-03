@@ -453,3 +453,22 @@ formatting, diff checks and the complete strict repository check also pass. The 
 remains active for journaled classic-to-first-epoch bootstrap, actual external
 continuation from produced packages, epoch repair/rollback/retirement,
 supported-platform qualification and human/product acceptance.
+
+
+## 2026-10-04 exact-head integration gate and execution slot
+
+Reviewed PR #343 is pushed at
+`cdc4065247bd30826f363d90657d67b82c8448e7`. Genuine produced B remains
+`7096f28d976151ff7f77cbae898ce6b93055d5a2`; its separately identified committed
+harness completed Windows classic and real-epoch interruption/recovery,
+repair/reapply/rollback and public retirement. Independent runtime assurance
+hash-binds all 321 retained fixture files. These are not integrated-source,
+full supported-profile, human or release acceptance.
+
+The exact-head protected-control check currently refuses integration until the
+repository owner supplies the supported issue comment. One observer owns the
+remaining required CI. This WorkUnit records that specific blocked integration
+action and releases its implementation WIP slot; it retains all other missing
+qualification and close_after requirements. It is not complete. Independent
+existing-install Play work proceeds from the latest integrated dev while the
+branch, packages, failures and evidence remain preserved.

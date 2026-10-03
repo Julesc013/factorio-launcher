@@ -22,7 +22,7 @@ last_reviewed: 2026-09-22
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
 - WIP: 4/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/9; in-flight work: 4
+- Near-term queued work: 6/9; in-flight work: 4
 
 ## North star
 
@@ -67,15 +67,15 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01` [P1/M] — Register scenario hosts and approved input custody
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
+- [ ] `FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01` [P1/M] — Complete existing-install readiness and launch isolation
+  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
+  - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
 - [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01` [P1/M] — Finish bounded managed install update repair and removal
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Implement installation/reconciliation/update/repair/removal over promoted USK mechanisms for the admitted local source formats.
 - [ ] `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01` [P1/M] — Journal native setup effects and recover across setup phases
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback.
-- [ ] `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01` [P1/M] — Complete independent FacMan self-maintenance
-  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
-  - Outcome: Update, repair and remove FacMan independently of Factorio install/content authority.
 
 ## Ready queue
 
@@ -102,7 +102,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Admitted backlog
 
-35 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
+34 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
 
 ## Blocking decisions
 

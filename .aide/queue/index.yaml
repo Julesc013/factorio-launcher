@@ -3,6 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01
+    status: active
+    lifecycle_state: active
+    title: Complete existing-install readiness and launch isolation
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence
   - id: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
     status: active_automated
     lifecycle_state: active_automated
@@ -46,8 +52,8 @@ items:
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence
   - id: FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01
-    status: active
-    lifecycle_state: active
+    status: blocked
+    lifecycle_state: blocked
     title: Complete independent FacMan self-maintenance
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/evidence
@@ -243,12 +249,6 @@ items:
     title: Prepare candidate custody trust and servicing
     task: .aide/queue/next/FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01/evidence
-  - id: FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01
-    status: planned
-    lifecycle_state: planned
-    title: Complete existing-install readiness and launch isolation
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence
   - id: FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01
     status: planned
     lifecycle_state: planned

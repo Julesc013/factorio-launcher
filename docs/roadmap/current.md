@@ -450,6 +450,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Require exact USK/ULK source reachable from each provider main and package provenance before changing consumer pins.
+- [ ] **FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01** — Complete existing-install readiness and launch isolation
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
 - [x] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -471,7 +475,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`
   - Outcome: Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback.
 - [ ] **FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01** — Complete independent FacMan self-maintenance
-  - State: `active`; priority/size: `P1/M`
+  - State: `blocked`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none; closes after `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
   - Outcome: Update, repair and remove FacMan independently of Factorio install/content authority.
 - [x] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
@@ -571,10 +575,6 @@ independent preparation.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — admitted backlog
 
-- [ ] **FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01** — Complete existing-install readiness and launch isolation
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
 - [ ] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none

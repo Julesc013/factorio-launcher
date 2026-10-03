@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01
 title: Complete existing-install readiness and launch isolation
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -17,7 +17,7 @@ allowed_paths:
   - "tests/**"
   - "docs/**"
   - "apps/**"
-  - ".aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
