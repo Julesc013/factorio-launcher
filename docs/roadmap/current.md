@@ -462,6 +462,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
+- [ ] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Back up selected worlds consistently with exact source identity, stable metadata and owned destination roots.
 - [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01** — Finish bounded managed install update repair and removal
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
@@ -575,10 +579,6 @@ independent preparation.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — admitted backlog
 
-- [ ] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Back up selected worlds consistently with exact source identity, stable metadata and owned destination roots.
 - [ ] **FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01** — Build matching Terminal and Desktop delivery profiles
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`

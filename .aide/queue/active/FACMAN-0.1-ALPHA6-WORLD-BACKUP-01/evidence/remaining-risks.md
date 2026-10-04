@@ -6,8 +6,13 @@
   before the evidence update.
   Prior candidate `36173342608` failed its Linux parent-swap case at `28f22163`
   and was cancelled. Earlier successful candidates do not qualify this change.
-- The available-space preflight is implemented and write failures are typed,
-  but low-space host behavior has not been reproduced in a package test.
+- Real low-space refusal and recovery now pass against an admitted produced
+  Linux CLI on WSL. The reusable regression exhausts a private 4 MiB tmpfs,
+  preserves the source and prior backup/manifest, refuses before effects,
+  and successfully retries the identical target after capacity is restored.
+  Its exact package/source custody and independent reviews are retained in
+  `real-low-space.v1.json`. This is PR371-tree integration preview evidence;
+  the final combined-head product-family candidate remains required.
 - Source consistency is enforced by a pinned object, repeat SHA-256 reads,
   path identity and modification time checks. A hostile writer that changes
   and restores both bytes and timestamps during the narrow final interval is

@@ -89,3 +89,43 @@ paths contain no published ZIP or sidecar and recovery rolls back safely.
   was dispatched at source correction `07ec7159`, then cancellation was
   requested before the evidence update. The final combined-head candidate
   still has to be run; this local evidence is not package qualification.
+
+## 2026-10-04 real kernel low-space refusal and identical-target retry
+
+The existing backup engine is integrated. This continuation adds an explicit
+produced-package regression, without rebuilding that engine or changing the
+filesystem-lock policy. PR371 normally integrated source
+`28843ba31aa6f9e83ab370a4a70ae5c8dba34f78` into dev
+`6668ef2c55f0e59ed40782121b832878c71e40c9`; both have source tree
+`8a70f7ebb7c1aa74c1b68c521c3ddc452c5db696`.
+
+The supplied Linux CLI came from the already required successful Linux-native
+job in run `37167358630`, artifact `11289922457`. Its synthetic PR merge
+`bd6678ee384af052e2739a814ab6950eb8afdb73` has that same exact tree and parents
+`eada9df6eed0353671500e6d5a8e0bc0365300d8` and the PR371 source above. Archive
+and executable digests, provenance admission, commands and raw outputs are
+bound in `real-low-space.v1.json` and its public validation custody archive.
+
+`tests/integration/facman_world_backup_low_space.py` passed once against those
+produced bytes on Ubuntu 24.04 WSL2, with assertions enabled and bytecode
+disabled. It uses an isolated mount namespace and two separate 4 MiB tmpfs
+volumes. The destination reached actual kernel ENOSPC and zero free bytes;
+the native backup refused with `persistent_write_refused`, the exact
+insufficient-space reason, and `refused_before_effects`. The source and prior
+backup/manifest remained unchanged, with no partial target or staging residue.
+Removing only the known filler restored 4,186,112 bytes of free space; the
+identical previously refused target and arguments then succeeded. Package and
+public install-fixture inventories remained unchanged.
+
+Independent static and retained-runtime reviews passed. Both mounts unmounted
+successfully. A separate read-only postcheck in the original namespace found
+no mounted proof children, empty underlying directories and an unchanged
+original starter-save fixture. The prior policy refusal on a WSL9fs workspace
+and earlier diagnostic attempts remain retained in the original owned root;
+they were not relabeled as passes or replayed.
+
+The original root and task branch are reused from the latest integrated dev.
+No new task root, native build, candidate dispatch or CI rerun was needed for
+this regression. These results qualify the supplied CLI regression on WSL;
+final combined-head product-family, supported physical host, real game,
+human-experience and release qualification remain separate and unclaimed.

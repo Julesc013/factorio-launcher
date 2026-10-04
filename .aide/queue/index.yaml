@@ -81,6 +81,12 @@ items:
     title: Close public workspace migration and recovery
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence
+  - id: FACMAN-0.1-ALPHA6-WORLD-BACKUP-01
+    status: active
+    lifecycle_state: active
+    title: Create consistent world backups and inspectable bundles
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence
   - id: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
     status: closed
     lifecycle_state: closed
@@ -261,12 +267,6 @@ items:
     title: Build matching Terminal and Desktop delivery profiles
     task: .aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01/evidence
-  - id: FACMAN-0.1-ALPHA6-WORLD-BACKUP-01
-    status: planned
-    lifecycle_state: planned
-    title: Create consistent world backups and inspectable bundles
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence
   - id: FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01
     status: planned
     lifecycle_state: planned
