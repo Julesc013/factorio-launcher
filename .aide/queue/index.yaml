@@ -87,6 +87,12 @@ items:
     title: Create consistent world backups and inspectable bundles
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence
+  - id: FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01
+    status: active
+    lifecycle_state: active
+    title: Restore worlds and apply explicit retention safely
+    task: .aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence
   - id: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
     status: closed
     lifecycle_state: closed
@@ -393,12 +399,6 @@ items:
     title: Complete ordinary WinForms setup and instance journeys
     task: .aide/queue/next/FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01/evidence
-  - id: FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01
-    status: planned
-    lifecycle_state: planned
-    title: Restore worlds and apply explicit retention safely
-    task: .aide/queue/next/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence
   - id: FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01
     status: planned
     lifecycle_state: planned

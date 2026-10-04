@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01
 title: Restore worlds and apply explicit retention safely
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -12,6 +12,11 @@ objective: "Restore and import selected world bundles using validated plans, ato
 source_bundles:
   - "F10"
 allowed_paths:
+  - "todo.md"
+  - "tools/generate_plan_views.py"
+  - "release/index/plan.v1.toml"
+  - ".aide/queue/index.yaml"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/**"
   - "apps/**"
   - "content/factorio/strings/en-US.toml"
   - "README.md"
@@ -41,3 +46,4 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+active_at: 2026-10-04T09:30:35Z

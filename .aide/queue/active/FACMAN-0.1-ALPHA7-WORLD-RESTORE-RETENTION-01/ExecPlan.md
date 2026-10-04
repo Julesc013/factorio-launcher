@@ -15,3 +15,18 @@
 Current user authority includes necessary source changes, tests, docs, sync,
 commits and normal checked merges. Publication and genuine experience remain
 separate. Unavailable host/input cells block their own qualification only.
+
+2026-10-04: Retention proof passed12cases/100commands on genuine803 Linux bytes.
+Restore SIGKILL proof exposed a committing-state recovery refusal (8commands);
+static-reviewed repair enters recovery_required before rollback intent without
+relaxing normal state guards. Source is applied; repaired-executable and final
+package qualification, import stale-source proof and original full scope remain
+open. Public custody binds these exact positive/negative observations.
+
+2026-10-04: Existing PR374 integrated with required automatic merge checks;
+restore source preparation stopped on invalid admission metadata and is retained.
+Corrected next horizon and explicitly selected programme engineering admission
+keep the Alpha7 epic and Alpha6 active release. Added independent-reviewed import
+plan-lifetime regressions and a bounded test pause; actual repaired-executable
+qualification remains pending. Windows write prevention is distinguished from
+POSIX same-object mutation/refusal. Original acceptance and external gates stay open.

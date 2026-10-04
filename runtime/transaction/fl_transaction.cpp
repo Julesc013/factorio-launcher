@@ -1952,6 +1952,14 @@ Outcome apply(const fs::path& workspace, const std::string& id)
             return Refusal {"recovery_staging_unrecognized", "Transaction staging marker is invalid", detail, false};
         }
     }
+    // A process can die before publication while its journal says committing.
+    // Reconcile that uncertainty only in recovery, after target absence and
+    // staging ownership are checked; normal committing rollback stays forbidden.
+    if (record.state == State::committing &&
+        !advance(workspace, record, "recovery_required", "unpublished_commit_recovery_selected", detail)) {
+        unlock();
+        return Refusal {"recovery_write_refused", "Prepublication recovery could not be durably recorded", detail, true};
+    }
     if (!advance(workspace, record, "rollback_required", "recovery_apply_started", detail)) {
         unlock();
         return Refusal {"recovery_write_refused", "Recovery intent could not be durably recorded", detail, true};
