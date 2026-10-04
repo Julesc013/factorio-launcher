@@ -687,7 +687,7 @@ facman::core::Result<std::string> profiles_create(const fs::path& workspace, con
     if (request.template_id != "vanilla") return failure("unknown_template", "Instance template is not shipped");
     auto settings = apply_patch(Settings {}, request.values);
     if (!settings) return failure(settings.error().code, settings.error().message, fs::u8path(settings.error().path));
-    Profile profile {request.profile_id, request.template_id, settings.take_value(), false, {}};
+    Profile profile {request.profile_id, request.template_id, settings.take_value(), false, {}, {}};
     auto written = write_profile_new(workspace, profile);
     if (!written) return failure(written.error().code, written.error().message, fs::u8path(written.error().path));
     return facman::core::Result<std::string>::success(profile_report("profiles.create", profile, true));
