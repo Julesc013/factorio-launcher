@@ -114,8 +114,8 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_alpha6_workspace_migration_recovery`. **Primary active WorkUnit:** `FACMAN-0.1-ALPHA6-WORLD-BACKUP-01`. **Next:** `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
-Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-WORLD-BACKUP-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`.
+**Phase:** `facman_0_1_alpha6_workspace_migration_recovery`. **Primary active WorkUnit:** `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`. **Next:** `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
+Active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`.
 
 Current release obligations come only from
 `release/index/active_release_view.v1.toml`.
