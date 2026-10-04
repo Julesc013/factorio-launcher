@@ -83,4 +83,49 @@ std::optional<std::string> effective_profile_text(const json::Value& report)
     return output.str();
 }
 
+std::optional<std::string> instance_readiness_text(const json::Value& report)
+{
+    const json::Value* readiness = report.find("instance_readiness");
+    if (readiness == nullptr) readiness = &report;
+    if (!readiness->is_object() || text_field(*readiness, "schema") != "factorio.instance_readiness.v1") {
+        return std::nullopt;
+    }
+    const json::Value* dimensions = readiness->find("dimensions");
+    const json::Value* blockers = readiness->find("blockers");
+    const json::Value* actions = readiness->find("safe_next_actions");
+    if (dimensions == nullptr || !dimensions->is_array() || blockers == nullptr || !blockers->is_array() ||
+        actions == nullptr || !actions->is_array()) return std::nullopt;
+    std::ostringstream output;
+    output << "Instance " << text_field(*readiness, "instance_id") << " ("
+           << text_field(*readiness, "launch_intent") << " readiness)\n";
+    output << "  Overall: " << text_field(*readiness, "overall_state")
+           << "\n  Configuration: " << text_field(*readiness, "configuration_state")
+           << "\n  Preparation: " << text_field(*readiness, "preparation_state")
+           << "\n  Play authority: " << text_field(*readiness, "play_authority_state") << '\n';
+    output << "Dimensions:\n";
+    for (std::size_t index = 0; index < dimensions->size(); ++index) {
+        const json::Value* item = dimensions->at(index);
+        if (item == nullptr || !item->is_object()) return std::nullopt;
+        output << "  " << text_field(*item, "id") << ": " << text_field(*item, "state")
+               << " - " << text_field(*item, "summary") << '\n';
+    }
+    if (blockers->size() != 0U) output << "Blockers:\n";
+    for (std::size_t index = 0; index < blockers->size(); ++index) {
+        const json::Value* item = blockers->at(index);
+        if (item == nullptr || !item->is_object()) return std::nullopt;
+        output << "  [" << text_field(*item, "code") << "] " << text_field(*item, "reason")
+               << "\n    " << text_field(*item, "detail")
+               << "\n    Next action: " << text_field(*item, "safe_next_action") << '\n';
+    }
+    if (actions->size() != 0U) output << "Next actions:\n";
+    for (std::size_t index = 0; index < actions->size(); ++index) {
+        const json::Value* item = actions->at(index);
+        if (item == nullptr || !item->is_object()) return std::nullopt;
+        output << "  [" << text_field(*item, "id") << "] " << text_field(*item, "label") << '\n';
+        const json::Value* command = item->find("command");
+        if (command != nullptr && !command->is_null()) output << "    " << text_field(*item, "command") << '\n';
+    }
+    return output.str();
+}
+
 } // namespace facman::cli

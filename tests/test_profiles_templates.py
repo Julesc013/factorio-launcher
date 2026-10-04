@@ -40,6 +40,60 @@ def create_instance(workspace: Path) -> Path:
 
 
 class ProfileTemplateTests(unittest.TestCase):
+    def test_menu_readiness_blocks_profile_and_override_save_selection(self) -> None:
+        for selected, options in (
+            ("load_save", ("--selection-mode", "load-save", "--selection", "selected.zip")),
+            ("benchmark", ("--selection-mode", "benchmark-save", "--selection", "selected.zip",
+                           "--launch-mode", "benchmark-preview", "--benchmark-ticks", "1")),
+        ):
+            for inherited in (False, True):
+                with self.subTest(intent=selected, inherited=inherited):
+                    with tempfile.TemporaryDirectory(prefix="facman menu intent ") as value:
+                        workspace = Path(value)
+                        instance = create_instance(workspace)
+                        baseline = invoke_json(workspace, "instances", "readiness", "main")
+                        self.assertEqual("satisfied", next(
+                            item["state"] for item in baseline["dimensions"] if item["id"] == "profile"))
+                        if inherited:
+                            invoke_json(workspace, "profiles", "create", "selected", *options)
+                            invoke_json(workspace, "profiles", "apply", "main", "selected")
+                        else:
+                            invoke_json(workspace, "profiles", "apply", "main", "gui", *options)
+                        before = {p.relative_to(workspace): p.read_bytes()
+                                  for p in workspace.rglob("*") if p.is_file()}
+                        readiness = invoke_json(workspace, "instances", "readiness", "main")
+                        assert_schema(self, readiness, "factorio_instance_readiness.v1.schema.json")
+                        self.assertEqual("menu", readiness["launch_intent"])
+                        self.assertEqual("blocked", readiness["configuration_state"])
+                        self.assertEqual("blocked", next(
+                            item["state"] for item in readiness["dimensions"] if item["id"] == "profile"))
+                        blocker = next(item for item in readiness["blockers"]
+                                       if item["code"] == "instance_launch_intent_mismatch")
+                        self.assertIn(selected, blocker["detail"])
+                        self.assertEqual("configure_menu_profile", blocker["safe_next_action"])
+                        self.assertNotEqual(baseline["readiness_digest"], readiness["readiness_digest"])
+                        described = invoke_json(workspace, "instances", "describe", "main")
+                        self.assertEqual(readiness, described["instance_readiness"])
+                        for action in ("readiness", "describe"):
+                            code, text, error = invoke([
+                                "--workspace", str(workspace), "instances", action, "main"])
+                            self.assertEqual(0, code, error)
+                            self.assertIn("Configuration: blocked", text)
+                            self.assertIn("instance_launch_intent_mismatch", text)
+                            self.assertIn(blocker["detail"], text)
+                            self.assertIn("configure_menu_profile", text)
+                            self.assertIn("facman profiles plan main gui --json", text)
+                        self.assertTrue(all(v is False for v in readiness["operation_guarantees"].values()))
+                        self.assertFalse((instance / "saves" / "selected.zip").exists())
+                        self.assertEqual(before, {p.relative_to(workspace): p.read_bytes()
+                                                 for p in workspace.rglob("*") if p.is_file()})
+                        invoke_json(workspace, "profiles", "apply", "main", "gui")
+                        restored = invoke_json(workspace, "instances", "readiness", "main")
+                        self.assertEqual("satisfied", next(
+                            item["state"] for item in restored["dimensions"] if item["id"] == "profile"))
+                        self.assertNotIn("instance_launch_intent_mismatch",
+                                         {item["code"] for item in restored["blockers"]})
+
     def test_human_profile_plan_and_apply_show_effective_values_and_sources(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman profile human ") as value:
             workspace = Path(value)

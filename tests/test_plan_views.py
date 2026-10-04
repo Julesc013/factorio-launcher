@@ -24,6 +24,12 @@ class PlanViewTests(unittest.TestCase):
         unit = next(item for item in plan["workunit"]
                     if item["id"] == "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01")
         programme = plan["execution_programme"]
+        # Replace the current admitted primary in this copied fixture; do not
+        # accidentally add a second one when the programme advances.
+        for previous in plan["workunit"]:
+            if (previous["id"] == programme.get("primary_workunit")
+                    and previous["id"] != unit["id"] and previous["status"] == "active"):
+                previous["status"] = "planned"
         programme.update(primary_workunit=unit["id"], status="implementation_active",
                          engineering_and_normal_integration_authorized=True)
         unit.update(status="active", horizon="next", execution_programme=programme["id"],

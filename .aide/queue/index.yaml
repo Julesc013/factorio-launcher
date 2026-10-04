@@ -87,6 +87,12 @@ items:
     title: Create consistent world backups and inspectable bundles
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence
+  - id: FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01
+    status: active
+    lifecycle_state: active
+    title: Converge Make Ready with selected-save Play
+    task: .aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence
   - id: FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01
     status: passed
     lifecycle_state: closed
@@ -327,12 +333,6 @@ items:
     title: Resolve local content and modpacks reproducibly
     task: .aide/queue/next/FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01/evidence
-  - id: FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01
-    status: planned
-    lifecycle_state: planned
-    title: Converge Make Ready with selected-save Play
-    task: .aide/queue/next/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence
   - id: FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01
     status: planned
     lifecycle_state: planned

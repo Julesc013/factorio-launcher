@@ -13,6 +13,7 @@ namespace facman::cli {
 
 std::string guidance_text(const facman::core::json::Value& report);
 std::optional<std::string> effective_profile_text(const facman::core::json::Value& report);
+std::optional<std::string> instance_readiness_text(const facman::core::json::Value& report);
 
 } // namespace facman::cli
 
