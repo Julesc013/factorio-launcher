@@ -129,3 +129,46 @@ No new task root, native build, candidate dispatch or CI rerun was needed for
 this regression. These results qualify the supplied CLI regression on WSL;
 final combined-head product-family, supported physical host, real game,
 human-experience and release qualification remain separate and unclaimed.
+
+## 2026-10-04 final produced files and same-object concurrent writes
+
+Product candidate `37172494677/1` passed all three platform jobs and its exact
+six-asset bundle at source `803bd98af05c7343977934a7c1b21c67ed897720`, tree
+`0a038464f24deb5ff946b091dd7b48a78a0ed995`. Artifact `11292276358` was downloaded
+once. Its recorded SHA-256, all six delivery files, platform provenance and
+payload equivalence passed the existing bundle verifier.
+
+The original-acceptance audit identified a missing direct same-object write
+oracle. `test_backup_blocks_or_refuses_same_object_content_write` now waits
+for the original staged bytes. On POSIX it writes a CRC-valid changed save
+to the same inode, preserves size and restores modification time, then checks
+`save_source_changed`, absence of publication and preserved prior backup and
+manifest. Windows checks both CRT EACCES and native sharing violation 32,
+then verifies the successful original-byte backup and unchanged prior bundle.
+The first Windows attempt incorrectly expected Python's CRT exception to
+expose `winerror`; its failure is preserved, and the corrected native oracle
+passed against the final produced Windows CLI.
+
+All 19 save-transfer tests passed without skips against the final produced
+Linux CLI. The reviewed real low-space regression then passed against that
+same executable: actual kernel ENOSPC, typed preflight refusal, preserved
+source/prior bundle, and identical-target success after restoring capacity.
+Package and public fixture inventories remained unchanged. This does not
+claim observed real exhaustion during a copy or sidecar flush.
+
+Windows and WSL9fs extraction could not preserve the distinct Linux names
+`FacMan` and `facman`. Those failed attempts were retained. The reviewed
+recovery used a private 128 MiB tmpfs beneath the existing owned task root,
+with a private PID namespace containing nested worker sessions and bounded
+deadlines. Native archive file modes, every product manifest hash and source
+identity passed. Both low-space mounts and the product mount unmounted; an
+independent parent postcheck found three empty, unmounted underlying children
+and the unchanged original starter fixture. No new task root, build or
+additional candidate was created.
+
+The final static and runtime reviews passed. Exact results, public logs and
+review custody are bound in `produced-package-acceptance.v1.json`. This
+follow-up changes tests and evidence only; the retained assets remain
+final803 observations, with their original provenance. Current-head required
+checks, normal integration and canonical closeout still gate WorldBackup;
+physical-host, game, human-experience and release authority remain separate.

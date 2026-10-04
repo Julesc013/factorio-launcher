@@ -1,18 +1,21 @@
 # World backup remaining gates
 
-- Final combined-head produced-package candidate, current-head required
-  checks, final review, and dev integration remain open. Candidate
-  `36175342699` at source correction `07ec7159` had cancellation requested
-  before the evidence update.
-  Prior candidate `36173342608` failed its Linux parent-swap case at `28f22163`
-  and was cancelled. Earlier successful candidates do not qualify this change.
+- The combined-source candidate `37172494677/1` passed with six exact assets
+  at source `803bd98af05c7343977934a7c1b21c67ed897720`, tree
+  `0a038464f24deb5ff946b091dd7b48a78a0ed995`. Its produced Linux CLI passed
+  all 19 save-transfer tests and real low-space refusal/same-target recovery;
+  its Windows CLI passed the new same-object write regression. Independent
+  runtime review passed. Current-head required checks, normal dev integration
+  and canonical acceptance closeout remain open. Prior failed/cancelled
+  candidates and failed local extraction attempts remain retained.
 - Real low-space refusal and recovery now pass against an admitted produced
   Linux CLI on WSL. The reusable regression exhausts a private 4 MiB tmpfs,
   preserves the source and prior backup/manifest, refuses before effects,
   and successfully retries the identical target after capacity is restored.
-  Its exact package/source custody and independent reviews are retained in
-  `real-low-space.v1.json`. This is PR371-tree integration preview evidence;
-  the final combined-head product-family candidate remains required.
+  The earlier PR371-tree proof remains in `real-low-space.v1.json`; exact
+  final803 delivery-file custody and the additional observed regressions are
+  retained in `produced-package-acceptance.v1.json`. Real ENOSPC is observed
+  before the backup preflight, rather than during copy or sidecar flush.
 - Source consistency is enforced by a pinned object, repeat SHA-256 reads,
   path identity and modification time checks. A hostile writer that changes
   and restores both bytes and timestamps during the narrow final interval is
@@ -21,8 +24,12 @@
 - Publication uses an owned staging root and no-clobber path operation under
   the existing, pinned parent explicitly selected by `--to`. The source
   workspace remains owned. A POSIX parent swap during the test pause is now
-  exercised locally and refused before publication; hosted Linux and macOS
-  package results remain pending. A namespace swap in the narrow interval
+  exercised against the produced Linux CLI and refused before publication;
+  the final803 macOS candidate's native save-transfer lane also passed. A namespace swap in the narrow interval
   between the final revalidation and publish call remains a residual race.
 - World restore, retention, and cross-platform native GUI use are separate
   successor outcomes; this slice does not close them.
+- The additional regression changes only tests and evidence. Final803 assets
+  retain their actual source revision; they are not represented as packages
+  built from a later commit, nor as proof of reproducible bytes. Final release
+  qualification still requires its own exact delivery files.
