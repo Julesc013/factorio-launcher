@@ -5580,7 +5580,7 @@
             "required": true
           }
         ],
-        "usage": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
+        "usage": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json"
       },
       "command_id": "profiles.apply",
       "deprecation": "active",
@@ -5616,6 +5616,15 @@
           "name": "expected_manifest_sha256",
           "repeatable": false,
           "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_plan_sha256",
+          "repeatable": false,
+          "request_field": "expected_plan_sha256",
           "required": false,
           "type": "sha256"
         },
@@ -6177,7 +6186,7 @@
             "required": true
           }
         ],
-        "usage": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
+        "usage": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json"
       },
       "command_id": "profiles.plan",
       "deprecation": "active",
@@ -6213,6 +6222,15 @@
           "name": "expected_manifest_sha256",
           "repeatable": false,
           "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_plan_sha256",
+          "repeatable": false,
+          "request_field": "expected_plan_sha256",
           "required": false,
           "type": "sha256"
         },
@@ -9645,5 +9663,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "c7c6b8b02c4543f360fc958a3d8618cce8250a4b2edcf114b183c407de967c50"
+  "source_digest": "ef8fd976e77d1141ecaf54ee128c47183a0e984ad81e205544bda9a9a55904db"
 }

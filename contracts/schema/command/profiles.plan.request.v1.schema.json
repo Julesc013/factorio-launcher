@@ -27,6 +27,12 @@
       "pattern": "^[0-9a-f]{64}$",
       "type": "string"
     },
+    "expected_plan_sha256": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
     "graphics_quality": {
       "enum": [
         "low",
