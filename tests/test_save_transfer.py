@@ -404,7 +404,9 @@ class SaveTransferTests(unittest.TestCase):
                     self.assertEqual((target / "saves" / "world.zip").read_bytes(), original_save)
                 else:
                     self.assertEqual(process.returncode, 1, stderr + stdout)
-                    self.assertEqual(json.loads(stdout)["refusal"]["code"], "persistent_write_refused")
+                    response = json.loads(stdout)
+                    self.assertEqual(response["schema"], "facman.transport_response.v2")
+                    self.assertEqual(response["payload"]["refusal"]["code"], "persistent_write_refused")
                     self.assertFalse(target.exists())
                 self.assertEqual(list((workspace / "instances").glob(".facman-instance-import-*")), [])
                 self.assertEqual(save.read_bytes(), original_save)

@@ -40,3 +40,12 @@ test is explicitly inapplicable on Windows. All raw issued/output/kill
 evidence and review are retained in native-recovery-custody.zip. Windows
 sharing denial is not POSIX changed-object refusal. POSIX runtime, repaired
 produced-package and whole-unit qualification remain open.
+
+2026-10-04: PR375 source064 Linux native/coverage jobs stopped on a new
+import test oracle KeyError. Direct child output retains its transport envelope;
+the invoke helper projects that envelope to a payload. Corrected only the direct
+assertion to require the transport schema and payload refusal code. Original
+failed jobs/controller and source are frozen in ci-failure-custody.zip. Cleanup
+and identical-target import retry were not reached in those failed POSIX runs;
+new-head hosted qualification is required. No production change, native rebuild,
+manual CI rerun, candidate dispatch or integration occurred.

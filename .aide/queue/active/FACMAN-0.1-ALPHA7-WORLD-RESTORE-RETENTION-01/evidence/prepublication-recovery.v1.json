@@ -33,7 +33,7 @@
       "runtime/transaction/fl_transaction.cpp": "db06baf41e6896c20eb0c23864440ea6e3a1b5e2998fa38886c92de32b370120",
       "runtime/factorio/saves/flb_factorio_save_operations.cpp": "afd1d4b67f9783922240fea436e9a5a2f08709a53913b7b7772d314cfa964b4a",
       "tests/native/fl_transaction_session_smoke.cpp": "e5b00a97a120f8765c85d31411b2479443d9a55228f83dbc28c0d0ce1b37ec62",
-      "tests/test_save_transfer.py": "8a8b19d053975dd7ba9928884df480d50a02fcc5fe5624db12b197133b29a5c9"
+      "tests/test_save_transfer.py": "49ceec21a826a503a20af4177abf80ba21ea82b8dd2f6c3a0baf03c132e348df"
     },
     "native_windows_runtime_qualified": true,
     "qualification_scope": "Scoped Windows local executable accepted; all-platform/package qualification remains open"
@@ -466,5 +466,24 @@
   "native_build_attempts": {
     "corrected_target_PASS": 1,
     "initial_wrong_target_FAIL_retained": 1
+  },
+  "source_test_correction": {
+    "source_head": "064cbe77b6bedd2079911bc31f14de5550555f92",
+    "run": 37195594826,
+    "jobs": [
+      111416672831,
+      111416672971
+    ],
+    "result": "CONFIRMED_TEST_ORACLE_FAILURE",
+    "detail": "Direct Popen JSON is facman.transport_response.v2; assertion incorrectly addressed unwrapped refusal. Exit1 observed; cleanup/retry assertions were not reached. Fix addresses payload.refusal and requires transport schema.",
+    "applied": true,
+    "tests/test_save_transfer.py_sha256": "49ceec21a826a503a20af4177abf80ba21ea82b8dd2f6c3a0baf03c132e348df",
+    "custody": ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/ci-failure-custody.zip",
+    "custody_sha256": "48f67b4fcf0d0238ae2ab4798798731585186d99e1aec161fd247e1afaf8d49c",
+    "custody_members": 10,
+    "production_changes": 0,
+    "native_builds": 0,
+    "reruns": 0,
+    "POSIX_runtime_qualified": false
   }
 }
