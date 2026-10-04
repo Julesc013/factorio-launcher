@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01
 title: Complete existing-install readiness and launch isolation
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -12,6 +12,12 @@ objective: "Select an existing approved install, construct isolated instance sta
 source_bundles:
   - "F06"
 allowed_paths:
+  - "README.md"
+  - ".aide/memory/project-state*"
+  - "release/index/current_state.v1.toml"
+  - "release/index/plan.v1.toml"
+  - ".aide/queue/index.yaml"
+  - "todo.md"
   - "runtime/**"
   - "contracts/**"
   - "tests/**"
@@ -34,3 +40,8 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+verified_pending_closeout_at: 2026-10-04T00:57:31Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-10-04T00:57:32Z
+closed_at: 2026-10-04T00:57:32Z

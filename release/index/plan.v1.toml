@@ -249,13 +249,13 @@ evidence = [
 id = "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01"
 title = "Complete existing-install readiness and launch isolation"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "active"
+status = "complete"
 horizon = "next"
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
 branch = "task/facman-existing-install-play-01"
-base_revision = "78de939f19d8c165023358d4dac4c7d26ef7283d"
+base_revision = "eada9df6eed0353671500e6d5a8e0bc0365300d8"
 repos = ["FacMan"]
 outcome = """Select an existing approved install, construct isolated instance state and reach a typed ready/blocked \
 outcome without changing foreign state."""
@@ -275,6 +275,11 @@ outcome without changing foreign state.""",
 actual runtime seams.""",
 ]
 
+
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence/integration-closeout.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence/integration-validation-custody.zip",
+]
 
 [[workunit]]
 id = "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01"

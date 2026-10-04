@@ -88,3 +88,19 @@ control is changed. Windows native fixture names include the process id and
 skip existing directories, preserving residue from earlier failed runs.
 The attempted stable-root drive mapping was refused by the provider's local
 filesystem gate and removed; qualification uses the original local volume.
+
+## Canonical acceptance closure
+
+Both original source/runtime criteria are satisfied by the retained audit and
+non-authoring review at source `13299fcf`. PR #370 normally merged that exact
+source/tree at `eada9df6` after every required context passed. This continuation
+uses that latest integrated dev base and the same owned root; prior source and
+base bindings remain in immutable receipts. The normal verify/review/close
+transitions transcribe the existing independent acceptance decision and exact
+checked integration. They do not supply a new self-approval or human verdict.
+
+The canonical WorkUnit is complete for its typed readiness and runtime seams.
+Overall real Play remains blocked until Alpha7 obtains its exact packaged
+input/host/game/menu acceptance. The PR343 owner gate, supported platform, human
+experience and release gates remain open. Automatic merge CI is owned by its
+existing controller and is not duplicated by this metadata change.
