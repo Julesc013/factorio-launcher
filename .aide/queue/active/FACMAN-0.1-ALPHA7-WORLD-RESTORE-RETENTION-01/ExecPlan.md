@@ -49,3 +49,19 @@ failed jobs/controller and source are frozen in ci-failure-custody.zip. Cleanup
 and identical-target import retry were not reached in those failed POSIX runs;
 new-head hosted qualification is required. No production change, native rebuild,
 manual CI rerun, candidate dispatch or integration occurred.
+
+2026-10-05: PR375 repair/oracle correction integrated as f6076c5 with required
+automatic merge CI. Corrected POSIX Debug/Release/sanitized55CTest each passed.
+One independently reviewed current-dev unsigned candidate37204014296/1 passed;
+artifact11303618953/six assets and resource companion11304391984/283 files
+were verified. Independent runtime review accepted three produced Linux WSL
+cases/21commands: owned restore SIGKILL before publication, public recovery,
+identical-target retry/no-clobber; retained import archive across path
+replacement; actual POSIX changed-source refusal/cleanup/retry. Worker and
+matching supervisor cleanup postcheck both passed. The preliminary launcher
+false-PASS defect was corrected before execution and retained with its review.
+Public produced-recovery-custody.zip preserves exact raw evidence and source
+bindings; old803 restore FAIL and Windows strict-skip FAIL remain unchanged.
+No new root/build, CI rerun, owner control action, private input or release
+authority. These scoped checks do not close the original WorkUnit; ordinary
+product flows and applicable host/game/human/release gates remain open.
