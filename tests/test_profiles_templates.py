@@ -110,7 +110,7 @@ class ProfileTemplateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="facman profile late input ") as value:
             workspace = Path(value)
             instance = create_instance(workspace)
-            invoke_json(workspace, "profiles", "apply", "main", "gui", "--audio", "disabled")
+            initial_apply = invoke_json(workspace, "profiles", "apply", "main", "gui", "--audio", "disabled")
             invoke_json(workspace, "profiles", "create", "quiet", "--audio", "disabled")
             planned = invoke_json(workspace, "profiles", "plan", "main", "quiet")
             originals = {name: (instance / name).read_bytes()
@@ -149,7 +149,12 @@ class ProfileTemplateTests(unittest.TestCase):
             self.assertEqual(originals, {name: (instance / name).read_bytes() for name in originals})
             self.assertEqual(preserved_profile, profile.read_bytes())
             pending = invoke_json(workspace, "workspace", "recovery", "inspect")["transactions"]
-            transaction = next(item for item in pending if item["command_id"] == "profiles.apply")
+            self.assertEqual("complete", next(item for item in pending
+                                             if item["transaction_id"] == initial_apply["transaction_id"])["state"])
+            interrupted = [item for item in pending if item["command_id"] == "profiles.apply"
+                           and item["transaction_id"] != initial_apply["transaction_id"]]
+            self.assertEqual(1, len(interrupted))
+            transaction = interrupted[0]
             self.assertEqual("recovery_required", transaction["state"])
             stages = tuple(instance.glob(f".profile*-{transaction['transaction_id']}.json"))
             self.assertEqual(2, len(stages))
