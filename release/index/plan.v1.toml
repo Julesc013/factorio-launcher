@@ -255,7 +255,7 @@ priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
 branch = "task/facman-existing-install-play-01"
-base_revision = "c574267afd06e05eb39b829da75ab1ecc68bbff8"
+base_revision = "78de939f19d8c165023358d4dac4c7d26ef7283d"
 repos = ["FacMan"]
 outcome = """Select an existing approved install, construct isolated instance state and reach a typed ready/blocked \
 outcome without changing foreign state."""

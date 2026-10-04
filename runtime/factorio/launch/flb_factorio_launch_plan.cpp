@@ -830,6 +830,10 @@ LaunchPreflightResult preflight_launch(
 
     add_problem_if_missing_directory(result, install.root, "install root does not exist");
     add_problem_if_missing_file(result, install.executable, "install executable does not exist");
+    add_problem_if_missing_file(
+        result,
+        install.root / "data" / "base" / "info.json",
+        "install base identity file is missing");
     add_problem_if_missing_directory(result, instance.local_data_root, "instance data root does not exist");
     add_problem_if_missing_directory(
         result,
