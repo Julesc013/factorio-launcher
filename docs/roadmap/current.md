@@ -450,8 +450,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Require exact USK/ULK source reachable from each provider main and package provenance before changing consumer pins.
-- [ ] **FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01** — Complete existing-install readiness and launch isolation
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01** — Complete existing-install readiness and launch isolation
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
 - [x] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable

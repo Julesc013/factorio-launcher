@@ -808,7 +808,6 @@
       "source_record": "release/index/plan.v1.toml",
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
-        "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
         "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
         "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
       ]
@@ -2727,17 +2726,16 @@
   ],
   "queue": {
     "active_workunits": [
-      "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
       "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
       "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 3,
+      "active": 2,
       "active_automated": 1,
       "blocked": 3,
-      "closed": 29,
+      "closed": 30,
       "planned": 33,
       "superseded": 7
     },
@@ -2745,9 +2743,9 @@
     "records": [
       {
         "id": "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active"
+        "status": "passed"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",

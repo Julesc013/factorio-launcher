@@ -4,8 +4,8 @@ canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
   - id: FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Complete existing-install readiness and launch isolation
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence
