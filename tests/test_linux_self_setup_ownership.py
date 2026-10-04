@@ -605,6 +605,314 @@ class LinuxSelfSetupOwnershipTests(unittest.TestCase):
             self.assertTrue(any(history.rglob("old-target")))
             self.assertEqual(sentinel.read_bytes(), b"preserved world bytes")
 
+    def prepared_rollback_fixture(self, root: Path) -> tuple[Path, Path, Path, Path]:
+        home = root / "home"
+        home.mkdir()
+        first = self.package_script(root, "0.1.0-alpha.5", b"previous executable\n")
+        second = self.package_script(root, "0.1.0-alpha.6", b"candidate executable\n")
+        for script in (first, second):
+            result = self.invoke(script, home, "install", "--yes")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        workspace = home / "workspace"
+        workspace.mkdir()
+        (workspace / "world.zip").write_bytes(b"preserved rollback world bytes")
+        install = home / ".local/opt/facman"
+        return home, first, second, install
+
+    def rollback_move_fault(self, root: Path, home: Path, install: Path,
+                            boundary: str, timing: str) -> tuple[Path, dict[str, str]]:
+        prefix = root / "fault-bin"
+        prefix.mkdir()
+        history = next((home / ".local/state/facman-setup/history").iterdir())
+        destinations = {
+            "pending": str(install / "state/update-pending.v1"),
+            "binding": str(install / "state/update-pending.v1/new-generation-manifest-sha256"),
+            "current": str(install / "current"),
+            "receipt": str(install / "state/installed-state.v1.json"),
+            "authority": str(install / "state/installed-setup.sha256"),
+            "generation": str(install / "state/update-pending.v1/retired-generation"),
+            "handoff": str(history / "entry-handoff.v1"),
+            "setup": str(install / "maintenance/FacManSetup.run"),
+            "history": str(history / "restored-*"),
+        }
+        wrapper = prefix / "mv"
+        wrapper.write_text(
+            "#!/bin/sh\nfor destination do :; done\n"
+            'case "$destination" in\n'
+            '  "$FACMAN_ROLLBACK_FAULT_PATH") fault=true ;;\n'
+            '  *) fault=false ;;\nesac\n'
+            'if [ "$FACMAN_ROLLBACK_FAULT_KIND" = history ]; then\n'
+            '  case "$destination" in "$FACMAN_ROLLBACK_FAULT_HISTORY"/restored-*) fault=true ;; esac\n'
+            'fi\n'
+            'if [ "$fault" = true ] && [ "$FACMAN_ROLLBACK_FAULT_TIMING" = before ]; then\n'
+            '  kill -KILL "$PPID"; exit 0\nfi\n'
+            '/usr/bin/mv "$@" || exit $?\n'
+            'if [ "$fault" = true ] && [ "$FACMAN_ROLLBACK_FAULT_TIMING" = after ]; then\n'
+            '  kill -KILL "$PPID"\nfi\n', encoding="utf-8",
+        )
+        wrapper.chmod(0o755)
+        return prefix, {
+            "FACMAN_ROLLBACK_FAULT_PATH": destinations[boundary],
+            "FACMAN_ROLLBACK_FAULT_KIND": boundary,
+            "FACMAN_ROLLBACK_FAULT_HISTORY": str(history),
+            "FACMAN_ROLLBACK_FAULT_TIMING": timing,
+        }
+
+    def assert_rollback_restored(self, home: Path, first: Path, install: Path) -> None:
+        verified = self.invoke(install / "maintenance/FacManSetup.run", home, "verify")
+        self.assertEqual(verified.returncode, 0, verified.stderr)
+        self.assertEqual(linux_self_setup.sha256(install / "maintenance/FacManSetup.run"),
+                         linux_self_setup.sha256(first))
+        self.assertEqual((install / "current").readlink(),
+                         install / "generations/0.1.0-alpha.5")
+        self.assertFalse((install / "generations/0.1.0-alpha.6").exists())
+        for name in ("facman", "FacMan"):
+            self.assertEqual((home / ".local/bin" / name).readlink(),
+                             install / "current" / name)
+        self.assertEqual((home / "workspace/world.zip").read_bytes(),
+                         b"preserved rollback world bytes")
+        retired = list((home / ".local/state/facman-setup/history").rglob("retired-generation"))
+        self.assertTrue(retired)
+        for generation in retired:
+            self.assertEqual((generation / "facman").read_bytes(), b"candidate executable\n")
+            self.assertEqual((generation / "FacMan").read_bytes(), b"candidate executable\n")
+
+    def test_rollback_recovers_process_loss_at_each_effect_boundary(self) -> None:
+        for boundary in ("pending", "current", "receipt", "authority", "generation",
+                         "handoff", "setup", "history"):
+            for timing in ("before", "after"):
+                with self.subTest(boundary=boundary, timing=timing), tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    home, first, second, install = self.prepared_rollback_fixture(root)
+                    prefix, environment = self.rollback_move_fault(root, home, install, boundary, timing)
+                    installed_setup = install / "maintenance/FacManSetup.run"
+                    interrupted = self.invoke(installed_setup, home, "rollback", "--yes",
+                                              path_prefix=prefix, extra_environment=environment)
+                    self.assertEqual(interrupted.returncode, -9, interrupted.stderr)
+                    if (boundary, timing) == ("pending", "before"):
+                        retried = self.invoke(installed_setup, home, "rollback", "--yes")
+                        self.assertEqual(retried.returncode, 0, retried.stderr)
+                    elif linux_self_setup.sha256(installed_setup) == linux_self_setup.sha256(second):
+                        recovered = self.invoke(installed_setup, home, "recover", "--yes")
+                        self.assertEqual(recovered.returncode, 0, recovered.stderr)
+                    self.assert_rollback_restored(home, first, install)
+
+    def test_rollback_handoff_handles_repeated_cycles_and_prior_removal(self) -> None:
+        for remove_previous in (False, True):
+            with self.subTest(remove_previous=remove_previous), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home, first, second, install = self.prepared_rollback_fixture(root)
+                prefix, environment = self.rollback_move_fault(root, home, install, "setup", "after")
+                for cycle in range(3):
+                    installed_setup = install / "maintenance/FacManSetup.run"
+                    interrupted = self.invoke(installed_setup, home, "rollback", "--yes",
+                                              path_prefix=prefix, extra_environment=environment)
+                    self.assertEqual(interrupted.returncode, -9, interrupted.stderr)
+                    self.assert_rollback_restored(home, first, install)
+                    if remove_previous:
+                        removed = self.invoke(installed_setup, home, "uninstall", "--yes")
+                        self.assertEqual(removed.returncode, 0, removed.stderr)
+                        self.assertFalse(install.exists())
+                    reapplied = self.invoke(second, home, "install", "--yes")
+                    self.assertEqual(reapplied.returncode, 0, reapplied.stderr)
+                    verified = self.invoke(second, home, "verify")
+                    self.assertEqual(verified.returncode, 0, verified.stderr)
+                    if remove_previous and cycle < 2:
+                        removed = self.invoke(second, home, "uninstall", "--yes")
+                        self.assertEqual(removed.returncode, 0, removed.stderr)
+                        self.assertFalse(install.exists())
+                        for script in (first, second):
+                            prepared = self.invoke(script, home, "install", "--yes")
+                            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+                self.assertEqual(len(list((home / ".local/state/facman-setup/history").rglob("retired-generation"))), 3)
+                self.assertEqual((home / "workspace/world.zip").read_bytes(), b"preserved rollback world bytes")
+
+    def test_rollback_preserves_foreign_handoff_and_restoration_staging(self) -> None:
+        for entry in ("handoff", "pointer", "receipt", "authority", "setup"):
+            with self.subTest(entry=entry), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home, first, second, install = self.prepared_rollback_fixture(root)
+                history = next((home / ".local/state/facman-setup/history").iterdir())
+                paths = {
+                    "handoff": history / "entry-handoff.v1/foreign.txt",
+                    "pointer": install / ".restoration-current",
+                    "receipt": install / "state/.restoration-receipt",
+                    "authority": install / "state/.restoration-authority",
+                    "setup": install / "maintenance/.restoration-setup",
+                }
+                foreign = paths[entry]
+                foreign.parent.mkdir(parents=True, exist_ok=True)
+                foreign.write_bytes(b"preserve foreign content")
+                rollback = install / "state/rollback.v1"
+                receipt = (install / "state/installed-state.v1.json").read_bytes()
+                refused = self.invoke(second, home, "rollback", "--yes")
+                self.assertNotEqual(refused.returncode, 0, refused.stdout)
+                self.assertEqual(foreign.read_bytes(), b"preserve foreign content")
+                self.assertTrue(rollback.is_dir())
+                self.assertFalse((install / "state/update-pending.v1").exists())
+                self.assertEqual((install / "state/installed-state.v1.json").read_bytes(), receipt)
+                self.assertEqual(linux_self_setup.sha256(install / "maintenance/FacManSetup.run"),
+                                 linux_self_setup.sha256(second))
+
+    def test_rollback_recovery_refuses_changed_retired_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home, first, second, install = self.prepared_rollback_fixture(root)
+            prefix, environment = self.rollback_move_fault(root, home, install, "generation", "after")
+            installed_setup = install / "maintenance/FacManSetup.run"
+            interrupted = self.invoke(installed_setup, home, "rollback", "--yes",
+                                      path_prefix=prefix, extra_environment=environment)
+            self.assertEqual(interrupted.returncode, -9, interrupted.stderr)
+            changed = install / "state/update-pending.v1/retired-generation/facman"
+            changed.write_bytes(b"preserve changed retired content")
+            refused = self.invoke(installed_setup, home, "recover", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertEqual(changed.read_bytes(), b"preserve changed retired content")
+            self.assertTrue((install / "state/update-pending.v1").is_dir())
+            self.assertEqual(linux_self_setup.sha256(installed_setup), linux_self_setup.sha256(second))
+
+    @unittest.skipUnless(os.environ.get("FACMAN_TEST_PRIVATE_MOUNT_NAMESPACE") == "1",
+                         "not_applicable: requires the owned private mount proof supervisor")
+    def test_rollback_refuses_separately_mounted_history_before_admission(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home, first, second, install = self.prepared_rollback_fixture(root)
+            history = next((home / ".local/state/facman-setup/history").iterdir())
+            subprocess.run(["mount", "-t", "tmpfs", "-o", "size=8m,nodev,nosuid", "tmpfs", str(history)],
+                           check=True, timeout=10)
+            try:
+                self.assertNotEqual(history.stat().st_dev, (install / "state/rollback.v1").stat().st_dev)
+                refused = self.invoke(second, home, "rollback", "--yes")
+                self.assertNotEqual(refused.returncode, 0, refused.stdout)
+                self.assertIn("one filesystem", refused.stderr)
+                self.assertTrue((install / "state/rollback.v1").is_dir())
+                self.assertFalse((install / "state/update-pending.v1").exists())
+                verified = self.invoke(second, home, "verify")
+                self.assertEqual(verified.returncode, 0, verified.stderr)
+            finally:
+                subprocess.run(["umount", str(history)], check=True, timeout=10)
+
+    def test_rollback_restores_older_journal_with_interrupted_manifest_publication(self) -> None:
+        for stage_bytes in (None, 0, 5, 64, 65):
+            with self.subTest(stage_bytes=stage_bytes), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home, first, second, install = self.prepared_rollback_fixture(root)
+                record = install / "state/rollback.v1"
+                digest = (record / "new-generation-manifest-sha256").read_bytes()
+                (record / "new-generation-manifest-sha256").unlink()
+                if stage_bytes is not None:
+                    (record / ".restoration-manifest-binding").write_bytes(digest[:stage_bytes])
+                result = self.invoke(second, home, "rollback", "--yes")
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assert_rollback_restored(home, first, install)
+
+        for timing in ("before", "after"):
+            with self.subTest(publication_loss=timing), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home, first, second, install = self.prepared_rollback_fixture(root)
+                (install / "state/rollback.v1/new-generation-manifest-sha256").unlink()
+                prefix, environment = self.rollback_move_fault(root, home, install, "binding", timing)
+                installed_setup = install / "maintenance/FacManSetup.run"
+                interrupted = self.invoke(installed_setup, home, "rollback", "--yes",
+                                          path_prefix=prefix, extra_environment=environment)
+                self.assertEqual(interrupted.returncode, -9, interrupted.stderr)
+                self.assertEqual((install / "current").readlink(), install / "generations/0.1.0-alpha.6")
+                recovered = self.invoke(installed_setup, home, "recover", "--yes")
+                self.assertEqual(recovered.returncode, 0, recovered.stderr)
+                self.assert_rollback_restored(home, first, install)
+
+    def test_rollback_refuses_foreign_manifest_publication_stage_before_admission(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home, first, second, install = self.prepared_rollback_fixture(root)
+            record = install / "state/rollback.v1"
+            (record / "new-generation-manifest-sha256").unlink()
+            stage = record / ".restoration-manifest-binding"
+            stage.write_bytes(b"preserve foreign staging bytes")
+            refused = self.invoke(second, home, "rollback", "--yes")
+            self.assertNotEqual(refused.returncode, 0, refused.stdout)
+            self.assertEqual(stage.read_bytes(), b"preserve foreign staging bytes")
+            self.assertTrue(record.is_dir())
+            self.assertFalse((install / "state/update-pending.v1").exists())
+            self.assertEqual((install / "current").readlink(), install / "generations/0.1.0-alpha.6")
+            self.assertEqual(linux_self_setup.sha256(install / "maintenance/FacManSetup.run"),
+                             linux_self_setup.sha256(second))
+
+    def test_fixed_rollback_handoff_requires_complete_retired_custody(self) -> None:
+        for phase in ("before_entry_swap", "after_entry_swap", "after_removal"):
+            for missing in ("retired-generation", "new-generation-manifest-sha256"):
+                with self.subTest(phase=phase, missing=missing), tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    home, first, second, install = self.prepared_rollback_fixture(root)
+                    boundary = "handoff" if phase == "before_entry_swap" else "setup"
+                    prefix, environment = self.rollback_move_fault(root, home, install, boundary, "after")
+                    installed_setup = install / "maintenance/FacManSetup.run"
+                    interrupted = self.invoke(installed_setup, home, "rollback", "--yes",
+                                              path_prefix=prefix, extra_environment=environment)
+                    self.assertEqual(interrupted.returncode, -9, interrupted.stderr)
+                    if phase == "after_removal":
+                        removed = self.invoke(installed_setup, home, "uninstall", "--yes")
+                        self.assertEqual(removed.returncode, 0, removed.stderr)
+                        self.assertFalse(install.exists())
+                    history = next((home / ".local/state/facman-setup/history").iterdir())
+                    handoff = history / "entry-handoff.v1"
+                    moved = root / missing
+                    (handoff / missing).rename(moved)
+                    retained = {str(path.relative_to(handoff)): path.read_bytes()
+                                for path in handoff.rglob("*") if path.is_file()}
+                    receipt = ((install / "state/installed-state.v1.json").read_bytes()
+                               if install.exists() else None)
+                    setup_sha = linux_self_setup.sha256(installed_setup) if install.exists() else None
+                    args = ("recover", "--yes") if phase == "before_entry_swap" else ("install", "--yes")
+                    refused = self.invoke(second, home, *args)
+                    self.assertNotEqual(refused.returncode, 0, refused.stdout)
+                    self.assertTrue(moved.exists())
+                    self.assertEqual({str(path.relative_to(handoff)): path.read_bytes()
+                                      for path in handoff.rglob("*") if path.is_file()}, retained)
+                    self.assertEqual((home / "workspace/world.zip").read_bytes(), b"preserved rollback world bytes")
+                    if phase == "after_removal":
+                        self.assertFalse(install.exists())
+                    else:
+                        self.assertEqual((install / "current").readlink(), install / "generations/0.1.0-alpha.5")
+                        self.assertEqual((install / "state/installed-state.v1.json").read_bytes(), receipt)
+                        self.assertEqual(linux_self_setup.sha256(installed_setup), setup_sha)
+
+    @unittest.skipUnless(os.environ.get("FACMAN_TEST_PRIVATE_MOUNT_NAMESPACE") == "1",
+                         "not_applicable: requires the owned private mount proof supervisor")
+    def test_rollback_refuses_same_device_bind_mounts_before_admission(self) -> None:
+        for entry in ("generation", "state", "journal", "history"):
+            with self.subTest(entry=entry), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home, first, second, install = self.prepared_rollback_fixture(root)
+                history = next((home / ".local/state/facman-setup/history").iterdir())
+                mounted = {
+                    "generation": install / "generations/0.1.0-alpha.6",
+                    "state": install / "state",
+                    "journal": install / "state/rollback.v1",
+                    "history": history,
+                }[entry]
+                receipt = (install / "state/installed-state.v1.json").read_bytes()
+                authority = (install / "state/installed-setup.sha256").read_bytes()
+                rollback = install / "state/rollback.v1"
+                journal = {path.name: path.read_bytes() for path in rollback.iterdir()}
+                subprocess.run(["mount", "--bind", str(mounted), str(mounted)], check=True, timeout=10)
+                try:
+                    self.assertEqual(mounted.stat().st_dev, install.stat().st_dev)
+                    refused = self.invoke(second, home, "rollback", "--yes")
+                    self.assertNotEqual(refused.returncode, 0, refused.stdout)
+                    self.assertIn("separately mounted", refused.stderr)
+                    self.assertEqual((install / "current").readlink(), install / "generations/0.1.0-alpha.6")
+                    self.assertEqual((install / "state/installed-state.v1.json").read_bytes(), receipt)
+                    self.assertEqual((install / "state/installed-setup.sha256").read_bytes(), authority)
+                    self.assertEqual(linux_self_setup.sha256(install / "maintenance/FacManSetup.run"),
+                                     linux_self_setup.sha256(second))
+                    self.assertEqual({path.name: path.read_bytes() for path in rollback.iterdir()}, journal)
+                    self.assertFalse((install / "state/update-pending.v1").exists())
+                    self.assertFalse((history / "entry-handoff.v1").exists())
+                    self.assertEqual((home / "workspace/world.zip").read_bytes(), b"preserved rollback world bytes")
+                finally:
+                    subprocess.run(["umount", str(mounted)], check=True, timeout=10)
+
     def test_first_install_cutover_recovers_to_absence_and_can_retry(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
