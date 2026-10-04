@@ -655,7 +655,10 @@ outcome = """Persist and reconcile file/native-integration effects across instal
 interrupted rollback."""
 source_bundles = ["F12"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/integration-checkpoint.json"]
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/integration-checkpoint.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/linux-rollback-restoration-custody.zip",
+]
 queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/task.yaml"
 depends_on = [
   "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",

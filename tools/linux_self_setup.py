@@ -263,6 +263,8 @@ assert_existing_install_owner() {
   receipt="$state/installed-state.v1.json"
   if [ ! -e "$current" ] && [ ! -L "$current" ] &&
      [ ! -e "$receipt" ] && [ ! -L "$receipt" ]; then
+    old_target=''
+    old_version=''
     return 0
   fi
   if [ ! -L "$current" ] || [ ! -f "$receipt" ] || [ -L "$receipt" ]; then
@@ -393,6 +395,8 @@ lock_setup() {
   exec 9>> "$lock_file"
   flock -x 9
   history_root="$lock_root/history/$lock_key"
+  entry_handoff="$history_root/entry-handoff.v1"
+  invoked_setup_sha=$(sha256sum "$0" | cut -d ' ' -f 1)
 }
 
 archive_record() {
@@ -478,12 +482,21 @@ replace_file() {
 point_current() {
   target="$1"
   expected_current="${2:-}"
-  current_staging="$install_root/.current-$$"
-  if [ -e "$current_staging" ] || [ -L "$current_staging" ]; then
+  pointer_staging="${3:-$install_root/.current-$$}"
+  if [ "$pointer_staging" = "$install_root/.restoration-current" ] &&
+     { [ -e "$pointer_staging" ] || [ -L "$pointer_staging" ]; }; then
+    if [ ! -L "$pointer_staging" ] || [ "$(readlink "$pointer_staging")" != "$target" ]; then
+      echo 'refusing foreign Linux Setup restoration pointer staging' >&2
+      return 1
+    fi
+    rm -f "$pointer_staging"
+  fi
+  if [ -e "$pointer_staging" ] || [ -L "$pointer_staging" ]; then
     echo 'refusing a preexisting current staging path' >&2
     return 1
   fi
-  ln -s "$target" "$current_staging"
+  ln -s "$target" "$pointer_staging"
+  current_staging="$pointer_staging"
   if [ -n "$expected_current" ] &&
      { [ ! -L "$current" ] || [ "$(readlink "$current")" != "$expected_current" ]; }; then
     echo 'refusing a changed current pointer at cutover' >&2
@@ -491,6 +504,71 @@ point_current() {
   fi
   mv -fT "$current_staging" "$current"
   current_staging=''
+}
+
+assert_restoration_rename_domain() {
+  # Device numbers alone do not identify Linux bind-mount rename domains.
+  # Refuse before application effects if the required mount query is absent.
+  command -v findmnt >/dev/null 2>&1 || {
+    echo 'restoration requires findmnt to validate mount boundaries' >&2
+    return 1
+  }
+  rename_domain=$(findmnt -n -o ID -T "$1") || return 1
+  case "$rename_domain" in
+    ''|*[!0-9]*) echo 'refusing ambiguous restoration mount identity' >&2; return 1 ;;
+  esac
+  shift
+  for rename_path do
+    path_domain=$(findmnt -n -o ID -T "$rename_path") || return 1
+    if [ "$path_domain" != "$rename_domain" ]; then
+      echo 'refusing separately mounted Linux Setup restoration roots' >&2
+      return 1
+    fi
+  done
+}
+
+assert_manifest_binding_stage() {
+  binding_stage_file="$1"
+  binding_stage_digest="$2"
+  if [ -e "$binding_stage_file" ] || [ -L "$binding_stage_file" ]; then
+    if [ ! -f "$binding_stage_file" ] || [ -L "$binding_stage_file" ] ||
+       [ "$(stat -c %h "$binding_stage_file")" != 1 ]; then
+      echo 'refusing foreign restoration manifest staging' >&2
+      return 1
+    fi
+    binding_stage_bytes=$(wc -c < "$binding_stage_file")
+    if [ "$binding_stage_bytes" -gt 65 ] ||
+       ! printf '%s\n' "$binding_stage_digest" |
+         cmp -s -n "$binding_stage_bytes" - "$binding_stage_file"; then
+      echo 'refusing changed restoration manifest staging bytes' >&2
+      return 1
+    fi
+  fi
+}
+
+publish_manifest_binding() {
+  binding_path="$1/new-generation-manifest-sha256"
+  binding_stage_path="$1/.restoration-manifest-binding"
+  binding_digest="$2"
+  [ ! -e "$binding_path" ] && [ ! -L "$binding_path" ] || return 1
+  assert_manifest_binding_stage "$binding_stage_path" "$binding_digest"
+  if [ -e "$binding_stage_path" ]; then rm -f "$binding_stage_path"; fi
+  (umask 077; set -C; printf '%s\n' "$binding_digest" > "$binding_stage_path")
+  if [ ! -f "$binding_stage_path" ] || [ -L "$binding_stage_path" ] ||
+     [ "$(wc -c < "$binding_stage_path")" != 65 ] ||
+     [ "$(cat "$binding_stage_path")" != "$binding_digest" ]; then
+    echo 'refusing incomplete restoration manifest staging' >&2
+    return 1
+  fi
+  binding_identity=$(stat -c '%d:%i' "$binding_stage_path")
+  mv --no-copy -nT "$binding_stage_path" "$binding_path"
+  if [ -e "$binding_stage_path" ] || [ -L "$binding_stage_path" ] ||
+     [ ! -f "$binding_path" ] || [ -L "$binding_path" ] ||
+     [ "$(stat -c '%d:%i' "$binding_path")" != "$binding_identity" ] ||
+     [ "$(cat "$binding_path")" != "$binding_digest" ]; then
+    echo 'refusing incomplete restoration manifest publication' >&2
+    return 1
+  fi
 }
 
 restore_update_record() {
@@ -506,7 +584,9 @@ restore_update_record() {
       return 1
     fi
   done
-  record_entries=$(find "$record" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)
+  record_entries=$(find "$record" -mindepth 1 -maxdepth 1 \
+    ! -name retired-generation ! -name new-generation-manifest-sha256 \
+    ! -name .restoration-manifest-binding -printf '%f\n' | sort)
   expected_entries=$(printf '%s\n' new-setup-sha256 new-target old-authority-mode old-receipt old-setup old-setup-sha256 old-target)
   legacy_entries=$(printf '%s\n' new-setup-sha256 new-target old-receipt old-setup old-target)
   if [ "$record_entries" = "$expected_entries" ]; then
@@ -572,8 +652,7 @@ restore_update_record() {
   esac
   assert_admitted_predecessor "$old_version" "$previous_setup_sha"
   new_setup_sha=$(cat "$record/new-setup-sha256")
-  if { [ "$record_schema" = 'current' ] &&
-       [ "$new_setup_sha" != "$(sha256sum "$0" | cut -d ' ' -f 1)" ]; } ||
+   if [ "$new_setup_sha" != "$invoked_setup_sha" ] ||
      [ ! -f "$maintenance/FacManSetup.run" ] ||
      [ -L "$maintenance/FacManSetup.run" ]; then
     echo 'refusing a changed update source' >&2
@@ -606,20 +685,124 @@ restore_update_record() {
   if [ -e "$new_target" ] || [ -L "$new_target" ]; then
     [ -d "$new_target" ] && [ ! -L "$new_target" ] || return 1
     assert_owned_generation "$new_target"
+    verify_generation "$new_target"
+  fi
+  retired_generation="$record/retired-generation"
+  manifest_binding="$record/new-generation-manifest-sha256"
+  if [ -e "$manifest_binding" ] || [ -L "$manifest_binding" ]; then
+    if [ ! -f "$manifest_binding" ] || [ -L "$manifest_binding" ] ||
+       ! grep -Eq '^[0-9a-f]{64}$' "$manifest_binding"; then
+      echo 'refusing changed retired generation manifest binding' >&2
+      return 1
+    fi
+    manifest_sha=$(cat "$manifest_binding")
+  else
+    manifest_sha=''
+  fi
+  binding_stage="$record/.restoration-manifest-binding"
+  if [ -e "$binding_stage" ] || [ -L "$binding_stage" ]; then
+    if [ -e "$manifest_binding" ] || [ -L "$manifest_binding" ] ||
+       [ ! -d "$new_target" ] || [ "$mode" = 'handoff' ] ||
+       [ -e "$retired_generation" ] || [ -L "$retired_generation" ]; then
+      echo 'refusing unexpected restoration manifest staging' >&2
+      return 1
+    fi
+    manifest_sha=$(sha256sum "$new_target/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1)
+    assert_manifest_binding_stage "$binding_stage" "$manifest_sha"
+  fi
+  if [ -e "$retired_generation" ] || [ -L "$retired_generation" ]; then
+    if [ -e "$new_target" ] || [ -L "$new_target" ] || [ -z "$manifest_sha" ]; then
+      echo 'refusing duplicate or unbound retired generation custody' >&2
+      return 1
+    fi
+    assert_owned_generation "$retired_generation"
+    verify_generation "$retired_generation"
+    [ "$(sha256sum "$retired_generation/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1)" = "$manifest_sha" ] || {
+      echo 'refusing changed retired generation manifest' >&2; return 1;
+    }
+  elif [ "$mode" = 'handoff' ] || [ ! -d "$new_target" ]; then
+    echo 'refusing missing retired generation custody' >&2
+    return 1
+  elif [ -n "$manifest_sha" ]; then
+    [ "$(sha256sum "$new_target/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1)" = "$manifest_sha" ] || {
+      echo 'refusing changed outgoing generation manifest' >&2; return 1;
+    }
   fi
   if [ "$mode" = 'check' ]; then
     return 0
+  fi
+  for protected_root in "$lock_root/history" "$history_root"; do
+    [ ! -L "$protected_root" ] || {
+      echo 'refusing linked Linux Setup history' >&2; return 1;
+    }
+  done
+  mkdir -p "$history_root"
+  if [ "$(stat -c %d "$record")" != "$(stat -c %d "$history_root")" ] ||
+     { [ -d "$new_target" ] &&
+       [ "$(stat -c %d "$new_target")" != "$(stat -c %d "$record")" ]; }; then
+    echo 'restoration requires one filesystem for generation, journal and history' >&2
+    return 1
+  fi
+  assert_restoration_rename_domain "$record" "$history_root"
+  if [ -d "$new_target" ]; then
+    assert_restoration_rename_domain "$record" "$new_target"
+  else
+    assert_restoration_rename_domain "$record" "$retired_generation"
+  fi
+  if [ "$mode" = 'handoff' ]; then
+    if [ "$record" != "$entry_handoff" ] || [ "$current_now" != "$old_target" ] ||
+       [ "$receipt_now" != "$expected_old" ] || [ -e "$new_target" ] || [ -L "$new_target" ] ||
+       [ -e "$state/.restoration-receipt" ] || [ -L "$state/.restoration-receipt" ] ||
+       [ -e "$state/.restoration-authority" ] || [ -L "$state/.restoration-authority" ] ||
+       [ -e "$install_root/.restoration-current" ] || [ -L "$install_root/.restoration-current" ]; then
+      echo 'refusing incomplete Linux Setup entry handoff' >&2
+      return 1
+    fi
+    if { [ "$authority_mode" = 'recorded' ] &&
+         [ "$(cat "$setup_authority")" != "$previous_setup_sha" ]; } ||
+       { [ "$authority_mode" = 'legacy-pinned' ] &&
+         { [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; }; }; then
+      echo 'refusing changed restored Setup authority' >&2
+      return 1
+    fi
+    repair_replace_file "$record/old-setup" "$maintenance/FacManSetup.run" "$maintenance/.restoration-setup" 0755
+    archive_record "$record" "restored-${old_version}-to-${version}"
+    return 0
+  fi
+  if [ -e "$entry_handoff" ] || [ -L "$entry_handoff" ]; then
+    echo 'recover the preceding Linux Setup entry handoff first' >&2
+    return 1
+  fi
+  restoration_pointer="$install_root/.restoration-current"
+  if [ -e "$restoration_pointer" ] || [ -L "$restoration_pointer" ]; then
+    [ -L "$restoration_pointer" ] && [ "$(readlink "$restoration_pointer")" = "$old_target" ] || {
+      echo 'refusing foreign Linux Setup restoration pointer staging' >&2; return 1;
+    }
+  fi
+  repair_cleanup_stage "$state/.restoration-receipt" "$record/old-receipt" check
+  repair_cleanup_stage "$maintenance/.restoration-setup" "$record/old-setup" check
+  if [ "$authority_mode" = 'recorded' ]; then
+    repair_cleanup_stage "$state/.restoration-authority" "$record/old-setup-sha256" check
+  elif [ -e "$state/.restoration-authority" ] || [ -L "$state/.restoration-authority" ]; then
+    echo 'refusing unexpected restoration authority staging' >&2
+    return 1
+  fi
+  if [ "$mode" = 'preflight' ]; then
+    return 0
+  fi
+  if [ -d "$new_target" ] && [ ! -e "$manifest_binding" ]; then
+    manifest_sha=$(sha256sum "$new_target/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1)
+    publish_manifest_binding "$record" "$manifest_sha"
   fi
   if [ ! -L "$current" ] || [ "$(readlink "$current")" != "$current_now" ]; then
     echo 'refusing a changed update current pointer at restoration' >&2
     return 1
   fi
   assert_native_integration_owned
-  point_current "$old_target" "$current_now"
-  replace_file "$record/old-receipt" "$state/installed-state.v1.json" 0600
-  replace_file "$record/old-setup" "$maintenance/FacManSetup.run" 0755
+  point_current "$old_target" "$current_now" "$install_root/.restoration-current"
+  repair_replace_file "$record/old-receipt" "$state/installed-state.v1.json" "$state/.restoration-receipt" 0600
   if [ "$authority_mode" = 'recorded' ]; then
-    replace_file "$record/old-setup-sha256" "$setup_authority" 0600
+    repair_replace_file "$record/old-setup-sha256" "$setup_authority" "$state/.restoration-authority" 0600
   elif [ -e "$setup_authority" ] || [ -L "$setup_authority" ]; then
     [ ! -L "$setup_authority" ] && [ "$(cat "$setup_authority")" = "$new_setup_sha" ] || return 1
     rm -f "$setup_authority"
@@ -627,8 +810,91 @@ restore_update_record() {
   if [ -e "$new_target" ] || [ -L "$new_target" ]; then
     assert_owned_generation "$new_target"
     assert_native_integration_owned
-    rm -rf "$new_target"
+    verify_generation "$new_target"
+    retiring_identity=$(stat -c '%d:%i' "$new_target")
+    mv --no-copy -nT "$new_target" "$retired_generation"
+    if [ -e "$new_target" ] || [ -L "$new_target" ] ||
+       [ ! -d "$retired_generation" ] || [ -L "$retired_generation" ] ||
+       [ "$(stat -c '%d:%i' "$retired_generation")" != "$retiring_identity" ]; then
+      echo 'refusing incomplete restored generation retirement' >&2
+      return 1
+    fi
   fi
+  record_identity=$(stat -c '%d:%i' "$record")
+  mv --no-copy -nT "$record" "$entry_handoff"
+  if [ -e "$record" ] || [ -L "$record" ] ||
+     [ ! -d "$entry_handoff" ] || [ -L "$entry_handoff" ] ||
+     [ "$(stat -c '%d:%i' "$entry_handoff")" != "$record_identity" ]; then
+    echo 'refusing incomplete Linux Setup entry handoff admission' >&2
+    return 1
+  fi
+  # All application/native effects are restored before the last entry swap.
+  # A loss after the swap leaves only history outside the application root.
+  repair_replace_file "$entry_handoff/old-setup" "$maintenance/FacManSetup.run" "$maintenance/.restoration-setup" 0755
+  archive_record "$entry_handoff" "restored-${old_version}-to-${version}"
+}
+
+finish_completed_entry_handoff() {
+  if [ -e "$install_root" ] || [ -L "$install_root" ]; then
+    restore_update_record "$entry_handoff" handoff
+    return
+  fi
+  # An older Setup may have removed the fully restored application after the
+  # final entry swap. Validate the retained record without requiring live A5
+  # files, then retire only history; application absence remains unchanged.
+  record="$entry_handoff"
+  [ -d "$record" ] && [ ! -L "$record" ] || return 1
+  record_entries=$(find "$record" -mindepth 1 -maxdepth 1 \
+    ! -name retired-generation ! -name new-generation-manifest-sha256 -printf '%f\n' | sort)
+  expected_entries=$(printf '%s\n' new-setup-sha256 new-target old-authority-mode old-receipt old-setup old-setup-sha256 old-target)
+  legacy_entries=$(printf '%s\n' new-setup-sha256 new-target old-receipt old-setup old-target)
+  if [ "$record_entries" != "$expected_entries" ] && [ "$record_entries" != "$legacy_entries" ]; then
+    echo 'refusing foreign completed Linux Setup handoff content' >&2
+    return 1
+  fi
+  for name in $record_entries; do
+    [ -f "$record/$name" ] && [ ! -L "$record/$name" ] || return 1
+  done
+  old_target=$(cat "$record/old-target")
+  old_version=${old_target##*/}
+  case "$old_version" in
+    ''|*[!A-Za-z0-9.+-]*) return 1 ;;
+  esac
+  if [ "$old_target" != "$install_root/generations/$old_version" ] ||
+     [ "$old_version" = "$version" ] || [ "$(cat "$record/new-target")" != "$generation" ] ||
+     [ "$(cat "$record/new-setup-sha256")" != "$invoked_setup_sha" ]; then
+    echo 'refusing changed completed Linux Setup handoff identity' >&2
+    return 1
+  fi
+  expected_old=$(printf '{"schema":"facman.installed_state.v1","version":"%s","generation":"%s","workspace_preserved":true}' "$old_version" "$old_target")
+  [ "$(cat "$record/old-receipt")" = "$expected_old" ] || return 1
+  previous_setup_sha=$(sha256sum "$record/old-setup" | cut -d ' ' -f 1)
+  assert_admitted_predecessor "$old_version" "$previous_setup_sha"
+  if [ "$record_entries" = "$expected_entries" ]; then
+    [ "$(cat "$record/old-setup-sha256")" = "$previous_setup_sha" ] || return 1
+    case "$(cat "$record/old-authority-mode")" in
+      recorded|legacy-pinned) ;;
+      *) return 1 ;;
+    esac
+  fi
+  manifest_binding="$record/new-generation-manifest-sha256"
+  retired_generation="$record/retired-generation"
+  if [ ! -f "$manifest_binding" ] || [ -L "$manifest_binding" ] ||
+     ! grep -Eq '^[0-9a-f]{64}$' "$manifest_binding" ||
+     [ ! -d "$retired_generation" ] || [ -L "$retired_generation" ]; then
+    echo 'refusing missing or changed completed handoff custody' >&2
+    return 1
+  fi
+  assert_owned_generation "$retired_generation" first-install-pending
+  verify_generation "$retired_generation"
+  [ "$(sha256sum "$retired_generation/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1)" = "$(cat "$manifest_binding")" ] || return 1
+  for protected_root in "$lock_root/history" "$history_root"; do
+    [ ! -L "$protected_root" ] || return 1
+  done
+  [ "$(stat -c %d "$record")" = "$(stat -c %d "$history_root")" ] || {
+    echo 'completed handoff retirement requires one filesystem' >&2; return 1;
+  }
+  assert_restoration_rename_domain "$record" "$history_root" "$retired_generation"
   archive_record "$record" "restored-${old_version}-to-${version}"
 }
 
@@ -834,7 +1100,9 @@ repair_cleanup_stage() {
       echo 'refusing changed Linux Setup repair staging bytes' >&2
       return 1
     fi
-    rm -f "$repair_stage_file"
+    if [ "${3:-apply}" != 'check' ]; then
+      rm -f "$repair_stage_file"
+    fi
   fi
 }
 
@@ -1031,6 +1299,13 @@ if [ "$operation" = 'recover' ] || [ "$operation" = 'rollback' ]; then
     exit 0
   fi
   lock_setup
+  if { [ -e "$entry_handoff" ] || [ -L "$entry_handoff" ]; } &&
+     { [ -e "$pending" ] || [ -L "$pending" ] ||
+       [ -e "$first_pending" ] || [ -L "$first_pending" ] ||
+       [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; }; then
+    echo 'refusing conflicting Linux Setup recovery records' >&2
+    exit 1
+  fi
   if [ "$operation" = 'recover' ]; then
     if [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
       finish_repair_record
@@ -1038,6 +1313,10 @@ if [ "$operation" = 'recover' ] || [ "$operation" = 'rollback' ]; then
     elif [ -e "$first_pending" ] || [ -L "$first_pending" ]; then
       restore_first_install_record
       echo 'Interrupted first Linux Setup install restored the prior absence'
+    elif [ -e "$entry_handoff" ] || [ -L "$entry_handoff" ]; then
+      assert_no_orphan_staging
+      finish_completed_entry_handoff
+      echo 'Interrupted Linux Setup entry handoff completed'
     else
       assert_no_orphan_staging
       restore_update_record "$pending"
@@ -1051,7 +1330,16 @@ if [ "$operation" = 'recover' ] || [ "$operation" = 'rollback' ]; then
       echo 'recover the interrupted Setup operation before rollback' >&2
       exit 1
     fi
-    restore_update_record "$rollback_record"
+    restore_update_record "$rollback_record" preflight
+    rollback_identity=$(stat -c '%d:%i' "$rollback_record")
+    mv --no-copy -nT "$rollback_record" "$pending"
+    if [ -e "$rollback_record" ] || [ -L "$rollback_record" ] ||
+       [ ! -d "$pending" ] || [ -L "$pending" ] ||
+       [ "$(stat -c '%d:%i' "$pending")" != "$rollback_identity" ]; then
+      echo 'refusing incomplete Linux Setup rollback admission' >&2
+      exit 1
+    fi
+    restore_update_record "$pending"
     echo 'Linux Setup restored the preceding generation'
   fi
   exit 0
@@ -1172,6 +1460,19 @@ if [ "$apply" != 'true' ]; then
 fi
 
 lock_setup
+if [ -e "$entry_handoff" ] || [ -L "$entry_handoff" ]; then
+  if [ -e "$pending" ] || [ -L "$pending" ] ||
+     [ -e "$first_pending" ] || [ -L "$first_pending" ] ||
+     [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
+    echo 'refusing conflicting Linux Setup recovery records' >&2
+    exit 1
+  fi
+  if [ "$operation" != 'install' ]; then
+    echo 'recover the interrupted Linux Setup entry handoff before repair' >&2
+    exit 1
+  fi
+  finish_completed_entry_handoff
+fi
 if [ -e "$pending" ] || [ -L "$pending" ] ||
    [ -e "$first_pending" ] || [ -L "$first_pending" ] ||
    [ -e "$repair_pending" ] || [ -L "$repair_pending" ]; then
@@ -1367,6 +1668,7 @@ if [ "$source_distinct" = 'true' ]; then
   printf '%s\n' "$predecessor_sha" > "$journal_staging/old-setup-sha256"
   printf '%s\n' "$predecessor_authority_mode" > "$journal_staging/old-authority-mode"
   sha256sum "$0" | cut -d ' ' -f 1 > "$journal_staging/new-setup-sha256"
+  sha256sum "$generation/share/facman/manifest/MANIFEST.sha256" | cut -d ' ' -f 1 > "$journal_staging/new-generation-manifest-sha256"
   mv -T "$journal_staging" "$pending"
   journal_staging=''
   assert_update_predecessor
