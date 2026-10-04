@@ -1,5 +1,5 @@
 command_id = "profiles.plan"
-cli = "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
+cli = "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json"
 effects = ["workspace_read"]
 request_schema = "contracts/schema/command/profiles.plan.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_effective_profile.v1.schema.json"

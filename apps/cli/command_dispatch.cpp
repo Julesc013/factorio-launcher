@@ -332,8 +332,7 @@ std::string preferences_payload(const std::vector<std::string>& args)
     return output.serialize();
 }
 
-std::string profile_payload(
-    const std::vector<std::string>& args,
+std::string profile_payload(const std::vector<std::string>& args,
     const std::vector<std::pair<std::string, std::string>>& identity)
 {
     json::ObjectBuilder output;
@@ -343,6 +342,7 @@ std::string profile_payload(
              {"graphics_quality", option(args, "--graphics-quality")}, {"audio", option(args, "--audio")},
              {"selection_mode", option(args, "--selection-mode")}, {"selection", option(args, "--selection")},
              {"launch_mode", option(args, "--launch-mode")}, {"benchmark_ticks", option(args, "--benchmark-ticks")}, {"expected_manifest_sha256", option(args, "--expected-revision")},
+             {"expected_plan_sha256", option(args, "--expected-plan")},
          }) if (!field.second.empty()) output.add_string(field.first, field.second);
     const auto arguments = option_values(args, "--arg");
     if (!arguments.empty()) {

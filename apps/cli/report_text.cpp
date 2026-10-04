@@ -79,6 +79,8 @@ std::optional<std::string> effective_profile_text(const json::Value& report)
                << (source == "request_override" ? "request override" : "profile") << "]\n";
     }
     output << "Source manifest SHA-256: " << text_field(report, "source_manifest_sha256") << '\n';
+    const json::Value* identity = report.find("plan_sha256");
+    if (identity != nullptr) output << "Preparation plan SHA-256: " << text_field(report, "plan_sha256") << '\n';
     if (!applied) output << "No files changed.\n";
     return output.str();
 }

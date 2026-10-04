@@ -7167,7 +7167,7 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json",
+      "cli": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json",
       "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
@@ -7192,7 +7192,7 @@
             "required": true
           }
         ],
-        "usage": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
+        "usage": "facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json"
       },
       "command_id": "profiles.apply",
       "contract_path": "contracts/command/factorio/profiles.apply.v1.toml",
@@ -7242,6 +7242,15 @@
           "name": "expected_manifest_sha256",
           "repeatable": false,
           "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_plan_sha256",
+          "repeatable": false,
+          "request_field": "expected_plan_sha256",
           "required": false,
           "type": "sha256"
         },
@@ -7901,7 +7910,7 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json",
+      "cli": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json",
       "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
@@ -7926,7 +7935,7 @@
             "required": true
           }
         ],
-        "usage": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] --json"
+        "usage": "facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json"
       },
       "command_id": "profiles.plan",
       "contract_path": "contracts/command/factorio/profiles.plan.v1.toml",
@@ -7975,6 +7984,15 @@
           "name": "expected_manifest_sha256",
           "repeatable": false,
           "request_field": "expected_manifest_sha256",
+          "required": false,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_plan_sha256",
+          "repeatable": false,
+          "request_field": "expected_plan_sha256",
           "required": false,
           "type": "sha256"
         },
@@ -12399,6 +12417,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "c7c6b8b02c4543f360fc958a3d8618cce8250a4b2edcf114b183c407de967c50",
+  "source_digest": "ef8fd976e77d1141ecaf54ee128c47183a0e984ad81e205544bda9a9a55904db",
   "version": "facman-0.1.0-alpha.6"
 }

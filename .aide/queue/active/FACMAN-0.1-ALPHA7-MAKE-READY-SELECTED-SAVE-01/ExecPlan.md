@@ -43,3 +43,21 @@ A copied planning fixture was corrected to replace its current admitted
 primary, retaining WIP/admission refusal tests. Strict, format, portable and
 generated-state checks passed. Durable scoped receipt: evidence/menu-intent.v1.json.
 Both original clauses and all five close-after gates remain open.
+
+2026-10-05: PR378 and automatic merge CI passed at e01a0d2. Continue this
+active WorkUnit from that exact dev using the same immutable owned root after
+the prior branch incarnation was integrated and retired. A 14-command public
+fixture demonstrated two unbound owner inputs: ordinary profile archive/create
+changed reviewed settings while the instance manifest stayed identical, and
+another profile apply changed existing overrides without changing that manifest.
+The legacy revision flag's documented scope remains unchanged. The next bounded
+step adds a profile-owner preparation identity and explicit expected-plan check;
+the federated Make Ready composition and original close-after gates remain open.
+
+Qualified bounded profile preparation: one Windows source build, native model
+and all 15 public profile/query tests passed. Explicit expected-plan binds
+owner inputs and desired settings while preserving the legacy manifest-only
+revision flag. Late changed-profile refusal and ordinary recovery preserve
+both original targets and changed profile; fresh reviewed apply succeeds.
+Receipt: evidence/profile-preparation.v1.json. Both original clauses and
+five close-after gates remain open; federated preparation is still pending.

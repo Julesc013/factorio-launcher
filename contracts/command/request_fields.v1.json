@@ -59,53 +59,6 @@
         "required": true
       }
     ],
-    "installs.reconcile.plan": [
-      {
-        "kind": "identifier",
-        "name": "install_id",
-        "required": true
-      },
-      {
-        "kind": "string",
-        "name": "version",
-        "required": false
-      },
-      {
-        "kind": "string",
-        "name": "source_ref",
-        "required": false
-      },
-      {
-        "kind": "path",
-        "name": "target_root",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "management_mode",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "deployment_style",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "data_policy",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "integration_mode",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "update_policy",
-        "required": false
-      }
-    ],
     "installs.install.apply": [
       {
         "kind": "string",
@@ -219,6 +172,53 @@
         "kind": "path",
         "name": "target_root",
         "required": true
+      }
+    ],
+    "installs.reconcile.plan": [
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "version",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "source_ref",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "target_root",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "management_mode",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "deployment_style",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "data_policy",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "integration_mode",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "update_policy",
+        "required": false
       }
     ],
     "installs.recovery.apply": [
@@ -454,18 +454,6 @@
         "required": false
       }
     ],
-    "instances.diff": [
-      {
-        "kind": "identifier",
-        "name": "left_instance_id",
-        "required": true
-      },
-      {
-        "kind": "string",
-        "name": "right_ref",
-        "required": true
-      }
-    ],
     "instances.describe": [
       {
         "kind": "identifier",
@@ -476,6 +464,18 @@
         "kind": "enum",
         "name": "intent",
         "required": false
+      }
+    ],
+    "instances.diff": [
+      {
+        "kind": "identifier",
+        "name": "left_instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "right_ref",
+        "required": true
       }
     ],
     "instances.inspect": [
@@ -1087,63 +1087,6 @@
         "required": false
       }
     ],
-    "profiles.apply": [
-      {
-        "kind": "identifier",
-        "name": "instance_id",
-        "required": true
-      },
-      {
-        "kind": "identifier",
-        "name": "profile_id",
-        "required": true
-      },
-      {
-        "kind": "sha256",
-        "name": "expected_manifest_sha256",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "window_mode",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "graphics_quality",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "audio",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "selection_mode",
-        "required": false
-      },
-      {
-        "kind": "string",
-        "name": "selection",
-        "required": false
-      },
-      {
-        "kind": "enum",
-        "name": "launch_mode",
-        "required": false
-      },
-      {
-        "kind": "bounded_ticks",
-        "name": "benchmark_ticks",
-        "required": false
-      },
-      {
-        "kind": "string_array",
-        "name": "additional_arguments",
-        "required": false
-      }
-    ],
     "presentation.action": [
       {
         "kind": "string",
@@ -1273,6 +1216,68 @@
         "required": false
       }
     ],
+    "profiles.apply": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "profile_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_manifest_sha256",
+        "required": false
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_plan_sha256",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "window_mode",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "graphics_quality",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "audio",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "selection_mode",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "selection",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "launch_mode",
+        "required": false
+      },
+      {
+        "kind": "bounded_ticks",
+        "name": "benchmark_ticks",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "additional_arguments",
+        "required": false
+      }
+    ],
     "profiles.archive": [
       {
         "kind": "identifier",
@@ -1378,6 +1383,11 @@
       {
         "kind": "sha256",
         "name": "expected_manifest_sha256",
+        "required": false
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_plan_sha256",
         "required": false
       },
       {
@@ -1963,6 +1973,48 @@
         "required": false
       }
     ],
+    "workspace.migration.apply": [
+      {
+        "kind": "sha256",
+        "name": "expected_workspace_revision",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_root_identity",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "request_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "operation_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "attempt_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "idempotency_key",
+        "required": true
+      }
+    ],
     "workspace.migration.operation.inspect": [
       {
         "kind": "identifier",
@@ -2085,48 +2137,6 @@
       {
         "kind": "transaction_identifier",
         "name": "transaction_id",
-        "required": true
-      }
-    ],
-    "workspace.migration.apply": [
-      {
-        "kind": "sha256",
-        "name": "expected_workspace_revision",
-        "required": true
-      },
-      {
-        "kind": "sha256",
-        "name": "expected_root_identity",
-        "required": true
-      },
-      {
-        "kind": "sha256",
-        "name": "plan_digest",
-        "required": true
-      },
-      {
-        "kind": "enum",
-        "name": "confirmation",
-        "required": true
-      },
-      {
-        "kind": "identifier",
-        "name": "request_id",
-        "required": true
-      },
-      {
-        "kind": "identifier",
-        "name": "operation_id",
-        "required": true
-      },
-      {
-        "kind": "identifier",
-        "name": "attempt_id",
-        "required": true
-      },
-      {
-        "kind": "identifier",
-        "name": "idempotency_key",
         "required": true
       }
     ],

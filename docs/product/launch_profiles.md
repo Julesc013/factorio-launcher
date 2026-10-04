@@ -37,6 +37,15 @@ prints these values and origins; `--json` retains the typed response. The
 stored profile is the base layer, so its own historical template-versus-edit
 origins are not inferred from current values.
 
+The returned `plan_sha256` binds the instance manifest, exact profile source,
+existing override bytes or their absence, and the requested effective values.
+Pass it as `--expected-plan` to apply that reviewed preparation. Changed inputs
+refuse before a new transaction begins. `--expected-revision` retains its
+instance-manifest-only meaning. Apply also rechecks its frozen input identity
+before publication; a late change retains the journal and staging for explicit
+recovery. These owner-level plans provide one subplan for Make Ready; they do
+not grant launch or setup authority.
+
 Safe fields cover window/fullscreen preference, graphics quality, audio,
 instance-local save selection, headless or benchmark planning modes, bounded
 benchmark ticks, and an explicit argument allowlist. FacMan always owns

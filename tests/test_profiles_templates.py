@@ -7,6 +7,8 @@ import hashlib
 import json
 import os
 import tempfile
+import threading
+import time
 import unittest
 from pathlib import Path
 
@@ -40,6 +42,137 @@ def create_instance(workspace: Path) -> Path:
 
 
 class ProfileTemplateTests(unittest.TestCase):
+    def test_reviewed_preparation_binds_profile_overrides_and_requested_values(self) -> None:
+        for changed in ("profile", "existing_overrides", "requested_values"):
+            with self.subTest(changed=changed):
+                with tempfile.TemporaryDirectory(prefix="facman reviewed profile ") as value:
+                    workspace = Path(value)
+                    instance = create_instance(workspace)
+                    invoke_json(workspace, "profiles", "create", "quiet", "--audio", "disabled")
+                    if changed == "existing_overrides":
+                        invoke_json(workspace, "profiles", "apply", "main", "gui", "--audio", "disabled")
+                    planned = invoke_json(workspace, "profiles", "plan", "main", "quiet")
+                    assert_schema(self, planned, "factorio_effective_profile.v1.schema.json")
+                    self.assertRegex(planned["plan_sha256"], "^[0-9a-f]{64}$")
+                    self.assertEqual(planned["plan_sha256"], invoke_json(
+                        workspace, "profiles", "plan", "main", "quiet")["plan_sha256"])
+                    self.assertEqual(hashlib.sha256((workspace / "profiles" / "quiet" /
+                                                     "profile.v1.json").read_bytes()).hexdigest(),
+                                     planned["source_profile_sha256"])
+                    options: tuple[str, ...] = ()
+                    if changed == "profile":
+                        invoke_json(workspace, "profiles", "archive", "quiet")
+                        invoke_json(workspace, "profiles", "create", "quiet", "--selection-mode",
+                                    "load-save", "--selection", "selected.zip")
+                    elif changed == "existing_overrides":
+                        invoke_json(workspace, "profiles", "apply", "main", "gui", "--audio", "enabled")
+                    else:
+                        options = ("--window-mode", "fullscreen")
+                    self.assertEqual(planned["source_manifest_sha256"],
+                                     hashlib.sha256((instance / "instance.v1.json").read_bytes()).hexdigest())
+                    before = {p.relative_to(workspace): p.read_bytes()
+                              for p in workspace.rglob("*") if p.is_file()}
+                    for action in ("plan", "apply"):
+                        refused = invoke_json(workspace, "profiles", action, "main", "quiet", *options,
+                                              "--expected-plan", planned["plan_sha256"], success=False)
+                        self.assertEqual("profile_preparation_revision_changed", refused["refusal"]["code"])
+                    self.assertEqual(before, {p.relative_to(workspace): p.read_bytes()
+                                             for p in workspace.rglob("*") if p.is_file()})
+                    fresh = invoke_json(workspace, "profiles", "plan", "main", "quiet", *options)
+                    self.assertNotEqual(planned["plan_sha256"], fresh["plan_sha256"])
+                    applied = invoke_json(workspace, "profiles", "apply", "main", "quiet", *options,
+                                          "--expected-plan", fresh["plan_sha256"],
+                                          "--expected-revision", fresh["source_manifest_sha256"])
+                    assert_schema(self, applied, "factorio_effective_profile.v1.schema.json")
+                    self.assertEqual(fresh["plan_sha256"], applied["plan_sha256"])
+                    self.assertEqual(fresh["settings"], applied["settings"])
+                    self.assertTrue(applied["mutation_executed"])
+                    self.assertFalse(applied["execution_enabled"])
+
+    def test_gui_preparation_plan_binds_override_absence(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman profile absence ") as value:
+            workspace = Path(value)
+            instance = create_instance(workspace)
+            absent = invoke_json(workspace, "profiles", "plan", "main", "gui")
+            (instance / "instance-overrides.v1.json").write_bytes(b"")
+            present = invoke_json(workspace, "profiles", "plan", "main", "gui")
+            self.assertNotEqual(absent["plan_sha256"], present["plan_sha256"])
+            self.assertEqual(absent["source_profile_sha256"], present["source_profile_sha256"])
+            before = {p.relative_to(workspace): p.read_bytes()
+                      for p in workspace.rglob("*") if p.is_file()}
+            refused = invoke_json(workspace, "profiles", "apply", "main", "gui",
+                                  "--expected-plan", absent["plan_sha256"], success=False)
+            self.assertEqual("profile_preparation_revision_changed", refused["refusal"]["code"])
+            self.assertEqual(before, {p.relative_to(workspace): p.read_bytes()
+                                     for p in workspace.rglob("*") if p.is_file()})
+
+    def test_late_profile_change_preserves_inputs_through_explicit_recovery(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman profile late input ") as value:
+            workspace = Path(value)
+            instance = create_instance(workspace)
+            initial_apply = invoke_json(workspace, "profiles", "apply", "main", "gui", "--audio", "disabled")
+            invoke_json(workspace, "profiles", "create", "quiet", "--audio", "disabled")
+            planned = invoke_json(workspace, "profiles", "plan", "main", "quiet")
+            originals = {name: (instance / name).read_bytes()
+                         for name in ("instance.v1.json", "instance-overrides.v1.json")}
+            profile = workspace / "profiles" / "quiet" / "profile.v1.json"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_PROFILE_BEFORE_PUBLICATION_PAUSE"] = "1"
+            outcome: list[tuple[int, str, str]] = []
+            worker = threading.Thread(target=lambda: outcome.append(invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "quiet",
+                "--expected-plan", planned["plan_sha256"], "--json",
+            ], env=environment)))
+            worker.start()
+            marker = instance / ".facman-test-profile-before-publication"
+            release = instance / ".facman-test-profile-publication-release"
+            try:
+                for _ in range(100):
+                    if marker.is_file():
+                        break
+                    time.sleep(0.05)
+                self.assertTrue(marker.is_file(), "profile apply did not reach publication boundary")
+                changed = json.loads(profile.read_text(encoding="utf-8"))
+                changed["settings"]["audio"] = "enabled"
+                profile.write_text(json.dumps(changed) + "\n", encoding="utf-8")
+                preserved_profile = profile.read_bytes()
+            finally:
+                release.write_text("continue\n", encoding="utf-8")
+                worker.join(timeout=10)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(1, len(outcome))
+            self.assertNotEqual(0, outcome[0][0])
+            refusal = json.loads(outcome[0][1] or outcome[0][2])["refusal"]
+            self.assertEqual("profile_transaction_recovery_required", refusal["code"])
+            self.assertIn("Profile preparation inputs changed before publication: "
+                          "Profile preparation inputs changed since the plan was reviewed", refusal["detail"])
+            self.assertEqual(originals, {name: (instance / name).read_bytes() for name in originals})
+            self.assertEqual(preserved_profile, profile.read_bytes())
+            pending = invoke_json(workspace, "workspace", "recovery", "inspect")["transactions"]
+            self.assertEqual("complete", next(item for item in pending
+                                             if item["transaction_id"] == initial_apply["transaction_id"])["state"])
+            interrupted = [item for item in pending if item["command_id"] == "profiles.apply"
+                           and item["transaction_id"] != initial_apply["transaction_id"]]
+            self.assertEqual(1, len(interrupted))
+            transaction = interrupted[0]
+            self.assertEqual("recovery_required", transaction["state"])
+            stages = tuple(instance.glob(f".profile*-{transaction['transaction_id']}.json"))
+            self.assertEqual(2, len(stages))
+            recovered = invoke_json(workspace, "workspace", "recovery", "apply", transaction["transaction_id"])
+            self.assertEqual("rolled_back", recovered["transactions"][0]["state"])
+            self.assertTrue(all(not stage.exists() for stage in stages))
+            self.assertEqual(originals, {name: (instance / name).read_bytes() for name in originals})
+            self.assertEqual(preserved_profile, profile.read_bytes())
+            refused = invoke_json(workspace, "profiles", "apply", "main", "quiet",
+                                  "--expected-plan", planned["plan_sha256"], success=False)
+            self.assertEqual("profile_preparation_revision_changed", refused["refusal"]["code"])
+            fresh = invoke_json(workspace, "profiles", "plan", "main", "quiet")
+            self.assertNotEqual(planned["plan_sha256"], fresh["plan_sha256"])
+            applied = invoke_json(workspace, "profiles", "apply", "main", "quiet",
+                                  "--expected-plan", fresh["plan_sha256"])
+            self.assertEqual("enabled", applied["settings"]["audio"])
+            self.assertEqual(fresh["plan_sha256"], applied["plan_sha256"])
+
     def test_menu_readiness_blocks_profile_and_override_save_selection(self) -> None:
         for selected, options in (
             ("load_save", ("--selection-mode", "load-save", "--selection", "selected.zip")),

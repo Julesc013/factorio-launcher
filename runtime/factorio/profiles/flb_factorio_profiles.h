@@ -43,6 +43,7 @@ struct EffectiveRequest {
     std::string instance_id;
     std::string profile_id;
     std::string expected_manifest_sha256;
+    std::string expected_plan_sha256;
     Patch overrides;
 };
 
@@ -52,6 +53,7 @@ struct EffectiveProfile {
     Settings settings;
     std::vector<std::string> base_additional_arguments;
     std::vector<std::string> launch_arguments;
+    std::string source_profile_sha256;
 };
 
 facman::core::Result<std::string> templates_list(const std::filesystem::path& workspace);
