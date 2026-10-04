@@ -37,7 +37,7 @@ source_of_truth = [
 [execution_programme]
 id = "FACMAN-0.1-BETA1-COMPLETION-2026-09-06"
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-primary_workunit = "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+primary_workunit = "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
 status = "implementation_active"
 authority_basis = "Current user request: implement, test, remediate, document, sync, commit and merge; tag and publish qualified alpha milestones through Beta1."
 engineering_and_normal_integration_authorized = true
@@ -527,7 +527,7 @@ replacing valid backups.""",
 id = "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
 title = "Restore worlds and apply explicit retention safely"
 epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
-status = "active"
+status = "complete"
 horizon = "next"
 priority = "P1"
 size = "M"
@@ -552,7 +552,11 @@ journals.""",
 ]
 
 
-evidence = [".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/prepublication-recovery.v1.json"]
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/integration-closeout.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/prepublication-recovery.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/integration-validation-custody.zip",
+]
 
 [[workunit]]
 id = "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01"

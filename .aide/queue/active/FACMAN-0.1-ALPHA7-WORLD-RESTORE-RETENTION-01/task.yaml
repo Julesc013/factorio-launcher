@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01
 title: Restore worlds and apply explicit retention safely
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -23,6 +23,7 @@ allowed_paths:
   - ".aide/memory/project-state.md"
   - ".aide/memory/project-state.v2.json"
   - "release/index/current_state.v1.toml"
+  - "release/index/project_status.v2.toml"
   - "tools/codegen/generate_metadata.py"
   - "runtime/**"
   - "contracts/**"
@@ -47,3 +48,8 @@ retained_boundaries:
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
 active_at: 2026-10-04T09:30:35Z
+verified_pending_closeout_at: 2026-10-04T15:23:08Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-10-04T15:23:09Z
+closed_at: 2026-10-04T15:23:09Z

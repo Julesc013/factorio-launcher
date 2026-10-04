@@ -65,3 +65,14 @@ bindings; old803 restore FAIL and Windows strict-skip FAIL remain unchanged.
 No new root/build, CI rerun, owner control action, private input or release
 authority. These scoped checks do not close the original WorkUnit; ordinary
 product flows and applicable host/game/human/release gates remain open.
+
+2026-10-05: PR376 integrated as 6c3c567 with all required automatic merge
+checks. Independent original-clause audit found no missing behavior,
+unresolved defect or required proof gap within this machine WorkUnit. Both
+unchanged clauses are transcribed in integration-closeout.v1.json; exact
+source/product/runtime reviews and checked integration are in validation
+custody. Canonical/task closure is prepared for independent commit review
+and normal integration. Earlier803 restore FAIL and Windows strict-skip
+FAIL remain unchanged. Broader F10/content-world interfaces, real game/host,
+human and release qualification remain separate open outcomes. No new
+candidate, native build, root, worktree or owner-control action was issued.

@@ -511,8 +511,8 @@ Close local application and terminal routes on all declared targets, then a fres
 
 Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
-- [ ] **FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01** — Restore worlds and apply explicit retention safely
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01** — Restore worlds and apply explicit retention safely
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-WORLD-BACKUP-01`
   - Outcome: Restore and import selected world bundles using validated plans, atomic visibility and recoverable journals.
 - [ ] **FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01** — Close content, modpack, world, and save routes
