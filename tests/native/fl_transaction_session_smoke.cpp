@@ -92,6 +92,7 @@ int prove_transition_table()
         !tx::can_transition(tx::State::requested, tx::State::failed_before_commit) ||
         !tx::can_transition(tx::State::requested, tx::State::rollback_required) ||
         tx::can_transition(tx::State::committing, tx::State::failed_before_commit) ||
+        tx::can_transition(tx::State::committing, tx::State::rollback_required) ||
         tx::can_transition(tx::State::committed, tx::State::rollback_required) ||
         tx::can_transition(tx::State::audited, tx::State::failed_before_commit) ||
         tx::can_transition(tx::State::complete, tx::State::recovery_required) ||

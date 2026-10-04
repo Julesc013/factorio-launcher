@@ -798,7 +798,7 @@
       "authority_class": "planning_only",
       "freshness": "current_queue_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+      "value": "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
     },
     "current_active_workunits": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
@@ -808,6 +808,7 @@
       "source_record": "release/index/plan.v1.toml",
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+        "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
         "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
         "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
       ]
@@ -826,7 +827,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+      "value": "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
@@ -2728,18 +2729,19 @@
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
       "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
-      "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+      "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+      "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 2,
+      "active": 3,
       "active_automated": 1,
       "blocked": 3,
       "closed": 31,
-      "planned": 32,
+      "planned": 31,
       "superseded": 7
     },
-    "current": "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+    "current": "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
     "records": [
       {
         "id": "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
@@ -2824,6 +2826,12 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
@@ -3127,12 +3135,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

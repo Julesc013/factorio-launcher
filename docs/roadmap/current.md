@@ -511,6 +511,10 @@ Close local application and terminal routes on all declared targets, then a fres
 
 Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
+- [ ] **FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01** — Restore worlds and apply explicit retention safely
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-WORLD-BACKUP-01`
+  - Outcome: Restore and import selected world bundles using validated plans, atomic visibility and recoverable journals.
 - [ ] **FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01** — Close content, modpack, world, and save routes
   - State: `planned`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`; closes after `FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01`, `FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01`,
@@ -610,10 +614,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: `FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01`; closure prerequisites: none
   - Outcome: Export/import/reconstruct modpack state with stable provenance and bounded local source custody.
-- [ ] **FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01** — Restore worlds and apply explicit retention safely
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: `FACMAN-0.1-ALPHA6-WORLD-BACKUP-01`; closure prerequisites: none
-  - Outcome: Restore and import selected world bundles using validated plans, atomic visibility and recoverable journals.
 - [ ] **FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01** — Converge Make Ready with selected-save Play
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01`, `FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01`,

@@ -1226,6 +1226,26 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
     if (fault_requested("after_target_planning")) {
         return refuse(command, instance.instance_id, "", "transaction_recovery_required", "Injected interruption after target planning", "no output created");
     }
+    if (fault_requested("pause_after_target_planning")) {
+        const char* marker = std::getenv("FACMAN_TEST_SAVE_TRANSFER_PAUSE_MARKER");
+        std::string detail;
+        if (marker == nullptr || *marker == '\0' ||
+            !facman::base::write_text_new_atomic(marker, "planned\n", detail)) {
+            return refuse(command, instance.instance_id, "", "persistent_write_refused",
+                "Import test pause marker could not be created", detail);
+        }
+        const fs::path release = std::string(marker) + ".release";
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+        std::error_code error;
+        while (!fs::exists(release, error) && !error &&
+            std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        if (error || !fs::exists(release, error)) {
+            return refuse(command, instance.instance_id, "", "persistent_write_refused",
+                "Import test pause timed out", error.message());
+        }
+    }
     fs::path install_root;
     if (!load_install_root(workspace, instance.install_ref, install_root)) {
         return refuse(command, instance.instance_id, "", "unknown_install", "Instance pack references an unregistered install", instance.install_ref);
