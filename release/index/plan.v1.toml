@@ -37,7 +37,7 @@ source_of_truth = [
 [execution_programme]
 id = "FACMAN-0.1-BETA1-COMPLETION-2026-09-06"
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-primary_workunit = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
+primary_workunit = "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01"
 status = "implementation_active"
 authority_basis = "Current user request: implement, test, remediate, document, sync, commit and merge; tag and publish qualified alpha milestones through Beta1."
 engineering_and_normal_integration_authorized = true
@@ -491,8 +491,11 @@ preserving foreign files.""",
 id = "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01"
 title = "Create consistent world backups and inspectable bundles"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "planned"
-horizon = "backlog"
+status = "active"
+horizon = "next"
+branch = "task/facman-owned-backup-presentation-08"
+base_revision = "6668ef2c55f0e59ed40782121b832878c71e40c9"
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/real-low-space.v1.json"]
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
@@ -501,7 +504,7 @@ outcome = """Back up selected worlds consistently with exact source identity, st
 roots."""
 source_bundles = ["F10"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml"
 depends_on = [
 
 ]

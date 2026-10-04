@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import shutil
@@ -555,6 +556,114 @@ class SaveTransferTests(unittest.TestCase):
                 self.assertEqual(save.read_bytes(), original)
                 self.assertFalse(destination.exists())
                 self.assertFalse(Path(str(destination) + ".manifest.json").exists())
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
+    def test_backup_blocks_or_refuses_same_object_content_write(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.prepare(workspace)
+            save = workspace / "instances" / "source-world" / "saves" / "world.zip"
+            shutil.copyfile(SAVE_FIXTURES / "valid_simple_save" / "starter.zip", save)
+            original = save.read_bytes()
+            replacement = io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(original)) as source_archive:
+                with zipfile.ZipFile(replacement, "w") as changed_archive:
+                    for entry in source_archive.infolist():
+                        content = source_archive.read(entry)
+                        if entry.filename == "level-init.dat":
+                            content = bytes([content[0] ^ 1]) + content[1:]
+                        changed_archive.writestr(entry, content)
+            changed = replacement.getvalue()
+            self.assertEqual(len(changed), len(original))
+            self.assertNotEqual(changed, original)
+            with zipfile.ZipFile(io.BytesIO(changed)) as changed_archive:
+                self.assertIsNone(changed_archive.testzip())
+
+            prior = workspace / "prior.backup.zip"
+            code, _stdout, stderr = invoke([
+                "--workspace", tmp, "saves", "backup", "world",
+                "--instance", "source-world", "--to", str(prior), "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            prior_manifest = Path(str(prior) + ".manifest.json")
+            prior_bytes = (prior.read_bytes(), prior_manifest.read_bytes())
+            source_identity = save.stat()
+            destination = workspace / "concurrent.backup.zip"
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE"] = "pause_after_staged_copy"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", tmp, "saves", "backup",
+                 "world", "--instance", "source-world", "--to", str(destination), "--json"],
+                cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while process.poll() is None and time.monotonic() < deadline:
+                    staged = list(workspace.glob(".facman-save-backup-*/concurrent.backup.zip"))
+                    if len(staged) == 1 and staged[0].read_bytes() == original:
+                        break
+                    time.sleep(0.02)
+                else:
+                    self.fail("backup did not retain the original staged bytes before publication")
+                self.assertIsNone(process.poll(), "backup exited before concurrent write")
+                if os.name == "nt":
+                    # The held Windows input denies writes while backup is active.
+                    with self.assertRaises(PermissionError) as refused_write:
+                        with save.open("r+b"):
+                            self.fail("Windows allowed a write handle to the held source")
+                    self.assertEqual(refused_write.exception.errno, 13)
+                    # Python's CRT open reports EACCES without winerror. Check
+                    # the native API independently to prove sharing refusal.
+                    import ctypes
+                    from ctypes import wintypes
+                    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+                    create = kernel.CreateFileW
+                    create.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                                       wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD,
+                                       wintypes.HANDLE]
+                    create.restype = wintypes.HANDLE
+                    handle = create(str(save), 0x40000000, 0x7, None, 3, 0, None)
+                    error = ctypes.get_last_error()
+                    invalid = ctypes.c_void_p(-1).value
+                    if handle != invalid:
+                        kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+                        kernel.CloseHandle.restype = wintypes.BOOL
+                        kernel.CloseHandle(handle)
+                    self.assertEqual(handle, invalid)
+                    self.assertEqual(error, 32)
+                else:
+                    with save.open("r+b") as writer:
+                        writer.write(changed)
+                        writer.flush()
+                        os.fsync(writer.fileno())
+                    os.utime(save, ns=(source_identity.st_atime_ns, source_identity.st_mtime_ns))
+                after_write = save.stat()
+                self.assertEqual((after_write.st_dev, after_write.st_ino),
+                                 (source_identity.st_dev, source_identity.st_ino))
+                self.assertEqual(after_write.st_size, source_identity.st_size)
+                self.assertEqual(after_write.st_mtime_ns, source_identity.st_mtime_ns)
+                stdout, stderr = process.communicate(timeout=20)
+                if os.name == "nt":
+                    self.assertEqual(process.returncode, 0, stderr)
+                    receipt = json.loads(stdout)["payload"]
+                    self.assertEqual(destination.read_bytes(), original)
+                    self.assertEqual(receipt["sha256"], hashlib.sha256(original).hexdigest())
+                    self.assertEqual(json.loads(Path(str(destination) + ".manifest.json").read_text(
+                        encoding="utf-8")), receipt)
+                else:
+                    self.assertEqual(process.returncode, 1, stderr)
+                    self.assertEqual(json.loads(stdout)["payload"]["refusal"]["code"],
+                                     "save_source_changed")
+                    self.assertFalse(destination.exists())
+                    self.assertFalse(Path(str(destination) + ".manifest.json").exists())
+                self.assertEqual(save.read_bytes(), original if os.name == "nt" else changed)
+                self.assertEqual((prior.read_bytes(), prior_manifest.read_bytes()), prior_bytes)
+                self.assertEqual(list(workspace.glob(".facman-save-backup-*")), [])
+                self.assertEqual(list(workspace.glob(".facman-save-backup-*.staging.zip")), [])
             finally:
                 if process.poll() is None:
                     process.kill()

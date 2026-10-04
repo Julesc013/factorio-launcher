@@ -89,3 +89,86 @@ paths contain no published ZIP or sidecar and recovery rolls back safely.
   was dispatched at source correction `07ec7159`, then cancellation was
   requested before the evidence update. The final combined-head candidate
   still has to be run; this local evidence is not package qualification.
+
+## 2026-10-04 real kernel low-space refusal and identical-target retry
+
+The existing backup engine is integrated. This continuation adds an explicit
+produced-package regression, without rebuilding that engine or changing the
+filesystem-lock policy. PR371 normally integrated source
+`28843ba31aa6f9e83ab370a4a70ae5c8dba34f78` into dev
+`6668ef2c55f0e59ed40782121b832878c71e40c9`; both have source tree
+`8a70f7ebb7c1aa74c1b68c521c3ddc452c5db696`.
+
+The supplied Linux CLI came from the already required successful Linux-native
+job in run `37167358630`, artifact `11289922457`. Its synthetic PR merge
+`bd6678ee384af052e2739a814ab6950eb8afdb73` has that same exact tree and parents
+`eada9df6eed0353671500e6d5a8e0bc0365300d8` and the PR371 source above. Archive
+and executable digests, provenance admission, commands and raw outputs are
+bound in `real-low-space.v1.json` and its public validation custody archive.
+
+`tests/integration/facman_world_backup_low_space.py` passed once against those
+produced bytes on Ubuntu 24.04 WSL2, with assertions enabled and bytecode
+disabled. It uses an isolated mount namespace and two separate 4 MiB tmpfs
+volumes. The destination reached actual kernel ENOSPC and zero free bytes;
+the native backup refused with `persistent_write_refused`, the exact
+insufficient-space reason, and `refused_before_effects`. The source and prior
+backup/manifest remained unchanged, with no partial target or staging residue.
+Removing only the known filler restored 4,186,112 bytes of free space; the
+identical previously refused target and arguments then succeeded. Package and
+public install-fixture inventories remained unchanged.
+
+Independent static and retained-runtime reviews passed. Both mounts unmounted
+successfully. A separate read-only postcheck in the original namespace found
+no mounted proof children, empty underlying directories and an unchanged
+original starter-save fixture. The prior policy refusal on a WSL9fs workspace
+and earlier diagnostic attempts remain retained in the original owned root;
+they were not relabeled as passes or replayed.
+
+The original root and task branch are reused from the latest integrated dev.
+No new task root, native build, candidate dispatch or CI rerun was needed for
+this regression. These results qualify the supplied CLI regression on WSL;
+final combined-head product-family, supported physical host, real game,
+human-experience and release qualification remain separate and unclaimed.
+
+## 2026-10-04 final produced files and same-object concurrent writes
+
+Product candidate `37172494677/1` passed all three platform jobs and its exact
+six-asset bundle at source `803bd98af05c7343977934a7c1b21c67ed897720`, tree
+`0a038464f24deb5ff946b091dd7b48a78a0ed995`. Artifact `11292276358` was downloaded
+once. Its recorded SHA-256, all six delivery files, platform provenance and
+payload equivalence passed the existing bundle verifier.
+
+The original-acceptance audit identified a missing direct same-object write
+oracle. `test_backup_blocks_or_refuses_same_object_content_write` now waits
+for the original staged bytes. On POSIX it writes a CRC-valid changed save
+to the same inode, preserves size and restores modification time, then checks
+`save_source_changed`, absence of publication and preserved prior backup and
+manifest. Windows checks both CRT EACCES and native sharing violation 32,
+then verifies the successful original-byte backup and unchanged prior bundle.
+The first Windows attempt incorrectly expected Python's CRT exception to
+expose `winerror`; its failure is preserved, and the corrected native oracle
+passed against the final produced Windows CLI.
+
+All 19 save-transfer tests passed without skips against the final produced
+Linux CLI. The reviewed real low-space regression then passed against that
+same executable: actual kernel ENOSPC, typed preflight refusal, preserved
+source/prior bundle, and identical-target success after restoring capacity.
+Package and public fixture inventories remained unchanged. This does not
+claim observed real exhaustion during a copy or sidecar flush.
+
+Windows and WSL9fs extraction could not preserve the distinct Linux names
+`FacMan` and `facman`. Those failed attempts were retained. The reviewed
+recovery used a private 128 MiB tmpfs beneath the existing owned task root,
+with a private PID namespace containing nested worker sessions and bounded
+deadlines. Native archive file modes, every product manifest hash and source
+identity passed. Both low-space mounts and the product mount unmounted; an
+independent parent postcheck found three empty, unmounted underlying children
+and the unchanged original starter fixture. No new task root, build or
+additional candidate was created.
+
+The final static and runtime reviews passed. Exact results, public logs and
+review custody are bound in `produced-package-acceptance.v1.json`. This
+follow-up changes tests and evidence only; the retained assets remain
+final803 observations, with their original provenance. Current-head required
+checks, normal integration and canonical closeout still gate WorldBackup;
+physical-host, game, human-experience and release authority remain separate.
