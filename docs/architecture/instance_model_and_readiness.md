@@ -33,6 +33,14 @@ only `menu`. Every other intent receives the typed
 `unsupported_launch_intent` refusal. No save, scenario, server, editor, or
 benchmark is inferred from instance contents.
 
+A valid profile or instance override that selects a save or benchmark does
+not satisfy menu readiness. The profile dimension is blocked with
+`instance_launch_intent_mismatch`, and the safe next action previews a menu
+profile. This read-only judgment does not change the profile, inspect an
+implicitly selected save, or grant execution authority.
+Human CLI readiness and describe show the same states, blockers, details and
+safe next actions as their JSON reports.
+
 Both command contracts have exactly the `workspace_read` effect and declare:
 
 ```text

@@ -20,9 +20,9 @@ last_reviewed: 2026-09-22
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
-- WIP: 3/4 including external gates
+- WIP: 4/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 6/9; in-flight work: 3
+- Near-term queued work: 6/9; in-flight work: 4
 
 ## North star
 
@@ -70,6 +70,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01` [P1/M] — Finish bounded managed install update repair and removal
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Implement installation/reconciliation/update/repair/removal over promoted USK mechanisms for the admitted local source formats.
+- [ ] `FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01` [P1/M] — Converge Make Ready with selected-save Play
+  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
+  - Outcome: Make one typed readiness plan reconcile install, instance, content and selected world before launch.
 - [ ] `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01` [P1/M] — Journal native setup effects and recover across setup phases
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback.
@@ -99,7 +102,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Admitted backlog
 
-32 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
+31 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
 
 ## Blocking decisions
 

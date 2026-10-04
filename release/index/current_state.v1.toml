@@ -73,7 +73,7 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+value = "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-22"
 freshness = "current_queue_projection"
@@ -81,7 +81,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.current_active_workunits]
-value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01", "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"]
+value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01", "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01", "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"]
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-22"
 freshness = "current_plan_projection"
@@ -89,7 +89,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+value = "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-22"
 freshness = "current_plan_projection"
@@ -335,16 +335,18 @@ silent_foreign_mutations = 0
 observed_player_journeys = 0
 
 [queue]
-primary_workunit = "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+primary_workunit = "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
 active_workunits = [
   "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
   "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
 ]
 active_automated = [
   "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
   "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
 ]
 awaiting_operator = [
 ]
@@ -368,7 +370,6 @@ planned = [
   "FACMAN-0.1-ALPHA7-GTK-SETUP-INSTANCES-01",
   "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
   "FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01",
-  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
   "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
   "FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01",
   "FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01",

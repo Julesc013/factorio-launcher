@@ -270,6 +270,17 @@ int emit_effective_profile(const CliResponse& response, bool as_json)
     return 0;
 }
 
+int emit_instance_readiness(const CliResponse& response, bool as_json)
+{
+    if (as_json) return emit_json(response);
+    if (!response || !response.value().ok()) return emit_basic(response, false, "");
+    if (!response.value().parsed_payload) { std::cerr << "Instance readiness response is missing\n"; return 1; }
+    auto report = facman::cli::instance_readiness_text(*response.value().parsed_payload);
+    if (!report) { std::cerr << "Instance readiness report is invalid\n"; return 1; }
+    std::cout << *report;
+    return 0;
+}
+
 std::string fields_payload(const std::vector<std::pair<std::string, std::string>>& fields = {})
 {
     json::ObjectBuilder output;
@@ -748,10 +759,10 @@ int command_instances(const Options& options)
             if (options.args[index] != "--intent" || index + 1 >= options.args.size()) return 2;
             ++index;
         }
-        return emit_basic(
+        return emit_instance_readiness(
             call(options, "instances." + action, fields_payload({
                 {"instance_id", options.args[2]}, {"intent", option(options.args, "--intent")}})),
-            flag(options.args, "--json"), "Instance " + action + " completed");
+            flag(options.args, "--json"));
     }
     if ((action == "inspect" || action == "verify" || action == "archive") && options.args.size() >= 3) {
         for (std::size_t index = 3; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;

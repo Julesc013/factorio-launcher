@@ -94,6 +94,7 @@ struct Projection {
     std::string instance_root_identity = "not_observed";
     std::string profile_digest = "not_observed";
     std::string profile_status = "not_observed";
+    std::string profile_launch_intent = "menu";
     std::string modset_status = "not_required";
     std::string modset_detail;
     std::string backup_state = "not_configured";
@@ -465,6 +466,11 @@ void inspect_profile(Projection& projection, const fs::path& workspace)
     projection.profile_digest = sha256_text(canonical_json(identity.serialize()));
     projection.profile_status = "valid";
     projection.profile_valid = true;
+    if (effective.value().settings.selection_mode == "load-save") {
+        projection.profile_launch_intent = "load_save";
+    } else if (effective.value().settings.selection_mode == "benchmark-save") {
+        projection.profile_launch_intent = "benchmark";
+    }
 
     const fs::path overrides = projection.instance.root / "instance-overrides.v1.json";
     std::error_code error;
@@ -975,6 +981,15 @@ ReadinessComponent encode_readiness(
             true, "inspect_profile"});
         actions.push_back({"inspect_profile", "Inspect the referenced profile",
             "facman profiles inspect " + projection.instance.profile + " --json", false});
+    } else if (projection.profile_launch_intent != "menu") {
+        add_dimension(dimensions, "profile", "blocked", true,
+            "The effective profile selects a different launch intent", {"profile"});
+        blockers.push_back({"instance_launch_intent_mismatch", "profile",
+            "The profile selection does not satisfy menu readiness",
+            "Effective profile selects " + projection.profile_launch_intent + "; requested intent is menu",
+            true, "configure_menu_profile"});
+        actions.push_back({"configure_menu_profile", "Preview a profile for menu launch",
+            "facman profiles plan " + projection.instance.id.str() + " gui --json", false});
     } else {
         add_dimension(dimensions, "profile", "satisfied", true,
             "The referenced profile and effective overrides are valid", {"profile"});
