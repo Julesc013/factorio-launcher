@@ -5,8 +5,9 @@
   `0a038464f24deb5ff946b091dd7b48a78a0ed995`. Its produced Linux CLI passed
   all 19 save-transfer tests and real low-space refusal/same-target recovery;
   its Windows CLI passed the new same-object write regression. Independent
-  runtime review passed. Current-head required checks, normal dev integration
-  and canonical acceptance closeout remain open. Prior failed/cancelled
+  runtime review passed. Current-head required checks, normal dev integration and automatic
+  merge CI passed. Canonical closeout changes are prepared for independent
+  source review and normal integration. Prior failed/cancelled
   candidates and failed local extraction attempts remain retained.
 - Real low-space refusal and recovery now pass against an admitted produced
   Linux CLI on WSL. The reusable regression exhausts a private 4 MiB tmpfs,

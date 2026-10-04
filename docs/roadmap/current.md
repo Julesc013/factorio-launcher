@@ -462,8 +462,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
-- [ ] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Back up selected worlds consistently with exact source identity, stable metadata and owned destination roots.
 - [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01** — Finish bounded managed install update repair and removal

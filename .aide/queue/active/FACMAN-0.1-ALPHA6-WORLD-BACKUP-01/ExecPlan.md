@@ -15,3 +15,15 @@
 Current user authority includes necessary source changes, tests, docs, sync,
 commits and normal checked merges. Publication and genuine experience remain
 separate. Unavailable host/input cells block their own qualification only.
+
+## Canonical acceptance closure
+
+Both unchanged original clauses are transcribed from independent source and
+produced-package assurance after exact PR372 integration and automatic merge
+CI success. Exact803 assets retain their original provenance; the follow-up
+changes tests and evidence only. The new canonical closeout still requires
+independent source review, a normal commit and protected integration.
+
+WorldRestore/retention, ordinary Setup recovery, game/input/host/human and
+release qualification remain separate. Prior failures, unique work and
+private custody are preserved; no new candidate or native build is dispatched.
