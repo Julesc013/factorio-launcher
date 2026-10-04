@@ -34,7 +34,9 @@
       "runtime/factorio/saves/flb_factorio_save_operations.cpp": "afd1d4b67f9783922240fea436e9a5a2f08709a53913b7b7772d314cfa964b4a",
       "tests/native/fl_transaction_session_smoke.cpp": "e5b00a97a120f8765c85d31411b2479443d9a55228f83dbc28c0d0ce1b37ec62",
       "tests/test_save_transfer.py": "8a8b19d053975dd7ba9928884df480d50a02fcc5fe5624db12b197133b29a5c9"
-    }
+    },
+    "native_windows_runtime_qualified": true,
+    "qualification_scope": "Scoped Windows local executable accepted; all-platform/package qualification remains open"
   },
   "custody": {
     "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/prepublication-recovery-custody.zip",
@@ -403,9 +405,9 @@
   "whole_workunit_closed": false,
   "builds": 0,
   "remaining": [
-    "Qualify repaired executable with actual restore process-loss/public recovery/identical-target retry",
-    "Import source identity during internal plan lifetime",
-    "Produced-package proof for repaired source; original full programme external gates remain"
+    "POSIX import same-object mutation/refusal and repaired runtime qualification",
+    "Repaired produced-package restore/recovery/import acceptance",
+    "Original full WorkUnit and programme acceptance, including ordinary product flows and external gates"
   ],
   "import_plan_lifetime": {
     "source_static_review": "PASS",
@@ -414,11 +416,55 @@
     "input_sha256": "10b4bdaa0b598e2f34b32580b07002cab2b895fe3f08fc68c670b44ef4b3ad2a",
     "review_sha256": "247090ccf30c21ebd5621555f6f16d10877cb0e7f332bba4b136fef04b7f0006",
     "custody": ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/import-plan-lifetime-custody.zip",
-    "custody_sha256": "30f4767bbbb81024d811ed8816e06863c15cf397de057e853b54a610cd394127"
+    "custody_sha256": "30f4767bbbb81024d811ed8816e06863c15cf397de057e853b54a610cd394127",
+    "native_windows_runtime_qualified": true,
+    "runtime_scope": "Opened archive retained across pathname replacement; native Windows sharing prevents same-object write. POSIX mutation/refusal remains open."
   },
   "source_preparation_failure_retained": {
     "path": "D:\\Development\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\world-restore-prepublication-prepare.json",
     "sha256": "77df2ec464fa22a37c4043bb21291c030d2ba6b0aba082fa64b124236a4ffbd7",
     "detail": "Unsupported now horizon and no explicit programme-engineering cross-release admission; task-owned applied work retained; no controller replay"
+  },
+  "native_windows_repair": {
+    "result": "PASS_SCOPED_WINDOWS",
+    "scope": "Windows x64 local Debug fixture executable",
+    "producer_head": "1949aff0d1830ca25582aab205b179d955b839c1",
+    "producer_tree": "459137e553e6542e8ed02bfbfe72b43ffcd7fab4",
+    "CLI_sha256": "38a45c75f40d70e0f22af3955ca5f4b7bfab4ab76813e6928e0b2d6d7fcd2ce6",
+    "native_smoke_tests": 2,
+    "accounting": {
+      "discovered_tests": 39,
+      "executed_pass": 38,
+      "failures": 0,
+      "errors": 0,
+      "declared_platform_not_applicable": 1,
+      "issued_and_completed_native_commands": 371,
+      "verified_raw_files": 742,
+      "verified_issued_files": 371,
+      "verified_owned_kill_intents": 6,
+      "closure_files": 1119
+    },
+    "original_worker_and_parent_verdict": "FAIL preserved: strict zero-skips predicate",
+    "accepted_results": [
+      "Restore ordinal128 owned Popen PID13588 terminated via Windows TerminateProcess exit1 at private-copy pause before target publication. Ordinals129-131 inspect committing/target absent, plan remove_owned_staging, apply rolled_back/removed_owned_staging. Ordinal132 same-target retry succeeds;133 refuses save_clone_target_exists. Passing source oracle asserts source bytes, backup/sidecar/unrelated sentinel preservation and no owned staging.",
+      "Import pathname replacement ordinal104 succeeds with retained original save bytes while closure-valid replacement archive remains at the pathname; source oracle asserts original retained archive and substitute bytes unchanged.",
+      "Import ordinal99 succeeds after same-object write attempt denied. Passing Windows source branch asserts CRT errno13 plus typed CreateFileW INVALID_HANDLE_VALUE/GetLastError32 and unchanged archive. This proves OS preventive sharing denial, not changed-object engine refusal.",
+      "All twelve retention fixtures passed, including owned-only reversible trash, forged journal ownership refusals, stale/new selection, live apply and run/write locks, substitution, restart and recovery. Four general recovery fixtures plus damaged-retained-evidence refusal passed.",
+      "Job30212 primary stopped and job empty observed after waiting; exit1 reflects preserved skip policy. No cleanup_error/error. Actual source clean/head/tree and executable digest match post-run records."
+    ],
+    "independent_runtime_review": "world-restore-native-rx3-runtime.review.json",
+    "independent_runtime_review_sha256": "2b6b7743c22c193c36bbeca63ac7cf7ff3e0872b694b1e256bf8e954e70cc81c",
+    "custody": ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/native-recovery-custody.zip",
+    "custody_sha256": "1015a994f7d59d624880fe1230a3ad6c08fe2dff3abe0082e331fb553675a003",
+    "custody_members": 1146,
+    "custody_bytes": 665628,
+    "manifest_sha256": "269d64223dfdd6d503a360a9a0c812beb57adf85d53559a0e6b9a4a15a2883d6",
+    "POSIX_runtime_qualified": false,
+    "produced_package_qualified": false,
+    "whole_workunit_closed": false
+  },
+  "native_build_attempts": {
+    "corrected_target_PASS": 1,
+    "initial_wrong_target_FAIL_retained": 1
   }
 }

@@ -30,3 +30,13 @@ keep the Alpha7 epic and Alpha6 active release. Added independent-reviewed impor
 plan-lifetime regressions and a bounded test pause; actual repaired-executable
 qualification remains pending. Windows write prevention is distinguished from
 POSIX same-object mutation/refusal. Original acceptance and external gates stay open.
+
+2026-10-04: Exact source1949aff/tree459137 rebuilt successfully; two native
+smoke tests passed. Independent runtime review accepted38 executed Windows
+fixture tests/371commands, including owned restore termination, public
+recovery and identical-target retry/no-clobber, plus import plan lifetime.
+The original strict zero-skip receipts remain FAIL: one existing parent-swap
+test is explicitly inapplicable on Windows. All raw issued/output/kill
+evidence and review are retained in native-recovery-custody.zip. Windows
+sharing denial is not POSIX changed-object refusal. POSIX runtime, repaired
+produced-package and whole-unit qualification remain open.
