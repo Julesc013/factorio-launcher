@@ -98,6 +98,12 @@ namespace FacMan.WinForms
             Identity = PresentationJson.Text(value, "identity");
             Sha256 = PresentationJson.Text(value, "sha256");
             AssociationStatus = PresentationJson.Text(value, "association_status");
+            IDictionary<string, object> associationContext = PresentationJson.Record(value, "association_context");
+            AssociationContextStatus = PresentationJson.Text(associationContext, "status");
+            AssociationVersionStatus = PresentationJson.Text(
+                PresentationJson.Record(associationContext, "factorio_version"), "status");
+            AssociationModsetStatus = PresentationJson.Text(
+                PresentationJson.Record(associationContext, "modset_lock"), "status");
             BackupStatus = PresentationJson.Text(value, "backup_status");
             Platform = PresentationJson.Text(value, "platform");
             DistributionOrigin = PresentationJson.Text(value, "distribution_origin");
@@ -123,6 +129,20 @@ namespace FacMan.WinForms
         public string Identity { get; private set; }
         public string Sha256 { get; private set; }
         public string AssociationStatus { get; private set; }
+        public string AssociationContextStatus { get; private set; }
+        public string AssociationVersionStatus { get; private set; }
+        public string AssociationModsetStatus { get; private set; }
+        public string AssociationContextSummary
+        {
+            get
+            {
+                if (String.IsNullOrWhiteSpace(AssociationContextStatus)) return "Not observed";
+                return AssociationContextStatus + " (version " +
+                    (String.IsNullOrWhiteSpace(AssociationVersionStatus) ? "not observed" : AssociationVersionStatus) +
+                    "; content " +
+                    (String.IsNullOrWhiteSpace(AssociationModsetStatus) ? "not observed" : AssociationModsetStatus) + ")";
+            }
+        }
         public string BackupStatus { get; private set; }
         public string Platform { get; private set; }
         public string DistributionOrigin { get; private set; }
