@@ -39,6 +39,15 @@ drifted bytes and matching declared context. Older backend snapshots without
 the optional context field display `Not observed`. The frontend formats these
 observations without recomputing compatibility or granting Play authority.
 
+Readable `saves index`, `inspect`, `verify`, and `associate` output shows the
+owner's save-byte status and declared context separately, including recorded
+and current version and content evidence. A successful byte verification can
+still show drifted declared context. JSON output and command exit meanings
+remain the owner's existing result. The ordinary TUI labels save-byte status
+and shows the selected save's context, version, and content on separate lines
+in both renderers. Missing optional context displays `Not observed`; these
+observations do not confer gameplay compatibility or Play authority.
+
 `saves retention plan` applies keep-last, daily, weekly, byte, and minimum-age
 policy to backups in the selected instance's owned backup directory. A backup
 is eligible only when its FacMan manifest matches the workspace, instance,

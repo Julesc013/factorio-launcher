@@ -120,9 +120,11 @@ std::string item_title(const json::Value& item)
 std::string item_detail(const json::Value& item)
 {
     std::vector<std::string> values;
+    const std::string save_bytes = string_member(item, "association_status");
+    if (!save_bytes.empty()) values.push_back("Save bytes: " + save_bytes);
     for (const char* key : {"factorio_version", "version", "profile", "ownership",
          "installation_layout", "distribution_origin", "strict_isolation_eligibility",
-         "verification_status", "association_status", "backup_status", "kind",
+         "verification_status", "backup_status", "kind",
          "status", "value", "root", "identity", "sha256"}) {
         const std::string value = string_member(item, key);
         if (!value.empty() && std::find(values.begin(), values.end(), value) == values.end()) {
@@ -409,11 +411,17 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
         line += item.title.empty() ? item.id : item.title;
         if (!item.detail.empty()) line += " - " + item.detail;
         model.body.push_back(std::move(line));
+        if (state.page == TuiPage::saves && index == state.selected_item && !item.save_context_status.empty()) {
+            model.body.push_back("  Declared context: " + item.save_context_status);
+            model.body.push_back("    Version: " + item.save_context_version);
+            model.body.push_back("    Content: " + item.save_context_content);
+        }
     }
     if (state.page == TuiPage::content) {
         model.body.push_back("Content is projected by the backend from shared profile and modset authority.");
     } else if (state.page == TuiPage::saves) {
         model.body.push_back("Save inventory is read from the selected instance without frontend joins.");
+        model.body.push_back("Declared context observes recorded inputs; gameplay compatibility is unclaimed.");
     } else if (state.page == TuiPage::settings) {
         model.body.push_back("Preferences, support, and runtime identity come from one backend snapshot.");
         model.body.push_back("Workspace: " + (state.snapshot.workspace_path.empty()
@@ -506,6 +514,25 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
                 item.title = item_title(*value);
                 item.detail = item_detail(*value);
                 item.selected = bool_member(*value, "selected");
+                if (snapshot.scope == "saves") {
+                    item.save_context_status = "Not observed";
+                    item.save_context_version = item.save_context_content = "not observed";
+                    const json::Value* context = value->find("association_context");
+                    if (context != nullptr && context->is_object()) {
+                        const std::string status = string_member(*context, "status");
+                        if (!status.empty()) item.save_context_status = status;
+                        const json::Value* version = context->find("factorio_version");
+                        const json::Value* content = context->find("modset_lock");
+                        if (version != nullptr && version->is_object()) {
+                            const std::string observed = string_member(*version, "status");
+                            if (!observed.empty()) item.save_context_version = observed;
+                        }
+                        if (content != nullptr && content->is_object()) {
+                            const std::string observed = string_member(*content, "status");
+                            if (!observed.empty()) item.save_context_content = observed;
+                        }
+                    }
+                }
                 if (item.selected) {
                     snapshot.selected_instance_id = item.id;
                     snapshot.selected_instance_name = item.title;

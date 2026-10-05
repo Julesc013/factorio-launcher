@@ -104,6 +104,43 @@ int main()
         content_snapshot.actions[0U].input_fields.size() != 1U ||
         content_snapshot.actions[0U].input_fields[0U].id != "mod_identity") return 30;
 
+    const TuiSnapshot saves_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "selected_context":{"instance_id":"main"},
+      "page":{"scope":"saves","summary":"Save inventory","items":[
+        {"save_id":"world.zip","name":"world.zip","association_status":"current",
+         "association_context":{"status":"drifted","factorio_version":{"status":"drifted"},
+           "modset_lock":{"status":"match"}}},
+        {"save_id":"legacy.zip","name":"legacy.zip","association_status":"drifted"}
+      ]}
+    })");
+    TuiState saves_state;
+    saves_state.page = TuiPage::saves;
+    saves_state.snapshot = saves_snapshot;
+    saves_state.focus_region = TuiFocusRegion::items;
+    const TuiRenderModel saves_model = make_tui_render_model(saves_state, false);
+    TerminalCapabilities saves_capabilities;
+    saves_capabilities.observed.columns = 80U;
+    saves_capabilities.observed.rows = 24U;
+    std::ostringstream saves_linear, saves_full;
+    ProductRenderer::render_linear(saves_linear, saves_model);
+    ProductRenderer::render_full_screen(saves_full, saves_model, saves_capabilities);
+    for (const char* text : {"Save bytes: current", "Declared context: drifted", "Version: drifted", "Content: match"}) {
+        if (saves_linear.str().find(text) == std::string::npos ||
+            saves_full.str().find(text) == std::string::npos) return 40;
+    }
+    if (saves_state.snapshot.selected_instance_id != "main") return 41;
+    saves_state.selected_item = 1U;
+    std::ostringstream legacy_linear, legacy_full;
+    const TuiRenderModel legacy_model = make_tui_render_model(saves_state, false);
+    ProductRenderer::render_linear(legacy_linear, legacy_model);
+    ProductRenderer::render_full_screen(legacy_full, legacy_model, saves_capabilities);
+    for (const char* text : {"Save bytes: drifted", "Declared context: Not observed", "Version: not observed", "Content: not observed"}) {
+        if (legacy_linear.str().find(text) == std::string::npos ||
+            legacy_full.str().find(text) == std::string::npos) return 42;
+    }
+
     const TuiSnapshot support_snapshot = parse_presentation_snapshot(R"({
       "schema":"facman.presentation_snapshot.v1",
       "revision":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
