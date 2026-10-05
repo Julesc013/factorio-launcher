@@ -13,6 +13,16 @@ namespace facman::factorio::application {
 bool effectful_semantic_action(const std::string& action_id);
 bool terminal_session_state(const std::string& state);
 std::string result_string(const ApplicationResult& result);
+bool lower_hex_digest(const std::string& value);
+std::string snapshot_revision(const std::string& snapshot);
+std::string profile_preparation_json(
+    const std::filesystem::path& workspace,
+    const std::string& instance_id,
+    std::vector<std::string> profile_ids);
+facman::core::Result<std::string> snapshot_profile_plan(
+    const std::string& snapshot,
+    const std::string& instance_id,
+    const std::string& profile_id);
 
 } // namespace facman::factorio::application
 

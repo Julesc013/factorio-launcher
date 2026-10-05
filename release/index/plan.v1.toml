@@ -601,7 +601,11 @@ outcome = "Make one typed readiness plan reconcile install, instance, content an
 source_bundles = ["F11"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
 execution_programme = "FACMAN-0.1-BETA1-COMPLETION-2026-09-06"
-evidence = [".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/menu-intent.v1.json", ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/profile-preparation.v1.json"]
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/menu-intent.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/profile-preparation.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/presentation-profile-preparation.v1.json",
+]
 queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml"
 depends_on = [
 

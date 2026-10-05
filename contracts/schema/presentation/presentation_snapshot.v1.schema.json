@@ -29,7 +29,34 @@
     "snapshot_id": {"type": "string", "minLength": 1},
     "revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "freshness": {"type": "object"},
-    "dependency_identities": {"type": "object"},
+    "dependency_identities": {
+      "type": "object",
+      "properties": {
+        "profile_preparation": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["instance_id", "profile_id", "plan_sha256", "refusal"],
+            "properties": {
+              "instance_id": {"type": "string", "minLength": 1},
+              "profile_id": {"type": "string", "minLength": 1},
+              "plan_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+              "refusal": {
+                "type": ["object", "null"],
+                "required": ["code", "detail"],
+                "properties": {"code": {"type": "string", "minLength": 1}, "detail": {"type": "string", "minLength": 1}},
+                "additionalProperties": false
+              }
+            },
+            "oneOf": [
+              {"properties": {"plan_sha256": {"type": "string"}, "refusal": {"type": "null"}}},
+              {"properties": {"plan_sha256": {"type": "null"}, "refusal": {"type": "object"}}}
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
     "workspace_health": {"type": "object"},
     "selected_context": {"type": "object"},
     "page": {"type": "object"},

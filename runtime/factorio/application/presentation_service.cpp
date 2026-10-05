@@ -98,13 +98,6 @@ bool semantic_outcome(const std::string& outcome)
         outcome == "recovery_required" || outcome == "outcome_unknown";
 }
 
-bool lower_hex_digest(const std::string& value)
-{
-    return value.size() == 64U && std::all_of(value.begin(), value.end(), [](char ch) {
-        return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
-    });
-}
-
 std::string action_request_json(const SemanticActionRequest& request)
 {
     json::ObjectBuilder input;
@@ -586,13 +579,6 @@ std::string recovery_json(const std::filesystem::path& workspace)
     }
     return transactions::to_json(
         std::get<transactions::Refusal>(outcome), "workspace.recovery.inspect");
-}
-
-std::string snapshot_revision(const std::string& snapshot)
-{
-    auto document = json::parse(snapshot);
-    if (!document || !document.value().is_object()) return {};
-    return decode_json_string_field(snapshot, "revision");
 }
 
 struct AdvertisedAction {
@@ -1193,6 +1179,10 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         auto projected = lifecycle::instance_readiness(context_.workspace(), projection);
         if (projected) readiness = projected.take_value();
     }
+    const std::string profile_preparation = profile_preparation_json(
+        context_.workspace(), request.selected_instance_id,
+        selected_exists && (request.scope == "instances" || request.scope == "content")
+            ? profile_choices : std::vector<std::string>());
     const std::string recovery = recovery_json(context_.workspace());
     const LastRunProjection last_run = request.selected_instance_id.empty()
         ? LastRunProjection {LastRunAuthorityState::no_record, last_run_provider_.provider_id(), {}, {}}
@@ -1578,6 +1568,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     revision_input.add_object("workspace_health", workspace_health);
     revision_input.add_object("selected_context", selection);
     revision_input.add_object("page", page);
+    add_json(revision_input, "profile_preparation", profile_preparation);
     if (readiness.empty()) revision_input.add_null("readiness");
     else add_json(revision_input, "readiness", readiness);
     add_json(revision_input, "recovery", recovery);
@@ -1595,6 +1586,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
 
     json::ObjectBuilder dependencies;
     dependencies.add_string("authoritative_digest", revision);
+    add_json(dependencies, "profile_preparation", profile_preparation);
     dependencies.add_string("workspace_store", "json_toml_v1");
     dependencies.add_string("readiness_owner", "facman.factorio.instance_readiness");
     dependencies.add_string("recovery_owner", "facman.workspace.transactions");
@@ -1774,6 +1766,19 @@ ApplicationResult PresentationService::action(
         return service_refusal(
             "presentation.action", "semantic_action_input_required", required_input,
             payload, facman::core::OutcomeKind::invalid_argument);
+    }
+
+    std::string profile_plan;
+    if (request.action_id == "profile.select") {
+        auto bound = snapshot_profile_plan(current_snapshot, request.selected_instance_id, request.profile_id);
+        if (!bound) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {},
+                bound.error().code, bound.error().message, false);
+            return service_refusal("presentation.action", bound.error().code,
+                bound.error().message, payload, bound.error().kind);
+        }
+        profile_plan = bound.take_value();
     }
 
     const char* durable_effect = request.action_id == "launch.play"
@@ -2041,12 +2046,15 @@ ApplicationResult PresentationService::action(
         EffectiveProfileRequest select;
         select.instance_id = request.selected_instance_id;
         select.profile_id = request.profile_id;
+        select.expected_plan_sha256 = profile_plan;
         domain.payload = std::move(select);
         domain.dry_run = false;
         const ApplicationResult selected = handlers::dispatch_profiles(context_, domain);
         if (selected.status != ULK_STATUS_OK) {
+            const char* outcome = selected.outcome_kind == facman::core::OutcomeKind::recovery_required
+                ? "recovery_required" : "refused_before_effects";
             output = action_result_json(
-                request, "refused_before_effects", current_snapshot,
+                request, outcome, current_snapshot,
                 result_string(selected), selected.error_code, selected.error_message,
                 false, {"workspace_write"});
         } else {

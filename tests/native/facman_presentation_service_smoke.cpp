@@ -21,16 +21,45 @@
 #include <condition_variable>
 #include <exception>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 #include <variant>
 
 namespace fs = std::filesystem;
 using namespace facman::factorio::application;
 
 namespace {
+
+// Mutate the unselected profile after the owner plan has been observed in a
+// snapshot but before its revision is admitted and apply is dispatched. This
+// existing provider seam avoids a production pause hook for the boundary test.
+class ProfileChangingLastRunProvider final : public LastRunProvider {
+public:
+    ProfileChangingLastRunProvider(LastRunProvider& delegate, fs::path profile)
+        : delegate_(delegate), profile_(std::move(profile)) {}
+    const char* provider_id() const noexcept override { return delegate_.provider_id(); }
+    LastRunProjection last_run(const std::string& reference) const override
+    {
+        if (armed) {
+            armed = false;
+            std::ofstream changed(profile_, std::ios::app | std::ios::binary);
+            changed << "\n";
+            changed.close();
+            mutated = static_cast<bool>(changed);
+        }
+        return delegate_.last_run(reference);
+    }
+    mutable bool armed = false;
+    mutable bool mutated = false;
+
+private:
+    LastRunProvider& delegate_;
+    fs::path profile_;
+};
 
 std::string output(const ApplicationResult& result)
 {
@@ -943,6 +972,35 @@ int run_smoke()
     select_profile.idempotency_key = "idempotency-select-profile";
     select_profile.durable_operation_id = "operation-select-profile";
     select_profile.attempt_id = "attempt-select-profile";
+    ProfileChangingLastRunProvider changing_provider(
+        journey_context.last_run_provider(),
+        journey_context.workspace() / "profiles" / "quiet-gui" / "profile.v1.json");
+    PresentationActionLedger changing_ledger;
+    PresentationService changing_service(journey_context, changing_provider, changing_ledger);
+    SemanticActionRequest raced_profile = select_profile;
+    raced_profile.request_id = "request-raced-profile";
+    raced_profile.idempotency_key = "idempotency-raced-profile";
+    raced_profile.durable_operation_id = "operation-raced-profile";
+    raced_profile.attempt_id = "attempt-raced-profile";
+    const fs::path isolated_manifest = journey_context.workspace() / "instances" /
+        "fixture-isolated" / "instance.v1.json";
+    std::ifstream before_stream(isolated_manifest, std::ios::binary);
+    if (!before_stream) return 110;
+    const std::string manifest_before_race {
+        std::istreambuf_iterator<char>(before_stream), std::istreambuf_iterator<char>()};
+    before_stream.close();
+    changing_provider.armed = true;
+    const ApplicationResult raced_result = changing_service.action(raced_profile, true);
+    std::ifstream after_stream(isolated_manifest, std::ios::binary);
+    const std::string manifest_after_race {
+        std::istreambuf_iterator<char>(after_stream), std::istreambuf_iterator<char>()};
+    after_stream.close();
+    if (!changing_provider.mutated || after_stream.bad() ||
+        manifest_before_race != manifest_after_race ||
+        output(raced_result).find("profile_preparation_revision_changed") == std::string::npos ||
+        output(raced_result).find("refused_before_effects") == std::string::npos) return 111;
+    planning_snapshot = output(journey_service.query(selected_instances_query));
+    select_profile.expected_snapshot_revision = field(planning_snapshot, "revision");
     const ApplicationResult selected_profile_result =
         journey_service.action(select_profile, true);
     if (selected_profile_result.status != ULK_STATUS_OK ||
