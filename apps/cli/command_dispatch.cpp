@@ -259,24 +259,14 @@ int emit_guidance(const CliResponse& response, bool as_json)
     return 0;
 }
 
-int emit_effective_profile(const CliResponse& response, bool as_json)
+int emit_report(const CliResponse& response, bool as_json,
+    std::optional<std::string> (*formatter)(const json::Value&), const char* missing, const char* invalid)
 {
     if (as_json) return emit_json(response);
     if (!response || !response.value().ok()) return emit_basic(response, false, "");
-    if (!response.value().parsed_payload) { std::cerr << "Effective profile response is missing\n"; return 1; }
-    auto report = facman::cli::effective_profile_text(*response.value().parsed_payload);
-    if (!report) { std::cerr << "Effective profile settings or provenance are missing\n"; return 1; }
-    std::cout << *report;
-    return 0;
-}
-
-int emit_instance_readiness(const CliResponse& response, bool as_json)
-{
-    if (as_json) return emit_json(response);
-    if (!response || !response.value().ok()) return emit_basic(response, false, "");
-    if (!response.value().parsed_payload) { std::cerr << "Instance readiness response is missing\n"; return 1; }
-    auto report = facman::cli::instance_readiness_text(*response.value().parsed_payload);
-    if (!report) { std::cerr << "Instance readiness report is invalid\n"; return 1; }
+    if (!response.value().parsed_payload) { std::cerr << missing << '\n'; return 1; }
+    auto report = formatter(*response.value().parsed_payload);
+    if (!report) { std::cerr << invalid << '\n'; return 1; }
     std::cout << *report;
     return 0;
 }
@@ -759,10 +749,11 @@ int command_instances(const Options& options)
             if (options.args[index] != "--intent" || index + 1 >= options.args.size()) return 2;
             ++index;
         }
-        return emit_instance_readiness(
+        return emit_report(
             call(options, "instances." + action, fields_payload({
                 {"instance_id", options.args[2]}, {"intent", option(options.args, "--intent")}})),
-            flag(options.args, "--json"));
+            flag(options.args, "--json"), facman::cli::instance_readiness_text,
+            "Instance readiness response is missing", "Instance readiness report is invalid");
     }
     if ((action == "inspect" || action == "verify" || action == "archive") && options.args.size() >= 3) {
         for (std::size_t index = 3; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;
@@ -923,9 +914,10 @@ int command_profiles(const Options& options)
         return emit_basic(call(options, "profiles." + action, exact_fields_payload(fields), action == "diff"), as_json,
             "Profile " + action + " completed");
     }
-    if ((action == "plan" || action == "apply") && options.args.size() >= 4) return emit_effective_profile(
+    if ((action == "plan" || action == "apply") && options.args.size() >= 4) return emit_report(
         call(options, "profiles." + action, profile_payload(options.args,
-            {{"instance_id", options.args[2]}, {"profile_id", options.args[3]}}), action == "plan"), as_json);
+            {{"instance_id", options.args[2]}, {"profile_id", options.args[3]}}), action == "plan"), as_json,
+        facman::cli::effective_profile_text, "Effective profile response is missing", "Effective profile settings or provenance are missing");
     return 2;
 }
 
@@ -956,12 +948,14 @@ int command_saves(const Options& options)
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
     const std::string instance = option(options.args, "--instance");
-    if (action == "index") return emit_basic(call(options, "saves.index", save_index_payload(
-        options.args, {{"instance_id", instance}})), flag(options.args, "--json"), "Saves indexed");
+    if (action == "index") return emit_report(call(options, "saves.index", save_index_payload(
+        options.args, {{"instance_id", instance}})), flag(options.args, "--json"), facman::cli::save_intelligence_text,
+        "Save intelligence response is missing", "Save intelligence report is invalid");
     if ((action == "inspect" || action == "verify" || action == "associate") && options.args.size() >= 3) {
-        return emit_basic(call(options, "saves." + action, save_index_payload(options.args,
+        return emit_report(call(options, "saves." + action, save_index_payload(options.args,
             {{"instance_id", instance}, {"save", options.args[2]}}), action != "associate"),
-            flag(options.args, "--json"), "Save " + action + " completed");
+            flag(options.args, "--json"), facman::cli::save_intelligence_text,
+            "Save intelligence response is missing", "Save intelligence report is invalid");
     }
     if (action == "diff" && options.args.size() >= 4) return emit_basic(call(options, "saves.diff", save_index_payload(
         options.args, {{"instance_id", instance}, {"save", options.args[2]}, {"other_save", options.args[3]}})),

@@ -130,4 +130,47 @@ std::optional<std::string> instance_readiness_text(const json::Value& report)
     return output.str();
 }
 
+std::optional<std::string> save_intelligence_text(const json::Value& report)
+{
+    if (text_field(report, "schema") != "factorio.save_intelligence.v1") return std::nullopt;
+    const json::Value* saves = report.find("saves");
+    if (saves == nullptr || !saves->is_array()) return std::nullopt;
+    std::ostringstream output;
+    output << text_field(report, "command") << " for instance " << text_field(report, "instance_id")
+           << "\nReport status: " << text_field(report, "status") << "\nSaves: " << saves->size() << '\n';
+    for (std::size_t index = 0; index < saves->size(); ++index) {
+        const json::Value* save = saves->at(index);
+        if (save == nullptr || !save->is_object()) return std::nullopt;
+        const json::Value* association = save->find("association");
+        if (association == nullptr || !association->is_object()) return std::nullopt;
+        output << text_field(*save, "filename") << "\n  Save bytes: " << text_field(*association, "status")
+               << "\n  SHA-256: " << text_field(*save, "sha256") << '\n';
+        const json::Value* context = association->find("context");
+        if (context == nullptr || !context->is_object()) {
+            output << "  Declared context: Not observed\n";
+            continue;
+        }
+        const json::Value* version = context->find("factorio_version");
+        const json::Value* content = context->find("modset_lock");
+        if (version == nullptr || !version->is_object() || content == nullptr || !content->is_object()) {
+            return std::nullopt;
+        }
+        output << "  Declared context: " << text_field(*context, "status")
+               << "\n    Version: " << text_field(*version, "status")
+               << " (recorded " << text_field(*version, "recorded")
+               << "; current " << text_field(*version, "current") << ")"
+               << "\n    Content: " << text_field(*content, "status")
+               << "\n      Recorded lock SHA-256: " << text_field(*content, "recorded_sha256")
+               << "\n      Current lock SHA-256: " << text_field(*content, "current_sha256")
+               << " (" << text_field(*content, "current_presence") << ")\n";
+        for (const json::Value* dimension : {version, content}) {
+            const std::string diagnostic = guidance_field(*dimension, "diagnostic");
+            if (!diagnostic.empty()) output << "    Observation: " << diagnostic << '\n';
+        }
+        output << "  Gameplay compatibility: " << text_field(*context, "gameplay_compatibility") << '\n';
+    }
+    output << "Deep Factorio save metadata: " << text_field(report, "deep_factorio_save_metadata") << '\n';
+    return output.str();
+}
+
 } // namespace facman::cli
