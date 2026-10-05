@@ -608,6 +608,7 @@ evidence = [
   ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/save-association-context.v1.json",
   ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/save-context-rendering.v1.json",
   ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/save-terminal-context.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/instance-configuration-produced.v1.json",
 ]
 queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml"
 depends_on = [
