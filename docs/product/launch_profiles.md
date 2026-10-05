@@ -46,6 +46,17 @@ before publication; a late change retains the journal and staging for explicit
 recovery. These owner-level plans provide one subplan for Make Ready; they do
 not grant launch or setup authority.
 
+Ordinary Instances and Content snapshots bind each selectable profile for the
+selected instance to the same owner plan digest, including profiles hidden by
+the current search. Selecting a profile carries that snapshot's digest to
+apply. Replacing an unselected profile invalidates the old snapshot; a change
+after observation still meets the owner's stale-plan refusal. A malformed
+profile has an explicit failed plan while valid siblings remain selectable.
+Late owner failures retain the semantic `recovery_required` outcome and its
+durable replay receipt. Refresh, inspect recovery, and apply the supported
+recovery before selecting again. The snapshot is an optimistic observation;
+it neither makes the whole workspace atomic nor grants execution authority.
+
 Safe fields cover window/fullscreen preference, graphics quality, audio,
 instance-local save selection, headless or benchmark planning modes, bounded
 benchmark ticks, and an explicit argument allowlist. FacMan always owns

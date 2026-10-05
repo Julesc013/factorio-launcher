@@ -1,0 +1,161 @@
+{
+  "schema": "facman.presentation_profile_preparation.v1",
+  "status": "PASS_SCOPED_WINDOWS_SOURCE_FIXTURE",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base": "1c8638bb0d7cc484963c4324fe6e564a0748b468",
+  "behavior": "Ordinary Instances/Content snapshots bind selectable profiles to owner plans; stale input refuses and late owner recovery remains truthful and replayable.",
+  "source_hashes": {
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "f694830dc3f4c2594dbbf9b0f634b79d807d3c1ac956e0aed1151bc5c12ae180",
+    "contracts/schema/presentation/presentation_snapshot.v1.schema.json": "2c24ea7f952295c87f112fcf1a7b0fb1b2cc9393afad0d87659eac9580673984",
+    "docs/product/launch_profiles.md": "19a0d466b0ed7570d71dcb8f202f60f136f9f6bd8af4eedae03e4b90d7305789",
+    "runtime/core/generated/version.h": "406216e13c9bb5088928c60079cf4a2bddba9cd8d555790d60a1e4eb476c9f11",
+    "runtime/factorio/application/presentation_action_support.cpp": "d8cd693c23d894595fcd4c75fd1845e4135876c9685a4028f0f4e96e62804088",
+    "runtime/factorio/application/presentation_action_support.h": "66f3964616747794c240975d115335485f06736552bf3d31b3c4efca40dad0d6",
+    "runtime/factorio/application/presentation_service.cpp": "081eb35e741971c1b42760a6c624fde52eef80f118ea2be118b1fc3c117c951e",
+    "tests/native/facman_presentation_service_smoke.cpp": "9c8bd0ff39f63ba00890e6e9b98729ed43699cb8c6310189cfdaf366b0c15a74",
+    "tests/test_presentation_profile_preparation.py": "58b6975afac7b2eeed75a7d39b4a6bf82f81fb60c1631359cf297409c8e2046c"
+  },
+  "CLI_sha256": "bc60a62920d48173f743a68cc5dfcd7929598c344c38bc117d48346b1ddf3254",
+  "source_proof_sha256": "76dbf0a50f9b97d283acfb685d8999b7b2c27e1d1cc646c620dfc1e97f60d9db",
+  "acceptance_scope": {
+    "public_tests": 25,
+    "observed_public_commands": 273,
+    "native_presentation_tests": 1,
+    "scopes": [
+      "instances",
+      "content"
+    ],
+    "owner_boundary_refusal": true,
+    "failed_profile_preserves_siblings": true,
+    "hidden_by_search_profiles_bound": true,
+    "read_only_query": true,
+    "late_recovery_replay_and_fresh_retry": true,
+    "prior_public_proof_reused_only_after_equal_rebuilt_CLI_hash": true
+  },
+  "source_reviews": [
+    {
+      "member": "make-ready-presentation-source-review-01.json",
+      "sha256": "8816a95f0aa0bf2970778152b10e2069a913a0bcca6e4862bc82a5b4ae6dbf76"
+    },
+    {
+      "member": "make-ready-presentation-source-review-02.json",
+      "sha256": "623184beb375d526efe584d12f6ed60920702f1bbda6bbfbcd8f90049b1408f2"
+    }
+  ],
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/presentation-profile-preparation-custody.zip",
+    "sha256": "eaeb07b6bbeca844943138712bc4fc5e68d9cea646b1ed40f439ee79a775e3f0",
+    "members": {
+      "make-ready-presentation-baseline-01.json": "117fc935017cd191fc18d28461d78e36521906324351ab2117c7d1c8b183e9dd",
+      "make-ready-presentation-baseline-01.log": "a3408a0003b2d11116830c510d0bb666ede167aaf5be712fe1cc5bbb8a42753e",
+      "make-ready-presentation-baseline-01.py": "2da2f551442a239060d4e0768b9eef9b27cf8213daf0d1831c6a1a0290fe1587",
+      "make-ready-presentation-branch-01-plan.json": "d240fca5d3606aa5d1fad7b784df788fa711f86865966e8aca9af5efe62e2f62",
+      "make-ready-presentation-branch-01.claim.json": "b92f56723740162826a4ff9f352f9eaf8dcba8db5b462dd49250558ed3e7bcb5",
+      "make-ready-presentation-branch-01.json": "a4a2675a00a49447b2f30101c77423dd658915acfb8515c238b8972da0db5266",
+      "make-ready-presentation-branch-01.py": "45f2eca7559f93f35a43237effb512d8de514484b50079016925061c13632ddd",
+      "make-ready-presentation-decision-01.json": "d4ac98befdca5c5c449ea28479896fc6c86e24b0e7bcac8b11d4368d8203114a",
+      "make-ready-presentation-native-failure-01.json": "ceeda0755511bce02b67334c9d3cf6d892446bf1d4188ca801794e496aa03a8e",
+      "make-ready-presentation-preflight-01-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-presentation-preflight-01-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-presentation-preflight-01-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-presentation-preflight-01-strict.log": "1bf5f45915270e8e5ae4ad0fe8a5db82187486f54a3a75817626f16340690e9f",
+      "make-ready-presentation-preflight-01.json": "625dd9f9ccb8f46c49b17079998b63ba799d52de0106451cef7e655e258e702a",
+      "make-ready-presentation-preflight-01.py": "7e42e0994472b51bd901b3f78e87f76ea08cbc8e869571dac14429a94d5d0792",
+      "make-ready-presentation-preflight-02-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-presentation-preflight-02-diff.log": "d2f980424e7c1e560b5c2deece91814731038dfcf65de5e7c51cb8f019546eb2",
+      "make-ready-presentation-preflight-02-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-presentation-preflight-02-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-presentation-preflight-02-plan-check.log": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31",
+      "make-ready-presentation-preflight-02-portable.log": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+      "make-ready-presentation-preflight-02-state-check.log": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd",
+      "make-ready-presentation-preflight-02-strict.log": "e458a0ddbcc05a69f417f96f3c5e1553659138aa3cf0888e205687fef991f4b6",
+      "make-ready-presentation-preflight-02.json": "9252b9fdc1724a9d37d4f6c6b4ec15c78daccf569f00ee7821b4c7c033608d9c",
+      "make-ready-presentation-preflight-02.py": "1548518f71f1e6e02e06962bac70633a4d0b86b9cc728e7bb28e51672b192a76",
+      "make-ready-presentation-preflight-03-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-presentation-preflight-03-diff.log": "d2f980424e7c1e560b5c2deece91814731038dfcf65de5e7c51cb8f019546eb2",
+      "make-ready-presentation-preflight-03-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-presentation-preflight-03-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-presentation-preflight-03-plan-check.log": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31",
+      "make-ready-presentation-preflight-03-portable.log": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+      "make-ready-presentation-preflight-03-state-check.log": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd",
+      "make-ready-presentation-preflight-03-strict.log": "e458a0ddbcc05a69f417f96f3c5e1553659138aa3cf0888e205687fef991f4b6",
+      "make-ready-presentation-preflight-03.json": "58eadcba7e0aa340701fceb99f95caab2ce168491dc6a23f9f42a60ba4be236b",
+      "make-ready-presentation-preflight-03.py": "72a8ce4eb06e5b63c063379bd74bba432d9fae00589b05a513c88cde99d92fa3",
+      "make-ready-presentation-public-01-commands.jsonl": "9c54e88ded017eec77d225d381332691e0049d19c7d65d338ffa7f8216956386",
+      "make-ready-presentation-public-01.json": "356d47bb7431c107ef70183c3d2b7b53e4588db1c5ae0b49359b3ddbfa7f9bd2",
+      "make-ready-presentation-public-01.py": "c9916c07129a8a2c1ed41a4fa69d9bba56761a549eef673cce97452fdbdf6aee",
+      "make-ready-presentation-public-02.py": "60dd98a334f8b01daffd2d704a3da9d6d14d255ecaa0d47b9c36ab913b899315",
+      "make-ready-presentation-public-diagnosis-01.log": "6ecbb2ae10b31767c20b7e15ed24abdd248cb1da80981d16b0b7e57bcac6bfdd",
+      "make-ready-presentation-source-proof-01-build.log": "342e8b6c73c19af8cd4254d6c8745cdd874612d1474be6047920bf78d3461cd8",
+      "make-ready-presentation-source-proof-01-doctor.json": "0f43426679371605caa4dbd67c47b0967c172737a2e55f9a58e7f5bcc967ab64",
+      "make-ready-presentation-source-proof-01-native-presentation.log": "fc4b506f60218d3466f60f1686db83b961724752865c692245250731d90b83fb",
+      "make-ready-presentation-source-proof-01-paths.json": "73cbf74d9798d09a79e8ee71f22fe9dd8591039bab2b1c9c38c66f5306999409",
+      "make-ready-presentation-source-proof-01.claim.json": "50cc2f4d78c2364db872b506db7c580fe4c942bca35e8eea4b7e1257abac5624",
+      "make-ready-presentation-source-proof-01.json": "0f17fd8d5024941aa96146a15871fc0e45b6586c7a45b0b5a422499bc1ba46dc",
+      "make-ready-presentation-source-proof-01.py": "fe1c9d613a8384c2c227e2eff1f43be99614ef44f12c9a6d0126b247a2030de7",
+      "make-ready-presentation-source-proof-02-build.log": "d8b90f33831efa1d0f8c09bbe24df43e78a57dd119c86ad14d75b2146c3ec20d",
+      "make-ready-presentation-source-proof-02-doctor.json": "cd820559ba21034eee463c26db4e1de444738be42f49066e54262f1b6943e4d0",
+      "make-ready-presentation-source-proof-02-native-presentation.log": "8886660b144c8f432cb50e38a0240e894cdecfa546ae65c7f867e93d91d5bf7a",
+      "make-ready-presentation-source-proof-02-paths.json": "73cbf74d9798d09a79e8ee71f22fe9dd8591039bab2b1c9c38c66f5306999409",
+      "make-ready-presentation-source-proof-02.claim.json": "3fa8684831db8baed8884f05ca41309427a7d8d1a7c9b685a3686719592a1e93",
+      "make-ready-presentation-source-proof-02.json": "76dbf0a50f9b97d283acfb685d8999b7b2c27e1d1cc646c620dfc1e97f60d9db",
+      "make-ready-presentation-source-proof-02.py": "4b647fd414aaa1984b893352ee5a3d6d45264ac3725b6653f037d2325de5977a",
+      "make-ready-presentation-source-review-01.json": "8816a95f0aa0bf2970778152b10e2069a913a0bcca6e4862bc82a5b4ae6dbf76",
+      "make-ready-presentation-source-review-02.json": "623184beb375d526efe584d12f6ed60920702f1bbda6bbfbcd8f90049b1408f2",
+      "source/apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "f694830dc3f4c2594dbbf9b0f634b79d807d3c1ac956e0aed1151bc5c12ae180",
+      "source/contracts/schema/presentation/presentation_snapshot.v1.schema.json": "2c24ea7f952295c87f112fcf1a7b0fb1b2cc9393afad0d87659eac9580673984",
+      "source/docs/product/launch_profiles.md": "19a0d466b0ed7570d71dcb8f202f60f136f9f6bd8af4eedae03e4b90d7305789",
+      "source/runtime/core/generated/version.h": "406216e13c9bb5088928c60079cf4a2bddba9cd8d555790d60a1e4eb476c9f11",
+      "source/runtime/factorio/application/presentation_action_support.cpp": "d8cd693c23d894595fcd4c75fd1845e4135876c9685a4028f0f4e96e62804088",
+      "source/runtime/factorio/application/presentation_action_support.h": "66f3964616747794c240975d115335485f06736552bf3d31b3c4efca40dad0d6",
+      "source/runtime/factorio/application/presentation_service.cpp": "081eb35e741971c1b42760a6c624fde52eef80f118ea2be118b1fc3c117c951e",
+      "source/tests/native/facman_presentation_service_smoke.cpp": "9c8bd0ff39f63ba00890e6e9b98729ed43699cb8c6310189cfdaf366b0c15a74",
+      "source/tests/test_presentation_profile_preparation.py": "58b6975afac7b2eeed75a7d39b4a6bf82f81fb60c1631359cf297409c8e2046c"
+    }
+  },
+  "retained_failures": [
+    "Baseline demonstrated same revision after replacing unselected profile in both scopes; extractor wording mismatch consumed without rerun.",
+    "Frozen service line cap preserved by sharing existing digest/snapshot utilities in existing support file.",
+    "Reviewer corrected recovery test to existing exit3 law before build.",
+    "Initial native test retained an open manifest reader; Windows replacement refused. Reader closed; failed fixture and recovery journal preserved externally."
+  ],
+  "resource_use": {
+    "native_builds": 2,
+    "public_suite_runs": 1,
+    "maximum_native_workers": 2,
+    "optional_candidate_dispatches": 0,
+    "CI_reruns": 0,
+    "new_roots": 0,
+    "new_worktrees": 0,
+    "model_wait_calls": 0,
+    "qualified_images_and_failed_fixtures_preserved_externally": true
+  },
+  "original_acceptance": [
+    "Make one typed readiness plan reconcile install, instance, content and selected world before launch.",
+    "Exercise stale inputs, recoverable partial preparation and selected-save mismatch through ordinary workflows."
+  ],
+  "close_after": [
+    "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+    "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+    "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+    "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+    "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+  ],
+  "qualification": {
+    "source_fixture": true,
+    "produced_package": false,
+    "actual_Factorio": false,
+    "human_experience": false,
+    "hostile_concurrent_writer": false,
+    "release": false,
+    "whole_workunit": false,
+    "full_programme": false
+  },
+  "external_gates_preserved": [
+    "PR343 protected-control owner authorization",
+    "Genuine distinct-version Linux Setup A5 update/rollback",
+    "MakeReady five original close-after prerequisites"
+  ],
+  "next_acceptance": "Compose owned multi-domain preparation and selected-save Play with current revisions through ordinary workflows.",
+  "finished_at_utc": "2026-10-05T00:35:00.887858+00:00"
+}

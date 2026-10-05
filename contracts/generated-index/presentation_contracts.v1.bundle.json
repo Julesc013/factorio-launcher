@@ -821,6 +821,81 @@
             "const": "presentation.query"
           },
           "dependency_identities": {
+            "properties": {
+              "profile_preparation": {
+                "items": {
+                  "additionalProperties": false,
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "plan_sha256": {
+                          "type": "string"
+                        },
+                        "refusal": {
+                          "type": "null"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "plan_sha256": {
+                          "type": "null"
+                        },
+                        "refusal": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  ],
+                  "properties": {
+                    "instance_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "plan_sha256": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "profile_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "refusal": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "detail": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "detail"
+                      ],
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "instance_id",
+                    "profile_id",
+                    "plan_sha256",
+                    "refusal"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
             "type": "object"
           },
           "freshness": {
@@ -896,7 +971,7 @@
       },
       "schema_id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
       "source_path": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
-      "source_sha256": "62af1ffe2e6e0fc4a7477dee63e9ec44c5b883811656feacaa5750ee4deeb889"
+      "source_sha256": "2c24ea7f952295c87f112fcf1a7b0fb1b2cc9393afad0d87659eac9580673984"
     },
     {
       "behavior": "read_projection",
@@ -997,5 +1072,5 @@
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200"
+  "source_digest": "d1cf4f23ddc35592f60727b92958ff23fec4ed69f1ab446f0a25f2d1612ef669"
 }
