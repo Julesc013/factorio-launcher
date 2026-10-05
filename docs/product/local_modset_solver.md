@@ -25,6 +25,13 @@ preserve all previous history and journals. A retry verifies the restored file
 presence, contents, backups, activation identity and journal-owned marker-only
 staging. Active attempts, unknown staged content and inconsistent history refuse.
 Apply and rollback share the existing instance configuration lock.
+Immediately before publication, apply checks selected local archive identities,
+the instance binding, and the exact presence and bytes of all three managed
+files again. A detected external edit refuses without restoring over that edit.
+Staging and history must retain their owned markers, safe paths, exact expected
+files, staged output and original backup bytes. Changed or unknown staged data
+remains intact for recovery. Failed applies retain the original failure detail
+in both the refusal and journal after verified restoration.
 `modsets rollback` verifies
 both applied state and backup hashes before restoring the exact earlier state;
 the displaced applied state remains in history.

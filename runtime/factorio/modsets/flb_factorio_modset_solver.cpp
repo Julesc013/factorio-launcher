@@ -18,6 +18,7 @@
 #include <map>
 #include <set>
 #include <system_error>
+#include <thread>
 
 namespace facman::factorio::modsets::solver {
 namespace fs = std::filesystem;
@@ -577,6 +578,23 @@ bool write_new(const fs::path& path, const std::string& text, std::string& detai
     return !error && facman::base::write_text_new_atomic(path, text, detail);
 }
 
+bool pause_before_apply_publication(const fs::path& stage, std::string& detail)
+{
+    const char* enabled = std::getenv("FACMAN_TEST_MODSET_APPLY_BEFORE_PUBLICATION_PAUSE");
+    if (enabled == nullptr || std::string(enabled) != "1") return true;
+    const fs::path marker = stage / ".facman-modset-apply-paused";
+    const fs::path release = stage / ".facman-modset-apply-release";
+    if (!write_new(marker, "ready\n", detail)) return false;
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+    std::error_code error;
+    while (!fs::exists(release, error) && !error && std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    const bool released = fs::exists(release, error) && !error;
+    if (!released) detail = "Modset apply publication test pause timed out";
+    return released;
+}
+
 void clean_stage(const fs::path& stage)
 {
     std::error_code error;
@@ -641,6 +659,54 @@ bool restored_files_match(const std::vector<StateFile>& files)
         auto current = state_file(file.key, file.target, "");
         if (!current || current.value().before_present != file.before_present ||
             current.value().before != file.before) return false;
+    }
+    return true;
+}
+
+bool verify_apply_staging(
+    const tx::Record& transaction, const ResolvedPlan& plan,
+    const std::vector<StateFile>& files, const fs::path& stage,
+    const fs::path& history, std::string& detail)
+{
+    for (const fs::path& root : {stage, history}) {
+        if (facman::base::path_crosses_link_or_reparse_point(root, detail) ||
+            !tx::verify_staging_ownership(transaction, root, detail)) return false;
+        std::map<std::string, std::string> expected;
+        if (root == stage) {
+            expected = {{"mod-list.json", files[0].after}, {"local-lock.json", files[1].after},
+                {"shared-lock.json", files[2].after}};
+            const char* pause = std::getenv("FACMAN_TEST_MODSET_APPLY_BEFORE_PUBLICATION_PAUSE");
+            if (pause != nullptr && std::string(pause) == "1") {
+                expected.emplace(".facman-modset-apply-paused", "ready\n");
+                std::error_code error;
+                if (fs::exists(stage / ".facman-modset-apply-release", error)) {
+                    expected.emplace(".facman-modset-apply-release", "");
+                }
+                if (error) { detail = error.message(); return false; }
+            }
+        } else {
+            expected.emplace("activation.v1.json", history_manifest(plan, files));
+            for (const StateFile& file : files) if (file.before_present) {
+                expected.emplace(file.key + ".before", file.before);
+            }
+        }
+        std::error_code error;
+        fs::directory_iterator iterator(root, error);
+        if (error) { detail = error.message(); return false; }
+        std::size_t observed = 0;
+        for (; iterator != fs::directory_iterator(); iterator.increment(error)) {
+            if (error) { detail = error.message(); return false; }
+            const fs::path path = iterator->path();
+            const std::string name = path.filename().string();
+            if (facman::base::path_crosses_link_or_reparse_point(path, detail)) return false;
+            if (name == tx::transaction_staging_marker_name()) continue;
+            const auto found = expected.find(name);
+            if (found == expected.end()) { detail = "Unexpected content in owned activation staging"; return false; }
+            const auto text = stable_text(path);
+            if (!text || text.value() != found->second) { detail = "Activation staging or backup bytes changed"; return false; }
+            ++observed;
+        }
+        if (error || observed != expected.size()) { detail = "Activation staging is incomplete"; return false; }
     }
     return true;
 }
@@ -812,8 +878,7 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
     if (!started) return failure<std::string>("recovery_write_refused", started.error().message);
     tx::TransactionSession session = started.take_value();
     if (!session.validated("local_archives_and_state_verified") || !session.planned("deterministic_plan_recorded") ||
-        !session.staging("new_state_staged") || !session.staged("backups_and_new_state_verified") ||
-        !session.verified("external_drift_revalidated") || !session.committing("atomic_state_replacement_started")) {
+        !session.staging("new_state_staged") || !session.staged("backups_and_new_state_verified")) {
         return failure<std::string>("recovery_write_refused", session.detail());
     }
     const char* fault = std::getenv("FACMAN_MODSET_FAULT");
@@ -825,6 +890,52 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
                 facman::core::OutcomeKind::recovery_required);
         }
         return failure<std::string>("modset_fault_injected", "Fault injected after backup");
+    }
+    const bool pause_completed = pause_before_apply_publication(stage, detail);
+    const std::string pause_detail = detail;
+    if (!verify_apply_staging(session.record(), plan, files, stage, history, detail)) {
+        session.require_recovery(detail);
+        return failure<std::string>("transaction_recovery_required", detail, stage,
+            facman::core::OutcomeKind::recovery_required);
+    }
+    const char* pause_enabled = std::getenv("FACMAN_TEST_MODSET_APPLY_BEFORE_PUBLICATION_PAUSE");
+    if (pause_enabled != nullptr && std::string(pause_enabled) == "1") {
+        fs::remove(stage / ".facman-modset-apply-paused", error);
+        if (!error) fs::remove(stage / ".facman-modset-apply-release", error);
+        if (error) {
+            session.require_recovery(error.message());
+            return failure<std::string>("transaction_recovery_required", error.message(), stage,
+                facman::core::OutcomeKind::recovery_required);
+        }
+    }
+    if (!pause_completed) {
+        clean_stage(stage);
+        if (!session.refused(pause_detail)) return failure<std::string>("recovery_write_refused", session.detail());
+        return failure<std::string>("modset_test_pause_failed", pause_detail, stage);
+    }
+    for (const auto& selected : plan.selected) if (!selected.second->virtual_package) {
+        const auto current = facman::factorio::mods::inspect_mod_zip(selected.second->file_path);
+        if (!current.valid || current.sha256 != selected.second->sha256 || current.sha1 != selected.second->sha1) {
+            clean_stage(stage);
+            if (!session.refused("Selected local archive changed before publication")) {
+                return failure<std::string>("recovery_write_refused", session.detail());
+            }
+            return failure<std::string>("modset_archive_changed", "A selected local archive changed before publication", selected.second->file_path);
+        }
+    }
+    const auto current_instance = load_instance(workspace, plan.instance.record.id.str());
+    if (!current_instance || current_instance.value().record.root != plan.instance.record.root ||
+        current_instance.value().record.install_ref.str() != plan.instance.record.install_ref.str() ||
+        current_instance.value().record.factorio_version != plan.instance.record.factorio_version ||
+        !restored_files_match(files)) {
+        clean_stage(stage);
+        if (!session.refused("Instance or managed modset state changed before publication")) {
+            return failure<std::string>("recovery_write_refused", session.detail());
+        }
+        return failure<std::string>("modset_external_drift", "Instance or modset state changed before publication", mods_root);
+    }
+    if (!session.verified("publication_inputs_revalidated") || !session.committing("atomic_state_replacement_started")) {
+        return failure<std::string>("recovery_write_refused", session.detail());
     }
     std::size_t committed = 0;
     for (std::size_t index = 0; index < files.size(); ++index) {
@@ -856,18 +967,19 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
         }
     }
     if (committed != files.size()) {
+        const std::string failure_detail = detail;
         if (!restore_files(files, history, ".failed-new", detail)) {
             session.failed(detail);
             return failure<std::string>("transaction_recovery_required", detail, history,
                 facman::core::OutcomeKind::recovery_required);
         }
         clean_stage(stage);
-        if (!restored_files_match(files) || !session.refused(detail + "; original state restored and verified")) {
+        if (!restored_files_match(files) || !session.refused(failure_detail + "; original state restored and verified")) {
             session.require_recovery("Restored state or refusal journal could not be verified");
             return failure<std::string>("transaction_recovery_required", session.detail(), history,
                 facman::core::OutcomeKind::recovery_required);
         }
-        return failure<std::string>(fault != nullptr ? "modset_fault_injected" : "persistent_write_refused", detail);
+        return failure<std::string>(fault != nullptr ? "modset_fault_injected" : "persistent_write_refused", failure_detail);
     }
     clean_stage(stage);
     if (!session.committed("modset_state_committed") || !session.complete()) {
