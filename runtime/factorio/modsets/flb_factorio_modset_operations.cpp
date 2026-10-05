@@ -182,7 +182,11 @@ std::vector<LockEntry> lock_entries(const std::string& text)
     return entries;
 }
 
-std::vector<std::string> verify_lock(const fs::path& workspace, const Instance& instance)
+std::vector<std::string> verify_lock(
+    const fs::path& workspace,
+    const Instance& instance,
+    std::vector<ModRef>* selected_mods = nullptr,
+    std::string* verified_lock = nullptr)
 {
     std::vector<std::string> problems;
     const fs::path path = instance_lock_path(instance);
@@ -229,6 +233,21 @@ std::vector<std::string> verify_lock(const fs::path& workspace, const Instance& 
     }
     if (current_lock != lock_json(instance, mods)) {
         problems.push_back("metadata drift: modset lock does not match inspected archives");
+    }
+    if (problems.empty()) {
+        if (selected_mods != nullptr) *selected_mods = std::move(mods);
+        if (verified_lock != nullptr) *verified_lock = current_lock;
+    }
+    return problems;
+}
+
+std::vector<std::string> verify_export_source(
+    const fs::path& workspace, const Instance& instance, const std::string& expected_lock)
+{
+    std::string current_lock;
+    std::vector<std::string> problems = verify_lock(workspace, instance, nullptr, &current_lock);
+    if (problems.empty() && current_lock != expected_lock) {
+        problems.push_back("selected modset lock changed during export");
     }
     return problems;
 }
@@ -620,12 +639,12 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     if (!load_instance(workspace, request.instance_id, instance)) {
         return refuse(command, request.instance_id, "unknown_instance", "Instance is not registered", request.instance_id);
     }
-    const std::vector<std::string> verification = verify_lock(workspace, instance);
+    std::vector<ModRef> mods;
+    std::string expected_lock;
+    const std::vector<std::string> verification = verify_lock(workspace, instance, &mods, &expected_lock);
     if (!verification.empty()) {
         return refuse(command, request.instance_id, "modset_verification_failed", "Modset must verify before export", verification.front());
     }
-    const std::vector<ModRef> mods = instance_mods(instance);
-    const std::string expected_lock = lock_json(instance, mods);
     if (read_text(instance_lock_path(instance)) != expected_lock) {
         return refuse(command, request.instance_id, "modset_verification_failed",
             "Modset lock changed before export", path_string(instance_lock_path(instance)));
@@ -635,6 +654,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         facman::base::sha256_hex_bytes(
             reinterpret_cast<const unsigned char*>(expected_lock.data()), expected_lock.size()));
     for (const ModRef& mod : mods) {
+        if (mod.virtual_package) continue;
         if (mod.sha256.size() != 64U ||
             !expected_archive_digests.emplace("mods/" + mod.file_name, mod.sha256).second) {
             return refuse(command, request.instance_id, "modset_verification_failed",
@@ -652,6 +672,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     std::vector<facman::archive::WriteEntry> entries;
     entries.push_back({"modset-lock.v1.json", instance_lock_path(instance), false});
     for (const ModRef& mod : mods) {
+        if (mod.virtual_package) continue;
         entries.push_back({"mods/" + mod.file_name, mod.file_path, false});
     }
     const fs::path staging = unique_staging(output_parent, ".facman-modset-export-");
@@ -728,7 +749,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         }
     }
     if (closure_error.empty()) {
-        const std::vector<std::string> after_staging = verify_lock(workspace, instance);
+        const std::vector<std::string> after_staging = verify_export_source(workspace, instance, expected_lock);
         if (!after_staging.empty()) {
             closure_error = "modset source changed during export: " + after_staging.front();
         }
@@ -823,7 +844,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
             result = facman::platform::IoStatus::failure(
                 "modset_verification_failed", "private archive copy differs from verified bytes");
         if (result.ok()) {
-            const std::vector<std::string> after_copy = verify_lock(workspace, instance);
+            const std::vector<std::string> after_copy = verify_export_source(workspace, instance, expected_lock);
             if (!after_copy.empty()) result = facman::platform::IoStatus::failure(
                 "modset_verification_failed", after_copy.front());
         }

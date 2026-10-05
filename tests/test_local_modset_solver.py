@@ -79,6 +79,89 @@ def managed_state(workspace: Path) -> list[bytes | None]:
 
 
 class LocalModsetSolverTests(unittest.TestCase):
+    def test_applied_selection_exports_exact_lock_and_only_selected_archives(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman selected export ") as value:
+            workspace = Path(value)
+            mods = setup(workspace) / "mods"
+            write_mod(mods / "library_1.0.0.zip", "library", "1.0.0")
+            write_mod(mods / "library_2.0.0.zip", "library", "2.0.0")
+            write_mod(mods / "application_1.0.0.zip", "application", "1.0.0", ["base >= 2.0", "library >= 1.0"])
+            (mods / "unused_bad_1.0.0.zip").write_bytes(b"unselected malformed archive\n")
+            call(workspace, "modsets", "apply", "solver", "--enable", "application")
+            call(workspace, "modsets", "verify", "solver")
+            before = snapshot(mods), snapshot(workspace / "modsets")
+            output = workspace / "selected.zip"
+            exported = call(workspace, "modsets", "export", "solver", str(output))
+            self.assertEqual(3, exported["files"])
+            with zipfile.ZipFile(output) as archive:
+                self.assertEqual({"modset-lock.v1.json", "mods/application_1.0.0.zip", "mods/library_2.0.0.zip"}, set(archive.namelist()))
+                self.assertEqual((mods / "modset-lock.v1.json").read_bytes(), archive.read("modset-lock.v1.json"))
+                for name in ("application_1.0.0.zip", "library_2.0.0.zip"):
+                    self.assertEqual((mods / name).read_bytes(), archive.read("mods/" + name))
+            exported_bytes = output.read_bytes()
+            refused = call(workspace, "modsets", "export", "solver", str(output), success=False)
+            self.assertEqual("persistent_target_exists", refused["refusal"]["code"])
+            self.assertEqual(exported_bytes, output.read_bytes())
+            repeated = workspace / "selected-repeat.zip"
+            call(workspace, "modsets", "export", "solver", str(repeated))
+            self.assertEqual(exported_bytes, repeated.read_bytes())
+            self.assertEqual(before, (snapshot(mods), snapshot(workspace / "modsets")))
+
+    def test_virtual_only_selection_exports_lock_without_inventing_archive(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman virtual export ") as value:
+            workspace = Path(value)
+            mods = setup(workspace) / "mods"
+            call(workspace, "modsets", "apply", "solver", "--enable", "base")
+            call(workspace, "modsets", "verify", "solver")
+            output = workspace / "virtual.zip"
+            exported = call(workspace, "modsets", "export", "solver", str(output))
+            self.assertEqual(1, exported["files"])
+            with zipfile.ZipFile(output) as archive:
+                self.assertEqual(["modset-lock.v1.json"], archive.namelist())
+                self.assertEqual((mods / "modset-lock.v1.json").read_bytes(), archive.read("modset-lock.v1.json"))
+                lock = json.loads(archive.read("modset-lock.v1.json"))
+                self.assertEqual(["base"], [mod["name"] for mod in lock["mods"]])
+                self.assertEqual("builtin_info_json", lock["mods"][0]["metadata_source"])
+
+    def test_export_refuses_valid_changed_selection_after_staging(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman export selection drift ") as value:
+            workspace = Path(value)
+            mods = setup(workspace) / "mods"
+            write_mod(mods / "simple_1.0.0.zip", "simple", "1.0.0")
+            call(workspace, "modsets", "apply", "solver", "--enable", "simple")
+            lock = json.loads((mods / "modset-lock.v1.json").read_bytes())
+            lock["mods"] = [mod for mod in lock["mods"] if mod["name"] == "base"]
+            changed = (json.dumps(lock, separators=(",", ":")) + "\n").encode()
+            output = workspace / "changed-selection.zip"
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", str(workspace), "modsets", "export", "solver", str(output), "--json"],
+                cwd=ROOT, env=dict(os.environ, FACMAN_TEST_MODSET_EXPORT_PAUSE_AFTER_STAGE="1"),
+                text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                staging = None
+                while staging is None and process.poll() is None and time.monotonic() < deadline:
+                    staging = next((path for path in workspace.glob(".facman-modset-export-*")
+                                    if (path / ".facman-modset-export-paused").is_file()), None)
+                    time.sleep(0.01)
+                self.assertIsNotNone(staging, "export did not reach the staged archive boundary")
+                (mods / "modset-lock.v1.json").write_bytes(changed)
+                (workspace / "modsets/solver.modset-lock.v1.json").write_bytes(changed)
+                (staging / ".facman-modset-export-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertNotEqual(0, process.returncode, stdout + stderr)
+                refusal = json.loads(stdout)["payload"]["refusal"]
+                self.assertEqual("modset_verification_failed", refusal["code"])
+                self.assertFalse(output.exists())
+                self.assertEqual(changed, (mods / "modset-lock.v1.json").read_bytes())
+                self.assertEqual(changed, (workspace / "modsets/solver.modset-lock.v1.json").read_bytes())
+                call(workspace, "modsets", "verify", "solver")
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                process.communicate()
+
     def test_apply_refuses_selected_archive_change_at_publication_boundary(self) -> None:
         self.assert_publication_drift_refused("archive")
 
