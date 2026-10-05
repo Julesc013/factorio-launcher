@@ -7,7 +7,7 @@ namespace FacMan.WinForms.GeneratedContracts
 {
     public static class PresentationContractIdentity
     {
-        public const string SourceDigest = "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200";
+        public const string SourceDigest = "d1cf4f23ddc35592f60727b92958ff23fec4ed69f1ab446f0a25f2d1612ef669";
     }
 
     public sealed class SemanticActionRequest
