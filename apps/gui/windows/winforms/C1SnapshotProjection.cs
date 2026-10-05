@@ -293,6 +293,10 @@ namespace FacMan.WinForms
                     { "identity", item.Identity },
                     { "sha256", item.Sha256 },
                     { "association_status", item.AssociationStatus },
+                    { "association_context_status", item.AssociationContextStatus },
+                    { "association_version_status", item.AssociationVersionStatus },
+                    { "association_modset_status", item.AssociationModsetStatus },
+                    { "association_context_summary", item.AssociationContextSummary },
                     { "backup_status", item.BackupStatus },
                     { "selected", item.Selected },
                 });

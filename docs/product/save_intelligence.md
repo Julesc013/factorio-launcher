@@ -32,6 +32,13 @@ reconstructed from a current observation. The original `association.status`
 and `verify.status` retain their save-byte-only meanings; neither is a Play
 readiness verdict. Observations do not claim an atomic game/content snapshot.
 
+The Windows Saves view keeps save-byte status in its own column and displays
+the owner's declared context state with its version and content states.
+A save can therefore have current bytes and drifted declared context, or
+drifted bytes and matching declared context. Older backend snapshots without
+the optional context field display `Not observed`. The frontend formats these
+observations without recomputing compatibility or granting Play authority.
+
 `saves retention plan` applies keep-last, daily, weekly, byte, and minimum-age
 policy to backups in the selected instance's owned backup directory. A backup
 is eligible only when its FacMan manifest matches the workspace, instance,

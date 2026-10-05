@@ -1,0 +1,200 @@
+{
+  "schema": "facman.save_context_rendering.v1",
+  "status": "PASS_SCOPED_WINDOWS_SOURCE_RENDERING",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base": "be3f5f47cb555661cd15ed2c96c475fd412c578d",
+  "behavior": "Windows Saves rows retain owner-reported overall/version/content context states and display declared context separately from save-byte status; absent optional context remains Not observed.",
+  "source_hashes": {
+    "apps/gui/windows/winforms/C1ShellForm.cs": "2bfb36c5a598896a7f41fbbe2648a6b4e6d3e7764aef9e3b9d084c97ffaa7377",
+    "apps/gui/windows/winforms/C1SnapshotProjection.cs": "bf1e9d8609f8346ff39350852795bf0bd45329c9c3fca96efabe5212287edab6",
+    "apps/gui/windows/winforms/PresentationModels.cs": "15fc0e6ed473c6b7550a0d15f636d957061a767faea86650f6ce2ebf8ba436d7",
+    "docs/product/save_intelligence.md": "05f7a4a11272f38afc11ee141db09a62d445214b29338dc7891cba18a0d2984c",
+    "tests/test_winforms_save_association_context.py": "851c5739a383214a6b841559f4de6b83b74abf5fe6ad5fc0679e51b399102005",
+    "tests/winforms_control_gallery/FacMan.SaveContext.Harness.csproj": "3576c1a13e8f4908e8719ad67114f69bc877a9e2816fa11584f234a4942ed341",
+    "tests/winforms_control_gallery/SaveContextHarness.cs": "503acd34b47164bef0adce89b78864962da13824abdfa3acd90108a554ea710b"
+  },
+  "binary_identities": {
+    "FacMan.exe": "9182926a0f7602b26d8abcfe3a78844fd21e8777a46304953478edda5b5fefd4",
+    "FacMan.SaveContext.Harness.exe": "3d42fcd96e5029d4d4d7c6e28018701fabcedf09a558e0a5606e331d4e8e679c"
+  },
+  "source_proof_sha256": "a6c31c97c763aa8cbc202c55430d4873aafec1acf71f834e9b9f1d7f1ae567d2",
+  "baseline_sha256": "16bd8e14810419fc6aa5d5989efe0c8367ae653987faa30292e21700b7b954fe",
+  "acceptance_scope": {
+    "runtime_cases": 7,
+    "actual_backend_cases": 6,
+    "optional_context_absent_compatibility_cases": 1,
+    "skips": 0,
+    "match": true,
+    "version_drift": true,
+    "content_drift": true,
+    "unknown_legacy_evidence": true,
+    "unavailable_context": true,
+    "byte_drift_with_matching_context": true,
+    "distinct_columns": true,
+    "backend_states_forwarded_without_recomputation": true,
+    "gallery_action_count_zero": true,
+    "actual_rendered_ListView_rows": true,
+    "windows_hidden_form": true,
+    "Python_test_method_rerun": false,
+    "corrected_GUI_uses_exact_retained_backend_cases": true
+  },
+  "owner_producer": {
+    "integrated_source": "4b32a15a59777911fe3911c55b5bc1f2be4c7ec5",
+    "integrated_dev": "be3f5f47cb555661cd15ed2c96c475fd412c578d",
+    "CLI_sha256": "20dfe23fcbba828b5be23205fce74f59c458c9c94339f3c725515db4e2af2f42",
+    "retained_public_commands": 16,
+    "new_public_commands": 0,
+    "cases_sha256": "fd0d3276c14416accd878e8dc19a1c51131d177f86f9130c75e73f24d20f10a9",
+    "exact_Git_and_LF_source_bindings": [
+      {
+        "path": "apps/gui/windows/winforms/GeneratedCommandCatalog.cs",
+        "raw_equal": false,
+        "git_blob_oid": "5e2394a68c41fbe39761abd1f6a28c8a84a5e80b",
+        "canonical_LF_sha256": "21f432df3a9e3244661b51f194f66a6bcabf43752ec00a55ff3d876de3d312e7"
+      },
+      {
+        "path": "contracts/schema/factorio/factorio_save_intelligence.v1.schema.json",
+        "raw_equal": true,
+        "git_blob_oid": "1fa9955a1b07c9fbc3d730ec4203191cf5bfebb3",
+        "canonical_LF_sha256": "b3a9892bae7c6f4393cf1574e847de903719dddffac7151f78d9792e6545639e"
+      },
+      {
+        "path": "runtime/core/generated/version.h",
+        "raw_equal": false,
+        "git_blob_oid": "6023162ffe1d0c07cb838202d54298acb8263db9",
+        "canonical_LF_sha256": "52ecf7898b210f28a030f797ab5bb397706e792e2313fdfd3fa4b999da27fe26"
+      },
+      {
+        "path": "runtime/factorio/application/presentation_service.cpp",
+        "raw_equal": true,
+        "git_blob_oid": "21cc9f5fb72868de90c7a9d718effcae11971762",
+        "canonical_LF_sha256": "9867102a6797ba36e52ac7c34ccc6519aa864187fff2c517c71df12774396e46"
+      },
+      {
+        "path": "runtime/factorio/saves/flb_factorio_save_index.cpp",
+        "raw_equal": true,
+        "git_blob_oid": "aff8676bc0e4a09a1533c720e2527298dbefbffe",
+        "canonical_LF_sha256": "21f90dcc97469f25d07dd1f8b76c884699a18524a54fd86000593fd4a3f74452"
+      },
+      {
+        "path": "tests/test_save_association_context.py",
+        "raw_equal": true,
+        "git_blob_oid": "806c788d6f2108518f1aed4f983d58836f70ffb8",
+        "canonical_LF_sha256": "cdacb0cb9174463814931842ff4cf9ae27e74781c69197c545d5645995c2d891"
+      }
+    ]
+  },
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/save-context-rendering-custody.zip",
+    "sha256": "95da530a44eec0e944d3223a9869dba06e50d81edea01f01a8319299aea42481",
+    "members": {
+      "make-ready-save-view-baseline-01-commands.jsonl": "cde6606bba85bf97c9b888674a12330e17289ef03d917fecd343e14152fe115c",
+      "make-ready-save-view-baseline-01-doctor.json": "3e1f106b40e99cca1d196a59c5baeee859dc8b63ab07ea87fd0f6be8cf1ac6bf",
+      "make-ready-save-view-baseline-01.json": "16bd8e14810419fc6aa5d5989efe0c8367ae653987faa30292e21700b7b954fe",
+      "make-ready-save-view-baseline-01.log": "319fccaeef5e4806191f7c0d26845096fd8b3a92737e0680e88c409b0c9012f7",
+      "make-ready-save-view-baseline-01.py": "8ee1fcd36e950177efe47dfa7d8bcb16ff52684f8b529906351afc0376862a03",
+      "make-ready-save-view-branch-01-plan.json": "9d5027780644274fbff7c16b2529117bdc7487e0baf6b1a8c9923eb16103be86",
+      "make-ready-save-view-branch-01.claim.json": "c0ec5bc22c089d19fbd7e43593ddc46f1715eafb68e6aa61772cc900ac3d93f9",
+      "make-ready-save-view-branch-01.json": "82a6ef8ca5f03be3cc6abac5f41310a0d87ae54f23ffb846853d653fc110a3e1",
+      "make-ready-save-view-branch-01.py": "887fde867b5e956ef2a20182d759ec3183c322a432549ce17282f479cbeecbcf",
+      "make-ready-save-view-branch-create-01.py": "d2cf489e3c06634d7517dac6e8d43ad773ce4cf75013cb887080443b37b6072d",
+      "make-ready-save-view-package-01.py": "9890eb9a8e8c51fad20e5dff83c535565e6c0f1ecd7013791385b99b047243cc",
+      "make-ready-save-view-prebranch-doctor.json": "be5750cb4a98c438472def5f84a63e7f5143a6ca3bc38a05104ee91199da51c7",
+      "make-ready-save-view-prebranch-git-detect.log": "45a66512e2a315415f9c80bf298548eda234778772b610d3d4472e2682707405",
+      "make-ready-save-view-prebranch-git-plan.log": "e37a1d350f25b7df7ed6d32d8c7312a72187f8ed1ddc4682ffe7ab35bff2d862",
+      "make-ready-save-view-prebranch-git-policy.log": "71ce5018e4abc2321cd3962f0b6c32fe1c00f85a9026b82e8130a7013700ba71",
+      "make-ready-save-view-prebranch-paths.json": "ef8d26829ebf621a61f34c075a75d6e0b7121ec5457defba1fbac4ae857635a9",
+      "make-ready-save-view-prebranch-task-inspect.log": "b38c1bce611a55fccf07272c9b0aab926c0187efabe16774c24ddc210147288d",
+      "make-ready-save-view-prebranch-task-noop-check.log": "5aa5f829377d6c1e6f915d0e9420e0ad519d403efc9aa87b845aa3b81756819e",
+      "make-ready-save-view-prebranch-task-recover.log": "0e421e796e3e36b610e641255f8e9c239ffc11be0c9da9633b4bff366da08098",
+      "make-ready-save-view-proof-create-02.py": "bc9573f2ce078bfb8193ead29830ebae870f6f3fe05821d46d32eaade5a9dd4e",
+      "make-ready-save-view-proof-create-03.py": "035706920f99b00592b4572cf8bb629de2f6970d75372609af4b266de75fa708",
+      "make-ready-save-view-source-proof-01-preclaim-failure.json": "cc4dcaaaf7ee0e7a5109a6fa2d597f7f4d98f980836a45356cd39e5e6f4b20f3",
+      "make-ready-save-view-source-proof-01.py": "8b926adb893df4a5d518cbb6f8a57c38682949678ad858e053de1f597e93ae6d",
+      "make-ready-save-view-source-proof-02-compiler.log": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "make-ready-save-view-source-proof-02-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-save-view-source-proof-02-doctor.json": "e419505e075aead5a8d4bec60c593c5089bfc67fa8f010357abadd7f4d5e1680",
+      "make-ready-save-view-source-proof-02-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-save-view-source-proof-02-gui-contract.log": "b5ee8ae7f234f9d1d23da7b6e508abe026abbbfbf170e978436743d5ac38cc1f",
+      "make-ready-save-view-source-proof-02-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-save-view-source-proof-02-strict.log": "6c9d2954242d27116eab85559d631d4048cc746961b1f6c1b04202155faa22dc",
+      "make-ready-save-view-source-proof-02.claim.json": "43c162a51d48be207ad05e65866c82a9a77a7ab7b12ace72b47784f23ec88d65",
+      "make-ready-save-view-source-proof-02.json": "de805a11f09ba02a7dcc7fc1feea7c042681b10ce9fa5f8f11270172f2a5d94b",
+      "make-ready-save-view-source-proof-02.py": "f0b10a084071d7b2b9082be84c3753a0932aaf7498b27c04cb815bb2e2f7953b",
+      "make-ready-save-view-source-proof-03-build.log": "e9aabe022218a90750f503495aba0cbd436fa31edb904ede1b8a6b8b5ef77c43",
+      "make-ready-save-view-source-proof-03-compiler.log": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "make-ready-save-view-source-proof-03-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-save-view-source-proof-03-doctor.json": "b7974dc574dfed8c1ebf72b5adfc2335e201c7481513fd0d25d1f0a36808878a",
+      "make-ready-save-view-source-proof-03-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-save-view-source-proof-03-gui-contract.log": "b5ee8ae7f234f9d1d23da7b6e508abe026abbbfbf170e978436743d5ac38cc1f",
+      "make-ready-save-view-source-proof-03-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-save-view-source-proof-03-portable.log": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+      "make-ready-save-view-source-proof-03-render.log": "38ee307c9492ed5a2dda960493b2fdac6eaa90c19c89c412b6c1932608b1066f",
+      "make-ready-save-view-source-proof-03-strict.log": "2f09eef4a7ac46ebefb53d96670677be534af6770d95b9ff4147abd3157e4175",
+      "make-ready-save-view-source-proof-03.claim.json": "8fdbdc9ae7dd591fa627f70966023e8711b6beb54ceed734ca14e8915f67bbdb",
+      "make-ready-save-view-source-proof-03.json": "a6c31c97c763aa8cbc202c55430d4873aafec1acf71f834e9b9f1d7f1ae567d2",
+      "make-ready-save-view-source-proof-03.py": "f8660b6543b7aef0d55529e4bdd54a72fe3630247a180feb81f5de177d916a03",
+      "baseline-fixture/cases.json": "fd0d3276c14416accd878e8dc19a1c51131d177f86f9130c75e73f24d20f10a9",
+      "baseline-fixture/build.log": "b2447f428286f59fc5fea0d426856c8c07fb48dcdf72e28a7a3e34d98a466ea4",
+      "baseline-fixture/run.log": "14fba43fdddcb513271e4f9989f5fec4d08d1ea9883fb4186c229143eb6ae071",
+      "baseline-fixture/binary-identities.json": "4b2dee291527ce8377bc2d409eb68766acc438192f8c98b979df63cce3aac48e",
+      "source/apps/gui/windows/winforms/C1ShellForm.cs": "2bfb36c5a598896a7f41fbbe2648a6b4e6d3e7764aef9e3b9d084c97ffaa7377",
+      "source/apps/gui/windows/winforms/C1SnapshotProjection.cs": "bf1e9d8609f8346ff39350852795bf0bd45329c9c3fca96efabe5212287edab6",
+      "source/apps/gui/windows/winforms/PresentationModels.cs": "15fc0e6ed473c6b7550a0d15f636d957061a767faea86650f6ce2ebf8ba436d7",
+      "source/docs/product/save_intelligence.md": "05f7a4a11272f38afc11ee141db09a62d445214b29338dc7891cba18a0d2984c",
+      "source/tests/test_winforms_save_association_context.py": "851c5739a383214a6b841559f4de6b83b74abf5fe6ad5fc0679e51b399102005",
+      "source/tests/winforms_control_gallery/FacMan.SaveContext.Harness.csproj": "3576c1a13e8f4908e8719ad67114f69bc877a9e2816fa11584f234a4942ed341",
+      "source/tests/winforms_control_gallery/SaveContextHarness.cs": "503acd34b47164bef0adce89b78864962da13824abdfa3acd90108a554ea710b"
+    }
+  },
+  "retained_failures": [
+    "Actual compiled baseline dropped owner association_context_status before rendering.",
+    "Preclaim guard stopped on generated-file checkout CRLF; exact filtered Git objects and LF producer bytes verified, with no semantic change.",
+    "Strict language policy rejected a new C# test root; unchanged harness moved into existing admitted WinForms control-gallery test root. Policy unchanged."
+  ],
+  "resource_use": {
+    "GUI_builds": 2,
+    "corrected_GUI_builds": 1,
+    "native_builds": 0,
+    "owner_query_replays": 0,
+    "maximum_workers": 2,
+    "maximum_heavy_local_jobs": 1,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "optional_candidate_dispatches": 0,
+    "CI_reruns": 0,
+    "unchanged_wait_model_calls": 0,
+    "prior_producer_images_and_evidence_preserved": true
+  },
+  "original_acceptance": [
+    "Make one typed readiness plan reconcile install, instance, content and selected world before launch.",
+    "Exercise stale inputs, recoverable partial preparation and selected-save mismatch through ordinary workflows."
+  ],
+  "close_after": [
+    "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+    "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+    "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+    "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+    "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+  ],
+  "qualification": {
+    "source_fixture": true,
+    "produced_package": false,
+    "actual_Factorio": false,
+    "human_experience": false,
+    "gameplay_compatibility": false,
+    "selected_save_launch": false,
+    "full_windows_backend_link_qualification": false,
+    "release": false,
+    "whole_workunit": false,
+    "full_programme": false,
+    "exact_current_source_CI": "pending"
+  },
+  "external_gates_preserved": [
+    "PR343 protected-control owner authorization",
+    "Genuine distinct-version Linux Setup A5 update/rollback",
+    "MakeReady five original close-after prerequisites",
+    "Windows backend required link cell remains host blocked"
+  ],
+  "finished_at_utc": "2026-10-05T06:07:55.711940+00:00"
+}

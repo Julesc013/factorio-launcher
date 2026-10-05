@@ -357,10 +357,11 @@ namespace FacMan.WinForms
             savesList.MultiSelect = false;
             savesList.AccessibleName = "Selected instance saves";
             savesList.AccessibleDescription =
-                "Structurally inspected local saves with association and backup status.";
+                "Structurally inspected local saves with save-byte, declared context and backup observations.";
             savesList.Columns.Add("Save", 250);
             savesList.Columns.Add("Status", 140);
-            savesList.Columns.Add("Association", 140);
+            savesList.Columns.Add("Save bytes", 140);
+            savesList.Columns.Add("Declared context", 330);
             savesList.Columns.Add("Backup", 120);
             savesList.Columns.Add("SHA-256", 330);
             layout.Controls.Add(savesList, 0, 2);
@@ -654,6 +655,7 @@ namespace FacMan.WinForms
                     save.Tag = RecordText(item, "id");
                     save.SubItems.Add(RecordText(item, "status"));
                     save.SubItems.Add(RecordText(item, "association_status"));
+                    save.SubItems.Add(FirstRecordText(item, "association_context_summary", "association_context_status"));
                     save.SubItems.Add(RecordText(item, "backup_status"));
                     save.SubItems.Add(RecordText(item, "sha256"));
                     savesList.Items.Add(save);
