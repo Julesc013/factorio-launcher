@@ -42,10 +42,14 @@ lock metadata cannot grant built-in provenance. Unselected local versions do not
 invalidate a solver selection. Human inventory and solver commands show the
 owner's package identities, selection, changes, explanation and rollback ID.
 
-The older `modsets export` path still requires its all-archive physical lock.
-Exporting a solver selection with virtual packages or unselected archives remains
-an explicit refusal pending the local-content/modpack acceptance work. A passing
-solver verification does not qualify that reconstruction path.
+`modsets export` packages the exact verified lock and only its selected physical
+archives. Unselected local versions and malformed archives remain outside the
+export. Trusted built-in packages stay in the lock as virtual metadata; export
+does not invent archives for them. A virtual-only selection contains only its
+lock. The staged archive must retain the verified entry bytes, and source checks
+after staging and private copying also require the same selected lock. Existing
+targets refuse without replacement. Import and offline reconstruction require
+their own acceptance evidence.
 
 These commands never fetch missing mods, remove local archives, execute Factorio,
 or grant setup, publication, or human-acceptance authority.
