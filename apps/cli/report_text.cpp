@@ -173,4 +173,69 @@ std::optional<std::string> save_intelligence_text(const json::Value& report)
     return output.str();
 }
 
+std::optional<std::string> local_content_text(const json::Value& report)
+{
+    const std::string schema = text_field(report, "schema");
+    std::ostringstream output;
+    output << text_field(report, "command") << ": " << text_field(report, "status") << '\n';
+    if (schema == "factorio.mod_inventory.v1" || schema == "factorio.mod_inventory_record.v1") {
+        const json::Value* records = report.find("records");
+        const json::Value* record = report.find("record");
+        if (schema == "factorio.mod_inventory.v1" && (records == nullptr || !records->is_array())) return std::nullopt;
+        if (schema == "factorio.mod_inventory_record.v1" && (record == nullptr || !record->is_object())) return std::nullopt;
+        if (records != nullptr) output << "Records: " << text_field(report, "record_count") << '\n';
+        const std::size_t count = record != nullptr ? 1U : records->size();
+        for (std::size_t index = 0; index < count; ++index) {
+            const json::Value* item = record != nullptr ? record : records->at(index);
+            if (item == nullptr || !item->is_object()) return std::nullopt;
+            output << "  " << text_field(*item, "name") << " " << text_field(*item, "version")
+                   << " [" << text_field(*item, "validation_status") << "] " << text_field(*item, "file_name")
+                   << "\n    Source: " << text_field(*item, "source") << " (" << text_field(*item, "source_path") << ")"
+                   << "\n    Metadata: " << text_field(*item, "metadata_source")
+                   << "; built-in: " << text_field(*item, "virtual_package")
+                   << "\n    SHA-256: " << text_field(*item, "sha256")
+                   << "\n    Dependencies: " << text_field(*item, "dependencies") << '\n';
+            const json::Value* refusal = item->find("refusal");
+            if (refusal != nullptr) output << "    Refusal: " << text_field(*refusal, "code") << ": " << text_field(*refusal, "reason") << '\n';
+        }
+    } else if (schema == "factorio.modset_plan.v1" || schema == "factorio.modset_apply.v1") {
+        const json::Value* desired = report.find("desired_mods");
+        const json::Value* changes = report.find("changes");
+        const json::Value* explanation = report.find("explanation");
+        if (desired == nullptr || !desired->is_array() || changes == nullptr || !changes->is_array() ||
+            explanation == nullptr || !explanation->is_array()) return std::nullopt;
+        output << "Instance: " << text_field(report, "instance_id") << "\nPlan SHA-256: " << text_field(report, "plan_id")
+               << "\nCurrent state SHA-256: " << text_field(report, "current_state_sha256") << '\n';
+        if (schema == "factorio.modset_apply.v1") output << "Rollback transaction: " << text_field(report, "transaction_id") << '\n';
+        output << "Selected packages: " << desired->size() << '\n';
+        for (std::size_t index = 0; index < desired->size(); ++index) {
+            const json::Value* item = desired->at(index);
+            if (item == nullptr || !item->is_object()) return std::nullopt;
+            output << "  " << text_field(*item, "name") << " " << text_field(*item, "version")
+                   << " (" << text_field(*item, "file_name") << "; " << text_field(*item, "source")
+                   << "; built-in: " << text_field(*item, "virtual_package") << ")\n";
+        }
+        output << "Changes:\n";
+        for (std::size_t index = 0; index < changes->size(); ++index) {
+            const json::Value* item = changes->at(index);
+            if (item == nullptr || !item->is_object()) return std::nullopt;
+            output << "  " << text_field(*item, "action") << ": " << text_field(*item, "name")
+                   << " " << text_field(*item, "from_version") << " -> " << text_field(*item, "to_version") << '\n';
+        }
+        output << "Explanation:\n";
+        for (std::size_t index = 0; index < explanation->size(); ++index) {
+            const json::Value* item = explanation->at(index);
+            if (item == nullptr || !item->string_value()) return std::nullopt;
+            output << "  " << item->string_value().value() << '\n';
+        }
+        output << "Budget usage: " << text_field(report, "budget_usage") << '\n';
+    } else if (schema == "factorio.modset_rollback.v1") {
+        output << "Instance: " << text_field(report, "instance_id")
+               << "\nRollback transaction: " << text_field(report, "transaction_id") << '\n';
+    } else return std::nullopt;
+    output << "Portal access: " << text_field(report, "portal_access")
+           << "\nMutation executed: " << text_field(report, "mutation_executed") << '\n';
+    return output.str();
+}
+
 } // namespace facman::cli

@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <thread>
 
@@ -31,6 +32,7 @@ namespace {
 struct Instance {
     std::string instance_id;
     std::string factorio_version;
+    std::string install_source;
     fs::path root;
 };
 
@@ -74,6 +76,7 @@ bool load_instance(const fs::path& workspace, const std::string& instance_id, In
     if (!record) return false;
     instance.instance_id = record.value().id.str();
     instance.factorio_version = record.value().factorio_version;
+    instance.install_source = "install-data:" + record.value().install_ref.str();
     instance.root = record.value().root;
     return !instance.factorio_version.empty();
 }
@@ -130,9 +133,11 @@ std::string lock_json(const Instance& instance, const std::vector<ModRef>& mods)
 }
 
 struct LockEntry {
+    std::string name;
     std::string file_name;
     std::string sha1;
     std::string sha256;
+    bool virtual_package = false;
 };
 
 std::vector<LockEntry> lock_entries(const std::string& text)
@@ -157,8 +162,16 @@ std::vector<LockEntry> lock_entries(const std::string& text)
         auto sha1_text = sha1->string_value();
         if (!file_text || !sha1_text) return {};
         LockEntry entry;
+        const json::Value* name = item->find("name");
+        if (name == nullptr || !name->string_value()) return {};
+        entry.name = name->string_value().take_value();
         entry.file_name = file_text.take_value();
         entry.sha1 = sha1_text.take_value();
+        const json::Value* metadata = item->find("metadata_source");
+        const json::Value* status = item->find("validation_status");
+        entry.virtual_package = metadata != nullptr && metadata->string_value() &&
+            metadata->string_value().value() == "builtin_info_json" && status != nullptr &&
+            status->string_value() && status->string_value().value() == "virtual";
         if (sha256 != nullptr) {
             auto sha256_text = sha256->string_value();
             if (!sha256_text) return {};
@@ -169,7 +182,7 @@ std::vector<LockEntry> lock_entries(const std::string& text)
     return entries;
 }
 
-std::vector<std::string> verify_lock(const Instance& instance)
+std::vector<std::string> verify_lock(const fs::path& workspace, const Instance& instance)
 {
     std::vector<std::string> problems;
     const fs::path path = instance_lock_path(instance);
@@ -178,20 +191,39 @@ std::vector<std::string> verify_lock(const Instance& instance)
         return problems;
     }
     const std::string current_lock = read_text(path);
+    std::vector<ModRef> mods;
+    std::set<std::string> names;
+    auto inventory = facman::factorio::mods::local_inventory(workspace);
+    if (!inventory) return {"local inventory could not be verified: " + inventory.error().message};
     for (const LockEntry& entry : lock_entries(current_lock)) {
+        if (!names.insert(entry.name).second || entry.file_name == "." || entry.file_name == ".." ||
+            entry.file_name.find_first_of("/\\:") != std::string::npos) {
+            problems.push_back("invalid or duplicate lock entry: " + entry.file_name);
+            continue;
+        }
+        if (entry.virtual_package) {
+            const auto builtin = std::find_if(inventory.value().begin(), inventory.value().end(), [&](const ModRef& mod) {
+                return mod.virtual_package && mod.valid && mod.source == instance.install_source &&
+                    mod.name == entry.name && mod.file_name == entry.file_name;
+            });
+            if (builtin == inventory.value().end()) problems.push_back("missing trusted built-in package: " + entry.name);
+            else mods.push_back(*builtin);
+            continue;
+        }
         const fs::path mod_path = instance.root / "mods" / entry.file_name;
         if (!fs::is_regular_file(mod_path)) {
             problems.push_back("missing mod file: " + entry.file_name);
             continue;
         }
-        if (sha1_hex_file(mod_path) != entry.sha1) {
+        ModRef mod = inspect_mod_zip(mod_path);
+        if (mod.sha1 != entry.sha1) {
             problems.push_back("sha1 mismatch: " + entry.file_name);
         }
-        if (!entry.sha256.empty() && sha256_hex_file(mod_path) != entry.sha256) {
+        if (!entry.sha256.empty() && mod.sha256 != entry.sha256) {
             problems.push_back("sha256 mismatch: " + entry.file_name);
         }
+        mods.push_back(std::move(mod));
     }
-    const std::vector<ModRef> mods = instance_mods(instance);
     for (const ModsetIssue& issue : validate_modset(mods, instance.factorio_version)) {
         problems.push_back(issue.code + ": " + issue.detail);
     }
@@ -578,7 +610,7 @@ VerifyOutcome verify_modset(const fs::path& workspace, const InstanceRequest& re
     if (!load_instance(workspace, request.instance_id, instance)) {
         return refuse("modsets.verify", request.instance_id, "unknown_instance", "Instance is not registered", request.instance_id);
     }
-    return VerifyResult {request.instance_id, verify_lock(instance)};
+    return VerifyResult {request.instance_id, verify_lock(workspace, instance)};
 }
 
 ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& request)
@@ -588,7 +620,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     if (!load_instance(workspace, request.instance_id, instance)) {
         return refuse(command, request.instance_id, "unknown_instance", "Instance is not registered", request.instance_id);
     }
-    const std::vector<std::string> verification = verify_lock(instance);
+    const std::vector<std::string> verification = verify_lock(workspace, instance);
     if (!verification.empty()) {
         return refuse(command, request.instance_id, "modset_verification_failed", "Modset must verify before export", verification.front());
     }
@@ -696,7 +728,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         }
     }
     if (closure_error.empty()) {
-        const std::vector<std::string> after_staging = verify_lock(instance);
+        const std::vector<std::string> after_staging = verify_lock(workspace, instance);
         if (!after_staging.empty()) {
             closure_error = "modset source changed during export: " + after_staging.front();
         }
@@ -791,7 +823,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
             result = facman::platform::IoStatus::failure(
                 "modset_verification_failed", "private archive copy differs from verified bytes");
         if (result.ok()) {
-            const std::vector<std::string> after_copy = verify_lock(instance);
+            const std::vector<std::string> after_copy = verify_lock(workspace, instance);
             if (!after_copy.empty()) result = facman::platform::IoStatus::failure(
                 "modset_verification_failed", after_copy.front());
         }

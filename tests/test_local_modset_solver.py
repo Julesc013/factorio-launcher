@@ -11,6 +11,7 @@ import zipfile
 from pathlib import Path
 
 from native_cli import invoke
+from test_instance_lifecycle import hold_configuration_lock
 from tools import json_contract
 
 
@@ -62,7 +63,188 @@ def lock_text(instance: str, mods: list[tuple[str, str]]) -> str:
     ) + "\n"
 
 
+def snapshot(root: Path, excluded: Path | None = None) -> dict[str, bytes]:
+    return {path.relative_to(root).as_posix(): path.read_bytes() for path in root.rglob("*")
+            if path.is_file() and path != excluded}
+
+
+def managed_state(workspace: Path) -> list[bytes | None]:
+    return [path.read_bytes() if path.exists() else None for path in (
+        workspace / "instances/solver/mods/mod-list.json",
+        workspace / "instances/solver/mods/modset-lock.v1.json",
+        workspace / "modsets/solver.modset-lock.v1.json",
+    )]
+
+
 class LocalModsetSolverTests(unittest.TestCase):
+    def test_applied_selection_verifies_virtual_base_and_only_pinned_archives(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman selected verification ") as value:
+            workspace = Path(value)
+            mods = setup(workspace) / "mods"
+            write_mod(mods / "library_1.0.0.zip", "library", "1.0.0")
+            selected = mods / "library_2.0.0.zip"
+            write_mod(selected, "library", "2.0.0")
+            write_mod(mods / "application_1.0.0.zip", "application", "1.0.0", ["base >= 2.0", "library >= 1.0"])
+            (mods / "unselected_1.0.0.zip").write_bytes(b"malformed unselected archive")
+            call(workspace, "modsets", "apply", "solver", "--enable", "application")
+            before = snapshot(workspace)
+            verified = call(workspace, "modsets", "verify", "solver")
+            self.assertEqual([], verified["problems"])
+            self.assertEqual(before, snapshot(workspace))
+            lock = mods / "modset-lock.v1.json"
+            original = lock.read_bytes()
+            for change in ("source", "version", "duplicate", "path", "malformed"):
+                with self.subTest(change=change):
+                    document = json.loads(original)
+                    base = next(item for item in document["mods"] if item["name"] == "base")
+                    if change == "source": base["source"] = "install-data:another-install"
+                    elif change == "version": base["version"] = "99.0.0"
+                    elif change == "duplicate": document["mods"].append(dict(base))
+                    elif change == "path": document["mods"][0]["file_name"] = "../outside.zip"
+                    lock.write_bytes(b"{}\n" if change == "malformed" else (json.dumps(document) + "\n").encode())
+                    tampered = snapshot(workspace)
+                    refused = call(workspace, "modsets", "verify", "solver", success=False)
+                    self.assertEqual("mod_hash_mismatch", refused["refusal"]["code"])
+                    self.assertEqual(tampered, snapshot(workspace))
+                    lock.write_bytes(original)
+            selected.write_bytes(selected.read_bytes() + b"changed archive bytes")
+            tampered = snapshot(workspace)
+            refused = call(workspace, "modsets", "verify", "solver", success=False)
+            self.assertTrue(any("mismatch" in problem for problem in refused["problems"]))
+            self.assertEqual(tampered, snapshot(workspace))
+
+    def test_failed_apply_retry_preserves_attempts_and_has_its_own_rollback_id(self) -> None:
+        for fault in ("after_backup", "after_first_commit"):
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory(prefix="facman retry ") as value:
+                workspace = Path(value)
+                mods = setup(workspace) / "mods"
+                write_mod(mods / "simple_1.0.0.zip", "simple", "1.0.0")
+                before = managed_state(workspace)
+                planned = call(workspace, "modsets", "plan", "solver", "--enable", "simple")
+                environment = dict(os.environ, FACMAN_MODSET_FAULT=fault)
+                for _attempt in range(2):
+                    refused = call(workspace, "modsets", "apply", "solver", "--enable", "simple", success=False, env=environment)
+                    self.assertEqual("modset_fault_injected", refused["refusal"]["code"])
+                    self.assertEqual(before, managed_state(workspace))
+                history = mods / ".facman-modset-history"
+                retained = snapshot(history)
+                journals = snapshot(workspace / "transactions")
+                stages = {path.name: snapshot(path) for path in mods.glob(".facman-modset-stage-*")}
+                applied = call(workspace, "modsets", "apply", "solver", "--enable", "simple")
+                self.assertEqual(planned["plan_id"], applied["plan_id"])
+                self.assertNotEqual(applied["plan_id"], applied["transaction_id"])
+                self.assertEqual([], json_contract.validate(applied, json_contract.load_schema(
+                    SCHEMA_ROOT / "factorio_modset_plan.v1.schema.json")))
+                for name, content in retained.items(): self.assertEqual(content, (history / name).read_bytes())
+                for name, content in journals.items(): self.assertEqual(content, (workspace / "transactions" / name).read_bytes())
+                for name, content in stages.items(): self.assertEqual(content, snapshot(mods / name))
+                call(workspace, "modsets", "verify", "solver")
+                call(workspace, "modsets", "rollback", "solver", applied["transaction_id"])
+                self.assertEqual(before, managed_state(workspace))
+
+    def test_retry_refuses_tampered_history_stage_and_active_journal(self) -> None:
+        for change in ("backup", "plan", "target", "stage", "marker", "active", "workspace"):
+            with self.subTest(change=change), tempfile.TemporaryDirectory(prefix="facman retry refusal ") as value:
+                workspace = Path(value)
+                mods = setup(workspace) / "mods"
+                write_mod(mods / "simple_1.0.0.zip", "simple", "1.0.0")
+                (mods / "mod-list.json").write_text('{"mods":[{"name":"base","enabled":true}]}\n', encoding="utf-8")
+                before = managed_state(workspace)
+                planned = call(workspace, "modsets", "plan", "solver", "--enable", "simple")
+                call(workspace, "modsets", "apply", "solver", "--enable", "simple", success=False,
+                     env=dict(os.environ, FACMAN_MODSET_FAULT="after_first_commit"))
+                history = mods / ".facman-modset-history" / planned["plan_id"]
+                stage = mods / (".facman-modset-stage-" + planned["plan_id"])
+                manifest = history / "activation.v1.json"
+                if change in ("plan", "target"):
+                    document = json.loads(manifest.read_bytes())
+                    if change == "plan": document["plan_id"] = "0" * 64
+                    else: document["files"][0]["target"] = str(workspace / "foreign.json")
+                    manifest.write_text(json.dumps(document) + "\n", encoding="utf-8")
+                elif change == "backup": (history / "mod-list.before").write_bytes(b"wrong backup")
+                elif change == "stage": (stage / "uncommitted.json").write_bytes(b"preserve me")
+                elif change == "marker": (stage / ".facman-transaction-staging.v2.json").write_bytes(b"{}\n")
+                else:
+                    marker = json.loads((history / ".facman-transaction-staging.v2.json").read_bytes())
+                    journal = workspace / "transactions" / (marker["transaction_id"] + ".transaction.v1.json")
+                    document = json.loads(journal.read_bytes())
+                    if change == "active": document["state"] = "committing"
+                    else: document["workspace_id"] = "workspace-other"
+                    journal.write_text(json.dumps(document) + "\n", encoding="utf-8")
+                retained = snapshot(workspace)
+                call(workspace, "modsets", "apply", "solver", "--enable", "simple", success=False)
+                self.assertEqual(before, managed_state(workspace))
+                self.assertEqual(retained, snapshot(workspace))
+
+    def test_legacy_restored_recovery_journal_is_preserved_during_retry(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman legacy retry ") as value:
+            workspace = Path(value)
+            mods = setup(workspace) / "mods"
+            write_mod(mods / "simple_1.0.0.zip", "simple", "1.0.0")
+            before = managed_state(workspace)
+            planned = call(workspace, "modsets", "plan", "solver", "--enable", "simple")
+            call(workspace, "modsets", "apply", "solver", "--enable", "simple", success=False,
+                 env=dict(os.environ, FACMAN_MODSET_FAULT="after_first_commit"))
+            history = mods / ".facman-modset-history" / planned["plan_id"]
+            stage = mods / (".facman-modset-stage-" + planned["plan_id"])
+            manifest = history / "activation.v1.json"
+            document = json.loads(manifest.read_bytes())
+            del document["plan_id"]
+            manifest.write_text(json.dumps(document) + "\n", encoding="utf-8")
+            marker = json.loads((history / ".facman-transaction-staging.v2.json").read_bytes())
+            journal = workspace / "transactions" / (marker["transaction_id"] + ".transaction.v1.json")
+            document = json.loads(journal.read_bytes())
+            document["state"] = "recovery_required"
+            document["error"] = "fault injection after first commit"
+            journal.write_text(json.dumps(document) + "\n", encoding="utf-8")
+            retained = (snapshot(history), snapshot(stage), journal.read_bytes())
+            applied = call(workspace, "modsets", "apply", "solver", "--enable", "simple")
+            self.assertEqual(planned["plan_id"], applied["plan_id"])
+            self.assertEqual(retained, (snapshot(history), snapshot(stage), journal.read_bytes()))
+            call(workspace, "modsets", "verify", "solver")
+            call(workspace, "modsets", "rollback", "solver", applied["transaction_id"])
+            self.assertEqual(before, managed_state(workspace))
+
+    def test_apply_and_rollback_refuse_the_existing_instance_configuration_lock(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman modset lock ") as value:
+            workspace = Path(value)
+            instance = setup(workspace)
+            write_mod(instance / "mods/simple_1.0.0.zip", "simple", "1.0.0")
+            applied = call(workspace, "modsets", "apply", "solver", "--enable", "simple")
+            before = snapshot(workspace)
+            marker = instance / "locks/configuration.write.lock"
+            before_unlocked = snapshot(workspace, excluded=marker)
+            with hold_configuration_lock(marker):
+                for command in (("modsets", "apply", "solver", "--enable", "simple"),
+                                ("modsets", "rollback", "solver", applied["transaction_id"])):
+                    refused = call(workspace, *command, success=False)
+                    self.assertEqual("instance_configuration_lock_contended", refused["refusal"]["code"])
+                    self.assertEqual(before_unlocked, snapshot(workspace, excluded=marker))
+            self.assertEqual(before, snapshot(workspace))
+            call(workspace, "modsets", "rollback", "solver", applied["transaction_id"])
+
+    def test_human_content_reports_show_owner_selection_and_diagnostics(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman content reports ") as value:
+            workspace = Path(value)
+            mods = setup(workspace) / "mods"
+            write_mod(mods / "simple_1.0.0.zip", "simple", "1.0.0")
+            before = snapshot(workspace)
+            for command in (("mods", "list"), ("mods", "index"), ("modsets", "plan", "solver", "--enable", "simple"),
+                            ("modsets", "diff", "solver", "--enable", "simple"), ("modsets", "explain", "solver", "--enable", "simple")):
+                with self.subTest(command=command):
+                    code, stdout, stderr = invoke(["--workspace", str(workspace), *command])
+                    self.assertEqual(0, code, stderr)
+                    self.assertIn("simple 1.0.0", stdout)
+                    self.assertIn("base", stdout)
+                    self.assertIn("install-data:fixture", stdout)
+                    self.assertIn("Portal access: false", stdout)
+                    self.assertIn("Mutation executed: false", stdout)
+                    if command[0] == "modsets":
+                        plan = call(workspace, *command)
+                        self.assertIn(plan["plan_id"], stdout)
+                        for explanation in plan["explanation"]: self.assertIn(explanation, stdout)
+                    self.assertEqual(before, snapshot(workspace))
+
     def test_dependency_plan_is_byte_deterministic_and_honors_tie_breaks(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman solver ") as value:
             workspace = Path(value)

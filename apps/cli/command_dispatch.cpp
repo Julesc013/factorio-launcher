@@ -807,17 +807,17 @@ int command_mods(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
-    if (action == "list") return emit_basic(call(options, "mods.list"), flag(options.args, "--json"), "Local mods listed");
+    if (action == "list") return emit_report(call(options, "mods.list"), flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     if (action == "index") {
         json::ArrayBuilder roots;
         for (const std::string& root : option_values(options.args, "--root")) roots.add_string(root);
         json::ObjectBuilder payload;
         payload.add_array("roots", roots);
-        return emit_basic(call(options, "mods.index", payload.serialize()), flag(options.args, "--json"), "Local mods indexed");
+        return emit_report(call(options, "mods.index", payload.serialize()), flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     }
-    if ((action == "inspect" || action == "verify" || action == "explain") && options.args.size() >= 3) return emit_basic(
+    if ((action == "inspect" || action == "verify" || action == "explain") && options.args.size() >= 3) return emit_report(
         call(options, "mods." + action, exact_fields_payload({{"identity", options.args[2]}})),
-        flag(options.args, "--json"), "Local mod " + action + " completed");
+        flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     if (action == "import" && options.args.size() >= 3) {
         const std::string instance = option(options.args, "--instance");
         return emit_basic(call(options, "mods.import", exact_fields_payload({{"source_path", options.args[2]}, {"instance_id", instance}}), false), flag(options.args, "--json"), "Mod imported");
@@ -926,12 +926,12 @@ int command_modsets(const Options& options)
     if (options.args.size() < 3) return 2;
     const std::string action = options.args[1], instance = options.args[2];
     if (action == "plan" || action == "diff" || action == "explain" || action == "apply") {
-        return emit_basic(call(options, "modsets." + action, modset_solver_payload(options.args, instance), action != "apply"),
-            flag(options.args, "--json"), "Modset " + action + " completed");
+        return emit_report(call(options, "modsets." + action, modset_solver_payload(options.args, instance), action != "apply"),
+            flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     }
     if (action == "rollback" && options.args.size() >= 4) {
-        return emit_basic(call(options, "modsets.rollback", modset_solver_payload(options.args, instance, options.args[3]), false),
-            flag(options.args, "--json"), "Modset rollback completed");
+        return emit_report(call(options, "modsets.rollback", modset_solver_payload(options.args, instance, options.args[3]), false),
+            flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     }
     if (action == "lock" || action == "verify") return emit_basic(call(options, "modsets." + action, exact_fields_payload({{"instance_id", instance}}), action == "verify"), flag(options.args, "--json"), "Modset " + action + " completed");
     if (action == "export" && options.args.size() >= 4) {

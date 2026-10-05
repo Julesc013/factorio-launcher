@@ -486,6 +486,11 @@ bool read_record(
     return load_record(workspace, transaction_id, record, detail);
 }
 
+bool verify_staging_ownership(const Record& record, const fs::path& staging, std::string& detail)
+{
+    return record.schema_version >= 2U && verify_staging_marker(record, staging, detail);
+}
+
 bool begin(const fs::path& workspace, Record& record, std::string& detail)
 {
     auto workspace_record = facman::workspace::WorkspaceRepository(
