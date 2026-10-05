@@ -1141,6 +1141,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                     item.add_string("status", recognized_value
                         ? "recognized" : "unverified");
                     item.add_string("association_status", association_status);
+                    if (association != nullptr && association->find("context") != nullptr) item.add_value("association_context", *association->find("context"));
                     item.add_string("backup_status", backup);
                     item.add_string("sha256", sha256);
                     item.add_unsigned_integer("size", size_value);

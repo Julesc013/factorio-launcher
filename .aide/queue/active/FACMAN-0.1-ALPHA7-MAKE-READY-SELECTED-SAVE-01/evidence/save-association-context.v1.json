@@ -1,0 +1,279 @@
+{
+  "schema": "facman.save_association_context.v1",
+  "status": "PASS_SCOPED_SOURCE_FIXTURE_WITH_WINDOWS_LINK_HOST_BLOCK",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base": "9339459e669f37ad1a5cc09394e3a05eef9350d0",
+  "behavior": "Save index/inspect/verify expose declared version and modset-lock drift separately from legacy save-byte status; ordinary Saves snapshots forward that owner observation.",
+  "source_hashes": {
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "d6d5e7d961ea18cf8c3e52fee2676bc7d110ee98af6efb539d70ead92b9f679f",
+    "contracts/schema/factorio/factorio_save_intelligence.v1.schema.json": "b3a9892bae7c6f4393cf1574e847de903719dddffac7151f78d9792e6545639e",
+    "docs/product/save_intelligence.md": "d6b4e43b90374155cd898a3fe7d961dd08722cb5ecf1b54ec2b40bbfd21b54c6",
+    "runtime/core/generated/version.h": "93ce6a50e7dad941a3df7352445e94bdda5aedada701d5c2fe5fcb21a43226c7",
+    "runtime/factorio/application/presentation_service.cpp": "9867102a6797ba36e52ac7c34ccc6519aa864187fff2c517c71df12774396e46",
+    "runtime/factorio/saves/flb_factorio_save_index.cpp": "21f90dcc97469f25d07dd1f8b76c884699a18524a54fd86000593fd4a3f74452",
+    "tests/test_save_association_context.py": "cdacb0cb9174463814931842ff4cf9ae27e74781c69197c545d5645995c2d891"
+  },
+  "source_proofs": {
+    "source-proof-02": {
+      "member": "make-ready-save-context-source-proof-02.json",
+      "sha256": "d6504e233ea732826510d104850f237f2fd6aec96e345043088287ab8f75841e"
+    },
+    "linux-proof-02": {
+      "member": "make-ready-save-context-linux-proof-02.json",
+      "sha256": "bc8294f2bde13368a40994ae07c7a716b94470e6c06720ecf032f6e80861ea09"
+    },
+    "linux-launch-03": {
+      "member": "make-ready-save-context-linux-launch-03.json",
+      "sha256": "1186f494279bbef36ae925dfc99466ae0080b8ce91d7110ba515ae24e5fea412"
+    }
+  },
+  "windows": {
+    "public_suite": {
+      "status": "actionable_public_failure",
+      "tests": 47,
+      "failures": 0,
+      "errors": 0,
+      "skips": [
+        {
+          "test": "test_final_broken_and_parent_links_are_unavailable (test_save_association_context.SaveAssociationContextTests.test_final_broken_and_parent_links_are_unavailable)",
+          "reason": "required_blocked: symlink creation unavailable: [WinError 1314] A required privilege is not held by the client: 'D:\\\\Development\\\\FacMan\\\\repositories\\\\factorio-launcher-5db2844e2f29\\\\tasks\\\\task-facman-w-bc5cd0812e\\\\evidence\\\\make-ready-save-context-proof-01-temp\\\\facman save context links 8khhfbq8\\\\instances\\\\save-index\\\\mods\\\\original-lock.json' -> 'D:\\\\Development\\\\FacMan\\\\repositories\\\\factorio-launcher-5db2844e2f29\\\\tasks\\\\task-facman-w-bc5cd0812e\\\\evidence\\\\make-ready-save-context-proof-01-temp\\\\facman save context links 8khhfbq8\\\\instances\\\\save-index\\\\mods\\\\modset-lock.v1.json'"
+        },
+        {
+          "test": "test_backup_external_parent_swap_cannot_redirect_publication (test_save_transfer.SaveTransferTests.test_backup_external_parent_swap_cannot_redirect_publication)",
+          "reason": "not_applicable: Windows pins the directory against rename"
+        }
+      ],
+      "cli_sha256": "20dfe23fcbba828b5be23205fce74f59c458c9c94339f3c725515db4e2af2f42",
+      "observed_public_commands": 367,
+      "commands_sha256": "a7c200df6607c0b646602311242c7e53bb547ffc42f45b771f403f2fe0a93505",
+      "command_capture_scope": "native_cli.invoke_machine only; direct subprocess calls are not separately counted",
+      "tested_modules": [
+        "test_save_association_context",
+        "test_save_index_retention",
+        "test_save_transfer",
+        "test_presentation_service"
+      ],
+      "actual_Factorio": false,
+      "produced_package": false,
+      "whole_workunit_closed": false
+    },
+    "actual_passes": 45,
+    "native_presentation_tests": 1,
+    "native_build_passed": true,
+    "required_link_cell": "host_blocked_WinError_1314"
+  },
+  "linux": {
+    "public_suite": {
+      "status": "PASS_REQUIRED_LINUX_SAVE_CONTEXT",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skips": [],
+      "observed_public_commands": 93,
+      "commands_sha256": "a3f16f795c1367d93845d0f6278b0926f1ea8ea47c6fda171ceab475ec924896",
+      "CLI_sha256": "db457a867fdce7773e84db77cfb16b61cd4874d67d9ef96aa14cab23ffed69f9",
+      "actual_Factorio": false,
+      "produced_package": false,
+      "whole_workunit_closed": false
+    },
+    "native_build_passed": true,
+    "private_tmpfs": true,
+    "tmpfs_limit_bytes": 134217728,
+    "private_mount_absent": true,
+    "original_namespace_preserved": true
+  },
+  "acceptance_scope": {
+    "old_byte_status_and_verify_outcome_preserved": true,
+    "declared_version_and_lock_drift": true,
+    "legacy_missing_evidence_unknown": true,
+    "empty_file_distinct_from_absence": true,
+    "historical_profile_is_provenance": true,
+    "repeated_queries_read_only": true,
+    "nonregular_hardlinked_oversize_context_unavailable": true,
+    "linux_live_broken_final_and_parent_links_unavailable": true,
+    "snapshot_revision_changes_with_owner_context": true
+  },
+  "source_reviews": [
+    {
+      "member": "make-ready-save-context-decision-01.json",
+      "sha256": "907e728fee9125559570f30ab26ca4db3ec725b2ea890133bf3714487c502a7a"
+    },
+    {
+      "member": "make-ready-save-context-source-review-01.json",
+      "sha256": "a071cfa95d45d99748493a232616e74cf3f576610dbdd36aa399652be1ec4c2d"
+    },
+    {
+      "member": "make-ready-save-context-source-review-02.json",
+      "sha256": "c643c3fe80e3346ad68d8058a1c2fc7526464bafcba3fab4e1280bbcfb74b3ca"
+    }
+  ],
+  "review_binding": "Static review02 predates one query argv correction and two compile API corrections; final independent commit review must bind final bytes and actual qualification.",
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/save-association-context-custody.zip",
+    "sha256": "2d48076cc22ed20c9f0210f4d1822210f96608f781fbf57e7a0979d0e9f5b011",
+    "members": {
+      "make-ready-save-context-baseline-01-commands.jsonl": "0853ad66451fe34e818f8d32f64f648303a0ef82714b4a861040836ed0aae42c",
+      "make-ready-save-context-baseline-01.json": "7bc1f25bdc6c12fe340cc974d4cedbb7e43a7ee433b8094d8ad2486dec4c48e7",
+      "make-ready-save-context-baseline-01.py": "a93f1212277efd80c3cc765c23ea4f93c44315ae04361ffdffa15625704d67ed",
+      "make-ready-save-context-baseline-consume-01.py": "889b2a7f1a5e950a6e80dd78db237b9ee71b6bc473b0ebe684e3d17dada27c0a",
+      "make-ready-save-context-branch-01-plan.json": "1799f054e8bcf0742df468bce334f59c10dba6581eb58c524410e373fef123a9",
+      "make-ready-save-context-branch-01.claim.json": "2cfa265b30a0c9d55db63c7486a1532c1d590b82251113d016a46878ef57a72f",
+      "make-ready-save-context-branch-01.json": "e2b5c33e767422ab81424f51872793b72f48054eea36dbfb46e1eb70be8b260a",
+      "make-ready-save-context-branch-01.py": "17d70fc0a1d7c7869327d44e37c2e86b3f8306b9f021ab32e587663216614c51",
+      "make-ready-save-context-branch-create-01.py": "7a261bdfe3592f4d4269541d31fab4d2f28c6e09bd32f704f3303abf9c4f3c84",
+      "make-ready-save-context-decision-01.json": "907e728fee9125559570f30ab26ca4db3ec725b2ea890133bf3714487c502a7a",
+      "make-ready-save-context-linux-admission-03.json": "a3336617b39e7670676d793660972e54958af43626bec43b8af85e772ac437c4",
+      "make-ready-save-context-linux-admit-03.log": "51a0cf74c16f25c7baef38461f3aa4f932d53401e2186f8f711bb21bfc87aef3",
+      "make-ready-save-context-linux-admit-03.py": "b9be939ae601112a4ca14115d83eaa4b144b176fc89a8ef95f06070d8ca3227e",
+      "make-ready-save-context-linux-launch-03.claim.json": "2cbc76d6bbece81ecaeb675abc76dfa652088fe7d853892c8fec9686c94e8562",
+      "make-ready-save-context-linux-launch-03.json": "1186f494279bbef36ae925dfc99466ae0080b8ce91d7110ba515ae24e5fea412",
+      "make-ready-save-context-linux-launch-03.log": "77de543d71b540f1ebdcb160d53bd464299c5e6bac13d97b7830c20853c518f9",
+      "make-ready-save-context-linux-launch-03.py": "734216e5ab0974045293608c7af48eb5ab197f325aeadc2d72913e3eebad6036",
+      "make-ready-save-context-linux-private-02.py": "e8999f2488383abdc6256b363fb8e917e8c85ed719e0e76615d0137ae6ba057d",
+      "make-ready-save-context-linux-proof-01-build-plan.json": "b271a53b49931a7995cb7d5df619c859c180944eceef3c48b38d89a9d94948b0",
+      "make-ready-save-context-linux-proof-01-configure.log": "3654f8ea8d8b30e6f47bd630ce1ca0c6b6c70f33647802490009452a3e5e70fb",
+      "make-ready-save-context-linux-proof-01-doctor.json": "be17e96e898ceda7953c9aad43500547d8ff860f8d79dd8cb1f19d8705ed70bf",
+      "make-ready-save-context-linux-proof-01-paths.json": "6a14c517c97614c504f53e9fe66b143f07a4bc56dfe833e7173f667c0008c60f",
+      "make-ready-save-context-linux-proof-01.json": "0a28dda8fd019a17b4facc98796d1bcee4b64346792959ccc9f256dcd332797c",
+      "make-ready-save-context-linux-proof-01.py": "b06142b0b08abad33827169c6c00f409f2505313f2f53806129e300c5210b577",
+      "make-ready-save-context-linux-proof-02-build-plan.json": "b271a53b49931a7995cb7d5df619c859c180944eceef3c48b38d89a9d94948b0",
+      "make-ready-save-context-linux-proof-02-build.log": "217d53d203b514342fddbec92ced21f7eb0a51f7fab839e48966ac5d706e0e0c",
+      "make-ready-save-context-linux-proof-02-configure.log": "b508f54fd0488e64cc762813cfd2cabfc8b80d73f284eed8fda576033ca15954",
+      "make-ready-save-context-linux-proof-02-doctor.json": "d5e65174d160ae4f40fa326a9d81eeac7d5b9d6d77eeb0d1fc3191feda3cbf64",
+      "make-ready-save-context-linux-proof-02-paths.json": "6a14c517c97614c504f53e9fe66b143f07a4bc56dfe833e7173f667c0008c60f",
+      "make-ready-save-context-linux-proof-02-public.log": "ec48f72eb7ba048a5fb5864f87d4c47cd7b560afbe7a17b4ca2aada676a3268f",
+      "make-ready-save-context-linux-proof-02.json": "bc8294f2bde13368a40994ae07c7a716b94470e6c06720ecf032f6e80861ea09",
+      "make-ready-save-context-linux-proof-02.py": "1dd9f295f7fe0f76ad7b6b9e26262c4182a2ae2cc9201294770da22ebbf69655",
+      "make-ready-save-context-linux-public-01-commands.jsonl": "41aa7fcdc14142e783ff716b60db7ba10c8c680b12348ed00f60c68a11bfc8c2",
+      "make-ready-save-context-linux-public-01.json": "baca6e2a497a971423dff1b42eb88aac47cd4555eeb510369ad411004cf8b19f",
+      "make-ready-save-context-linux-public-01.py": "99f5bdfd364628297d0d8e9e91ead7c260c0a803841155f00a0d64fbd4868d9f",
+      "make-ready-save-context-linux-public-02-commands.jsonl": "a3f16f795c1367d93845d0f6278b0926f1ea8ea47c6fda171ceab475ec924896",
+      "make-ready-save-context-linux-public-02-mount.json": "d2babd3e6c597218d4cd63d1e9824d56063108f86b85759174613d2acc7baccf",
+      "make-ready-save-context-linux-public-02.json": "591dbd60f9a825b7cd74eb6f953b5b7c472b5847a4ac8f58fba46c4fb52656dc",
+      "make-ready-save-context-linux-public-02.py": "cc519e658bf89e0421551debda27af9a0d72a69c03e4b888f6ffbe61280d44d5",
+      "make-ready-save-context-package-01.py": "56f98a3768707ffa06ce501ed9b3427792df8bb3095e4496337982c27d674506",
+      "make-ready-save-context-prebranch-doctor.json": "ef179af7d44f70a6145ffaed58bc4cc16085b9d6eee9f282503d75f042bc65f2",
+      "make-ready-save-context-prebranch-git-detect.log": "45a66512e2a315415f9c80bf298548eda234778772b610d3d4472e2682707405",
+      "make-ready-save-context-prebranch-git-plan.log": "e37a1d350f25b7df7ed6d32d8c7312a72187f8ed1ddc4682ffe7ab35bff2d862",
+      "make-ready-save-context-prebranch-git-policy.log": "71ce5018e4abc2321cd3962f0b6c32fe1c00f85a9026b82e8130a7013700ba71",
+      "make-ready-save-context-prebranch-paths.json": "ef8d26829ebf621a61f34c075a75d6e0b7121ec5457defba1fbac4ae857635a9",
+      "make-ready-save-context-prebranch-task-inspect.log": "b3e46602bbdc607587f2bfb4656c5eddec683de3e6eef565de540f29874c45d8",
+      "make-ready-save-context-prebranch-task-noop-check.log": "5aa5f829377d6c1e6f915d0e9420e0ad519d403efc9aa87b845aa3b81756819e",
+      "make-ready-save-context-prebranch-task-recover.log": "0e421e796e3e36b610e641255f8e9c239ffc11be0c9da9633b4bff366da08098",
+      "make-ready-save-context-preflight-01-compiler-tests.log": "9fa611f7800427279840d54086b93edc4ae906e16fc0c9f715fb23aeb467ef6a",
+      "make-ready-save-context-preflight-01-compiler.log": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "make-ready-save-context-preflight-01-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-save-context-preflight-01-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-save-context-preflight-01-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-save-context-preflight-01-strict.log": "d08e596a94a783f9db77731a4a33c12b4faee00bc368684f3f9646e3023e76bf",
+      "make-ready-save-context-preflight-01.json": "005d43e926c3a6fbbdb5415da0970f325171f5a37f63d2bd72b271ca5038ccb9",
+      "make-ready-save-context-preflight-01.py": "a72ac044c0c8d034826a9b7d8985ab4b79d0a101c870b4721e51d698f02fb84e",
+      "make-ready-save-context-preflight-02-compiler-tests.log": "59325e34997790f62a39943a77894f20a2d522af2e2cdfb79cb91afd2a29a398",
+      "make-ready-save-context-preflight-02-compiler.log": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "make-ready-save-context-preflight-02-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-save-context-preflight-02-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-save-context-preflight-02-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-save-context-preflight-02-plan.log": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31",
+      "make-ready-save-context-preflight-02-portable.log": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+      "make-ready-save-context-preflight-02-state.log": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd",
+      "make-ready-save-context-preflight-02-strict.log": "fe7f33a4fb1cb1769fd9c7b1828558c97b22bd2d611f9f0595c56276081ee12e",
+      "make-ready-save-context-preflight-02.json": "ea67f86978ca44d4bdd6d480a199ecbfb07804ba788d6d5fa305f5031c10dd63",
+      "make-ready-save-context-preflight-02.py": "1877037f33934fba10ce1da460c5b9814b3628175192aeb4cc5bbd037e45cd3c",
+      "make-ready-save-context-preflight-03-compiler-tests.log": "3126b48a1613148f8f202e110c01be4f122ce30f5884bd1bfeb5e3e7a604129c",
+      "make-ready-save-context-preflight-03-compiler.log": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "make-ready-save-context-preflight-03-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-save-context-preflight-03-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-save-context-preflight-03-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-save-context-preflight-03-plan.log": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31",
+      "make-ready-save-context-preflight-03-portable.log": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+      "make-ready-save-context-preflight-03-state.log": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd",
+      "make-ready-save-context-preflight-03-strict.log": "fe7f33a4fb1cb1769fd9c7b1828558c97b22bd2d611f9f0595c56276081ee12e",
+      "make-ready-save-context-preflight-03.json": "e728114fff5775762aff3358f96b79a3c03fa9d84f54ef989bcb61267a624395",
+      "make-ready-save-context-preflight-03.py": "07a841f93e42da0b7039837eb6a3bb75565bff7894f3477b44f366adcc2062db",
+      "make-ready-save-context-public-01-commands.jsonl": "a7c200df6607c0b646602311242c7e53bb547ffc42f45b771f403f2fe0a93505",
+      "make-ready-save-context-public-01.json": "84a4b7b6321ace51d3139a6b88555cd4923a2fd728f36f7e189fb38d3d1b244d",
+      "make-ready-save-context-public-01.py": "9cf66bdcd7cbe3a5852ffa9e98f17ad1718ed00edf0ddd740639a3272fcc5f63",
+      "make-ready-save-context-source-proof-01-build.log": "af62ad7d93563c7a16cff3cee5838c7134bed8d1a5d5d82160726306d20628a3",
+      "make-ready-save-context-source-proof-01-doctor.json": "879885900b35f2051814adcdab52ae9dfa5e4a23868d49a42e3cc78ff37eb4b6",
+      "make-ready-save-context-source-proof-01-paths.json": "6a14c517c97614c504f53e9fe66b143f07a4bc56dfe833e7173f667c0008c60f",
+      "make-ready-save-context-source-proof-01.claim.json": "9d058ae392eb7d5bf885e8d2b81e2e3c92df484613079d058449848f1dc3d272",
+      "make-ready-save-context-source-proof-01.json": "77f29dc6d9cd779f692e5f1518b670e3c213fb7627cf1e5e15352c5710922893",
+      "make-ready-save-context-source-proof-01.py": "61d2ae1c99387c5a0f43439d882835db3aeef125bb29d40362f8cd42ad78c704",
+      "make-ready-save-context-source-proof-02-build.log": "4f8c57642b46cc2a4ab4f475689411aa56ef3b5fcd2a8738380403f1c3a51525",
+      "make-ready-save-context-source-proof-02-doctor.json": "810e0e2488802e7c938fe6d0f59e58e29332595ba9530aad5d1378c7876c1bd2",
+      "make-ready-save-context-source-proof-02-native-presentation.log": "1fc038d13df66aa40055e074b80796dcd7bf932f57e5787fe5569b9b7e8c4968",
+      "make-ready-save-context-source-proof-02-paths.json": "6a14c517c97614c504f53e9fe66b143f07a4bc56dfe833e7173f667c0008c60f",
+      "make-ready-save-context-source-proof-02-public.log": "2a7b5fcc9f2cd534c52bc05ecaeacd8f6914c20a2337c6459eab162426b35772",
+      "make-ready-save-context-source-proof-02.claim.json": "d96cf64086a88b9618afd48b11aa488c3f45533e8ea8fc1ce51ec4bf40db1450",
+      "make-ready-save-context-source-proof-02.json": "d6504e233ea732826510d104850f237f2fd6aec96e345043088287ab8f75841e",
+      "make-ready-save-context-source-proof-02.py": "aa10679cbc339fad380c834d4d3bd8e2c3a6408bac8733972a3946697c410431",
+      "make-ready-save-context-source-review-01.json": "a071cfa95d45d99748493a232616e74cf3f576610dbdd36aa399652be1ec4c2d",
+      "make-ready-save-context-source-review-02.json": "c643c3fe80e3346ad68d8058a1c2fc7526464bafcba3fab4e1280bbcfb74b3ca",
+      "source/apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "d6d5e7d961ea18cf8c3e52fee2676bc7d110ee98af6efb539d70ead92b9f679f",
+      "source/contracts/schema/factorio/factorio_save_intelligence.v1.schema.json": "b3a9892bae7c6f4393cf1574e847de903719dddffac7151f78d9792e6545639e",
+      "source/docs/product/save_intelligence.md": "d6b4e43b90374155cd898a3fe7d961dd08722cb5ecf1b54ec2b40bbfd21b54c6",
+      "source/runtime/core/generated/version.h": "93ce6a50e7dad941a3df7352445e94bdda5aedada701d5c2fe5fcb21a43226c7",
+      "source/runtime/factorio/application/presentation_service.cpp": "9867102a6797ba36e52ac7c34ccc6519aa864187fff2c517c71df12774396e46",
+      "source/runtime/factorio/saves/flb_factorio_save_index.cpp": "21f90dcc97469f25d07dd1f8b76c884699a18524a54fd86000593fd4a3f74452",
+      "source/tests/test_save_association_context.py": "cdacb0cb9174463814931842ff4cf9ae27e74781c69197c545d5645995c2d891"
+    }
+  },
+  "retained_failures": [
+    "Baseline public observations demonstrated missing declared context; two extractor failures consumed retained observations without query replay.",
+    "Reviewer rejected broken-parent link handling; local no-follow component checks corrected it before build.",
+    "First Windows build failed two API names; second build and native smoke passed after exact API corrections.",
+    "Windows public suite retained required WinError1314 link host block and existing Windows directory-rename not-applicable cell.",
+    "First Linux configure stopped on checkout EOL interpretation; process-only core.autocrlf=true matched authoritative Windows filtered provider bytes without persistent settings.",
+    "First Linux public attempt refused the unreviewed 9p temporary filesystem; exact ELF reused in bounded private tmpfs without policy change or rebuild."
+  ],
+  "resource_use": {
+    "native_build_attempts": 3,
+    "successful_native_builds": 2,
+    "windows_build_attempts": 2,
+    "linux_build_attempts": 1,
+    "linux_configure_attempts": 2,
+    "public_suite_attempts": 3,
+    "maximum_native_workers": 2,
+    "maximum_heavy_local_jobs": 1,
+    "optional_candidate_dispatches": 0,
+    "CI_reruns": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "unchanged_wait_model_calls": 0,
+    "prior_qualified_images_and_failure_evidence_preserved": true
+  },
+  "original_acceptance": [
+    "Make one typed readiness plan reconcile install, instance, content and selected world before launch.",
+    "Exercise stale inputs, recoverable partial preparation and selected-save mismatch through ordinary workflows."
+  ],
+  "close_after": [
+    "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+    "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+    "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+    "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+    "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+  ],
+  "qualification": {
+    "source_fixture": true,
+    "full_windows_link_qualification": false,
+    "produced_package": false,
+    "actual_Factorio": false,
+    "gameplay_compatibility": false,
+    "atomic_game_content_snapshot": false,
+    "hostile_concurrent_writer": false,
+    "selected_save_launch": false,
+    "human_experience": false,
+    "release": false,
+    "whole_workunit": false,
+    "full_programme": false,
+    "exact_current_source_CI": "pending"
+  },
+  "external_gates_preserved": [
+    "PR343 protected-control owner authorization",
+    "Genuine distinct-version Linux Setup A5 update/rollback",
+    "MakeReady five original close-after prerequisites",
+    "Windows required link cell needs a capable host"
+  ],
+  "next_acceptance": "Compose owned multi-domain preparation and selected-save Play with current revisions through ordinary workflows.",
+  "finished_at_utc": "2026-10-05T03:52:49.237166+00:00"
+}

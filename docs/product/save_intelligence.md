@@ -16,6 +16,22 @@ profile, source operation, backup history, creation time, and verification time.
 If the save bytes change, verification reports `drifted`; it never silently
 rewrites the association.
 
+The optional typed `association.context` observation compares the recorded
+declared Factorio version and modset-lock digest with the current instance.
+It reports `match`, `drifted`, `unknown`, or `unavailable`, with each input and
+its diagnostic. Ordinary Saves snapshots forward the same owner observation
+and include it in their revision. This observation is read-only and does not
+claim gameplay compatibility or inspect save internals. Historical profile
+context remains provenance; changing the active profile does not imply drift.
+
+Legacy absent version evidence or an empty/invalid stored modset digest stays
+unknown. An absent lock differs from a present empty file. Current lock reads
+use bounded stable no-follow handles; unsafe paths, multiply linked files and
+unreadable inputs remain unavailable. Missing historical evidence cannot be
+reconstructed from a current observation. The original `association.status`
+and `verify.status` retain their save-byte-only meanings; neither is a Play
+readiness verdict. Observations do not claim an atomic game/content snapshot.
+
 `saves retention plan` applies keep-last, daily, weekly, byte, and minimum-age
 policy to backups in the selected instance's owned backup directory. A backup
 is eligible only when its FacMan manifest matches the workspace, instance,

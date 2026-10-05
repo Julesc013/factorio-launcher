@@ -23,10 +23,44 @@
         "path": { "type": "string" }, "filename": { "type": "string" }, "stable_file_identity": { "type": "string" },
         "size": { "type": "integer", "minimum": 0 }, "mtime": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "archive_structure": { "type": "object" }, "factorio_save_recognized": { "type": "boolean" },
-        "deep_factorio_save_metadata": { "const": "unsupported" }, "backup_sidecar_status": { "enum": ["present", "absent", "unreadable"] }, "association": { "type": "object" }
+        "deep_factorio_save_metadata": { "const": "unsupported" }, "backup_sidecar_status": { "enum": ["present", "absent", "unreadable"] },
+        "association": { "type": "object", "properties": { "context": { "$ref": "#/$defs/association_context" } } }
       },
       "additionalProperties": false
-    }
+    },
+    "association_context": {
+      "type": "object",
+      "required": ["schema", "status", "factorio_version", "modset_lock", "observation_scope", "gameplay_compatibility"],
+      "properties": {
+        "schema": { "const": "factorio.save_association_context.v1" },
+        "status": { "$ref": "#/$defs/context_status" },
+        "observation_scope": { "const": "recorded_declared_context_only" },
+        "gameplay_compatibility": { "const": "unclaimed" },
+        "factorio_version": {
+          "type": "object", "required": ["status", "recorded", "current", "diagnostic"],
+          "properties": {
+            "status": { "$ref": "#/$defs/context_status" },
+            "recorded": { "type": ["string", "null"] },
+            "current": { "type": "string" },
+            "diagnostic": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "modset_lock": {
+          "type": "object", "required": ["status", "recorded_sha256", "current_sha256", "current_presence", "diagnostic"],
+          "properties": {
+            "status": { "$ref": "#/$defs/context_status" },
+            "recorded_sha256": { "type": ["string", "null"] },
+            "current_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+            "current_presence": { "enum": ["absent", "present", "unavailable"] },
+            "diagnostic": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "context_status": { "enum": ["match", "drifted", "unknown", "unavailable"] }
   },
   "additionalProperties": false
 }
