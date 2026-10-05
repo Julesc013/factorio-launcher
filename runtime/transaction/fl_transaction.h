@@ -91,6 +91,9 @@ struct Record {
     std::vector<std::string> recovery_actions;
 };
 
+bool verify_staging_ownership(
+    const Record& record, const std::filesystem::path& staging, std::string& detail);
+
 class TransactionSession {
 public:
     static facman::core::Result<TransactionSession> begin(

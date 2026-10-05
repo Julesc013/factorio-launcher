@@ -47,6 +47,7 @@ struct ResolvedPlan {
     std::vector<std::string> explanation;
     std::string current_state_sha256;
     std::string plan_id;
+    std::string transaction_id;
     std::uint32_t states = 0;
     std::uint32_t backtracks = 0;
     std::uint32_t edges = 0;
@@ -465,6 +466,7 @@ std::string serialize_plan(ResolvedPlan& plan, const std::string& command, bool 
     output.add_string("instance_id", plan.instance.record.id.str());
     output.add_string("factorio_version", plan.instance.record.factorio_version);
     output.add_string("plan_id", plan.plan_id);
+    if (applied) output.add_string("transaction_id", plan.transaction_id);
     output.add_string("current_state_sha256", plan.current_state_sha256);
     output.add_array("desired_mods", desired);
     output.add_array("changes", changes);
@@ -559,7 +561,8 @@ std::string history_manifest(const ResolvedPlan& plan, const std::vector<StateFi
     }
     json::ObjectBuilder output;
     output.add_string("schema", "factorio.modset_activation_history.v1");
-    output.add_string("transaction_id", plan.plan_id);
+    output.add_string("transaction_id", plan.transaction_id);
+    output.add_string("plan_id", plan.plan_id);
     output.add_string("instance_id", plan.instance.record.id.str());
     output.add_string("current_state_sha256", plan.current_state_sha256);
     output.add_array("files", entries);
@@ -632,8 +635,117 @@ bool restore_applied_files(const std::vector<StateFile>& files, const fs::path& 
     return true;
 }
 
+bool restored_files_match(const std::vector<StateFile>& files)
+{
+    for (const StateFile& file : files) {
+        auto current = state_file(file.key, file.target, "");
+        if (!current || current.value().before_present != file.before_present ||
+            current.value().before != file.before) return false;
+    }
+    return true;
+}
+
+facman::core::Result<std::string> activation_id(
+    const fs::path& workspace, const ResolvedPlan& plan, const std::vector<StateFile>& files, const fs::path& mods_root)
+{
+    // Keep the original plan-id alias for first attempts. Retained attempts are
+    // immutable; a retry receives a separate rollback identity only after the
+    // complete original state and its backups have been verified.
+    auto workspace_record = facman::workspace::WorkspaceRepository(facman::workspace::WorkspaceLayout(workspace)).load();
+    if (!workspace_record) return failure<std::string>("workspace_state_invalid", workspace_record.error().message, workspace);
+    for (unsigned attempt = 0; attempt < 100; ++attempt) {
+        const std::string id = attempt == 0 ? plan.plan_id :
+            sha256_text(plan.plan_id + ":attempt:" + std::to_string(attempt));
+        const fs::path history = mods_root / ".facman-modset-history" / id;
+        const fs::path stage = mods_root / (".facman-modset-stage-" + id);
+        std::string detail;
+        if (facman::base::path_crosses_link_or_reparse_point(history, detail) ||
+            facman::base::path_crosses_link_or_reparse_point(stage, detail)) {
+            return failure<std::string>("modset_path_unsafe", detail, history);
+        }
+        std::error_code error;
+        const bool exists = fs::exists(history, error);
+        if (error) return failure<std::string>("persistent_write_refused", error.message(), history);
+        if (!exists) {
+            if (fs::exists(stage, error) || error) return failure<std::string>(
+                "transaction_recovery_required", "Unbound activation staging requires recovery", stage,
+                facman::core::OutcomeKind::recovery_required);
+            return facman::core::Result<std::string>::success(id);
+        }
+        auto text = stable_text(history / "activation.v1.json");
+        auto document = text ? json::parse(text.value()) : json::parse("");
+        if (!document || !document.value().is_object() ||
+            field_string(document.value(), "schema") != "factorio.modset_activation_history.v1" ||
+            field_string(document.value(), "transaction_id") != id ||
+            field_string(document.value(), "instance_id") != plan.instance.record.id.str() ||
+            field_string(document.value(), "current_state_sha256") != plan.current_state_sha256) {
+            return failure<std::string>("modset_history_invalid", "Retained activation identity does not match", history);
+        }
+        if (document.value().find("plan_id") != nullptr && field_string(document.value(), "plan_id") != plan.plan_id) {
+            return failure<std::string>("modset_history_invalid", "Retained activation plan identity does not match", history);
+        }
+        const json::Value* entries = document.value().find("files");
+        if (entries == nullptr || !entries->is_array() || entries->size() != files.size()) return failure<std::string>(
+            "modset_history_invalid", "Retained activation file set is incomplete", history);
+        for (std::size_t index = 0; index < files.size(); ++index) {
+            const StateFile& file = files[index];
+            const json::Value* entry = entries->at(index);
+            const json::Value* present = entry == nullptr ? nullptr : entry->find("before_present");
+            if (entry == nullptr || !entry->is_object() || present == nullptr || !present->bool_value() ||
+                present->bool_value().value() != file.before_present || field_string(*entry, "key") != file.key ||
+                facman::platform::path_from_utf8(field_string(*entry, "target")).lexically_normal() != file.target.lexically_normal() ||
+                field_string(*entry, "before_sha256") != (file.before_present ? sha256_text(file.before) : "") ||
+                field_string(*entry, "after_sha256") != sha256_text(file.after)) {
+                return failure<std::string>("modset_history_invalid", "Retained activation state does not match restored targets", history);
+            }
+            if (file.before_present) {
+                auto backup = stable_text(history / (file.key + ".before"));
+                if (!backup || backup.value() != file.before) return failure<std::string>(
+                    "modset_history_invalid", "Retained activation backup does not match restored state", history);
+            }
+        }
+        // Old apply failures may have a recovery-required journal despite
+        // restoring all targets. Keep that journal and marker-only stage intact;
+        // they may be reused as proof only when bound to this exact activation.
+        auto marker_text = stable_text(history / tx::transaction_staging_marker_name());
+        auto marker = marker_text ? json::parse(marker_text.value()) : json::parse("");
+        tx::Record record;
+        if (!marker || !marker.value().is_object() || !tx::read_record(workspace,
+                field_string(marker.value(), "transaction_id"), record, detail) ||
+            record.command_id != "modsets.apply" || record.target.lexically_normal() != plan.instance.mod_list.lexically_normal() ||
+            record.workspace_id != workspace_record.value().id.str() ||
+            record.staging_roots != std::vector<fs::path>{stage, history} ||
+            !tx::verify_staging_ownership(record, history, detail) ||
+            !tx::verify_staging_ownership(record, stage, detail)) {
+            return failure<std::string>("modset_history_invalid", "Retained activation journal ownership does not match", history);
+        }
+        if (record.state != tx::State::refused && record.state != tx::State::complete &&
+            record.state != tx::State::rolled_back && record.state != tx::State::recovery_required) {
+            return failure<std::string>("transaction_recovery_required", "Retained activation is not an inactive restored attempt", history,
+                facman::core::OutcomeKind::recovery_required);
+        }
+        fs::directory_iterator iterator(stage, error);
+        if (error) return failure<std::string>("modset_history_invalid", error.message(), stage);
+        std::size_t children = 0;
+        for (; iterator != fs::directory_iterator(); iterator.increment(error)) {
+            if (error || iterator->path().filename() != tx::transaction_staging_marker_name() || ++children != 1U) {
+                return failure<std::string>("transaction_recovery_required", "Retained staging still contains uncommitted content", stage,
+                    facman::core::OutcomeKind::recovery_required);
+            }
+        }
+        if (error || children != 1U) return failure<std::string>(
+            "modset_history_invalid", "Retained staging marker is incomplete", stage);
+    }
+    return failure<std::string>("persistent_target_exists", "Activation attempt limit reached", mods_root);
+}
+
 facman::core::Result<std::string> apply_plan(const fs::path& workspace, ResolvedPlan plan)
 {
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = tx::acquire_instance_configuration_lock(plan.instance.record.root, configuration_lock);
+    if (!locked.acquired()) return failure<std::string>(
+        locked.code == facman::base::StableLockCode::contended ? "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        locked.detail, plan.instance.record.root);
     plan.plan_id = sha256_text(plan_core_json(plan));
     for (const auto& selected : plan.selected) if (!selected.second->virtual_package) {
         auto current = facman::factorio::mods::inspect_mod_zip(selected.second->file_path);
@@ -659,14 +771,20 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
     if (facman::base::path_crosses_link_or_reparse_point(mods_root, link_detail)) {
         return failure<std::string>("modset_path_unsafe", link_detail, mods_root);
     }
-    const fs::path history = mods_root / ".facman-modset-history" / plan.plan_id;
-    const fs::path stage = mods_root / (".facman-modset-stage-" + plan.plan_id);
+    auto attempt = activation_id(workspace, plan, files, mods_root);
+    if (!attempt) return failure<std::string>(attempt.error().code, attempt.error().message,
+        facman::platform::path_from_utf8(attempt.error().path), attempt.error().kind);
+    plan.transaction_id = attempt.take_value();
+    const fs::path history = mods_root / ".facman-modset-history" / plan.transaction_id;
+    const fs::path stage = mods_root / (".facman-modset-stage-" + plan.transaction_id);
     std::error_code error;
     if (fs::exists(history, error) || fs::exists(stage, error)) {
         return failure<std::string>("persistent_target_exists", "Activation history or staging already exists", history);
     }
-    fs::create_directories(history, error);
+    fs::create_directories(history.parent_path(), error);
     if (error) return failure<std::string>("persistent_write_refused", error.message(), history);
+    if (!fs::create_directory(history, error)) return failure<std::string>(
+        "persistent_target_exists", error ? error.message() : "Activation attempt was claimed concurrently", history);
     std::string detail;
     for (const StateFile& file : files) if (file.before_present &&
         !write_new(history / (file.key + ".before"), file.before, detail)) {
@@ -700,7 +818,12 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
     }
     const char* fault = std::getenv("FACMAN_MODSET_FAULT");
     if (fault != nullptr && std::string(fault) == "after_backup") {
-        clean_stage(stage); session.failed("fault injection after backup");
+        clean_stage(stage);
+        if (!restored_files_match(files) || !session.refused("fault injection after backup; original state verified")) {
+            session.require_recovery("Original state or refusal journal could not be verified");
+            return failure<std::string>("transaction_recovery_required", session.detail(), history,
+                facman::core::OutcomeKind::recovery_required);
+        }
         return failure<std::string>("modset_fault_injected", "Fault injected after backup");
     }
     std::size_t committed = 0;
@@ -738,7 +861,12 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
             return failure<std::string>("transaction_recovery_required", detail, history,
                 facman::core::OutcomeKind::recovery_required);
         }
-        clean_stage(stage); session.failed(detail);
+        clean_stage(stage);
+        if (!restored_files_match(files) || !session.refused(detail + "; original state restored and verified")) {
+            session.require_recovery("Restored state or refusal journal could not be verified");
+            return failure<std::string>("transaction_recovery_required", session.detail(), history,
+                facman::core::OutcomeKind::recovery_required);
+        }
         return failure<std::string>(fault != nullptr ? "modset_fault_injected" : "persistent_write_refused", detail);
     }
     clean_stage(stage);
@@ -760,13 +888,16 @@ struct HistoryEntry {
     std::string after_hash;
 };
 
-facman::core::Result<std::vector<HistoryEntry>> read_history(const fs::path& manifest)
+facman::core::Result<std::vector<HistoryEntry>> read_history(
+    const fs::path& manifest, const std::string& transaction_id, const std::string& instance_id)
 {
     auto text = stable_text(manifest);
     if (!text) return failure<std::vector<HistoryEntry>>(text.error().code, text.error().message, manifest);
     auto document = json::parse(text.value());
     if (!document || !document.value().is_object() ||
-        field_string(document.value(), "schema") != "factorio.modset_activation_history.v1") {
+        field_string(document.value(), "schema") != "factorio.modset_activation_history.v1" ||
+        field_string(document.value(), "transaction_id") != transaction_id ||
+        field_string(document.value(), "instance_id") != instance_id) {
         return failure<std::vector<HistoryEntry>>("modset_history_invalid", "Activation history manifest is invalid", manifest);
     }
     const json::Value* files = document.value().find("files");
@@ -804,6 +935,11 @@ facman::core::Result<std::string> rollback_history(const fs::path& workspace, co
     }
     auto instance = load_instance(workspace, request.instance_id);
     if (!instance) return failure<std::string>(instance.error().code, instance.error().message);
+    facman::base::StableLocalLock configuration_lock;
+    const auto locked = tx::acquire_instance_configuration_lock(instance.value().record.root, configuration_lock);
+    if (!locked.acquired()) return failure<std::string>(
+        locked.code == facman::base::StableLockCode::contended ? "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
+        locked.detail, instance.value().record.root);
     const fs::path mods_root = instance.value().record.root / "mods";
     std::string link_detail;
     if (facman::base::path_crosses_link_or_reparse_point(mods_root, link_detail)) {
@@ -813,7 +949,7 @@ facman::core::Result<std::string> rollback_history(const fs::path& workspace, co
     if (fs::exists(history / "rollback.v1.json")) {
         return failure<std::string>("modset_already_rolled_back", "This activation has already been rolled back", history);
     }
-    auto entries = read_history(history / "activation.v1.json");
+    auto entries = read_history(history / "activation.v1.json", request.transaction_id, request.instance_id);
     if (!entries) return failure<std::string>(entries.error().code, entries.error().message, history);
     const std::map<std::string, fs::path> expected_targets = {
         {"mod-list", instance.value().mod_list},
