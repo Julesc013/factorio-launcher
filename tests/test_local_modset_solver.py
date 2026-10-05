@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import tempfile
+import time
 import unittest
 import zipfile
 from pathlib import Path
 
-from native_cli import invoke
+from native_cli import facman_executable, invoke
 from test_instance_lifecycle import hold_configuration_lock
 from tools import json_contract
 
@@ -77,6 +79,110 @@ def managed_state(workspace: Path) -> list[bytes | None]:
 
 
 class LocalModsetSolverTests(unittest.TestCase):
+    def test_apply_refuses_selected_archive_change_at_publication_boundary(self) -> None:
+        self.assert_publication_drift_refused("archive")
+
+    def test_apply_preserves_external_managed_state_change_at_publication_boundary(self) -> None:
+        for change in ("managed", "managed_remove", "shared_lock"):
+            with self.subTest(change=change): self.assert_publication_drift_refused(change)
+
+    def test_apply_preserves_unverified_publication_staging_and_history(self) -> None:
+        for change in ("marker", "staged_payload", "unknown_child", "history_manifest", "history_backup"):
+            with self.subTest(change=change): self.assert_publication_drift_refused(change)
+
+    def test_apply_refuses_redirected_publication_stage_where_supported(self) -> None:
+        for change in ("staged_symlink", "stage_redirect"):
+            with self.subTest(change=change): self.assert_publication_drift_refused(change)
+
+    def assert_publication_drift_refused(self, change: str) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman publication drift ") as value:
+            workspace = Path(value)
+            mods = setup(workspace) / "mods"
+            archive = mods / "simple_1.0.0.zip"
+            write_mod(archive, "simple", "1.0.0")
+            if change in ("managed_remove", "history_backup"):
+                (mods / "mod-list.json").write_bytes(b'{"mods":[]}\n')
+            before = managed_state(workspace)
+            environment = dict(os.environ, FACMAN_TEST_MODSET_APPLY_BEFORE_PUBLICATION_PAUSE="1")
+            process = subprocess.Popen(
+                [str(facman_executable()), "--workspace", str(workspace), "modsets", "apply",
+                 "solver", "--enable", "simple", "--json"],
+                cwd=ROOT, env=environment, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                stage = None
+                while process.poll() is None and stage is None and time.monotonic() < deadline:
+                    stage = next((path for path in mods.glob(".facman-modset-stage-*")
+                                  if (path / ".facman-modset-apply-paused").is_file()), None)
+                    time.sleep(0.01)
+                self.assertIsNotNone(stage, "apply did not reach the publication boundary")
+                history = mods / ".facman-modset-history"
+                attempt = next(history.iterdir())
+                unsafe = change in {"marker", "staged_payload", "unknown_child", "history_manifest", "history_backup", "staged_symlink", "stage_redirect"}
+                if change == "archive": write_mod(archive, "simple", "1.0.0", ["base >= 2.0.0"])
+                elif change == "managed": (mods / "mod-list.json").write_bytes(b'{"mods":[],"external_edit":"preserve"}\n')
+                elif change == "managed_remove": (mods / "mod-list.json").unlink()
+                elif change == "shared_lock":
+                    external_lock = json.loads(lock_text("solver", []))
+                    external_lock["external_edit"] = "preserve"
+                    (workspace / "modsets/solver.modset-lock.v1.json").write_bytes((json.dumps(external_lock) + "\n").encode())
+                elif change == "marker": (stage / ".facman-transaction-staging.v2.json").write_bytes(b"foreign marker\n")
+                elif change == "staged_payload": (stage / "local-lock.json").write_bytes(b"external staged bytes\n")
+                elif change == "unknown_child": (stage / "external.txt").write_bytes(b"preserve unknown content\n")
+                elif change == "history_manifest": (attempt / "activation.v1.json").write_bytes(b"changed history\n")
+                elif change == "history_backup": (attempt / "mod-list.before").write_bytes(b"changed backup\n")
+                elif change in {"staged_symlink", "stage_redirect"}:
+                    if change == "staged_symlink":
+                        foreign = workspace / "external_staged_bytes.json"
+                        foreign.write_bytes(b"preserve linked bytes\n")
+                        link = stage / "local-lock.json"
+                        link.unlink()
+                    else:
+                        foreign = stage.with_name(stage.name + "-retained")
+                        stage.rename(foreign)
+                        link = stage
+                    try: link.symlink_to(foreign, target_is_directory=change == "stage_redirect")
+                    except OSError as error:
+                        if getattr(error, "winerror", None) == 1314 or error.errno in {1, 13, 95}:
+                            self.skipTest("not_applicable: publication symlink creation unavailable on this host")
+                        raise
+                external_state = managed_state(workspace)
+                external_archive = archive.read_bytes()
+                staged_before = snapshot(stage)
+                staged_before[".facman-modset-apply-release"] = b""
+                history_before = snapshot(history)
+                (stage / ".facman-modset-apply-release").touch()
+                stdout, stderr = process.communicate(timeout=20)
+                self.assertNotEqual(0, process.returncode, stdout + stderr)
+                envelope = json.loads(stdout)
+                refusal = envelope["payload"]["refusal"]
+                expected = "transaction_recovery_required" if unsafe else "modset_archive_changed" if change == "archive" else "modset_external_drift"
+                self.assertEqual(expected, refusal["code"])
+                self.assertEqual(external_state, managed_state(workspace))
+                self.assertEqual(external_archive, archive.read_bytes())
+                if change == "archive": self.assertEqual(before, managed_state(workspace))
+                if unsafe:
+                    self.assertEqual(staged_before, snapshot(stage))
+                    self.assertEqual(history_before, snapshot(history))
+                    if change in {"staged_symlink", "stage_redirect"}: self.assertTrue(link.is_symlink())
+                    if change == "staged_symlink": self.assertEqual(b"preserve linked bytes\n", foreign.read_bytes())
+                    return
+                retained = snapshot(history)
+                journals = snapshot(workspace / "transactions")
+                retained_stage = snapshot(stage)
+                applied = call(workspace, "modsets", "apply", "solver", "--enable", "simple")
+                call(workspace, "modsets", "verify", "solver")
+                call(workspace, "modsets", "rollback", "solver", applied["transaction_id"])
+                self.assertEqual(external_state, managed_state(workspace))
+                self.assertEqual(retained, {key: value for key, value in snapshot(history).items() if key in retained})
+                self.assertEqual(journals, {key: value for key, value in snapshot(workspace / "transactions").items() if key in journals})
+                self.assertEqual(retained_stage, snapshot(stage))
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
     def test_applied_selection_verifies_virtual_base_and_only_pinned_archives(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman selected verification ") as value:
             workspace = Path(value)
@@ -125,10 +231,17 @@ class LocalModsetSolverTests(unittest.TestCase):
                 for _attempt in range(2):
                     refused = call(workspace, "modsets", "apply", "solver", "--enable", "simple", success=False, env=environment)
                     self.assertEqual("modset_fault_injected", refused["refusal"]["code"])
+                    phrase = "fault injected after backup" if fault == "after_backup" else "fault injection after first commit"
+                    self.assertIn(phrase, refused["refusal"]["detail"].lower())
                     self.assertEqual(before, managed_state(workspace))
                 history = mods / ".facman-modset-history"
                 retained = snapshot(history)
                 journals = snapshot(workspace / "transactions")
+                failed_journals = [json.loads(data) for data in journals.values()
+                                   if json.loads(data).get("command_id") == "modsets.apply"]
+                self.assertEqual(2, len(failed_journals))
+                self.assertTrue(all(phrase.lower().replace("fault injected", "fault injection") in
+                                    journal["error"].lower() for journal in failed_journals))
                 stages = {path.name: snapshot(path) for path in mods.glob(".facman-modset-stage-*")}
                 applied = call(workspace, "modsets", "apply", "solver", "--enable", "simple")
                 self.assertEqual(planned["plan_id"], applied["plan_id"])
