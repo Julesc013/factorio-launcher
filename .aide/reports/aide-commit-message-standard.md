@@ -45,6 +45,23 @@ The `## Changelog` section uses machine-readable category prefixes:
 Future automated changelog and release-note tooling consumes these prefixes.
 Existing history is not rewritten; malformed commits are reported.
 
+## Exact Historical Dispositions
+
+Range validation may consume a separately reviewed exact historical
+disposition. The record must identify the full Git commit, tree, ordered
+parents, canonical message digest, exact failed checks, narrow decision scope,
+review authority, and content-hashed decision and evidence files. Every field
+and the record digest are fail-closed. Git replacement objects are disabled
+for range traversal and message reads, the whole registry is validated before
+any match can apply, and accepted records require an exact structured JSON
+decision by a policy-allowlisted reviewer with a non-future review date.
+
+An accepted record reports the commit as `DISPOSITIONED` and preserves each
+`original_failure`; it does not relabel the historical message as passing.
+Proposed and rejected records are ineffective. Run a range check with
+`--no-dispositions` to show the unmodified policy result. Dispositions never
+apply to the latest-commit, message-file, or commit-hook checks.
+
 ## Trailers
 
 AIDE queue commits should include:
@@ -110,6 +127,7 @@ update
 - Check a message file: `py -3 .aide/scripts/aide_lite.py commit check --message-file .git/COMMIT_EDITMSG`
 - Check latest commit: `py -3 .aide/scripts/aide_lite.py commit check --latest`
 - Check a range: `py -3 .aide/scripts/aide_lite.py commit check --range HEAD~5..HEAD`
+- Check a raw range: `py -3 .aide/scripts/aide_lite.py commit check --range HEAD~5..HEAD --no-dispositions`
 - Print template: `py -3 .aide/scripts/aide_lite.py commit template`
 - Install local hook: `py -3 .aide/scripts/aide_lite.py commit install-hook`
 
