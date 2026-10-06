@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_content_records.h"
+#include "flb_factorio_modpack_export_closure.h"
 
 #include "fl_identity.h"
 #include "fl_json.h"
@@ -150,8 +151,7 @@ json::ObjectBuilder content_lock_builder(const ContentLock& value, bool include_
     }
     output.add_string("instance_id", value.instance_id);
     output.add_string("factorio_version", value.factorio_version);
-    output.add_string("startup_settings_state",
-        value.startup_settings_sha256.empty() ? "unbound" : "sha256_bound");
+    output.add_string("startup_settings_state", modpack_startup_settings_state(value));
     output.add_string("startup_settings_sha256", value.startup_settings_sha256);
     output.add_bool("local_artifacts_only", true);
     output.add_bool("network_authority", false);
@@ -202,8 +202,8 @@ json::ObjectBuilder modpack_manifest_builder(const ModpackManifest& value, bool 
     output.add_bool("contains_factorio_binaries", false);
     output.add_bool("contains_credentials", false);
     output.add_bool("artifact_closure_complete", true);
-    output.add_bool("startup_settings_bound", !value.content_lock.startup_settings_sha256.empty());
-    output.add_array("artifacts", artifacts);
+    output.add_bool("startup_settings_bound", modpack_startup_settings_bound(value));
+    append_modpack_manifest_closure_fields(output, value, artifacts);
     return output;
 }
 

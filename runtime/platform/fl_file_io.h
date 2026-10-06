@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -153,6 +154,15 @@ public:
     IoStatus list_child_names_bounded(
         std::size_t maximum_entries,
         std::vector<std::filesystem::path>& names) const;
+    // Windows deletes through the same exclusive child handle used for identity
+    // and content verification. POSIX removes only the recorded leaf relative
+    // to the held parent after verification; its final-leaf replacement window
+    // remains because the platform has no atomic compare-and-unlink operation.
+    IoStatus remove_child_file_no_follow_if_matches(
+        const std::filesystem::path& leaf, const FileIdentity& expected,
+        const std::function<bool(const StableInputFile&)>& verify_content) const;
+    IoStatus remove_child_empty_directory_no_follow_if_matches(
+        const std::filesystem::path& leaf, const PathIdentity& expected) const;
     IoStatus create_child_file_exclusive(
         const std::filesystem::path& leaf,
         std::uint64_t maximum_size,
