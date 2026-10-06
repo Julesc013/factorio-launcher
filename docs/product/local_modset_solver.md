@@ -42,14 +42,40 @@ lock metadata cannot grant built-in provenance. Unselected local versions do not
 invalidate a solver selection. Human inventory and solver commands show the
 owner's package identities, selection, changes, explanation and rollback ID.
 
-`modsets export` packages the exact verified lock and only its selected physical
-archives. Unselected local versions and malformed archives remain outside the
-export. Trusted built-in packages stay in the lock as virtual metadata; export
-does not invent archives for them. A virtual-only selection contains only its
-lock. The staged archive must retain the verified entry bytes, and source checks
-after staging and private copying also require the same selected lock. Existing
-targets refuse without replacement. Import and offline reconstruction require
-their own acceptance evidence.
+`modsets export` packages the exact verified `modset-lock.v1.json`, a typed
+`modpack-manifest.v1.json`, and only the selected physical archives under `mods/`.
+The manifest projects the canonical content lock, binds the SHA-256 and size of
+the exact raw source lock and each selected archive, and carries a canonical
+manifest identity. Trusted built-in packages remain virtual metadata; export
+does not invent archives for them. Unselected versions, installation binaries,
+credentials, and other instance content stay outside this selected closure.
+
+The fixed settings paths `mods/mod-list.json` and `mods/mod-settings.dat` retain
+their exact bytes when present. The manifest binds each path's presence, size,
+and SHA-256. An absent file is explicitly bound as absent, with zero size and an
+empty digest; no empty file is invented. A present empty file has the SHA-256 of
+empty bytes and remains distinct from absence. Startup settings report
+`sha256_bound` when present and `absent` when missing, including for virtual-only
+packs. Older internal projections without admitted settings retain `unbound`.
+Settings and source lock files are limited to 16 MiB each.
+
+The staged archive must retain every bound entry's exact size and bytes. Source
+checks after staging and immediately before publication also revalidate file
+presence, object identities, bytes, and the instance/mods directories; linked
+or redirected sources refuse. Export preserves reproducible ZIP output and
+refuses existing targets without replacement. Genuine offline import and
+reconstruction still require their own implementation and acceptance evidence.
+
+Export cleanup binds created staging file identities and bytes, including the
+transaction's exact ownership marker. It removes only those recorded children
+relative to held parent directories and removes directories nonrecursively.
+Observed unknown, replaced, or changed staging content remains for recovery;
+writer failures retain staging for this policy, and generic recovery requires
+review for the portable export strategy. Windows verifies and deletes each file
+through one exclusive handle. POSIX verifies each recorded leaf before bounded
+unlink; concurrent replacement of that same leaf between the final check and
+unlink remains an open platform acceptance limit. This change does not establish
+complete adversarial or cross-platform acceptance.
 
 These commands never fetch missing mods, remove local archives, execute Factorio,
 or grant setup, publication, or human-acceptance authority.

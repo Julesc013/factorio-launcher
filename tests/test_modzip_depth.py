@@ -263,7 +263,7 @@ class ModZipDepthTests(unittest.TestCase):
                 ["--workspace", tmp, "modsets", "export", "modzip", str(output), "--json"]
             )
             self.assertEqual(code, 0, stderr)
-            self.assertEqual(exported["files"], 2)
+            self.assertEqual(exported["files"], 3)
             self.assertEqual(
                 json_contract.validate(
                     exported,
@@ -276,7 +276,7 @@ class ModZipDepthTests(unittest.TestCase):
             with zipfile.ZipFile(output) as archive:
                 self.assertEqual(
                     sorted(archive.namelist()),
-                    ["mods/compressed_mod_1.2.3.zip", "modset-lock.v1.json"],
+                    ["modpack-manifest.v1.json", "mods/compressed_mod_1.2.3.zip", "modset-lock.v1.json"],
                 )
                 self.assertTrue(all(info.CRC or info.file_size == 0 for info in archive.infolist()))
             facman_internal = sorted(
@@ -627,7 +627,7 @@ class ModZipDepthTests(unittest.TestCase):
                 ]
             )
             self.assertEqual(code, 0, stderr)
-            self.assertEqual(exported["files"], 2)
+            self.assertEqual(exported["files"], 3)
             self.assertEqual(tree_snapshot(fixture_root), before)
 
             pack_bytes = pack.read_bytes()
@@ -636,7 +636,7 @@ class ModZipDepthTests(unittest.TestCase):
             with zipfile.ZipFile(pack) as archive:
                 self.assertEqual(
                     sorted(archive.namelist()),
-                    ["mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"],
+                    ["modpack-manifest.v1.json", "mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"],
                 )
 
     def test_export_refuses_lock_changed_after_archive_staging(self) -> None:
@@ -718,11 +718,11 @@ class ModZipDepthTests(unittest.TestCase):
                     time.sleep(0.02)
                 self.assertIsNotNone(staging, "export did not reach its staged archive")
                 self.assertIsNone(process.poll())
-                replacement = staging / "replacement.zip"
+                replacement = workspace / "exports/replacement.zip"
                 with zipfile.ZipFile(replacement, "w") as archive:
                     archive.writestr("foreign.txt", "unverified content")
                 try:
-                    os.replace(replacement, staging / destination.name)
+                    os.replace(replacement, staging / "archive" / destination.name)
                     replaced = True
                 except PermissionError:
                     # Windows holds the source reader open across the pause.
@@ -731,14 +731,18 @@ class ModZipDepthTests(unittest.TestCase):
                 stdout, stderr = process.communicate(timeout=20)
                 if replaced:
                     self.assertEqual(process.returncode, 1, stderr + stdout)
-                    self.assertIn("modset_verification_failed", stdout)
+                    self.assertIn("transaction_recovery_required", stdout)
                     self.assertFalse(destination.exists())
+                    self.assertTrue(staging.exists())
+                    with zipfile.ZipFile(staging / "archive" / destination.name) as archive:
+                        self.assertEqual(b"unverified content", archive.read("foreign.txt"))
                 else:
                     self.assertEqual(process.returncode, 0, stderr + stdout)
                     with zipfile.ZipFile(destination) as archive:
                         self.assertEqual(sorted(archive.namelist()),
-                            ["mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"])
-                self.assertEqual([], list((workspace / "exports").glob(".facman-modset-export-*")))
+                            ["modpack-manifest.v1.json", "mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"])
+                if not replaced:
+                    self.assertEqual([], list((workspace / "exports").glob(".facman-modset-export-*")))
             finally:
                 if process.poll() is None:
                     process.kill()
@@ -778,16 +782,27 @@ class ModZipDepthTests(unittest.TestCase):
                     time.sleep(0.02)
                 self.assertIsNotNone(staging, "private publication did not reach its pause")
                 self.assertIsNone(process.poll())
-                with (staging / destination.name).open("r+b") as archive:
+                with (staging / "archive" / destination.name).open("r+b") as archive:
                     archive.write(b"X")
                 (staging / ".facman-modset-private-copy-release").touch()
                 stdout, stderr = process.communicate(timeout=20)
-                self.assertEqual(process.returncode, 0, stderr + stdout)
+                self.assertEqual(process.returncode, 1, stderr + stdout)
+                self.assertIn("transaction_recovery_required", stdout)
                 with zipfile.ZipFile(destination) as archive:
                     self.assertEqual(sorted(archive.namelist()),
-                        ["mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"])
+                        ["modpack-manifest.v1.json", "mods/simple_mod_1.0.0.zip", "modset-lock.v1.json"])
                     self.assertEqual(archive.read("mods/simple_mod_1.0.0.zip"), mod_zip.read_bytes())
-                self.assertEqual([], list((workspace / "exports").glob(".facman-modset-export-*")))
+                changed_archive = (staging / "archive" / destination.name).read_bytes()
+                self.assertEqual(b"X", changed_archive[:1])
+                published_bytes = destination.read_bytes()
+                code, pending, stderr = run_json(["--workspace", tmp, "workspace", "recovery", "inspect", "--json"])
+                self.assertEqual(code, 0, stderr)
+                transaction = next(item for item in pending["transactions"] if item["command_id"] == "modsets.export")
+                code, refused, stderr = run_json(["--workspace", tmp, "workspace", "recovery", "apply", transaction["transaction_id"], "--json"])
+                self.assertEqual(code, 1, stderr)
+                self.assertEqual("recovery_staging_unrecognized", refused["refusal"]["code"])
+                self.assertEqual(changed_archive, (staging / "archive" / destination.name).read_bytes())
+                self.assertEqual(published_bytes, destination.read_bytes())
             finally:
                 if process.poll() is None:
                     process.kill()

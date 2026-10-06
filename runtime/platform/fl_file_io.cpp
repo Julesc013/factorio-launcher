@@ -655,6 +655,99 @@ bool StableDirectoryObject::open() const noexcept
     return impl_ && impl_->handle != kInvalidHandle;
 }
 
+IoStatus StableDirectoryObject::remove_child_file_no_follow_if_matches(
+    const std::filesystem::path& leaf, const FileIdentity& expected,
+    const std::function<bool(const StableInputFile&)>& verify_content) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name) || !verify_content || !expected.regular_file || expected.link_count != 1U)
+        return IoStatus::failure("relative_cleanup_identity_invalid", path_to_utf8(leaf));
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
+#ifdef _WIN32
+    NativeHandle handle = kInvalidHandle;
+    auto opened = open_relative_windows(impl_->handle, name,
+        GENERIC_READ | DELETE | FILE_READ_ATTRIBUTES, 1, 0x00200040, handle, 0);
+    if (!opened.ok()) return opened;
+    StableInputFile file;
+    file.impl_->handle = handle;
+    file.impl_->path = impl_->path / leaf;
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(handle, &info))
+        return IoStatus::failure("relative_cleanup_identity_failed", windows_error("GetFileInformationByHandle"));
+    file.impl_->identity = identity_from_info(info);
+    if (!expected.unchanged(file.identity()) || !verify_content(file) || !file.revalidate().ok())
+        return IoStatus::failure("relative_cleanup_identity_changed", name);
+    FILE_DISPOSITION_INFO disposition {};
+    disposition.DeleteFile = TRUE;
+    if (!SetFileInformationByHandle(handle, FileDispositionInfo, &disposition,
+            static_cast<DWORD>(sizeof(disposition))))
+        return IoStatus::failure("relative_cleanup_remove_failed", windows_error("SetFileInformationByHandle"));
+    return close_native_handle(file.impl_->handle, "relative_cleanup_close_failed");
+#else
+    StableInputFile file;
+    auto opened = open_child_file_no_follow_pinned(leaf, file);
+    if (!opened.ok()) return opened;
+    if (!expected.unchanged(file.identity()) || !verify_content(file) || !file.revalidate().ok())
+        return IoStatus::failure("relative_cleanup_identity_changed", name);
+    struct stat current {};
+    if (::fstatat(impl_->handle, name.c_str(), &current, AT_SYMLINK_NOFOLLOW) != 0 ||
+        !expected.unchanged(identity_from_stat(current)))
+        return IoStatus::failure("relative_cleanup_identity_changed", name);
+    // Bounded unlink, not atomic compare-and-unlink: a final-leaf concurrent
+    // replacement after fstatat is a retained platform acceptance limitation.
+    if (::unlinkat(impl_->handle, name.c_str(), 0) != 0)
+        return IoStatus::failure("relative_cleanup_remove_failed", std::strerror(errno));
+    return flush_directory_handle(impl_->handle);
+#endif
+}
+
+IoStatus StableDirectoryObject::remove_child_empty_directory_no_follow_if_matches(
+    const std::filesystem::path& leaf, const PathIdentity& expected) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name) || !expected.exists || expected.reparse_or_link || expected.kind != PathObjectKind::directory)
+        return IoStatus::failure("relative_cleanup_identity_invalid", path_to_utf8(leaf));
+    const IoStatus valid = revalidate();
+    if (!valid.ok()) return valid;
+#ifdef _WIN32
+    NativeHandle handle = kInvalidHandle;
+    auto opened = open_relative_windows(impl_->handle, name,
+        DELETE | FILE_READ_ATTRIBUTES | FILE_LIST_DIRECTORY, 1, 0x00200001, handle, 0);
+    if (!opened.ok()) return opened;
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(handle, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(handle);
+        return IoStatus::failure("relative_cleanup_identity_failed", detail);
+    }
+    const PathIdentity current = path_identity_from_info(impl_->path / leaf, handle, info);
+    if (!current.same_object(expected) || current.reparse_or_link) {
+        CloseHandle(handle);
+        return IoStatus::failure("relative_cleanup_identity_changed", name);
+    }
+    // Native disposition is nonrecursive and refuses a nonempty directory,
+    // including a foreign child inserted after any earlier enumeration.
+    FILE_DISPOSITION_INFO disposition {};
+    disposition.DeleteFile = TRUE;
+    const bool removed = SetFileInformationByHandle(handle, FileDispositionInfo, &disposition,
+        static_cast<DWORD>(sizeof(disposition))) != 0;
+    const std::string detail = removed ? std::string {} : windows_error("SetFileInformationByHandle");
+    const IoStatus closed = close_native_handle(handle, "relative_cleanup_close_failed");
+    if (!removed) return IoStatus::failure("relative_cleanup_remove_failed", detail);
+    return closed;
+#else
+    struct stat current {};
+    if (::fstatat(impl_->handle, name.c_str(), &current, AT_SYMLINK_NOFOLLOW) != 0 ||
+        !path_identity_from_stat(current).same_object(expected) || !S_ISDIR(current.st_mode))
+        return IoStatus::failure("relative_cleanup_identity_changed", name);
+    // Nonrecursive rmdir refuses foreign children inserted after enumeration.
+    if (::unlinkat(impl_->handle, name.c_str(), AT_REMOVEDIR) != 0)
+        return IoStatus::failure("relative_cleanup_remove_failed", std::strerror(errno));
+    return flush_directory_handle(impl_->handle);
+#endif
+}
+
 IoStatus StableDirectoryObject::flush_metadata() const
 {
     const IoStatus valid = revalidate();

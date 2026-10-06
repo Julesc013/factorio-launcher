@@ -1203,6 +1203,9 @@ Outcome plan(const fs::path& workspace, const std::string& id)
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
     record.recovery_actions.clear();
     if (terminal(record.state)) record.recovery_actions.push_back("none");
+    else if (record.command_id == "modsets.export" &&
+             record.commit_strategy == "portable_modpack_export_destination_volume_atomic_no_replace")
+        record.recovery_actions.push_back("preserve_portable_export_staging_for_review");
     else if (record.command_id == "saves.retention.apply")
         record.recovery_actions.push_back("verify_and_resume_owned_backup_moves");
     else if (record.command_id == "profiles.apply" &&
@@ -1755,6 +1758,12 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     std::string detail;
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
     if (terminal(record.state)) return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+    if (record.command_id == "modsets.export" &&
+        record.commit_strategy == "portable_modpack_export_destination_volume_atomic_no_replace") {
+        return Refusal {"recovery_staging_unrecognized",
+            "Portable export staging requires review before cleanup",
+            "Retained export staging and any published target remain intact", false};
+    }
     const fs::path lock_path = recovery_lock_path(workspace, id);
     facman::base::StableLocalLock recovery_lock;
     facman::base::StableLockResult lock_result = recovery_lock.create(lock_path);

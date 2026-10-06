@@ -11,6 +11,7 @@
 #include "fl_sha256.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
+#include "flb_factorio_modpack_export_closure.h"
 
 #include <algorithm>
 #include <array>
@@ -27,6 +28,7 @@ namespace facman::factorio::modsets::operations {
 namespace fs = std::filesystem;
 namespace tx = facman::transaction;
 namespace json = facman::core::json;
+namespace content = facman::factorio::content;
 namespace {
 
 struct Instance {
@@ -639,28 +641,21 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     if (!load_instance(workspace, request.instance_id, instance)) {
         return refuse(command, request.instance_id, "unknown_instance", "Instance is not registered", request.instance_id);
     }
-    std::vector<ModRef> mods;
     std::string expected_lock;
-    const std::vector<std::string> verification = verify_lock(workspace, instance, &mods, &expected_lock);
+    const std::vector<std::string> verification = verify_lock(workspace, instance, nullptr, &expected_lock);
     if (!verification.empty()) {
         return refuse(command, request.instance_id, "modset_verification_failed", "Modset must verify before export", verification.front());
     }
-    if (read_text(instance_lock_path(instance)) != expected_lock) {
-        return refuse(command, request.instance_id, "modset_verification_failed",
-            "Modset lock changed before export", path_string(instance_lock_path(instance)));
-    }
-    std::map<std::string, std::string> expected_archive_digests;
-    expected_archive_digests.emplace("modset-lock.v1.json",
-        facman::base::sha256_hex_bytes(
-            reinterpret_cast<const unsigned char*>(expected_lock.data()), expected_lock.size()));
-    for (const ModRef& mod : mods) {
-        if (mod.virtual_package) continue;
-        if (mod.sha256.size() != 64U ||
-            !expected_archive_digests.emplace("mods/" + mod.file_name, mod.sha256).second) {
-            return refuse(command, request.instance_id, "modset_verification_failed",
-                "Modset contains an ambiguous archive entry", mod.file_name);
-        }
-    }
+    // Capture below rechecks the exact raw lock through a no-follow file handle.
+    auto captured = content::capture_modpack_export_source(instance.root, expected_lock);
+    if (!captured) return refuse(command, request.instance_id, "modset_verification_failed",
+        "Portable modpack source could not be bound", captured.error().message + ": " + captured.error().path);
+    const content::ModpackExportSource source = captured.take_value();
+    const std::string manifest_json = content::to_json(source.manifest) + "\n";
+    std::map<std::string, content::BlobIdentity> expected_archive_files;
+    expected_archive_files.emplace("modpack-manifest.v1.json", content::BlobIdentity {
+        facman::base::sha256_hex_bytes(reinterpret_cast<const unsigned char*>(manifest_json.data()), manifest_json.size()),
+        static_cast<std::uint64_t>(manifest_json.size())});
     if (fs::exists(request.output_path)) {
         return refuse(command, request.instance_id, "persistent_target_exists", "Modset export target already exists", path_string(request.output_path));
     }
@@ -670,10 +665,11 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         return refuse(command, request.instance_id, "persistent_write_refused", "Modset export parent does not exist", path_string(output_parent));
     }
     std::vector<facman::archive::WriteEntry> entries;
-    entries.push_back({"modset-lock.v1.json", instance_lock_path(instance), false});
-    for (const ModRef& mod : mods) {
-        if (mod.virtual_package) continue;
-        entries.push_back({"mods/" + mod.file_name, mod.file_path, false});
+    for (const content::ModpackSourceFile& file : source.files) {
+        if (!file.present) continue;
+        if (!expected_archive_files.emplace(file.archive_path, file.blob).second) return refuse(
+            command, request.instance_id, "modset_verification_failed", "Portable archive entry is ambiguous", file.archive_path);
+        entries.push_back({file.archive_path, file.source_path, false});
     }
     const fs::path staging = unique_staging(output_parent, ".facman-modset-export-");
     tx::Record transaction;
@@ -681,7 +677,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     transaction.target = request.output_path;
     transaction.sources = {instance.root};
     transaction.staging_roots = {staging};
-    transaction.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+    transaction.commit_strategy = "portable_modpack_export_destination_volume_atomic_no_replace";
     auto started = tx::TransactionSession::begin(workspace, std::move(transaction));
     if (!started) {
         return refuse(command, request.instance_id, "recovery_write_refused", "Modset export journal preparation failed", started.error().message);
@@ -695,44 +691,44 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     facman::archive::WriteOptions options;
     options.method = facman::archive::CompressionMethod::deflate;
     options.reproducible = true;
+    options.preserve_staging_on_failure = true;
     options.limits = facman::archive::PackageArchivePolicy::limits();
     facman::archive::WriteResult written;
-    facman::archive::Status status = facman::archive::write_to_new_owned_staging(
-        staging,
+    content::ModpackExportStaging staging_state;
+    const auto prepared = content::prepare_modpack_export_staging(staging, manifest_json, staging_state);
+    facman::archive::Status status = prepared.ok() ? facman::archive::Status::success() :
+        facman::archive::Status::failure(prepared.code, prepared.detail);
+    entries.push_back({"modpack-manifest.v1.json", staging / "modpack-manifest.v1.json", false});
+    if (status.ok()) status = facman::archive::write_to_new_owned_staging(
+        staging / "archive",
         request.output_path.filename().string(),
         entries,
         options,
         written);
+    if (status.ok()) {
+        const auto bound = content::bind_modpack_export_archive(staging_state, written, options.limits);
+        if (!bound.ok()) status = facman::archive::Status::failure(bound.code, bound.detail);
+    }
     if (!status.ok()) {
+        written.verified_plan.reader.reset();
+        const auto cleaned = content::cleanup_modpack_export_staging(staging_state);
+        if (!cleaned.ok()) {
+            session.require_recovery(status.detail + "; cleanup: " + cleaned.detail);
+            return refuse(command, request.instance_id, "transaction_recovery_required", "Export staging requires recovery", cleaned.detail, false);
+        }
         session.failed(status.detail);
         return refuse(command, request.instance_id, "persistent_write_refused", "Modset archive staging failed", status.code + ": " + status.detail);
     }
     std::string closure_error;
-    const char* pause_after_stage = std::getenv("FACMAN_TEST_MODSET_EXPORT_PAUSE_AFTER_STAGE");
-    if (pause_after_stage != nullptr && std::string(pause_after_stage) == "1") {
-        const fs::path pause_marker = staging / ".facman-modset-export-paused";
-        const fs::path pause_release = staging / ".facman-modset-export-release";
-        std::string marker_detail;
-        if (!facman::base::write_text_new_atomic(
-                pause_marker, "staged\n", marker_detail)) {
-            closure_error = "modset export test pause marker could not be written: " + marker_detail;
-        }
-        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
-        while (closure_error.empty() && !fs::exists(pause_release) &&
-            std::chrono::steady_clock::now() < deadline) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        }
-        if (closure_error.empty() && !fs::exists(pause_release)) {
-            closure_error = "modset export test pause timed out";
-        }
-    }
+    const auto paused = content::pause_modpack_export_staging(staging_state, false);
+    if (!paused.ok()) closure_error = paused.detail;
     if (closure_error.empty() &&
-        written.verified_plan.entries.size() != expected_archive_digests.size()) {
+        written.verified_plan.entries.size() != expected_archive_files.size()) {
         closure_error = "staged archive entry count differs from the verified lock";
     } else if (closure_error.empty()) {
         for (const facman::archive::Entry& entry : written.verified_plan.entries) {
-            const auto expected = expected_archive_digests.find(entry.path);
-            if (entry.directory || expected == expected_archive_digests.end()) {
+            const auto expected = expected_archive_files.find(entry.path);
+            if (entry.directory || expected == expected_archive_files.end() || entry.expanded_size != expected->second.size) {
                 closure_error = "staged archive contains an unbound entry: " + entry.path;
                 break;
             }
@@ -742,7 +738,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
                     digest.update(bytes, size);
                     return true;
                 });
-            if (!status.ok() || digest.finish() != expected->second) {
+            if (!status.ok() || digest.finish() != expected->second.sha256) {
                 closure_error = "staged archive differs from the verified lock: " + entry.path;
                 break;
             }
@@ -753,12 +749,10 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         if (!after_staging.empty()) {
             closure_error = "modset source changed during export: " + after_staging.front();
         }
+        const auto exact_source = content::revalidate_modpack_export_source(source);
+        if (!exact_source.ok()) closure_error = exact_source.detail;
     }
-    std::string archive_digest;
-    if (closure_error.empty()) {
-        status = facman::archive::archive_sha256(written.verified_plan, options.limits, archive_digest);
-        if (!status.ok()) closure_error = "staged archive digest failed: " + status.detail;
-    }
+    const std::string archive_digest = staging_state.archive_blob.sha256;
     facman::platform::FileIdentity exact_archive_identity;
     if (closure_error.empty()) {
         facman::platform::StableInputFile staged_archive;
@@ -789,9 +783,11 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     }
     if (!closure_error.empty()) {
         written.verified_plan.reader.reset();
-        const facman::archive::Status cleaned =
-            facman::archive::cleanup_owned_staging_root(staging);
-        if (!cleaned.ok()) closure_error += "; cleanup: " + cleaned.detail;
+        const auto cleaned = content::cleanup_modpack_export_staging(staging_state);
+        if (!cleaned.ok()) {
+            session.require_recovery(closure_error + "; cleanup: " + cleaned.detail);
+            return refuse(command, request.instance_id, "transaction_recovery_required", "Export staging requires recovery", cleaned.detail, false);
+        }
         session.failed(closure_error);
         return refuse(command, request.instance_id, "modset_verification_failed",
             "Modset export no longer matches its verified lock", closure_error);
@@ -801,17 +797,23 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         !session.committing("no_clobber_commit_started")) {
         return refuse(command, request.instance_id, "recovery_write_refused", "Modset export journal update failed", session.detail());
     }
+    const auto transaction_marker = content::bind_modpack_export_transaction_marker(staging_state, session.record());
+    if (!transaction_marker.ok()) {
+        session.require_recovery(transaction_marker.detail);
+        return refuse(command, request.instance_id, "transaction_recovery_required", "Export transaction marker changed", transaction_marker.detail, false);
+    }
     written.verified_plan.reader.reset();
     const auto opened = [&]() {
         facman::platform::StableDirectoryObject source_parent;
         facman::platform::StableDirectoryObject target_parent;
-        auto result = source_parent.open_no_follow_for_relative_writes(staging);
+        auto result = source_parent.open_no_follow_for_relative_writes(written.archive_path.parent_path());
         if (result.ok()) result = target_parent.open_no_follow_for_relative_writes(output_parent);
 #ifdef _WIN32
         facman::platform::DurableOutputFile exact_archive;
         if (result.ok()) result = source_parent.reopen_child_file_no_follow_for_relative_publish(
             written.archive_path.filename(), exact_archive_identity,
             options.limits.maximum_archive_bytes, exact_archive);
+        if (result.ok()) result = content::revalidate_modpack_export_source(source);
         if (result.ok()) result = exact_archive.publish_in_directory_no_replace(
             target_parent, request.output_path.filename());
 #else
@@ -848,22 +850,8 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
             if (!after_copy.empty()) result = facman::platform::IoStatus::failure(
                 "modset_verification_failed", after_copy.front());
         }
-        const char* pause_private = std::getenv("FACMAN_TEST_MODSET_EXPORT_PAUSE_AFTER_PRIVATE_COPY");
-        if (result.ok() && pause_private != nullptr && std::string(pause_private) == "1") {
-            std::string marker_detail;
-            if (!facman::base::write_text_new_atomic(
-                    staging / ".facman-modset-private-copy-paused", "copied\n", marker_detail))
-                result = facman::platform::IoStatus::failure(
-                    "modset_verification_failed", marker_detail);
-            const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
-            while (result.ok() &&
-                !fs::exists(staging / ".facman-modset-private-copy-release") &&
-                std::chrono::steady_clock::now() < deadline)
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
-            if (result.ok() && !fs::exists(staging / ".facman-modset-private-copy-release"))
-                result = facman::platform::IoStatus::failure(
-                    "modset_verification_failed", "private archive copy test pause timed out");
-        }
+        if (result.ok()) result = content::pause_modpack_export_staging(staging_state, true);
+        if (result.ok()) result = content::revalidate_modpack_export_source(source);
         if (result.ok()) result = private_copy.publish_no_replace(request.output_path.filename());
 #endif
         return result;
@@ -874,7 +862,11 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
             return refuse(command, request.instance_id, "transaction_recovery_required",
                 "Modset archive publication requires recovery", opened.detail, false);
         }
-        (void)facman::archive::cleanup_owned_staging_root(staging);
+        const auto cleaned = content::cleanup_modpack_export_staging(staging_state);
+        if (!cleaned.ok()) {
+            session.require_recovery(opened.detail + "; cleanup: " + cleaned.detail);
+            return refuse(command, request.instance_id, "transaction_recovery_required", "Export staging requires recovery", cleaned.detail, false);
+        }
         session.failed(opened.detail);
         const bool verification_failed = opened.code == "modset_verification_failed";
         return refuse(command, request.instance_id,
@@ -882,6 +874,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
             verification_failed ? "Modset export no longer matches its verified lock" : "Modset archive commit failed",
             opened.detail);
     }
+    staging_state.archive_published = true;
     if (!session.committed("modset_archive_committed")) {
         return refuse(
             command,
@@ -891,9 +884,10 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
             session.detail(),
             false);
     }
-    status = facman::archive::cleanup_owned_staging_root(staging);
-    if (!status.ok()) {
-        return refuse(command, request.instance_id, "persistent_write_refused", "Committed export staging cleanup requires review", status.code + ": " + status.detail, false);
+    const auto cleaned = content::cleanup_modpack_export_staging(staging_state);
+    if (!cleaned.ok()) {
+        session.require_recovery(cleaned.detail);
+        return refuse(command, request.instance_id, "transaction_recovery_required", "Committed export staging cleanup requires review", cleaned.code + ": " + cleaned.detail, false);
     }
     if (!session.complete()) return refuse(command, request.instance_id, "transaction_recovery_required", "Modset export committed but journal close requires recovery", session.detail(), false);
     return ExportResult {request.instance_id, request.output_path, entries.size()};

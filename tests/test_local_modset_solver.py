@@ -92,9 +92,10 @@ class LocalModsetSolverTests(unittest.TestCase):
             before = snapshot(mods), snapshot(workspace / "modsets")
             output = workspace / "selected.zip"
             exported = call(workspace, "modsets", "export", "solver", str(output))
-            self.assertEqual(3, exported["files"])
+            self.assertEqual(5, exported["files"])
             with zipfile.ZipFile(output) as archive:
-                self.assertEqual({"modset-lock.v1.json", "mods/application_1.0.0.zip", "mods/library_2.0.0.zip"}, set(archive.namelist()))
+                self.assertEqual({"modpack-manifest.v1.json", "modset-lock.v1.json", "mods/mod-list.json",
+                                  "mods/application_1.0.0.zip", "mods/library_2.0.0.zip"}, set(archive.namelist()))
                 self.assertEqual((mods / "modset-lock.v1.json").read_bytes(), archive.read("modset-lock.v1.json"))
                 for name in ("application_1.0.0.zip", "library_2.0.0.zip"):
                     self.assertEqual((mods / name).read_bytes(), archive.read("mods/" + name))
@@ -115,9 +116,9 @@ class LocalModsetSolverTests(unittest.TestCase):
             call(workspace, "modsets", "verify", "solver")
             output = workspace / "virtual.zip"
             exported = call(workspace, "modsets", "export", "solver", str(output))
-            self.assertEqual(1, exported["files"])
+            self.assertEqual(3, exported["files"])
             with zipfile.ZipFile(output) as archive:
-                self.assertEqual(["modset-lock.v1.json"], archive.namelist())
+                self.assertEqual({"modpack-manifest.v1.json", "modset-lock.v1.json", "mods/mod-list.json"}, set(archive.namelist()))
                 self.assertEqual((mods / "modset-lock.v1.json").read_bytes(), archive.read("modset-lock.v1.json"))
                 lock = json.loads(archive.read("modset-lock.v1.json"))
                 self.assertEqual(["base"], [mod["name"] for mod in lock["mods"]])
