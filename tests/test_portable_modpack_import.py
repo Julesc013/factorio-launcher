@@ -14,8 +14,6 @@ import unittest
 import zipfile
 from pathlib import Path
 
-import jsonschema
-
 from native_cli import facman_executable
 from test_local_modset_solver import FIXTURE_INSTALL, SCHEMA_ROOT, call, setup, snapshot, write_mod
 from tools import json_contract
@@ -45,8 +43,9 @@ class PortableModpackImportTests(unittest.TestCase):
     def assert_reconstruction(self, workspace: Path, pack: Path, install: str = "fixture") -> None:
         target = workspace / "instances/reconstructed"
         receipt = json.loads((target / "modpack-import.v1.json").read_bytes())
-        jsonschema.Draft202012Validator(json_contract.load_schema(
-            SCHEMA_ROOT / "factorio_modpack_import.v1.schema.json")).validate(receipt)
+        schema = json_contract.load_schema(SCHEMA_ROOT / "factorio_modpack_import.v1.schema.json")
+        self.assertEqual([], json_contract.supported_schema_problems(schema))
+        self.assertEqual([], json_contract.validate(receipt, schema))
         with zipfile.ZipFile(pack) as archive:
             for leaf in ("modset-lock.v1.json", "modpack-manifest.v1.json"):
                 self.assertEqual(archive.read(leaf), (target / leaf).read_bytes())

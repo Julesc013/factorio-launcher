@@ -142,8 +142,11 @@ facman::core::Result<std::vector<ModRef>> validate_selected(
             return invalid<std::vector<ModRef>>("Source lock metadata differs from local content: " + entry.name);
         selected.push_back(std::move(mod));
     }
-    for (const auto& issue : validate_modset(selected, source.manifest.content_lock.factorio_version))
+    const auto issues = validate_modset(selected, source.manifest.content_lock.factorio_version);
+    if (!issues.empty()) {
+        const auto& issue = issues.front();
         return invalid<std::vector<ModRef>>(issue.code + ": " + issue.detail);
+    }
     return facman::core::Result<std::vector<ModRef>>::success(std::move(selected));
 }
 std::string target_lock_json(const std::string& instance_id, const std::string& version,
