@@ -47,7 +47,19 @@
     "canonicalization_version": {"const": "facman.sorted-json.v1"},
     "policy_revision": {"const": "factorio.instance-readiness-policy.v1"},
     "instance_id": {"type": "string", "minLength": 1},
-    "launch_intent": {"const": "menu"},
+    "launch_intent": {"enum": ["menu", "load_save"]},
+    "selected_save": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "filename": {"type": "string"},
+        "state": {"enum": ["satisfied", "degraded", "blocked"]},
+        "inspection_identity": {"type": "string"},
+        "observation_scope": {"const": "query_only_point_in_time"},
+        "gameplay_compatibility": {"const": "unclaimed"},
+        "record": {"type": ["object", "null"]}
+      },
+      "required": ["filename", "state", "inspection_identity", "observation_scope", "gameplay_compatibility", "record"]
+    },
     "instance_spec_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "instance_binding_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "overall_state": {"enum": ["ready", "degraded", "blocked", "recovery_required"]},

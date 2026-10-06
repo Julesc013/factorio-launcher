@@ -23,13 +23,13 @@ temporary file.
 ## Commands
 
 ```text
-facman instances describe <instance-id> [--intent menu] --json
-facman instances readiness <instance-id> [--intent menu] --json
+facman instances describe <instance-id> [--intent menu|load_save] --json
+facman instances readiness <instance-id> [--intent menu|load_save] --json
 ```
 
 Omitting `--intent` means `menu`. The full launch-intent vocabulary is
 registered so requests can be represented consistently, but Gate 2 accepts
-only `menu`. Every other intent receives the typed
+`menu` and explicit `load_save`. Every other intent receives the typed
 `unsupported_launch_intent` refusal. No save, scenario, server, editor, or
 benchmark is inferred from instance contents.
 
@@ -92,7 +92,7 @@ dependencies marked `revalidate_before_use` before a later operation.
 
 ## Computed `InstanceReadiness`
 
-`factorio.instance_readiness.v1` evaluates the exact `menu` intent across these
+`factorio.instance_readiness.v1` evaluates the exact requested `menu` or `load_save` intent across these
 initial dimensions:
 
 | Dimension | Gate 2 evaluation |
@@ -104,7 +104,7 @@ initial dimensions:
 | Configuration | Read-data routes to the installation and write-data/mods route to the instance |
 | Profile | Effective profile and override resolution |
 | Mod content | No external mods, explicitly degraded unlocked mods, or verified exact lock/artifacts/hashes/metadata/compatibility |
-| Saves | Informational; zero saves is valid for menu launch |
+| Saves | Informational for menu (zero saves valid); required selected archive and declared-context evidence for load_save |
 | Accounts | Not applicable to standalone menu readiness in this slice |
 | Recovery | Any incomplete or invalid transaction takes precedence |
 | Environment | Explicitly degraded until per-operation filesystem/process capabilities are proven |
@@ -197,3 +197,21 @@ anchors, and absence of mutation/process primitives.
 These tests establish the read-only software contract. They do not promote
 Play, installation mutation, credential, signing, release, or publication
 authority and do not replace the later human-reviewed real-product Play gate.
+
+Explicit `--intent load_save` requires an effective load-save profile selection.
+A menu or benchmark profile produces `instance_launch_intent_mismatch`. The
+required saves dimension consumes the exact existing `saves.inspect` record:
+missing/unsafe inputs and malformed or unrecognized archives block readiness;
+recorded association-byte or declared version/modset drift blocks it separately.
+Absent association and unknown deep metadata degrade the saves dimension without
+claiming gameplay compatibility. A match means only recorded declared context.
+The selected record and refusal outcome participate in the binding dependencies
+and readiness digest. Evidence is query-only and point-in-time; changing outer
+instance/profile/config/install/modset inputs during observation refuses the query.
+The safe action has no shell command interpolated from the selected filename.
+Menu defaults and zero-save behavior remain unchanged. Preparation and execution
+remain unavailable, no permit is issued, and `real_play_gate_not_passed` remains.
+
+Selected-save queries refuse linked/reparse instance, save, modset-context and
+association ancestors before observation. Optional evidence checks ancestors
+before and after a stable read; a late unsafe path blocks the observation.

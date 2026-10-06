@@ -89,3 +89,9 @@ Independent acceptance and exact producer/artifact/stream digests are retained
 in evidence/local-content-produced-reconstruction.v1.json. This is Windows
 source-fixture package acceptance; original failed regression evidence and all
 real-game, human, other-platform, WorkUnit and Beta gates remain unchanged.
+
+Selected-save readiness continuation: admit exactly tools/instance_model_check.py
+to recognize menu and explicit load_save query intents while retaining default
+menu InstanceSpec and all preparation/execution/permit boundaries. Reuse the
+existing saves.inspect evidence; no archive subsystem or public command is added.
+Native qualification and independent review remain required after source edits.
