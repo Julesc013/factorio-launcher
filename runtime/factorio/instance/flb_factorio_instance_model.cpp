@@ -14,6 +14,7 @@
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
 #include "flb_factorio_profiles.h"
+#include "flb_factorio_save_index.h"
 #include "flb_factorio_version_family.h"
 
 #include <algorithm>
@@ -95,6 +96,13 @@ struct Projection {
     std::string profile_digest = "not_observed";
     std::string profile_status = "not_observed";
     std::string profile_launch_intent = "menu";
+    std::string launch_intent = "menu";
+    std::string selected_save;
+    std::string selected_save_evidence;
+    std::string selected_save_identity = "not_observed";
+    std::string selected_save_state = "blocked";
+    std::string selected_save_code = "instance_selected_save_not_selected";
+    std::string selected_save_detail = "The effective profile does not select a save";
     std::string modset_status = "not_required";
     std::string modset_detail;
     std::string backup_state = "not_configured";
@@ -468,6 +476,7 @@ void inspect_profile(Projection& projection, const fs::path& workspace)
     projection.profile_valid = true;
     if (effective.value().settings.selection_mode == "load-save") {
         projection.profile_launch_intent = "load_save";
+        projection.selected_save = effective.value().settings.selection;
     } else if (effective.value().settings.selection_mode == "benchmark-save") {
         projection.profile_launch_intent = "benchmark";
     }
@@ -629,13 +638,120 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
     projection.modset_detail = "The exact modset lock, artifacts, hashes, metadata, and compatibility verify";
 }
 
+std::string optional_evidence_identity(const fs::path& path)
+{
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail)) return "unsafe:linked_path";
+    auto observed = observe_file(path);
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail)) return "unsafe:linked_path";
+    return observed ? observed.value().identity : "unavailable:" + observed.error().code;
+}
+
+// Save inspection owns archive recognition. This projection consumes its exact
+// selected record; it neither probes a second archive nor grants launch authority.
+void inspect_selected_save(Projection& projection, const fs::path& workspace)
+{
+    if (!projection.root_safe) {
+        projection.selected_save_code = "instance_root_unsafe";
+        projection.selected_save_detail = "Selected-save observation requires a safe instance root";
+        projection.selected_save_identity = "refused:instance_root_unsafe";
+        return;
+    }
+    if (!projection.profile_valid || projection.profile_launch_intent != "load_save" ||
+        projection.selected_save.empty()) return;
+    facman::factorio::saves::index::Request request;
+    request.instance_id = projection.instance.id.str();
+    request.save = projection.selected_save;
+    const fs::path local_lock = projection.instance.root / "mods" / "modset-lock.v1.json";
+    const fs::path association_path = projection.instance.root / "metadata" / "save-refs" /
+        fs::u8path(projection.selected_save + ".save-ref.v1.json");
+    // Effective-profile validation guards the selection filename. The reused
+    // inspector scans records and supports filename/stem/hash selection; this
+    // projection subsequently requires the exact selected filename and path.
+    const bool simple_name = safe_mod_file_name(projection.selected_save) &&
+        projection.selected_save.find_first_of("/\\:") == std::string::npos;
+    std::string path_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(local_lock, path_detail) ||
+        (simple_name && (facman::base::path_crosses_link_or_reparse_point(association_path, path_detail) ||
+            facman::base::path_crosses_link_or_reparse_point(
+                projection.instance.root / "saves" / fs::u8path(projection.selected_save), path_detail)))) {
+        projection.selected_save_code = "instance_selected_save_path_unsafe";
+        projection.selected_save_detail = "Selected save or context crosses a link/reparse boundary";
+        projection.selected_save_identity = "refused:instance_selected_save_path_unsafe";
+        return;
+    }
+    const std::string local_before = optional_evidence_identity(local_lock);
+    const std::string association_before = simple_name ? optional_evidence_identity(association_path) : "unsafe";
+    if (local_before == "unsafe:linked_path" || association_before == "unsafe:linked_path") {
+        projection.selected_save_code = "instance_selected_save_path_unsafe";
+        projection.selected_save_detail = "Selected context became unsafe during evidence observation";
+        projection.selected_save_identity = "refused:instance_selected_save_path_unsafe";
+        return;
+    }
+    auto inspected = facman::factorio::saves::index::inspect(workspace, request);
+    if (!inspected) {
+        projection.selected_save_code = inspected.error().code;
+        projection.selected_save_detail = inspected.error().message;
+        projection.selected_save_identity = "refused:" + inspected.error().code;
+        return;
+    }
+    auto report = json::parse(inspected.value());
+    const json::Value* saves = report ? report.value().find("saves") : nullptr;
+    const json::Value* record = saves && saves->is_array() && saves->size() == 1U ? saves->at(0) : nullptr;
+    const json::Value* archive = record ? record->find("archive_structure") : nullptr;
+    const json::Value* association = record ? record->find("association") : nullptr;
+    const json::Value* context = association ? association->find("context") : nullptr;
+    const json::Value* version = context ? context->find("factorio_version") : nullptr;
+    const json::Value* modset = context ? context->find("modset_lock") : nullptr;
+    if (record) {
+        projection.selected_save_evidence = canonical_json(record->serialize());
+        projection.selected_save_identity = "sha256:" + sha256_text(projection.selected_save_evidence);
+    }
+    if (local_before != optional_evidence_identity(local_lock) ||
+        (simple_name && association_before != optional_evidence_identity(association_path)) ||
+        !record || !archive || !association || !context || !version || !modset ||
+        object_string(*record, "filename") != projection.selected_save ||
+        !same_path(fs::u8path(object_string(*record, "path")),
+            projection.instance.root / "saves" / fs::u8path(projection.selected_save)) ||
+        object_string(*version, "current") != projection.instance.factorio_version ||
+        (projection.modset_lock && !object_string(*modset, "current_sha256").empty() &&
+            object_string(*modset, "current_sha256") != projection.modset_lock->digest)) {
+        projection.selected_save_code = "instance_selected_save_observation_inconsistent";
+        projection.selected_save_detail = "Selected-save inspection does not match the instance projection";
+        return;
+    }
+    if (object_string(*archive, "status") != "valid" || !object_bool(*record, "factorio_save_recognized")) {
+        projection.selected_save_code = "instance_selected_save_invalid";
+        projection.selected_save_detail = "Selected archive is malformed or not structurally recognized as a Factorio save";
+    } else if (object_string(*association, "status") == "drifted" ||
+        object_string(*version, "status") == "drifted" || object_string(*modset, "status") == "drifted") {
+        projection.selected_save_code = "instance_selected_save_context_drifted";
+        projection.selected_save_detail = "Selected save bytes or recorded declared version/modset context have drifted";
+    } else if (object_string(*association, "status") == "invalid" || object_string(*context, "status") == "unavailable") {
+        projection.selected_save_code = "instance_selected_save_context_unavailable";
+        projection.selected_save_detail = "Selected save association or current declared context is invalid, unsafe, or unavailable";
+    } else {
+        projection.selected_save_state = object_string(*context, "status") == "match" ? "satisfied" : "degraded";
+        projection.selected_save_code = "instance_selected_save_context_unknown";
+        projection.selected_save_detail = projection.selected_save_state == "satisfied"
+            ? "Selected save structure and recorded declared context match; gameplay compatibility remains unclaimed"
+            : "Selected save structure is recognized; recorded declared context is unknown and gameplay compatibility remains unclaimed";
+    }
+}
+
+bool unchanged(const fs::path& path, const FileObservation& expected)
+{
+    auto observed = observe_file(path);
+    return observed && observed.value().identity == expected.identity;
+}
+
 facman::core::Result<Projection> project(
     const fs::path& workspace,
     const ProjectionRequest& request)
 {
-    if (request.launch_intent != "menu") return fail<Projection>(
+    if (request.launch_intent != "menu" && request.launch_intent != "load_save") return fail<Projection>(
         "unsupported_launch_intent",
-        "Gate 2 evaluates only the menu launch intent",
+        "Readiness evaluates only menu and load_save launch intents",
         {},
         facman::core::OutcomeKind::invalid_argument);
     auto parsed_id = facman::core::InstanceId::parse_legacy(request.instance_id);
@@ -646,6 +762,7 @@ facman::core::Result<Projection> project(
 
     Projection projection;
     projection.instance = loaded.take_value();
+    projection.launch_intent = request.launch_intent;
     const version::VersionClassification classified =
         version::classify(projection.instance.factorio_version);
     projection.version_recorded = !projection.instance.factorio_version.empty();
@@ -662,9 +779,44 @@ facman::core::Result<Projection> project(
 
     inspect_installation(projection, workspace);
     inspect_root_and_content(projection, workspace);
+    if (projection.launch_intent == "load_save") {
+        if (!projection.root_safe) return fail<Projection>("instance_root_unsafe",
+            "Selected-save observation requires a safe instance root", projection.instance.root);
+        std::string detail;
+        for (const fs::path& path : {projection.instance.root / "saves",
+                projection.instance.root / "mods", projection.instance.root / "metadata" / "save-refs",
+                projection.instance.root / "backups"}) {
+            if (facman::base::path_crosses_link_or_reparse_point(path, detail)) {
+                return fail<Projection>("instance_selected_save_path_unsafe",
+                    "Selected save/context path crosses a link or reparse point", path);
+            }
+        }
+    }
     inspect_profile(projection, workspace);
     inspect_configuration(projection);
     inspect_modset(projection, workspace);
+    if (projection.launch_intent == "load_save") {
+        inspect_selected_save(projection, workspace);
+        // inspect() reloads instance/context. Reject mixed observations rather
+        // than presenting them as one coherent preparation plan.
+        Projection current = projection;
+        current.profile_valid = false;
+        current.profile_digest = "not_observed";
+        current.modset_lock.reset();
+        current.modset_valid = true;
+        inspect_profile(current, workspace);
+        inspect_modset(current, workspace);
+        if (!unchanged(projection.instance.source_path, projection.instance_record) ||
+            current.profile_valid != projection.profile_valid || current.profile_digest != projection.profile_digest ||
+            current.modset_valid != projection.modset_valid || current.modset_status != projection.modset_status ||
+            current.modset_lock.has_value() != projection.modset_lock.has_value() ||
+            (projection.modset_lock && current.modset_lock->identity != projection.modset_lock->identity) ||
+            (projection.install_record && !unchanged(projection.install->source_path, *projection.install_record)) ||
+            (projection.config && !unchanged(projection.instance.root / "config" / "config.ini", *projection.config))) {
+            return fail<Projection>("instance_projection_inputs_changed",
+                "Instance, profile, configuration, installation or modset changed during selected-save observation");
+        }
+    }
     projection.pending_transactions = tx::incomplete_count(workspace);
     return facman::core::Result<Projection>::success(std::move(projection));
 }
@@ -796,6 +948,11 @@ json::ArrayBuilder binding_dependencies(const Projection& projection)
         projection.config_valid ? "structural-preflight:pass" : "structural-preflight:blocked",
         "observed",
         true));
+    if (projection.launch_intent == "load_save") {
+        output.add_object(dependency("selected_save",
+            "selection:" + projection.selected_save + ":" + projection.selected_save_identity,
+            projection.selected_save_state, true));
+    }
     return output;
 }
 
@@ -981,15 +1138,16 @@ ReadinessComponent encode_readiness(
             true, "inspect_profile"});
         actions.push_back({"inspect_profile", "Inspect the referenced profile",
             "facman profiles inspect " + projection.instance.profile + " --json", false});
-    } else if (projection.profile_launch_intent != "menu") {
+    } else if (projection.profile_launch_intent != projection.launch_intent) {
         add_dimension(dimensions, "profile", "blocked", true,
             "The effective profile selects a different launch intent", {"profile"});
         blockers.push_back({"instance_launch_intent_mismatch", "profile",
-            "The profile selection does not satisfy menu readiness",
-            "Effective profile selects " + projection.profile_launch_intent + "; requested intent is menu",
-            true, "configure_menu_profile"});
-        actions.push_back({"configure_menu_profile", "Preview a profile for menu launch",
-            "facman profiles plan " + projection.instance.id.str() + " gui --json", false});
+            "The profile selection does not satisfy " + projection.launch_intent + " readiness",
+            "Effective profile selects " + projection.profile_launch_intent + "; requested intent is " + projection.launch_intent,
+            true, projection.launch_intent == "menu" ? "configure_menu_profile" : "configure_load_save_profile"});
+        actions.push_back({projection.launch_intent == "menu" ? "configure_menu_profile" : "configure_load_save_profile",
+            "Preview a profile for " + projection.launch_intent + " launch",
+            projection.launch_intent == "menu" ? "facman profiles plan " + projection.instance.id.str() + " gui --json" : "", false});
     } else {
         add_dimension(dimensions, "profile", "satisfied", true,
             "The referenced profile and effective overrides are valid", {"profile"});
@@ -1015,7 +1173,17 @@ ReadinessComponent encode_readiness(
             projection.modset_detail, {"modset_lock"});
     }
 
-    add_dimension(dimensions, "saves", "satisfied", false,
+    if (projection.launch_intent == "load_save") {
+        add_dimension(dimensions, "saves", projection.selected_save_state, true,
+            projection.selected_save_detail, {"selected_save", "profile", "instance_record", "modset_lock"});
+        actions.push_back({"inspect_selected_save", "Inspect the selected save and its recorded declared context", "", false});
+        if (projection.selected_save_state == "blocked") {
+            blockers.push_back({projection.selected_save_code, "saves", "Selected-save prerequisite is not satisfied",
+                projection.selected_save_detail, true, "inspect_selected_save"});
+        } else if (projection.selected_save_state == "degraded") {
+            findings.push_back({projection.selected_save_code, "saves", "warning", projection.selected_save_detail});
+        }
+    } else add_dimension(dimensions, "saves", "satisfied", false,
         projection.save_count == 0U
             ? "Zero saves is valid for menu launch"
             : std::to_string(projection.save_count) + " save archive(s) are available inside the instance",
@@ -1100,7 +1268,18 @@ ReadinessComponent encode_readiness(
     core.add_string("canonicalization_version", kCanonicalizationVersion);
     core.add_string("policy_revision", kPolicyRevision);
     core.add_string("instance_id", projection.instance.id.str());
-    core.add_string("launch_intent", "menu");
+    core.add_string("launch_intent", projection.launch_intent);
+    if (projection.launch_intent == "load_save") {
+        json::ObjectBuilder selected;
+        selected.add_string("filename", projection.selected_save);
+        selected.add_string("state", projection.selected_save_state);
+        selected.add_string("inspection_identity", projection.selected_save_identity);
+        selected.add_string("observation_scope", "query_only_point_in_time");
+        selected.add_string("gameplay_compatibility", "unclaimed");
+        if (projection.selected_save_evidence.empty()) selected.add_null("record");
+        else selected.add_value("record", parsed_value(projection.selected_save_evidence));
+        core.add_object("selected_save", selected);
+    }
     core.add_string("instance_spec_digest", spec.digest);
     core.add_string("instance_binding_digest", binding.digest);
     core.add_string("overall_state", overall_state);

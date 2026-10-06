@@ -120,6 +120,7 @@ target_include_directories(flb_factorio_instance_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/launch ${CMAKE_CURRENT_SOURCE_DIR}/modsets
   ${CMAKE_CURRENT_SOURCE_DIR}/profiles ${CMAKE_CURRENT_SOURCE_DIR}/snapshots)
 target_link_libraries(flb_factorio_instance_static PUBLIC
+  flb_factorio_saves_static
   facman_archive_static facman_base_static facman_platform_static facman_transaction_static facman_workspace_static
   flb_factorio_install_model_static flb_factorio_launch_planning_static flb_factorio_modsets_static
   flb_factorio_profiles_static flb_factorio_snapshots_static)

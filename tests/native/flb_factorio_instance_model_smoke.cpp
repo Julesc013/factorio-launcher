@@ -188,7 +188,22 @@ int main()
         !bool_is(version_requirement->find("exact_patch"), true) ||
         !string_is(version_requirement->find("support_claim"), "unclaimed")) return 8;
 
-    instance::ProjectionRequest unsupported {"main", "load_save"};
+    // Explicit load_save observes prerequisites and never borrows menu authority.
+    const auto load_inventory = snapshot(fixture.path);
+    auto load_result = instance::instance_readiness(workspace, {"main", "load_save"});
+    auto load_json = load_result ? json::parse(load_result.value())
+        : facman::core::Result<json::Value>::failure(load_result.error());
+    if (!load_json || !string_is(load_json.value().find("launch_intent"), "load_save") ||
+        !has_blocker(load_json.value(), "instance_launch_intent_mismatch") ||
+        !has_blocker(load_json.value(), "instance_selected_save_not_selected") ||
+        !has_blocker(load_json.value(), "real_play_gate_not_passed") ||
+        !bool_is(dimension(load_json.value(), "saves")->find("required"), true) ||
+        !bool_is(load_json.value().find("preparation_available"), false) ||
+        !bool_is(load_json.value().find("execution_available"), false) ||
+        !bool_is(load_json.value().find("permit_issued"), false) ||
+        load_inventory != snapshot(fixture.path)) return 17;
+
+    instance::ProjectionRequest unsupported {"main", "benchmark"};
     auto unsupported_result = instance::instance_readiness(workspace, unsupported);
     if (unsupported_result || unsupported_result.error().code != "unsupported_launch_intent") return 4;
 

@@ -10,10 +10,12 @@ import tempfile
 import threading
 import time
 import unittest
+import zipfile
 from pathlib import Path
 
 from native_cli import invoke
 from tools import json_contract
+from tests.windows_junction import create_junction
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -226,6 +228,143 @@ class ProfileTemplateTests(unittest.TestCase):
                             item["state"] for item in restored["dimensions"] if item["id"] == "profile"))
                         self.assertNotIn("instance_launch_intent_mismatch",
                                          {item["code"] for item in restored["blockers"]})
+
+    def test_load_save_readiness_refuses_linked_save_and_context_ancestors(self) -> None:
+        for relative in ("saves", "mods", "metadata/save-refs", "backups"):
+            with self.subTest(ancestor=relative):
+                with tempfile.TemporaryDirectory(prefix="facman selected linked ") as value:
+                    fixture = Path(value)
+                    workspace = fixture / "workspace"
+                    instance = create_instance(workspace)
+                    invoke_json(workspace, "profiles", "apply", "main", "gui", "--selection-mode", "load-save",
+                                "--selection", "selected.zip")
+                    external = fixture / "external"
+                    external.mkdir()
+                    (external / "selected.zip").write_bytes(b"external archive must not be inspected")
+                    (external / "modset-lock.v1.json").write_bytes(b"external modset must not be read")
+                    (external / "selected.zip.save-ref.v1.json").write_bytes(b"external association must not be read")
+                    linked = instance / relative
+                    linked.parent.mkdir(parents=True, exist_ok=True)
+                    if linked.exists():
+                        linked.rename(linked.with_name(linked.name + "-original"))
+                    if os.name == "nt":
+                        create_junction(linked, external)
+                    else:
+                        linked.symlink_to(external, target_is_directory=True)
+                    before = {p.relative_to(fixture): p.read_bytes()
+                              for p in fixture.rglob("*") if p.is_file()}
+                    try:
+                        for action in ("readiness", "describe"):
+                            rejected = invoke_json(workspace, "instances", action, "main",
+                                                   "--intent", "load_save", success=False)
+                            self.assertEqual("instance_selected_save_path_unsafe", rejected["refusal"]["code"])
+                            self.assertNotIn("selected_save", rejected)
+                        self.assertEqual(before, {p.relative_to(fixture): p.read_bytes()
+                                                  for p in fixture.rglob("*") if p.is_file()})
+                    finally:
+                        # Remove only the test-created link, never its target.
+                        if os.name == "nt":
+                            linked.rmdir()
+                        else:
+                            linked.unlink()
+
+    def test_load_save_readiness_binds_exact_selected_archive_and_declared_context(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman selected readiness ") as value:
+            workspace = Path(value)
+            instance = create_instance(workspace)
+
+            def query() -> dict:
+                before = {p.relative_to(workspace): p.read_bytes()
+                          for p in workspace.rglob("*") if p.is_file()}
+                result = invoke_json(workspace, "instances", "readiness", "main", "--intent", "load_save")
+                assert_schema(self, result, "factorio_instance_readiness.v1.schema.json")
+                described = invoke_json(workspace, "instances", "describe", "main", "--intent", "load_save")
+                self.assertEqual(result, described["instance_readiness"])
+                self.assertEqual(result, invoke_json(workspace, "instances", "readiness", "main",
+                                                     "--intent", "load_save"))
+                self.assertEqual(before, {p.relative_to(workspace): p.read_bytes()
+                                          for p in workspace.rglob("*") if p.is_file()})
+                self.assertIn("real_play_gate_not_passed", {b["code"] for b in result["blockers"]})
+                for field in ("preparation_available", "execution_available", "permit_issued",
+                              "preparation_executed", "execution_started", "mutation_executed"):
+                    self.assertFalse(result[field], field)
+                self.assertTrue(all(v is False for v in result["operation_guarantees"].values()))
+                self.assertEqual("unclaimed", result["selected_save"]["gameplay_compatibility"])
+                self.assertTrue(next(d for d in result["dimensions"] if d["id"] == "saves")["required"])
+                self.assertEqual("menu", described["instance_spec"]["default_launch_intent"])
+                self.assertIsNone(next(a for a in result["safe_next_actions"]
+                                       if a["id"] == "inspect_selected_save")["command"])
+                return result
+
+            mismatch = query()
+            self.assertIn("instance_launch_intent_mismatch", {b["code"] for b in mismatch["blockers"]})
+            invoke_json(workspace, "profiles", "apply", "main", "gui", "--selection-mode", "benchmark-save",
+                        "--selection", "selected.zip", "--launch-mode", "benchmark-preview", "--benchmark-ticks", "1")
+            self.assertIn("instance_launch_intent_mismatch", {b["code"] for b in query()["blockers"]})
+            invoke_json(workspace, "profiles", "apply", "main", "gui", "--selection-mode", "load-save",
+                        "--selection", "selected.zip")
+            missing = query()
+            self.assertEqual("blocked", missing["selected_save"]["state"])
+            self.assertIsNone(missing["selected_save"]["record"])
+            save = instance / "saves" / "selected.zip"
+
+            def write_save(payload: bytes, recognized: bool = True) -> None:
+                entry = zipfile.ZipInfo("world/level-init.dat" if recognized else "world/other.dat",
+                                        (2026, 7, 12, 0, 0, 0))
+                entry.external_attr = 0o644 << 16
+                with zipfile.ZipFile(save, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                    archive.writestr(entry, payload)
+
+            save.write_bytes(b"malformed")
+            malformed = query()
+            self.assertIn("instance_selected_save_invalid", {b["code"] for b in malformed["blockers"]})
+            write_save(b"unrecognized", False)
+            self.assertIn("instance_selected_save_invalid", {b["code"] for b in query()["blockers"]})
+            write_save(b"first")
+            unknown = query()
+            self.assertEqual("degraded", unknown["selected_save"]["state"])
+            self.assertEqual("absent", unknown["selected_save"]["record"]["association"]["status"])
+            self.assertNotEqual(missing["readiness_digest"], unknown["readiness_digest"])
+            write_save(b"second")
+            changed = query()
+            self.assertNotEqual(unknown["readiness_digest"], changed["readiness_digest"])
+            self.assertNotEqual(unknown["instance_binding_digest"], changed["instance_binding_digest"])
+            invoke_json(workspace, "saves", "associate", "selected.zip", "--instance", "main")
+            associated = query()
+            self.assertEqual("degraded", associated["selected_save"]["state"])
+            sidecar = instance / "metadata" / "save-refs" / "selected.zip.save-ref.v1.json"
+            original = sidecar.read_bytes()
+            document = json.loads(original)
+            document["factorio_version"] = "2.0.76"
+            sidecar.write_text(json.dumps(document), encoding="utf-8")
+            drifted = query()
+            self.assertIn("instance_selected_save_context_drifted", {b["code"] for b in drifted["blockers"]})
+            self.assertNotEqual(associated["readiness_digest"], drifted["readiness_digest"])
+            sidecar.write_bytes(original)
+            write_save(b"third")
+            self.assertIn("instance_selected_save_context_drifted", {b["code"] for b in query()["blockers"]})
+            sidecar.unlink()
+            invoke_json(workspace, "modsets", "lock", "main")
+            invoke_json(workspace, "saves", "associate", "selected.zip", "--instance", "main")
+            matching = query()
+            self.assertEqual("satisfied", matching["selected_save"]["state"])
+            lock = instance / "mods" / "modset-lock.v1.json"
+            changed_lock = lock.read_bytes() + b" "
+            lock.write_bytes(changed_lock)
+            (workspace / "modsets" / "main.modset-lock.v1.json").write_bytes(changed_lock)
+            modset_drift = query()
+            self.assertIn("instance_selected_save_context_drifted", {b["code"] for b in modset_drift["blockers"]})
+            self.assertNotEqual(matching["readiness_digest"], modset_drift["readiness_digest"])
+            overrides = instance / "instance-overrides.v1.json"
+            unsafe = json.loads(overrides.read_bytes())
+            unsafe["values"]["selection"] = "../outside.zip"
+            overrides.write_text(json.dumps(unsafe), encoding="utf-8")
+            (instance / "outside.zip").write_bytes(b"outside selected save root")
+            rejected = query()
+            self.assertIn("instance_profile_invalid", {b["code"] for b in rejected["blockers"]})
+            self.assertEqual("blocked", rejected["selected_save"]["state"])
+            self.assertIsNone(rejected["selected_save"]["record"])
+
 
     def test_human_profile_plan_and_apply_show_effective_values_and_sources(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman profile human ") as value:

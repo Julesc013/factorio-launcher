@@ -1,5 +1,5 @@
 command_id = "instances.readiness"
-cli = "facman instances readiness <instance-id> [--intent menu] --json"
+cli = "facman instances readiness <instance-id> [--intent menu|load_save] --json"
 effects = ["workspace_read"]
 request_schema = "contracts/schema/command/instances.readiness.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_instance_readiness.v1.schema.json"

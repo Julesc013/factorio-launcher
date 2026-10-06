@@ -33,6 +33,7 @@ allowed_paths:
   - "release/generated/technical_preview_command_api_conformance.v1.json"
   - "tools/command_contract_check.py"
   - "tools/frontend_contract_check.py"
+  - "tools/instance_model_check.py"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"

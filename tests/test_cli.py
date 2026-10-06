@@ -706,7 +706,7 @@ class CliTests(unittest.TestCase):
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "readiness", "main",
-                "--intent", "load_save", "--json",
+                "--intent", "benchmark", "--json",
             ])
             self.assertNotEqual(code, 0, stderr)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "unsupported_launch_intent")
