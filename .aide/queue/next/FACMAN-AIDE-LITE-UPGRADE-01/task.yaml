@@ -1,0 +1,81 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-AIDE-LITE-UPGRADE-01
+title: Update portable AIDE while preserving FacMan controls
+status: planned
+lifecycle_state: planned
+planning_state: planned
+created_at: 2026-10-06T15:01:08Z
+owner: tooling-maintainer
+objective: >
+  Update the portable tooling from exact aide/main while retaining local state and controls, qualify it, and integrate through current protected gates.
+allowed_paths:
+  - release/index/current_state.v1.toml
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - .aide.local.example/execution.json
+  - .aide/capabilities/capability-evidence-bindings.schema.json
+  - .aide/commands/catalog.yaml
+  - .aide/git/commit-message-disposition.schema.json
+  - .aide/policies/commit-message-dispositions.yaml
+  - .aide/policies/commit-messages.yaml
+  - .aide/policies/release-publication-boundary.yaml
+  - .aide/policies/release-versioning.yaml
+  - .aide/prompts/compact-task.md
+  - .aide/reports/aide-commit-message-standard.md
+  - .aide/scripts/aide_lite.py
+  - .aide/scripts/tests/test_aide_lite.py
+  - .aide/scripts/tests/test_efficiency_wait.py
+  - .aide/scripts/tests/test_export_import.py
+  - .aide/scripts/tests/test_managed_commit_create.py
+  - .aide/scripts/tests/test_public_archive_fixture.py
+  - .aide/scripts/tests/test_q27_commit_recovery.py
+  - .aide/scripts/tests/test_q34_changelog_release.py
+  - .aide/scripts/tests/test_q47_release_bundle.py
+  - .aide/scripts/tests/test_q48_github_release_draft.py
+  - .aide/scripts/tests/test_stable_release_admission.py
+  - .aide/scripts/tests/test_x_os_01_task_os_commands.py
+  - .aide/scripts/tests/test_x_os_02_capability_reality.py
+  - .aide/templates/portable-apply/README.md
+  - .aide/templates/portable-apply/__init__.py
+  - docs/reference/aide-lite-release-bundle.md
+  - docs/reference/aide-lite-test-runner.md
+  - docs/reference/capability-reality-ledger.md
+  - docs/reference/commit-discipline.md
+  - docs/reference/cross-repo-pack-export-import.md
+  - docs/reference/github-release-draft.md
+  - docs/reference/task-os-report-only-commands.md
+  - .aide/scripts/aide_managed_commit.py
+  - .aide/queue/index.yaml
+  - .aide/queue/next/FACMAN-AIDE-LITE-UPGRADE-01/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  []
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed

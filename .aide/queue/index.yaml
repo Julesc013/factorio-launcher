@@ -447,6 +447,12 @@ items:
     title: Freeze and qualify the complete beta subset
     task: .aide/queue/next/FACMAN-0.1-FEATURE-FREEZE-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-FEATURE-FREEZE-01/evidence
+  - id: FACMAN-AIDE-LITE-UPGRADE-01
+    status: planned
+    lifecycle_state: planned
+    title: Update portable AIDE while preserving FacMan controls
+    task: .aide/queue/next/FACMAN-AIDE-LITE-UPGRADE-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-AIDE-LITE-UPGRADE-01/evidence
   - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
     status: superseded
     lifecycle_state: superseded

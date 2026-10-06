@@ -2738,7 +2738,7 @@
       "active_automated": 1,
       "blocked": 3,
       "closed": 32,
-      "planned": 30,
+      "planned": 31,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
@@ -3183,6 +3183,12 @@
       },
       {
         "id": "FACMAN-0.1-FEATURE-FREEZE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-AIDE-LITE-UPGRADE-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

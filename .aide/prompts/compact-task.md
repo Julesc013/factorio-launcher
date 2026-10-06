@@ -119,3 +119,11 @@ Return a compact final report with:
 - `ADAPTER_COMPILER_RESULT`
 - `RISKS`
 - `NEXT`
+
+## TOKEN_ESTIMATE
+
+approx_tokens: `<estimate from characters divided by four>`
+
+Record the compact packet's character-count estimate. This is not an actual
+tokenizer measurement or parent/child/host usage. Keep unavailable actual usage
+unknown; do not infer allowance savings from this document-size estimate.
