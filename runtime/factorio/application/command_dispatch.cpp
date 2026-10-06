@@ -949,6 +949,16 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
         request.payload = std::move(typed); return true;
     }
+    case CommandId::modsets_import: {
+        if (!validate_fields(payload, {"instance_id", "install_id", "source_path", "display_name"}, detail)) return false;
+        ImportModpackRequest typed; std::string path;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "install_id", typed.install_id, detail) ||
+            !required_string(payload, "source_path", path, detail) ||
+            !optional_string(payload, "display_name", typed.display_name, detail)) return false;
+        typed.source_path = facman::platform::path_from_utf8(path);
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::modsets_export: {
         if (!validate_fields(payload, {"instance_id", "output_path"}, detail)) return false;
         ExportModsetRequest typed; std::string path;

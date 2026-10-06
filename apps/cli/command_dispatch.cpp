@@ -921,10 +921,16 @@ int command_profiles(const Options& options)
     return 2;
 }
 
-int command_modsets(const Options& options)
-{
+int command_modsets(const Options& options) {
     if (options.args.size() < 3) return 2;
     const std::string action = options.args[1], instance = options.args[2];
+    if (action == "import") {
+        const std::string destination = option(options.args, "--instance"), install = option(options.args, "--install");
+        if (destination.empty() || install.empty()) return 2;
+        return emit_basic(call(options, "modsets.import", exact_fields_payload({{"source_path", options.args[2]},
+            {"instance_id", destination}, {"install_id", install}, {"display_name", option(options.args, "--name")}}), false), flag(options.args, "--json"),
+            "Modpack imported into instance " + destination);
+    }
     if (action == "plan" || action == "diff" || action == "explain" || action == "apply") {
         return emit_report(call(options, "modsets." + action, modset_solver_payload(options.args, instance), action != "apply"),
             flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");

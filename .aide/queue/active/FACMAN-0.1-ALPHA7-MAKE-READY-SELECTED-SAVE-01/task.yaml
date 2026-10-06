@@ -28,6 +28,11 @@ allowed_paths:
   - "README.md"
   - "todo.md"
   - "CMakeLists.txt"
+  - "content/factorio/strings/en-US.toml"
+  - "release/index/capability_frontend_matrix.v1.toml"
+  - "release/generated/technical_preview_command_api_conformance.v1.json"
+  - "tools/command_contract_check.py"
+  - "tools/frontend_contract_check.py"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"

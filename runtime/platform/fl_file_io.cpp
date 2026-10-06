@@ -480,8 +480,13 @@ IoStatus StableDirectoryObject::open_no_follow_for_relative_writes(const std::fi
     return open_no_follow_impl(path, true);
 }
 
+IoStatus StableDirectoryObject::open_no_follow_for_publication_verification(const std::filesystem::path& path)
+{
+    return open_no_follow_impl(path, false, true);
+}
+
 IoStatus StableDirectoryObject::open_no_follow_impl(
-    const std::filesystem::path& path, bool relative_writes)
+    const std::filesystem::path& path, bool relative_writes, bool allow_publication_handle)
 {
     if (!impl_ || impl_->handle != kInvalidHandle) {
         return IoStatus::failure("directory_object_already_open", path_to_utf8(path));
@@ -494,13 +499,14 @@ IoStatus StableDirectoryObject::open_no_follow_impl(
     }
 #ifndef _WIN32
     (void)relative_writes;
+    (void)allow_publication_handle;
 #endif
 #ifdef _WIN32
     const std::wstring native_path = windows_extended_path(absolute);
     impl_->handle = CreateFileW(
         native_path.c_str(), FILE_READ_ATTRIBUTES | FILE_LIST_DIRECTORY |
             (relative_writes ? FILE_ADD_FILE | FILE_ADD_SUBDIRECTORY | FILE_TRAVERSE | SYNCHRONIZE : 0),
-        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | (allow_publication_handle ? FILE_SHARE_DELETE : 0),
         nullptr, OPEN_EXISTING,
         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
         nullptr);

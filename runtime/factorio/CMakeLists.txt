@@ -92,10 +92,15 @@ target_link_libraries(flb_factorio_mods_static PUBLIC
 add_library(flb_factorio_modsets_static
   modsets/flb_factorio_modsets.cpp modsets/flb_factorio_modset_operations.cpp
   modsets/flb_factorio_modset_solver.cpp modsets/flb_factorio_content_records.cpp
-  modsets/flb_factorio_modpack_export_closure.cpp)
+  modsets/flb_factorio_modpack_export_closure.cpp
+  modsets/flb_factorio_modpack_import.cpp
+  modsets/flb_factorio_modpack_import_validation.cpp
+  instance/flb_factorio_instance_staging.cpp)
 target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
-target_include_directories(flb_factorio_modsets_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/modsets ${CMAKE_CURRENT_SOURCE_DIR}/mods)
-target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static facman_workspace_static)
+target_include_directories(flb_factorio_modsets_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/modsets ${CMAKE_CURRENT_SOURCE_DIR}/mods
+  ${CMAKE_CURRENT_SOURCE_DIR}/instance)
+target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static facman_workspace_static
+  flb_factorio_launch_planning_static flb_factorio_discovery_static)
 
 add_library(flb_factorio_saves_static saves/flb_factorio_save_operations.cpp saves/flb_factorio_save_index.cpp)
 target_compile_features(flb_factorio_saves_static PUBLIC cxx_std_17)

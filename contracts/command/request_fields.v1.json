@@ -804,6 +804,28 @@
         "required": true
       }
     ],
+    "modsets.import": [
+      {
+        "kind": "path",
+        "name": "source_path",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "display_name",
+        "required": false
+      }
+    ],
     "modsets.lock": [
       {
         "kind": "identifier",

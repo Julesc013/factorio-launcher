@@ -10,6 +10,7 @@
 namespace facman::factorio::application::handlers {
 ApplicationResult lock_modset(ApplicationContext& context, const ModsetInstanceRequest& request);
 ApplicationResult verify_modset(ApplicationContext& context, const ModsetInstanceRequest& request);
+ApplicationResult import_modpack(ApplicationContext& context, const ImportModpackRequest& request);
 ApplicationResult export_modset(ApplicationContext& context, const ExportModsetRequest& request);
 ApplicationResult dispatch_modset_solver(ApplicationContext& context, const ApplicationRequest& request);
 }
