@@ -61,3 +61,21 @@ revision flag. Late changed-profile refusal and ordinary recovery preserve
 both original targets and changed profile; fresh reviewed apply succeeds.
 Receipt: evidence/profile-preparation.v1.json. Both original clauses and
 five close-after gates remain open; federated preparation is still pending.
+
+2026-10-07: The authorized offline rich-v1 pack import continuation adds exactly
+content/factorio/strings/en-US.toml to allowed_paths for its two English command
+catalog keys. Shared instance construction is extracted from create so imported
+content remains invisible until complete instance publication. Import journals
+bind the complete staged inventory and directory ownership for verified resume
+and committed finalization; interrupted incomplete extraction is retained for
+review without deletion or a claim of successful reconstruction.
+
+The continuation also authorizes exactly tools/command_contract_check.py and
+tools/frontend_contract_check.py in allowed_paths: their closed command inventories
+must include the new public modsets.import command. Each checker receives only
+that inventory entry; validation rules and broader tools scope remain unchanged.
+
+The new public command also requires its exact frontend capability matrix input
+and generated technical-preview census output. Their two explicit paths are
+admitted here so checked-in generated state remains current; no workflow,
+provider, release authority or WorkUnit status changes.

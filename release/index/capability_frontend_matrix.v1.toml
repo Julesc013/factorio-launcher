@@ -345,7 +345,7 @@ documentation = "docs/product/modset_lockfile.md"
 support = "instance-local only"
 limits = "No global mod-folder swap and no remote acquisition."
 invalidation_triggers = ["modset_schema", "solver", "archive_parser"]
-dependent_commands = ["modsets.apply", "modsets.diff", "modsets.explain", "modsets.export", "modsets.lock", "modsets.plan", "modsets.rollback", "modsets.verify"]
+dependent_commands = ["modsets.apply", "modsets.diff", "modsets.explain", "modsets.export", "modsets.import", "modsets.lock", "modsets.plan", "modsets.rollback", "modsets.verify"]
 
 [[capability]]
 id = "saves.discover_select"

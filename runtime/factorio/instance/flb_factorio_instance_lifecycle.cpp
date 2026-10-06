@@ -646,6 +646,7 @@ facman::core::Result<std::string> verify(const fs::path& root, const InspectRequ
     const std::set<std::string> expected_top = {
         "instance.v1.json", "config", "mods", "saves", "scenarios", "script-output",
         "logs", "crash", "exports", "cache", "locks", "imports", "temp",
+        "modpack-manifest.v1.json", "modset-lock.v1.json", "modpack-import.v1.json",
         "player-data.json", "achievements.dat", "crop-cache.dat",
         "factorio-current.log", "factorio-previous.log"};
     std::error_code error;

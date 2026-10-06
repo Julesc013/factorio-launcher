@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `ef8fd976e77d1141ecaf54ee128c47183a0e984ad81e205544bda9a9a55904db`.
+Source digest: `1ad8350864e4fcac4c01e51e8e093e6bb008f4aa06f923f34f0f1c2eff79b0e3`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -66,6 +66,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `modsets.diff` | `modsets.diff` | `modsets_diff` | no | - | available | workspace_read | `facman modsets diff <instance-id> [solver options] --json` |
 | `modsets.explain` | `modsets.explain` | `modsets_explain` | no | - | available | workspace_read | `facman modsets explain <instance-id> [solver options] --json` |
 | `modsets.export` | `modsets.export` | `modsets_export` | yes | - | available | workspace_read, workspace_write | `facman modsets export <instance-id> <pack.zip> --json` |
+| `modsets.import` | `modsets.import` | `modsets_import` | yes | - | available | workspace_read, workspace_write | `facman modsets import <pack.zip> --instance <new-id> --install <registered-id> [--name <name>] --json` |
 | `modsets.lock` | `modsets.lock` | `modsets_lock` | yes | - | available | workspace_read, workspace_write | `facman modsets lock <instance-id> --json` |
 | `modsets.plan` | `modsets.plan` | `modsets_plan` | no | - | available | workspace_read | `facman modsets plan <instance-id> [solver options] --json` |
 | `modsets.rollback` | `modsets.rollback` | `modsets_rollback` | yes | - | available | workspace_read, workspace_write | `facman modsets rollback <instance-id> <transaction-id> --json` |

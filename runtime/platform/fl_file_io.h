@@ -124,6 +124,9 @@ public:
     StableDirectoryObject& operator=(const StableDirectoryObject&) = delete;
 
     IoStatus open_no_follow(const std::filesystem::path& path);
+    // Read-only verification while a separate publication handle owns DELETE.
+    // Existing opens retain their original deny-delete sharing policy.
+    IoStatus open_no_follow_for_publication_verification(const std::filesystem::path& path);
     IoStatus open_no_follow_for_relative_writes(const std::filesystem::path& path);
     IoStatus revalidate() const;
     IoStatus validate_descendant(
@@ -175,7 +178,8 @@ public:
 private:
     friend class DurableOutputFile;
     friend class PrivatePublicationFile;
-    IoStatus open_no_follow_impl(const std::filesystem::path& path, bool relative_writes);
+    IoStatus open_no_follow_impl(const std::filesystem::path& path, bool relative_writes,
+        bool allow_publication_handle = false);
     IoStatus open_child_directory_no_follow_impl(
         const std::filesystem::path& leaf,
         StableDirectoryObject& child,

@@ -5242,6 +5242,117 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
+      "cli": "facman modsets import <pack.zip> --instance <new-id> --install <registered-id> [--name <name>] --json",
+      "cli_aliases": [],
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--instance",
+            "repeatable": false,
+            "value": "new-id"
+          },
+          {
+            "name": "--install",
+            "repeatable": false,
+            "value": "registered-id"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "modsets",
+          "import"
+        ],
+        "positionals": [
+          {
+            "name": "pack.zip",
+            "required": true
+          }
+        ],
+        "usage": "facman modsets import <pack.zip> --instance <new-id> --install <registered-id> [--name <name>] --json"
+      },
+      "command_id": "modsets.import",
+      "contract_path": "contracts/command/factorio/modsets.import.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "frontend_category": "modsets",
+      "golden_refusal": "tests/golden/commands/modsets.import.refusal.json",
+      "golden_success": "tests/golden/commands/modsets.import.success.json",
+      "localization_keys": [
+        "command.modsets.import.title",
+        "command.modsets.import.description"
+      ],
+      "mutates_workspace": true,
+      "native_id": "modsets_import",
+      "owner": "facman",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "modsets_import",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "source_path",
+          "repeatable": false,
+          "request_field": "source_path",
+          "required": true,
+          "type": "path"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "display_name",
+          "repeatable": false,
+          "request_field": "display_name",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "request_schema": "contracts/schema/command/modsets.import.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_modpack_import.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "modsets.import",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": true
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
       "cli": "facman modsets lock <instance-id> --json",
       "cli_aliases": [],
       "cli_grammar": {
@@ -11933,7 +12044,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "ef8fd976e77d1141ecaf54ee128c47183a0e984ad81e205544bda9a9a55904db",
+  "source_digest": "1ad8350864e4fcac4c01e51e8e093e6bb008f4aa06f923f34f0f1c2eff79b0e3",
   "workflows": [
     {
       "always_visible_fields": [
