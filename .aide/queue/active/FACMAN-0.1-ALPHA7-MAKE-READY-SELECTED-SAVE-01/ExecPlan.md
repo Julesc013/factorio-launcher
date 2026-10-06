@@ -79,3 +79,13 @@ The new public command also requires its exact frontend capability matrix input
 and generated technical-preview census output. Their two explicit paths are
 admitted here so checked-in generated state remains current; no workflow,
 provider, release authority or WorkUnit status changes.
+
+2026-10-07: The existing Windows CI delivery from exact source 23a7668d
+passed produced offline reconstruction: 98 public CLI commands, eight clean
+consumer workspaces separate from preserved producers, exact selected content,
+settings or absence, raw provenance and rebound operational lock, three durable
+process-loss recovery boundaries, and foreign target/staging preservation.
+Independent acceptance and exact producer/artifact/stream digests are retained
+in evidence/local-content-produced-reconstruction.v1.json. This is Windows
+source-fixture package acceptance; original failed regression evidence and all
+real-game, human, other-platform, WorkUnit and Beta gates remain unchanged.
