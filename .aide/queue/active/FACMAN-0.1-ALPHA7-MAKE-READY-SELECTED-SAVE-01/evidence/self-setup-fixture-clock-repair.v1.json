@@ -1,0 +1,85 @@
+{
+  "base": "701077ca45bc8496c70c07895c67e3a679c6ed4a",
+  "baseline_failure_log_sha256": "c4a13dd54f572279042d359b9d5bc298dbfa28e0c4a52ec276354ee7afd17371",
+  "beta_or_release_ready": false,
+  "controlled_clock_oracle_sha256": "e226f2f80b8da1673a97cc4131fb4aa68d9a43e4548c7223d5ad625ccee2ed7e",
+  "correction": "Prepare input files once and reuse them for both builds; byte equality assertions remain unchanged",
+  "diagnosis": "Fixture regenerated ZIP input between builds; crossing a two-second timestamp boundary changed the provenance digest",
+  "failure_job": "https://github.com/Julesc013/factorio-launcher/actions/runs/37455476039/job/112241936460",
+  "failure_log_sha256": "21154f2f192640f96ecce44a0da9edaac3eee034fba4a75cb0519788f7615551",
+  "new_builds": 0,
+  "new_clones": 0,
+  "new_worktrees": 0,
+  "offline_reconstruction_complete": false,
+  "package_builder_unchanged": true,
+  "package_tests_summary": "Ran 5 tests in 0.157s",
+  "path": "tests/test_self_setup_package.py",
+  "previous_product_source_unchanged": true,
+  "public_pack_import_complete": false,
+  "qualification": [
+    {
+      "check": "clock-oracle",
+      "command": [
+        "py",
+        "-3",
+        "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\self-setup-clock-oracle.py"
+      ],
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\self-setup-fixture-clock-oracle.log",
+      "sha256": "f047169673a336497d42fe8a070507bf74c7bc69aee06db54f86d6ff312cfd16"
+    },
+    {
+      "check": "package-tests",
+      "command": [
+        "py",
+        "-3",
+        "-m",
+        "unittest",
+        "-v",
+        "test_self_setup_package"
+      ],
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\self-setup-fixture-package-tests.log",
+      "sha256": "472f1095c75591a8d3c3cc3afbae03ee3764527bfdda7355e50b20d07428921e"
+    },
+    {
+      "check": "source-format",
+      "command": [
+        "py",
+        "-3",
+        "tools/source_format_check.py"
+      ],
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\self-setup-fixture-source-format.log",
+      "sha256": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191"
+    },
+    {
+      "check": "engineering",
+      "command": [
+        "py",
+        "-3",
+        "tools/engineering_quality_check.py"
+      ],
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\self-setup-fixture-engineering.log",
+      "sha256": "4c5931b6335a72854ad13b79a7a9e0a4de695e972a9232583353e156b74eb196"
+    },
+    {
+      "check": "test-architecture",
+      "command": [
+        "py",
+        "-3",
+        "tools/test_architecture_check.py"
+      ],
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\self-setup-fixture-test-architecture.log",
+      "sha256": "7bac6f674e6208cbe3fed0261481f501dc7137c1174179ec2442b64c8c9a8ade"
+    }
+  ],
+  "required_remote_checks_outstanding": true,
+  "schema": "facman.self_setup_fixture_clock_repair.v1",
+  "source_sha256": "d05a9cec089b1782236ea830be8bf211059448112e8d512970aa15d71353dd45",
+  "status": "PASS_SCOPED_TEST_FIXTURE",
+  "whole_workunit_closed": false,
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}
