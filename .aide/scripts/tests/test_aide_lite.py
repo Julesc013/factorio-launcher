@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -20,12 +21,103 @@ SPEC.loader.exec_module(aide_lite)
 
 
 class AideLiteWorkflowTests(unittest.TestCase):
+    def test_canonical_target_queue_remains_authoritative_over_context_packet(self) -> None:
+        root = self.make_repo()
+        task_id = "FACMAN-PORTABLE-QUEUE-FIXTURE-01"
+        (root / ".aide/queue/index.yaml").write_text(
+            "schema_version: aide.queue-index.v1\n"
+            "canonical_source: .aide/queue/{active,next}\nitems:\n"
+            f"  - id: {task_id}\n    status: active\n"
+            f"    task: .aide/queue/active/{task_id}/task.yaml\n"
+        )
+        packet = root / aide_lite.LATEST_PACKET_PATH
+        packet.parent.mkdir(parents=True, exist_ok=True)
+        packet.write_text("# Packet\n\n- task_id: AIDE-FIX-OS-03\n")
+        self.assertEqual((task_id, task_id), aide_lite.task_os_latest_task_ref(root))
+        queue = root / ".aide/queue/index.yaml"
+        queue.write_text(queue.read_text().replace("canonical_source: .aide/queue/{active,next}\n", ""))
+        packet.write_text("phase: FACMAN-INCIDENTAL-PACKET-01\n")
+        self.assertEqual(task_id, aide_lite.current_task_id(root))
+
+    def test_missing_target_lifecycle_tooling_refuses_before_queue_mutation(self) -> None:
+        root = self.make_repo()
+        before = sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file())
+        with mock.patch.object(aide_lite.importlib, "import_module", side_effect=ModuleNotFoundError("absent target tooling")):
+            with self.assertRaisesRegex(ValueError, "FacMan queue tooling is required"):
+                aide_lite.facman_lifecycle_module()
+        self.assertEqual(before, sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()))
+
     def make_repo(self) -> Path:
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
         aide_lite._write_minimal_repo(root)
         return root
+
+    def test_portable_pack_excludes_source_only_runtime_tests(self) -> None:
+        root = self.make_repo()
+        cases = {
+            "test_aide_lite.py": True,
+            "test_aide_apply_00_transaction_model.py": True,
+            "test_aide_apply_01_managed_sections.py": True,
+            "test_aide_local_process_execution_host.py": False,
+            "test_aide_future_source_worker.py": False,
+            "test_continuous_worker_state.py": False,
+            "nested/test_aide_lite.py": False,
+            "nested/test_aide_source_worker.py": False,
+            "nested/test_continuous_worker_state.py": False,
+        }
+        for name, expected in cases.items():
+            relative = ".aide/scripts/tests/" + name
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("# harmless test module\n", encoding="utf-8")
+            with self.subTest(name=name):
+                self.assertEqual(
+                    aide_lite.is_exportable_file(root, relative), expected
+                )
+                self.assertEqual(
+                    relative in aide_lite.iter_portable_source_files(root), expected
+                )
+
+    def test_pack_boundary_refuses_injected_source_only_tests(self) -> None:
+        root = self.make_repo()
+        pack = root / "pack-fixture"
+        for name in ("test_continuous_worker_state.py", "nested/test_aide_worker.py"):
+            path = pack / "files/.aide/scripts/tests" / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("# harmless test module\n", encoding="utf-8")
+        violations = aide_lite.validate_export_pack_boundary(pack)
+        self.assertEqual(len(violations), 2)
+        self.assertTrue(all("forbidden exported path" in v for v in violations))
+
+    def test_portable_apply_descriptions_match_shipped_modules(self) -> None:
+        root = self.make_repo()
+        for relative in (
+            ".aide/templates/portable-apply/README.md",
+            ".aide/templates/portable-apply/__init__.py",
+        ):
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(
+                (REPO_ROOT / relative).read_text(encoding="utf-8"), encoding="utf-8"
+            )
+        source = root / "core/apply/README.md"
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_text("Source-only executor is available here.\n", encoding="utf-8")
+        policy = root / aide_lite.EXPORT_IMPORT_POLICY_TEMPLATE_PATH
+        policy.parent.mkdir(parents=True, exist_ok=True)
+        policy.write_bytes((REPO_ROOT / ".aide/import-policy.template.yaml").read_bytes())
+        pack, _ = aide_lite.build_export_pack(root)
+        readme = (pack / "files/core/apply/README.md").read_text(encoding="utf-8")
+        self.assertIn("managed_sections.py", readme)
+        self.assertIn("not included", readme)
+        self.assertNotIn("Source-only executor is available here", readme)
+        self.assertFalse((pack / "files/core/apply/transaction_executor.py").exists())
+        for relative in ("README.md", "__init__.py"):
+            self.assertTrue(
+                (pack / "files/.aide/templates/portable-apply" / relative).is_file()
+            )
 
     def test_approximate_token_calculation(self) -> None:
         self.assertEqual(aide_lite.approx_tokens_for_chars(0), 0)

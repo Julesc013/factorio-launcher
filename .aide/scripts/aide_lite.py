@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import base64
 import builtins
+from contextlib import ExitStack, contextmanager
 import fnmatch
 import gzip
 import hashlib
@@ -22,18 +23,21 @@ import os
 import posixpath
 import re
 import shutil
+import stat
+import uuid
 import subprocess
 import sys
 import tarfile
 import tempfile
+import threading
+import time
 import zipfile
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 from urllib.parse import urlsplit
-
-import aide_lifecycle
 
 try:
     import tomllib
@@ -123,6 +127,9 @@ COMMIT_MESSAGE_STANDARD_PATH = ".aide/reports/aide-commit-message-standard.md"
 COMMIT_MESSAGE_HOOK_TEMPLATE_PATH = ".aide/hooks/commit-msg"
 COMMIT_TEMPLATE_PATH = ".aide/git/commit-template.md"
 FACMAN_COMMIT_TEMPLATE_PATH = ".aide/git/commit-template.facman.txt"
+COMMIT_MESSAGE_DISPOSITION_POLICY_PATH = ".aide/policies/commit-message-dispositions.yaml"
+COMMIT_MESSAGE_DISPOSITION_SCHEMA_PATH = ".aide/git/commit-message-disposition.schema.json"
+COMMIT_MESSAGE_DISPOSITIONS_PATH = ".aide/git/commit-message-dispositions.json"
 GIT_WORKFLOW_POLICY_PATH = ".aide/policies/git-workflow.yaml"
 BRANCH_ROLES_POLICY_PATH = ".aide/policies/branch-roles.yaml"
 PROMOTION_RULES_POLICY_PATH = ".aide/policies/promotion-rules.yaml"
@@ -798,6 +805,8 @@ Q24_REQUIRED_FILES = [
 
 Q27_REQUIRED_FILES = [
     COMMIT_MESSAGE_POLICY_PATH,
+    COMMIT_MESSAGE_DISPOSITION_POLICY_PATH,
+    COMMIT_MESSAGE_DISPOSITION_SCHEMA_PATH,
     TASK_RESUMPTION_POLICY_PATH,
     WORK_UNITS_POLICY_PATH,
     RECOVERY_POLICY_PATH,
@@ -1887,6 +1896,11 @@ CAPABILITY_OBSERVATIONS_JSON_PATH = ".aide/reports/capability-observations.json"
 CAPABILITY_OBSERVATIONS_MD_PATH = ".aide/reports/capability-observations.md"
 CAPABILITY_LEDGER_JSON_PATH = ".aide/reports/capability-ledger.json"
 CAPABILITY_LEDGER_MD_PATH = ".aide/reports/capability-ledger.md"
+CAPABILITY_BINDINGS_PATH = ".aide/reports/capability-evidence-bindings.json"
+CAPABILITY_BINDINGS_SCHEMA_PATH = f"{CAPABILITY_DIR}/capability-evidence-bindings.schema.json"
+CAPABILITY_EVIDENCE_MAX_REFS = 128
+CAPABILITY_EVIDENCE_MAX_FILE_BYTES = 4 * 1024 * 1024
+CAPABILITY_EVIDENCE_MAX_TOTAL_BYTES = 16 * 1024 * 1024
 CAPABILITY_OVERCLAIMS_JSON_PATH = ".aide/reports/capability-overclaims.json"
 CAPABILITY_OVERCLAIMS_MD_PATH = ".aide/reports/capability-overclaims.md"
 CAPABILITY_VALIDATION_REPORT_PATH = ".aide/reports/capability-validation.md"
@@ -1953,6 +1967,7 @@ CAPABILITY_OVERCLAIM_CLASSES = [
     "unknown_claimed_as_verified",
 ]
 CAPABILITY_REQUIRED_FILES = [
+    CAPABILITY_BINDINGS_SCHEMA_PATH,
     CAPABILITY_SEEDS_PATH,
     CAPABILITY_OBSERVATION_SCHEMA_PATH,
     CAPABILITY_OVERCLAIM_SCHEMA_PATH,
@@ -1978,6 +1993,7 @@ CAPABILITY_COMMANDS = [
     "capability validate",
 ]
 CAPABILITY_PORTABLE_SOURCE_FILES = [
+    CAPABILITY_BINDINGS_SCHEMA_PATH,
     f"{CAPABILITY_DIR}/README.md",
     CAPABILITY_SEEDS_PATH,
     CAPABILITY_OBSERVATION_SCHEMA_PATH,
@@ -2424,9 +2440,27 @@ TRANSACTION_REQUIRED_GATES = [
 QUALITY_GOLDEN_DATA_CACHE: dict[str, dict[str, object]] = {}
 
 PORTABLE_SOURCE_FILES = [
+    "core/apply/managed_commit.py",
+    ".aide/templates/portable-apply/README.md",
+    ".aide/templates/portable-apply/__init__.py",
     ".aide/scripts/aide_lite.py",
+    ".aide/scripts/aide_managed_commit.py",
+    "core/execution/__init__.py",
+    "core/execution/provider.py",
+    "core/execution/registered_process.py",
+    "core/execution/managed_workspace.py",
+    "core/execution/retired_evidence.py",
+    "core/execution/scoped_host.py",
+    "core/protocol/__init__.py",
+    "core/protocol/execution_receipt.py",
+    "core/protocol/process_invocation.py",
+    "core/runtime/continuous_worker/__init__.py",
+    "core/runtime/continuous_worker/state.py",
+    "core/runtime/continuous_worker/windows_job.py",
     ".aide/policies/token-budget.yaml",
     COMMIT_MESSAGE_POLICY_PATH,
+    COMMIT_MESSAGE_DISPOSITION_POLICY_PATH,
+    COMMIT_MESSAGE_DISPOSITION_SCHEMA_PATH,
     TASK_RESUMPTION_POLICY_PATH,
     WORK_UNITS_POLICY_PATH,
     RECOVERY_POLICY_PATH,
@@ -2804,7 +2838,25 @@ IMPORT_SAFE_ALLOWED_DOCS_PREFIX = "docs/reference/"
 
 IMPORT_MODES = {"safe", "full"}
 
+PORTABLE_IMPORT_RECEIPT_PATH = ".aide/install/aide-lite-pack-v0.receipt.json"
+PORTABLE_IMPORT_INTENT_PATH = ".aide/install/aide-lite-pack-v0.intent.json"
+PORTABLE_REPAIR_INTENT_PATH = ".aide/install/aide-lite-pack-v0.repair-intent.json"
+PORTABLE_LIFECYCLE_LOCK_PATH = ".aide/install/aide-lite-pack-v0.lifecycle.lock"
+PORTABLE_REMOVAL_INTENT_PATH = ".aide/install/aide-lite-pack-v0.removal-intent.json"
+PORTABLE_REMOVAL_RUNNER_PATH = ".aide/scripts/aide_lite.py"
+PROJECT_CUSTOMIZATIONS_PATH = ".aide/customizations.json"
+PROJECT_CUSTOMIZATIONS_SCHEMA = "aide.project-customizations.v1"
+PROJECT_CUSTOMIZATIONS_SCHEMA_V2 = "aide.project-customizations.v2"
+PORTABLE_IMPORT_RECEIPT_SCHEMA = "aide.portable-import-receipt.v1"
+PORTABLE_IMPORT_RECEIPT_SCHEMA_V2 = "aide.portable-import-receipt.v2"
+PORTABLE_IMPORT_INTENT_SCHEMA = "aide.portable-import-intent.v1"
+PORTABLE_OPTIONAL_FEATURES = {"local_state_examples": ".aide.local.example/"}
+PORTABLE_REMOVAL_PLAN_SCHEMA = "aide.portable-removal-plan.v1"
+PORTABLE_REMOVAL_INTENT_SCHEMA = "aide.portable-removal-intent.v1"
+
 PORTABLE_TEMPLATE_MAP = {
+    ".aide/templates/portable-apply/README.md": "core/apply/README.md",
+    ".aide/templates/portable-apply/__init__.py": "core/apply/__init__.py",
     TARGET_PROFILE_TEMPLATE_PATH: ".aide/profile.template.yaml",
     TARGET_PROJECT_STATE_TEMPLATE_PATH: ".aide/memory/project-state.template.md",
     TARGET_DECISIONS_TEMPLATE_PATH: ".aide/memory/decisions.template.md",
@@ -2839,6 +2891,7 @@ EXPORT_FORBIDDEN_PATH_PATTERNS = [
     ".aide/git/aide-branch-policy.yaml",
     ".aide/git/aide-dev-main-plan.json",
     ".aide/git/aide-dev-main-plan.md",
+    COMMIT_MESSAGE_DISPOSITIONS_PATH,
     ".aide/changelog/*.preview.md",
     ".aide/changelog/changelog.preview.json",
     ".aide/changelog/release-notes.preview.json",
@@ -4959,6 +5012,8 @@ def commit_message_result(checks: Iterable[Check]) -> str:
 
 
 def git_latest_commit_message(repo_root: Path) -> str:
+    env = dict(os.environ)
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
     result = subprocess.run(
         ["git", "log", "-1", "--pretty=%B"],
         cwd=repo_root,
@@ -4967,6 +5022,7 @@ def git_latest_commit_message(repo_root: Path) -> str:
         stderr=subprocess.PIPE,
         check=False,
         encoding="utf-8",
+        env=env,
     )
     if result.returncode != 0:
         raise ValueError(result.stderr.strip() or "git log failed")
@@ -4995,6 +5051,8 @@ def git_commit_messages_for_revisions(
     if max_count is not None:
         command.insert(2, f"--max-count={max_count}")
     command.extend(revisions)
+    env = dict(os.environ)
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
     result = subprocess.run(
         command,
         cwd=repo_root,
@@ -5003,6 +5061,7 @@ def git_commit_messages_for_revisions(
         stderr=subprocess.PIPE,
         check=False,
         encoding="utf-8",
+        env=env,
     )
     if result.returncode != 0:
         description = " ".join(revisions)
@@ -5018,6 +5077,378 @@ def git_commit_messages_for_revisions(
         commit_hash, subject, message = parts
         commits.append((commit_hash.strip(), subject.strip(), message.strip() + "\n"))
     return commits
+
+
+def canonical_commit_message_sha256(message: str) -> str:
+    normalized = message.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n") + "\n"
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def git_commit_object_facts(repo_root: Path, commit_hash: str) -> dict[str, object]:
+    if not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", commit_hash):
+        raise ValueError("historical disposition requires a full lowercase Git object id")
+    env = dict(os.environ)
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
+    object_type = subprocess.run(
+        ["git", "cat-file", "-t", commit_hash],
+        cwd=repo_root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        encoding="utf-8",
+        env=env,
+    )
+    if object_type.returncode != 0 or object_type.stdout.strip() != "commit":
+        raise ValueError(object_type.stderr.strip() or f"Git object is not a commit: {commit_hash}")
+    result = subprocess.run(
+        ["git", "show", "-s", "--format=%H%x00%T%x00%P", commit_hash],
+        cwd=repo_root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        encoding="utf-8",
+        env=env,
+    )
+    if result.returncode != 0:
+        raise ValueError(result.stderr.strip() or f"git show failed for commit {commit_hash}")
+    parts = result.stdout.rstrip("\n").split("\x00")
+    if len(parts) != 3 or parts[0] != commit_hash:
+        raise ValueError(f"Git returned an unexpected identity for commit {commit_hash}")
+    parents = parts[2].split() if parts[2] else []
+    return {"commit": parts[0], "tree": parts[1], "parents": parents}
+
+
+def historical_disposition_record_digest(record: dict[str, object]) -> str:
+    digest_input = {key: value for key, value in record.items() if key != "record_digest"}
+    serialized = json.dumps(digest_input, sort_keys=True, separators=(",", ":"), ensure_ascii=True) + "\n"
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+
+DISPOSITION_RECORD_FIELDS = {
+    "schema_version",
+    "disposition_id",
+    "status",
+    "commit",
+    "tree",
+    "parents",
+    "message_sha256",
+    "failed_checks",
+    "scope",
+    "decision",
+    "reviewed_by",
+    "reviewed_at",
+    "decision_ref",
+    "evidence",
+    "record_digest",
+}
+
+DISPOSITION_DECISION_FIELDS = {
+    "schema_version",
+    "disposition_id",
+    "status",
+    "commit",
+    "tree",
+    "message_sha256",
+    "scope",
+    "decision",
+    "reviewed_by",
+    "reviewed_at",
+}
+
+
+def _is_full_git_object_id(value: object) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", value) is not None
+
+
+def _disposition_authority_policy(repo_root: Path) -> tuple[set[str], object | None, list[str]]:
+    path = repo_root / COMMIT_MESSAGE_DISPOSITION_POLICY_PATH
+    if not path.is_file() or path.is_symlink():
+        return set(), None, ["disposition authority policy is missing or is a symlink"]
+    text = read_text(path)
+    reviewers = set(parse_simple_list(text, "authorized_reviewers"))
+    errors: list[str] = []
+    if not reviewers:
+        errors.append("disposition authority policy has no authorized_reviewers")
+    for reviewer in reviewers:
+        if not re.fullmatch(r"(?:owner|reviewer):[^\s:][^\s]*", reviewer):
+            errors.append(f"disposition authority policy has invalid reviewer identity: {reviewer}")
+    match = re.search(r"^\s*decision_window_start:\s*(\d{4}-\d{2}-\d{2})\s*$", text, re.MULTILINE)
+    start_date = None
+    if not match:
+        errors.append("disposition authority policy has no decision_window_start")
+    else:
+        try:
+            start_date = datetime.strptime(match.group(1), "%Y-%m-%d").date()
+        except ValueError:
+            errors.append("disposition authority policy decision_window_start is invalid")
+    return reviewers, start_date, errors
+
+
+def latest_possible_local_review_date(now_utc: datetime | None = None):
+    """Accept a date that has begun in any civil timezone (UTC+14 at latest)."""
+    instant = now_utc if now_utc is not None else datetime.now(timezone.utc)
+    return instant.astimezone(timezone(timedelta(hours=14))).date()
+
+
+def load_commit_message_dispositions(repo_root: Path) -> tuple[dict[str, object], bool]:
+    path = repo_root / COMMIT_MESSAGE_DISPOSITIONS_PATH
+    if not path.exists():
+        return {"schema_version": "aide.commit-message-dispositions.v1", "records": []}, False
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return {
+            "schema_version": "invalid",
+            "records": [],
+            "load_errors": [f"cannot read disposition registry: {exc}"],
+        }, True
+    if not isinstance(data, dict):
+        return {
+            "schema_version": "invalid",
+            "records": [],
+            "load_errors": ["disposition registry root must be an object"],
+        }, True
+    return data, True
+
+
+def _validate_disposition_reference(repo_root: Path, value: object, label: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(value, dict) or set(value) != {"path", "sha256"}:
+        return [f"{label} must contain exactly path and sha256"]
+    path_value = value.get("path")
+    digest = value.get("sha256")
+    if not isinstance(path_value, str) or not path_value or normalize_rel(path_value) != path_value:
+        return [f"{label} path must be a normalized non-empty repository-relative path"]
+    if Path(path_value).is_absolute() or ".." in Path(path_value).parts:
+        return [f"{label} path must stay inside the repository"]
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        errors.append(f"{label} sha256 must be 64 lowercase hexadecimal characters")
+    unresolved = repo_root / path_value
+    if unresolved.is_symlink():
+        errors.append(f"{label} path must not be a symlink")
+        return errors
+    try:
+        path = safe_repo_path(repo_root, path_value)
+    except ValueError as exc:
+        errors.append(f"{label} path is invalid: {exc}")
+        return errors
+    if not path.is_file():
+        errors.append(f"{label} path does not identify a file: {path_value}")
+    elif isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest) and sha256_file(path) != digest:
+        errors.append(f"{label} sha256 does not match: {path_value}")
+    return errors
+
+
+def validate_historical_disposition_registry(repo_root: Path, registry: dict[str, object]) -> list[str]:
+    errors = [str(item) for item in registry.get("load_errors", [])] if isinstance(registry, dict) else []
+    if not isinstance(registry, dict):
+        return errors + ["disposition registry root must be an object"]
+    if set(registry) - {"schema_version", "records", "load_errors"}:
+        errors.append("disposition registry contains unsupported fields")
+    if registry.get("schema_version") != "aide.commit-message-dispositions.v1":
+        errors.append("disposition registry schema_version is not supported")
+    records = registry.get("records")
+    if not isinstance(records, list):
+        return errors + ["disposition registry records must be an array"]
+
+    seen_ids: set[str] = set()
+    seen_commits: set[str] = set()
+    for index, record in enumerate(records):
+        label = f"records[{index}]"
+        if not isinstance(record, dict):
+            errors.append(f"{label} must be an object")
+            continue
+        missing_fields = DISPOSITION_RECORD_FIELDS - set(record)
+        unsupported_fields = set(record) - DISPOSITION_RECORD_FIELDS
+        if missing_fields:
+            errors.append(f"{label} is missing fields: " + ", ".join(sorted(missing_fields)))
+        if unsupported_fields:
+            errors.append(f"{label} contains unsupported fields: " + ", ".join(sorted(unsupported_fields)))
+        if record.get("schema_version") != "aide.commit-message-disposition.v1":
+            errors.append(f"{label} schema_version is not supported")
+        disposition_id = record.get("disposition_id")
+        if not isinstance(disposition_id, str) or not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", disposition_id):
+            errors.append(f"{label} disposition_id must be a stable lowercase identifier")
+        elif disposition_id in seen_ids:
+            errors.append(f"{label} duplicates disposition_id: {disposition_id}")
+        else:
+            seen_ids.add(disposition_id)
+        commit = record.get("commit")
+        if not _is_full_git_object_id(commit):
+            errors.append(f"{label} commit must be a full lowercase Git object id")
+        elif commit in seen_commits:
+            errors.append(f"{label} duplicates exact commit: {commit}")
+        else:
+            seen_commits.add(str(commit))
+        if not _is_full_git_object_id(record.get("tree")):
+            errors.append(f"{label} tree must be a full lowercase Git object id")
+        parents = record.get("parents")
+        if not isinstance(parents, list) or any(not _is_full_git_object_id(parent) for parent in parents):
+            errors.append(f"{label} parents must be an array of full lowercase Git object ids")
+        if not isinstance(record.get("message_sha256"), str) or not re.fullmatch(
+            r"[0-9a-f]{64}", str(record.get("message_sha256", ""))
+        ):
+            errors.append(f"{label} message_sha256 must be 64 lowercase hexadecimal characters")
+        failed_checks = record.get("failed_checks")
+        if not isinstance(failed_checks, list) or not failed_checks or any(
+            not isinstance(item, str) or not item for item in failed_checks
+        ):
+            errors.append(f"{label} failed_checks must be a non-empty array of strings")
+        if record.get("scope") != "historical_commit_message_only":
+            errors.append(f"{label} scope is not historical_commit_message_only")
+        if record.get("decision") != "accept_historical_nonconformance":
+            errors.append(f"{label} decision is not accept_historical_nonconformance")
+        if record.get("status") not in {"proposed", "accepted", "rejected"}:
+            errors.append(f"{label} status is not supported")
+        if not isinstance(record.get("reviewed_by"), str):
+            errors.append(f"{label} reviewed_by must be a string")
+        if not isinstance(record.get("reviewed_at"), str):
+            errors.append(f"{label} reviewed_at must be a string")
+        errors.extend(
+            f"{label} {error}" for error in _validate_disposition_reference(repo_root, record.get("decision_ref"), "decision_ref")
+        )
+        evidence = record.get("evidence")
+        if not isinstance(evidence, list) or not evidence:
+            errors.append(f"{label} evidence must contain at least one reference")
+        else:
+            seen_paths: set[str] = set()
+            for evidence_index, reference in enumerate(evidence):
+                errors.extend(
+                    f"{label} {error}"
+                    for error in _validate_disposition_reference(
+                        repo_root, reference, f"evidence[{evidence_index}]"
+                    )
+                )
+                if isinstance(reference, dict) and isinstance(reference.get("path"), str):
+                    path_value = str(reference["path"])
+                    if path_value in seen_paths:
+                        errors.append(f"{label} evidence[{evidence_index}] duplicates path: {path_value}")
+                    seen_paths.add(path_value)
+        if record.get("record_digest") != historical_disposition_record_digest(record):
+            errors.append(f"{label} record_digest does not match the canonical record")
+        if record.get("status") == "accepted":
+            errors.extend(
+                f"{label} {error}" for error in _validate_accepted_disposition_decision(repo_root, record)
+            )
+    return errors
+
+
+def _validate_accepted_disposition_decision(repo_root: Path, record: dict[str, object]) -> list[str]:
+    errors: list[str] = []
+    reviewers, start_date, policy_errors = _disposition_authority_policy(repo_root)
+    errors.extend(policy_errors)
+    reviewed_by = record.get("reviewed_by")
+    reviewed_at = record.get("reviewed_at")
+    if reviewed_by not in reviewers:
+        errors.append("accepted disposition reviewer is not in authorized_reviewers")
+    review_date = None
+    try:
+        if not isinstance(reviewed_at, str):
+            raise ValueError
+        review_date = datetime.strptime(reviewed_at, "%Y-%m-%d").date()
+    except ValueError:
+        errors.append("accepted disposition requires a valid YYYY-MM-DD review date")
+    if review_date is not None:
+        if start_date is not None and review_date < start_date:
+            errors.append("accepted disposition review date precedes the decision window")
+        if review_date > latest_possible_local_review_date():
+            errors.append("accepted disposition review date is in the future")
+
+    decision_ref = record.get("decision_ref")
+    if not isinstance(decision_ref, dict) or not isinstance(decision_ref.get("path"), str):
+        return errors + ["accepted disposition decision_ref is not readable"]
+    try:
+        decision_path = safe_repo_path(repo_root, str(decision_ref["path"]))
+    except ValueError as exc:
+        return errors + [f"accepted disposition decision_ref path is invalid: {exc}"]
+    try:
+        decision_data = json.loads(read_text(decision_path))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return errors + [f"accepted disposition decision_ref must be structured JSON: {exc}"]
+    if not isinstance(decision_data, dict):
+        return errors + ["accepted disposition decision artifact must be an object"]
+    if set(decision_data) != DISPOSITION_DECISION_FIELDS:
+        errors.append("accepted disposition decision artifact fields do not match the required schema")
+    expected = {
+        "schema_version": "aide.commit-message-disposition-decision.v1",
+        "disposition_id": record.get("disposition_id"),
+        "status": "accepted",
+        "commit": record.get("commit"),
+        "tree": record.get("tree"),
+        "message_sha256": record.get("message_sha256"),
+        "scope": record.get("scope"),
+        "decision": record.get("decision"),
+        "reviewed_by": reviewed_by,
+        "reviewed_at": reviewed_at,
+    }
+    for key, expected_value in expected.items():
+        if decision_data.get(key) != expected_value:
+            errors.append(f"accepted disposition decision artifact does not match record field: {key}")
+    return errors
+
+
+def evaluate_historical_commit_disposition(
+    repo_root: Path,
+    commit_hash: str,
+    message: str,
+    checks: Iterable[Check],
+    registry: dict[str, object],
+) -> dict[str, object]:
+    errors = validate_historical_disposition_registry(repo_root, registry)
+    result: dict[str, object] = {
+        "status": "missing",
+        "effective": False,
+        "disposition_id": "",
+        "errors": errors,
+    }
+    if not isinstance(registry, dict):
+        result["errors"] = errors + ["disposition registry root must be an object"]
+        return result
+    records = registry.get("records")
+    if not isinstance(records, list):
+        errors.append("disposition registry records must be an array")
+        result["errors"] = errors
+        return result
+    matches = [record for record in records if isinstance(record, dict) and record.get("commit") == commit_hash]
+    if not matches:
+        errors.append("no exact disposition record for commit")
+        result["errors"] = errors
+        return result
+    if len(matches) != 1:
+        errors.append("multiple disposition records target the same exact commit")
+        result["errors"] = errors
+        return result
+    record = matches[0]
+    result["status"] = str(record.get("status", "invalid"))
+    result["disposition_id"] = str(record.get("disposition_id", ""))
+    status = record.get("status")
+    try:
+        facts = git_commit_object_facts(repo_root, commit_hash)
+    except ValueError as exc:
+        errors.append(str(exc))
+        facts = {"tree": "", "parents": []}
+    if record.get("tree") != facts["tree"]:
+        errors.append("disposition tree does not match the exact commit")
+    if record.get("parents") != facts["parents"]:
+        errors.append("disposition ordered parents do not match the exact commit")
+    if record.get("message_sha256") != canonical_commit_message_sha256(message):
+        errors.append("disposition message_sha256 does not match the checked message")
+    failures = [check.message for check in checks if check.severity == "FAIL"]
+    if record.get("failed_checks") != failures:
+        errors.append("disposition failed_checks do not match the checker output")
+    if status == "accepted":
+        pass
+    elif status == "proposed":
+        errors.append("disposition is proposed and has no effect")
+    elif status == "rejected":
+        errors.append("disposition is rejected and has no effect")
+    result["errors"] = errors
+    result["effective"] = status == "accepted" and not errors
+    if errors and status == "accepted":
+        result["status"] = "invalid"
+    return result
 
 
 def git_commit_messages_for_range(repo_root: Path, revision_range: str, max_count: int | None = None) -> list[tuple[str, str, str]]:
@@ -5779,6 +6210,19 @@ def git_head_commit(repo_root: Path) -> str:
     return result.stdout.strip()
 
 
+def git_commit_for_ref(repo_root: Path, ref: str) -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{ref}^{{commit}}"],
+        cwd=repo_root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        encoding="utf-8",
+    )
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
 def resolve_changelog_commits(
     repo_root: Path,
     revision_range: str | None = None,
@@ -5907,6 +6351,13 @@ def make_changelog_preview(
         to_ref=to_ref,
         limit=limit,
     )
+    if revision_range:
+        source_ref = revision_range.rsplit("..", 1)[-1].lstrip(".") or "HEAD"
+    elif to_ref:
+        source_ref = to_ref
+    else:
+        source_ref = "HEAD"
+    source_head = git_commit_for_ref(repo_root, source_ref)
     grouped: dict[str, list[dict[str, object]]] = {category: [] for category in COMMIT_CHANGELOG_CATEGORIES}
     entries: list[dict[str, object]] = []
     malformed: list[dict[str, object]] = []
@@ -5946,7 +6397,7 @@ def make_changelog_preview(
         "schema_version": CHANGELOG_STRUCTURED_SCHEMA_VERSION,
         "generated_by": GENERATOR_NAME,
         "source_range": source,
-        "source_head": git_head_commit(repo_root),
+        "source_head": source_head,
         "commit_count": len(commits),
         "malformed_count": len(malformed),
         "category_counts": category_counts,
@@ -6320,14 +6771,22 @@ def task_status_value(repo_root: Path, task_id: str) -> str:
 
 def current_task_id(repo_root: Path) -> str | None:
     tasks = queue_task_blocks(repo_root)
+    queue_index = repo_root / ".aide/queue/index.yaml"
+    canonical_queue = queue_index.exists() and "canonical_source: .aide/queue/{active,next}" in read_text(queue_index)
+    packet = repo_root / LATEST_PACKET_PATH
+    # Legacy product packets predate the canonical queue marker. Keep their
+    # explicit FacMan identity, while an existing queued product stays authoritative.
+    if not canonical_queue and packet.exists():
+        packet_phase = re.search(r"^phase:\s*(FACMAN-[A-Z0-9._-]+)\s*$", read_text(packet), re.MULTILINE)
+        if packet_phase and not any(str(task.get("id", "")).startswith("FACMAN-")
+                                    for task in tasks):
+            return packet_phase.group(1)
     for status in ["active", "running", "partial", "ready", "verified", "reviewed", "needs_review", "planned"]:
         for task in reversed(tasks):
             if task.get("status") == status:
                 return task.get("id")
-    queue_index = repo_root / ".aide/queue/index.yaml"
-    if queue_index.exists() and "canonical_source: .aide/queue/{active,next}" in read_text(queue_index):
+    if canonical_queue:
         return None
-    packet = repo_root / LATEST_PACKET_PATH
     if packet.exists():
         text = read_text(packet)
         match = re.search(r"^phase:\s*([^\n]+)$", text, re.IGNORECASE | re.MULTILINE)
@@ -6427,35 +6886,50 @@ def safe_git_head_commit(repo_root: Path) -> str:
 
 
 def task_os_latest_task_ref(repo_root: Path) -> tuple[str, str]:
-    current = current_task_id(repo_root)
-    if current and any(task.get("id") == current for task in queue_task_blocks(repo_root)):
-        return current, current
+    queue_index = repo_root / ".aide/queue/index.yaml"
+    if queue_index.is_file() and "canonical_source: .aide/queue/{active,next}" in read_text(queue_index):
+        current = current_task_id(repo_root)
+        if current and any(task.get("id") == current for task in queue_task_blocks(repo_root)):
+            return current, current
     packet = repo_root / LATEST_PACKET_PATH
     if not packet.exists():
         return "", ""
     text = read_text(packet)
-    candidate_sections: list[str] = []
+    # Only the packet preamble and the leading PHASE/GOAL lines can declare
+    # task identity. Later sections contain incidental IDs in guidance.
+    preamble = re.split(r"^##\s+", text, maxsplit=1, flags=re.MULTILINE)[0]
+    declared_id = re.search(r"^\s*[-*]?\s*task_id:\s*([^\s`]+)", preamble, re.MULTILINE)
+    if declared_id:
+        raw = declared_id.group(1)
+        return raw, resolve_task_id(repo_root, raw)
+    candidate_lines: list[str] = []
     for heading in ["PHASE", "GOAL"]:
         match = re.search(rf"^##\s+{heading}\s*$\s*(.*?)(?=^##\s+|\Z)", text, re.MULTILINE | re.DOTALL)
         if match:
-            candidate_sections.append(match.group(1).strip())
-    candidate_sections.append(text)
-    known_ids = sorted((str(task.get("id", "")) for task in queue_task_blocks(repo_root) if str(task.get("id", ""))), key=len, reverse=True)
+            lines = match.group(1).strip().splitlines()
+            if lines:
+                candidate_lines.append(re.sub(r"^UNSPECIFIED\s+-\s+", "", lines[0].strip()))
     patterns = [
-        r"(?<![A-Za-z0-9._-])AIDE-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*-\d+(?:-[A-Za-z0-9._]+)*(?![A-Za-z0-9._-])",
-        r"(?<![A-Za-z0-9._-])X-OS-\d+(?:-[A-Za-z0-9._]+)*(?![A-Za-z0-9._-])",
-        r"(?<![A-Za-z0-9._-])X-TEST-\d+(?:-[A-Za-z0-9._]+)*(?![A-Za-z0-9._-])",
-        r"(?<![A-Za-z0-9._-])Q\d+(?:-[A-Za-z0-9._]+)*(?![A-Za-z0-9._-])",
+        r"AIDE-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*-\d+(?:-[A-Za-z0-9._]+)*(?![A-Za-z0-9._-])",
+        r"X-OS-\d+(?:-[A-Za-z0-9._]+)*(?![A-Za-z0-9._-])",
+        r"X-TEST-\d+(?:-[A-Za-z0-9._]+)*(?![A-Za-z0-9._-])",
+        r"Q\d+(?:-[A-Za-z0-9._]+)*(?![A-Za-z0-9._-])",
     ]
-    for section in candidate_sections:
-        for known_id in known_ids:
-            if re.search(rf"(?<![A-Za-z0-9._-]){re.escape(known_id)}(?![A-Za-z0-9._-])", section):
-                return known_id, known_id
+    known_ids = sorted(
+        (str(task.get("id", "")) for task in queue_task_blocks(repo_root) if str(task.get("id", ""))),
+        key=len, reverse=True,
+    )
+    for line in candidate_lines:
+        # Canonical leading AIDE shorthand has priority over an incidental
+        # longer queue name later on the same declaration line.
         for pattern in patterns:
-            match = re.search(pattern, section)
+            match = re.match(pattern, line)
             if match:
                 raw = match.group(0)
                 return raw, resolve_task_id(repo_root, raw)
+        for known_id in known_ids:
+            if re.search(rf"(?<![A-Za-z0-9._-]){re.escape(known_id)}(?![A-Za-z0-9._-])", line):
+                return known_id, known_id
     return "", ""
 
 
@@ -6467,6 +6941,16 @@ def task_os_read_status_yaml(repo_root: Path, task_id: str) -> str:
 def task_os_status_field(text: str, key: str, default: str = "") -> str:
     match = re.search(rf"^\s*{re.escape(key)}:\s*(.+)$", text, re.MULTILINE)
     return match.group(1).strip() if match else default
+
+
+def task_os_profile_role(repo_root: Path) -> str:
+    profile = repo_root / ".aide/profile.yaml"
+    if not profile.exists():
+        return "unknown"
+    profile_text = read_text(profile)
+    profile_id = task_os_status_field(profile_text, "profile_id").strip("\"'")
+    profile_mode = task_os_status_field(profile_text, "profile_mode").strip("\"'")
+    return "aide_source" if profile_id == "aide-self-hosting" and profile_mode == "self-hosting" else "target"
 
 
 def task_os_warning_counts(text: str) -> dict[str, int]:
@@ -6515,7 +6999,31 @@ TASK_OS_APPLY_02_TASK_ID = "AIDE-APPLY-02-scoped-transaction-executor-v0"
 TASK_OS_APPLY_02_REPAIR_TASK_ID = "AIDE-APPLY-02-REPAIR-01"
 TASK_OS_CHECK_APPLY_02_RECHECK_TASK_ID = "AIDE-CHECK-APPLY-02-RECHECK-01"
 TASK_OS_STATUS_REPAIR_TASK_ID = "AIDE-TASK-OS-STATUS-REPAIR-01"
-TASK_OS_LIFECYCLE_PLAN_TASK_LABEL = "AIDE-APPLY-LIFECYCLE-PLAN-01 - Apply Lifecycle Planning"
+TASK_OS_SOURCE_ROUTING_TASK_IDS = {
+    "X-OS-00-aide-task-os-schemas-policies",
+    "X-OS-01-aide-task-os-report-only-commands",
+    "X-OS-02-capability-reality-ledger-v0",
+    TASK_OS_CHECKPOINT_TASK_ID,
+    TASK_OS_REPAIR_TASK_ID,
+    TASK_OS_APPLY_02_TASK_ID,
+    TASK_OS_CHECK_APPLY_02_RECHECK_TASK_ID,
+    TASK_OS_STATUS_REPAIR_TASK_ID,
+}
+TASK_OS_LIFECYCLE_PLAN_TASK_ID = "AIDE-APPLY-LIFECYCLE-PLAN-01"
+TASK_OS_LIFECYCLE_PLAN_TASK_LABEL = TASK_OS_LIFECYCLE_PLAN_TASK_ID + " - Apply Lifecycle Planning"
+
+
+def task_os_source_routing_enabled(context: dict[str, object]) -> bool:
+    role = context.get("task_os_profile_role", "unknown")
+    if role == "target":
+        return False
+    if role == "aide_source":
+        return True
+    tasks = context.get("tasks", []) if isinstance(context.get("tasks"), list) else []
+    return any(
+        isinstance(task, dict) and task.get("id") in TASK_OS_SOURCE_ROUTING_TASK_IDS
+        for task in tasks
+    )
 
 
 def task_os_done_local(status: str) -> bool:
@@ -6581,6 +7089,28 @@ def task_os_next_selection(context: dict[str, object]) -> dict[str, object]:
         "aide_apply_lifecycle_plan_ready": False,
         "lifecycle_apply_authorized": False,
     }
+    if not context.get("tasks"):
+        return {
+            "task": "No queued WorkUnit selected",
+            "reason": "The target queue is empty; create a target-owned WorkUnit through intake before execution.",
+            "x_os_01_status": xos01_status,
+            "x_os_02_status": xos02_status,
+            "checkpoint_status": checkpoint_status,
+            "repair_status": repair_status,
+            "aide_apply_00_next_packet_ready": False,
+            **post_apply_fields,
+        }
+    if not task_os_source_routing_enabled(context):
+        return {
+            "task": "Review target-owned queue WorkUnits",
+            "reason": "Inspect this repository's queue status and evidence; no AIDE source-phase recommendation is inferred for this target.",
+            "x_os_01_status": xos01_status,
+            "x_os_02_status": xos02_status,
+            "checkpoint_status": checkpoint_status,
+            "repair_status": repair_status,
+            "aide_apply_00_next_packet_ready": False,
+            **post_apply_fields,
+        }
     if apply02_accepted_with_notes and not task_os_done_local(status_repair_status):
         return {
             "task": f"{TASK_OS_STATUS_REPAIR_TASK_ID} - Task OS Current and Latest-Task Reporting Repair",
@@ -6593,6 +7123,20 @@ def task_os_next_selection(context: dict[str, object]) -> dict[str, object]:
             **post_apply_fields,
         }
     if apply02_accepted_with_notes and task_os_done_local(status_repair_status):
+        lifecycle_plan_status = task_os_status_from_context(context, TASK_OS_LIFECYCLE_PLAN_TASK_ID)
+        if lifecycle_plan_status not in ("missing", "pending"):
+            return {
+                "task": "Review current AIDE queue WorkUnits",
+                "reason": ("The historical lifecycle-plan WorkUnit is already "
+                           + lifecycle_plan_status
+                           + "; inspect current queue status and evidence before selecting another task."),
+                "x_os_01_status": xos01_status,
+                "x_os_02_status": xos02_status,
+                "checkpoint_status": checkpoint_status,
+                "repair_status": repair_status,
+                "aide_apply_00_next_packet_ready": False,
+                **post_apply_fields,
+            }
         return {
             "task": TASK_OS_LIFECYCLE_PLAN_TASK_LABEL,
             "reason": "AIDE-APPLY-02 is accepted with notes and Task OS current/latest truth is review-gated; the next safe WorkUnit is planning-only lifecycle scoping, not lifecycle apply execution.",
@@ -6775,6 +7319,7 @@ def task_os_context(repo_root: Path) -> dict[str, object]:
         "schema_version": "aide.task-os-command-context.v0",
         "generated_at": "deterministic",
         "repo_root": normalize_rel(repo_root),
+        "task_os_profile_role": task_os_profile_role(repo_root),
         "current_branch": git_current_branch_name(repo_root),
         "current_commit": safe_git_head_commit(repo_root),
         "current_toml_state": current_toml.get("current_toml_state", "unknown"),
@@ -6878,16 +7423,16 @@ def task_os_render_task_status(context: dict[str, object]) -> str:
             f"- current_task_status: `{context.get('current_task_status', 'unknown')}`",
             f"- latest_indexed_task_id: `{context.get('latest_indexed_task_id', '') or 'none'}`",
             f"- latest_indexed_task_status: `{context.get('latest_indexed_task_status', 'unknown')}`",
-            f"- latest_task_packet_raw: `{context.get('latest_task_raw', '') or 'unknown'}`",
-            f"- latest_task_packet_id: `{context.get('latest_task_id', '') or 'unknown'}`",
+            f"- latest_task_packet_raw: `{context.get('latest_task_raw', '') or 'none'}`",
+            f"- latest_task_packet_id: `{context.get('latest_task_id', '') or 'none'}`",
             f"- latest_task_packet_status: `{context.get('latest_task_status', '') or 'unknown'}`",
             f"- selected_next_workunit: {selection.get('task', 'review current task evidence')}",
             f"- selected_next_workunit_reason: {selection.get('reason', '')}",
             "",
             "## Latest Task Packet",
             "",
-            f"- latest_task_raw: `{context.get('latest_task_raw', '') or 'unknown'}`",
-            f"- latest_task_id: `{context.get('latest_task_id', '') or 'unknown'}`",
+            f"- latest_task_raw: `{context.get('latest_task_raw', '') or 'none'}`",
+            f"- latest_task_id: `{context.get('latest_task_id', '') or 'none'}`",
             f"- latest_task_status: `{context.get('latest_task_status', '') or 'unknown'}`",
             "",
             "## Queue Summary",
@@ -7614,6 +8159,25 @@ def write_task_os_next_plan(repo_root: Path) -> WriteResult:
     context = task_os_context(repo_root)
     selection = task_os_next_selection(context)
     lines = task_os_markdown_header("Task OS Next Plan", "task-os next plan", context)
+    if not task_os_source_routing_enabled(context):
+        lines.extend(
+            [
+                "## Target Queue Next Work",
+                "",
+                f"- selected_next_workunit: {selection.get('task', 'review current task evidence')}",
+                f"- reason: {selection.get('reason', '')}",
+                f"- task_count: {context.get('task_count', 0)}",
+                f"- latest_indexed_task_id: {context.get('latest_indexed_task_id', '') or 'none'}",
+                f"- latest_task_packet_id: {context.get('latest_task_id', '') or 'none'}",
+                "",
+                "## Boundary",
+                "",
+                "- this report does not execute or authorize a target WorkUnit",
+                "- choose next work under the target repository's own queue policy and evidence",
+                "",
+            ]
+        )
+        return write_text_if_changed(repo_root / TASK_OS_NEXT_PLAN_REPORT_PATH, "\n".join(lines))
     lines.extend(
         [
             "## Selected Next Task",
@@ -7725,16 +8289,219 @@ def parse_capability_seed_records(text: str) -> list[dict[str, object]]:
 
 
 def capability_seed_records(repo_root: Path) -> list[dict[str, object]]:
-    path = repo_root / CAPABILITY_SEEDS_PATH
-    if not path.exists():
+    _entry, content = capability_evidence_read(repo_root, CAPABILITY_SEEDS_PATH)
+    if content is None:
         return []
-    return parse_capability_seed_records(read_text(path))
+    try:
+        return parse_capability_seed_records(content.decode("utf-8"))
+    except UnicodeError:
+        return []
+
+
+def capability_public_file(repo_root: Path, rel: str) -> tuple[Path | None, str]:
+    """Inspect a declared public file, without following redirected components.
+
+    This conservative reader is not an OS sandbox or an authority boundary.
+    """
+    rel = rel.replace("\\", "/")
+    parts = rel.split("/")
+    if (not rel or ":" in rel or "\x00" in rel
+            or any(part in {"", ".", ".."} for part in parts)):
+        return None, "external_or_non_relative"
+    lower = [part.lower() for part in parts]
+    if (any(part in {".git", ".aide.local", "secrets", "__pycache__", "node_modules"} for part in lower)
+            or any(part.startswith(".env") for part in lower)
+            or install_rel_is_secret_like(rel)):
+        return None, "private_or_secret_like"
+    current = repo_root.absolute()
+    try:
+        for index, part in enumerate([None, *parts]):
+            if part is not None:
+                current = current / part
+            info = current.lstat()
+            if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 1024:
+                return None, "redirected"
+            expected = stat.S_ISREG if index == len(parts) else stat.S_ISDIR
+            if not expected(info.st_mode):
+                return None, "not_ordinary_file"
+            if index == len(parts) and (info.st_nlink != 1 or info.st_ino <= 0):
+                return None, "shared_or_unstable_identity"
+    except FileNotFoundError:
+        return None, "missing"
+    except OSError:
+        return None, "unreadable"
+    return current, ""
+
+
+def capability_evidence_read(repo_root: Path, rel: str,
+                             maximum: int = CAPABILITY_EVIDENCE_MAX_FILE_BYTES,
+                             *, check_ignored: bool = True, budget: list[int] | None = None
+                             ) -> tuple[dict[str, object], bytes | None]:
+    entry: dict[str, object] = {"path": rel, "state": "unknown", "sha256": None,
+                                "bytes": None, "reason": ""}
+    path, reason = capability_public_file(repo_root, rel)
+    if path is None:
+        entry["reason"] = reason
+        return entry, None
+    ignored = capability_ignored_refs(repo_root, [rel]) if check_ignored else set()
+    if ignored is None or rel in ignored:
+        entry["reason"] = "ignored_check_unavailable" if ignored is None else "ignored"
+        return entry, None
+    try:
+        before = path.lstat()
+        if budget is not None:
+            maximum = min(maximum, budget[0])
+        if before.st_size > maximum:
+            entry["reason"] = "read_budget"
+            return entry, None
+        with path.open("rb") as stream:
+            opened = os.fstat(stream.fileno())
+            if (not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1 or opened.st_ino <= 0
+                    or (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino)):
+                entry["reason"] = "changed_during_read"
+                return entry, None
+            # Reserve before the read, including failed/unstable observations.
+            # Never request bytes beyond the admitted snapshot budget.
+            if budget is not None:
+                budget[0] -= before.st_size
+            content = stream.read(before.st_size)
+            after = os.fstat(stream.fileno())
+        final = path.lstat()
+        identities = {(info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_nlink)
+                      for info in (before, opened, after, final)}
+        if (len(content) != before.st_size or len(identities) != 1
+                or stat.S_ISLNK(final.st_mode) or getattr(final, "st_file_attributes", 0) & 1024):
+            entry["reason"] = "changed_during_read"
+            return entry, None
+        entry.update(state="observed", sha256=hashlib.sha256(content).hexdigest(),
+                     bytes=len(content))
+        return entry, content
+    except OSError:
+        entry["reason"] = "unreadable"
+        return entry, None
+
+
+def capability_ignored_refs(repo_root: Path, refs: list[str]) -> set[str] | None:
+    if not (repo_root / ".git").exists():
+        return set()
+    try:
+        result = subprocess.run(["git", "-C", str(repo_root), "check-ignore", "--no-index",
+                                 "-z", "--stdin"], input="\x00".join(refs) + "\x00",
+                                capture_output=True, text=True, timeout=10)
+        if result.returncode not in {0, 1}:
+            return None
+        return set(result.stdout.rstrip("\x00").split("\x00")) if result.stdout else set()
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def capability_evidence_snapshot(repo_root: Path, *,
+                                 seed_records: list[dict[str, object]] | None = None
+                                 ) -> dict[str, object]:
+    if CAPABILITY_EVIDENCE_MAX_REFS < 1:
+        return {"inputs": [], "complete": False, "truncated": True}
+    budget = [CAPABILITY_EVIDENCE_MAX_TOTAL_BYTES]
+    seed_entry, seed_content = capability_evidence_read(
+        repo_root, CAPABILITY_SEEDS_PATH,
+        min(CAPABILITY_EVIDENCE_MAX_FILE_BYTES, CAPABILITY_EVIDENCE_MAX_TOTAL_BYTES), budget=budget)
+    try:
+        seeds = parse_capability_seed_records(seed_content.decode("utf-8")) if seed_content else []
+    except UnicodeError:
+        seeds = []
+    if seed_records is not None:
+        seed_records.extend(seeds)
+    refs = {CAPABILITY_SEEDS_PATH, CAPABILITY_POLICY_PATH, ".aide/scripts/aide_lite.py",
+            *CAPABILITY_REQUIRED_FILES}
+    for seed in seeds:
+        refs.update(str(ref) for ref in seed.get("expected_evidence_hints", []) if str(ref))
+    # The seed was already read to discover hints; reserve it within the cap.
+    selected = sorted({CAPABILITY_SEEDS_PATH, *sorted(refs - {CAPABILITY_SEEDS_PATH})[
+        :CAPABILITY_EVIDENCE_MAX_REFS - 1]})
+    ignored = capability_ignored_refs(repo_root, selected)
+    inputs = []
+    for rel in selected:
+        if rel == CAPABILITY_SEEDS_PATH:
+            entry = seed_entry.copy()
+        else:
+            entry, content = capability_evidence_read(
+                repo_root, rel, CAPABILITY_EVIDENCE_MAX_FILE_BYTES, check_ignored=False, budget=budget) if (
+                    ignored is not None and rel not in ignored
+                    and rel not in {*CAPABILITY_REPORT_FILES, CAPABILITY_BINDINGS_PATH}) else (
+                        {"path": rel, "state": "unknown", "sha256": None,
+                         "bytes": None, "reason": "ignored_or_self_referential"}, None)
+        if ignored is None or rel in ignored:
+            entry = {"path": rel, "state": "unknown", "sha256": None,
+                     "bytes": None, "reason": "ignored_check_unavailable" if ignored is None else "ignored"}
+        inputs.append(entry)
+    return {"inputs": inputs, "complete": bool(seeds) and len(refs) <= len(selected)
+            and all(entry["state"] == "observed" for entry in inputs),
+            "truncated": len(refs) > len(selected)}
+
+
+def capability_ledger_digest(data: dict[str, object]) -> str:
+    return hashlib.sha256(json.dumps(data, sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=True).encode("utf-8")).hexdigest()
+
+
+def capability_ledger_evidence_validity(repo_root: Path) -> dict[str, object]:
+    validity: dict[str, object] = {"state": "UNKNOWN", "reason": "missing_or_invalid_binding",
+                                   "changed_refs": [], "qualification": "source_classification_only"}
+    _binding_entry, raw = capability_evidence_read(repo_root, CAPABILITY_BINDINGS_PATH)
+    _ledger_entry, ledger_raw = capability_evidence_read(repo_root, CAPABILITY_LEDGER_JSON_PATH)
+    if raw is None or ledger_raw is None:
+        return validity
+    try:
+        binding, ledger = (json.loads(content, object_pairs_hook=_job_wait_unique_object,
+                                      parse_constant=_job_wait_reject_constant)
+                           for content in (raw, ledger_raw))
+        if (not isinstance(binding, dict) or not isinstance(ledger, dict)
+                or set(binding) != {"schema_version", "ledger_sha256", "inputs", "complete", "truncated"}
+                or binding["schema_version"] != "aide.capability-evidence-bindings.v1"
+                or not isinstance(binding["complete"], bool) or not isinstance(binding["truncated"], bool)
+                or not re.fullmatch(r"[0-9a-f]{64}", str(binding["ledger_sha256"]))
+                or not isinstance(binding["inputs"], list)
+                or not 1 <= len(binding["inputs"]) <= CAPABILITY_EVIDENCE_MAX_REFS):
+            return validity
+        paths = []
+        for entry in binding["inputs"]:
+            if (not isinstance(entry, dict) or set(entry) != {"path", "state", "sha256", "bytes", "reason"}
+                    or not isinstance(entry["path"], str) or not isinstance(entry["reason"], str)
+                    or entry["state"] not in {"observed", "unknown"}):
+                return validity
+            if entry["state"] == "observed":
+                if (not re.fullmatch(r"[0-9a-f]{64}", str(entry["sha256"]))
+                        or type(entry["bytes"]) is not int
+                        or not 0 <= entry["bytes"] <= CAPABILITY_EVIDENCE_MAX_FILE_BYTES
+                        or entry["reason"]):
+                    return validity
+            elif entry["sha256"] is not None or entry["bytes"] is not None or not entry["reason"]:
+                return validity
+            paths.append(entry["path"])
+        if paths != sorted(set(paths)):
+            return validity
+        if capability_ledger_digest(ledger) != binding["ledger_sha256"]:
+            validity.update(state="STALE", reason="ledger_binding_mismatch")
+            return validity
+        current = capability_evidence_snapshot(repo_root)
+        previous = {entry["path"]: entry for entry in binding["inputs"]}
+        observed = {entry["path"]: entry for entry in current["inputs"]}
+        changed = sorted(ref for ref in previous.keys() | observed.keys()
+                         if previous.get(ref) != observed.get(ref))
+        if changed:
+            validity.update(state="STALE", reason="source_inputs_changed", changed_refs=changed)
+        elif binding["complete"] and not binding["truncated"] and current["complete"]:
+            validity.update(state="CURRENT", reason="bound_source_inputs_unchanged")
+        else:
+            validity["reason"] = "incomplete_source_evidence"
+    except (ValueError, TypeError, KeyError, RecursionError):
+        pass
+    return validity
 
 
 def capability_path_exists(repo_root: Path, rel: str) -> bool:
-    if "://" in rel:
-        return True
-    return (repo_root / normalize_rel(rel)).exists()
+    path, _reason = capability_public_file(repo_root, rel)
+    ignored = capability_ignored_refs(repo_root, [rel]) if path is not None else None
+    return path is not None and ignored is not None and rel not in ignored
 
 
 def capability_evidence_classes_for_path(rel_path: str) -> list[str]:
@@ -7789,14 +8556,12 @@ def capability_generated_refs(refs: Iterable[str]) -> list[str]:
 
 def capability_observed_states(seed: dict[str, object], evidence_refs: list[str]) -> list[str]:
     expected = str(seed.get("expected_state", "unknown"))
-    states = [expected if expected in CAPABILITY_STATES else "unknown"]
+    states = [expected if evidence_refs and expected in CAPABILITY_STATES else "unknown"]
     classes = set(class_name for ref in evidence_refs for class_name in capability_evidence_classes_for_path(ref))
     if "docs_only" in classes and "documented" not in states:
         states.append("documented")
     if "schema_only" in classes and "specified" not in states:
         states.append("specified")
-    if "test_only" in classes and "tested" not in states:
-        states.append("tested")
     if "command_surface" in classes and expected in {"implemented", "tested", "exposed"} and "exposed" not in states:
         states.append("exposed")
     if not evidence_refs and "unknown" not in states:
@@ -7814,10 +8579,13 @@ def capability_confidence(seed: dict[str, object], evidence_refs: list[str], mis
     return "low"
 
 
-def capability_record_from_seed(repo_root: Path, seed: dict[str, object], index: int) -> dict[str, object]:
+def capability_record_from_seed(repo_root: Path, seed: dict[str, object], index: int,
+                                *, observed_refs: set[str] | None = None) -> dict[str, object]:
     hints = [normalize_rel(str(item)) for item in seed.get("expected_evidence_hints", []) if str(item)]
-    evidence_refs = sorted(ref for ref in hints if capability_path_exists(repo_root, ref))
-    missing_refs = sorted(ref for ref in hints if not capability_path_exists(repo_root, ref))
+    present = {ref for ref in hints if (ref in observed_refs if observed_refs is not None
+                                       else capability_path_exists(repo_root, ref))}
+    evidence_refs = sorted(present)
+    missing_refs = sorted(set(hints) - present)
     modifiers = sorted(str(item) for item in seed.get("expected_modifiers", []) if str(item))
     classes = sorted(dict.fromkeys(class_name for ref in evidence_refs for class_name in capability_evidence_classes_for_path(ref)))
     if not classes:
@@ -7827,8 +8595,15 @@ def capability_record_from_seed(repo_root: Path, seed: dict[str, object], index:
         limitations.extend(f"missing evidence hint: {ref}" for ref in missing_refs)
     observed_states = capability_observed_states(seed, evidence_refs)
     dominant = str(seed.get("expected_state", "unknown"))
-    if dominant not in CAPABILITY_STATES:
+    if (dominant not in CAPABILITY_STATES or not evidence_refs
+            or dominant in {"implemented", "exposed"} and not capability_code_refs(evidence_refs)
+            or dominant == "tested" and not capability_test_refs(evidence_refs)):
         dominant = "unknown"
+    if dominant == "unknown":
+        observed_states = [state for state in observed_states if state not in {"implemented", "tested", "exposed"}]
+        if "unknown" not in observed_states:
+            observed_states.append("unknown")
+    limitations.append("Source classification and test-file presence are not executed tests or host qualification.")
     return {
         "record_id": f"CAPABILITY-{index:03d}",
         "capability_id": str(seed.get("capability_id", f"capability_{index:03d}")),
@@ -7887,7 +8662,7 @@ def capability_observation_records(repo_root: Path) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     for seed in capability_seed_records(repo_root):
         capability_id = str(seed.get("capability_id", "unknown"))
-        expected_state = str(seed.get("expected_state", "unknown"))
+        classified_state = str(capability_record_from_seed(repo_root, seed, 1)["dominant_state"])
         hints = [normalize_rel(str(item)) for item in seed.get("expected_evidence_hints", []) if str(item)]
         if not hints:
             records.append(
@@ -7908,20 +8683,26 @@ def capability_observation_records(repo_root: Path) -> list[dict[str, object]]:
                 records.append(
                     {
                         "capability_id": capability_id,
-                        "observed_state": expected_state if exists and expected_state in CAPABILITY_STATES else "unknown",
+                        "observed_state": classified_state if exists else "unknown",
                         "evidence_class": class_name,
                         "evidence_ref": ref,
                         "confidence": "high" if exists else "low",
-                        "notes": "evidence present" if exists else "declared evidence hint is missing",
+                        "notes": ("declared source evidence present; classification only, tests not executed"
+                                  if exists else "declared evidence hint is missing"),
                     }
                 )
     return sorted(records, key=lambda record: (str(record.get("capability_id", "")), str(record.get("evidence_ref", "")), str(record.get("evidence_class", ""))))
 
 
-def capability_ledger_data(repo_root: Path) -> dict[str, object]:
+def capability_ledger_data(repo_root: Path, *, source_snapshot: dict[str, object] | None = None,
+                           seed_records: list[dict[str, object]] | None = None) -> dict[str, object]:
+    seeds = capability_seed_records(repo_root) if seed_records is None else seed_records
+    observed_refs = (None if source_snapshot is None else {
+        normalize_rel(str(entry["path"])) for entry in source_snapshot["inputs"]
+        if entry["state"] == "observed"})
     records = [
-        capability_record_from_seed(repo_root, seed, index)
-        for index, seed in enumerate(capability_seed_records(repo_root), start=1)
+        capability_record_from_seed(repo_root, seed, index, observed_refs=observed_refs)
+        for index, seed in enumerate(seeds, start=1)
     ]
     counts: dict[str, int] = {state: 0 for state in CAPABILITY_STATES}
     for record in records:
@@ -8029,6 +8810,7 @@ def capability_command_status_data(repo_root: Path) -> dict[str, object]:
         "commands": CAPABILITY_COMMANDS,
         "seed_count": len(seeds),
         "reports": reports,
+        "ledger_evidence_validity": capability_ledger_evidence_validity(repo_root),
         "source_files": [rel for rel in CAPABILITY_REQUIRED_FILES if (repo_root / rel).exists()],
         "no_apply_boundary": capability_no_apply_boundary(),
     }
@@ -8075,6 +8857,11 @@ def capability_render_command_status(data: dict[str, object], repo_root: Path) -
             "## Status",
             "",
             f"- seed_count: {data.get('seed_count', 0)}",
+            f"- ledger_evidence_validity: {data['ledger_evidence_validity']['state']}",
+            f"- evidence_reason: {data['ledger_evidence_validity']['reason']}",
+            "- evidence_qualification: source_classification_only",
+            *[f"- changed_evidence_ref: `{str(ref)[:240]}`"
+              for ref in data["ledger_evidence_validity"]["changed_refs"][:8]],
             "- command_surface: registered",
             "- no_apply_boundary: enforced_by_report",
             "",
@@ -8169,10 +8956,15 @@ def write_capability_scan(repo_root: Path) -> tuple[WriteResult, WriteResult, di
 
 
 def write_capability_ledger(repo_root: Path) -> tuple[WriteResult, WriteResult, dict[str, object]]:
-    data = capability_ledger_data(repo_root)
-    write_capability_command_status(repo_root)
+    seeds: list[dict[str, object]] = []
+    snapshot = capability_evidence_snapshot(repo_root, seed_records=seeds)
+    data = capability_ledger_data(repo_root, source_snapshot=snapshot, seed_records=seeds)
     json_result = write_text_if_changed(repo_root / CAPABILITY_LEDGER_JSON_PATH, stable_json_text(data))
     md_result = write_text_if_changed(repo_root / CAPABILITY_LEDGER_MD_PATH, capability_render_ledger(data, repo_root))
+    binding = {"schema_version": "aide.capability-evidence-bindings.v1",
+               "ledger_sha256": capability_ledger_digest(data), **snapshot}
+    write_text_if_changed(repo_root / CAPABILITY_BINDINGS_PATH, stable_json_text(binding))
+    write_capability_command_status(repo_root)
     return json_result, md_result, data
 
 
@@ -18336,6 +19128,11 @@ RELEASE_BUNDLE_NAME = "aide-lite-pack-v0"
 RELEASE_ARCHIVE_ROOT = "aide-lite-pack-v0"
 RELEASE_GENERATED_BY = "aide-lite release bundle q47"
 RELEASE_PUBLICATION_STATUS = "local_preview_no_publish"
+RELEASE_VALIDATION_MAX_MEMBERS = 10_000
+RELEASE_VALIDATION_MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
+RELEASE_VALIDATION_MAX_UNCOMPRESSED_BYTES = 512 * 1024 * 1024
+RELEASE_VALIDATION_MAX_TAR_METADATA_BYTES = 1024 * 1024
+RELEASE_VALIDATION_MAX_TAR_STREAM_BYTES = 640 * 1024 * 1024
 RELEASE_REQUIRED_PACK_FILES = [
     "manifest.yaml",
     "checksums.json",
@@ -18361,8 +19158,26 @@ RELEASE_DIST_REQUIRED_FILES = [
 RELEASE_CHECKSUM_EXCLUDED_NAMES = {
     "aide-lite-pack-v0.checksums.json",
     "SHA256SUMS.txt",
+    "release-assets.json",
     "release-validation.json",
     "release-validation.md",
+}
+RELEASE_ASSET_INDEX_EXCLUDED_NAMES = {
+    "release-assets.json",
+    "release-validation.json",
+    "release-validation.md",
+}
+RELEASE_PREVIEW_SOURCE_PATHS = {
+    CHANGELOG_PREVIEW_MD_PATH: CHANGELOG_PREVIEW_JSON_PATH,
+    RELEASE_NOTES_PREVIEW_MD_PATH: RELEASE_NOTES_PREVIEW_JSON_PATH,
+}
+RELEASE_PREVIEW_GENERATED_PATHS = {
+    CHANGELOG_PREVIEW_MD_PATH,
+    CHANGELOG_PREVIEW_JSON_PATH,
+    RELEASE_NOTES_PREVIEW_MD_PATH,
+    RELEASE_NOTES_PREVIEW_JSON_PATH,
+    MALFORMED_COMMITS_MD_PATH,
+    CHANGELOG_REPORT_PATH,
 }
 GITHUB_RELEASE_DRAFT_GENERATED_BY = "aide-lite release draft q48"
 GITHUB_RELEASE_PUBLICATION_STATUS = "local_draft_no_publish"
@@ -18425,8 +19240,18 @@ def git_branch_name(repo_root: Path) -> str:
 
 
 def release_bundle_id(repo_root: Path) -> str:
-    commit = git_commit_id(repo_root)
+    pack_root = export_pack_root(repo_root, EXPORT_PACK_ID)
+    commit = pack_manifest_scalars(pack_root).get("source_commit", "") or git_commit_id(repo_root)
     return f"{RELEASE_BUNDLE_NAME}-{short_sha(commit if commit != 'unavailable' else 'unknown')}"
+
+
+def release_source_repo_identity(repo_root: Path) -> str:
+    pack_root = export_pack_root(repo_root, EXPORT_PACK_ID)
+    return pack_manifest_scalars(pack_root).get("source_repo", "") or "not-recorded-in-pack"
+
+
+def release_source_branch_identity() -> str:
+    return "not-recorded-in-pack"
 
 
 def release_path_kind(path: Path) -> str:
@@ -18501,16 +19326,33 @@ def release_pack_status(repo_root: Path) -> tuple[str, list[str]]:
     return provenance_status, []
 
 
-def release_forbidden_archive_path(name: str) -> bool:
-    rel = normalize_rel(name).lower()
-    parts = [part for part in rel.split("/") if part]
-    if rel.startswith("/") or ".." in parts:
+def release_forbidden_archive_path(name: str | Path) -> bool:
+    # Reject Windows aliases and ADS before archive extraction. A later rglob
+    # cannot observe an NTFS alternate stream written through `file:stream`.
+    if isinstance(name, Path):
+        name = name.as_posix()
+    if not name or "\\" in name or name.startswith("/") or any(ord(char) < 32 for char in name):
         return True
-    if ".git" in parts or ".aide.local" in parts:
+    parts = name.split("/")
+    if any(not part or part in {".", ".."} or part.endswith((".", " ")) for part in parts):
         return True
-    if any(part == ".env" for part in parts):
+    for part in parts:
+        if any(char in '<>:"|?*' for char in part):
+            return True
+        stem = part.split(".", 1)[0].casefold()
+        if stem in {"con", "prn", "aux", "nul", "com¹", "com²", "com³", "lpt¹", "lpt²", "lpt³"}:
+            return True
+        if re.fullmatch(r"(?:com|lpt)[1-9]", stem) or re.search(r"~[0-9]+(?:\.|$)", part):
+            return True
+    rel = name.casefold()
+    if Path(name).is_absolute():
         return True
-    if "secrets" in parts:
+    folded_parts = [part.casefold() for part in parts]
+    if ".git" in folded_parts or ".aide.local" in folded_parts:
+        return True
+    if ".env" in folded_parts:
+        return True
+    if "secrets" in folded_parts:
         return True
     prompt_response_markers = [
         "raw_prompt",
@@ -18533,6 +19375,58 @@ def release_pack_files(pack_root: Path) -> list[Path]:
             continue
         files.append(path)
     return files
+
+
+def build_release_pack_projection(pack_root: Path, projection_root: Path) -> dict[str, object]:
+    if projection_root.exists():
+        shutil.rmtree(projection_root)
+    projection_root.mkdir(parents=True, exist_ok=True)
+
+    for source in release_pack_files(pack_root):
+        rel = normalize_rel(source.relative_to(pack_root))
+        if rel in CHECKSUM_EXCLUDED_PACK_FILES or rel == "checksums.json":
+            continue
+        copy_pack_file(source, projection_root / rel)
+
+    scalars = pack_manifest_scalars(pack_root)
+    source_commit = scalars.get("source_commit", "")
+    source_dirty_state = scalars.get("source_dirty_state", "")
+    if not source_commit or source_dirty_state not in {"true", "false"}:
+        raise ValueError("source pack manifest lacks valid release projection provenance")
+
+    files_root = projection_root / "files"
+    included_files = sorted(
+        normalize_rel(path.relative_to(projection_root))
+        for path in files_root.rglob("*")
+        if path.is_file()
+    )
+    write_text_if_changed(
+        projection_root / "manifest.yaml",
+        render_manifest(included_files, source_commit, source_dirty_state == "true"),
+    )
+    checksums = build_pack_checksums(projection_root)
+    write_text_if_changed(projection_root / "checksums.json", stable_json_text(checksums))
+    boundary_violations = validate_export_pack_boundary(projection_root)
+    write_text_if_changed(
+        projection_root / "export-report.md",
+        render_export_report(projection_root, included_files, boundary_violations),
+    )
+
+    forbidden = [
+        normalize_rel(path.relative_to(projection_root))
+        for path in projection_root.rglob("*")
+        if path.is_file() and release_forbidden_archive_path(path.relative_to(projection_root))
+    ]
+    checksum_ok, checksum_problems = validate_pack_checksums(projection_root)
+    if boundary_violations or forbidden or not checksum_ok:
+        problems = [*boundary_violations]
+        problems.extend(f"forbidden projected path: {rel}" for rel in sorted(forbidden))
+        problems.extend(checksum_problems)
+        raise ValueError("release pack projection invalid: " + "; ".join(problems[:10]))
+    return {
+        "included_files": included_files,
+        "checksum_count": len(checksums["checksums"]),
+    }
 
 
 def write_release_zip(pack_root: Path, zip_path: Path) -> None:
@@ -18574,20 +19468,27 @@ def release_install_notes_text(repo_root: Path, bundle_id: str, pack_status: str
         f"- source_pack: {source.get('path', EXPORT_PACK_PATH)}",
         f"- pack_status: {pack_status}",
         "- publication_status: local_preview_no_publish",
-        "- apply_mode_available: false",
+        "- apply_mode_available: true",
+        "- apply_mode_scope: bounded receipt-owned removal on Windows",
         "",
         "## Default Workflow",
         "",
         "1. Extract the archive into a review location.",
         "2. Inspect `manifest.yaml`, `checksums.json`, `install.md`, and `files/**`.",
-        "3. Run target-local AIDE Lite validation after import or extraction.",
-        "4. Use install, repair, upgrade, rollback, and uninstall commands in observe/plan/dry-run mode only.",
+        "3. From the extracted archive root, run the isolated dry-run and safe import commands from `install.md`.",
+        "4. Run target-local AIDE Lite validation after import.",
+        "5. On Windows, use `plan-removal --target <target-repo> --json`, then `apply-removal --target <target-repo> --expect-plan <plan_digest>` for receipt-owned removal.",
+        "6. Treat other lifecycle apply commands according to their separately documented boundaries.",
+        "7. `plan-removal` reports `apply_allowed: false` because that command is read-only; the separate `apply-removal` command accepts its exact digest on Windows.",
         "",
         "## Preservation Rules",
         "",
         "- Target `.aide/memory/**`, `.aide/queue/**`, evidence, golden tasks, generated reports, docs/canon, manual guidance, and existing tools are target state and must be preserved.",
         "- `.aide.local/**`, `.env`, secrets, raw prompts, raw responses, and provider credentials are never install candidates.",
-        "- Upgrade, repair, rollback, and uninstall are planning models only until a future reviewed apply phase exists.",
+        "- Windows `apply-removal` deletes unchanged receipt-owned regular files and an exact generated whole-file `AGENTS.md` scaffold; it removes only the receipt-owned managed section inside authored `AGENTS.md`, preserving every outside byte. A stale preview refuses before deletion; a change after removal begins returns `RECOVERY_REQUIRED` with the intent retained and earlier effects possible.",
+        "- Changed or already absent recorded paths remain partial: the runner and receipt stay and the command reports `PARTIAL_REMOVAL`.",
+        "- Non-Windows removal apply remains unavailable. An interrupted removal requires exact-intent reconciliation; a partial result retains the receipt and runner for further review.",
+        "- General install, repair, upgrade, and rollback apply have separate documented scopes; this removal command does not expand them.",
         "",
         "## Publication Boundary",
         "",
@@ -18596,15 +19497,110 @@ def release_install_notes_text(repo_root: Path, bundle_id: str, pack_status: str
     ]) + "\n"
 
 
-def copy_release_preview_or_placeholder(repo_root: Path, source_rel: str, destination_rel: str, title: str) -> None:
+def release_preview_markdown_source_head(path: Path) -> str:
+    if not path.exists():
+        return ""
+    for line in read_text(path).splitlines():
+        if line.startswith("source_head:"):
+            return line.split(":", 1)[1].strip()
+    return ""
+
+
+def release_preview_binding(repo_root: Path, source_rel: str, source_commit: str) -> tuple[str, str, str]:
     source = repo_root / source_rel
+    if not source.exists():
+        return "missing", "", f"source preview missing at {source_rel}"
+    observed_head = release_preview_markdown_source_head(source)
+    if not observed_head:
+        return "stale", "", "source preview Markdown does not record source_head"
+    json_rel = RELEASE_PREVIEW_SOURCE_PATHS.get(source_rel, "")
+    if not json_rel:
+        return "stale", observed_head, "source preview JSON path is not configured"
+    json_path = repo_root / json_rel
+    if not json_path.exists():
+        return "stale", observed_head, f"source preview JSON missing at {json_rel}"
+    try:
+        data = read_json_file(json_path)
+    except (OSError, json.JSONDecodeError, TypeError) as exc:
+        return "stale", observed_head, f"source preview JSON is malformed: {exc}"
+    if not isinstance(data, dict):
+        return "stale", observed_head, "source preview JSON must be an object"
+    json_head_value = data.get("source_head")
+    if not isinstance(json_head_value, str) or not json_head_value.strip():
+        return "stale", observed_head, "source preview JSON does not record source_head"
+    json_head = json_head_value.strip()
+    if json_head != observed_head:
+        return "stale", observed_head, "source preview Markdown and JSON identify different source heads"
+    if observed_head == source_commit:
+        return "bound", observed_head, "source_head matches export-pack source commit"
+    if not re.fullmatch(r"[0-9a-fA-F]{40}", observed_head) or not re.fullmatch(r"[0-9a-fA-F]{40}", source_commit):
+        return "stale", observed_head, "source preview and export source are not comparable full commit identities"
+
+    environment = os.environ.copy()
+    environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    try:
+        ancestor = subprocess.run(
+            ["git", "-C", str(repo_root), "merge-base", "--is-ancestor", observed_head, source_commit],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=environment,
+        )
+    except OSError as exc:
+        return "stale", observed_head, f"could not verify preview ancestry: {exc}"
+    if ancestor.returncode != 0:
+        return "stale", observed_head, "source_head is not the export-pack source commit or its ancestor"
+    try:
+        changed = subprocess.run(
+            ["git", "-C", str(repo_root), "diff", "--name-only", f"{observed_head}..{source_commit}"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=environment,
+        )
+    except OSError as exc:
+        return "stale", observed_head, f"could not compare preview source with export source: {exc}"
+    if changed.returncode != 0:
+        return "stale", observed_head, "could not compare preview source_head with export-pack source commit"
+    changed_paths = {normalize_rel(line.strip()) for line in changed.stdout.splitlines() if line.strip()}
+    if changed_paths and changed_paths.issubset(RELEASE_PREVIEW_GENERATED_PATHS):
+        return "bound", observed_head, "source_head is followed only by the committed preview projection"
+    return "stale", observed_head, "source_head does not cover the exported source revision"
+
+
+def release_preview_copy_is_blocked(path: Path) -> bool:
+    return path.exists() and "status: blocked_stale_source_preview" in read_text(path)
+
+
+def copy_release_preview_or_placeholder(
+    repo_root: Path,
+    source_rel: str,
+    destination_rel: str,
+    title: str,
+    source_commit: str,
+) -> None:
+    source = repo_root / source_rel
+    status, observed_head, reason = release_preview_binding(repo_root, source_rel, source_commit)
     destination = repo_root / destination_rel
-    if source.exists():
+    if status == "bound":
         write_text_if_changed(destination, read_text(source))
         return
     write_text_if_changed(
         destination,
-        f"# {title}\n\n- status: unavailable\n- reason: source preview missing at `{source_rel}`\n- publication_status: local_preview_no_publish\n",
+        "\n".join([
+            f"# {title}",
+            "",
+            "status: blocked_stale_source_preview",
+            f"source_preview: {source_rel}",
+            f"expected_source_commit: {source_commit}",
+            f"observed_source_head: {observed_head or 'unavailable'}",
+            f"reason: {reason}",
+            "publish_candidate: false",
+            "publication_status: local_preview_no_publish",
+            "",
+        ]),
     )
 
 
@@ -18663,20 +19659,33 @@ def write_release_checksums(repo_root: Path, bundle_id: str) -> dict[str, object
     return data
 
 
-def release_provenance_data(repo_root: Path, bundle_id: str, artifacts: list[dict[str, object]]) -> dict[str, object]:
+def release_provenance_data(
+    repo_root: Path,
+    bundle_id: str,
+    artifacts: list[dict[str, object]],
+    *,
+    source_commit: str | None = None,
+    source_branch: str | None = None,
+    dirty_state: bool | None = None,
+    dirty_state_error: str | None = None,
+) -> dict[str, object]:
     source = release_source_pack_ref(repo_root)
     git_ok, status_entries, git_error = git_status_short(repo_root)
+    resolved_commit = source_commit if source_commit is not None else git_commit_id(repo_root)
+    resolved_branch = source_branch if source_branch is not None else git_branch_name(repo_root)
+    resolved_dirty = dirty_state if dirty_state is not None else (bool(status_entries) if git_ok else True)
+    resolved_error = dirty_state_error if dirty_state_error is not None else ("" if git_ok else git_error)
     return {
         "schema_version": "aide.release-provenance.v0",
         "bundle_id": bundle_id,
-        "source_repo": normalize_rel(repo_root),
-        "source_commit": git_commit_id(repo_root),
-        "source_branch": git_branch_name(repo_root),
-        "dirty_state": bool(status_entries) if git_ok else True,
-        "dirty_state_error": "" if git_ok else git_error,
+        "source_repo": release_source_repo_identity(repo_root),
+        "source_commit": resolved_commit,
+        "source_branch": resolved_branch,
+        "dirty_state": resolved_dirty,
+        "dirty_state_error": resolved_error,
         "export_pack_manifest_sha256": source.get("manifest_sha256", ""),
         "export_pack_checksums_sha256": source.get("checksums_sha256", ""),
-        "generated_at_or_source_ref": f"source_commit:{git_commit_id(repo_root)}",
+        "generated_at_or_source_ref": f"source_commit:{resolved_commit}",
         "generated_by": RELEASE_GENERATED_BY,
         "artifact_hashes": {str(asset.get("path")): asset.get("sha256", "") for asset in artifacts},
         "preview_only": True,
@@ -18700,16 +19709,16 @@ def render_release_provenance_md(data: dict[str, object]) -> str:
     ]) + "\n"
 
 
-def release_assets_data(repo_root: Path) -> dict[str, object]:
+def release_assets_data(repo_root: Path, bundle_id: str | None = None) -> dict[str, object]:
     dist = release_dist_dir(repo_root)
     assets = []
     if dist.exists():
         for path in sorted(dist.iterdir()):
-            if path.is_file() and path.name != "release-assets.json":
+            if path.is_file() and path.name not in RELEASE_ASSET_INDEX_EXCLUDED_NAMES:
                 assets.append(release_asset_record(repo_root, path, "release_dist", "generated local release artifact"))
     return {
         "schema_version": "aide.release-assets.v0",
-        "bundle_id": release_bundle_id(repo_root),
+        "bundle_id": bundle_id or release_bundle_id(repo_root),
         "artifact_count": len(assets),
         "artifacts": assets,
         "no_publish": True,
@@ -18728,6 +19737,13 @@ def validate_release_checksums(repo_root: Path) -> tuple[bool, list[str]]:
     if not isinstance(entries, dict):
         return False, ["release checksums entry is not a mapping"]
     problems: list[str] = []
+    expected_entries = release_dist_checksum_entries(repo_root)
+    actual_names = {str(name) for name in entries}
+    expected_names = set(expected_entries)
+    for name in sorted(expected_names.difference(actual_names)):
+        problems.append(f"release checksums missing artifact: {name}")
+    for name in sorted(actual_names.difference(expected_names)):
+        problems.append(f"release checksums contain stale artifact: {name}")
     for name, expected in sorted(entries.items()):
         path = release_dist_dir(repo_root) / str(name)
         if not path.exists() or not path.is_file():
@@ -18741,20 +19757,205 @@ def validate_release_checksums(repo_root: Path) -> tuple[bool, list[str]]:
         problems.append("missing SHA256SUMS.txt")
     else:
         text = read_text(sha_path)
-        for name, expected in sorted(entries.items()):
-            if f"{expected}  {name}" not in text:
-                problems.append(f"SHA256SUMS missing entry: {name}")
+        expected_text = "".join(f"{digest}  {name}\n" for name, digest in sorted(entries.items()))
+        if text != expected_text:
+            problems.append("SHA256SUMS content does not exactly match release checksums JSON")
+    return not problems, problems
+
+
+def validate_release_asset_index(repo_root: Path) -> tuple[bool, list[str]]:
+    index_path = repo_root / RELEASE_ASSETS_JSON_PATH
+    if not index_path.exists():
+        return False, ["missing release asset index"]
+    try:
+        data = json.loads(read_text(index_path))
+    except (OSError, json.JSONDecodeError) as exc:
+        return False, [f"release asset index malformed: {exc}"]
+    records = data.get("artifacts", [])
+    if not isinstance(records, list):
+        return False, ["release asset index artifacts is not a list"]
+    problems: list[str] = []
+    dist = release_dist_dir(repo_root)
+    expected_paths = {
+        normalize_rel(path.relative_to(repo_root)): path
+        for path in sorted(dist.iterdir())
+        if path.is_file() and path.name not in RELEASE_ASSET_INDEX_EXCLUDED_NAMES
+    } if dist.exists() else {}
+    indexed: dict[str, dict[str, object]] = {}
+    for record in records:
+        if not isinstance(record, dict):
+            problems.append("release asset index contains a non-object record")
+            continue
+        rel = normalize_rel(str(record.get("path", "")))
+        if not rel:
+            problems.append("release asset index record missing path")
+            continue
+        if rel in indexed:
+            problems.append(f"release asset index contains duplicate path: {rel}")
+            continue
+        indexed[rel] = record
+    for rel in sorted(set(expected_paths).difference(indexed)):
+        problems.append(f"release asset index missing artifact: {rel}")
+    for rel in sorted(set(indexed).difference(expected_paths)):
+        problems.append(f"release asset index contains stale artifact: {rel}")
+    for rel in sorted(set(indexed).intersection(expected_paths)):
+        record = indexed[rel]
+        path = expected_paths[rel]
+        if str(record.get("sha256", "")) != sha256_file(path):
+            problems.append(f"release asset index checksum mismatch: {rel}")
+        if record.get("size_bytes") != path.stat().st_size:
+            problems.append(f"release asset index size mismatch: {rel}")
+    if data.get("artifact_count") != len(records):
+        problems.append("release asset index artifact_count does not match records")
     return not problems, problems
 
 
 def archive_member_names(archive_path: Path) -> list[str]:
+    names, _unsafe, _uncompressed = inspect_release_archive_members(archive_path)
+    return sorted(names)
+
+
+class ReleaseBoundedTarInfo(tarfile.TarInfo):
+    def _proc_member(self, archive: tarfile.TarFile) -> tarfile.TarInfo:
+        # TarInfo processes PAX/GNU metadata before yielding a member. Refuse
+        # oversized declarations before its parser allocates their contents.
+        if self.type == tarfile.GNUTYPE_SPARSE:
+            raise tarfile.ReadError("archive sparse metadata rejected")
+        if self.type in {
+            tarfile.XHDTYPE, tarfile.XGLTYPE, tarfile.SOLARIS_XHDTYPE,
+            tarfile.GNUTYPE_LONGNAME, tarfile.GNUTYPE_LONGLINK,
+        } and self.size > RELEASE_VALIDATION_MAX_TAR_METADATA_BYTES:
+            raise tarfile.ReadError("archive tar metadata exceeds validation limit")
+        return super()._proc_member(archive)
+
+
+class ReleaseBoundedTarReader:
+    def __init__(self, source: object) -> None:
+        self.source = source
+        self.bytes_read = 0
+
+    def read(self, size: int = -1) -> bytes:
+        if size < 0 or size > RELEASE_VALIDATION_MAX_TAR_STREAM_BYTES - self.bytes_read:
+            raise ValueError("archive decompressed tar stream exceeds validation limit")
+        data = self.source.read(size)
+        self.bytes_read += len(data)
+        return data
+
+
+def inspect_release_archive_members(archive_path: Path) -> tuple[list[str], list[str], int]:
+    if archive_path.stat().st_size > RELEASE_VALIDATION_MAX_ARCHIVE_BYTES:
+        raise ValueError("archive compressed size exceeds validation limit")
+    names: list[str] = []
+    unsafe: list[str] = []
+    uncompressed = 0
     if archive_path.name.endswith(".zip"):
+        # ZIP central-directory parsing is bounded by the compressed-file cap.
         with zipfile.ZipFile(archive_path, "r") as archive:
-            return sorted(archive.namelist())
-    if archive_path.name.endswith(".tar.gz"):
-        with tarfile.open(archive_path, "r:gz") as archive:
-            return sorted(member.name for member in archive.getmembers())
-    return []
+            entries = (
+                (info.filename, info.file_size, info.is_dir() or stat.S_IFMT(info.external_attr >> 16) not in {0, stat.S_IFREG})
+                for info in archive.infolist()
+            )
+            for name, size, special in entries:
+                names.append(name)
+                if len(names) > RELEASE_VALIDATION_MAX_MEMBERS:
+                    raise ValueError("archive member count exceeds validation limit")
+                if size < 0 or size > RELEASE_VALIDATION_MAX_UNCOMPRESSED_BYTES - uncompressed:
+                    raise ValueError("archive uncompressed size exceeds validation limit")
+                uncompressed += size
+                if special:
+                    unsafe.append(name)
+    elif archive_path.name.endswith(".tar.gz"):
+        # Stream headers and stop before decompressing a declared over-limit
+        # member; getmembers() would parse the entire untrusted archive first.
+        with gzip.open(archive_path, "rb") as decompressed:
+            bounded = ReleaseBoundedTarReader(decompressed)
+            with tarfile.open(fileobj=bounded, mode="r|", tarinfo=ReleaseBoundedTarInfo) as archive:
+                for member in archive:
+                    names.append(member.name)
+                    if len(names) > RELEASE_VALIDATION_MAX_MEMBERS:
+                        raise ValueError("archive member count exceeds validation limit")
+                    if member.size < 0 or member.size > RELEASE_VALIDATION_MAX_UNCOMPRESSED_BYTES - uncompressed:
+                        raise ValueError("archive uncompressed size exceeds validation limit")
+                    uncompressed += member.size
+                    if not member.isfile() or member.sparse is not None:
+                        unsafe.append(member.name)
+    else:
+        raise ValueError("unsupported release archive format")
+    return names, unsafe, uncompressed
+
+
+@contextmanager
+def public_archive_fixture(prefix: str):
+    """Public packaging fixtures inside an authenticated job remain observable.
+
+    Windows Python private temp directories exclude the separate controller
+    account. Only these public archive/test fixtures inherit the existing job
+    temp ACL; unrelated and unmanaged temporary directories stay private.
+    """
+    if prefix not in {"aide-release-validate-", "aide-release-pack-", "aide-stable-pack-",
+                      "aide-public-release-test-"}:
+        raise ValueError("unknown public archive fixture namespace")
+    if os.name != "nt" or not os.environ.get("AIDE_JOB_ID"):
+        with tempfile.TemporaryDirectory(prefix=prefix) as directory:
+            yield directory
+        return
+    source_root = repo_root_from_script()
+    if str(source_root) not in sys.path:
+        sys.path.insert(0, str(source_root))
+    from core.execution import managed_workspace
+    control = managed_workspace.root_path(os.environ["AIDE_JOB_CONTROL"])
+    active = control / "active.json"
+    for attempt in range(3):
+        try:
+            seed = managed_workspace.read_json(active)
+            record = managed_workspace.current_context(seed["job"]["cwd"])
+            break
+        except PermissionError as exc:
+            # The controller replaces this read-only checkpoint while sampling.
+            # Retry only this exact metadata read, before any fixture allocation;
+            # authentication remains mandatory and persistent denial fails closed.
+            if (attempt == 2 or exc.filename is None
+                    or os.path.normcase(os.path.abspath(exc.filename))
+                    != os.path.normcase(str(active))):
+                raise
+            print(f"Public fixture active metadata read: errno={exc.errno} "
+                  f"winerror={getattr(exc, 'winerror', None)}; retry={attempt + 1}/2",
+                  file=sys.stderr)
+            time.sleep(0.05)
+    parent = managed_workspace.root_path(os.environ["AIDE_JOB_TMP"])
+    owned_parent = managed_workspace.root_path(str(Path(record["scratch"]) / "tmp"))
+    if not parent.is_relative_to(owned_parent):
+        raise managed_workspace.WorkspaceRefused("public fixture must use this admitted job temp")
+    fixture = parent / (prefix + uuid.uuid4().hex)
+    fixture.mkdir(mode=0o777)
+    original = managed_workspace.ordinary(fixture, directory=True)
+    identity = (original.st_dev, original.st_ino)
+    try:
+        yield str(fixture)
+    finally:
+        current = managed_workspace.ordinary(fixture, directory=True)
+        if (current.st_dev, current.st_ino) != identity or fixture.resolve(strict=True).parent != parent:
+            raise managed_workspace.WorkspaceRefused("public fixture identity changed before retirement")
+        for index, entry in enumerate(fixture.rglob("*")):
+            if index >= 100000:
+                raise managed_workspace.WorkspaceRefused("public fixture retirement entry bound")
+            info = entry.lstat()
+            if stat.S_ISDIR(info.st_mode):
+                managed_workspace.ordinary(entry, directory=True)
+            else:
+                managed_workspace.ordinary(entry)
+        def remove_readonly_file(function, path, exc):
+            # Git fixtures can have the ordinary DOS read-only file flag.
+            # This does not alter ACLs, ownership or directory access.
+            if not isinstance(exc, PermissionError) or function not in {os.unlink, os.remove}:
+                raise exc
+            target = Path(path)
+            managed_workspace.ordinary(target)
+            if not target.resolve(strict=True).is_relative_to(fixture):
+                raise managed_workspace.WorkspaceRefused("public fixture cleanup target escaped")
+            target.chmod(stat.S_IWRITE | stat.S_IREAD)
+            function(path)
+        shutil.rmtree(fixture, onexc=remove_readonly_file)
 
 
 def validate_release_archive(repo_root: Path, archive_rel: str) -> dict[str, object]:
@@ -18772,14 +19973,23 @@ def validate_release_archive(repo_root: Path, archive_rel: str) -> dict[str, obj
         result["problems"] = [f"archive missing: {archive_rel}"]
         return result
     try:
-        names = archive_member_names(archive_path)
-    except (OSError, zipfile.BadZipFile, tarfile.TarError) as exc:
+        names, unsafe, _uncompressed = inspect_release_archive_members(archive_path)
+    except (OSError, ValueError, zipfile.BadZipFile, tarfile.TarError) as exc:
         result["problems"] = [f"archive read failed: {exc}"]
         return result
     forbidden = [name for name in names if release_forbidden_archive_path(name)]
     if forbidden:
         problems.append("forbidden archive paths: " + ", ".join(forbidden[:5]))
     root_prefix = f"{RELEASE_ARCHIVE_ROOT}/"
+    outside_root = [name for name in names if not name.startswith(root_prefix)]
+    if outside_root:
+        problems.append("archive members outside pack root: " + ", ".join(outside_root[:5]))
+    if len(names) != len(set(names)):
+        problems.append("duplicate archive member names")
+    if len(names) != len({name.casefold() for name in names}):
+        problems.append("Windows case-alias archive members")
+    if unsafe:
+        problems.append("archive non-regular members rejected: " + ", ".join(unsafe[:5]))
     root_present = any(name.startswith(root_prefix) for name in names)
     if not root_present:
         problems.append(f"archive root missing: {RELEASE_ARCHIVE_ROOT}/")
@@ -18790,7 +20000,15 @@ def validate_release_archive(repo_root: Path, archive_rel: str) -> dict[str, obj
             required_present.append(rel)
         else:
             problems.append(f"archive missing required file: {member}")
-    with tempfile.TemporaryDirectory(prefix="aide-release-validate-") as temp_name:
+    if problems:
+        result.update({
+            "root_present": root_present,
+            "required_files_present": required_present,
+            "forbidden_paths": forbidden,
+            "problems": problems,
+        })
+        return result
+    with public_archive_fixture("aide-release-validate-") as temp_name:
         temp_root = Path(temp_name)
         try:
             if archive_path.name.endswith(".zip"):
@@ -18798,9 +20016,6 @@ def validate_release_archive(repo_root: Path, archive_rel: str) -> dict[str, obj
                     archive.extractall(temp_root)
             else:
                 with tarfile.open(archive_path, "r:gz") as archive:
-                    for member in archive.getmembers():
-                        if member.issym() or member.islnk():
-                            problems.append(f"archive link member rejected: {member.name}")
                     archive.extractall(temp_root)
         except (OSError, zipfile.BadZipFile, tarfile.TarError) as exc:
             problems.append(f"fixture extraction failed: {exc}")
@@ -18817,6 +20032,23 @@ def validate_release_archive(repo_root: Path, archive_rel: str) -> dict[str, obj
         ]
         if extracted_forbidden:
             problems.append("fixture forbidden paths: " + ", ".join(extracted_forbidden[:5]))
+        if extracted_root.exists():
+            checksum_ok, checksum_problems = validate_pack_checksums(extracted_root)
+            if not checksum_ok:
+                problems.append("fixture pack checksum failure: " + "; ".join(checksum_problems[:5]))
+            manifest_files = set(pack_manifest_list(extracted_root, "included_files"))
+            actual_payload = {
+                normalize_rel(path.relative_to(extracted_root))
+                for path in (extracted_root / "files").rglob("*")
+                if path.is_file()
+            }
+            if manifest_files != actual_payload:
+                missing = sorted(actual_payload.difference(manifest_files))
+                stale = sorted(manifest_files.difference(actual_payload))
+                if missing:
+                    problems.append("fixture manifest missing payload: " + ", ".join(missing[:5]))
+                if stale:
+                    problems.append("fixture manifest lists absent payload: " + ", ".join(stale[:5]))
     result.update({
         "result": "PASS" if not problems else "FAIL",
         "root_present": root_present,
@@ -18839,6 +20071,13 @@ def validate_release_artifacts(repo_root: Path, require_validation_files: bool =
         checks.append(Check("PASS", "release checksums validate"))
     else:
         checks.append(Check("FAIL", "release checksum problem: " + "; ".join(checksum_problems[:5])))
+    asset_index_ok, asset_index_problems = validate_release_asset_index(repo_root)
+    if asset_index_ok:
+        checks.append(Check("PASS", "release asset index validates"))
+    else:
+        checks.append(Check("FAIL", "release asset index problem: " + "; ".join(asset_index_problems[:5])))
+    for rel in [RELEASE_CHANGELOG_PREVIEW_PATH, RELEASE_RELEASE_NOTES_PREVIEW_PATH]:
+        check_pass(checks, not release_preview_copy_is_blocked(repo_root / rel), f"release preview is source-bound: {rel}")
     fixture_results = [
         validate_release_archive(repo_root, RELEASE_ZIP_PATH),
         validate_release_archive(repo_root, RELEASE_TAR_GZ_PATH),
@@ -18876,6 +20115,10 @@ def validate_release_artifacts(repo_root: Path, require_validation_files: bool =
         "checksum_validation": {
             "result": "PASS" if checksum_ok else "FAIL",
             "problems": checksum_problems,
+        },
+        "asset_index_validation": {
+            "result": "PASS" if asset_index_ok else "FAIL",
+            "problems": asset_index_problems,
         },
         "pack_status": pack_status,
         "secret_scan": {
@@ -18947,14 +20190,22 @@ def build_release_bundle_outputs(repo_root: Path) -> dict[str, object]:
     pack_status, pack_problems = release_pack_status(repo_root)
     if pack_problems:
         raise ValueError("pack-status failed for release bundle: " + "; ".join(pack_problems[:5]))
-    bundle_id = release_bundle_id(repo_root)
+    pack_provenance = pack_manifest_scalars(pack_root)
+    source_commit = pack_provenance["source_commit"]
+    source_branch = release_source_branch_identity()
+    source_dirty_state = pack_provenance["source_dirty_state"] == "true"
+    source_dirty_error = ""
+    bundle_id = f"{RELEASE_BUNDLE_NAME}-{short_sha(source_commit)}"
     dist = release_dist_dir(repo_root)
     dist.mkdir(parents=True, exist_ok=True)
-    write_release_zip(pack_root, repo_root / RELEASE_ZIP_PATH)
-    write_release_tar_gz(pack_root, repo_root / RELEASE_TAR_GZ_PATH)
+    with public_archive_fixture("aide-release-pack-") as temp_name:
+        projected_pack_root = Path(temp_name) / RELEASE_ARCHIVE_ROOT
+        build_release_pack_projection(pack_root, projected_pack_root)
+        write_release_zip(projected_pack_root, repo_root / RELEASE_ZIP_PATH)
+        write_release_tar_gz(projected_pack_root, repo_root / RELEASE_TAR_GZ_PATH)
     write_text_if_changed(repo_root / RELEASE_INSTALL_NOTES_PATH, release_install_notes_text(repo_root, bundle_id, pack_status))
-    copy_release_preview_or_placeholder(repo_root, CHANGELOG_PREVIEW_MD_PATH, RELEASE_CHANGELOG_PREVIEW_PATH, "AIDE Changelog Preview")
-    copy_release_preview_or_placeholder(repo_root, RELEASE_NOTES_PREVIEW_MD_PATH, RELEASE_RELEASE_NOTES_PREVIEW_PATH, "AIDE Release Notes Preview")
+    copy_release_preview_or_placeholder(repo_root, CHANGELOG_PREVIEW_MD_PATH, RELEASE_CHANGELOG_PREVIEW_PATH, "AIDE Changelog Preview", source_commit)
+    copy_release_preview_or_placeholder(repo_root, RELEASE_NOTES_PREVIEW_MD_PATH, RELEASE_RELEASE_NOTES_PREVIEW_PATH, "AIDE Release Notes Preview", source_commit)
 
     preliminary_assets = [
         release_asset_record(repo_root, repo_root / RELEASE_ZIP_PATH, EXPORT_PACK_PATH, "archive generated from validated export pack"),
@@ -18965,34 +20216,43 @@ def build_release_bundle_outputs(repo_root: Path) -> dict[str, object]:
     ]
     write_text_if_changed(repo_root / RELEASE_MANIFEST_PATH, render_release_manifest_yaml(bundle_id, preliminary_assets))
     preliminary_assets.append(release_asset_record(repo_root, repo_root / RELEASE_MANIFEST_PATH, "release_model", "release manifest"))
-    provenance = release_provenance_data(repo_root, bundle_id, preliminary_assets)
+    provenance = release_provenance_data(
+        repo_root,
+        bundle_id,
+        preliminary_assets,
+        source_commit=source_commit,
+        source_branch=source_branch,
+        dirty_state=source_dirty_state,
+        dirty_state_error=source_dirty_error,
+    )
     write_text_if_changed(repo_root / RELEASE_PROVENANCE_JSON_PATH, stable_json_text(provenance))
     write_text_if_changed(repo_root / LATEST_RELEASE_PROVENANCE_MD_PATH, render_release_provenance_md(provenance))
 
-    assets_data = release_assets_data(repo_root)
-    write_text_if_changed(repo_root / RELEASE_ASSETS_JSON_PATH, stable_json_text(assets_data))
-    assets_data = release_assets_data(repo_root)
+    checksums = write_release_checksums(repo_root, bundle_id)
+    assets_data = release_assets_data(repo_root, bundle_id)
     write_text_if_changed(repo_root / RELEASE_ASSETS_JSON_PATH, stable_json_text(assets_data))
     write_text_if_changed(repo_root / LATEST_RELEASE_ARTIFACTS_JSON_PATH, stable_json_text(assets_data))
-
-    checksums = write_release_checksums(repo_root, bundle_id)
     validation = validate_release_artifacts(repo_root, require_validation_files=False)
     write_text_if_changed(repo_root / RELEASE_VALIDATION_JSON_PATH, stable_json_text(validation))
     validation_md = render_release_validation_md(validation)
     write_text_if_changed(repo_root / RELEASE_VALIDATION_MD_PATH, validation_md)
     write_text_if_changed(repo_root / LATEST_RELEASE_VALIDATION_MD_PATH, validation_md)
+    validation = validate_release_artifacts(repo_root, require_validation_files=True)
+    write_text_if_changed(repo_root / RELEASE_VALIDATION_JSON_PATH, stable_json_text(validation))
+    validation_md = render_release_validation_md(validation)
+    write_text_if_changed(repo_root / RELEASE_VALIDATION_MD_PATH, validation_md)
+    write_text_if_changed(repo_root / LATEST_RELEASE_VALIDATION_MD_PATH, validation_md)
 
-    artifacts = release_assets_data(repo_root).get("artifacts", [])
-    git_ok, status_entries, _git_error = git_status_short(repo_root)
+    artifacts = assets_data.get("artifacts", [])
     bundle = {
         "schema_version": "aide.release-bundle.v0",
         "bundle_id": bundle_id,
         "bundle_name": RELEASE_BUNDLE_NAME,
         "generated_by": RELEASE_GENERATED_BY,
-        "source_repo": normalize_rel(repo_root),
-        "source_commit": git_commit_id(repo_root),
-        "source_branch": git_branch_name(repo_root),
-        "dirty_state": bool(status_entries) if git_ok else True,
+        "source_repo": release_source_repo_identity(repo_root),
+        "source_commit": source_commit,
+        "source_branch": source_branch,
+        "dirty_state": source_dirty_state,
         "source_pack_ref": release_source_pack_ref(repo_root),
         "artifacts": artifacts if isinstance(artifacts, list) else [],
         "checksums": checksums,
@@ -19051,6 +20311,8 @@ def validate_release_files(repo_root: Path, require_outputs: bool = True) -> lis
 
 
 def command_release_bundle(args: argparse.Namespace) -> int:
+    if not source_maintainer_job_guard(args.repo_root, packaging=True):
+        return 1
     try:
         bundle = build_release_bundle_outputs(args.repo_root)
     except ValueError as exc:
@@ -19074,7 +20336,246 @@ def command_release_bundle(args: argparse.Namespace) -> int:
     return 1 if validation.get("result") == "FAIL" else 0
 
 
+STABLE_RELEASE_DIR = ".aide/release/stable"
+STABLE_RELEASE_PROFILE = "aide-lite-local-windows"
+
+
+def stable_release_paths(version: str) -> dict[str, str]:
+    if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version):
+        raise ValueError("stable release version must be MAJOR.MINOR.PATCH without leading zeros")
+    base = f"{STABLE_RELEASE_DIR}/aide-lite-v{version}"
+    return {
+        "zip": f"{base}.zip",
+        "tar_gz": f"{base}.tar.gz",
+        "manifest": f"{base}.manifest.json",
+        "sha256sums": f"{base}.SHA256SUMS.txt",
+    }
+
+
+def stable_release_cli_forms(repo_root: Path) -> list[str]:
+    policy = read_text(repo_root / ".aide/policies/release-versioning.yaml")
+    lines = policy.splitlines()
+    try:
+        start = lines.index("  candidate_public_cli:") + 1
+    except ValueError as exc:
+        raise ValueError("release versioning policy lacks candidate_public_cli") from exc
+    forms: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("    - "):
+            forms.append(line[6:].strip())
+        else:
+            break
+    if len(forms) < 20 or len(forms) != len(set(forms)):
+        raise ValueError("release versioning candidate CLI list is missing or duplicated")
+    return forms
+
+
+def stable_release_source_tree(repo_root: Path, commit: str) -> str:
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("stable release pack source commit is not a full Git object")
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "show", "-s", "--format=%T", commit],
+        check=False, capture_output=True, text=True, encoding="utf-8",
+    )
+    tree = result.stdout.strip()
+    if result.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", tree):
+        raise ValueError("stable release pack source tree is unavailable")
+    return tree
+
+
+def build_stable_release_candidate(repo_root: Path, version: str) -> dict[str, object]:
+    paths = stable_release_paths(version)
+    if version != "1.0.0":
+        raise ValueError("this first-stable builder requires 1.0.0 and an empty predecessor matrix")
+    existing_tag = subprocess.run(
+        ["git", "-C", str(repo_root), "tag", "--list", f"aide-lite-v{version}"],
+        check=False, capture_output=True, text=True, encoding="utf-8",
+    )
+    if existing_tag.returncode != 0 or existing_tag.stdout.strip():
+        raise ValueError("stable release tag already exists or local tag state is unavailable")
+    output_root = repo_root / STABLE_RELEASE_DIR
+    for path in (repo_root / ".aide", repo_root / ".aide/release", output_root):
+        if path.exists() and (path.is_symlink() or bool(getattr(path, "is_junction", lambda: False)())):
+            raise ValueError("stable release output path is redirected")
+    allowed_outputs = set(paths.values())
+    if output_root.exists():
+        for path in output_root.iterdir():
+            if (not path.is_file() or path.is_symlink()
+                    or bool(getattr(path, "is_junction", lambda: False)())
+                    or path.stat().st_nlink != 1
+                    or normalize_rel(path.relative_to(repo_root)) not in allowed_outputs):
+                raise ValueError("stable release output contains unknown or redirected material")
+    git_ok, changes, _error = git_status_short(repo_root)
+    if not git_ok or any(normalize_rel(path).rstrip("/") not in (allowed_outputs | {STABLE_RELEASE_DIR}) for _status, path in changes):
+        raise ValueError("stable release build requires clean source outside its exact output files")
+    pack_status, problems = release_pack_status(repo_root)
+    if problems or pack_status not in {"PASS", "PASS_SOURCE_ANCESTOR"}:
+        raise ValueError("stable release source pack failed clean provenance: " + "; ".join(problems[:5]))
+    pack_root = export_pack_root(repo_root, EXPORT_PACK_ID)
+    scalars = pack_manifest_scalars(pack_root)
+    if scalars.get("source_dirty_state") != "false":
+        raise ValueError("stable release source pack records dirty source")
+    source_commit = scalars.get("source_commit", "")
+    source_tree = stable_release_source_tree(repo_root, source_commit)
+    policy_path = repo_root / ".aide/policies/release-versioning.yaml"
+    marker = {
+        "schema_version": "aide.stable-release-identity.v1",
+        "artifact_state": "immutable_release_payload",
+        "intended_channel": "stable",
+        "release_axis": "aide_lite_portable_package",
+        "version": version,
+        "tag": f"aide-lite-v{version}",
+        "profile_id": STABLE_RELEASE_PROFILE,
+        "support_tier_candidate": "T3",
+        "support_mode": "companion",
+        "lifecycle_apply_platform": "Windows only; exact tested environment in effect evidence",
+        "offline_scope": "local CLI after archive acquisition; no native network isolation claim",
+        "predecessor_matrix": [],
+        "public_cli_forms": stable_release_cli_forms(repo_root),
+        "version_policy_sha256": sha256_file(policy_path),
+        "source_repo": scalars.get("source_repo", ""),
+        "source_commit": source_commit,
+        "source_tree": source_tree,
+        "source_pack_checksums_sha256": sha256_file(pack_root / "checksums.json"),
+    }
+    output_root.mkdir(parents=True, exist_ok=True)
+    with public_archive_fixture("aide-stable-pack-") as temp_name:
+        projected = Path(temp_name) / RELEASE_ARCHIVE_ROOT
+        build_release_pack_projection(pack_root, projected)
+        write_text_if_changed(projected / "stable-release.json", stable_json_text(marker))
+        write_text_if_changed(projected / "checksums.json", stable_json_text(build_pack_checksums(projected)))
+        checksum_ok, checksum_problems = validate_pack_checksums(projected)
+        if not checksum_ok:
+            raise ValueError("stable projected pack checksum failure: " + "; ".join(checksum_problems[:5]))
+        write_release_zip(projected, repo_root / paths["zip"])
+        write_release_tar_gz(projected, repo_root / paths["tar_gz"])
+    archives = {
+        key: {"path": paths[key], "sha256": sha256_file(repo_root / paths[key]), "size_bytes": (repo_root / paths[key]).stat().st_size}
+        for key in ("zip", "tar_gz")
+    }
+    manifest = {
+        "schema_version": "aide.stable-release-candidate.v1",
+        "status": "frozen_release_assets",
+        "identity": marker,
+        "archives": archives,
+        "review_required": "independent technical ACCEPT for exact release and effect",
+        "publication_evidence": "separate exact effect record required",
+    }
+    write_text_if_changed(repo_root / paths["manifest"], stable_json_text(manifest))
+    checksum_lines = [
+        f"{sha256_file(repo_root / paths[key])}  {Path(paths[key]).name}"
+        for key in ("zip", "tar_gz", "manifest")
+    ]
+    write_text_if_changed(repo_root / paths["sha256sums"], "\n".join(checksum_lines) + "\n")
+    result = validate_stable_release_candidate(repo_root, version)
+    if result["result"] != "PASS":
+        raise ValueError("stable release candidate validation failed: " + "; ".join(result["problems"][:5]))
+    return manifest
+
+
+def validate_stable_release_candidate(repo_root: Path, version: str) -> dict[str, object]:
+    paths = stable_release_paths(version)
+    problems: list[str] = []
+    try:
+        manifest = json.loads(read_text(repo_root / paths["manifest"]))
+        identity = manifest["identity"]
+        archives = manifest["archives"]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return {"result": "FAIL", "problems": [f"stable manifest unavailable or malformed: {exc}"]}
+    if not isinstance(manifest, dict) or not isinstance(identity, dict) or not isinstance(archives, dict):
+        return {"result": "FAIL", "problems": ["stable manifest fields have invalid types"]}
+    if manifest.get("status") != "frozen_release_assets" or identity.get("version") != version:
+        problems.append("stable candidate identity or status mismatch")
+    if identity.get("profile_id") != STABLE_RELEASE_PROFILE or identity.get("artifact_state") != "immutable_release_payload" or identity.get("intended_channel") != "stable":
+        problems.append("stable profile identity mismatch")
+    if identity.get("public_cli_forms") != stable_release_cli_forms(repo_root):
+        problems.append("stable public CLI forms differ from version policy")
+    if identity.get("version_policy_sha256") != sha256_file(repo_root / ".aide/policies/release-versioning.yaml"):
+        problems.append("stable version policy digest mismatch")
+    pack_root = export_pack_root(repo_root, EXPORT_PACK_ID)
+    if identity.get("source_commit") != pack_manifest_scalars(pack_root).get("source_commit"):
+        problems.append("stable source commit differs from current validated pack")
+    try:
+        if identity.get("source_tree") != stable_release_source_tree(repo_root, identity.get("source_commit", "")):
+            problems.append("stable source tree mismatch")
+    except ValueError as exc:
+        problems.append(str(exc))
+    source_checksums_path = pack_root / "checksums.json"
+    if not source_checksums_path.is_file() or identity.get("source_pack_checksums_sha256") != sha256_file(source_checksums_path):
+        problems.append("stable source pack checksum digest mismatch")
+    pack_status, pack_problems = release_pack_status(repo_root)
+    if pack_problems or pack_status not in {"PASS", "PASS_SOURCE_ANCESTOR"}:
+        problems.append("stable source pack provenance no longer passes")
+    for key in ("zip", "tar_gz"):
+        path = repo_root / paths[key]
+        recorded = archives.get(key, {}) if isinstance(archives, dict) else {}
+        if not path.is_file() or recorded.get("path") != paths[key]:
+            problems.append(f"stable {key} asset missing or path mismatch")
+            continue
+        if recorded.get("sha256") != sha256_file(path) or recorded.get("size_bytes") != path.stat().st_size:
+            problems.append(f"stable {key} asset digest or size mismatch")
+        archive_result = validate_release_archive(repo_root, paths[key])
+        if archive_result["result"] != "PASS":
+            problems.extend(f"stable {key}: {item}" for item in archive_result["problems"])
+        marker_name = f"{RELEASE_ARCHIVE_ROOT}/stable-release.json"
+        try:
+            if key == "zip":
+                with zipfile.ZipFile(path) as archive:
+                    embedded = json.loads(archive.read(marker_name))
+            else:
+                with tarfile.open(path, "r:gz") as archive:
+                    member = archive.extractfile(marker_name)
+                    if member is None:
+                        raise ValueError("stable identity member missing")
+                    embedded = json.loads(member.read())
+            if embedded != identity:
+                problems.append(f"stable {key} embedded identity mismatch")
+        except (OSError, ValueError, KeyError, zipfile.BadZipFile, tarfile.TarError) as exc:
+            problems.append(f"stable {key} identity unreadable: {exc}")
+    expected_checksums = "\n".join(
+        f"{sha256_file(repo_root / paths[key])}  {Path(paths[key]).name}"
+        for key in ("zip", "tar_gz", "manifest") if (repo_root / paths[key]).is_file()
+    ) + "\n"
+    if not (repo_root / paths["sha256sums"]).is_file() or read_text(repo_root / paths["sha256sums"]) != expected_checksums:
+        problems.append("stable SHA256SUMS mismatch")
+    return {"result": "FAIL" if problems else "PASS", "problems": problems, "manifest": paths["manifest"]}
+
+
+def command_release_stable_build(args: argparse.Namespace) -> int:
+    if not (args.repo_root / "core/execution/managed_workspace.py").is_file():
+        print("result: REFUSED\nsource-only managed release runner required")
+        return 1
+    if not source_maintainer_job_guard(args.repo_root, canonical_paths=(".aide/release",)):
+        return 1
+    try:
+        manifest = build_stable_release_candidate(args.repo_root, args.version)
+    except (OSError, ValueError) as exc:
+        print(f"stable release candidate: FAIL\nerror: {exc}")
+        return 1
+    print("stable release candidate: PASS")
+    print(f"version: {args.version}")
+    print(f"source_commit: {manifest['identity']['source_commit']}")
+    print("published: false")
+    return 0
+
+
+def command_release_stable_validate(args: argparse.Namespace) -> int:
+    if not (args.repo_root / "core/execution/managed_workspace.py").is_file():
+        print("result: REFUSED\nsource-only managed release runner required")
+        return 1
+    if not source_maintainer_job_guard(args.repo_root, canonical_paths=(".aide/release",)):
+        return 1
+    result = validate_stable_release_candidate(args.repo_root, args.version)
+    print(f"stable release candidate: {result['result']}")
+    for problem in result["problems"]:
+        print(f"- FAIL {problem}")
+    print("published: false")
+    return 0 if result["result"] == "PASS" else 1
+
+
 def command_release_validate(args: argparse.Namespace) -> int:
+    if not source_maintainer_job_guard(args.repo_root, packaging=True):
+        return 1
     checks = validate_release_files(args.repo_root, require_outputs=True)
     validation = validate_release_artifacts(args.repo_root)
     write_text_if_changed(args.repo_root / RELEASE_VALIDATION_JSON_PATH, stable_json_text(validation))
@@ -19244,6 +20745,8 @@ def github_release_suggested_title(repo_root: Path) -> str:
 def github_release_asset_record(repo_root: Path, rel: str, kind: str, required: bool, order: int) -> dict[str, object]:
     path = repo_root / rel
     present = path.exists() and path.is_file()
+    blocked_stale = present and kind in {"changelog_preview_copy", "release_notes_preview_copy"} and release_preview_copy_is_blocked(path)
+    validation_status = "blocked_stale" if blocked_stale else ("present" if present else ("missing_required" if required else "missing_optional"))
     return {
         "asset_id": Path(rel).name,
         "path": normalize_rel(rel),
@@ -19252,10 +20755,10 @@ def github_release_asset_record(repo_root: Path, rel: str, kind: str, required: 
         "size_bytes": path.stat().st_size if present else 0,
         "sha256": sha256_file(path) if present else "",
         "required": required,
-        "publish_candidate": present,
+        "publish_candidate": present and not blocked_stale,
         "upload_order": order,
-        "validation_status": "present" if present else ("missing_required" if required else "missing_optional"),
-        "notes": "local draft asset candidate; no upload performed in Q48" if present else "asset missing from local Q47 bundle",
+        "validation_status": validation_status,
+        "notes": "source preview is stale for the exported revision" if blocked_stale else ("local draft asset candidate; no upload performed in Q48" if present else "asset missing from local Q47 bundle"),
     }
 
 
@@ -19268,8 +20771,8 @@ def collect_github_release_assets(repo_root: Path) -> tuple[list[dict[str, objec
         asset = github_release_asset_record(repo_root, rel, kind, True, order)
         order += 1
         assets.append(asset)
-        if asset["validation_status"] == "missing_required":
-            blockers.append(f"missing required release asset: {rel}")
+        if asset["validation_status"] != "present":
+            blockers.append(f"required release asset is not publishable ({asset['validation_status']}): {rel}")
     for rel, kind in GITHUB_RELEASE_OPTIONAL_ASSETS:
         asset = github_release_asset_record(repo_root, rel, kind, False, order)
         order += 1
@@ -19330,7 +20833,7 @@ def github_release_known_risks(repo_root: Path) -> list[str]:
         "This is a local draft only; no GitHub publication, tag, or upload has occurred.",
         "Suggested tag naming still requires human/operator review.",
         "Dominium and Eureka target install readiness are not claimed by Q48.",
-        "Install, repair, upgrade, rollback, and uninstall remain plan/dry-run models unless a future phase adds apply behavior.",
+        "Q43-Q46 lifecycle planners remain report-only; separate Windows exact-plan apply paths require final profile qualification before public support is claimed.",
     ]
     if github_release_dirty_state(repo_root):
         risks.append("Q47 bundle provenance records dirty source state; release reviewers must explicitly accept or regenerate from a clean state.")
@@ -19360,7 +20863,7 @@ def render_github_release_body(repo_root: Path, assets: list[dict[str, object]],
         "",
         "- AIDE Lite Pack v0 local release bundle prepared for human review.",
         "- Assets come from the Q47 local bundle under `.aide/release/dist/`.",
-        "- Install, repair, upgrade, rollback, and uninstall commands remain preservation-first planning surfaces.",
+        "- Q43-Q46 report-only planners and separate bounded Windows exact-plan apply commands have distinct boundaries.",
         "",
         "## Release Notes Preview",
     ]
@@ -19372,7 +20875,7 @@ def render_github_release_body(repo_root: Path, assets: list[dict[str, object]],
         "## Install Notes",
         "",
         f"- Local install notes: `{RELEASE_INSTALL_NOTES_PATH}`",
-        "- Default install workflow is observe, plan, dry-run, review.",
+        "- Preview first; use documented exact-plan apply only where the final artifact and Windows profile are qualified.",
         "- Target repositories must run their own validation after extraction/import.",
         "",
         "## Assets",
@@ -19583,7 +21086,7 @@ def github_release_draft_data(repo_root: Path, assets: list[dict[str, object]], 
         "schema_version": "aide.github-release-draft.v0",
         "draft_id": github_release_draft_id(repo_root),
         "generated_by": GITHUB_RELEASE_DRAFT_GENERATED_BY,
-        "source_repo": normalize_rel(repo_root),
+        "source_repo": release_source_repo_identity(repo_root),
         "source_commit": github_release_source_commit(repo_root),
         "source_branch": github_release_source_branch(repo_root),
         "suggested_tag": github_release_suggested_tag(repo_root),
@@ -19664,8 +21167,8 @@ def validate_github_release_draft_files(repo_root: Path, require_outputs: bool =
     assets_data = read_json_file(assets_path) if assets_path.exists() else {}
     assets = assets_data.get("assets", []) if isinstance(assets_data.get("assets"), list) else []
     check_pass(checks, bool(assets), "github release assets are listed")
-    missing_required = [asset for asset in assets if isinstance(asset, dict) and asset.get("required") is True and asset.get("validation_status") == "missing_required"]
-    check_pass(checks, not missing_required, "required release draft assets are present")
+    unavailable_required = [asset for asset in assets if isinstance(asset, dict) and asset.get("required") is True and asset.get("validation_status") != "present"]
+    check_pass(checks, not unavailable_required, "required release draft assets are present and publishable")
     hash_ok, hash_problems = validate_github_release_asset_hashes(repo_root, [asset for asset in assets if isinstance(asset, dict)])
     check_pass(checks, hash_ok, "release draft asset checksums match")
     for problem in hash_problems:
@@ -19770,6 +21273,8 @@ def build_github_release_draft_outputs(repo_root: Path) -> dict[str, object]:
 
 
 def command_release_draft(args: argparse.Namespace) -> int:
+    if not source_maintainer_job_guard(args.repo_root, packaging=True):
+        return 1
     draft = build_github_release_draft_outputs(args.repo_root)
     validation = github_release_draft_validation_data(args.repo_root)
     assets = draft.get("assets", []) if isinstance(draft.get("assets"), list) else []
@@ -19790,6 +21295,8 @@ def command_release_draft(args: argparse.Namespace) -> int:
 
 
 def command_release_draft_validate(args: argparse.Namespace) -> int:
+    if not source_maintainer_job_guard(args.repo_root, packaging=True):
+        return 1
     validation = github_release_draft_validation_data(args.repo_root)
     write_text_if_changed(args.repo_root / GITHUB_RELEASE_DRAFT_VALIDATION_JSON_PATH, stable_json_text(validation))
     write_text_if_changed(args.repo_root / GITHUB_RELEASE_DRAFT_VALIDATION_MD_PATH, render_github_release_draft_validation_md(validation))
@@ -21894,7 +23401,15 @@ GIT_HELPER_POLICY_FILES = [
 ]
 
 
-def run_git_status_code(repo_root: Path, args: list[str]) -> tuple[int, str, str]:
+def run_git_status_code(
+    repo_root: Path,
+    args: list[str],
+    *,
+    ignore_replacements: bool = False,
+) -> tuple[int, str, str]:
+    environment = os.environ.copy()
+    if ignore_replacements:
+        environment["GIT_NO_REPLACE_OBJECTS"] = "1"
     try:
         result = subprocess.run(
             ["git", *args],
@@ -21904,6 +23419,7 @@ def run_git_status_code(repo_root: Path, args: list[str]) -> tuple[int, str, str
             stderr=subprocess.PIPE,
             check=False,
             encoding="utf-8",
+            env=environment,
         )
     except OSError as exc:
         return 127, "", str(exc)
@@ -24058,6 +25574,8 @@ def run_golden_commit_message_standard(repo_root: Path) -> GoldenTaskResult:
     checks: list[Check] = []
     related = [
         COMMIT_MESSAGE_POLICY_PATH,
+        COMMIT_MESSAGE_DISPOSITION_POLICY_PATH,
+        COMMIT_MESSAGE_DISPOSITION_SCHEMA_PATH,
         COMMIT_MESSAGE_STANDARD_PATH,
         COMMIT_MESSAGE_HOOK_TEMPLATE_PATH,
         COMMIT_TEMPLATE_PATH,
@@ -24091,6 +25609,22 @@ def run_golden_commit_message_standard(repo_root: Path) -> GoldenTaskResult:
         hook = read_text(repo_root / COMMIT_MESSAGE_HOOK_TEMPLATE_PATH)
         check_pass(checks, "commit check --message-file" in hook, "hook calls commit check command")
         check_pass(checks, "provider" in hook.lower() and "network" in hook.lower(), "hook documents no provider/network behavior")
+    if (repo_root / COMMIT_MESSAGE_DISPOSITION_POLICY_PATH).exists():
+        policy = read_text(repo_root / COMMIT_MESSAGE_DISPOSITION_POLICY_PATH)
+        for marker in [
+            "range_checks_only: true",
+            "exact_commit_object_required: true",
+            "accepted_human_review_required: true",
+            "raw_mode_flag: --no-dispositions",
+        ]:
+            check_pass(checks, marker in policy, f"historical disposition policy contains {marker}")
+    if (repo_root / COMMIT_MESSAGE_DISPOSITION_SCHEMA_PATH).exists():
+        try:
+            schema = json.loads(read_text(repo_root / COMMIT_MESSAGE_DISPOSITION_SCHEMA_PATH))
+            check_pass(checks, schema.get("$schema") == "https://json-schema.org/draft/2020-12/schema", "historical disposition schema uses Draft 2020-12")
+            check_pass(checks, schema.get("additionalProperties") is False, "historical disposition schema rejects unknown fields")
+        except (OSError, json.JSONDecodeError) as exc:
+            check_pass(checks, False, f"historical disposition schema parses: {exc}")
     return golden_task_result(
         "commit_message_standard_golden",
         checks,
@@ -30849,6 +32383,9 @@ def validate_capability_files(repo_root: Path, require_reports: bool = False) ->
         check_pass(checks, (repo_root / GOLDEN_TASK_ROOT / task_id / "acceptance.md").exists(), f"Capability acceptance exists: {task_id}")
 
     if require_reports:
+        validity = capability_ledger_evidence_validity(repo_root)
+        check_pass(checks, validity["state"] == "CURRENT",
+                   f"Capability ledger evidence validity: {validity['state']} ({validity['reason']}); explicit ledger refresh required otherwise")
         for rel in CAPABILITY_REPORT_FILES:
             path = repo_root / rel
             if rel == CAPABILITY_VALIDATION_REPORT_PATH and not path.exists():
@@ -31432,7 +32969,8 @@ def cache_status_checks(repo_root: Path) -> list[Check]:
         else:
             checks.append(Check("FAIL", f"cache/local-state artifact missing: {rel}"))
     for rel in [CACHE_KEYS_JSON_PATH, CACHE_KEYS_MD_PATH]:
-        checks.append(Check("PASS" if (repo_root / rel).exists() else "WARN", f"cache key report exists: {rel}"))
+        present = (repo_root / rel).exists()
+        checks.append(Check("PASS" if present else "WARN", f"cache key report {'exists' if present else 'missing'}: {rel}"))
     return checks
 
 
@@ -34025,6 +35563,8 @@ def command_eval_list(args: argparse.Namespace) -> int:
 
 
 def command_eval_run(args: argparse.Namespace) -> int:
+    if not source_maintainer_job_guard(args.repo_root, canonical_paths=(".aide/evals/runs",)):
+        return 1
     run = run_golden_tasks(args.repo_root, task_id=args.task)
     json_result, md_result = write_golden_run_reports(args.repo_root, run)
     data = golden_run_to_dict(run)
@@ -34073,6 +35613,8 @@ def command_commit_check(args: argparse.Namespace) -> int:
         raise ValueError("--first-parent requires --range")
     if (args.merge_evidence or args.bootstrap_evidence) and not args.first_parent:
         raise ValueError("--merge-evidence and --bootstrap-evidence require --range --first-parent")
+    if getattr(args, "no_dispositions", False) and not args.range:
+        raise ValueError("--no-dispositions is valid only with --range")
     if args.range:
         if args.first_parent:
             if not args.merge_evidence:
@@ -34092,17 +35634,40 @@ def command_commit_check(args: argparse.Namespace) -> int:
                 print(f"- FAIL {blocker}")
             return 1 if blockers else 0
         commits = git_commit_messages_for_range(args.repo_root, args.range, max_count=args.max_count)
-        results, any_fail, baseline_count = validate_commit_range_messages(args.repo_root, commits)
-        range_result = "FAIL" if any_fail else ("PASS" if commits else "WARN")
+        original_results, _original_any_fail, baseline_count = validate_commit_range_messages(args.repo_root, commits)
+        registry, registry_present = load_commit_message_dispositions(args.repo_root)
+        messages = {commit_hash: message for commit_hash, _subject, message in commits}
+        results: list[tuple[str, str, str, list[Check], dict[str, object] | None]] = []
+        any_unresolved_fail = False
+        any_disposition = False
+        for commit_hash, subject, result, checks in original_results:
+            disposition: dict[str, object] | None = None
+            if result == "FAIL":
+                if not getattr(args, "no_dispositions", False):
+                    disposition = evaluate_historical_commit_disposition(
+                        args.repo_root, commit_hash, messages[commit_hash], checks, registry,
+                    )
+                if disposition and disposition.get("effective") is True:
+                    result = "DISPOSITIONED"
+                    any_disposition = True
+                else:
+                    any_unresolved_fail = True
+            results.append((commit_hash, subject, result, checks, disposition))
+        range_result = (
+            "FAIL" if any_unresolved_fail
+            else ("PASS_WITH_DISPOSITIONS" if any_disposition else ("PASS" if commits else "WARN"))
+        )
         print("AIDE Lite commit range check")
         print(f"result: {range_result}")
         print(f"range: {args.range}")
         print(f"commit_count: {len(commits)}")
         print(f"policy: {COMMIT_MESSAGE_POLICY_PATH}")
+        print(f"disposition_policy: {COMMIT_MESSAGE_DISPOSITION_POLICY_PATH}")
+        print(f"dispositions: {'disabled' if getattr(args, 'no_dispositions', False) else ('loaded' if registry_present else 'absent')}")
         baseline_path = args.repo_root / COMMIT_POLICY_BASELINE_PATH
         print(f"baseline: {COMMIT_POLICY_BASELINE_PATH if baseline_path.exists() else 'none'}")
         print(f"baseline_count: {baseline_count}")
-        for commit_hash, subject, result, checks in results:
+        for commit_hash, subject, result, checks, disposition in results:
             format_classification = "immutable_baseline"
             if result != "BASELINE":
                 classification_check = next((check.message for check in checks if check.message.startswith("format classification: ")), "format classification: invalid")
@@ -34110,8 +35675,14 @@ def command_commit_check(args: argparse.Namespace) -> int:
             print(f"- {commit_hash[:7]} {result} [{format_classification}] {subject}")
             for check in checks:
                 if check.severity != "PASS":
-                    print(f"  - {check.severity} {check.message}")
-        return 1 if any_fail or not commits else 0
+                    prefix = "original_failure" if result == "DISPOSITIONED" and check.severity == "FAIL" else check.severity
+                    print(f"  - {prefix}: {check.message}")
+            if disposition and (registry_present or disposition.get("effective") is True):
+                print(f"  - disposition_id: {disposition.get('disposition_id', '') or '<none>'}")
+                print(f"  - disposition_status: {disposition.get('status', 'missing')}")
+                for error in disposition.get("errors", []):
+                    print(f"  - disposition_error: {error}")
+        return 1 if any_unresolved_fail or not commits else 0
     if args.message_file:
         message_path = safe_repo_path(args.repo_root, args.message_file)
         text = read_text(message_path)
@@ -34204,6 +35775,111 @@ def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
     return 0 if not blockers else 1
 
 
+def facman_portable_installation(repo_root: Path) -> bool:
+    """Recognize committed target identity despite deleted working controls.
+
+    This is identity classification, not install ownership or apply authority.
+    A committed AIDE self-hosting identity cannot be replaced by target-looking
+    working-tree files. Unknown or damaged Git checkouts do not use the
+    non-Git extracted-target fallback.
+    """
+    profile_code, head_profile, _error = run_git_status_code(
+        repo_root, ["show", "HEAD:.aide/profile.yaml"], ignore_replacements=True,
+    )
+    if profile_code == 0 and re.search(r"^profile_id:\s*aide-self-hosting\s*$", head_profile, re.MULTILINE):
+        return False
+    def target_profile(profile: str) -> bool:
+        return (len(profile.encode("utf-8")) <= 65536
+                and re.search(r"^profile_id:\s*factorio-launcher\s*$", profile, re.MULTILINE) is not None
+                and re.search(r"^generated_from:\s*aide-lite-pack-v0\s*$", profile, re.MULTILINE) is not None
+                and re.search(r"^status:\s*target_initialized\s*$", profile, re.MULTILINE) is not None)
+    if profile_code == 0 and target_profile(head_profile):
+        return True
+    policy_code, head_policy, _error = run_git_status_code(
+        repo_root, ["show", "HEAD:" + FACMAN_COMMIT_MESSAGE_POLICY_PATH], ignore_replacements=True,
+    )
+    if (policy_code == 0 and len(head_policy.encode("utf-8")) <= 65536
+            and re.search(r"^schema_version:\s*facman.commit-message-profile.v1\s*$", head_policy, re.MULTILINE)):
+        return True
+    git_code, _git_dir, _error = run_git_status_code(repo_root, ["rev-parse", "--git-dir"], ignore_replacements=True)
+    if git_code == 0 or (repo_root / ".git").exists() or profile_code == 0 or policy_code == 0:
+        return False
+    profile, _error = helper_read_bounded_regular_file(repo_root / ".aide/profile.yaml", 65536)
+    if profile is None:
+        return False
+    try:
+        return target_profile(profile.decode("utf-8"))
+    except UnicodeDecodeError:
+        return False
+
+
+def aide_source_checkout_identity(repo_root: Path) -> bool:
+    code, profile, _error = run_git_status_code(
+        repo_root, ["show", "HEAD:.aide/profile.yaml"], ignore_replacements=True,
+    )
+    return code == 0 and re.search(r"^profile_id:\s*aide-self-hosting\s*$", profile, re.MULTILINE) is not None
+
+
+def facman_missing_commit_controls(repo_root: Path) -> list[str]:
+    required = {
+        FACMAN_COMMIT_MESSAGE_POLICY_PATH, FACMAN_COMMIT_TEMPLATE_PATH,
+        COMMIT_POLICY_BASELINE_PATH, COMMIT_MESSAGE_POLICY_PATH,
+        *GIT_HELPER_POLICY_FILES,
+    }
+    return sorted(rel for rel in required
+                  if helper_read_bounded_regular_file(repo_root / rel, GIT_COMMIT_CLASSIFICATION_MAX_BYTES)[0] is None)
+
+
+def command_commit_create(args: argparse.Namespace) -> int:
+    known_facman = facman_portable_installation(args.repo_root) or (args.repo_root / FACMAN_COMMIT_MESSAGE_POLICY_PATH).exists()
+    if known_facman:
+        missing = facman_missing_commit_controls(args.repo_root)
+        if missing:
+            print("AIDE Lite managed commit\nresult: REFUSED\nreason: required FacMan controls are missing or unsafe")
+            print(json.dumps({"missing_controls": missing}, sort_keys=True))
+            return 1
+        if not getattr(args, "classification", None):
+            print("AIDE Lite managed commit\nresult: REFUSED\nreason: FacMan requires --classification and its existing commit-plan checks")
+            return 1
+        if args.apply:
+            print("AIDE Lite managed commit\nresult: REFUSED\nreason: FacMan apply requires atomic independent-review/control binding; use the existing reviewed commit workflow")
+            return 1
+    module_path = repo_root_from_script() / ".aide/scripts/aide_managed_commit.py"
+    spec = importlib.util.spec_from_file_location("aide_managed_commit", module_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("managed commit module is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    message_path = safe_repo_path(args.repo_root, args.message_file)
+    if message_path.stat().st_size > module.MAX_MESSAGE_BYTES:
+        print("AIDE Lite managed commit\nresult: REFUSED\nreason: message exceeds finite limit")
+        return 1
+    if known_facman:
+        classification = getattr(args, "classification", None)
+        if not classification:
+            print("AIDE Lite managed commit\nresult: REFUSED\nreason: FacMan requires --classification and its existing commit-plan checks")
+            return 1
+        plan = make_git_commit_plan(args.repo_root, Path(classification).expanduser(), message_path)
+        if (plan.get("status") != "ready_to_commit"
+                or set(args.path) != set(plan.get("classification", {}).get("changed_paths", []))):
+            print("AIDE Lite managed commit\nresult: REFUSED\nreason: FacMan commit-plan or classified path scope refused")
+            print(json.dumps({"blockers": plan.get("blockers", []), "status": plan.get("status")}, sort_keys=True))
+            return 1
+    result = module.create_commit(
+        args.repo_root, message=message_path.read_bytes(),
+        expected_message_sha256=args.expect_message_sha256,
+        expected_ref=args.expect_ref, expected_head=args.expect_head,
+        expected_tree=args.expect_tree, allowed_paths=args.path,
+        validator=lambda message: [check.message for check in validate_commit_message_text(message, repo_root=args.repo_root)
+                                   if check.severity == "FAIL"],
+        apply=args.apply,
+    )
+    print("AIDE Lite managed commit")
+    print("result: " + str(result["status"]))
+    print(json.dumps(result, sort_keys=True))
+    return 0 if result["status"] in ("DRY_RUN", "COMMITTED") else 1
+
+
 def command_commit_template(args: argparse.Namespace) -> int:
     template_rel = effective_commit_template_path(args.repo_root)
     template_path = args.repo_root / template_rel
@@ -34248,6 +35924,14 @@ def command_commit_status(args: argparse.Namespace) -> int:
 
 
 def command_changelog_preview(args: argparse.Namespace) -> int:
+    output_dir = getattr(args, "output_dir", None)
+    if (output_dir not in (None, ".aide/changelog")
+            and (args.repo_root / "core/execution/managed_workspace.py").is_file()
+            and (args.repo_root / ".aide/queue/index.yaml").is_file()):
+        print("result: REFUSED\nsource changelog output must use .aide/changelog")
+        return 1
+    if not source_maintainer_job_guard(args.repo_root, canonical_paths=(".aide/changelog",)):
+        return 1
     output_format = getattr(args, "format", "all") or "all"
     data = write_changelog_preview(
         args.repo_root,
@@ -34255,7 +35939,7 @@ def command_changelog_preview(args: argparse.Namespace) -> int:
         from_ref=getattr(args, "from_ref", None),
         to_ref=getattr(args, "to_ref", None),
         limit=getattr(args, "limit", CHANGELOG_DEFAULT_LIMIT),
-        output_dir=getattr(args, "output_dir", None),
+        output_dir=output_dir,
         output_format=output_format,
     )
     malformed = data.get("malformed_commits", [])
@@ -34424,6 +36108,11 @@ def command_capability_status(args: argparse.Namespace) -> int:
     print(f"report: {CAPABILITY_COMMAND_STATUS_REPORT_PATH}")
     print(f"report_action: {write_result.action}")
     print(f"seed_count: {data.get('seed_count', 0)}")
+    print(f"ledger_evidence_validity: {data['ledger_evidence_validity']['state']}")
+    print(f"evidence_reason: {data['ledger_evidence_validity']['reason']}")
+    print("evidence_qualification: source_classification_only")
+    for ref in data["ledger_evidence_validity"]["changed_refs"][:8]:
+        print(f"changed_evidence_ref: {str(ref)[:240]}")
     print(f"command_count: {len(data.get('commands', [])) if isinstance(data.get('commands'), list) else 0}")
     print("mode: report_only")
     print("task_execution: false")
@@ -34484,9 +36173,6 @@ def command_capability_overclaim_report(args: argparse.Namespace) -> int:
 
 
 def command_capability_validate(args: argparse.Namespace) -> int:
-    write_capability_scan(args.repo_root)
-    write_capability_ledger(args.repo_root)
-    write_capability_overclaim_report(args.repo_root)
     write_result, checks = write_capability_validation_report(args.repo_root)
     result = result_from_checks(checks)
     print("AIDE Lite capability validate")
@@ -39747,13 +41433,20 @@ def command_task_inspect(args: argparse.Namespace) -> int:
 
 def command_task_status(args: argparse.Namespace) -> int:
     tasks = queue_task_blocks(args.repo_root)
-    report_result, context = write_task_os_task_status(args.repo_root)
+    write_reports = getattr(args, "write_reports", False)
+    report_result = None
+    if write_reports:
+        report_result, context = write_task_os_task_status(args.repo_root)
+    else:
+        context = task_os_context(args.repo_root)
     print("AIDE Lite task status")
     print(f"task_count: {len(tasks)}")
     for task in tasks:
         print(f"- {task.get('id', '')}: status={task.get('status', 'unknown')} planning_state={task.get('planning_state', 'unknown')}")
-    print(f"latest_task_id: {context.get('latest_task_id', '') or 'unknown'}")
-    print(f"report: {TASK_OS_TASK_STATUS_REPORT_PATH} ({report_result.action})")
+    print(f"latest_task_id: {context.get('latest_task_id', '') or 'none'}")
+    if report_result is not None:
+        print(f"report: {TASK_OS_TASK_STATUS_REPORT_PATH} ({report_result.action})")
+    print(f"non_mutating: {str(not write_reports).lower()}")
     print("report_only: true")
     return 0 if tasks else 1
 
@@ -39805,15 +41498,19 @@ def command_task_resume_plan(args: argparse.Namespace) -> int:
 
 
 def command_task_next_plan(args: argparse.Namespace) -> int:
-    result = write_task_os_next_plan(args.repo_root)
+    write_report = getattr(args, "write_report", False)
+    result = write_task_os_next_plan(args.repo_root) if write_report else None
     context = task_os_context(args.repo_root)
     selection = task_os_next_selection(context)
     print("AIDE Lite task next-plan")
     print("result: PASS")
     print(f"selected_next_workunit: {selection.get('task', 'review current task evidence')}")
-    print(f"report: {TASK_OS_NEXT_PLAN_REPORT_PATH} ({result.action})")
+    print(f"reason: {selection.get('reason', '')}")
+    if result is not None:
+        print(f"report: {TASK_OS_NEXT_PLAN_REPORT_PATH} ({result.action})")
     print(f"aide_apply_lifecycle_plan_ready: {str(bool(selection.get('aide_apply_lifecycle_plan_ready'))).lower()}")
     print(f"lifecycle_apply_authorized: {str(bool(selection.get('lifecycle_apply_authorized'))).lower()}")
+    print(f"non_mutating: {str(not write_report).lower()}")
     print("report_only: true")
     print("task_execution: false")
     return 0
@@ -39892,9 +41589,21 @@ def command_task_current(args: argparse.Namespace) -> int:
     return 0 if task_id else 1
 
 
+def facman_lifecycle_module():
+    """Load target queue tooling only for explicitly requested mutations.
+
+    Generic portable observations/imports do not depend on FacMan tools.
+    Missing target lifecycle machinery refuses mutations before any write.
+    """
+    try:
+        return importlib.import_module("aide_lifecycle")
+    except ModuleNotFoundError as exc:
+        raise ValueError("Target task lifecycle is unavailable; FacMan queue tooling is required") from exc
+
+
 def command_task_create(args: argparse.Namespace) -> int:
     try:
-        path = aide_lifecycle.create(args.repo_root, args.task_id, args.title, args.objective, args.path)
+        path = facman_lifecycle_module().create(args.repo_root, args.task_id, args.title, args.objective, args.path)
     except ValueError as error:
         print(f"AIDE Lite task create: {error}", file=sys.stderr)
         return 1
@@ -39907,7 +41616,7 @@ def command_task_create(args: argparse.Namespace) -> int:
 
 def command_task_transition(args: argparse.Namespace) -> int:
     try:
-        state = aide_lifecycle.transition(
+        state = facman_lifecycle_module().transition(
             args.repo_root, args.task_id, args.task_command, result=getattr(args, "result", "")
         )
     except ValueError as error:
@@ -39921,7 +41630,7 @@ def command_task_transition(args: argparse.Namespace) -> int:
 
 def command_task_archive(args: argparse.Namespace) -> int:
     try:
-        path = aide_lifecycle.archive(args.repo_root, args.task_id, args.checkpoint)
+        path = facman_lifecycle_module().archive(args.repo_root, args.task_id, args.checkpoint)
     except ValueError as error:
         print(f"AIDE Lite task archive: {error}", file=sys.stderr)
         return 1
@@ -40272,10 +41981,14 @@ def command_checkpoint_plan(args: argparse.Namespace) -> int:
 
 
 def command_git_detect(args: argparse.Namespace) -> int:
-    data, json_result, md_result = write_git_workflow_detection(args.repo_root)
+    write_reports = getattr(args, "write_reports", False)
+    if write_reports:
+        data, json_result, md_result = write_git_workflow_detection(args.repo_root)
+    else:
+        data = collect_git_workflow_detection(args.repo_root)
     aide_plan_result: WriteResult | None = None
     aide_plan_md_result: WriteResult | None = None
-    if (args.repo_root / AIDE_BRANCH_POLICY_PATH).exists():
+    if write_reports and (args.repo_root / AIDE_BRANCH_POLICY_PATH).exists():
         _plan, aide_plan_result, aide_plan_md_result = write_aide_dev_main_plan(args.repo_root)
     print("AIDE Lite git detect")
     print(f"result: PASS")
@@ -40285,12 +41998,13 @@ def command_git_detect(args: argparse.Namespace) -> int:
     print(f"canonical_branch: {data.get('canonical_branch')}")
     print(f"integration_branch_detected: {data.get('integration_branch_detected')}")
     print(f"recommended_next_action: {data.get('recommended_next_action')}")
-    print(f"json_report: {GIT_WORKFLOW_DETECTION_JSON_PATH} ({json_result.action})")
-    print(f"markdown_report: {GIT_WORKFLOW_DETECTION_MD_PATH} ({md_result.action})")
+    if write_reports:
+        print(f"json_report: {GIT_WORKFLOW_DETECTION_JSON_PATH} ({json_result.action})")
+        print(f"markdown_report: {GIT_WORKFLOW_DETECTION_MD_PATH} ({md_result.action})")
     if aide_plan_result is not None and aide_plan_md_result is not None:
         print(f"aide_dev_main_plan_json: {AIDE_DEV_MAIN_PLAN_JSON_PATH} ({aide_plan_result.action})")
         print(f"aide_dev_main_plan_markdown: {AIDE_DEV_MAIN_PLAN_MD_PATH} ({aide_plan_md_result.action})")
-    print("non_mutating: true")
+    print(f"non_mutating: {str(not write_reports).lower()}")
     return 0
 
 
@@ -40416,12 +42130,16 @@ def print_git_helper_plan_summary(title: str, plan: dict[str, object], json_resu
 
 def command_git_plan(args: argparse.Namespace) -> int:
     plan = make_git_helper_plan(args.repo_root, "plan", dry_run=True)
-    json_result, md_result = write_git_helper_plan(args.repo_root, plan)
+    write_reports = getattr(args, "write_reports", False)
+    json_result = md_result = None
+    if write_reports:
+        json_result, md_result = write_git_helper_plan(args.repo_root, plan)
     aide_plan_result: WriteResult | None = None
     aide_plan_md_result: WriteResult | None = None
-    if (args.repo_root / AIDE_BRANCH_POLICY_PATH).exists():
+    if write_reports and (args.repo_root / AIDE_BRANCH_POLICY_PATH).exists():
         _aide_plan, aide_plan_result, aide_plan_md_result = write_aide_dev_main_plan(args.repo_root)
     print_git_helper_plan_summary("AIDE Lite git plan", plan, json_result, md_result)
+    print(f"reports_written: {str(write_reports).lower()}")
     if aide_plan_result is not None and aide_plan_md_result is not None:
         print(f"aide_dev_main_plan_json: {AIDE_DEV_MAIN_PLAN_JSON_PATH} ({aide_plan_result.action})")
         print(f"aide_dev_main_plan_markdown: {AIDE_DEV_MAIN_PLAN_MD_PATH} ({aide_plan_md_result.action})")
@@ -40931,9 +42649,30 @@ def is_allowed_portable_report(rel_path: str) -> bool:
 
 def is_forbidden_export_path(rel_path: str) -> bool:
     rel = normalize_rel(rel_path)
+    if is_source_only_export_test(rel):
+        return True
     if is_allowed_generated_export_template(rel) or is_allowed_local_state_example(rel) or is_allowed_portable_report(rel):
         return False
     return any(pattern_matches(rel, pattern) for pattern in EXPORT_FORBIDDEN_PATH_PATTERNS)
+
+
+# Self-hosting tests require source-only core modules and execution authority.
+# AIDE Lite exports only the explicitly admitted portable AIDE test modules.
+PORTABLE_AIDE_TEST_MODULES = frozenset({
+    ".aide/scripts/tests/test_aide_lite.py",
+    ".aide/scripts/tests/test_aide_apply_00_transaction_model.py",
+    ".aide/scripts/tests/test_aide_apply_01_managed_sections.py",
+})
+
+
+def is_source_only_export_test(rel_path: str) -> bool:
+    rel = normalize_rel(rel_path)
+    if not rel.startswith(".aide/scripts/tests/"):
+        return False
+    name = Path(rel).name
+    return name in {"test_managed_workspace.py", "test_scoped_host.py"} or name.startswith("test_continuous_worker") or (
+        name.startswith("test_aide_") and rel not in PORTABLE_AIDE_TEST_MODULES
+    )
 
 
 def is_exportable_file(repo_root: Path, rel_path: str) -> bool:
@@ -40987,6 +42726,311 @@ def write_bytes_if_changed(path: Path, data: bytes) -> WriteResult:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(data)
     return WriteResult(path, "written")
+
+
+def atomic_write_bytes_if_changed(path: Path, data: bytes) -> WriteResult:
+    if path.exists() and path.is_file() and path.read_bytes() == data:
+        return WriteResult(path, "unchanged")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    return WriteResult(path, "written")
+
+
+def atomic_create_bytes_no_clobber(path: Path, data: bytes) -> None:
+    """Publish complete bytes while denying rival staging writers."""
+    if os.name != "nt":
+        raise ValueError("owned repair requires Windows anchored directory handles")
+    if not path.parent.is_dir():
+        raise ValueError(f"repair parent directory is missing: {path.parent}")
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
+    class FileDispositionInfo(ctypes.Structure):
+        _fields_ = [("delete_file", wintypes.BOOL)]
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.SetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+    kernel.SetFileInformationByHandle.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    invalid = ctypes.c_void_p(-1).value
+
+    def delete_stage_link(native_handle: int) -> None:
+        disposition = FileDispositionInfo(True)
+        if not kernel.SetFileInformationByHandle(
+            native_handle, 4, ctypes.byref(disposition), ctypes.sizeof(disposition),
+        ):
+            raise ctypes.WinError(ctypes.get_last_error())
+
+    with windows_pinned_directory(path.parent) as directory_handle:
+        # A CRT mkstemp descriptor permits another Windows writer. Create the
+        # stage with no sharing and keep that handle through the no-replace link.
+        for _ in range(8):
+            temporary = path.parent / f".{path.name}.{os.urandom(16).hex()}.tmp"
+            native_handle = kernel.CreateFileW(
+                str(temporary),
+                0x80000000 | 0x40000000 | 0x00010000,  # READ | WRITE | DELETE
+                0, None, 2, 0x80, None,  # no sharing, CREATE_NEW, NORMAL
+            )
+            if native_handle != invalid and native_handle is not None:
+                break
+            error = ctypes.get_last_error()
+            if error not in {80, 183}:
+                raise ctypes.WinError(error)
+        else:
+            raise FileExistsError("could not reserve a unique repair stage")
+        try:
+            descriptor = msvcrt.open_osfhandle(native_handle, os.O_RDWR | os.O_BINARY)
+        except BaseException:
+            try:
+                delete_stage_link(native_handle)
+            finally:
+                kernel.CloseHandle(native_handle)
+            raise
+        try:
+            file_handle = os.fdopen(descriptor, "wb")
+        except BaseException:
+            try:
+                delete_stage_link(msvcrt.get_osfhandle(descriptor))
+            finally:
+                os.close(descriptor)
+            raise
+        with file_handle as handle:
+            try:
+                handle.write(data)
+                handle.flush()
+                os.fsync(handle.fileno())
+                windows_link_from_handle(handle.fileno(), directory_handle, path.name)
+            finally:
+                # Delete the random staging link through the same exclusive
+                # handle. A pathname unlink after close could hit a replacement.
+                delete_stage_link(msvcrt.get_osfhandle(handle.fileno()))
+
+
+@contextmanager
+def windows_pinned_directory(path: Path, *, for_write: bool = True):
+    """Hold every ancestor against rename and reject reparse-point traversal."""
+    if os.name != "nt":
+        raise ValueError("Windows directory handles required")
+    import ctypes
+    from ctypes import wintypes
+
+    class FileTime(ctypes.Structure):
+        _fields_ = [("low", wintypes.DWORD), ("high", wintypes.DWORD)]
+
+    class FileInfo(ctypes.Structure):
+        _fields_ = [("attributes", wintypes.DWORD), ("created", FileTime), ("accessed", FileTime), ("written", FileTime), ("volume", wintypes.DWORD), ("size_high", wintypes.DWORD), ("size_low", wintypes.DWORD), ("links", wintypes.DWORD), ("index_high", wintypes.DWORD), ("index_low", wintypes.DWORD)]
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.GetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.POINTER(FileInfo)]
+    kernel.GetFileInformationByHandle.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    resolved = path.absolute()
+    if not resolved.anchor:
+        raise ValueError("directory lacks a Windows volume anchor")
+    current = Path(resolved.anchor)
+    components = [current]
+    for part in resolved.parts[1:]:
+        current = current / part
+        components.append(current)
+    handles = []
+    invalid = ctypes.c_void_p(-1).value
+    try:
+        for index, component in enumerate(components):
+            access = 0x80 | (0x2 if for_write and index == len(components) - 1 else 0)  # READ_ATTRIBUTES | ADD_FILE for effects
+            handle = kernel.CreateFileW(str(component), access, 0x1 | 0x2, None, 3, 0x02000000 | 0x00200000, None)
+            if handle == invalid or handle is None:
+                raise ctypes.WinError(ctypes.get_last_error())
+            handles.append(handle)
+            info = FileInfo()
+            if not kernel.GetFileInformationByHandle(handle, ctypes.byref(info)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if not info.attributes & 0x10 or info.attributes & 0x400:  # DIRECTORY, REPARSE_POINT
+                raise ValueError(f"repair path crosses a non-directory or reparse point: {component}")
+        yield handles[-1]
+    finally:
+        for handle in reversed(handles):
+            kernel.CloseHandle(handle)
+
+
+def windows_link_from_handle(descriptor: int, directory_handle: int, leaf_name: str) -> None:
+    """Create a no-replace hard link relative to a pinned directory handle."""
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
+    class FileLinkInfo(ctypes.Structure):
+        _fields_ = [("replace", wintypes.BOOLEAN), ("root", wintypes.HANDLE), ("name_length", wintypes.DWORD), ("name", wintypes.WCHAR * len(leaf_name))]
+
+    class IoStatusBlock(ctypes.Structure):
+        _fields_ = [("status", ctypes.c_void_p), ("information", ctypes.c_size_t)]
+
+    info = FileLinkInfo()
+    info.replace = False
+    info.root = directory_handle
+    info.name_length = len(leaf_name.encode("utf-16-le"))
+    info.name = leaf_name
+    native = ctypes.WinDLL("ntdll")
+    native.NtSetInformationFile.argtypes = [wintypes.HANDLE, ctypes.POINTER(IoStatusBlock), ctypes.c_void_p, wintypes.ULONG, ctypes.c_int]
+    native.NtSetInformationFile.restype = ctypes.c_long
+    native.RtlNtStatusToDosError.argtypes = [ctypes.c_long]
+    native.RtlNtStatusToDosError.restype = wintypes.ULONG
+    status = native.NtSetInformationFile(msvcrt.get_osfhandle(descriptor), ctypes.byref(IoStatusBlock()), ctypes.byref(info), ctypes.sizeof(info), 11)
+    if status < 0:
+        code = native.RtlNtStatusToDosError(status)
+        if code in {80, 183}:
+            raise FileExistsError(code, "repair target already exists", leaf_name)
+        raise OSError(code, f"Windows hard-link publication failed (NTSTATUS {status:#x})")
+
+
+def delete_portable_repair_intent_anchored(target_root: Path, intent: dict[str, object]) -> None:
+    """Delete only the exact single-link intent opened beneath pinned parents."""
+    if os.name != "nt":
+        raise ValueError("owned repair intent cleanup requires Windows anchored handles")
+    import ctypes
+    from ctypes import wintypes
+
+    class FileTime(ctypes.Structure):
+        _fields_ = [("low", wintypes.DWORD), ("high", wintypes.DWORD)]
+
+    class FileInfo(ctypes.Structure):
+        _fields_ = [("attributes", wintypes.DWORD), ("created", FileTime), ("accessed", FileTime), ("written", FileTime), ("volume", wintypes.DWORD), ("size_high", wintypes.DWORD), ("size_low", wintypes.DWORD), ("links", wintypes.DWORD), ("index_high", wintypes.DWORD), ("index_low", wintypes.DWORD)]
+
+    class FileDispositionInfo(ctypes.Structure):
+        _fields_ = [("delete_file", wintypes.BOOL)]
+
+    path = target_root / PORTABLE_REPAIR_INTENT_PATH
+    expected = stable_json_text(intent).encode("utf-8")
+    if len(expected) > 65536:
+        raise ValueError("repair intent exceeds cleanup size limit")
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.GetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.POINTER(FileInfo)]
+    kernel.GetFileInformationByHandle.restype = wintypes.BOOL
+    kernel.ReadFile.argtypes = [wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD), wintypes.LPVOID]
+    kernel.ReadFile.restype = wintypes.BOOL
+    kernel.SetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+    kernel.SetFileInformationByHandle.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    with windows_pinned_directory(path.parent):
+        handle = kernel.CreateFileW(str(path), 0x80000000 | 0x00010000, 0x1, None, 3, 0x00200000, None)
+        if handle == ctypes.c_void_p(-1).value or handle is None:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            info = FileInfo()
+            if not kernel.GetFileInformationByHandle(handle, ctypes.byref(info)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if info.attributes & (0x10 | 0x400) or info.links != 1 or info.size_high or info.size_low != len(expected):
+                raise ValueError("repair intent is not the expected regular single-link file")
+            chunks: list[bytes] = []
+            remaining = len(expected)
+            while remaining:
+                buffer = ctypes.create_string_buffer(remaining)
+                count = wintypes.DWORD()
+                if not kernel.ReadFile(handle, buffer, remaining, ctypes.byref(count), None):
+                    raise ctypes.WinError(ctypes.get_last_error())
+                if count.value == 0:
+                    raise ValueError("repair intent ended before expected bytes")
+                chunks.append(buffer.raw[:count.value])
+                remaining -= count.value
+            if b"".join(chunks) != expected:
+                raise ValueError("repair intent bytes changed before cleanup")
+            disposition = FileDispositionInfo(True)
+            if not kernel.SetFileInformationByHandle(handle, 4, ctypes.byref(disposition), ctypes.sizeof(disposition)):
+                raise ctypes.WinError(ctypes.get_last_error())
+        finally:
+            kernel.CloseHandle(handle)
+
+
+_PORTABLE_LIFECYCLE_GUARD = threading.Lock()
+_PORTABLE_LIFECYCLE_ACTIVE: set[str] = set()
+
+
+@contextmanager
+def portable_lifecycle_lock(target_root: Path):
+    """Serialize all effectful imports and repairs without writing to target."""
+    identity = os.path.normcase(str(target_root.resolve()))
+    key = hashlib.sha256(identity.encode("utf-8")).hexdigest()
+    with _PORTABLE_LIFECYCLE_GUARD:
+        if key in _PORTABLE_LIFECYCLE_ACTIVE:
+            raise ValueError("portable lifecycle operation already in progress")
+        _PORTABLE_LIFECYCLE_ACTIVE.add(key)
+    try:
+        if os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+
+            kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel.CreateMutexW.argtypes = [wintypes.LPVOID, wintypes.BOOL, wintypes.LPCWSTR]
+            kernel.CreateMutexW.restype = wintypes.HANDLE
+            kernel.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+            kernel.WaitForSingleObject.restype = wintypes.DWORD
+            kernel.ReleaseMutex.argtypes = [wintypes.HANDLE]
+            kernel.ReleaseMutex.restype = wintypes.BOOL
+            kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+            kernel.CloseHandle.restype = wintypes.BOOL
+            handle = kernel.CreateMutexW(None, False, "Global\\AIDE.PortableLifecycle." + key)
+            if not handle:
+                raise ctypes.WinError(ctypes.get_last_error())
+            try:
+                wait = kernel.WaitForSingleObject(handle, 0)
+                if wait == 0x102:
+                    raise ValueError("portable lifecycle operation already in progress")
+                if wait not in {0, 0x80}:
+                    raise ctypes.WinError(ctypes.get_last_error())
+                try:
+                    yield
+                finally:
+                    kernel.ReleaseMutex(handle)
+            finally:
+                kernel.CloseHandle(handle)
+        else:
+            import fcntl
+
+            lock_dir = Path(tempfile.gettempdir()) / f"aide-portable-lifecycle-locks-{os.getuid()}"
+            lock_dir.mkdir(mode=0o700, exist_ok=True)
+            directory_stat = lock_dir.lstat()
+            if not stat.S_ISDIR(directory_stat.st_mode) or directory_stat.st_uid != os.getuid() or directory_stat.st_mode & 0o077:
+                raise ValueError("portable lifecycle lock directory is not private")
+            lock_path = lock_dir / (key + ".lock")
+            descriptor = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+            with os.fdopen(descriptor, "r+b") as handle:
+                lock_stat = os.fstat(handle.fileno())
+                if not stat.S_ISREG(lock_stat.st_mode) or lock_stat.st_uid != os.getuid() or lock_stat.st_nlink != 1:
+                    raise ValueError("portable lifecycle lock file ownership is invalid")
+                try:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError as exc:
+                    raise ValueError("portable lifecycle operation already in progress") from exc
+                try:
+                    yield
+                finally:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        with _PORTABLE_LIFECYCLE_GUARD:
+            _PORTABLE_LIFECYCLE_ACTIVE.remove(key)
+
+
+def atomic_write_json(path: Path, data: object) -> WriteResult:
+    return atomic_write_bytes_if_changed(path, stable_json_text(data).encode("utf-8"))
 
 
 def copy_pack_file(source: Path, destination: Path) -> WriteResult:
@@ -41043,6 +43087,14 @@ commands:
     owner_component: aide-lite-pack
     mutates_repo: false
     notes: canonical AIDE Lite validation command; no provider/model/network calls.
+  - id: aide-lite-plan-removal
+    display_name: AIDE Lite portable removal planner
+    invocation: py -3 .aide/scripts/aide_lite.py plan-removal --target <target-repo> [--json]
+    command_kind: repo-local-helper
+    status: implemented-portable-read-only
+    owner_component: aide-lite-pack
+    mutates_repo: false
+    notes: validates the portable import receipt and classifies only unchanged recorded managed bytes as future removal candidates; never deletes files or removes managed sections.
   - id: aide-lite-test-tier-model
     display_name: AIDE Lite validation tier planning
     invocation: py -3 .aide/scripts/aide_lite.py test <tiers|tier-plan|impact-plan|summary-validate|telemetry-status|full-discovery-handoff|slow-report-validate>
@@ -41164,11 +43216,18 @@ def pack_install_text() -> str:
 
 ## Command Import
 
-From the source AIDE repository:
+From the root of an extracted release archive, without the source checkout:
+
+```text
+py -3 -I -B files/.aide/scripts/aide_lite.py --repo-root <target-repo> import-pack --pack . --target <target-repo> --dry-run --mode safe
+py -3 -I -B files/.aide/scripts/aide_lite.py --repo-root <target-repo> import-pack --pack . --target <target-repo> --mode safe --expect-plan <preview-plan-digest>
+```
+
+From the source AIDE repository during development:
 
 ```text
 py -3 .aide/scripts/aide_lite.py import-pack --pack .aide/export/{EXPORT_PACK_ID} --target <target-repo> --dry-run
-py -3 .aide/scripts/aide_lite.py import-pack --pack .aide/export/{EXPORT_PACK_ID} --target <target-repo> --mode safe
+py -3 .aide/scripts/aide_lite.py import-pack --pack .aide/export/{EXPORT_PACK_ID} --target <target-repo> --mode safe --expect-plan <preview-plan-digest>
 ```
 
 `--mode safe` is the default. It skips optional broad roots such as `core/` and
@@ -41176,6 +43235,40 @@ non-reference `docs/` content and prints the exact planned writes plus skipped
 paths during dry-run. Portable `docs/reference/` governance docs are safe-mode
 files. Use `--mode full` only in reviewed local fixtures where copying optional
 roots has been explicitly accepted.
+
+Successful import records exact managed-file and portable managed-section
+baselines under `.aide/install/`. A later pack updates unchanged recorded
+bytes only when `--from-pack <validated-predecessor-pack>` also proves their
+source and installed baseline. Retain that exact previous pack for updates.
+Local edits, unknown ownership,
+changed preview state, invalid packs, and partial prior effects refuse closed.
+
+## Bounded Receipt-Owned Removal on Windows
+
+After a receipt-backed import, inspect the exact removal boundary without
+changing target bytes. Pass that preview's exact `plan_digest` to apply:
+
+```text
+py -3 -I -B files/.aide/scripts/aide_lite.py --repo-root <target-repo> plan-removal --target <target-repo>
+py -3 -I -B files/.aide/scripts/aide_lite.py --repo-root <target-repo> plan-removal --target <target-repo> --json
+py -3 -I -B files/.aide/scripts/aide_lite.py --repo-root <target-repo> apply-removal --target <target-repo> --expect-plan <plan_digest>
+```
+
+`plan-removal` is read-only. On Windows, `apply-removal` deletes unchanged
+receipt-owned regular files and an exact generated whole-file `AGENTS.md`
+scaffold. In an authored `AGENTS.md`, it removes only the managed section
+recorded by the receipt while preserving every outside byte. It checks
+ownership again at effect time and retains an intent for
+interruption recovery. The preview's `apply_allowed: false` describes the
+read-only `plan-removal` command; the separate `apply-removal` command accepts
+its exact digest on Windows. A stale preview refuses before deletion. If a
+candidate changes after removal begins, the command stops with
+`RECOVERY_REQUIRED`; earlier deletions may have occurred, and the intent remains.
+Changed or already absent recorded paths retain the runner and receipt as
+`PARTIAL_REMOVAL` (exit code 2). A repeated apply must use the same digest
+to reconcile an interrupted intent.
+Non-Windows apply fails closed. Keep the extracted pack available for recovery
+after full detach.
 
 ## Manual Import
 
@@ -41378,9 +43471,36 @@ def render_export_report(pack_root: Path, manifest_files: list[str], boundary_vi
     return "\n".join(lines) + "\n"
 
 
+def reset_export_contents(pack_root: Path) -> None:
+    """Keep the directory carrying the scoped permission and volume binding."""
+    if not os.path.lexists(pack_root):
+        pack_root.mkdir(parents=True)
+        return
+    root_info = pack_root.lstat()
+    if (not stat.S_ISDIR(root_info.st_mode) or stat.S_ISLNK(root_info.st_mode)
+            or getattr(root_info, "st_file_attributes", 0) & 1024):
+        raise ValueError("linked or non-directory export root preserved")
+    known = {"files", "README.md", "install.md", "import-policy.yaml",
+             "manifest.yaml", "checksums.json", "export-report.md"}
+    children = list(pack_root.iterdir())
+    for child in children:
+        info = child.lstat()
+        if (child.name not in known or child.is_symlink()
+                or getattr(info, "st_file_attributes", 0) & 1024
+                or (child.name == "files") != child.is_dir()
+                or (child.is_file() and info.st_nlink != 1)):
+            raise ValueError("unknown or linked export member preserved: " + child.name)
+    for child in children:
+        if child.is_dir():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
+
+
 def build_export_pack(repo_root: Path, name: str = EXPORT_PACK_ID, output: str | None = None) -> tuple[Path, dict[str, object]]:
     if name != EXPORT_PACK_ID:
         raise ValueError(f"unsupported pack name: {name}")
+    source_dirty = bool(git_status_short(repo_root)[1])
     pack_root = (repo_root / output).resolve() if output else export_pack_root(repo_root, name)
     repo_root_resolved = repo_root.resolve()
     try:
@@ -41390,8 +43510,20 @@ def build_export_pack(repo_root: Path, name: str = EXPORT_PACK_ID, output: str |
     expected_root = export_pack_root(repo_root, name).resolve()
     if output and pack_root != expected_root:
         raise ValueError(f"Q21 only permits committed export path: {EXPORT_PACK_PATH}")
-    if pack_root.exists():
-        shutil.rmtree(pack_root)
+    current_source = git_commit_id(repo_root)
+    prior_source = None
+    prior_checksums = None
+    if pack_root.exists() and not source_dirty:
+        prior = pack_manifest_scalars(pack_root)
+        candidate = prior.get("source_commit", "")
+        if (prior.get("source_dirty_state") == "false"
+                and candidate and candidate not in {"unavailable", current_source}
+                and pack_source_ancestor_has_unchanged_inputs(repo_root, candidate, current_source)
+                and validate_pack_checksums(pack_root)[0]
+                and not validate_export_pack_boundary(pack_root)):
+            prior_source = candidate
+            prior_checksums = json.loads(read_text(pack_root / "checksums.json"))
+    reset_export_contents(pack_root)
     files_root = pack_root / "files"
     files_root.mkdir(parents=True, exist_ok=True)
 
@@ -41426,10 +43558,13 @@ def build_export_pack(repo_root: Path, name: str = EXPORT_PACK_ID, output: str |
     import_policy_source = repo_root / EXPORT_IMPORT_POLICY_TEMPLATE_PATH
     write_text_if_changed(pack_root / "import-policy.yaml", read_text(import_policy_source))
 
-    dirty = bool(git_status_short(repo_root)[1])
     manifest_files = sorted(set(copied))
-    write_text_if_changed(pack_root / "manifest.yaml", render_manifest(manifest_files, git_commit_id(repo_root), dirty))
+    write_text_if_changed(pack_root / "manifest.yaml", render_manifest(manifest_files, current_source, source_dirty))
     checksums = build_pack_checksums(pack_root)
+    if prior_source is not None and checksums == prior_checksums:
+        # The pack commit changed no portable input or checksummed byte.
+        # Keep the source commit that actually produced those bytes.
+        write_text_if_changed(pack_root / "manifest.yaml", render_manifest(manifest_files, prior_source, False))
     write_text_if_changed(pack_root / "checksums.json", stable_json_text(checksums))
     boundary_violations = validate_export_pack_boundary(pack_root)
     write_text_if_changed(pack_root / "export-report.md", render_export_report(pack_root, manifest_files, boundary_violations))
@@ -41481,6 +43616,53 @@ def pack_manifest_scalars(pack_root: Path) -> dict[str, str]:
     return scalars
 
 
+def pack_manifest_list(pack_root: Path, field: str) -> list[str]:
+    manifest_path = pack_root / "manifest.yaml"
+    if not manifest_path.exists():
+        return []
+    values: list[str] = []
+    in_field = False
+    for line in read_text(manifest_path).splitlines():
+        if line == f"{field}:":
+            in_field = True
+            continue
+        if not in_field:
+            continue
+        if line.startswith("  - "):
+            values.append(line[4:].strip())
+            continue
+        if line and not line.startswith(" "):
+            break
+    return values
+
+
+def pack_source_ancestor_has_unchanged_inputs(repo_root: Path, source_commit: str, current_commit: str) -> bool:
+    ancestor_code, _ancestor_output, _ancestor_error = run_git_status_code(
+        repo_root,
+        ["merge-base", "--is-ancestor", source_commit, current_commit],
+        ignore_replacements=True,
+    )
+    if ancestor_code != 0:
+        return False
+    diff_code, diff_output, _diff_error = run_git_status_code(
+        repo_root,
+        ["diff", "--name-only", "--no-renames", source_commit, current_commit],
+        ignore_replacements=True,
+    )
+    if diff_code != 0:
+        return False
+    portable_files = {
+        normalize_rel(path)
+        for path in [*PORTABLE_SOURCE_FILES, *PORTABLE_TEMPLATE_MAP.keys()]
+    }
+    portable_dirs = tuple(f"{normalize_rel(path).rstrip('/')}/" for path in PORTABLE_SOURCE_DIRS)
+    for line in diff_output.splitlines():
+        rel = normalize_rel(line.strip())
+        if rel in portable_files or rel.startswith(portable_dirs):
+            return False
+    return True
+
+
 def validate_pack_provenance(
     pack_root: Path,
     repo_root: Path,
@@ -41500,14 +43682,19 @@ def validate_pack_provenance(
         return "FAIL", problems
     dirty_recorded = dirty_text == "true"
     current = current_commit if current_commit is not None else git_commit_id(repo_root)
+    source_ancestor = False
     if current not in {"", "unavailable"} and source_commit != current and not dirty_recorded:
-        problems.append(
-            f"manifest source_commit {source_commit} does not match current HEAD {current}"
-        )
+        source_ancestor = pack_source_ancestor_has_unchanged_inputs(repo_root, source_commit, current)
+        if not source_ancestor:
+            problems.append(
+                f"manifest source_commit {source_commit} does not match current HEAD {current}"
+            )
     if problems:
         return "FAIL", problems
     if dirty_recorded:
         return "DIRTY_SOURCE_RECORDED", []
+    if source_ancestor:
+        return "PASS_SOURCE_ANCESTOR", []
     if current == "unavailable":
         return "UNKNOWN_GIT_UNAVAILABLE", []
     return "PASS", []
@@ -41608,13 +43795,17 @@ def render_target_template(text: str, target_root: Path, next_task: str = "Impor
 def merge_agents_text(existing: str | None, template: str) -> str:
     begin = "<!-- AIDE-PORTABLE:BEGIN section=aide-lite-pack-v0"
     end = "<!-- AIDE-PORTABLE:END section=aide-lite-pack-v0 -->"
+    block = template.rstrip("\r\n")
     if existing is None or not existing.strip():
-        return "# AGENTS.md\n\n" + template
+        return "# AGENTS.md\n\n" + block + "\n"
+    newline = "\r\n" if "\r\n" in existing else "\n"
+    target_block = block.replace("\r\n", "\n").replace("\n", newline)
     if begin in existing and end in existing:
-        prefix, rest = existing.split(begin, 1)
-        _old, suffix = rest.split(end, 1)
-        return prefix.rstrip() + "\n\n" + template.rstrip() + "\n" + suffix.lstrip()
-    return existing.rstrip() + "\n\n" + template
+        start = existing.index(begin)
+        finish = existing.index(end, start) + len(end)
+        return existing[:start] + target_block + existing[finish:]
+    separator = "" if existing.endswith(newline * 2) else (newline if existing.endswith(newline) else newline * 2)
+    return existing + separator + target_block + newline
 
 
 def ensure_target_gitignore_text(existing: str | None) -> str:
@@ -41640,13 +43831,464 @@ def import_scope_skip_reason(rel: str, mode: str) -> str:
     return ""
 
 
+def portable_import_record_digest(record: dict[str, object], digest_key: str) -> str:
+    unsigned = dict(record)
+    unsigned.pop(digest_key, None)
+    return hashlib.sha256(stable_compact_json_text(unsigned).encode("utf-8")).hexdigest()
+
+
+def portable_target_path(target_root: Path, target_rel: str) -> Path:
+    relative = Path(target_rel.replace("\\", "/"))
+    if relative.is_absolute() or relative.drive or not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
+        raise ValueError(f"unsafe portable import target path: {target_rel}")
+    root = target_root.resolve()
+    current = root
+    for part in relative.parts:
+        current = current / part
+        is_junction = bool(getattr(current, "is_junction", lambda: False)())
+        if current.is_symlink() or is_junction:
+            raise ValueError(f"portable import target crosses a symlink or junction: {target_rel}")
+    try:
+        current.parent.resolve().relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"portable import target escapes target root: {target_rel}") from exc
+    return current
+
+
+def load_portable_import_receipt(target_root: Path) -> dict[str, object] | None:
+    path = portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH)
+    if not path.exists():
+        return None
+    try:
+        record = json.loads(read_text(path))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid portable import receipt: {exc}") from exc
+    if not isinstance(record, dict) or record.get("schema_version") not in {PORTABLE_IMPORT_RECEIPT_SCHEMA, PORTABLE_IMPORT_RECEIPT_SCHEMA_V2}:
+        raise ValueError("invalid portable import receipt schema")
+    if record.get("pack_id") != EXPORT_PACK_ID:
+        raise ValueError("portable import receipt pack id mismatch")
+    expected = portable_import_record_digest(record, "receipt_digest")
+    if record.get("receipt_digest") != expected:
+        raise ValueError("portable import receipt digest mismatch")
+    managed = record.get("managed")
+    if not isinstance(managed, dict):
+        raise ValueError("portable import receipt managed entries are invalid")
+    for target_rel, entry in managed.items():
+        if not isinstance(target_rel, str) or not target_rel:
+            raise ValueError("portable import receipt managed target is invalid")
+        portable_target_path(target_root, target_rel)
+        if target_rel in {PORTABLE_IMPORT_RECEIPT_PATH, PORTABLE_IMPORT_INTENT_PATH, PORTABLE_REMOVAL_INTENT_PATH}:
+            raise ValueError(f"portable import receipt contains reserved target: {target_rel}")
+        if not isinstance(entry, dict):
+            raise ValueError(f"portable import receipt managed entry is invalid: {target_rel}")
+        if entry.get("kind") not in {"managed_file", "portable_managed_section"}:
+            raise ValueError(f"portable import receipt managed kind is invalid: {target_rel}")
+        overlay = (
+            entry.get("installed_digest") != entry.get("source_digest")
+            if entry.get("kind") == "managed_file"
+            else entry.get("local_overlay") is True
+        )
+        expected_ownership = "project_overlay_on_aide_managed" if overlay else "aide_portable_managed"
+        if entry.get("ownership") != expected_ownership:
+            raise ValueError(f"portable import receipt ownership is invalid: {target_rel}")
+        if record["schema_version"] == PORTABLE_IMPORT_RECEIPT_SCHEMA_V2 and entry.get("local_overlay") is not overlay:
+            raise ValueError(f"portable import receipt overlay state is invalid: {target_rel}")
+        if record["schema_version"] == PORTABLE_IMPORT_RECEIPT_SCHEMA and overlay:
+            raise ValueError(f"portable import v1 receipt cannot claim an overlay: {target_rel}")
+        if not isinstance(entry.get("source"), str) or not entry.get("source"):
+            raise ValueError(f"portable import receipt source is invalid: {target_rel}")
+        for digest_key in ("installed_digest", "source_digest"):
+            digest = entry.get(digest_key)
+            if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+                raise ValueError(f"portable import receipt {digest_key} is invalid: {target_rel}")
+    if record["schema_version"] == PORTABLE_IMPORT_RECEIPT_SCHEMA_V2:
+        disabled = record.get("disabled_features")
+        if not isinstance(disabled, list) or any(not isinstance(feature, str) or feature not in PORTABLE_OPTIONAL_FEATURES for feature in disabled) or disabled != sorted(set(disabled)):
+            raise ValueError("portable import receipt disabled features are invalid")
+        controls_digest = record.get("project_controls_digest")
+        if not isinstance(controls_digest, str) or (controls_digest != "missing" and re.fullmatch(r"[0-9a-f]{64}", controls_digest) is None):
+            raise ValueError("portable import receipt project controls digest is invalid")
+    return record
+
+
+def load_portable_import_intent(target_root: Path) -> dict[str, object] | None:
+    path = portable_target_path(target_root, PORTABLE_IMPORT_INTENT_PATH)
+    if not path.exists():
+        return None
+    try:
+        record = json.loads(read_text(path))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid portable import intent: {exc}") from exc
+    if not isinstance(record, dict) or record.get("schema_version") != PORTABLE_IMPORT_INTENT_SCHEMA:
+        raise ValueError("invalid portable import intent schema")
+    expected = portable_import_record_digest(record, "intent_digest")
+    if record.get("intent_digest") != expected:
+        raise ValueError("portable import intent digest mismatch")
+    if not isinstance(record.get("operations"), list) or not isinstance(record.get("next_receipt"), dict):
+        raise ValueError("portable import intent shape is invalid")
+    return record
+
+
+def load_portable_removal_intent(target_root: Path) -> dict[str, object] | None:
+    path = portable_target_path(target_root, PORTABLE_REMOVAL_INTENT_PATH)
+    if not path.exists():
+        return None
+    try:
+        record = json.loads(read_text(path))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid portable removal intent: {exc}") from exc
+    if not isinstance(record, dict) or record.get("schema_version") != PORTABLE_REMOVAL_INTENT_SCHEMA:
+        raise ValueError("invalid portable removal intent schema")
+    if record.get("pack_id") != EXPORT_PACK_ID or record.get("target") != normalize_rel(target_root.resolve()):
+        raise ValueError("portable removal intent identity mismatch")
+    if record.get("intent_digest") != portable_import_record_digest(record, "intent_digest"):
+        raise ValueError("portable removal intent digest mismatch")
+    if not isinstance(record.get("operations"), list) or not isinstance(record.get("receipt_digest"), str):
+        raise ValueError("portable removal intent shape is invalid")
+    if not isinstance(record.get("plan_digest"), str) or re.fullmatch(r"[0-9a-f]{64}", record["plan_digest"]) is None:
+        raise ValueError("portable removal intent plan digest is invalid")
+    plan_snapshot = record.get("plan_snapshot")
+    if plan_snapshot is not None and (
+        not isinstance(plan_snapshot, dict)
+        or plan_snapshot.get("plan_digest") != record["plan_digest"]
+        or portable_import_record_digest(plan_snapshot, "plan_digest") != record["plan_digest"]
+        or plan_snapshot.get("target") != record["target"]
+        or plan_snapshot.get("receipt_digest") != record["receipt_digest"]
+        or not isinstance(plan_snapshot.get("operations"), list)
+    ):
+        raise ValueError("portable removal intent plan snapshot is invalid")
+    if not isinstance(record.get("retire_receipt"), bool) or not isinstance(record.get("preserved"), list) or not isinstance(record.get("settled_absent"), list):
+        raise ValueError("portable removal intent completion shape is invalid")
+    if not isinstance(record.get("receipt_file_digest"), str) or re.fullmatch(r"[0-9a-f]{64}", record["receipt_file_digest"]) is None:
+        raise ValueError("portable removal intent receipt file digest is invalid")
+    if record["retire_receipt"] and record["preserved"]:
+        raise ValueError("portable removal intent cannot retire a preserved receipt")
+    # Older intents could retire a receipt based on an unguarded absence
+    # observation. They require manual reconciliation instead of replay.
+    if record["settled_absent"]:
+        raise ValueError("portable removal intent has unguarded absent targets")
+    if any(not isinstance(item, str) for item in record["preserved"]):
+        raise ValueError("portable removal intent preservation list is invalid")
+    targets: list[str] = []
+    for target_rel in record["preserved"]:
+        portable_target_path(target_root, target_rel)
+        targets.append(target_rel)
+    for item in record["settled_absent"]:
+        if not isinstance(item, dict) or item.get("kind") not in {"managed_file", "portable_managed_section"} or not isinstance(item.get("target"), str):
+            raise ValueError("portable removal intent settled entry is invalid")
+        portable_target_path(target_root, item["target"])
+        targets.append(item["target"])
+    for item in record["operations"]:
+        if not isinstance(item, dict) or item.get("kind") not in {"managed_file", "standalone_managed_agents", "managed_agents_section"}:
+            raise ValueError("portable removal intent operation is invalid")
+        target_rel = item.get("target")
+        if not isinstance(target_rel, str) or target_rel in {
+            PORTABLE_IMPORT_RECEIPT_PATH, PORTABLE_IMPORT_INTENT_PATH, PORTABLE_REMOVAL_INTENT_PATH
+        }:
+            raise ValueError("portable removal intent target is invalid")
+        portable_target_path(target_root, target_rel)
+        if not isinstance(item.get("installed_digest"), str) or re.fullmatch(r"[0-9a-f]{64}", item["installed_digest"]) is None:
+            raise ValueError("portable removal intent installed digest is invalid")
+        if not isinstance(item.get("preimage_digest"), str) or re.fullmatch(r"[0-9a-f]{64}", item["preimage_digest"]) is None:
+            raise ValueError("portable removal intent preimage digest is invalid")
+        if item["kind"] in {"standalone_managed_agents", "managed_agents_section"} and target_rel != "AGENTS.md":
+            raise ValueError("portable removal intent AGENTS target is invalid")
+        if item["kind"] == "managed_agents_section" and (
+            not isinstance(item.get("postimage_digest"), str)
+            or re.fullmatch(r"[0-9a-f]{64}", item["postimage_digest"]) is None
+        ):
+            raise ValueError("portable removal intent AGENTS postimage is invalid")
+        if item["kind"] == "managed_agents_section" and item.get("backup_rel") != f".AGENTS.md.aide-import-backup-{record['plan_digest'][:20]}":
+            raise ValueError("portable removal intent AGENTS backup is invalid")
+        if item["kind"] == "managed_agents_section" and item.get("preimage_file_identity") is not None and (
+            not isinstance(item["preimage_file_identity"], str)
+            or re.fullmatch(r"[0-9a-f]{24}", item["preimage_file_identity"]) is None
+        ):
+            raise ValueError("portable removal intent AGENTS preimage identity is invalid")
+        if item["kind"] == "managed_agents_section":
+            plan_agents = next((entry for entry in plan_snapshot["operations"] if isinstance(entry, dict) and entry.get("target") == "AGENTS.md"), None) if isinstance(plan_snapshot, dict) else None
+            if not isinstance(plan_agents, dict) or not plan_agents.get("removal_candidate") or plan_agents.get("kind") != "portable_managed_section" or plan_agents.get("installed_digest") != item["installed_digest"] or plan_agents.get("target_file_digest") != item["preimage_digest"]:
+                raise ValueError("portable removal intent AGENTS preimage differs from exact preview")
+        targets.append(target_rel)
+    if len(targets) != len(set(targets)):
+        raise ValueError("portable removal intent has duplicate targets")
+    return record
+
+
+def portable_managed_block(text: str) -> str | None:
+    begin = "<!-- AIDE-PORTABLE:BEGIN section=aide-lite-pack-v0"
+    end = "<!-- AIDE-PORTABLE:END section=aide-lite-pack-v0 -->"
+    start = text.find(begin)
+    finish = text.find(end, start + len(begin)) if start >= 0 else -1
+    if start < 0 or finish < 0:
+        return None
+    return text[start : finish + len(end)]
+
+
+def digest_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def target_file_digest(path: Path) -> str:
+    if not path.exists():
+        return "missing"
+    if not path.is_file():
+        return "not-a-file"
+    return sha256_file(path)
+
+
+def text_output_bytes(text: str) -> bytes:
+    return normalize_text(text).encode("utf-8")
+
+
+def import_pack_identity(pack_root: Path) -> dict[str, str]:
+    scalars = pack_manifest_scalars(pack_root)
+    return {
+        "pack_id": scalars.get("pack_id", EXPORT_PACK_ID),
+        "source_commit": scalars.get("source_commit", "unknown"),
+        "manifest_digest": sha256_file(pack_root / "manifest.yaml"),
+        "checksums_digest": sha256_file(pack_root / "checksums.json"),
+    }
+
+
+def receipt_managed_entry(receipt: dict[str, object] | None, target_rel: str, source_rel: str) -> dict[str, object] | None:
+    if receipt is None:
+        return None
+    managed = receipt.get("managed", {})
+    entry = managed.get(target_rel) if isinstance(managed, dict) else None
+    if not isinstance(entry, dict) or entry.get("source") != source_rel:
+        return None
+    return entry
+
+
+def predecessor_installed_digest(predecessor_pack: Path | None, source_rel: str, kind: str) -> str | None:
+    if predecessor_pack is None:
+        return None
+    source = predecessor_pack / "files" / source_rel
+    if not source.exists() or not source.is_file():
+        return None
+    if kind == "portable_managed_section":
+        block = portable_managed_block(read_text(source))
+        return digest_bytes(block.encode("utf-8")) if block is not None else None
+    return sha256_file(source)
+
+
+def receipt_matches_predecessor_baseline(
+    predecessor_pack: Path | None, source_rel: str, kind: str, entry: dict[str, object]
+) -> bool:
+    """Check receipt ownership against the caller-validated exact predecessor."""
+    if predecessor_pack is None:
+        return False
+    source = predecessor_pack / "files" / source_rel
+    if not source.is_file():
+        return False
+    if kind == "managed_file":
+        expected = sha256_file(source)
+        return entry.get("source_digest") == expected and entry.get("installed_digest") == expected
+    if kind != "portable_managed_section":
+        return False
+    try:
+        block = portable_managed_block(source.read_bytes().decode("utf-8"))
+    except UnicodeDecodeError:
+        return False
+    if block is None:
+        return False
+    normalized = block.replace("\r\n", "\n")
+    allowed_installed = {
+        digest_bytes(block.encode("utf-8")),
+        digest_bytes(normalized.encode("utf-8")),
+        digest_bytes(normalized.replace("\n", "\r\n").encode("utf-8")),
+    }
+    return entry.get("source_digest") == digest_bytes(block.encode("utf-8")) and entry.get("installed_digest") in allowed_installed
+
+
+def copy_operation(
+    source: Path,
+    source_rel: str,
+    target: Path,
+    target_rel: str,
+    receipt: dict[str, object] | None,
+    predecessor_pack: Path | None,
+    resolved_data: bytes | None = None,
+) -> tuple[dict[str, str], str | None]:
+    source_digest = sha256_file(source)
+    observed = target_file_digest(target)
+    managed = receipt.get("managed", {}) if receipt else {}
+    prior_target = managed.get(target_rel) if isinstance(managed, dict) else None
+    entry = receipt_managed_entry(receipt, target_rel, source_rel)
+    action = "copy"
+    ownership_basis = "new_path"
+    conflict: str | None = None
+    postimage_digest = source_digest
+    if prior_target is not None and (entry is None or entry.get("kind") != "managed_file"):
+        action, ownership_basis, conflict = "conflict", "receipt_source_mismatch", target_rel
+    elif entry is not None and observed in {"missing", "not-a-file"}:
+        action, ownership_basis, conflict = "conflict", "missing_or_invalid_receipt_owned_file", target_rel
+    elif observed == source_digest:
+        action = "unchanged"
+        ownership_basis = "identical_incoming_bytes"
+    elif entry is not None:
+        if source_digest == entry["source_digest"]:
+            action = "preserve_local"
+            ownership_basis = "unchanged_upstream_project_bytes"
+            postimage_digest = observed
+        elif entry.get("ownership") == "aide_portable_managed" and entry.get("local_overlay") is not True and entry["installed_digest"] == observed and receipt_matches_predecessor_baseline(predecessor_pack, source_rel, "managed_file", entry):
+            action = "update_owned"
+            ownership_basis = "installed_receipt"
+        else:
+            action, ownership_basis, conflict = "conflict", "project_edit_and_incoming_change", target_rel
+    elif observed != "missing":
+        if receipt is None and predecessor_installed_digest(predecessor_pack, source_rel, "managed_file") == observed:
+            action = "update_owned"
+            ownership_basis = "validated_predecessor_pack"
+        else:
+            action = "conflict"
+            ownership_basis = "unknown_or_locally_modified"
+            conflict = target_rel
+    if resolved_data is not None:
+        if action != "conflict" or entry is None or observed in {"missing", "not-a-file"} or predecessor_pack is None:
+            raise ValueError(f"resolution is not applicable to a receipt-owned conflict: {target_rel}")
+        base_digest = predecessor_installed_digest(predecessor_pack, source_rel, "managed_file")
+        if base_digest != entry["source_digest"] or source_digest == base_digest:
+            raise ValueError(f"resolution predecessor does not match the installed upstream baseline: {target_rel}")
+        action, ownership_basis, conflict = "resolve_owned", "project_selected_three_way", None
+        postimage_digest = digest_bytes(resolved_data)
+    return (
+        {
+            "source": source_rel,
+            "target": target_rel,
+            "action": action,
+            "kind": "managed_file",
+            "ownership_basis": ownership_basis,
+            "preimage_digest": observed,
+            "postimage_digest": postimage_digest,
+            "source_digest": source_digest,
+            **({"base_digest": str(base_digest), "resolution_digest": postimage_digest} if resolved_data is not None else {}),
+        },
+        conflict,
+    )
+
+
+def agents_operation(
+    source: Path,
+    source_rel: str,
+    target: Path,
+    target_rel: str,
+    receipt: dict[str, object] | None,
+    predecessor_pack: Path | None,
+) -> tuple[dict[str, str], str | None]:
+    template = source.read_bytes().decode("utf-8")
+    desired_block = portable_managed_block(template)
+    if desired_block is None:
+        raise ValueError("portable AGENTS template is missing its managed block")
+    existing = target.read_bytes().decode("utf-8") if target.exists() and target.is_file() else None
+    current_block = portable_managed_block(existing) if existing is not None else None
+    current_block_digest = digest_bytes(current_block.encode("utf-8")) if current_block is not None else "missing"
+    desired_block_digest = digest_bytes(desired_block.encode("utf-8"))
+    preimage_digest = target_file_digest(target)
+    desired_text = merge_agents_text(existing, template)
+    desired_installed_block = portable_managed_block(desired_text)
+    if desired_installed_block is None:
+        raise ValueError("portable AGENTS merge did not produce its managed block")
+    installed_digest = digest_bytes(desired_installed_block.encode("utf-8"))
+    postimage_digest = digest_bytes(desired_text.encode("utf-8"))
+    action = "merge_agents"
+    ownership_basis = "new_managed_section"
+    conflict: str | None = None
+    managed = receipt.get("managed", {}) if receipt else {}
+    prior_target = managed.get(target_rel) if isinstance(managed, dict) else None
+    entry = receipt_managed_entry(receipt, target_rel, source_rel)
+    if prior_target is not None and (entry is None or entry.get("kind") != "portable_managed_section"):
+        action, ownership_basis, conflict = "conflict", "receipt_source_mismatch", target_rel
+    elif entry is not None and current_block is None:
+        action, ownership_basis, conflict = "conflict", "missing_receipt_owned_section", target_rel
+    elif current_block_digest == desired_block_digest:
+        action = "unchanged"
+        ownership_basis = "identical_incoming_section"
+        postimage_digest = preimage_digest
+    elif entry is not None and desired_block_digest == entry["source_digest"]:
+        if entry.get("installed_digest") == current_block_digest and entry.get("ownership") == "aide_portable_managed" and entry.get("local_overlay") is not True:
+            action = "unchanged"
+            ownership_basis = "unchanged_receipt_owned_section"
+        else:
+            action = "preserve_local"
+            ownership_basis = "unchanged_upstream_project_section"
+        installed_digest = current_block_digest
+        postimage_digest = preimage_digest
+    elif current_block is not None:
+        if entry is not None and entry.get("installed_digest") == current_block_digest and entry.get("ownership") == "aide_portable_managed" and entry.get("local_overlay") is not True and receipt_matches_predecessor_baseline(predecessor_pack, source_rel, "portable_managed_section", entry):
+            action = "update_owned"
+            ownership_basis = "installed_receipt"
+        elif receipt is None and predecessor_installed_digest(predecessor_pack, source_rel, "portable_managed_section") == current_block_digest:
+            action = "update_owned"
+            ownership_basis = "validated_predecessor_pack"
+        else:
+            action = "conflict"
+            ownership_basis = "unknown_or_locally_modified"
+            conflict = target_rel
+    return (
+        {
+            "source": source_rel,
+            "target": target_rel,
+            "action": action,
+            "kind": "portable_managed_section",
+            "ownership_basis": ownership_basis,
+            "preimage_digest": preimage_digest,
+            "postimage_digest": postimage_digest,
+            "source_digest": desired_block_digest,
+            "installed_digest": installed_digest,
+        },
+        conflict,
+    )
+
+
+def read_portable_resolution_bytes(path: Path, pack_root: Path, target_root: Path) -> bytes:
+    """Read one bounded project-selected postimage outside both effect roots."""
+    path = Path(os.path.abspath(path))
+    for ancestor in (path, *path.parents):
+        if ancestor.is_symlink() or bool(getattr(ancestor, "is_junction", lambda: False)()):
+            raise ValueError(f"resolution crosses a reparse path: {path}")
+    if not path.is_file() or not stat.S_ISREG(path.stat().st_mode) or path.stat().st_size > 4 * 1024 * 1024:
+        raise ValueError(f"resolution must be a bounded regular file: {path}")
+    if os.name == "nt" and path.stat().st_nlink != 1:
+        raise ValueError("resolution must not be a hard-linked pack or target alias")
+    resolved = path.resolve()
+    if resolved in {pack_root, target_root} or pack_root in resolved.parents or target_root in resolved.parents:
+        raise ValueError("resolution file must be outside pack and target")
+    if os.name == "nt":
+        with windows_pinned_directory(path.parent, for_write=False):
+            chunks: list[bytes] = []
+            kernel, handle = portable_import_verified_leaf(path, None, read_only=True, max_bytes=4 * 1024 * 1024, capture_out=chunks)
+            try:
+                data = b"".join(chunks)
+            finally:
+                kernel.CloseHandle(handle)
+    else:
+        data = path.read_bytes()
+        if len(data) > 4 * 1024 * 1024:
+            raise ValueError("resolution file exceeds the size bound")
+    return data
+
+
 def import_pack_plan(
     pack_root: Path,
     target_root: Path,
     mode: str = "safe",
+    predecessor_pack: Path | None = None,
+    resolutions: dict[str, Path] | None = None,
+    resolution_data: dict[str, bytes] | None = None,
+    disabled_features: dict[str, str] | None = None,
 ) -> tuple[list[dict[str, str]], list[str], list[dict[str, str]]]:
     if mode not in IMPORT_MODES:
         raise ValueError(f"unsupported import mode: {mode}")
+    receipt = load_portable_import_receipt(target_root)
+    resolutions = resolutions or {}
+    resolution_data = resolution_data if resolution_data is not None else {}
+    disabled_features = disabled_features or {}
+    for target_rel in resolutions:
+        if not isinstance(target_rel, str) or "\\" in target_rel or normalize_rel(target_rel) != target_rel:
+            raise ValueError("invalid resolution target")
+        portable_target_path(target_root, target_rel)
     files_root = pack_root / "files"
     if not files_root.exists():
         raise ValueError(f"pack files root missing: {files_root}")
@@ -41661,36 +44303,1585 @@ def import_pack_plan(
             continue
         if rel == "AGENTS.md.template":
             target_rel = "AGENTS.md"
-            action = "merge_agents"
         else:
             target_rel = rel
-            action = "copy"
-        target = target_root / target_rel
-        if action == "copy" and target.exists():
-            same = sha256_file(source) == sha256_file(target) if target.is_file() else False
-            action = "unchanged" if same else "conflict"
-            if not same:
-                conflicts.append(target_rel)
-        operations.append({"source": rel, "target": target_rel, "action": action})
+        reserved_key = "/".join(part.rstrip(" .").casefold() for part in target_rel.split("/"))
+        if reserved_key in {PORTABLE_IMPORT_RECEIPT_PATH.casefold(), PORTABLE_IMPORT_INTENT_PATH.casefold(), PORTABLE_REPAIR_INTENT_PATH.casefold(), PORTABLE_REMOVAL_INTENT_PATH.casefold(), PORTABLE_LIFECYCLE_LOCK_PATH.casefold(), PROJECT_CUSTOMIZATIONS_PATH.casefold()}:
+            raise ValueError(f"pack payload collides with reserved project/import state: {target_rel}")
+        target = portable_target_path(target_root, target_rel)
+        feature = next((feature_id for feature_id, prefix in PORTABLE_OPTIONAL_FEATURES.items() if feature_id in disabled_features and target_rel.startswith(prefix)), None)
+        if feature is not None:
+            observed = target_file_digest(target)
+            operation = {"source": rel, "target": target_rel, "action": "preserve_disabled", "kind": "disabled_feature", "ownership_basis": f"project_disabled_feature:{feature}", "preimage_digest": observed, "postimage_digest": observed, "source_digest": sha256_file(source), "feature_id": feature}
+            conflict = None
+        elif rel == "AGENTS.md.template":
+            operation, conflict = agents_operation(source, rel, target, target_rel, receipt, predecessor_pack)
+        else:
+            resolved = None
+            if target_rel in resolutions:
+                resolved = read_portable_resolution_bytes(Path(resolutions[target_rel]), pack_root, target_root)
+                resolution_data[target_rel] = resolved
+            operation, conflict = copy_operation(source, rel, target, target_rel, receipt, predecessor_pack, resolved)
+        operations.append(operation)
+        if conflict:
+            conflicts.append(conflict)
         if rel == ".aide/profile.template.yaml":
-            operations.append({"source": rel, "target": ".aide/profile.yaml", "action": "create_from_template"})
+            generated_rel = ".aide/profile.yaml"
+            generated = portable_target_path(target_root, generated_rel)
+            desired = text_output_bytes(render_target_template(read_text(source), target_root))
+            operations.append({"source": rel, "target": generated_rel, "action": "preserve" if generated.exists() else "create_from_template", "kind": "target_owned_template", "ownership_basis": "target_owned_after_creation", "preimage_digest": target_file_digest(generated), "postimage_digest": target_file_digest(generated) if generated.exists() else digest_bytes(desired), "source_digest": sha256_file(source)})
         elif rel == ".aide/memory/project-state.template.md":
-            operations.append({"source": rel, "target": ".aide/memory/project-state.md", "action": "create_from_template"})
+            generated_rel = ".aide/memory/project-state.md"
+            generated = portable_target_path(target_root, generated_rel)
+            desired = text_output_bytes(render_target_template(read_text(source), target_root))
+            operations.append({"source": rel, "target": generated_rel, "action": "preserve" if generated.exists() else "create_from_template", "kind": "target_owned_template", "ownership_basis": "target_owned_after_creation", "preimage_digest": target_file_digest(generated), "postimage_digest": target_file_digest(generated) if generated.exists() else digest_bytes(desired), "source_digest": sha256_file(source)})
         elif rel == ".aide/memory/decisions.template.md":
-            operations.append({"source": rel, "target": ".aide/memory/decisions.md", "action": "create_from_template"})
+            generated_rel = ".aide/memory/decisions.md"
+            generated = portable_target_path(target_root, generated_rel)
+            desired = text_output_bytes(render_target_template(read_text(source), target_root))
+            operations.append({"source": rel, "target": generated_rel, "action": "preserve" if generated.exists() else "create_from_template", "kind": "target_owned_template", "ownership_basis": "target_owned_after_creation", "preimage_digest": target_file_digest(generated), "postimage_digest": target_file_digest(generated) if generated.exists() else digest_bytes(desired), "source_digest": sha256_file(source)})
         elif rel == ".aide/memory/open-risks.template.md":
-            operations.append({"source": rel, "target": ".aide/memory/open-risks.md", "action": "create_from_template"})
-    operations.append({"source": "<generated>", "target": ".gitignore", "action": "ensure_local_state_ignore"})
+            generated_rel = ".aide/memory/open-risks.md"
+            generated = portable_target_path(target_root, generated_rel)
+            desired = text_output_bytes(render_target_template(read_text(source), target_root))
+            operations.append({"source": rel, "target": generated_rel, "action": "preserve" if generated.exists() else "create_from_template", "kind": "target_owned_template", "ownership_basis": "target_owned_after_creation", "preimage_digest": target_file_digest(generated), "postimage_digest": target_file_digest(generated) if generated.exists() else digest_bytes(desired), "source_digest": sha256_file(source)})
+    gitignore = portable_target_path(target_root, ".gitignore")
+    existing_gitignore = read_text(gitignore) if gitignore.exists() and gitignore.is_file() else None
+    desired_gitignore = text_output_bytes(ensure_target_gitignore_text(existing_gitignore))
+    gitignore_preimage = target_file_digest(gitignore)
+    gitignore_postimage = digest_bytes(desired_gitignore)
+    operations.append({"source": "<generated>", "target": ".gitignore", "action": "unchanged" if gitignore_preimage == gitignore_postimage else "ensure_local_state_ignore", "kind": "target_owned_additive", "ownership_basis": "additive_ignore_rules", "preimage_digest": gitignore_preimage, "postimage_digest": gitignore_postimage, "source_digest": gitignore_postimage})
+    if set(resolutions) != set(resolution_data):
+        raise ValueError("resolution target is absent or outside the admitted payload")
     return operations, sorted(set(conflicts)), skipped
 
 
-def apply_import_pack(pack_root: Path, target_root: Path, dry_run: bool = False, mode: str = "safe") -> dict[str, object]:
+def import_plan_digest(
+    pack_root: Path,
+    target_root: Path,
+    mode: str,
+    operations: list[dict[str, str]],
+    conflicts: list[str],
+    skipped: list[dict[str, str]],
+    predecessor_pack: Path | None,
+    project_controls_digest: str = "missing",
+) -> str:
+    receipt = load_portable_import_receipt(target_root)
+    payload = {
+        "schema_version": "aide.portable-import-plan.v1",
+        "pack": import_pack_identity(pack_root),
+        "predecessor_pack": import_pack_identity(predecessor_pack) if predecessor_pack else None,
+        "target": normalize_rel(target_root.resolve()),
+        "mode": mode,
+        "prior_receipt_digest": receipt.get("receipt_digest") if receipt else None,
+        "project_controls_digest": project_controls_digest,
+        "operations": operations,
+        "conflicts": conflicts,
+        "skipped": skipped,
+    }
+    return digest_bytes(stable_compact_json_text(payload).encode("utf-8"))
+
+
+def load_project_customizations(target_root: Path, record_override: dict[str, object] | None = None) -> dict[str, dict[str, str]]:
+    """Read optional project-authored explanations; never grant ownership."""
+    path = portable_target_path(target_root, PROJECT_CUSTOMIZATIONS_PATH)
+    if record_override is None and not path.exists():
+        return {}
+    if record_override is None:
+        if not path.is_file() or path.stat().st_size > 65536:
+            raise ValueError("invalid project customizations file")
+        try:
+            record = json.loads(read_text(path))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"invalid project customizations JSON: {exc}") from exc
+    else:
+        record = record_override
+    if not isinstance(record, dict) or record.get("schema_version") not in {PROJECT_CUSTOMIZATIONS_SCHEMA, PROJECT_CUSTOMIZATIONS_SCHEMA_V2}:
+        raise ValueError("invalid project customizations schema")
+    if record["schema_version"] == PROJECT_CUSTOMIZATIONS_SCHEMA and set(record) != {"schema_version", "entries"}:
+        raise ValueError("invalid project customizations schema")
+    if record["schema_version"] == PROJECT_CUSTOMIZATIONS_SCHEMA_V2:
+        if set(record) != {"schema_version", "entries", "disabled_features"}:
+            raise ValueError("invalid project customizations v2 schema")
+        disabled = record["disabled_features"]
+        if not isinstance(disabled, list) or len(disabled) > len(PORTABLE_OPTIONAL_FEATURES):
+            raise ValueError("invalid disabled features")
+        seen: set[str] = set()
+        for feature in disabled:
+            if not isinstance(feature, dict) or not {"feature_id"} <= set(feature) <= {"feature_id", "rationale"}:
+                raise ValueError("invalid disabled feature entry")
+            feature_id = feature["feature_id"]
+            if not isinstance(feature_id, str) or feature_id not in PORTABLE_OPTIONAL_FEATURES or feature_id in seen:
+                raise ValueError("unknown or duplicate disabled feature")
+            seen.add(feature_id)
+            rationale = feature.get("rationale")
+            if rationale is not None and (not isinstance(rationale, str) or not rationale.strip() or len(rationale) > 500 or any(ord(char) < 32 for char in rationale)):
+                raise ValueError("invalid disabled feature rationale")
+    entries = record["entries"]
+    if not isinstance(entries, dict) or len(entries) > 256:
+        raise ValueError("invalid project customizations entries")
+    for target_rel, entry in entries.items():
+        if not isinstance(target_rel, str) or "\\" in target_rel or not target_rel or normalize_rel(target_rel) != target_rel:
+            raise ValueError("invalid project customization path")
+        portable_target_path(target_root, target_rel)
+        if not isinstance(entry, dict) or set(entry) != {"observed_digest", "rationale"}:
+            raise ValueError(f"invalid project customization entry: {target_rel}")
+        observed = entry["observed_digest"]
+        rationale = entry["rationale"]
+        if not isinstance(observed, str) or not re.fullmatch(r"[0-9a-f]{64}", observed):
+            raise ValueError(f"invalid project customization digest: {target_rel}")
+        if not isinstance(rationale, str) or not rationale.strip() or len(rationale) > 500 or any(ord(char) < 32 for char in rationale):
+            raise ValueError(f"invalid project customization rationale: {target_rel}")
+    return entries
+
+
+def project_update_controls(target_root: Path, prior_receipt: dict[str, object] | None) -> tuple[dict[str, str], str]:
+    """Treat v1 rationale as advisory; require valid v2 for effectful disables."""
+    path = portable_target_path(target_root, PROJECT_CUSTOMIZATIONS_PATH)
+    prior_disabled = prior_receipt.get("disabled_features", []) if prior_receipt else []
+    if not path.exists():
+        if prior_disabled:
+            raise ValueError("disabled-feature controls missing; explicit reenablement is required")
+        return {}, "missing"
+    if not path.is_file() or path.stat().st_size > 65536:
+        raise ValueError("invalid project customizations file")
+    try:
+        if os.name == "nt":
+            with windows_pinned_directory(path.parent, for_write=False):
+                chunks: list[bytes] = []
+                kernel, handle = portable_import_verified_leaf(path, None, read_only=True, max_bytes=65536, capture_out=chunks)
+                try:
+                    raw = b"".join(chunks)
+                finally:
+                    kernel.CloseHandle(handle)
+        else:
+            with path.open("rb") as stream:
+                raw = stream.read(65537)
+            if len(raw) > 65536:
+                raise ValueError("invalid project customizations file")
+        observed = digest_bytes(raw)
+        record = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid project customizations JSON: {exc}") from exc
+    if not isinstance(record, dict) or record.get("schema_version") != PROJECT_CUSTOMIZATIONS_SCHEMA_V2:
+        if prior_disabled:
+            raise ValueError("disabled-feature controls require explicit v2 reenablement")
+        return {}, "missing"
+    load_project_customizations(target_root, record_override=record)
+    return {item["feature_id"]: item.get("rationale", "unknown") for item in record["disabled_features"]}, observed
+
+
+def explain_import_result(result: dict[str, object], target_root: Path, customizations: dict[str, dict[str, str]] | None = None) -> list[dict[str, str]]:
+    """Explain ownership decisions without inferring a project's motivation."""
+    if customizations is None:
+        customizations = load_project_customizations(target_root)
+    reasons = {
+        "preserve": "Project-owned file exists; the incoming template cannot replace it.",
+        "conflict": "Existing bytes differ from incoming bytes and their ownership cannot be proven; the whole payload apply stops before writes.",
+        "update_owned": "The validated predecessor and observed managed bytes prove this recorded baseline may be updated.",
+        "preserve_local": "The upstream bytes are unchanged; the project-edited managed bytes remain installed.",
+        "resolve_owned": "A project-selected file supplies the exact postimage for this receipt-owned three-way conflict.",
+        "preserve_disabled": "The project disabled this optional example feature; its existing bytes remain untouched.",
+        "create_from_template": "No project-owned file exists; create the initial editable template.",
+        "merge_agents": "Add the portable section while retaining project-authored text outside it.",
+    }
+    explanations: list[dict[str, str]] = []
+    disabled_rationales: dict[str, str] = {}
+    controls_current = False
+    if any(operation.get("action") == "preserve_disabled" for operation in result.get("operations", [])):
+        disabled_rationales, controls_digest = project_update_controls(target_root, load_portable_import_receipt(target_root))
+        controls_current = controls_digest == result.get("project_controls_digest")
+    for operation in result.get("operations", []):
+        action = operation.get("action")
+        if action not in reasons:
+            continue
+        target_rel = operation["target"]
+        entry = customizations.get(target_rel)
+        known = (
+            entry is not None
+            and entry["observed_digest"] == operation["preimage_digest"]
+            and target_file_digest(portable_target_path(target_root, target_rel)) == operation["preimage_digest"]
+        )
+        feature_id = operation.get("feature_id") if action == "preserve_disabled" else None
+        disabled_reason = disabled_rationales.get(feature_id, "unknown") if controls_current and feature_id else "unknown"
+        rationale = disabled_reason if feature_id else entry["rationale"] if known else "unknown"
+        explanations.append({
+            "target": target_rel,
+            "action": action,
+            "ownership_basis": operation["ownership_basis"],
+            "observed_digest": operation["preimage_digest"],
+            "incoming_digest": operation["source_digest"],
+            "reason": reasons[action],
+            "rationale_status": ("recorded_for_current_controls" if disabled_reason != "unknown" else "unknown") if feature_id else "recorded_for_current_bytes" if known else "unknown",
+            "project_rationale": rationale,
+        })
+    return explanations
+
+
+def write_import_feedback(path: Path, pack_root: Path, target_root: Path, result: dict[str, object], explanations: list[dict[str, str]], *, predecessor_pack: Path | None = None) -> None:
+    """Create a manual-share packet only at an explicit, external output path."""
+    if path.exists() or path.is_symlink() or not path.parent.exists() or not path.parent.is_dir():
+        raise ValueError("feedback output must be a new file in an existing directory")
+    resolved = path.parent.resolve() / path.name
+    protected_roots = [pack_root.resolve(), target_root.resolve()]
+    if predecessor_pack is not None:
+        protected_roots.append(predecessor_pack.resolve())
+    if any(resolved == root or root in resolved.parents for root in protected_roots):
+        raise ValueError("feedback output must be outside all supplied packs and target")
+    packet = {
+        "schema_version": "aide.import-feedback.v1",
+        "pack": import_pack_identity(pack_root),
+        "target": normalize_rel(target_root),
+        "plan_digest": result["plan_digest"],
+        "status": result["status"],
+        "explanations": explanations,
+        "sharing": "manual_only",
+        "network_calls": False,
+        "provider_or_model_calls": False,
+    }
+    with resolved.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(packet, sort_keys=True, indent=2, ensure_ascii=False) + "\n")
+
+
+def build_portable_import_receipt(
+    pack_root: Path,
+    mode: str,
+    operations: list[dict[str, str]],
+    plan_digest: str,
+    predecessor_pack: Path | None,
+    disabled_features: dict[str, str] | None = None,
+    project_controls_digest: str = "missing",
+) -> dict[str, object]:
+    managed: dict[str, dict[str, str]] = {}
+    for operation in operations:
+        kind = operation.get("kind")
+        if kind not in {"managed_file", "portable_managed_section"} or operation.get("action") == "conflict":
+            continue
+        installed_digest = operation.get("installed_digest") if kind == "portable_managed_section" else operation.get("postimage_digest")
+        overlay = (
+            installed_digest != operation.get("source_digest")
+            if kind == "managed_file"
+            else operation.get("action") == "preserve_local"
+        )
+        managed[operation["target"]] = {
+            "source": operation["source"],
+            "kind": kind,
+            "installed_digest": str(installed_digest),
+            "source_digest": operation.get("source_digest", ""),
+            "ownership": "project_overlay_on_aide_managed" if overlay else "aide_portable_managed",
+            "local_overlay": overlay,
+        }
+    record: dict[str, object] = {
+        "schema_version": PORTABLE_IMPORT_RECEIPT_SCHEMA_V2,
+        "pack_id": EXPORT_PACK_ID,
+        "mode": mode,
+        "pack": import_pack_identity(pack_root),
+        "predecessor_pack": import_pack_identity(predecessor_pack) if predecessor_pack else None,
+        "plan_digest": plan_digest,
+        "managed": dict(sorted(managed.items())),
+        "disabled_features": sorted(disabled_features or {}),
+        "project_controls_digest": project_controls_digest,
+        "network_calls": False,
+        "provider_or_model_calls": False,
+    }
+    record["receipt_digest"] = portable_import_record_digest(record, "receipt_digest")
+    return record
+
+
+def build_portable_import_intent(
+    target_root: Path,
+    plan_digest: str,
+    operations: list[dict[str, str]],
+    next_receipt: dict[str, object],
+    skipped: list[dict[str, str]] | None = None,
+    plan_operations: list[dict[str, str]] | None = None,
+) -> dict[str, object]:
+    writes = [
+        {
+            "target": operation["target"],
+            "preimage_digest": operation["preimage_digest"],
+            "postimage_digest": operation["postimage_digest"],
+            "backup_rel": operation.get("backup_rel"),
+        }
+        for operation in operations
+        if operation.get("action") in {"copy", "update_owned", "resolve_owned", "merge_agents", "create_from_template", "ensure_local_state_ignore"}
+        and operation.get("preimage_digest") != operation.get("postimage_digest")
+    ]
+    record: dict[str, object] = {
+        "schema_version": PORTABLE_IMPORT_INTENT_SCHEMA,
+        "pack_id": EXPORT_PACK_ID,
+        "target": normalize_rel(target_root.resolve()),
+        "plan_digest": plan_digest,
+        "operations": writes,
+        "next_receipt": next_receipt,
+    }
+    if skipped is not None:
+        record["plan_snapshot"] = {"operations": plan_operations if plan_operations is not None else operations, "skipped": skipped}
+    record["intent_digest"] = portable_import_record_digest(record, "intent_digest")
+    return record
+
+
+def portable_receipt_state_matches(left: dict[str, object] | None, right: dict[str, object]) -> bool:
+    if left is None:
+        return False
+    return all(left.get(key) == right.get(key) for key in ("schema_version", "pack_id", "mode", "pack", "managed", "disabled_features", "project_controls_digest"))
+
+
+def portable_removal_operation(
+    target_root: Path,
+    target_rel: str,
+    entry: dict[str, object],
+) -> dict[str, object]:
+    target = portable_target_path(target_root, target_rel)
+    kind = str(entry["kind"])
+    installed_digest = str(entry["installed_digest"])
+    target_digest = target_file_digest(target)
+    observed_digest = target_digest
+    preserves_authored_content = kind == "portable_managed_section"
+    observation = "managed_file_bytes"
+    if kind == "portable_managed_section":
+        observation = "portable_managed_section_bytes"
+        if target_digest in {"missing", "not-a-file"}:
+            observed_digest = target_digest
+        else:
+            try:
+                block = portable_managed_block(target.read_bytes().decode("utf-8"))
+            except (OSError, UnicodeDecodeError):
+                block = None
+                observed_digest = "unreadable-text"
+            else:
+                observed_digest = digest_bytes(block.encode("utf-8")) if block is not None else "managed-section-missing"
+
+    if entry.get("local_overlay") or entry.get("ownership") == "project_overlay_on_aide_managed":
+        action = "preserve_project_overlay"
+        state = "recorded_project_overlay"
+        removal_candidate = False
+    elif observed_digest == installed_digest:
+        action = "remove_managed_section_future" if kind == "portable_managed_section" else "remove_managed_file_future"
+        state = "unchanged_recorded_managed_bytes"
+        removal_candidate = True
+    elif observed_digest in {"missing", "managed-section-missing"}:
+        action = "preserve_already_absent"
+        state = "recorded_managed_bytes_absent"
+        removal_candidate = False
+    else:
+        action = "preserve_local_or_unknown"
+        state = "recorded_managed_bytes_changed_or_unreadable"
+        removal_candidate = False
+
+    return {
+        "target": target_rel,
+        "source": str(entry["source"]),
+        "kind": kind,
+        "ownership": str(entry["ownership"]),
+        "ownership_basis": "digest_validated_portable_import_receipt",
+        "observation": observation,
+        "state": state,
+        "action": action,
+        "removal_candidate": removal_candidate,
+        "installed_digest": installed_digest,
+        "observed_digest": observed_digest,
+        "target_file_digest": target_digest,
+        "preserves_authored_content": preserves_authored_content,
+    }
+
+
+def build_portable_removal_plan(target_root: Path) -> dict[str, object]:
+    target_root = target_root.resolve()
+    if not target_root.exists() or not target_root.is_dir():
+        raise ValueError(f"portable removal target is not a directory: {target_root}")
+    if load_portable_removal_intent(target_root) is not None:
+        raise ValueError("portable removal recovery must complete before a new plan")
+    pending_path = portable_target_path(target_root, PORTABLE_IMPORT_INTENT_PATH)
+    if pending_path.exists():
+        load_portable_import_intent(target_root)
+        raise ValueError("portable import recovery must complete before removal planning")
+    receipt = load_portable_import_receipt(target_root)
+    if receipt is None:
+        raise ValueError("portable import receipt missing")
+    managed = receipt["managed"]
+    assert isinstance(managed, dict)
+    operations = [
+        portable_removal_operation(target_root, target_rel, entry)
+        for target_rel, entry in sorted(managed.items())
+        if isinstance(target_rel, str) and isinstance(entry, dict)
+    ]
+    candidates = sorted(str(item["target"]) for item in operations if item["removal_candidate"])
+    preserved = sorted(str(item["target"]) for item in operations if not item["removal_candidate"])
+    status = "PLANNED" if not preserved else "PRESERVATION_REQUIRED"
+    observed_state = {
+        str(item["target"]): {
+            "observed_digest": item["observed_digest"],
+            "target_file_digest": item["target_file_digest"],
+        }
+        for item in operations
+    }
+    plan: dict[str, object] = {
+        "schema_version": PORTABLE_REMOVAL_PLAN_SCHEMA,
+        "status": status,
+        "pack_id": EXPORT_PACK_ID,
+        "target": normalize_rel(target_root),
+        "receipt_path": PORTABLE_IMPORT_RECEIPT_PATH,
+        "receipt_digest": receipt["receipt_digest"],
+        "receipt_pack": receipt.get("pack"),
+        "observed_state_digest": digest_bytes(stable_compact_json_text(observed_state).encode("utf-8")),
+        "operation_count": len(operations),
+        "candidate_count": len(candidates),
+        "preservation_count": len(preserved),
+        "candidate_targets": candidates,
+        "preserved_recorded_targets": preserved,
+        "operations": operations,
+        "read_only": True,
+        "apply_allowed": False,
+        "delete_allowed": False,
+        "managed_section_removal_allowed": False,
+        "unknown_ownership_preserved": True,
+        "target_owned_content_preserved": True,
+        "authored_agents_content_preserved": True,
+        "receipt_preserved_until_future_verified_apply": True,
+        "network_calls": False,
+        "provider_or_model_calls": False,
+    }
+    plan["plan_digest"] = portable_import_record_digest(plan, "plan_digest")
+    return plan
+
+
+def windows_unlink_exact_portable_file(
+    path: Path, expected_digest: str, before_disposition: Callable[[], None] | None = None,
+    *, expected_identity: str | None = None,
+) -> None:
+    """Hash and unlink the same opened regular file while its ancestors are pinned.
+
+    This requires the reviewed Windows pinned-directory primitive shared with
+    portable repair. A pathname digest followed by Path.unlink is insufficient.
+    """
+    if os.name != "nt":
+        raise ValueError("portable removal apply requires Windows anchored file handles")
+    import ctypes
+    from ctypes import wintypes
+
+    class FileTime(ctypes.Structure):
+        _fields_ = [("low", wintypes.DWORD), ("high", wintypes.DWORD)]
+
+    class FileInfo(ctypes.Structure):
+        _fields_ = [("attributes", wintypes.DWORD), ("created", FileTime), ("accessed", FileTime), ("written", FileTime), ("volume", wintypes.DWORD), ("size_high", wintypes.DWORD), ("size_low", wintypes.DWORD), ("links", wintypes.DWORD), ("index_high", wintypes.DWORD), ("index_low", wintypes.DWORD)]
+
+    class DispositionInfo(ctypes.Structure):
+        _fields_ = [("delete", wintypes.BOOLEAN)]
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.GetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.POINTER(FileInfo)]
+    kernel.GetFileInformationByHandle.restype = wintypes.BOOL
+    kernel.ReadFile.argtypes = [wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD), wintypes.LPVOID]
+    kernel.ReadFile.restype = wintypes.BOOL
+    kernel.SetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD]
+    kernel.SetFileInformationByHandle.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    invalid = ctypes.c_void_p(-1).value
+
+    with windows_pinned_directory(path.parent):
+        # Exclude both write and delete sharing. No other writer may alter the
+        # bytes between the handle-bound digest and disposition effect.
+        handle = kernel.CreateFileW(str(path), 0x80000000 | 0x00010000, 0x1, None, 3, 0x00200000, None)
+        if handle == invalid or handle is None:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            info = FileInfo()
+            if not kernel.GetFileInformationByHandle(handle, ctypes.byref(info)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if info.attributes & (0x10 | 0x400):  # directory or reparse point
+                raise ValueError(f"portable removal leaf is not a regular file: {path}")
+            if info.links != 1:
+                raise ValueError(f"portable removal leaf has multiple hard links: {path}")
+            identity = f"{info.volume:08x}{info.index_high:08x}{info.index_low:08x}"
+            if expected_identity is not None and identity != expected_identity:
+                raise RuntimeError(f"portable removal leaf identity changed: {path}")
+            digest = hashlib.sha256()
+            buffer = ctypes.create_string_buffer(65536)
+            count = wintypes.DWORD()
+            while True:
+                if not kernel.ReadFile(handle, buffer, len(buffer), ctypes.byref(count), None):
+                    raise ctypes.WinError(ctypes.get_last_error())
+                if not count.value:
+                    break
+                digest.update(buffer.raw[:count.value])
+            if digest.hexdigest() != expected_digest:
+                raise RuntimeError(f"stale owned removal preimage: {path}")
+            if before_disposition is not None:
+                before_disposition()
+            disposition = DispositionInfo(True)
+            if not kernel.SetFileInformationByHandle(handle, 4, ctypes.byref(disposition), ctypes.sizeof(disposition)):
+                raise ctypes.WinError(ctypes.get_last_error())
+        finally:
+            kernel.CloseHandle(handle)
+
+
+def standalone_portable_agents_digest(target_root: Path, item: dict[str, object]) -> str | None:
+    """Recognize only the exact whole AGENTS file made for an empty target."""
+    if item.get("target") != "AGENTS.md" or item.get("kind") != "portable_managed_section":
+        return None
+    path = portable_target_path(target_root, "AGENTS.md")
+    try:
+        data = path.read_bytes()
+        text = data.decode("utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+    block = portable_managed_block(text)
+    if block is None or digest_bytes(block.encode("utf-8")) != item.get("installed_digest"):
+        return None
+    if data != merge_agents_text(None, block).encode("utf-8"):
+        return None
+    digest = digest_bytes(data)
+    return digest if digest == item.get("target_file_digest") else None
+
+
+def portable_agents_section_postimage(data: bytes, installed_digest: str) -> bytes | None:
+    """Remove exactly one receipt-owned block without changing outside bytes."""
+    begin = b"<!-- AIDE-PORTABLE:BEGIN section=aide-lite-pack-v0"
+    end = b"<!-- AIDE-PORTABLE:END section=aide-lite-pack-v0 -->"
+    if data.count(begin) != 1 or data.count(end) != 1:
+        return None
+    start = data.find(begin)
+    finish = data.find(end, start + len(begin))
+    if finish < 0:
+        return None
+    finish += len(end)
+    if digest_bytes(data[start:finish]) != installed_digest:
+        return None
+    return data[:start] + data[finish:]
+
+
+def portable_removal_entry_still_absent(target_root: Path, item: dict[str, object]) -> bool:
+    path = portable_target_path(target_root, str(item["target"]))
+    observed = target_file_digest(path)
+    if observed == "missing":
+        return True
+    if item["kind"] != "portable_managed_section" or observed == "not-a-file":
+        return False
+    try:
+        return portable_managed_block(read_text(path)) is None
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def portable_removal_recovery_observations(target_root: Path, intent: dict[str, object]) -> list[dict[str, str]]:
+    observations: list[dict[str, str]] = []
+    for item in intent["operations"]:
+        target_rel = str(item["target"])
+        observed = target_file_digest(portable_target_path(target_root, target_rel))
+        if item["kind"] == "managed_agents_section":
+            backup = portable_target_path(target_root, str(item["backup_rel"]))
+            # A published postimage does not reconcile a failed replacement:
+            # the original authored file may still live at this exact name.
+            backup_present = os.path.lexists(backup)
+            state = "unknown" if backup_present else "removed" if observed == item["postimage_digest"] else "pending" if observed == item["preimage_digest"] else "unknown"
+        else:
+            state = "removed" if observed == "missing" else "pending" if observed == item["preimage_digest"] else "unknown"
+        observation = {"target": target_rel, "state": state, "observed_digest": observed}
+        if item["kind"] == "managed_agents_section":
+            observation["backup_state"] = "present" if backup_present else "absent"
+        observations.append(observation)
+    for item in intent["settled_absent"]:
+        observations.append({"target": str(item["target"]), "state": "removed" if portable_removal_entry_still_absent(target_root, item) else "unknown", "observed_digest": target_file_digest(portable_target_path(target_root, str(item["target"])))})
+    return observations
+
+
+def portable_removal_restore_agents_preimage(target_root: Path, item: dict[str, object]) -> bool:
+    """Restore only the intent-bound authored file parked in the rename gap."""
+    if not isinstance(item.get("preimage_file_identity"), str):
+        return False
+    agents = portable_target_path(target_root, "AGENTS.md")
+    backup = portable_target_path(target_root, str(item["backup_rel"]))
+    if target_file_digest(agents) != "missing" or not os.path.lexists(backup):
+        return False
+    try:
+        with windows_pinned_directory(agents.parent) as parent:
+            identity: list[str] = []
+            kernel, handle = portable_import_verified_leaf(
+                backup, str(item["preimage_digest"]), identity_out=identity
+            )
+            try:
+                if identity != [item["preimage_file_identity"]] or target_file_digest(agents) != "missing":
+                    return False
+                # replace=False on the open handle refuses a rival target.
+                portable_import_rename_open_leaf(kernel, handle, parent, str(agents))
+            finally:
+                kernel.CloseHandle(handle)
+            restored_identity: list[str] = []
+            kernel, handle = portable_import_verified_leaf(
+                agents, str(item["preimage_digest"]), identity_out=restored_identity
+            )
+            kernel.CloseHandle(handle)
+            return restored_identity == identity and not os.path.lexists(backup)
+    except (OSError, RuntimeError, ValueError):
+        return False
+
+
+def _apply_portable_removal_pinned(
+    target_root: Path,
+    expected_plan_digest: str,
+    fail_after_removals: int | None = None,
+    fail_after_receipt: bool = False,
+) -> dict[str, object]:
+    """Remove exact owned files and the AGENTS block before receipt retirement."""
+    if not expected_plan_digest or re.fullmatch(r"[0-9a-f]{64}", expected_plan_digest) is None:
+        raise ValueError("portable removal apply requires an exact preview plan digest")
+    if os.name != "nt":
+        raise ValueError("portable removal apply requires Windows anchored file handles")
+    with portable_lifecycle_lock(target_root):
+        if load_portable_import_intent(target_root) is not None:
+            raise ValueError("portable import recovery must complete before removal")
+        intent = load_portable_removal_intent(target_root)
+        receipt = load_portable_import_receipt(target_root)
+        if intent is not None and intent["plan_digest"] != expected_plan_digest:
+            return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": intent["preserved"], "recovery": portable_removal_recovery_observations(target_root, intent)}
+        if receipt is None:
+            if intent is None:
+                raise ValueError("portable import receipt missing")
+            observations = portable_removal_recovery_observations(target_root, intent)
+            if not intent["retire_receipt"] or any(item["state"] != "removed" for item in observations):
+                return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": intent["preserved"], "recovery": observations}
+            windows_unlink_exact_portable_file(
+                portable_target_path(target_root, PORTABLE_REMOVAL_INTENT_PATH),
+                digest_bytes(stable_json_text(intent).encode("utf-8")),
+            )
+            return {"status": "DETACHED_RECOVERED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": [], "receipt_retained": False}
+        if intent is None:
+            plan = build_portable_removal_plan(target_root)
+            if plan["plan_digest"] != expected_plan_digest:
+                return {"status": "STALE_PLAN", "plan_digest": plan["plan_digest"], "removed": [], "preserved": plan["preserved_recorded_targets"]}
+            if receipt["receipt_digest"] != plan["receipt_digest"]:
+                return {"status": "STALE_PLAN", "plan_digest": plan["plan_digest"], "removed": [], "preserved": plan["preserved_recorded_targets"]}
+            for item in plan["operations"]:
+                if target_file_digest(portable_target_path(target_root, str(item["target"]))) != item["target_file_digest"]:
+                    return {"status": "STALE_PLAN", "plan_digest": plan["plan_digest"], "removed": [], "preserved": plan["preserved_recorded_targets"]}
+            candidates: list[dict[str, object]] = []
+            preserved: list[str] = []
+            settled_absent: list[dict[str, str]] = []
+            for item in plan["operations"]:
+                if not item["removal_candidate"]:
+                    # An absent leaf cannot be held absent through receipt
+                    # retirement. Keep the receipt and installed runner so a
+                    # later writer cannot leave an unrecorded replacement.
+                    preserved.append(str(item["target"]))
+                elif item["kind"] == "managed_file":
+                    candidates.append({"target": item["target"], "kind": "managed_file", "installed_digest": item["installed_digest"], "preimage_digest": item["installed_digest"]})
+                else:
+                    whole_digest = standalone_portable_agents_digest(target_root, item)
+                    if whole_digest is not None:
+                        candidates.append({"target": item["target"], "kind": "standalone_managed_agents", "installed_digest": item["installed_digest"], "preimage_digest": whole_digest})
+                    else:
+                        agents_path = portable_target_path(target_root, "AGENTS.md")
+                        agents_bytes = agents_path.read_bytes()
+                        postimage = portable_agents_section_postimage(agents_bytes, str(item["installed_digest"]))
+                        if postimage is None or digest_bytes(agents_bytes) != item["target_file_digest"]:
+                            preserved.append(str(item["target"]))
+                        else:
+                            identity: list[str] = []
+                            with windows_pinned_directory(agents_path.parent):
+                                identity_kernel, identity_handle = portable_import_verified_leaf(
+                                    agents_path, str(item["target_file_digest"]), identity_out=identity
+                                )
+                                identity_kernel.CloseHandle(identity_handle)
+                            candidates.append({
+                                "target": "AGENTS.md",
+                                "kind": "managed_agents_section",
+                                "installed_digest": item["installed_digest"],
+                                "preimage_digest": item["target_file_digest"],
+                                "postimage_digest": digest_bytes(postimage),
+                                "backup_rel": f".AGENTS.md.aide-import-backup-{expected_plan_digest[:20]}",
+                                "preimage_file_identity": identity[0],
+                            })
+            if preserved:
+                candidates = [item for item in candidates if item["target"] != PORTABLE_REMOVAL_RUNNER_PATH]
+                if any(item["target"] == PORTABLE_REMOVAL_RUNNER_PATH and item["removal_candidate"] for item in plan["operations"]):
+                    preserved.append(PORTABLE_REMOVAL_RUNNER_PATH)
+            candidates.sort(key=lambda item: (item["target"] == PORTABLE_REMOVAL_RUNNER_PATH, str(item["target"])))
+            preserved = sorted(set(preserved))
+            if not candidates and preserved:
+                return {"status": "PRESERVATION_REQUIRED", "plan_digest": expected_plan_digest, "removed": [], "preserved": preserved}
+            receipt_file_digest = target_file_digest(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH))
+            if re.fullmatch(r"[0-9a-f]{64}", receipt_file_digest) is None:
+                raise ValueError("portable import receipt changed before removal intent")
+            intent = {
+                "schema_version": PORTABLE_REMOVAL_INTENT_SCHEMA,
+                "pack_id": EXPORT_PACK_ID,
+                "target": normalize_rel(target_root),
+                "plan_digest": expected_plan_digest,
+                "plan_snapshot": plan,
+                "receipt_digest": receipt["receipt_digest"],
+                "receipt_file_digest": receipt_file_digest,
+                "operations": candidates,
+                "preserved": preserved,
+                "settled_absent": settled_absent,
+                "retire_receipt": not preserved,
+            }
+            intent["intent_digest"] = portable_import_record_digest(intent, "intent_digest")
+            atomic_create_bytes_no_clobber(
+                portable_target_path(target_root, PORTABLE_REMOVAL_INTENT_PATH),
+                stable_json_text(intent).encode("utf-8"),
+            )
+        if receipt["receipt_digest"] != intent["receipt_digest"]:
+            raise ValueError("portable removal receipt changed during recovery")
+        managed = receipt["managed"]
+        assert isinstance(managed, dict)
+        covered_targets = {str(item["target"]) for item in intent["operations"]} | set(intent["preserved"]) | {str(item["target"]) for item in intent["settled_absent"]}
+        if covered_targets != set(managed):
+            raise ValueError("portable removal intent does not cover exact receipt targets")
+        for item in intent["settled_absent"]:
+            entry = managed[item["target"]]
+            if entry["kind"] != item["kind"] or not portable_removal_entry_still_absent(target_root, item):
+                return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": intent["preserved"], "recovery": portable_removal_recovery_observations(target_root, intent)}
+        for item in intent["operations"]:
+            entry = managed.get(item["target"])
+            expected_kind = "managed_file" if item["kind"] == "managed_file" else "portable_managed_section"
+            if not isinstance(entry, dict) or entry.get("kind") != expected_kind or entry.get("installed_digest") != item["installed_digest"]:
+                raise ValueError(f"portable removal intent no longer matches receipt: {item['target']}")
+            if item["kind"] == "managed_file" and item["preimage_digest"] != entry["installed_digest"]:
+                raise ValueError(f"portable removal intent preimage differs from installed bytes: {item['target']}")
+            if item["kind"] == "standalone_managed_agents":
+                agents_path = portable_target_path(target_root, "AGENTS.md")
+                if target_file_digest(agents_path) != "missing" and standalone_portable_agents_digest(
+                    target_root,
+                    {"target": "AGENTS.md", "kind": "portable_managed_section", "installed_digest": entry["installed_digest"], "target_file_digest": item["preimage_digest"]},
+                ) is None:
+                    return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": intent["preserved"], "recovery": portable_removal_recovery_observations(target_root, intent)}
+            if item["kind"] == "managed_agents_section":
+                agents_path = portable_target_path(target_root, "AGENTS.md")
+                observed = target_file_digest(agents_path)
+                if observed == "missing":
+                    if not portable_removal_restore_agents_preimage(target_root, item):
+                        return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": intent["preserved"], "recovery": portable_removal_recovery_observations(target_root, intent)}
+                    observed = target_file_digest(agents_path)
+                if observed == item["preimage_digest"]:
+                    postimage = portable_agents_section_postimage(agents_path.read_bytes(), str(entry["installed_digest"]))
+                    if postimage is None or digest_bytes(postimage) != item["postimage_digest"]:
+                        return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": intent["preserved"], "recovery": portable_removal_recovery_observations(target_root, intent)}
+                elif observed == item["postimage_digest"]:
+                    if b"<!-- AIDE-PORTABLE:BEGIN section=aide-lite-pack-v0" in agents_path.read_bytes():
+                        return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": intent["preserved"], "recovery": portable_removal_recovery_observations(target_root, intent)}
+                else:
+                    return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": [], "preserved": intent["preserved"], "recovery": portable_removal_recovery_observations(target_root, intent)}
+        removed: list[str] = []
+        for item in intent["operations"]:
+            target_rel = str(item["target"])
+            target = portable_target_path(target_root, target_rel)
+            observed = target_file_digest(target)
+            if item["kind"] == "managed_agents_section" and observed == item["postimage_digest"]:
+                continue
+            if item["kind"] != "managed_agents_section" and observed == "missing":
+                continue
+            if observed != item["preimage_digest"]:
+                return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": removed, "preserved": intent.get("preserved", []), "recovery": portable_removal_recovery_observations(target_root, intent)}
+            try:
+                if item["kind"] == "managed_agents_section":
+                    postimage = portable_agents_section_postimage(target.read_bytes(), str(item["installed_digest"]))
+                    if postimage is None or digest_bytes(postimage) != item["postimage_digest"]:
+                        raise RuntimeError("stale portable AGENTS section preimage")
+                    portable_import_write_exact(target_root, target_rel, postimage, str(item["preimage_digest"]), str(item["backup_rel"]))
+                else:
+                    windows_unlink_exact_portable_file(target, str(item["preimage_digest"]))
+            except (OSError, RuntimeError, ValueError):
+                return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": removed, "preserved": intent.get("preserved", []), "recovery": portable_removal_recovery_observations(target_root, intent)}
+            removed.append(target_rel)
+            if fail_after_removals is not None and len(removed) >= fail_after_removals:
+                return {"status": "INTERRUPTED", "plan_digest": intent["plan_digest"], "removed": removed, "preserved": intent.get("preserved", []), "recovery": portable_removal_recovery_observations(target_root, intent)}
+        # Observe before opening the no-write/no-delete AGENTS guard: ordinary
+        # pathname reads cannot reopen that leaf while the guard is held.
+        observations = portable_removal_recovery_observations(target_root, intent)
+        guard_kernel = guard_handle = None
+        try:
+            section_operation = next((item for item in intent["operations"] if item["kind"] == "managed_agents_section"), None)
+            if section_operation is not None:
+                try:
+                    # Keep the postimage pinned through backup cleanup and
+                    # receipt/intent retirement. The backup delete hashes and
+                    # disposes the same anchored, single-link regular handle.
+                    guard_kernel, guard_handle = portable_import_verified_leaf(
+                        portable_target_path(target_root, "AGENTS.md"), str(section_operation["postimage_digest"])
+                    )
+                    backup_path = portable_target_path(target_root, str(section_operation["backup_rel"]))
+                    if os.path.lexists(backup_path):
+                        identity = section_operation.get("preimage_file_identity")
+                        if not isinstance(identity, str):
+                            raise RuntimeError("portable AGENTS backup lacks original file identity")
+                        windows_unlink_exact_portable_file(
+                            backup_path, str(section_operation["preimage_digest"]), expected_identity=identity
+                        )
+                        if os.path.lexists(backup_path):
+                            raise RuntimeError("original portable AGENTS backup remains after disposition")
+                except (OSError, RuntimeError, ValueError):
+                    return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": removed, "preserved": intent.get("preserved", []), "recovery": observations}
+                for observation in observations:
+                    if observation["target"] == "AGENTS.md":
+                        observation["state"] = "removed"
+                        observation["backup_state"] = "absent"
+            if any(item["state"] != "removed" for item in observations):
+                return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": removed, "preserved": intent.get("preserved", []), "recovery": observations}
+            current_receipt = load_portable_import_receipt(target_root)
+            receipt_path = portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH)
+            if current_receipt is None or current_receipt["receipt_digest"] != intent["receipt_digest"] or target_file_digest(receipt_path) != intent["receipt_file_digest"]:
+                raise ValueError("portable removal receipt changed before intent reconciliation")
+            if intent["retire_receipt"]:
+                try:
+                    windows_unlink_exact_portable_file(receipt_path, str(intent["receipt_file_digest"]))
+                except (OSError, RuntimeError, ValueError):
+                    return {"status": "RECOVERY_REQUIRED", "plan_digest": intent["plan_digest"], "removed": removed, "preserved": [], "recovery": observations}
+                if fail_after_receipt:
+                    return {"status": "INTERRUPTED", "plan_digest": intent["plan_digest"], "removed": removed, "preserved": [], "recovery": observations}
+            intent_path = portable_target_path(target_root, PORTABLE_REMOVAL_INTENT_PATH)
+            windows_unlink_exact_portable_file(intent_path, digest_bytes(stable_json_text(intent).encode("utf-8")))
+        finally:
+            if guard_kernel is not None and guard_handle is not None:
+                guard_kernel.CloseHandle(guard_handle)
+        return {"status": "DETACHED" if intent["retire_receipt"] else "PARTIAL_REMOVAL", "plan_digest": intent["plan_digest"], "removed": removed, "preserved": intent["preserved"], "receipt_retained": not intent["retire_receipt"]}
+
+
+def apply_portable_removal(
+    target_root: Path,
+    expected_plan_digest: str,
+    fail_after_removals: int | None = None,
+    fail_after_receipt: bool = False,
+) -> dict[str, object]:
+    """Hold the target root itself against reparse traversal or replacement."""
+    if os.name != "nt":
+        raise ValueError("portable removal apply requires Windows anchored file handles")
+    target_root = Path(os.path.abspath(target_root))
+    with windows_pinned_directory(target_root):
+        return _apply_portable_removal_pinned(target_root, expected_plan_digest, fail_after_removals, fail_after_receipt)
+
+
+def classify_portable_import_recovery(target_root: Path, intent: dict[str, object]) -> dict[str, object]:
+    observations: list[dict[str, str]] = []
+    states: list[str] = []
+    outstanding_backups: list[str] = []
+    for item in intent.get("operations", []):
+        if not isinstance(item, dict):
+            continue
+        target_rel = str(item.get("target", ""))
+        backup_rel = item.get("backup_rel")
+        if isinstance(backup_rel, str) and backup_rel and portable_target_path(target_root, backup_rel).exists():
+            outstanding_backups.append(backup_rel)
+        observed = target_file_digest(portable_target_path(target_root, target_rel))
+        if observed == item.get("postimage_digest"):
+            state = "effect_observed"
+        elif observed == item.get("preimage_digest"):
+            state = "no_effect_observed"
+        else:
+            state = "unknown"
+        states.append(state)
+        observations.append({"target": target_rel, "state": state, "observed_digest": observed})
+    receipt_backup_rel = intent.get("receipt_backup_rel")
+    if isinstance(receipt_backup_rel, str) and receipt_backup_rel and portable_target_path(target_root, receipt_backup_rel).exists():
+        outstanding_backups.append(receipt_backup_rel)
+    receipt_preimage = intent.get("receipt_preimage_digest")
+    receipt_postimage = intent.get("receipt_postimage_digest")
+    if not states and isinstance(receipt_postimage, str):
+        observed_receipt = target_file_digest(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH))
+        states.append("effect_observed" if observed_receipt == receipt_postimage else "no_effect_observed" if observed_receipt == receipt_preimage else "unknown")
+    if outstanding_backups:
+        classification = "unknown"
+    elif states and all(state == "effect_observed" for state in states):
+        classification = "completed"
+    elif not states or all(state == "no_effect_observed" for state in states):
+        classification = "no_effect"
+    elif "unknown" in states:
+        classification = "unknown"
+    else:
+        classification = "partial"
+    return {"classification": classification, "observations": observations, "outstanding_backups": sorted(set(outstanding_backups)), "plan_digest": intent.get("plan_digest")}
+
+
+def portable_import_ensure_parent(target_root: Path, target_rel: str) -> Path:
+    """Create missing ancestors only beneath a pinned, non-reparse parent."""
+    if os.name != "nt":
+        raise ValueError("anchored portable import writes require Windows")
+    target = portable_target_path(target_root, target_rel)
+    root = target_root.absolute()
+    current = root
+    for part in Path(target_rel.replace("\\", "/")).parts[:-1]:
+        with windows_pinned_directory(current):
+            child = current / part
+            try:
+                child.mkdir()
+            except FileExistsError:
+                pass
+        current = child
+    with windows_pinned_directory(target.parent):
+        pass
+    return target
+
+
+def portable_import_verified_leaf(path: Path, expected_digest: str | None, *, writable: bool = False, read_only: bool = False, identity_out: list[str] | None = None, max_bytes: int | None = None, capture_out: list[bytes] | None = None) -> tuple[object, object]:
+    """Open the exact regular, single-link preimage without writer/delete sharing."""
+    import ctypes
+    from ctypes import wintypes
+
+    class FileTime(ctypes.Structure):
+        _fields_ = [("low", wintypes.DWORD), ("high", wintypes.DWORD)]
+
+    class FileInfo(ctypes.Structure):
+        _fields_ = [("attributes", wintypes.DWORD), ("created", FileTime), ("accessed", FileTime), ("written", FileTime), ("volume", wintypes.DWORD), ("size_high", wintypes.DWORD), ("size_low", wintypes.DWORD), ("links", wintypes.DWORD), ("index_high", wintypes.DWORD), ("index_low", wintypes.DWORD)]
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.GetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.POINTER(FileInfo)]
+    kernel.GetFileInformationByHandle.restype = wintypes.BOOL
+    kernel.ReadFile.argtypes = [wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD), wintypes.LPVOID]
+    kernel.ReadFile.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    if writable and read_only:
+        raise ValueError("verified leaf cannot be writable and read-only")
+    access = 0x80000000 | (0 if read_only else 0x00010000) | (0x40000000 if writable else 0)
+    handle = kernel.CreateFileW(str(path), access, 0x1, None, 3, 0x00200000, None)
+    if handle == ctypes.c_void_p(-1).value or handle is None:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        info = FileInfo()
+        if not kernel.GetFileInformationByHandle(handle, ctypes.byref(info)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if info.attributes & (0x10 | 0x400) or info.links != 1 or info.size_high:
+            raise RuntimeError(f"import preimage is not a regular single-link file: {path}")
+        if max_bytes is not None and info.size_low > max_bytes:
+            raise ValueError(f"import preimage exceeds the size bound: {path}")
+        remaining = info.size_low
+        digest = hashlib.sha256()
+        while remaining:
+            buffer = ctypes.create_string_buffer(min(remaining, 65536))
+            count = wintypes.DWORD()
+            if not kernel.ReadFile(handle, buffer, len(buffer), ctypes.byref(count), None):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if not count.value:
+                raise RuntimeError(f"import preimage ended early: {path}")
+            chunk = buffer.raw[:count.value]
+            digest.update(chunk)
+            if capture_out is not None:
+                capture_out.append(chunk)
+            remaining -= count.value
+        if expected_digest is not None and digest.hexdigest() != expected_digest:
+            raise RuntimeError(f"stale target preimage: {path}")
+        if identity_out is not None:
+            identity_out.append(f"{info.volume:08x}{info.index_high:08x}{info.index_low:08x}")
+        return kernel, handle
+    except BaseException:
+        kernel.CloseHandle(handle)
+        raise
+
+
+@contextmanager
+def portable_import_guard_missing_controls(target_root: Path):
+    """Reserve an absent project controls name until the import intent retires."""
+    if os.name != "nt":
+        raise ValueError("missing-controls reservation requires Windows")
+    import ctypes
+    from ctypes import wintypes
+
+    path = portable_target_path(target_root, PROJECT_CUSTOMIZATIONS_PATH)
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+        wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    with windows_pinned_directory(path.parent):
+        # CREATE_NEW refuses a competing project file. DELETE_ON_CLOSE removes
+        # only this owned reservation, including after process termination.
+        handle = kernel.CreateFileW(str(path), 0x00010000 | 0x80 | 0x2, 0,
+            None, 1, 0x04000000 | 0x00200000 | 0x100 | 0x2, None)
+        if handle == ctypes.c_void_p(-1).value or handle is None:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            yield
+        finally:
+            kernel.CloseHandle(handle)
+
+
+def portable_import_rename_open_leaf(kernel: object, handle: object, directory_handle: object, name: str) -> None:
+    import ctypes
+    from ctypes import wintypes
+
+    class FileRenameInfo(ctypes.Structure):
+        _fields_ = [("replace", wintypes.DWORD), ("root", wintypes.HANDLE), ("name_length", wintypes.DWORD), ("name", wintypes.WCHAR * (len(name) + 1))]
+
+    info = FileRenameInfo()
+    info.replace = False
+    # Ancestors are pinned by the caller; Win32 accepts this absolute name
+    # without depending on a separately interpreted RootDirectory handle.
+    info.root = None
+    info.name_length = len(name.encode("utf-16-le"))
+    info.name = name
+    kernel.SetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+    kernel.SetFileInformationByHandle.restype = wintypes.BOOL
+    if not kernel.SetFileInformationByHandle(handle, 3, ctypes.byref(info), ctypes.sizeof(info)):
+        raise ctypes.WinError(ctypes.get_last_error())
+
+
+def portable_import_delete_open_leaf(kernel: object, handle: object) -> None:
+    import ctypes
+    from ctypes import wintypes
+
+    class FileDispositionInfo(ctypes.Structure):
+        _fields_ = [("delete_file", wintypes.BOOL)]
+
+    info = FileDispositionInfo(True)
+    kernel.SetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+    kernel.SetFileInformationByHandle.restype = wintypes.BOOL
+    if not kernel.SetFileInformationByHandle(handle, 4, ctypes.byref(info), ctypes.sizeof(info)):
+        raise ctypes.WinError(ctypes.get_last_error())
+
+
+@contextmanager
+def windows_guarded_staged_bytes(parent: Path, leaf_name: str, data: bytes):
+    """Verify complete stage bytes, then deny rival write/delete until publication."""
+    import msvcrt
+
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{leaf_name}.", suffix=".tmp", dir=parent)
+    temporary = Path(temporary_name)
+    with os.fdopen(descriptor, "wb") as writer:
+        writer.write(data)
+        writer.flush()
+        os.fsync(writer.fileno())
+    # The mkstemp descriptor permits another writer on Windows. Close it,
+    # then reopen the exact verified bytes with writer/delete sharing denied.
+    # A rival holding a writer handle or changing bytes in the gap makes this
+    # reopen fail closed; do not unlink an unverified replacement by path.
+    kernel, handle = portable_import_verified_leaf(temporary, digest_bytes(data), writable=True)
+    try:
+        guarded_descriptor = msvcrt.open_osfhandle(handle, os.O_RDWR)
+    except BaseException:
+        kernel.CloseHandle(handle)
+        raise
+    try:
+        yield guarded_descriptor
+    finally:
+        try:
+            portable_import_delete_open_leaf(kernel, handle)
+        finally:
+            os.close(guarded_descriptor)
+
+
+def portable_import_write_exact(target_root: Path, target_rel: str, data: bytes, expected_digest: str, backup_rel: str | None = None) -> WriteResult:
+    """Stage under pinned ancestors; publish new bytes without replacing a rival leaf."""
+    target = portable_import_ensure_parent(target_root, target_rel)
+    with windows_pinned_directory(target.parent) as directory_handle:
+        with windows_guarded_staged_bytes(target.parent, target.name, data) as stage_descriptor:
+                if expected_digest == "missing":
+                    windows_link_from_handle(stage_descriptor, directory_handle, target.name)
+                else:
+                    if backup_rel is not None:
+                        backup = portable_target_path(target_root, backup_rel)
+                        if backup.parent != target.parent or not backup.name.startswith(f".{target.name}.aide-import-backup-"):
+                            raise ValueError("import backup is outside the pinned target parent")
+                        backup_name = backup.name
+                    else:
+                        backup_name = f".{target.name}.aide-import-backup-{os.urandom(12).hex()}"
+                    kernel, old_handle = portable_import_verified_leaf(target, expected_digest)
+                    try:
+                        portable_import_rename_open_leaf(kernel, old_handle, directory_handle, str(target.parent / backup_name))
+                        try:
+                            windows_link_from_handle(stage_descriptor, directory_handle, target.name)
+                        except BaseException:
+                            # A rival leaf is never replaced. If it won the gap,
+                            # preserve the exact old bytes under the backup name.
+                            try:
+                                portable_import_rename_open_leaf(kernel, old_handle, directory_handle, str(target))
+                            except OSError:
+                                pass
+                            raise
+                        portable_import_delete_open_leaf(kernel, old_handle)
+                    finally:
+                        kernel.CloseHandle(old_handle)
+    return WriteResult(target, "written")
+
+
+def portable_import_delete_exact(target_root: Path, target_rel: str, expected: bytes) -> None:
+    target = portable_target_path(target_root, target_rel)
+    with windows_pinned_directory(target.parent):
+        kernel, handle = portable_import_verified_leaf(target, digest_bytes(expected))
+        try:
+            portable_import_delete_open_leaf(kernel, handle)
+        finally:
+            kernel.CloseHandle(handle)
+
+
+def apply_import_operation(pack_root: Path, target_root: Path, operation: dict[str, str], resolution_data: dict[str, bytes] | None = None) -> bool:
+    action = operation["action"]
+    target = portable_target_path(target_root, operation["target"])
+    if target_file_digest(target) != operation["preimage_digest"]:
+        raise RuntimeError(f"stale target preimage: {operation['target']}")
+    if action == "resolve_owned" and operation["kind"] == "managed_file":
+        data = (resolution_data or {}).get(operation["target"])
+        if data is None or digest_bytes(data) != operation.get("resolution_digest"):
+            raise RuntimeError(f"resolution data no longer matches the plan: {operation['target']}")
+    elif action in {"copy", "update_owned"} and operation["kind"] == "managed_file":
+        data = (pack_root / "files" / operation["source"]).read_bytes()
+    elif operation["kind"] == "portable_managed_section" and action in {"merge_agents", "update_owned"}:
+        existing = target.read_bytes().decode("utf-8") if target.exists() and target.is_file() else None
+        template = (pack_root / "files" / operation["source"]).read_bytes().decode("utf-8")
+        data = merge_agents_text(existing, template).encode("utf-8")
+    elif action == "create_from_template":
+        source = pack_root / "files" / operation["source"]
+        data = text_output_bytes(render_target_template(read_text(source), target_root))
+    elif action == "ensure_local_state_ignore":
+        existing = read_text(target) if target.exists() and target.is_file() else None
+        data = text_output_bytes(ensure_target_gitignore_text(existing))
+    else:
+        return False
+    if digest_bytes(data) != operation["postimage_digest"]:
+        raise RuntimeError(f"planned postimage mismatch: {operation['target']}")
+    result = (
+        portable_import_write_exact(target_root, operation["target"], data, operation["preimage_digest"], operation.get("backup_rel"))
+        if os.name == "nt"
+        else atomic_write_bytes_if_changed(target, data)
+    )
+    if target_file_digest(target) != operation["postimage_digest"]:
+        raise RuntimeError(f"written postimage mismatch: {operation['target']}")
+    return result.action == "written"
+
+
+def recover_partial_import(
+    pack_root: Path,
+    target_root: Path,
+    pending: dict[str, object],
+    recovery: dict[str, object],
+    mode: str,
+    predecessor_pack: Path | None,
+    expected_plan_digest: str,
+    resolutions: dict[str, Path],
+) -> dict[str, object]:
+    """Continue only an exact, snapshot-bound partial Windows import on request."""
+    def refused() -> dict[str, object]:
+        return {
+            "status": "RECOVERY_REQUIRED", "dry_run": False, "mode": mode,
+            "target": normalize_rel(target_root),
+            "operation_count": len(pending.get("operations", [])),
+            "conflicts": [], "skipped": [], "operations": [], "written": [],
+            "recovery": classify_portable_import_recovery(target_root, pending),
+            "plan_digest": pending.get("plan_digest"),
+        }
+
+    def verified_observed_digest(target_rel: str) -> str:
+        target = portable_target_path(target_root, target_rel)
+        observed = target_file_digest(target)
+        if observed not in {"missing", "not-a-file"}:
+            with windows_pinned_directory(target.parent, for_write=False):
+                kernel, handle = portable_import_verified_leaf(target, observed, read_only=True)
+                kernel.CloseHandle(handle)
+        return observed
+
+    if (
+        os.name != "nt"
+        or pending.get("target") != normalize_rel(target_root)
+        or pending.get("pack_id") != EXPORT_PACK_ID
+        or re.fullmatch(r"[0-9a-f]{64}", expected_plan_digest) is None
+        or expected_plan_digest != pending.get("plan_digest")
+        or recovery.get("classification") != "partial"
+        or recovery.get("outstanding_backups")
+    ):
+        return refused()
+    snapshot = pending.get("plan_snapshot")
+    next_receipt = pending.get("next_receipt")
+    if not isinstance(snapshot, dict) or not isinstance(next_receipt, dict):
+        return refused()  # Old intents retain their original safe-refusal behavior.
+    operations = snapshot.get("operations")
+    skipped = snapshot.get("skipped")
+    if not isinstance(operations, list) or not isinstance(skipped, list) or not all(isinstance(item, dict) for item in operations + skipped):
+        return refused()
+    if (
+        next_receipt.get("mode") != mode
+        or next_receipt.get("pack") != import_pack_identity(pack_root)
+        or next_receipt.get("predecessor_pack") != (import_pack_identity(predecessor_pack) if predecessor_pack else None)
+        or next_receipt.get("plan_digest") != expected_plan_digest
+    ):
+        return refused()
+    prior_receipt = load_portable_import_receipt(target_root)
+    if target_file_digest(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH)) != pending.get("receipt_preimage_digest"):
+        return refused()
+    try:
+        disabled, controls_digest = project_update_controls(target_root, prior_receipt)
+        if controls_digest != next_receipt.get("project_controls_digest") or sorted(disabled) != next_receipt.get("disabled_features"):
+            return refused()
+        if import_plan_digest(pack_root, target_root, mode, operations, [], skipped, predecessor_pack, controls_digest) != expected_plan_digest:
+            return refused()
+        if build_portable_import_receipt(pack_root, mode, operations, expected_plan_digest, predecessor_pack, disabled, controls_digest) != next_receipt:
+            return refused()
+        write_actions = {"copy", "update_owned", "resolve_owned", "merge_agents", "create_from_template", "ensure_local_state_ignore"}
+        expected_writes = []
+        for item in operations:
+            if item.get("action") not in write_actions or item.get("preimage_digest") == item.get("postimage_digest"):
+                continue
+            relative = Path(item["target"])
+            backup_rel = (
+                (relative.parent / f".{relative.name}.aide-import-backup-{expected_plan_digest[:20]}").as_posix()
+                if item["preimage_digest"] != "missing" else None
+            )
+            expected_writes.append({"target": item["target"], "preimage_digest": item["preimage_digest"],
+                "postimage_digest": item["postimage_digest"], "backup_rel": backup_rel})
+        if expected_writes != pending.get("operations"):
+            return refused()
+        included = set(pack_manifest_list(pack_root, "included_files"))
+        portable_safe_pack_targets(pack_root)
+        if predecessor_pack is not None:
+            portable_safe_pack_targets(predecessor_pack)
+        template_targets = {
+            ".aide/profile.template.yaml": ".aide/profile.yaml",
+            ".aide/memory/project-state.template.md": ".aide/memory/project-state.md",
+            ".aide/memory/decisions.template.md": ".aide/memory/decisions.md",
+            ".aide/memory/open-risks.template.md": ".aide/memory/open-risks.md",
+        }
+        expected_layout: list[tuple[str, str, str]] = []
+        expected_skipped: list[dict[str, str]] = []
+        for source in sorted(path for path in (pack_root / "files").rglob("*") if path.is_file()):
+            source_rel = normalize_rel(source.relative_to(pack_root / "files"))
+            reason = import_scope_skip_reason(source_rel, mode)
+            if reason:
+                expected_skipped.append({"source": source_rel, "reason": reason})
+                continue
+            target_rel = "AGENTS.md" if source_rel == "AGENTS.md.template" else source_rel
+            disabled_feature = next((feature_id for feature_id, prefix in PORTABLE_OPTIONAL_FEATURES.items()
+                if feature_id in disabled and target_rel.startswith(prefix)), None)
+            kind = "disabled_feature" if disabled_feature else "portable_managed_section" if source_rel == "AGENTS.md.template" else "managed_file"
+            expected_layout.append((source_rel, target_rel, kind))
+            if source_rel in template_targets:
+                expected_layout.append((source_rel, template_targets[source_rel], "target_owned_template"))
+        expected_layout.append(("<generated>", ".gitignore", "target_owned_additive"))
+        if skipped != expected_skipped or expected_layout != [
+            (item.get("source"), item.get("target"), item.get("kind")) for item in operations
+        ]:
+            return refused()
+        seen: set[str] = set()
+        resolution_data: dict[str, bytes] = {}
+        resolution_targets = {str(item["target"]) for item in operations if item.get("action") == "resolve_owned"}
+        if set(resolutions) != resolution_targets:
+            return refused()
+        for item in operations:
+            target_rel = item["target"]
+            source_rel = item["source"]
+            action = item["action"]
+            kind = item["kind"]
+            if not isinstance(target_rel, str) or target_rel in seen or "\\" in target_rel or normalize_rel(target_rel) != target_rel:
+                return refused()
+            seen.add(target_rel)
+            portable_target_path(target_root, target_rel)
+            if action not in write_actions | {"unchanged", "preserve", "preserve_local", "preserve_disabled"}:
+                return refused()
+            if source_rel == "<generated>":
+                if target_rel != ".gitignore" or kind != "target_owned_additive" or action not in {"unchanged", "ensure_local_state_ignore"} or item.get("source_digest") != item.get("postimage_digest"):
+                    return refused()
+            else:
+                if not isinstance(source_rel, str) or "\\" in source_rel or normalize_rel(source_rel) != source_rel or "files/" + source_rel not in included:
+                    return refused()
+                source = pack_root / "files" / source_rel
+                if kind == "portable_managed_section":
+                    block = portable_managed_block(read_text(source))
+                    if source_rel != "AGENTS.md.template" or target_rel != "AGENTS.md" or block is None or digest_bytes(block.encode("utf-8")) != item.get("source_digest"):
+                        return refused()
+                elif kind == "target_owned_template":
+                    if template_targets.get(source_rel) != target_rel or action not in {"preserve", "create_from_template"} or sha256_file(source) != item.get("source_digest"):
+                        return refused()
+                elif kind in {"managed_file", "disabled_feature"}:
+                    if source_rel != target_rel or sha256_file(source) != item.get("source_digest"):
+                        return refused()
+                else:
+                    return refused()
+            observed = verified_observed_digest(target_rel)
+            if observed not in {item.get("preimage_digest"), item.get("postimage_digest")}:
+                return refused()
+            preimage = item.get("preimage_digest")
+            postimage = item.get("postimage_digest")
+            source_digest = item.get("source_digest")
+            basis = item.get("ownership_basis")
+            if kind == "managed_file":
+                rows = prior_receipt.get("managed", {}) if prior_receipt else {}
+                prior_row = rows.get(target_rel) if isinstance(rows, dict) else None
+                entry = receipt_managed_entry(prior_receipt, target_rel, source_rel)
+                if prior_row is not None and (entry is None or entry.get("kind") != "managed_file"):
+                    return refused()
+                if action == "copy":
+                    if preimage != "missing" or prior_row is not None or postimage != source_digest or basis != "new_path":
+                        return refused()
+                elif action == "update_owned":
+                    receipt_owned = (
+                        entry is not None and entry.get("kind") == "managed_file"
+                        and entry.get("ownership") == "aide_portable_managed"
+                        and entry.get("local_overlay") is not True
+                        and entry.get("installed_digest") == preimage
+                        and receipt_matches_predecessor_baseline(predecessor_pack, source_rel, "managed_file", entry)
+                    )
+                    unrecorded_baseline = (
+                        prior_receipt is None and predecessor_pack is not None
+                        and predecessor_installed_digest(predecessor_pack, source_rel, "managed_file") == preimage
+                    )
+                    if (not (receipt_owned or unrecorded_baseline) or postimage != source_digest
+                        or basis != ("installed_receipt" if receipt_owned else "validated_predecessor_pack")):
+                        return refused()
+                elif action == "resolve_owned":
+                    if (entry is None or entry.get("kind") != "managed_file" or predecessor_pack is None
+                        or preimage in {"missing", "not-a-file", source_digest}
+                        or source_digest == entry.get("source_digest")
+                        or item.get("base_digest") != entry.get("source_digest")
+                        or predecessor_installed_digest(predecessor_pack, source_rel, "managed_file") != item.get("base_digest")
+                        or postimage != item.get("resolution_digest")
+                        or basis != "project_selected_three_way"):
+                        return refused()
+                elif action == "unchanged":
+                    if preimage != source_digest or postimage != source_digest or basis != "identical_incoming_bytes":
+                        return refused()
+                elif action == "preserve_local":
+                    if (entry is None or entry.get("kind") != "managed_file" or preimage in {"missing", "not-a-file", source_digest}
+                        or postimage != preimage or source_digest != entry.get("source_digest")
+                        or basis != "unchanged_upstream_project_bytes"):
+                        return refused()
+                else:
+                    return refused()
+            elif kind == "disabled_feature":
+                feature = next((feature_id for feature_id, prefix in PORTABLE_OPTIONAL_FEATURES.items()
+                    if feature_id in disabled and target_rel.startswith(prefix)), None)
+                if (feature is None or item.get("feature_id") != feature or action != "preserve_disabled"
+                    or preimage != postimage or basis != f"project_disabled_feature:{feature}"):
+                    return refused()
+            elif kind == "target_owned_template":
+                desired = digest_bytes(text_output_bytes(render_target_template(read_text(source), target_root)))
+                if action == "create_from_template":
+                    if preimage != "missing" or postimage != desired or basis != "target_owned_after_creation":
+                        return refused()
+                elif action == "preserve":
+                    if preimage in {"missing", "not-a-file"} or preimage != postimage or basis != "target_owned_after_creation":
+                        return refused()
+                else:
+                    return refused()
+            elif kind == "portable_managed_section":
+                rows = prior_receipt.get("managed", {}) if prior_receipt else {}
+                prior_row = rows.get(target_rel) if isinstance(rows, dict) else None
+                entry = receipt_managed_entry(prior_receipt, target_rel, source_rel)
+                if prior_row is not None and (entry is None or entry.get("kind") != "portable_managed_section"):
+                    return refused()
+                if action in {"unchanged", "preserve_local"} or observed == preimage:
+                    planned, conflict = agents_operation(source, source_rel,
+                        portable_target_path(target_root, target_rel), target_rel, prior_receipt, predecessor_pack)
+                    if conflict or planned != item:
+                        return refused()
+                elif action in {"merge_agents", "update_owned"}:
+                    current_block = portable_managed_block(read_text(portable_target_path(target_root, target_rel)))
+                    if (current_block is None or digest_bytes(current_block.encode("utf-8")) != source_digest
+                        or item.get("installed_digest") != source_digest or postimage != observed):
+                        return refused()
+                    if action == "merge_agents":
+                        if prior_row is not None or basis != "new_managed_section":
+                            return refused()
+                    elif not (
+                        (entry is not None and entry.get("ownership") == "aide_portable_managed"
+                         and entry.get("local_overlay") is not True
+                         and receipt_matches_predecessor_baseline(predecessor_pack, source_rel, "portable_managed_section", entry)
+                         and basis == "installed_receipt")
+                        or (prior_receipt is None and predecessor_pack is not None
+                            and predecessor_installed_digest(predecessor_pack, source_rel, "portable_managed_section") is not None
+                            and basis == "validated_predecessor_pack")
+                    ):
+                        return refused()
+                else:
+                    return refused()
+            elif kind == "target_owned_additive":
+                if action == "unchanged":
+                    if preimage != postimage or basis != "additive_ignore_rules":
+                        return refused()
+                elif action == "ensure_local_state_ignore":
+                    if basis != "additive_ignore_rules" or postimage != source_digest:
+                        return refused()
+                    if observed == preimage:
+                        existing = read_text(portable_target_path(target_root, target_rel)) if preimage != "missing" else None
+                        if digest_bytes(text_output_bytes(ensure_target_gitignore_text(existing))) != postimage:
+                            return refused()
+                    elif digest_bytes(text_output_bytes(ensure_target_gitignore_text(
+                        read_text(portable_target_path(target_root, target_rel))))) != postimage:
+                        return refused()
+                else:
+                    return refused()
+            if action == "resolve_owned":
+                data = read_portable_resolution_bytes(Path(resolutions[target_rel]), pack_root, target_root)
+                if digest_bytes(data) != item.get("resolution_digest") or digest_bytes(data) != item.get("postimage_digest"):
+                    return refused()
+                resolution_data[target_rel] = data
+
+        def external_inputs_match() -> bool:
+            try:
+                current_disabled, current_controls = project_update_controls(target_root, prior_receipt)
+                if current_disabled != disabled or current_controls != controls_digest:
+                    return False
+                return all(read_portable_resolution_bytes(Path(resolutions[rel]), pack_root, target_root) == body for rel, body in resolution_data.items())
+            except (OSError, RuntimeError, ValueError):
+                return False
+
+        written: list[str] = []
+        for item in operations:
+            if item.get("action") not in write_actions or item.get("preimage_digest") == item.get("postimage_digest"):
+                continue
+            observed = verified_observed_digest(item["target"])
+            if observed == item["postimage_digest"]:
+                continue
+            if observed != item["preimage_digest"] or not external_inputs_match():
+                return refused()
+            try:
+                if apply_import_operation(pack_root, target_root, item, resolution_data):
+                    written.append(item["target"])
+            except (OSError, RuntimeError, ValueError):
+                return refused()
+        if not external_inputs_match() or any(
+            verified_observed_digest(item["target"]) != item["postimage_digest"]
+            for item in operations
+        ):
+            return refused()
+        if target_file_digest(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH)) != pending["receipt_preimage_digest"]:
+            return refused()
+        valid, problems = validate_pack_checksums(pack_root)
+        if not valid or problems or import_pack_identity(pack_root) != next_receipt["pack"]:
+            return refused()
+        # Keep every existing postimage regular, single-linked, and immutable
+        # until the receipt and intent have been published/retired.
+        with ExitStack() as guards:
+            for item in operations:
+                postimage = item["postimage_digest"]
+                if postimage == "missing":
+                    continue
+                target = portable_target_path(target_root, item["target"])
+                guards.enter_context(windows_pinned_directory(target.parent, for_write=False))
+                kernel, handle = portable_import_verified_leaf(target, postimage, read_only=True)
+                guards.callback(kernel.CloseHandle, handle)
+            controls_path = portable_target_path(target_root, PROJECT_CUSTOMIZATIONS_PATH)
+            if not os.path.lexists(controls_path):
+                if controls_digest != "missing" or disabled:
+                    raise RuntimeError("project controls disappeared before publication")
+                guards.enter_context(portable_import_guard_missing_controls(target_root))
+            else:
+                guards.enter_context(windows_pinned_directory(controls_path.parent, for_write=False))
+                captured_controls: list[bytes] = []
+                kernel, handle = portable_import_verified_leaf(controls_path, None,
+                    read_only=True, max_bytes=65536, capture_out=captured_controls)
+                guards.callback(kernel.CloseHandle, handle)
+                raw_controls = b"".join(captured_controls)
+                controls_record = json.loads(raw_controls.decode("utf-8"))
+                if isinstance(controls_record, dict) and controls_record.get("schema_version") == PROJECT_CUSTOMIZATIONS_SCHEMA_V2:
+                    load_project_customizations(target_root, record_override=controls_record)
+                    guarded_disabled = {item["feature_id"]: item.get("rationale", "unknown")
+                        for item in controls_record["disabled_features"]}
+                    guarded_digest = digest_bytes(raw_controls)
+                else:
+                    guarded_disabled, guarded_digest = {}, "missing"
+                    if prior_receipt and prior_receipt.get("disabled_features"):
+                        raise RuntimeError("disabled-feature controls changed before publication")
+                if guarded_disabled != disabled or guarded_digest != controls_digest:
+                    raise RuntimeError("project controls changed before publication")
+            for target_rel, data in resolution_data.items():
+                resolution_path = Path(os.path.abspath(resolutions[target_rel]))
+                guards.enter_context(windows_pinned_directory(resolution_path.parent, for_write=False))
+                kernel, handle = portable_import_verified_leaf(resolution_path, digest_bytes(data),
+                    read_only=True, max_bytes=4 * 1024 * 1024)
+                guards.callback(kernel.CloseHandle, handle)
+            receipt_bytes = stable_json_text(next_receipt).encode("utf-8")
+            portable_import_write_exact(target_root, PORTABLE_IMPORT_RECEIPT_PATH, receipt_bytes,
+                pending["receipt_preimage_digest"], pending.get("receipt_backup_rel"))
+            portable_import_delete_exact(target_root, PORTABLE_IMPORT_INTENT_PATH, stable_json_text(pending).encode("utf-8"))
+        return {"status": "RECOVERED", "dry_run": False, "mode": mode, "target": normalize_rel(target_root),
+            "operation_count": len(operations), "conflicts": [], "skipped": skipped, "operations": operations,
+            "written": sorted(written), "plan_digest": expected_plan_digest,
+            "receipt": PORTABLE_IMPORT_RECEIPT_PATH, "receipt_written": True,
+            "project_controls_digest": controls_digest}
+    except (KeyError, TypeError, OSError, RuntimeError, ValueError, UnicodeDecodeError):
+        return refused()
+
+
+def _apply_import_pack_unlocked(
+    pack_root: Path,
+    target_root: Path,
+    dry_run: bool = False,
+    mode: str = "safe",
+    predecessor_pack: Path | None = None,
+    expected_plan_digest: str | None = None,
+    fail_after_writes: int | None = None,
+    resolutions: dict[str, Path] | None = None,
+    recover_partial: bool = False,
+) -> dict[str, object]:
+    pack_root = pack_root.resolve()
+    target_root = target_root.resolve()
+    if pack_root == target_root or pack_root in target_root.parents or target_root in pack_root.parents:
+        raise ValueError("pack and target must be separate roots")
+    if load_portable_removal_intent(target_root) is not None:
+        raise ValueError("portable removal recovery must complete before import")
     ok, checksum_problems = validate_pack_checksums(pack_root)
     if not ok:
         raise ValueError("invalid pack checksums: " + "; ".join(checksum_problems))
-    operations, conflicts, skipped = import_pack_plan(pack_root, target_root, mode=mode)
+    if predecessor_pack is not None:
+        predecessor_pack = predecessor_pack.resolve()
+        predecessor_ok, predecessor_problems = validate_pack_checksums(predecessor_pack)
+        if not predecessor_ok:
+            raise ValueError("invalid predecessor pack checksums: " + "; ".join(predecessor_problems))
+    if portable_target_path(target_root, PORTABLE_REPAIR_INTENT_PATH).exists():
+        raise ValueError("pending portable repair intent requires repair recovery")
+    if recover_partial and (dry_run or expected_plan_digest is None or os.name != "nt"):
+        raise ValueError("partial import recovery requires Windows, apply mode and --expect-plan")
+    pending = load_portable_import_intent(target_root)
+    if pending is not None:
+        recovery = classify_portable_import_recovery(target_root, pending)
+        if dry_run:
+            return {"status": "RECOVERY_REQUIRED", "dry_run": True, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(pending.get("operations", [])), "conflicts": [], "skipped": [], "operations": [], "written": [], "recovery": recovery, "plan_digest": pending.get("plan_digest")}
+        if recover_partial and recovery["classification"] == "partial":
+            return recover_partial_import(pack_root, target_root, pending, recovery, mode,
+                predecessor_pack, expected_plan_digest, resolutions or {})
+        if recovery["classification"] == "completed":
+            expected_controls = pending["next_receipt"].get("project_controls_digest")
+            if expected_controls not in {None, "missing"} and target_file_digest(portable_target_path(target_root, PROJECT_CUSTOMIZATIONS_PATH)) != expected_controls:
+                return {"status": "RECOVERY_REQUIRED", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(pending.get("operations", [])), "conflicts": [], "skipped": [], "operations": [], "written": [], "recovery": recovery, "plan_digest": pending.get("plan_digest")}
+            receipt_bytes = stable_json_text(pending["next_receipt"]).encode("utf-8")
+            receipt_preimage = pending.get("receipt_preimage_digest")
+            if os.name == "nt":
+                if not isinstance(receipt_preimage, str):
+                    raise ValueError("import recovery lacks receipt preimage identity")
+                observed_receipt = target_file_digest(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH))
+                if observed_receipt != digest_bytes(receipt_bytes):
+                    portable_import_write_exact(target_root, PORTABLE_IMPORT_RECEIPT_PATH, receipt_bytes, receipt_preimage, pending.get("receipt_backup_rel"))
+                portable_import_delete_exact(target_root, PORTABLE_IMPORT_INTENT_PATH, stable_json_text(pending).encode("utf-8"))
+            else:
+                atomic_write_json(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH), pending["next_receipt"])
+                portable_target_path(target_root, PORTABLE_IMPORT_INTENT_PATH).unlink()
+            return {"status": "RECOVERED", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": 0, "conflicts": [], "skipped": [], "operations": [], "written": [], "recovery": recovery, "plan_digest": pending.get("plan_digest")}
+        if recovery["classification"] == "no_effect":
+            if os.name == "nt":
+                portable_import_delete_exact(target_root, PORTABLE_IMPORT_INTENT_PATH, stable_json_text(pending).encode("utf-8"))
+            else:
+                portable_target_path(target_root, PORTABLE_IMPORT_INTENT_PATH).unlink()
+        else:
+            return {"status": "RECOVERY_REQUIRED", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(pending.get("operations", [])), "conflicts": [], "skipped": [], "operations": [], "written": [], "recovery": recovery, "plan_digest": pending.get("plan_digest")}
+    if recover_partial:
+        raise ValueError("partial import recovery requires a pending intent")
+    prior_receipt = load_portable_import_receipt(target_root)
+    disabled_features, controls_digest = project_update_controls(target_root, prior_receipt)
+    if os.name != "nt" and not dry_run and (resolutions or disabled_features or (prior_receipt and prior_receipt.get("disabled_features"))):
+        raise ValueError("three-way resolution and disabled-feature apply require Windows anchored effects")
+    if resolutions and predecessor_pack is None:
+        raise ValueError("three-way resolution requires the exact predecessor pack")
+    if resolutions and prior_receipt is None:
+        raise ValueError("three-way resolution requires an installed receipt")
+    if resolutions and expected_plan_digest is None and not dry_run:
+        raise ValueError("three-way resolution apply requires --expect-plan")
+    if disabled_features and expected_plan_digest is None and not dry_run:
+        raise ValueError("disabled-feature apply requires --expect-plan")
+    if predecessor_pack is not None and prior_receipt is not None and prior_receipt.get("pack") != import_pack_identity(predecessor_pack):
+        raise ValueError("predecessor pack does not match the installed receipt")
+    receipt_preimage_digest = target_file_digest(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH))
+    resolution_data: dict[str, bytes] = {}
+    operations, conflicts, skipped = import_pack_plan(pack_root, target_root, mode=mode, predecessor_pack=predecessor_pack, resolutions=resolutions, resolution_data=resolution_data, disabled_features=disabled_features)
+    plan_digest = import_plan_digest(pack_root, target_root, mode, operations, conflicts, skipped, predecessor_pack, controls_digest)
+    plan_operations = [dict(operation) for operation in operations]
+    if expected_plan_digest is not None and expected_plan_digest != plan_digest:
+        return {"status": "STALE_PLAN", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(operations), "conflicts": conflicts, "skipped": skipped, "operations": operations, "written": [], "plan_digest": plan_digest, "expected_plan_digest": expected_plan_digest, "project_controls_digest": controls_digest}
     if dry_run:
         return {
+            "status": "PLANNED_CONFLICT" if conflicts else "PLANNED",
             "dry_run": True,
             "mode": mode,
             "target": normalize_rel(target_root),
@@ -41699,53 +45890,602 @@ def apply_import_pack(pack_root: Path, target_root: Path, dry_run: bool = False,
             "skipped": skipped,
             "operations": operations,
             "written": [],
+            "plan_digest": plan_digest,
+            "project_controls_digest": controls_digest,
         }
+    if conflicts:
+        return {"status": "CONFLICT", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(operations), "conflicts": conflicts, "skipped": skipped, "skipped_conflicts": conflicts, "operations": operations, "written": [], "plan_digest": plan_digest, "project_controls_digest": controls_digest}
     target_root.mkdir(parents=True, exist_ok=True)
-    files_root = pack_root / "files"
-    written: list[str] = []
-    skipped_conflicts: list[str] = []
+    next_receipt = build_portable_import_receipt(pack_root, mode, operations, plan_digest, predecessor_pack, disabled_features, controls_digest)
     for operation in operations:
-        action = operation["action"]
-        rel = operation["target"]
-        target = target_root / rel
-        if action == "conflict":
-            skipped_conflicts.append(rel)
-            continue
-        if action == "ensure_local_state_ignore":
-            existing = read_text(target) if target.exists() else None
-            write_text_if_changed(target, ensure_target_gitignore_text(existing))
-            written.append(rel)
-            continue
-        source_rel = operation["source"]
-        source = files_root / source_rel
-        if action == "merge_agents":
-            existing = read_text(target) if target.exists() else None
-            write_text_if_changed(target, merge_agents_text(existing, read_text(source)))
-            written.append(rel)
-        elif action == "create_from_template":
-            if target.exists():
-                continue
-            write_text_if_changed(target, render_target_template(read_text(source), target_root))
-            written.append(rel)
-        elif action in {"copy", "unchanged"}:
-            if action == "unchanged":
-                continue
-            copy_pack_file(source, target)
-            written.append(rel)
+        if operation.get("action") in {"copy", "update_owned", "resolve_owned", "merge_agents", "create_from_template", "ensure_local_state_ignore"} and operation.get("preimage_digest") not in {"missing", operation.get("postimage_digest")}:
+            relative = Path(operation["target"])
+            operation["backup_rel"] = (relative.parent / f".{relative.name}.aide-import-backup-{plan_digest[:20]}").as_posix()
+    intent = build_portable_import_intent(target_root, plan_digest, operations, next_receipt, skipped, plan_operations)
+    intent["receipt_preimage_digest"] = receipt_preimage_digest
+    intent["receipt_postimage_digest"] = digest_bytes(stable_json_text(next_receipt).encode("utf-8"))
+    if receipt_preimage_digest != "missing":
+        relative = Path(PORTABLE_IMPORT_RECEIPT_PATH)
+        intent["receipt_backup_rel"] = (relative.parent / f".{relative.name}.aide-import-backup-{plan_digest[:20]}").as_posix()
+    intent["intent_digest"] = portable_import_record_digest(intent, "intent_digest")
+    payload_operations = [
+        operation
+        for operation in operations
+        if operation.get("action") in {"copy", "update_owned", "resolve_owned", "merge_agents", "create_from_template", "ensure_local_state_ignore"}
+        and operation.get("preimage_digest") != operation.get("postimage_digest")
+    ]
+    receipt_changed = not portable_receipt_state_matches(load_portable_import_receipt(target_root), next_receipt)
+    for operation in payload_operations:
+        if target_file_digest(portable_target_path(target_root, operation["target"])) != operation["preimage_digest"]:
+            return {"status": "STALE_PLAN", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(operations), "conflicts": [], "skipped": skipped, "operations": operations, "written": [], "plan_digest": plan_digest}
+    if payload_operations or receipt_changed:
+        if os.name == "nt":
+            portable_import_write_exact(target_root, PORTABLE_IMPORT_INTENT_PATH, stable_json_text(intent).encode("utf-8"), "missing")
+        else:
+            atomic_write_json(portable_target_path(target_root, PORTABLE_IMPORT_INTENT_PATH), intent)
+    def external_inputs_still_match() -> bool:
+        try:
+            current_disabled, current_controls_digest = project_update_controls(target_root, prior_receipt)
+        except (OSError, RuntimeError, ValueError):
+            return False
+        if current_disabled != disabled_features or current_controls_digest != controls_digest:
+            return False
+        for target_rel, path in (resolutions or {}).items():
+            try:
+                if read_portable_resolution_bytes(Path(path), pack_root, target_root) != resolution_data[target_rel]:
+                    return False
+            except (OSError, RuntimeError, ValueError, KeyError):
+                return False
+        return True
+
+    written: list[str] = []
+    if not external_inputs_still_match():
+        recovery = classify_portable_import_recovery(target_root, intent) if payload_operations or receipt_changed else None
+        return {"status": "INTERRUPTED" if recovery else "STALE_PLAN", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(operations), "conflicts": [], "skipped": skipped, "operations": operations, "written": [], "recovery": recovery, "plan_digest": plan_digest}
+    for operation in payload_operations:
+        try:
+            if not external_inputs_still_match():
+                raise RuntimeError("project controls or resolution changed after intent")
+            applied = (
+                apply_import_operation(pack_root, target_root, operation, resolution_data)
+                if operation["action"] == "resolve_owned"
+                else apply_import_operation(pack_root, target_root, operation)
+            )
+            if applied:
+                written.append(operation["target"])
+        except (OSError, RuntimeError, ValueError):
+            recovery = classify_portable_import_recovery(target_root, intent)
+            return {"status": "INTERRUPTED", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(operations), "conflicts": [], "skipped": skipped, "operations": operations, "written": written, "recovery": recovery, "plan_digest": plan_digest}
+        if fail_after_writes is not None and len(written) >= fail_after_writes:
+            recovery = classify_portable_import_recovery(target_root, intent)
+            return {"status": "INTERRUPTED", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(operations), "conflicts": [], "skipped": skipped, "operations": operations, "written": written, "recovery": recovery, "plan_digest": plan_digest}
+    if not external_inputs_still_match():
+        recovery = classify_portable_import_recovery(target_root, intent)
+        return {"status": "INTERRUPTED", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(operations), "conflicts": [], "skipped": skipped, "operations": operations, "written": written, "recovery": recovery, "plan_digest": plan_digest}
+    current_receipt = load_portable_import_receipt(target_root)
+    if not payload_operations and not receipt_changed and portable_receipt_state_matches(current_receipt, next_receipt):
+        receipt_result = WriteResult(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH), "unchanged")
+    else:
+        receipt_result = (
+            portable_import_write_exact(target_root, PORTABLE_IMPORT_RECEIPT_PATH, stable_json_text(next_receipt).encode("utf-8"), receipt_preimage_digest, intent.get("receipt_backup_rel"))
+            if os.name == "nt"
+            else atomic_write_json(portable_target_path(target_root, PORTABLE_IMPORT_RECEIPT_PATH), next_receipt)
+        )
+    if not external_inputs_still_match():
+        recovery = classify_portable_import_recovery(target_root, intent)
+        return {"status": "INTERRUPTED", "dry_run": False, "mode": mode, "target": normalize_rel(target_root), "operation_count": len(operations), "conflicts": [], "skipped": skipped, "operations": operations, "written": written, "recovery": recovery, "plan_digest": plan_digest}
+    intent_path = portable_target_path(target_root, PORTABLE_IMPORT_INTENT_PATH)
+    if intent_path.exists():
+        if os.name == "nt":
+            portable_import_delete_exact(target_root, PORTABLE_IMPORT_INTENT_PATH, stable_json_text(intent).encode("utf-8"))
+        else:
+            intent_path.unlink()
+    status = "APPLIED" if written or receipt_result.action == "written" else "NO_CHANGES"
     return {
+        "status": status,
         "dry_run": False,
         "mode": mode,
         "target": normalize_rel(target_root),
         "operation_count": len(operations),
         "conflicts": sorted(set(conflicts)),
         "skipped": skipped,
-        "skipped_conflicts": sorted(set(skipped_conflicts)),
+        "skipped_conflicts": [],
         "operations": operations,
         "written": sorted(set(written)),
+        "receipt": PORTABLE_IMPORT_RECEIPT_PATH,
+        "receipt_written": receipt_result.action == "written",
+        "plan_digest": plan_digest,
+        "project_controls_digest": controls_digest,
     }
 
 
+def apply_import_pack(
+    pack_root: Path,
+    target_root: Path,
+    dry_run: bool = False,
+    mode: str = "safe",
+    predecessor_pack: Path | None = None,
+    expected_plan_digest: str | None = None,
+    fail_after_writes: int | None = None,
+    resolutions: dict[str, Path] | None = None,
+    recover_partial: bool = False,
+) -> dict[str, object]:
+    if dry_run:
+        return _apply_import_pack_unlocked(pack_root, target_root, dry_run, mode, predecessor_pack, expected_plan_digest, fail_after_writes, resolutions, recover_partial)
+    with portable_lifecycle_lock(target_root.resolve()):
+        return _apply_import_pack_unlocked(pack_root, target_root, dry_run, mode, predecessor_pack, expected_plan_digest, fail_after_writes, resolutions, recover_partial)
+
+
+def reject_portable_rollback_pack_reparse(pack_root: Path) -> None:
+    """Reject reparse roots and metadata before reading a rollback pack."""
+    for path in (pack_root, pack_root / "files", pack_root / "manifest.yaml", pack_root / "checksums.json"):
+        if path.is_symlink() or bool(getattr(path, "is_junction", lambda: False)()):
+            raise ValueError(f"rollback pack contains a reparse path: {path}")
+
+
+def portable_safe_pack_targets(pack_root: Path) -> set[str]:
+    """Project targets represented by a checksum-valid safe portable pack."""
+    reject_portable_rollback_pack_reparse(pack_root)
+    files_root = pack_root / "files"
+    if not files_root.is_dir():
+        raise ValueError("rollback pack has no payload root")
+    actual_files: set[str] = set()
+    for path in files_root.rglob("*"):
+        if path.is_symlink() or bool(getattr(path, "is_junction", lambda: False)()):
+            raise ValueError("rollback pack payload has a reparse path")
+        if path.is_file():
+            actual_files.add("files/" + normalize_rel(path.relative_to(files_root)))
+    manifest_files = set(pack_manifest_list(pack_root, "included_files"))
+    if actual_files != manifest_files:
+        raise ValueError("rollback payload manifest differs from actual files")
+    targets: set[str] = set()
+    for packed_rel in sorted(manifest_files):
+        if not packed_rel.startswith("files/"):
+            continue
+        source_rel = packed_rel[len("files/"):]
+        if import_scope_skip_reason(source_rel, "safe"):
+            continue
+        targets.add("AGENTS.md" if source_rel == "AGENTS.md.template" else source_rel)
+    return targets
+
+
+def portable_rollback_receipt_baseline(
+    current_pack: Path, previous_pack: Path, target_root: Path,
+    current_identity: dict[str, object], previous_identity: dict[str, object],
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Validate the completed safe receipt before a rollback or its recovery."""
+    receipt = load_portable_import_receipt(target_root)
+    if receipt is None or receipt.get("mode") != "safe":
+        raise ValueError("rollback requires a completed safe-mode import receipt")
+    if receipt.get("pack") != current_identity or receipt.get("predecessor_pack") != previous_identity:
+        raise ValueError("rollback packs do not match exact receipt lineage")
+    current_targets, previous_targets = portable_safe_pack_targets(current_pack), portable_safe_pack_targets(previous_pack)
+    if current_targets != previous_targets:
+        raise ValueError("rollback payload paths differ; ownership-aware path changes require separate recovery")
+    if portable_target_path(target_root, PORTABLE_REPAIR_INTENT_PATH).exists():
+        raise ValueError("pending portable repair intent blocks rollback")
+    managed = receipt["managed"]
+    if set(managed) != current_targets:
+        raise ValueError("rollback receipt does not cover exact safe payload targets")
+    for target_rel, entry in managed.items():
+        source_rel = "AGENTS.md.template" if target_rel == "AGENTS.md" else target_rel
+        expected_kind = "portable_managed_section" if target_rel == "AGENTS.md" else "managed_file"
+        source = current_pack / "files" / source_rel
+        if entry["kind"] != expected_kind or entry["source"] != source_rel or not source.is_file():
+            raise ValueError(f"rollback receipt source does not match current pack: {target_rel}")
+        if expected_kind == "managed_file":
+            source_digest = sha256_file(source)
+        else:
+            source_block = portable_managed_block(read_text(source))
+            if source_block is None:
+                raise ValueError("current rollback pack AGENTS template has no managed block")
+            source_digest = digest_bytes(source_block.encode("utf-8"))
+        allowed_installed = {source_digest}
+        if expected_kind == "portable_managed_section":
+            # The authored AGENTS.md newline style is receipt-owned.
+            allowed_installed.add(digest_bytes(source_block.replace("\n", "\r\n").encode("utf-8")))
+        if entry["installed_digest"] not in allowed_installed or entry["source_digest"] != source_digest:
+            raise ValueError(f"rollback receipt baseline differs from current pack: {target_rel}")
+    return receipt, managed
+
+
+def build_portable_rollback_plan(current_pack: Path, previous_pack: Path, target_root: Path) -> dict[str, object]:
+    """Preview a receipt-bound return to the exact predecessor payload."""
+    reject_portable_rollback_pack_reparse(current_pack)
+    reject_portable_rollback_pack_reparse(previous_pack)
+    current_pack, previous_pack, target_root = current_pack.resolve(), previous_pack.resolve(), target_root.resolve()
+    if current_pack == previous_pack or not target_root.is_dir():
+        raise ValueError("rollback requires distinct packs and an existing target")
+    # Removal may already have deleted owned bytes or retired the import
+    # receipt. Its intent must be reconciled before either rollback preview
+    # or apply interprets that state as an update conflict or fresh baseline.
+    if load_portable_removal_intent(target_root) is not None:
+        raise ValueError("portable removal recovery must complete before rollback")
+    for label, pack in (("current", current_pack), ("previous", previous_pack)):
+        if pack == target_root or pack in target_root.parents or target_root in pack.parents:
+            raise ValueError(f"{label} rollback pack must be outside the target")
+        ok, problems = validate_pack_checksums(pack)
+        if not ok:
+            raise ValueError(f"invalid {label} rollback pack checksums: " + "; ".join(problems))
+    current_identity, previous_identity = import_pack_identity(current_pack), import_pack_identity(previous_pack)
+    pending = load_portable_import_intent(target_root)
+    if pending is not None:
+        next_receipt = pending["next_receipt"]
+        expected_pair = (
+            (current_identity, previous_identity),
+            (previous_identity, current_identity),
+        )
+        if pending.get("target") != normalize_rel(target_root) or (next_receipt.get("pack"), next_receipt.get("predecessor_pack")) not in expected_pair:
+            raise ValueError("pending import intent belongs to different rollback packs or target")
+        rollback_pending = (
+            next_receipt.get("pack") == previous_identity
+            and next_receipt.get("predecessor_pack") == current_identity
+            and next_receipt.get("mode") == "safe"
+        )
+        if rollback_pending:
+            portable_rollback_receipt_baseline(current_pack, previous_pack, target_root, current_identity, previous_identity)
+        return {"status": "RECOVERY_REQUIRED", "plan_digest": None,
+            "recovery_plan_digest": pending.get("plan_digest") if rollback_pending else None,
+            "operations": [], "conflicts": [], "preserved": [],
+            "recovery": classify_portable_import_recovery(target_root, pending)}
+    receipt, managed = portable_rollback_receipt_baseline(
+        current_pack, previous_pack, target_root, current_identity, previous_identity)
+    changed: list[str] = []
+    for target_rel, entry in managed.items():
+        target = portable_target_path(target_root, target_rel)
+        if entry["kind"] == "managed_file":
+            observed = target_file_digest(target)
+        else:
+            try:
+                block = portable_managed_block(target.read_bytes().decode("utf-8"))
+            except (OSError, UnicodeDecodeError):
+                block = None
+            observed = digest_bytes(block.encode("utf-8")) if block is not None else "missing"
+        if observed != entry["installed_digest"]:
+            changed.append(target_rel)
+    preview = apply_import_pack(previous_pack, target_root, dry_run=True, mode="safe", predecessor_pack=current_pack)
+    if preview["status"] == "RECOVERY_REQUIRED":
+        return {"status": "RECOVERY_REQUIRED", "plan_digest": None, "operations": [], "conflicts": [], "preserved": [], "recovery": preview["recovery"]}
+    preserved = [str(item["target"]) for item in preview["operations"] if item["kind"] in {"target_owned_template", "target_owned_additive"} and item["action"] not in {"preserve", "unchanged"}]
+    conflicts = sorted(set(changed) | set(preview["conflicts"]))
+    status = "CONFLICT" if conflicts else "PRESERVATION_REQUIRED" if preserved else "PLANNED"
+    plan = {
+        "schema_version": "aide.portable-rollback-plan.v1",
+        "status": status,
+        "target": normalize_rel(target_root),
+        "current_pack": current_identity,
+        "previous_pack": previous_identity,
+        "receipt_digest": receipt["receipt_digest"],
+        "import_plan_digest": preview["plan_digest"],
+        "operations": preview["operations"],
+        "conflicts": conflicts,
+        "preserved": sorted(set(preserved)),
+    }
+    plan["plan_digest"] = portable_import_record_digest(plan, "plan_digest")
+    return plan
+
+
+def apply_portable_rollback(
+    current_pack: Path,
+    previous_pack: Path,
+    target_root: Path,
+    expected_plan_digest: str,
+    *,
+    fail_after_writes: int | None = None,
+    recover_partial: bool = False,
+) -> dict[str, object]:
+    """Apply a previewed rollback or explicitly continue its exact partial intent."""
+    if os.name != "nt":
+        raise ValueError("portable rollback apply requires Windows anchored file handles")
+    if re.fullmatch(r"[0-9a-f]{64}", expected_plan_digest or "") is None:
+        raise ValueError("portable rollback apply requires an exact preview digest")
+    with portable_lifecycle_lock(target_root.resolve()):
+        plan = build_portable_rollback_plan(current_pack, previous_pack, target_root)
+        if recover_partial:
+            if plan["status"] != "RECOVERY_REQUIRED":
+                raise ValueError("partial rollback recovery requires a pending rollback intent")
+            recovery_digest = plan.get("recovery_plan_digest")
+            if recovery_digest is None or plan["recovery"]["classification"] != "partial":
+                return plan
+            if expected_plan_digest != recovery_digest:
+                return {"status": "STALE_PLAN", "plan_digest": None,
+                    "recovery_plan_digest": recovery_digest, "written": []}
+            result = _apply_import_pack_unlocked(
+                previous_pack, target_root, mode="safe", predecessor_pack=current_pack,
+                expected_plan_digest=recovery_digest, recover_partial=True,
+            )
+            if result["status"] == "RECOVERED":
+                result["status"] = "ROLLED_BACK_RECOVERED"
+            result["recovery_plan_digest"] = recovery_digest
+            return result
+        if plan["status"] == "RECOVERY_REQUIRED":
+            return plan
+        if plan["plan_digest"] != expected_plan_digest:
+            return {"status": "STALE_PLAN", "plan_digest": plan["plan_digest"], "written": []}
+        if plan["status"] != "PLANNED":
+            return {"status": plan["status"], "plan_digest": plan["plan_digest"], "conflicts": plan["conflicts"], "preserved": plan["preserved"], "written": []}
+        result = _apply_import_pack_unlocked(
+            previous_pack, target_root, mode="safe", predecessor_pack=current_pack,
+            expected_plan_digest=str(plan["import_plan_digest"]), fail_after_writes=fail_after_writes,
+        )
+        if result["status"] == "APPLIED":
+            result["status"] = "ROLLED_BACK"
+        result["rollback_plan_digest"] = plan["plan_digest"]
+        return result
+
+
+def _apply_portable_owned_repair_unlocked(
+    pack_root: Path,
+    target_root: Path,
+    target_rel: str,
+    *,
+    dry_run: bool = False,
+    expected_plan_digest: str | None = None,
+    fail_after_write: bool = False,
+) -> dict[str, object]:
+    """Restore one absent receipt-owned file from its exact delivered pack."""
+    pack_root, target_root = pack_root.resolve(), target_root.resolve()
+    if pack_root == target_root or pack_root in target_root.parents or target_root in pack_root.parents:
+        raise ValueError("pack and target must be separate roots")
+    if not target_root.is_dir():
+        raise ValueError("repair target must be an existing directory")
+    ok, problems = validate_pack_checksums(pack_root)
+    if not ok:
+        raise ValueError("invalid pack checksums: " + "; ".join(problems))
+    if not target_rel or "\\" in target_rel or normalize_rel(target_rel) != target_rel:
+        raise ValueError("invalid repair path")
+    target = portable_target_path(target_root, target_rel)
+    receipt = load_portable_import_receipt(target_root)
+    if receipt is None or receipt.get("pack") != import_pack_identity(pack_root):
+        raise ValueError("repair requires a receipt for this exact pack")
+    if receipt.get("mode") != "safe" or import_scope_skip_reason(target_rel, "safe"):
+        raise ValueError("repair requires a safe-mode managed file")
+    if portable_target_path(target_root, PORTABLE_IMPORT_INTENT_PATH).exists():
+        raise ValueError("pending portable import intent blocks repair")
+    entry = receipt_managed_entry(receipt, target_rel, target_rel)
+    if entry is None or entry.get("kind") != "managed_file" or entry.get("ownership") != "aide_portable_managed":
+        raise ValueError("path has no receipt-owned managed-file baseline")
+    source_rel = "files/" + target_rel
+    if source_rel not in pack_manifest_list(pack_root, "included_files"):
+        raise ValueError("repair source is absent from the pack manifest")
+    source = pack_root / source_rel
+    if any(parent.is_symlink() or bool(getattr(parent, "is_junction", lambda: False)()) for parent in (source, *source.parents) if parent == pack_root or pack_root in parent.parents) or not source.is_file():
+        raise ValueError("repair source is not a regular pack file")
+    source_digest = sha256_file(source)
+    if entry.get("source_digest") != source_digest or entry.get("installed_digest") != source_digest:
+        raise ValueError("receipt baseline differs from validated pack payload")
+    preimage = target_file_digest(target)
+    plan = {
+        "schema_version": "aide.portable-owned-repair-plan.v1",
+        "target": normalize_rel(target_root),
+        "path": target_rel,
+        "pack": import_pack_identity(pack_root),
+        "receipt_digest": receipt["receipt_digest"],
+        "preimage_digest": "missing",
+        "postimage_digest": source_digest,
+    }
+    plan_digest = digest_bytes(stable_compact_json_text(plan).encode("utf-8"))
+    intent_path = portable_target_path(target_root, PORTABLE_REPAIR_INTENT_PATH)
+    intent = None
+    if intent_path.exists():
+        try:
+            intent = json.loads(read_text(intent_path))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"invalid repair intent: {exc}") from exc
+        if not isinstance(intent, dict) or intent.get("schema_version") != "aide.portable-owned-repair-intent.v1" or intent.get("intent_digest") != portable_import_record_digest(intent, "intent_digest"):
+            raise ValueError("invalid repair intent digest or schema")
+        if intent.get("plan") != plan or intent.get("plan_digest") != plan_digest:
+            raise ValueError("repair intent does not match exact pack, receipt, target, and path")
+    status = "RECOVERY_REQUIRED" if intent else ("PLANNED" if preimage == "missing" else "CONFLICT")
+    result = {"status": status, "dry_run": dry_run, "path": target_rel, "plan_digest": plan_digest, "observed_digest": preimage, "postimage_digest": source_digest, "written": []}
+    if dry_run:
+        return result
+    if expected_plan_digest != plan_digest:
+        result["status"] = "STALE_PLAN"
+        return result
+    if intent and preimage == source_digest:
+        delete_portable_repair_intent_anchored(target_root, intent)
+        result["status"] = "RECOVERED"
+        return result
+    if preimage != "missing":
+        result["status"] = "CONFLICT"
+        return result
+    if intent is None:
+        intent = {"schema_version": "aide.portable-owned-repair-intent.v1", "plan": plan, "plan_digest": plan_digest}
+        intent["intent_digest"] = portable_import_record_digest(intent, "intent_digest")
+        try:
+            atomic_create_bytes_no_clobber(intent_path, stable_json_text(intent).encode("utf-8"))
+        except FileExistsError:
+            result["status"] = "RECOVERY_REQUIRED"
+            return result
+    if target_file_digest(target) != "missing":
+        result["status"] = "CONFLICT"
+        return result
+    data = source.read_bytes()
+    if digest_bytes(data) != source_digest:
+        raise ValueError("repair source changed after preflight")
+    portable_target_path(target_root, target_rel)
+    try:
+        atomic_create_bytes_no_clobber(target, data)
+    except FileExistsError:
+        result["status"] = "CONFLICT"
+        result["observed_digest"] = target_file_digest(target)
+        return result
+    if fail_after_write:
+        result["status"] = "INTERRUPTED"
+        result["written"] = [target_rel]
+        return result
+    if target_file_digest(target) != source_digest:
+        result["status"] = "INTERRUPTED"
+        return result
+    delete_portable_repair_intent_anchored(target_root, intent)
+    result["status"] = "APPLIED"
+    result["written"] = [target_rel]
+    return result
+
+
+def apply_portable_owned_repair(
+    pack_root: Path,
+    target_root: Path,
+    target_rel: str,
+    *,
+    dry_run: bool = False,
+    expected_plan_digest: str | None = None,
+    fail_after_write: bool = False,
+) -> dict[str, object]:
+    if dry_run:
+        return _apply_portable_owned_repair_unlocked(pack_root, target_root, target_rel, dry_run=True, expected_plan_digest=expected_plan_digest, fail_after_write=fail_after_write)
+    with portable_lifecycle_lock(target_root.resolve()):
+        return _apply_portable_owned_repair_unlocked(pack_root, target_root, target_rel, dry_run=False, expected_plan_digest=expected_plan_digest, fail_after_write=fail_after_write)
+
+
+def inspect_portable_repair_health(pack_root: Path, target_root: Path) -> dict[str, object]:
+    """Observe receipt-owned files without changing the target; apply rechecks everything."""
+    pack_root, target_root = pack_root.absolute(), target_root.absolute()
+    report: dict[str, object] = {
+        "schema_version": "aide.portable-repair-health.v1", "status": "HEALTHY",
+        "pack": None, "target": str(target_root), "receipt_digest": None,
+        "pending_intents": [], "disabled_features": [], "observations": [], "read_only": True,
+        "network_calls": False, "provider_or_model_calls": False,
+    }
+    if os.name != "nt" or not target_root.is_dir() or target_root.is_symlink() or bool(getattr(target_root, "is_junction", lambda: False)()):
+        report["status"] = "UNSAFE_TARGET"
+        return report
+    if pack_root == target_root or pack_root in target_root.parents or target_root in pack_root.parents:
+        report["status"] = "INVALID_PACK"
+        return report
+    try:
+        valid, problems = validate_pack_checksums(pack_root)
+        if not valid:
+            report["status"], report["reason"] = "INVALID_PACK", "; ".join(problems)
+            return report
+        report["pack"] = import_pack_identity(pack_root)
+    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        report["status"], report["reason"] = "INVALID_PACK", str(exc)
+        return report
+    try:
+        with windows_pinned_directory(target_root, for_write=False):
+            for name, rel in (("import", PORTABLE_IMPORT_INTENT_PATH), ("repair", PORTABLE_REPAIR_INTENT_PATH), ("removal", PORTABLE_REMOVAL_INTENT_PATH)):
+                if os.path.lexists(portable_target_path(target_root, rel)):
+                    report["pending_intents"].append(name)
+            receipt = load_portable_import_receipt(target_root)
+    except (OSError, ValueError, RuntimeError) as exc:
+        report["status"], report["reason"] = "INVALID_RECEIPT", str(exc)
+        return report
+    if receipt is None:
+        report["status"], report["reason"] = "INVALID_RECEIPT", "portable import receipt is absent"
+        return report
+    report["receipt_digest"] = receipt["receipt_digest"]
+    report["disabled_features"] = receipt.get("disabled_features", [])
+    if receipt.get("pack") != report["pack"]:
+        report["status"] = "PACK_MISMATCH"
+        return report
+    if receipt.get("mode") not in {"safe", "full"}:
+        report["status"], report["reason"] = "INVALID_RECEIPT", "portable import receipt mode is invalid"
+        return report
+    pending = bool(report["pending_intents"])
+    included_sources = set(pack_manifest_list(pack_root, "included_files"))
+    for rel, entry in sorted(receipt["managed"].items()):
+        observation: dict[str, object] = {
+            "path": rel, "kind": entry["kind"], "ownership": entry["ownership"],
+            "local_overlay": bool(entry.get("local_overlay", False)), "expected_digest": entry["installed_digest"],
+            "observed_digest": None, "state": "UNKNOWN", "repair_eligible": False,
+            "repair_plan_digest": None, "reason": "", "next_action": "inspect ownership and preserve local state",
+        }
+        report["observations"].append(observation)
+        try:
+            source_rel = "AGENTS.md.template" if rel == "AGENTS.md" else rel
+            expected_kind = "portable_managed_section" if rel == "AGENTS.md" else "managed_file"
+            if entry["source"] != source_rel or entry["kind"] != expected_kind or "files/" + source_rel not in included_sources or import_scope_skip_reason(source_rel, receipt["mode"]):
+                observation["reason"] = "receipt source or kind is outside the admitted pack mapping"
+                continue
+            if any(rel.startswith(PORTABLE_OPTIONAL_FEATURES[feature]) for feature in receipt.get("disabled_features", [])):
+                observation["reason"] = "receipt claims ownership of a disabled feature"
+                continue
+            source = pack_root / "files" / source_rel
+            if entry["kind"] == "portable_managed_section":
+                pack_block = portable_managed_block(source.read_bytes().decode("utf-8"))
+                pack_digest = digest_bytes(pack_block.encode("utf-8")) if pack_block is not None else None
+            else:
+                pack_digest = sha256_file(source)
+            if pack_digest is None or entry["source_digest"] != pack_digest:
+                observation["reason"] = "receipt source baseline differs from validated pack bytes"
+                continue
+            if entry["ownership"] == "aide_portable_managed" and not receipt_matches_predecessor_baseline(pack_root, source_rel, entry["kind"], entry):
+                observation["reason"] = "receipt owned baseline differs from validated pack bytes"
+                continue
+            target = portable_target_path(target_root, rel)
+            with windows_pinned_directory(target.parent, for_write=False):
+                if not os.path.lexists(target):
+                    observation["state"] = "MISSING_OWNED"
+                    observation["observed_digest"] = "missing"
+                else:
+                    captured: list[bytes] = []
+                    kernel, handle = portable_import_verified_leaf(target, None, read_only=True, capture_out=captured, max_bytes=64 * 1024 * 1024)
+                    try:
+                        data = b"".join(captured)
+                    finally:
+                        kernel.CloseHandle(handle)
+                    if entry["kind"] == "portable_managed_section":
+                        block = portable_managed_block(data.decode("utf-8"))
+                        observation["observed_digest"] = digest_bytes(block.encode("utf-8")) if block is not None else None
+                    else:
+                        observation["observed_digest"] = digest_bytes(data)
+                    observation["state"] = "MATCHING" if observation["observed_digest"] == entry["installed_digest"] else "CHANGED"
+            if observation["state"] == "MISSING_OWNED" and not pending and entry["kind"] == "managed_file" and entry["ownership"] == "aide_portable_managed" and receipt.get("mode") == "safe" and not import_scope_skip_reason(rel, "safe") and not any(rel.startswith(PORTABLE_OPTIONAL_FEATURES[feature]) for feature in receipt.get("disabled_features", [])):
+                preview = apply_portable_owned_repair(pack_root, target_root, rel, dry_run=True)
+                if preview["status"] == "PLANNED":
+                    observation["repair_eligible"] = True
+                    observation["repair_plan_digest"] = preview["plan_digest"]
+                    observation["next_action"] = "repair-owned-file with this exact preview digest"
+                else:
+                    observation["reason"] = f"exact repair preview returned {preview['status']}"
+            elif observation["state"] == "MISSING_OWNED":
+                observation["reason"] = "missing path is outside the exact safe owned-file repair scope"
+            elif observation["state"] == "CHANGED":
+                observation["reason"] = "installed content differs from the receipt; preserve local edits"
+            elif observation["state"] == "MATCHING":
+                observation["next_action"] = "none"
+                if observation["local_overlay"]:
+                    observation["reason"] = "project overlay remains project owned"
+        except (OSError, ValueError, RuntimeError, UnicodeDecodeError, KeyError, TypeError) as exc:
+            observation["state"], observation["repair_eligible"] = "UNKNOWN", False
+            observation["reason"] = str(exc)
+    if pending:
+        report["status"] = "RECOVERY_REQUIRED"
+    elif any(item["repair_eligible"] for item in report["observations"]):
+        report["status"] = "REPAIRABLE"
+    elif any(item["state"] != "MATCHING" or item["local_overlay"] for item in report["observations"]):
+        report["status"] = "PRESERVATION_REQUIRED"
+    return report
+
+
+def command_repair_health(args: argparse.Namespace) -> int:
+    report = inspect_portable_repair_health(Path(args.pack), Path(args.target))
+    if args.json:
+        print(stable_json_text(report), end="")
+    else:
+        print("AIDE Lite repair-health")
+        print(f"status: {report['status']}")
+        print(f"observations: {len(report['observations'])}")
+        print(f"pending_intents: {','.join(report['pending_intents']) or 'none'}")
+        print("network_calls: none")
+    return 0 if report["status"] in {"HEALTHY", "REPAIRABLE", "PRESERVATION_REQUIRED"} else 3
+
+
+def command_repair_owned_file(args: argparse.Namespace) -> int:
+    result = apply_portable_owned_repair(Path(args.pack), Path(args.target), args.path, dry_run=args.dry_run, expected_plan_digest=args.expect_plan)
+    print("AIDE Lite repair-owned-file")
+    for key in ("status", "path", "plan_digest", "observed_digest", "postimage_digest"):
+        print(f"{key}: {result[key]}")
+    print(f"written: {len(result['written'])}")
+    print("network_calls: none")
+    return 0 if result["status"] in {"PLANNED", "APPLIED", "RECOVERED"} else (2 if result["status"] == "CONFLICT" else 3)
+
+
 def command_export_pack(args: argparse.Namespace) -> int:
+    if not source_maintainer_job_guard(args.repo_root, canonical_paths=(EXPORT_PACK_PATH,)):
+        return 1
     pack_root, report = build_export_pack(args.repo_root, name=args.name, output=args.output)
     print("AIDE Lite export-pack")
     print(f"pack: {normalize_rel(pack_root.relative_to(args.repo_root))}")
@@ -41760,16 +46500,44 @@ def command_export_pack(args: argparse.Namespace) -> int:
 
 
 def command_import_pack(args: argparse.Namespace) -> int:
+    if args.feedback_out and not args.dry_run:
+        raise ValueError("--feedback-out requires --dry-run")
     pack_root = Path(args.pack).resolve()
     if not pack_root.exists():
         pack_root = (args.repo_root / args.pack).resolve()
     target_root = Path(args.target).resolve()
-    result = apply_import_pack(pack_root, target_root, dry_run=args.dry_run, mode=args.mode)
+    predecessor_pack = Path(args.from_pack).resolve() if args.from_pack else None
+    if predecessor_pack is not None and not predecessor_pack.exists():
+        predecessor_pack = (args.repo_root / args.from_pack).resolve()
+    resolutions: dict[str, Path] = {}
+    for target_rel, filename in args.resolve or []:
+        if target_rel in resolutions:
+            raise ValueError(f"duplicate resolution target: {target_rel}")
+        resolutions[target_rel] = Path(filename)
+    customizations = load_project_customizations(target_root) if args.explain or args.feedback_out else None
+    result = apply_import_pack(
+        pack_root,
+        target_root,
+        dry_run=args.dry_run,
+        mode=args.mode,
+        predecessor_pack=predecessor_pack,
+        expected_plan_digest=args.expect_plan,
+        resolutions=resolutions,
+        recover_partial=args.recover_partial,
+    )
+    explanations = explain_import_result(result, target_root, customizations) if customizations is not None else []
+    if args.feedback_out:
+        if result["status"] not in {"PLANNED", "PLANNED_CONFLICT"}:
+            raise ValueError("feedback output requires a complete import dry-run plan")
+        write_import_feedback(Path(args.feedback_out), pack_root, target_root, result, explanations, predecessor_pack=predecessor_pack)
     print("AIDE Lite import-pack")
     print(f"pack: {normalize_rel(pack_root)}")
     print(f"target: {normalize_rel(target_root)}")
     print(f"dry_run: {str(args.dry_run).lower()}")
     print(f"mode: {result['mode']}")
+    print(f"status: {result['status']}")
+    print(f"plan_digest: {result['plan_digest']}")
+    print(f"predecessor_pack: {normalize_rel(predecessor_pack) if predecessor_pack else 'none'}")
     print(f"operation_count: {result['operation_count']}")
     print(f"conflicts: {len(result['conflicts'])}")
     print(f"skipped: {len(result['skipped'])}")
@@ -41781,9 +46549,114 @@ def command_import_pack(args: argparse.Namespace) -> int:
         print("skipped_paths:")
         for skipped in result["skipped"]:
             print(f"- {skipped['source']}: {skipped['reason']}")
+    if args.explain:
+        print("explanations:")
+        for item in explanations:
+            print(f"- {item['action']}: {item['target']}; basis={item['ownership_basis']}; reason={item['reason']}; rationale_status={item['rationale_status']}; project_rationale={json.dumps(item['project_rationale'], ensure_ascii=False)}")
+    if args.feedback_out:
+        print(f"feedback_out: {normalize_rel(Path(args.feedback_out).resolve())}")
     print("provider_or_model_calls: none")
     print("network_calls: none")
-    return 0 if not result["conflicts"] else 2
+    if result["status"] in {"CONFLICT", "PLANNED_CONFLICT"}:
+        return 2
+    if result["status"] in {"STALE_PLAN", "INTERRUPTED", "RECOVERY_REQUIRED"}:
+        return 3
+    return 0
+
+
+def command_rollback_pack(args: argparse.Namespace) -> int:
+    current_pack = Path(args.current_pack).resolve()
+    previous_pack = Path(args.previous_pack).resolve()
+    target_root = Path(args.target).resolve()
+    if args.dry_run and args.recover_partial:
+        raise ValueError("partial rollback recovery requires apply mode")
+    if args.dry_run:
+        result = build_portable_rollback_plan(current_pack, previous_pack, target_root)
+    else:
+        result = apply_portable_rollback(current_pack, previous_pack, target_root, args.expect_plan,
+            recover_partial=args.recover_partial)
+    if args.json:
+        print(json.dumps(result, sort_keys=True, indent=2, ensure_ascii=False))
+    else:
+        print("AIDE Lite rollback-pack")
+        print(f"status: {result['status']}")
+        print(f"plan_digest: {result.get('plan_digest') or result.get('rollback_plan_digest') or 'none'}")
+        if result.get("recovery_plan_digest"):
+            print(f"recovery_plan_digest: {result['recovery_plan_digest']}")
+        print(f"written: {len(result.get('written', []))}")
+        print("provider_or_model_calls: none")
+        print("network_calls: none")
+    return 0 if result["status"] in {"PLANNED", "ROLLED_BACK", "ROLLED_BACK_RECOVERED", "NO_CHANGES"} else 2 if result["status"] in {"CONFLICT", "PRESERVATION_REQUIRED"} else 3
+
+
+def command_plan_removal(args: argparse.Namespace) -> int:
+    target_root = Path(args.target).resolve()
+    try:
+        plan = build_portable_removal_plan(target_root)
+    except ValueError as exc:
+        refusal = {
+            "schema_version": PORTABLE_REMOVAL_PLAN_SCHEMA,
+            "status": "REFUSED",
+            "target": normalize_rel(target_root),
+            "error": str(exc),
+            "read_only": True,
+            "apply_allowed": False,
+            "delete_allowed": False,
+            "network_calls": False,
+            "provider_or_model_calls": False,
+        }
+        if args.json:
+            print(stable_json_text(refusal), end="")
+        else:
+            print("AIDE Lite plan-removal")
+            print("status: REFUSED")
+            print(f"target: {normalize_rel(target_root)}")
+            print(f"error: {exc}")
+            print("read_only: true")
+            print("apply_allowed: false")
+            print("delete_allowed: false")
+            print("provider_or_model_calls: none")
+            print("network_calls: none")
+        return 3
+    if args.json:
+        print(stable_json_text(plan), end="")
+    else:
+        print("AIDE Lite plan-removal")
+        print(f"status: {plan['status']}")
+        print(f"target: {plan['target']}")
+        print(f"receipt_digest: {plan['receipt_digest']}")
+        print(f"observed_state_digest: {plan['observed_state_digest']}")
+        print(f"plan_digest: {plan['plan_digest']}")
+        print(f"operation_count: {plan['operation_count']}")
+        print(f"candidate_count: {plan['candidate_count']}")
+        print(f"preservation_count: {plan['preservation_count']}")
+        print("planned_operations:")
+        for operation in plan["operations"]:
+            print(f"- {operation['action']}: {operation['target']}")
+        print("read_only: true")
+        print("apply_allowed: false")
+        print("delete_allowed: false")
+        print("provider_or_model_calls: none")
+        print("network_calls: none")
+    return 0 if plan["status"] == "PLANNED" else 2
+
+
+def command_apply_removal(args: argparse.Namespace) -> int:
+    result = apply_portable_removal(Path(args.target), args.expect_plan)
+    if args.json:
+        print(stable_json_text(result), end="")
+    else:
+        print("AIDE Lite apply-removal")
+        print(f"status: {result['status']}")
+        print(f"plan_digest: {result['plan_digest']}")
+        print(f"removed: {len(result['removed'])}")
+        print(f"preserved: {len(result['preserved'])}")
+        print(f"receipt_retained: {str(result.get('receipt_retained', True)).lower()}")
+        print("provider_or_model_calls: none")
+        print("network_calls: none")
+    if result["status"] in {"STALE_PLAN", "RECOVERY_REQUIRED", "INTERRUPTED"}:
+        return 3
+    return 2 if result["status"] in {"PRESERVATION_REQUIRED", "PARTIAL_REMOVAL"} else 0
 
 
 def command_pack_status(args: argparse.Namespace) -> int:
@@ -42848,7 +47721,716 @@ def run_selftest() -> tuple[bool, list[str]]:
     return result
 
 
+def _job_wait_unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    value: dict[str, object] = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError("job evidence has duplicate JSON keys")
+        value[key] = item
+    return value
+
+
+def _job_wait_reject_constant(value: str) -> object:
+    raise ValueError("job evidence contains a nonfinite JSON constant")
+
+
+def _job_wait_read_json(path: Path, maximum: int) -> tuple[dict[str, object], str] | None:
+    """Read one ordinary bounded owner record; absence is distinct from damage."""
+    if not os.path.lexists(path):
+        return None
+    info = path.lstat()
+    if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+            or getattr(info, "st_file_attributes", 0) & 0x400 or info.st_size > maximum):
+        raise ValueError("job evidence is not an ordinary bounded record")
+    identity = lambda item: (item.st_dev, item.st_ino, item.st_size, item.st_mtime_ns)
+    with path.open("rb") as source:
+        if identity(os.fstat(source.fileno())) != identity(info):
+            raise ValueError("job evidence changed before read")
+        data = source.read(maximum + 1)
+        if len(data) > maximum or identity(os.fstat(source.fileno())) != identity(info):
+            raise ValueError("job evidence changed or exceeded the read bound")
+    if identity(path.lstat()) != identity(info):
+        raise ValueError("job evidence changed during read")
+    try:
+        value = json.loads(data, object_pairs_hook=_job_wait_unique_object,
+                           parse_constant=_job_wait_reject_constant)
+    except RecursionError as exc:
+        raise ValueError("job evidence JSON exceeds structural bound") from exc
+    if not isinstance(value, dict):
+        raise ValueError("job evidence is not an object")
+    return value, hashlib.sha256(data).hexdigest()
+
+
+def _job_wait_root(value: object) -> Path:
+    if not isinstance(value, str) or len(value) > 512:
+        raise ValueError("job observation root is missing or too long")
+    root = Path(value)
+    if not root.is_absolute() or ".." in root.parts or root == Path(root.anchor):
+        raise ValueError("job observation root must be an absolute child")
+    for member in reversed((root, *root.parents)):
+        info = member.lstat()
+        if not stat.S_ISDIR(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+            raise ValueError("job observation root is redirected or not a directory")
+    return root
+
+
+def wait_for_managed_job(config_path: Path, job_id: str, manifest_digest: str,
+                         timeout_seconds: float, interval_seconds: float, *,
+                         clock: Callable[[], float] = time.monotonic,
+                         sleeper: Callable[[float], None] = time.sleep) -> dict[str, object]:
+    """Portable read-only attachment to the existing maintainer job owner."""
+    if not re.fullmatch(r"[0-9a-f]{32}", job_id) or not re.fullmatch(r"[0-9a-f]{64}", manifest_digest):
+        raise ValueError("exact job ID and manifest digest required")
+    if not 0 <= timeout_seconds <= 3600 or not 0.1 <= interval_seconds <= 30:
+        raise ValueError("finite job observation limits required")
+    config_record = _job_wait_read_json(Path(config_path), 65536)
+    if config_record is None or config_record[0].get("schema") != "aide.managed-workspace.local.v1":
+        raise ValueError("managed workspace configuration unavailable")
+    roots = config_record[0].get("roots")
+    if not isinstance(roots, dict):
+        raise ValueError("managed workspace roots unavailable")
+    control, retained = (_job_wait_root(roots.get(name)) for name in ("control", "retained"))
+    receipt_path = retained / job_id / "receipt.json"
+    owner_path = retained / job_id / "owner.json"
+    active_path = control / "active.json"
+    base = {"schema": "aide.job-observation.v1", "job_id": job_id,
+            "manifest_digest": manifest_digest, "model_requests_started_by_observer": 0,
+            "host_model_requests": "unknown", "invocation_control": "observer_only",
+            "receipt_ref": str(receipt_path)}
+    start = clock()
+    observations = unchanged = 0
+    previous_phase: str | None = None
+    while True:
+        observations += 1
+        try:
+            retained_job = retained / job_id
+            if os.path.lexists(retained_job):
+                info = retained_job.lstat()
+                if not stat.S_ISDIR(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+                    raise ValueError("job retention path is redirected")
+            receipt = _job_wait_read_json(receipt_path, 1024 * 1024)
+            if receipt is not None:
+                owner = _job_wait_read_json(owner_path, 65536)
+                record, receipt_sha = receipt
+                if (owner is None or owner[0] != {"job_id": job_id, "manifest_digest": manifest_digest}
+                        or record.get("job_id") != job_id or record.get("manifest_digest") != manifest_digest):
+                    raise ValueError("job receipt ownership or identity mismatch")
+                job = record.get("job")
+                if (not isinstance(job, dict) or hashlib.sha256(json.dumps(job, sort_keys=True,
+                        separators=(",", ":")).encode()).hexdigest() != manifest_digest):
+                    raise ValueError("job receipt manifest changed")
+                if record.get("phase") == "retired":
+                    result = record.get("result")
+                    if not isinstance(result, dict):
+                        raise ValueError("job terminal result missing")
+                    source_commit, source_tree = job.get("source_commit"), job.get("source_tree")
+                    if (not isinstance(source_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", source_commit)
+                            or not isinstance(source_tree, str) or not re.fullmatch(r"[0-9a-f]{40}", source_tree)):
+                        raise ValueError("job source identity missing")
+                    collected = record.get("collected_manifest")
+                    if (not isinstance(collected, dict) or any(not isinstance(collected.get(name), str)
+                            or not re.fullmatch(r"[0-9a-f]{64}", collected[name]) for name in ("output", "logs"))):
+                        raise ValueError("job collected evidence manifest missing")
+                    peaks = record.get("peaks") if isinstance(record.get("peaks"), dict) else {}
+                    passed = (result.get("reason") == "exited" and result.get("exit_code") == 0
+                              and result.get("job_id") == job_id and result.get("quiescent") is True
+                              and record.get("scratch_absent") is True
+                              and record.get("reservation_released") is True)
+                    return {**base, "status": "PASS" if passed else "FAIL", "terminal": True,
+                            "reason": str(result.get("reason", "unknown"))[:80],
+                            "exit_code": result.get("exit_code") if type(result.get("exit_code")) is int else None,
+                            "source_commit": source_commit, "source_tree": source_tree,
+                            "receipt_sha256": receipt_sha, "evidence_status": "receipt_present_outputs_unverified",
+                            "peak_scratch_bytes": peaks.get("scratch_bytes") if type(peaks.get("scratch_bytes")) is int else None,
+                            "peak_memory_bytes": peaks.get("memory_bytes") if type(peaks.get("memory_bytes")) is int else None,
+                            "observations": observations, "unchanged_observations": unchanged}
+            active = _job_wait_read_json(active_path, 1024 * 1024)
+            if active is None:
+                return {**base, "status": "ACTION_REQUIRED" if receipt is not None else "MISSING",
+                        "terminal": False,
+                        "observations": observations, "unchanged_observations": unchanged}
+            record = active[0]
+            if record.get("job_id") != job_id or record.get("manifest_digest") != manifest_digest:
+                return {**base, "status": "OTHER_ATTEMPT", "terminal": False,
+                        "observations": observations, "unchanged_observations": unchanged}
+            active_job = record.get("job")
+            if (not isinstance(active_job, dict) or hashlib.sha256(json.dumps(active_job, sort_keys=True,
+                    separators=(",", ":")).encode()).hexdigest() != manifest_digest):
+                raise ValueError("active job manifest changed")
+            phase = record.get("phase")
+            if not isinstance(phase, str):
+                raise ValueError("job phase missing")
+            if phase == previous_phase:
+                unchanged += 1
+            previous_phase = phase
+            if phase == "collection_recovery_required":
+                return {**base, "status": "ACTION_REQUIRED", "terminal": False,
+                        "reason": "collection_recovery_required", "observations": observations,
+                        "unchanged_observations": unchanged}
+        except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+            return {**base, "status": "EVIDENCE_UNAVAILABLE", "terminal": False,
+                    "observations": observations, "unchanged_observations": unchanged}
+        remaining = timeout_seconds - (clock() - start)
+        if remaining <= 0:
+            return {**base, "status": "PENDING", "terminal": False,
+                    "observations": observations, "unchanged_observations": unchanged}
+        sleeper(min(interval_seconds, remaining))
+
+
+def command_job_wait(args: argparse.Namespace) -> int:
+    try:
+        result = wait_for_managed_job(Path(args.config), args.job_id, args.manifest_digest,
+                                      args.timeout_seconds, args.interval_seconds)
+    except (OSError, ValueError) as exc:
+        result = {"schema": "aide.job-observation.v1", "status": "REFUSED", "terminal": False,
+                  "reason": str(exc)[:120], "model_requests_started_by_observer": 0,
+                  "host_model_requests": "unknown"}
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0 if result["status"] == "PASS" else 2 if result["status"] == "PENDING" else 1
+
+
+CODEX_EXEC_USAGE_FIELDS = ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens")
+CODEX_EXEC_MAX_STREAM_BYTES = 16 * 1024 * 1024
+CODEX_EXEC_MAX_LINE_BYTES = 1024 * 1024
+
+
+def _codex_exec_unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Codex stream contains a duplicate JSON object key")
+        result[key] = value
+    return result
+
+
+def _codex_exec_usage(value: object) -> tuple[dict[str, int | None], list[str]]:
+    if not isinstance(value, dict):
+        return {name: None for name in CODEX_EXEC_USAGE_FIELDS}, ["usage_missing"]
+    usage: dict[str, int | None] = {}
+    gaps = []
+    for name in CODEX_EXEC_USAGE_FIELDS:
+        count = value.get(name)
+        if type(count) is int and count >= 0:
+            usage[name] = count
+        else:
+            usage[name] = None
+            gaps.append(name + "_unknown")
+    if (usage["cached_input_tokens"] is not None and usage["input_tokens"] is not None
+            and usage["cached_input_tokens"] > usage["input_tokens"]):
+        raise ValueError("cached input exceeds reported input")
+    if (usage["reasoning_output_tokens"] is not None and usage["output_tokens"] is not None
+            and usage["reasoning_output_tokens"] > usage["output_tokens"]):
+        raise ValueError("reasoning output exceeds reported output")
+    if set(value) - set(CODEX_EXEC_USAGE_FIELDS):
+        gaps.append("unrecognized_usage_fields")
+    return usage, gaps
+
+
+def _codex_exec_stream(path: Path) -> dict[str, object]:
+    info = path.lstat()
+    if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+            or getattr(info, "st_file_attributes", 0) & 0x400 or info.st_size > CODEX_EXEC_MAX_STREAM_BYTES):
+        raise ValueError("Codex stream is not an ordinary bounded file")
+    stream_hash = hashlib.sha256()
+    session = None
+    completed = None
+    failed = False
+    started_turns = 0
+    completion_before_start = False
+    duplicate_terminal = 0
+    count = size = 0
+    with path.open("rb") as source:
+        opened = os.fstat(source.fileno())
+        identity = lambda item: (item.st_dev, item.st_ino, item.st_size, item.st_mtime_ns)
+        if identity(opened) != identity(info):
+            raise ValueError("Codex stream changed before read")
+        while line := source.readline(CODEX_EXEC_MAX_LINE_BYTES + 1):
+            size += len(line)
+            count += 1
+            if size > CODEX_EXEC_MAX_STREAM_BYTES or len(line) > CODEX_EXEC_MAX_LINE_BYTES or count > 100000:
+                raise ValueError("Codex stream exceeded read limits")
+            stream_hash.update(line)
+            if not line.strip():
+                continue
+            try:
+                event = json.loads(line, object_pairs_hook=_codex_exec_unique_object)
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise ValueError("Codex stream contains malformed JSONL") from exc
+            if not isinstance(event, dict):
+                raise ValueError("Codex event is not an object")
+            kind = event.get("type")
+            if kind == "thread.started":
+                raw_session = event.get("thread_id")
+                try:
+                    observed = str(uuid.UUID(raw_session))
+                except (ValueError, TypeError, AttributeError) as exc:
+                    raise ValueError("Codex session identity invalid") from exc
+                if session is not None and session != observed:
+                    raise ValueError("multiple Codex sessions in one stream")
+                session = observed
+            elif kind == "turn.started":
+                started_turns += 1
+            elif kind == "turn.completed":
+                if started_turns != 1:
+                    completion_before_start = True
+                if completed is not None:
+                    if completed != event:
+                        raise ValueError("conflicting terminal Codex usage events")
+                    duplicate_terminal += 1
+                else:
+                    completed = event
+            elif kind in ("turn.failed", "error"):
+                failed = True
+        if identity(os.fstat(source.fileno())) != identity(info):
+            raise ValueError("Codex stream changed during read")
+    if identity(path.lstat()) != identity(info):
+        raise ValueError("Codex stream path changed during read")
+    if session is None:
+        raise ValueError("Codex stream lacks session identity")
+    usage, gaps = _codex_exec_usage(completed.get("usage") if completed else None)
+    if failed:
+        gaps.append("turn_failed_or_error")
+    terminal_conflict = completed is not None and failed
+    if terminal_conflict:
+        gaps.append("terminal_conflict")
+    if completed is None:
+        gaps.append("terminal_usage_absent")
+    ambiguous_turn = started_turns != 1 or completion_before_start
+    if ambiguous_turn:
+        gaps.append("turn_boundary_ambiguous")
+    return {"session_id": session, "stream_sha256": stream_hash.hexdigest(),
+            "event_count": count, "duplicate_terminal_events": duplicate_terminal,
+            "terminal_status": "AMBIGUOUS" if terminal_conflict or ambiguous_turn else "FAILED" if failed else "COMPLETED" if completed else "INCOMPLETE",
+            "usage": usage, "coverage_gaps": sorted(set(gaps))}
+
+
+def summarize_codex_exec_usage(paths: list[Path]) -> dict[str, object]:
+    """Import at most eight Codex exec JSONL files; never retain raw model output."""
+    if not 1 <= len(paths) <= 8:
+        raise ValueError("one to eight Codex streams required")
+    records = []
+    seen_hashes: set[str] = set()
+    duplicates = 0
+    for path in paths:
+        record = _codex_exec_stream(Path(path))
+        if record["stream_sha256"] in seen_hashes:
+            duplicates += 1
+            continue
+        seen_hashes.add(str(record["stream_sha256"]))
+        records.append(record)
+    sessions = [str(record["session_id"]) for record in records]
+    gaps = sorted({gap for record in records for gap in record["coverage_gaps"]})
+    ambiguous_session = len(sessions) != len(set(sessions))
+    if ambiguous_session:
+        gaps.append("same_session_multiple_streams_turn_identity_unknown")
+    totals: dict[str, int | None] = {}
+    known_totals: dict[str, int | None] = {}
+    for name in CODEX_EXEC_USAGE_FIELDS:
+        values = [record["usage"][name] for record in records]
+        known_values = [record["usage"][name] for record in records
+                        if "terminal_conflict" not in record["coverage_gaps"]
+                        and "turn_boundary_ambiguous" not in record["coverage_gaps"]
+                        and record["usage"][name] is not None]
+        known_totals[name] = None if ambiguous_session or not known_values else sum(known_values)
+        totals[name] = known_totals[name] if not gaps and all(value is not None for value in values) else None
+    return {"schema": "aide.codex-exec-usage.v1", "status": "COMPLETE" if not gaps else "PARTIAL",
+            "source": "codex_exec_jsonl", "model": "unknown", "model_requests": "unknown",
+            "completed_turns": sum(record["terminal_status"] == "COMPLETED" for record in records),
+            "failed_or_incomplete_turns": sum(record["terminal_status"] != "COMPLETED" for record in records),
+            "duplicate_streams_excluded": duplicates, "records": records,
+            "usage_totals": totals, "known_usage_totals": known_totals,
+            "coverage_gaps": gaps, "raw_prompt_or_response_retained": False}
+
+
+CODEX_ATTEMPT_ROLES = ("parent", "child", "review", "retry", "repair", "overhead")
+CODEX_ATTEMPT_ROSTER_MAX_BYTES = 64 * 1024
+
+
+def summarize_codex_usage_attempts(path: Path) -> dict[str, object]:
+    """Attribute supplied Codex streams without claiming a complete work roster."""
+    path = Path(path)
+    info = path.lstat()
+    if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+            or getattr(info, "st_file_attributes", 0) & 0x400
+            or info.st_size > CODEX_ATTEMPT_ROSTER_MAX_BYTES):
+        raise ValueError("Codex attempt roster is not an ordinary bounded file")
+    identity = lambda item: (item.st_dev, item.st_ino, item.st_size, item.st_mtime_ns)
+    with path.open("rb") as source:
+        if identity(os.fstat(source.fileno())) != identity(info):
+            raise ValueError("Codex attempt roster changed before read")
+        raw = source.read(CODEX_ATTEMPT_ROSTER_MAX_BYTES + 1)
+        if len(raw) > CODEX_ATTEMPT_ROSTER_MAX_BYTES or identity(os.fstat(source.fileno())) != identity(info):
+            raise ValueError("Codex attempt roster changed or exceeded read limit")
+    if identity(path.lstat()) != identity(info):
+        raise ValueError("Codex attempt roster path changed during read")
+    try:
+        roster = json.loads(raw, object_pairs_hook=_codex_exec_unique_object)
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+        raise ValueError("Codex attempt roster contains malformed JSON") from exc
+    if (not isinstance(roster, dict) or set(roster) != {"schema", "work_id", "attempts"}
+            or roster["schema"] != "aide.codex-exec-attempt-roster.v1"
+            or not isinstance(roster["work_id"], str)
+            or not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", roster["work_id"])):
+        raise ValueError("Codex attempt roster identity or schema invalid")
+    attempts = roster["attempts"]
+    if not isinstance(attempts, list) or not 1 <= len(attempts) <= 8:
+        raise ValueError("Codex attempt roster requires one to eight attempts")
+    by_id = {}
+    paths = []
+    supplied = []
+    expected_hashes = []
+    parent_root = path.parent.resolve()
+    for attempt in attempts:
+        if (not isinstance(attempt, dict)
+                or set(attempt) != {"attempt_id", "role", "parent_attempt_id", "stream", "stream_sha256"}
+                or not isinstance(attempt["attempt_id"], str)
+                or not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", attempt["attempt_id"])
+                or attempt["attempt_id"] in by_id
+                or attempt["role"] not in CODEX_ATTEMPT_ROLES):
+            raise ValueError("Codex attempt roster entry invalid or duplicated")
+        by_id[attempt["attempt_id"]] = attempt
+        stream = attempt["stream"]
+        digest = attempt["stream_sha256"]
+        if stream is None and digest is None:
+            continue
+        if (not isinstance(stream, str) or len(stream) > 240
+                or not re.fullmatch(r"[A-Za-z0-9._/-]+\.jsonl", stream)
+                or any(part in ("", ".", "..") for part in stream.split("/"))):
+            raise ValueError("Codex attempt stream path invalid")
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            raise ValueError("Codex attempt stream digest invalid")
+        stream_path = (parent_root / stream).resolve()
+        if not stream_path.is_relative_to(parent_root):
+            raise ValueError("Codex attempt stream path escapes roster root")
+        paths.append(stream_path)
+        supplied.append(attempt["attempt_id"])
+        expected_hashes.append(digest)
+    if sum(attempt["role"] == "parent" and attempt["parent_attempt_id"] is None
+           for attempt in attempts) != 1:
+        raise ValueError("Codex attempt roster requires one parent root")
+    for attempt in attempts:
+        parent = attempt["parent_attempt_id"]
+        if ((parent is None) != (attempt["role"] == "parent")
+                or (parent is not None and
+                    (not isinstance(parent, str)
+                     or not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", parent)
+                     or parent not in by_id))):
+            raise ValueError("Codex attempt parent link invalid")
+    for attempt in attempts:
+        seen = set()
+        cursor = attempt["attempt_id"]
+        while cursor is not None:
+            if cursor in seen:
+                raise ValueError("Codex attempt parent links contain a cycle")
+            seen.add(cursor)
+            cursor = by_id[cursor]["parent_attempt_id"]
+    if len(expected_hashes) != len(set(expected_hashes)):
+        raise ValueError("Codex attempt roster has duplicate stream identity")
+    if paths:
+        stream_result = summarize_codex_exec_usage(paths)
+        if stream_result["duplicate_streams_excluded"] or len(stream_result["records"]) != len(paths):
+            raise ValueError("Codex attempt roster has duplicate stream content")
+        records = dict(zip(supplied, stream_result["records"]))
+        for attempt_id, expected in zip(supplied, expected_hashes):
+            if records[attempt_id]["stream_sha256"] != expected:
+                raise ValueError("Codex attempt stream digest mismatch")
+    else:
+        stream_result = {"status": "PARTIAL", "records": [],
+                         "known_usage_totals": {name: None for name in CODEX_EXEC_USAGE_FIELDS},
+                         "coverage_gaps": ["no_streams_available"]}
+        records = {}
+    gaps = set(stream_result["coverage_gaps"])
+    gaps.add("work_roster_completeness_unverified")
+    if len(records) != len(attempts):
+        gaps.add("attempt_stream_unavailable")
+    session_overlap = "same_session_multiple_streams_turn_identity_unknown" in gaps
+    role_totals = {}
+    for role in sorted({attempt["role"] for attempt in attempts}):
+        members = [records[attempt["attempt_id"]] for attempt in attempts
+                   if attempt["role"] == role and attempt["attempt_id"] in records]
+        role_totals[role] = {}
+        for name in CODEX_EXEC_USAGE_FIELDS:
+            values = [record["usage"][name] for record in members
+                      if "terminal_conflict" not in record["coverage_gaps"]
+                      and "turn_boundary_ambiguous" not in record["coverage_gaps"]
+                      and record["usage"][name] is not None]
+            role_totals[role][name] = None if session_overlap or not values else sum(values)
+    return {"schema": "aide.codex-exec-attributed-usage.v1", "status": "PARTIAL",
+            "source": "supplied_codex_exec_attempt_roster", "work_id": roster["work_id"],
+            "roster_sha256": hashlib.sha256(raw).hexdigest(), "attempt_count": len(attempts),
+            "stream_count": len(records), "supplied_stream_status": stream_result["status"],
+            "attempts": [{"attempt_id": attempt["attempt_id"], "role": attempt["role"],
+                          "parent_attempt_id": attempt["parent_attempt_id"],
+                          "stream_sha256": records[attempt["attempt_id"]]["stream_sha256"]
+                          if attempt["attempt_id"] in records else None,
+                          "terminal_status": records[attempt["attempt_id"]]["terminal_status"]
+                          if attempt["attempt_id"] in records else "UNAVAILABLE"}
+                         for attempt in attempts],
+            "supplied_known_usage_totals": stream_result["known_usage_totals"],
+            "role_known_usage_totals": role_totals,
+            "work_usage_totals": {name: None for name in CODEX_EXEC_USAGE_FIELDS},
+            "work_outcome": "unknown", "model_requests": "unknown",
+            "coverage_gaps": sorted(gaps), "raw_prompt_or_response_retained": False}
+
+
+def command_job_usage(args: argparse.Namespace) -> int:
+    try:
+        if getattr(args, "attempt_set", None):
+            result = summarize_codex_usage_attempts(Path(args.attempt_set))
+        else:
+            result = summarize_codex_exec_usage([Path(path) for path in args.stream])
+    except (OSError, ValueError) as exc:
+        result = {"schema": "aide.codex-exec-usage.v1", "status": "REFUSED",
+                  "reason": str(exc)[:120], "raw_prompt_or_response_retained": False}
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0 if result["status"] == "COMPLETE" else 2 if result["status"] == "PARTIAL" else 1
+
+
+CODEX_PROMPT_INPUT_MAX_BYTES = 2 * 1024 * 1024
+CODEX_PROMPT_INPUT_ROLES = {"system", "developer", "user", "assistant", "tool"}
+
+
+def summarize_codex_prompt_input(raw: bytes) -> dict[str, object]:
+    """Count a supplied debugger view in memory; never return its text."""
+    if not raw or len(raw) > CODEX_PROMPT_INPUT_MAX_BYTES:
+        raise ValueError("one nonempty bounded prompt-input stream required")
+    try:
+        messages = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError, RecursionError) as exc:
+        raise ValueError("malformed prompt-input JSON") from exc
+    if not isinstance(messages, list) or not 1 <= len(messages) <= 128:
+        raise ValueError("bounded prompt-input message list required")
+    roles: dict[str, dict[str, int]] = {}
+    gaps: set[str] = set()
+    for message in messages:
+        if not isinstance(message, dict) or message.get("type") != "message":
+            raise ValueError("unsupported prompt-input message shape")
+        role = message.get("role")
+        if not isinstance(role, str):
+            raise ValueError("prompt-input role required")
+        if role not in CODEX_PROMPT_INPUT_ROLES:
+            role = "other"
+            gaps.add("unknown_role")
+        content = message.get("content")
+        if not isinstance(content, list) or len(content) > 32:
+            raise ValueError("bounded prompt-input content list required")
+        row = roles.setdefault(role, {"messages": 0, "parts": 0, "text_utf8_bytes": 0, "text_chars": 0})
+        row["messages"] += 1
+        for part in content:
+            if not isinstance(part, dict) or not isinstance(part.get("type"), str):
+                raise ValueError("prompt-input content item shape invalid")
+            row["parts"] += 1
+            if part["type"] in ("text", "input_text") and isinstance(part.get("text"), str):
+                row["text_utf8_bytes"] += len(part["text"].encode("utf-8"))
+                row["text_chars"] += len(part["text"])
+            else:
+                gaps.add("non_text_content")
+    return {"schema": "aide.codex-prompt-input-summary.v1",
+            "status": "COMPLETE" if not gaps else "PARTIAL",
+            "source": "supplied_codex_debug_prompt_input_json",
+            "input_json_bytes": len(raw), "message_count": len(messages),
+            "roles": {key: roles[key] for key in sorted(roles)},
+            "visible_text_utf8_bytes": sum(row["text_utf8_bytes"] for row in roles.values()),
+            "coverage_gaps": sorted(gaps), "effective_tokens": None,
+            "tool_definitions": "unknown", "internal_inference": "unknown",
+            "model_requests_started_by_parser": 0, "raw_prompt_or_response_retained": False}
+
+
+def command_job_context(args: argparse.Namespace) -> int:
+    try:
+        if sys.stdin.isatty():
+            raise ValueError("pipe one prompt-input JSON stream on stdin")
+        result = summarize_codex_prompt_input(sys.stdin.buffer.read(CODEX_PROMPT_INPUT_MAX_BYTES + 1))
+    except (OSError, ValueError) as exc:
+        result = {"schema": "aide.codex-prompt-input-summary.v1", "status": "REFUSED",
+                  "reason": str(exc)[:120], "raw_prompt_or_response_retained": False,
+                  "model_requests_started_by_parser": 0}
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0 if result["status"] == "COMPLETE" else 2 if result["status"] == "PARTIAL" else 1
+
+
+def managed_inspection_boundary(config_digest: str, scoped_metadata=None) -> dict[str, object]:
+    """Configuration provenance is not host qualification or run admission."""
+    scoped = scoped_metadata is not None
+    if scoped and scoped_metadata['config_digest'] != config_digest:
+        raise ValueError('inspection configuration identity changed')
+    return {
+        'config_digest': config_digest,
+        'configuration_only': True,
+        'execution_kind': scoped_metadata['kind'] if scoped else 'Windows_Job_resources',
+        'worker_write_placement': ('configured_command_sandbox' if scoped
+                                   else 'not_enforced_by_Windows_Job'),
+        'worker_read_isolation': 'not_verified_by_inspection',
+        'canonical_output_allowlist': list(scoped_metadata['canonical_outputs']) if scoped else [],
+        'toolchain_read_root_count': scoped_metadata['toolchain_read_root_count'] if scoped else None,
+        'aggregate_limit_bytes': scoped_metadata['aggregate_limit_bytes'] if scoped else None,
+        'aggregate_admission': 'checked_under_lock_by_job_run' if scoped else 'not_configured',
+        'aggregate_admission_checked_by_inspection': False,
+        'disk_enforcement': ('cooperative_admission_and_monitored_growth' if scoped
+                             else 'reservation_and_monitored_threshold'),
+        'provides_hard_filesystem_quota': False,
+        'controls_outer_session': False,
+        'outer_session_containment': 'unobserved',
+        'uncovered_routes': ['outer_shell', 'editor_and_filesystem_tools',
+                             'plugins_and_integrations', 'other_sessions_and_unmanaged_processes',
+                             'external_host_metadata_and_caches'],
+        'qualification': 'requires_exact_route_and_runtime_evidence',
+    }
+
+
+def command_job_custody(args: argparse.Namespace) -> int:
+    """Explicit retired-evidence administration; never start a worker/model."""
+    root = str(args.repo_root)
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    sys.dont_write_bytecode = True
+    try:
+        config, _ = _job_wait_read_json(Path(args.config), 1048576)
+        if "execution_host" in config:
+            spec = importlib.util.spec_from_file_location(
+                "aide_custody_scoped_host", Path(root) / "core/execution/scoped_host.py")
+            scoped = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(scoped)
+            owner, _ = scoped.prepare(args.config, args.repo_root)
+        else:
+            from core.execution import managed_workspace as owner
+        # The pinned owner retains its own old core package namespace. Load
+        # this separately qualified administrative source explicitly; it uses
+        # the selected owner's guards/lock and never becomes the supervisor.
+        custody_spec = importlib.util.spec_from_file_location(
+            "aide_retired_evidence_custody", Path(root) / "core/execution/retired_evidence.py")
+        custody_module = importlib.util.module_from_spec(custody_spec)
+        custody_spec.loader.exec_module(custody_module)
+        custody = custody_module.Custody(owner, args.config)
+        operation = args.custody_command
+        if operation == "plan":
+            result = custody.plan(args.job_id)
+            if not args.full:
+                plan = result.pop("plan")
+                result.update(job_id=args.job_id, original_bytes=plan["original_bytes"],
+                              files=len(plan["files"]), directories=len(plan["directories"]))
+        elif operation == "verify":
+            manifest = custody.verify(args.job_id)
+            result = {"state": "VERIFIED", "job_id": args.job_id,
+                      "plan_digest": owner.digest(manifest["plan"]),
+                      "archive_sha256": manifest["archive_sha256"],
+                      "receipt_sha256": manifest["plan"]["anchors"]["receipt.json"],
+                      "collected_manifest": manifest["plan"]["collected_manifest"], "writes": False}
+        elif operation == "read":
+            result = custody.read(args.job_id, args.member, offset=args.offset,
+                                  limit=args.limit, expected_sha256=args.sha256)
+        else:
+            result = getattr(custody, operation)(args.job_id, args.expect_plan)
+        print(json.dumps(result, sort_keys=True, indent=2))
+        return 0
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, zipfile.BadZipFile) as exc:
+        print(json.dumps({"state": "REFUSED", "reason": str(exc),
+                          "effect_requested": args.custody_command in ("apply", "recover")}))
+        return 1
+
+
+def command_managed_job(args: argparse.Namespace) -> int:
+    """Explicit maintainer execution; inspect never projects tracked reports."""
+    root = str(args.repo_root)
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    try:
+        # Do not import edited execution code before selecting a pinned owner.
+        # This command-local option does not change the outer session's access.
+        sys.dont_write_bytecode = True
+        scoped = None
+        config = None
+        if args.job_command != "setup":
+            config = _job_wait_read_json(Path(args.config), 1048576)
+        if config is not None and "execution_host" in config[0]:
+            spec = importlib.util.spec_from_file_location(
+                "aide_scoped_job_host", Path(root) / "core/execution/scoped_host.py")
+            scoped = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(scoped)
+            managed_workspace, scoped_host = scoped.prepare(args.config, args.repo_root)
+        else:
+            from core.execution import managed_workspace
+        if args.job_command == "setup":
+            result = managed_workspace.configure(args.config, args.selection, args.approved_parent)
+        elif args.job_command == "recover":
+            _, roots, _ = managed_workspace.load_config(args.config)
+            active = roots["control"] / "active.json"
+            if os.path.lexists(active) and managed_workspace.read_json(active).get("schema") == "aide.retired-evidence-custody-pending.v1":
+                raise ValueError("pending evidence custody requires job custody recover with its exact plan digest")
+            result = managed_workspace.recover(args.config)
+        elif args.job_command in ("pause-dispatch", "resume-dispatch"):
+            mode = "paused" if args.job_command == "pause-dispatch" else "running"
+            result = managed_workspace.set_dispatch(args.config, mode)
+        else:
+            job = managed_workspace.read_json(args.manifest) if args.manifest else None
+            if args.job_command == "inspect":
+                result = managed_workspace.inspect(args.config, job)
+                metadata = None
+                if scoped is not None:
+                    describe = getattr(scoped_host, 'inspection_metadata', None)
+                    if not callable(describe):
+                        raise ValueError('selected scoped host lacks configuration-bound inspection metadata')
+                    metadata = describe()
+                result['execution_boundary'] = managed_inspection_boundary(
+                    result['config_digest'], metadata)
+            else:
+                result = (scoped.run(managed_workspace, scoped_host, args.config, job)
+                          if scoped is not None else managed_workspace.run(args.config, job))
+        if args.job_command == "run":
+            view = wait_for_managed_job(Path(args.config), result["job_id"], result["manifest_digest"], 0, 1)
+            print(json.dumps(result if args.full else view, sort_keys=True,
+                             indent=2 if args.full else None,
+                             separators=None if args.full else (",", ":")))
+            return 0 if view["status"] == "PASS" else 1
+        print(json.dumps(result, sort_keys=True, indent=2))
+        return 0
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+        print(json.dumps({"result": "REFUSED", "reason": str(exc), "writes": args.job_command != "inspect"}))
+        return 1
+
+
+def source_maintainer_job_guard(repo_root: Path, *, packaging: bool = False, canonical_paths=()) -> bool:
+    # A validated extracted payload can run its portable no-model checks
+    # without source-checkout admission. Missing source state alone is never a
+    # reason to bypass the guard: it may mean the checkout is damaged.
+    if repo_root.name == "files" and repo_root.parent.name == EXPORT_PACK_ID:
+        try:
+            if (pack_manifest_scalars(repo_root.parent).get("pack_id") == EXPORT_PACK_ID
+                    and validate_pack_checksums(repo_root.parent)[0]):
+                return True
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+    # The FacMan portable target owns its queue and needs no source-host
+    # execution machinery. Positive committed identity is mandatory for a Git
+    # checkout; a missing owner in genuine AIDE source remains fail-closed.
+    if facman_portable_installation(repo_root):
+        return True
+    if not (repo_root / "core/execution/managed_workspace.py").is_file():
+        if (repo_root / ".aide/queue/index.yaml").is_file() or aide_source_checkout_identity(repo_root):
+            print("result: REFUSED\nsource checkout has no managed job owner")
+            return False
+        return True
+    if not (repo_root / ".aide/queue/index.yaml").is_file():
+        print("result: REFUSED\nsource checkout has no canonical queue index")
+        return False
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+    from core.execution import managed_workspace
+    try:
+        record = managed_workspace.current_context(repo_root)
+        if packaging:
+            canonical_paths = (EXPORT_PACK_PATH, ".aide/release")
+        if canonical_paths:
+            managed_workspace.require_canonical_outputs(record, canonical_paths)
+        return True
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"result: REFUSED\nresource_admission: {exc}")
+        return False
+
+
 def command_internal_test(args: argparse.Namespace, label: str) -> int:
+    if not source_maintainer_job_guard(args.repo_root):
+        return 1
     try:
         ok, messages = run_selftest()
     except AssertionError as exc:
@@ -43039,7 +48621,18 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     commit_check_parser.add_argument("--first-parent", action="store_true", help="Validate dev-to-main first-parent merges only with external protected-PR evidence.")
     commit_check_parser.add_argument("--merge-evidence", help="Absolute external verified_protected_pr_merge_v1 JSON evidence; requires --range --first-parent.")
     commit_check_parser.add_argument("--bootstrap-evidence", help="Absolute external dev_to_main_bootstrap_v1 evidence; requires --range --first-parent.")
+    commit_check_parser.add_argument("--no-dispositions", action="store_true", help="Report raw range-policy results without historical dispositions.")
     commit_check_parser.set_defaults(handler=command_commit_check)
+    commit_create_parser = commit_subparsers.add_parser("create", help="Guard one normal local commit; dry-run by default.")
+    commit_create_parser.add_argument("--message-file", required=True, help="Exact bounded checkout-relative UTF-8 LF message.")
+    commit_create_parser.add_argument("--expect-message-sha256", required=True, help="Expected exact message-file digest.")
+    commit_create_parser.add_argument("--expect-ref", required=True, help="Expected existing refs/heads/... branch.")
+    commit_create_parser.add_argument("--expect-head", required=True, help="Expected full parent object id.")
+    commit_create_parser.add_argument("--expect-tree", required=True, help="Expected full staged tree object id.")
+    commit_create_parser.add_argument("--path", action="append", required=True, help="Exact allowed staged path; repeat for each path.")
+    commit_create_parser.add_argument("--classification", help="FacMan requires the exact reviewed classification consumed by git commit-plan.")
+    commit_create_parser.add_argument("--apply", action="store_true", help="Create, verify and atomically advance this existing local branch.")
+    commit_create_parser.set_defaults(handler=command_commit_create)
     commit_template_parser = commit_subparsers.add_parser("template")
     commit_template_parser.add_argument("--output", help="Optional repo-relative path to write the template.")
     commit_template_parser.set_defaults(handler=command_commit_template)
@@ -43234,6 +48827,12 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     release_parser = subparsers.add_parser("release")
     release_subparsers = release_parser.add_subparsers(dest="release_command", required=True)
     release_subparsers.add_parser("bundle").set_defaults(handler=command_release_bundle)
+    stable_build_parser = release_subparsers.add_parser("stable-build")
+    stable_build_parser.add_argument("--version", required=True)
+    stable_build_parser.set_defaults(handler=command_release_stable_build)
+    stable_validate_parser = release_subparsers.add_parser("stable-validate")
+    stable_validate_parser.add_argument("--version", required=True)
+    stable_validate_parser.set_defaults(handler=command_release_stable_validate)
     release_subparsers.add_parser("validate").set_defaults(handler=command_release_validate)
     release_subparsers.add_parser("status").set_defaults(handler=command_release_status)
     release_subparsers.add_parser("assets").set_defaults(handler=command_release_assets)
@@ -43255,12 +48854,16 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     task_inspect_parser = task_subparsers.add_parser("inspect")
     task_inspect_parser.add_argument("--task-id", help="Queue task id. Defaults to current/latest task.")
     task_inspect_parser.set_defaults(handler=command_task_inspect)
-    task_subparsers.add_parser("status").set_defaults(handler=command_task_status)
+    task_status_parser = task_subparsers.add_parser("status")
+    task_status_parser.add_argument("--write-reports", action="store_true", help="Explicitly generate tracked Task OS status reports")
+    task_status_parser.set_defaults(handler=command_task_status)
     task_subparsers.add_parser("classify").set_defaults(handler=command_task_classify)
     task_subparsers.add_parser("repair-plan").set_defaults(handler=command_task_repair_plan)
     task_subparsers.add_parser("requeue-plan").set_defaults(handler=command_task_requeue_plan)
     task_subparsers.add_parser("resume-plan").set_defaults(handler=command_task_resume_plan)
-    task_subparsers.add_parser("next-plan").set_defaults(handler=command_task_next_plan)
+    task_next_plan_parser = task_subparsers.add_parser("next-plan")
+    task_next_plan_parser.add_argument("--write-report", action="store_true", help="Explicitly refresh the tracked Task OS next-plan report")
+    task_next_plan_parser.set_defaults(handler=command_task_next_plan)
     task_noop_parser = task_subparsers.add_parser("noop-check")
     task_noop_parser.add_argument("--task-id", help="Queue task id. Defaults to current/latest task.")
     task_noop_parser.set_defaults(handler=command_task_noop_check)
@@ -43927,13 +49530,17 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
 
     git_parser = subparsers.add_parser("git")
     git_subparsers = git_parser.add_subparsers(dest="git_command", required=True)
-    git_subparsers.add_parser("detect").set_defaults(handler=command_git_detect)
+    git_detect_parser = git_subparsers.add_parser("detect")
+    git_detect_parser.add_argument("--write-reports", action="store_true", help="Explicitly project tracked reports.")
+    git_detect_parser.set_defaults(handler=command_git_detect)
     git_subparsers.add_parser("doctor").set_defaults(handler=command_git_doctor)
     git_subparsers.add_parser("status").set_defaults(handler=command_git_status)
     git_subparsers.add_parser("workflow").set_defaults(handler=command_git_workflow)
     git_subparsers.add_parser("roles").set_defaults(handler=command_git_roles)
     git_subparsers.add_parser("policy").set_defaults(handler=command_git_policy)
-    git_subparsers.add_parser("plan").set_defaults(handler=command_git_plan)
+    git_plan_parser = git_subparsers.add_parser("plan")
+    git_plan_parser.add_argument("--write-reports", action="store_true", help="Explicitly project tracked reports.")
+    git_plan_parser.set_defaults(handler=command_git_plan)
     git_commit_plan_parser = git_subparsers.add_parser("commit-plan")
     git_commit_plan_parser.add_argument("--classification", required=True, help="Exact commit-classification JSON receipt.")
     git_commit_plan_parser.add_argument("--message-file", required=True, help="Exact compact_v1 commit message file.")
@@ -44042,6 +49649,12 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     import_parser.add_argument("--pack", default=EXPORT_PACK_PATH)
     import_parser.add_argument("--target", required=True)
     import_parser.add_argument("--dry-run", action="store_true")
+    import_parser.add_argument("--explain", action="store_true", help="Explain ownership decisions; unknown project rationale remains unknown.")
+    import_parser.add_argument("--feedback-out", help="With --dry-run, create a local manual-share JSON packet at a new path outside pack and target.")
+    import_parser.add_argument("--from-pack", help="Exact validated predecessor pack required for automatic managed updates, manual resolution, or an unrecorded baseline.")
+    import_parser.add_argument("--resolve", nargs=2, action="append", metavar=("TARGET", "FILE"), help="Use FILE's exact bytes as the explicit postimage for a receipt-owned conflict; requires --from-pack and --expect-plan on apply.")
+    import_parser.add_argument("--expect-plan", help="Exact plan digest printed by a prior dry-run; changed inputs refuse apply.")
+    import_parser.add_argument("--recover-partial", action="store_true", help="Explicitly reconcile a partial import only from its exact intent, pack, predecessor, inputs and plan.")
     import_parser.add_argument(
         "--mode",
         choices=sorted(IMPORT_MODES),
@@ -44049,6 +49662,39 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
         help="safe imports portable .aide/templates only; full includes optional broad roots for reviewed fixtures.",
     )
     import_parser.set_defaults(handler=command_import_pack)
+
+    rollback_pack_parser = subparsers.add_parser("rollback-pack")
+    rollback_pack_parser.add_argument("--current-pack", required=True)
+    rollback_pack_parser.add_argument("--previous-pack", required=True)
+    rollback_pack_parser.add_argument("--target", required=True)
+    rollback_pack_parser.add_argument("--dry-run", action="store_true")
+    rollback_pack_parser.add_argument("--expect-plan", help="Rollback preview digest for apply, or reported recovery-plan digest with --recover-partial.")
+    rollback_pack_parser.add_argument("--recover-partial", action="store_true", help="Continue only an exact partial rollback intent with its reported recovery-plan digest.")
+    rollback_pack_parser.add_argument("--json", action="store_true")
+    rollback_pack_parser.set_defaults(handler=command_rollback_pack)
+
+    removal_parser = subparsers.add_parser("plan-removal")
+    removal_parser.add_argument("--target", required=True)
+    removal_parser.add_argument("--json", action="store_true", help="Emit the deterministic plan or refusal record as JSON.")
+    removal_parser.set_defaults(handler=command_plan_removal)
+
+    repair_owned_parser = subparsers.add_parser("repair-owned-file")
+    repair_owned_parser.add_argument("--pack", required=True)
+    repair_owned_parser.add_argument("--target", required=True)
+    repair_owned_parser.add_argument("--path", required=True)
+    repair_owned_parser.add_argument("--dry-run", action="store_true")
+    repair_owned_parser.add_argument("--expect-plan", help="Exact digest from dry-run; required for apply.")
+    repair_owned_parser.set_defaults(handler=command_repair_owned_file)
+    repair_health_parser = subparsers.add_parser("repair-health")
+    repair_health_parser.add_argument("--pack", required=True)
+    repair_health_parser.add_argument("--target", required=True)
+    repair_health_parser.add_argument("--json", action="store_true")
+    repair_health_parser.set_defaults(handler=command_repair_health)
+    removal_apply_parser = subparsers.add_parser("apply-removal")
+    removal_apply_parser.add_argument("--target", required=True)
+    removal_apply_parser.add_argument("--expect-plan", required=True, help="Exact digest from plan-removal --json.")
+    removal_apply_parser.add_argument("--json", action="store_true")
+    removal_apply_parser.set_defaults(handler=command_apply_removal)
 
     subparsers.add_parser("pack-status").set_defaults(handler=command_pack_status)
 
@@ -44062,6 +49708,53 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     adapter_subparsers.add_parser("generate").set_defaults(handler=command_adapter_generate)
 
     subparsers.add_parser("adapt").set_defaults(handler=command_adapt)
+    job_parser = subparsers.add_parser("job", help="Bounded maintainer jobs with explicit local storage.")
+    job_subparsers = job_parser.add_subparsers(dest="job_command", required=True)
+    custody_parser = job_subparsers.add_parser("custody", help="Plan, preserve and read complete retired evidence under finite custody.")
+    custody_subparsers = custody_parser.add_subparsers(dest="custody_command", required=True)
+    for operation in ("plan", "apply", "recover", "verify", "read"):
+        custody_operation_parser = custody_subparsers.add_parser(operation)
+        custody_operation_parser.add_argument("--config", required=True)
+        custody_operation_parser.add_argument("--job-id", required=True)
+        if operation == "plan":
+            custody_operation_parser.add_argument("--full", action="store_true", help="Print complete custody plan for retained review evidence.")
+        if operation in ("apply", "recover"):
+            custody_operation_parser.add_argument("--expect-plan", required=True)
+        if operation == "read":
+            custody_operation_parser.add_argument("--member", required=True)
+            custody_operation_parser.add_argument("--sha256")
+            custody_operation_parser.add_argument("--offset", type=int, default=0)
+            custody_operation_parser.add_argument("--limit", type=int, default=2048)
+        custody_operation_parser.set_defaults(handler=command_job_custody)
+    wait_parser = job_subparsers.add_parser("wait", help="Observe one existing job without model calls or writes.")
+    wait_parser.add_argument("--config", required=True)
+    wait_parser.add_argument("--job-id", required=True)
+    wait_parser.add_argument("--manifest-digest", required=True)
+    wait_parser.add_argument("--timeout-seconds", type=float, default=3600)
+    wait_parser.add_argument("--interval-seconds", type=float, default=1)
+    wait_parser.set_defaults(handler=command_job_wait)
+    usage_parser = job_subparsers.add_parser("usage", help="Import bounded Codex exec JSONL usage without model calls.")
+    usage_source = usage_parser.add_mutually_exclusive_group(required=True)
+    usage_source.add_argument("--stream", action="append", help="Ordinary Codex exec --json file; repeat at most eight times.")
+    usage_source.add_argument("--attempt-set", help="Bounded attributed attempt roster JSON; complete-work coverage remains unknown.")
+    usage_parser.set_defaults(handler=command_job_usage)
+    job_subparsers.add_parser("context", help="Summarize one supplied Codex prompt-input JSON stream without retaining text or starting a model.").set_defaults(handler=command_job_context)
+    setup_parser = job_subparsers.add_parser("setup")
+    setup_parser.add_argument("--config", required=True, help="Machine-local output config in an approved checkout.")
+    setup_parser.add_argument("--selection", required=True, help="Explicit local root, checkout and finite-limit selection JSON.")
+    setup_parser.add_argument("--approved-parent", required=True, help="Existing owner-selected parent containing the storage roots.")
+    setup_parser.set_defaults(handler=command_managed_job)
+    for operation in ("inspect", "run", "recover"):
+        operation_parser = job_subparsers.add_parser(operation)
+        operation_parser.add_argument("--config", required=True, help="Existing machine-local storage policy JSON.")
+        operation_parser.add_argument("--manifest", required=operation == "run", help="Exact source-bound job JSON.")
+        if operation == "run":
+            operation_parser.add_argument("--full", action="store_true", help="Print the full result for existing consumers; default is a bounded view.")
+        operation_parser.set_defaults(handler=command_managed_job)
+    for operation in ("pause-dispatch", "resume-dispatch"):
+        operation_parser = job_subparsers.add_parser(operation)
+        operation_parser.add_argument("--config", required=True, help="Existing machine-local storage policy JSON.")
+        operation_parser.set_defaults(handler=command_managed_job)
     subparsers.add_parser("selftest").set_defaults(handler=command_selftest)
     test_parser = subparsers.add_parser("test")
     test_parser.set_defaults(handler=command_test)
