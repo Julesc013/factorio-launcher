@@ -46,7 +46,47 @@ internal static class ObservationIntentHarness
             Require(Object.ReferenceEquals(identity, pendingType.GetProperty("Identity",
                 BindingFlags.Instance | BindingFlags.NonPublic).GetValue(pending, null)), "uncertain identity changed");
             Require(store.HasUncertainAction, "changing observation erased uncertainty");
-            Console.WriteLine("PASS default Menu, busy selector refusal, pending action refusal, immutable uncertain intent and identity");
+            var previewInput = new Dictionary<string, object> {
+                { "composition_state", "partial" }, { "plan_digest", new string('b', 64) },
+                // Even malformed incoming authority booleans cannot enable an advisory apply.
+                { "preparation_available", true },
+                { "installation", new Dictionary<string, object> {
+                    { "disposition", "plan" }, { "refusal", null },
+                    { "report", new Dictionary<string, object> { { "plan_digest", new string('c', 64) } } }
+                } },
+                { "profile", new Dictionary<string, object> {
+                    { "disposition", "refusal" }, { "report", null }, { "refusal", "profile_overrides_invalid" }
+                } }
+            };
+            var readiness = (PresentationReadiness)Activator.CreateInstance(typeof(PresentationReadiness),
+                BindingFlags.Instance | BindingFlags.NonPublic, null,
+                new object[] { new Dictionary<string, object> {
+                    { "execution_available", false }, { "preparation_preview", previewInput }
+                } }, null);
+            Require(!readiness.Available && !readiness.PreparationApplyAvailable,
+                "preview granted preparation or execution authority");
+            Require(readiness.PreparationPreviewState == "partial" &&
+                readiness.PreparationPreviewDigest == new string('b', 64) &&
+                readiness.PreparationInstallationPlanDigest == new string('c', 64), "preview identities lost");
+            Require(readiness.PreparationOwnerSummaries.Count == 2 &&
+                readiness.PreparationOwnerSummaries[1].Contains("profile_overrides_invalid") &&
+                !readiness.PreparationOwnerSummaries[0].Contains(new string('c', 64)), "advisory owner summaries invalid");
+            var backendInput = new Dictionary<string, object> {
+                { "schema", "facman.presentation_snapshot.v1" }, { "revision", new string('d', 64) },
+                { "readiness", new Dictionary<string, object> {
+                    { "overall_state", "blocked" }, { "execution_available", false }, { "preparation_preview", previewInput }
+                } }
+            };
+            var backend = (BackendPresentationSnapshot)typeof(BackendPresentationSnapshot).GetMethod("ParseRecord",
+                BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { backendInput });
+            Type projectionType = typeof(BackendPresentationSnapshot).Assembly.GetType("FacMan.WinForms.C1SnapshotProjection");
+            MethodInfo readinessRecord = projectionType.GetMethod("ReadinessRecord",
+                BindingFlags.NonPublic | BindingFlags.Static);
+            var advisory = (IDictionary<string, object>)readinessRecord.Invoke(null,
+                new object[] { backend, new DateTime(2026, 10, 7, 0, 0, 0, DateTimeKind.Utc) });
+            Require(((string)advisory["summary"]).Contains("Preparation preview: partial; apply unavailable") &&
+                !((string)advisory["summary"]).Contains(new string('c', 64)), "Launch Deck advisory missing");
+            Console.WriteLine("PASS default Menu, busy selector refusal, pending action refusal, immutable uncertain intent and identity; advisory preview and unavailable apply");
             return 0;
         }
         catch (Exception error) { Console.Error.WriteLine(error); return 1; }

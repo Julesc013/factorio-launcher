@@ -566,27 +566,49 @@ facman::core::Result<EffectiveProfile> effective_profile(
     return facman::core::Result<EffectiveProfile>::success(std::move(output));
 }
 
-facman::core::Result<EffectiveProfile> effective_profile_for_instance(
-    const fs::path& workspace,
-    const std::string& instance_id,
-    const std::string& profile_id)
+namespace {
+// One validated stored-override parser for observation and current-instance planning.
+facman::core::Result<CurrentInstancePlan> current_instance_request(
+    const fs::path& workspace, const std::string& instance_id, const std::string& profile_id)
 {
     auto parsed = facman::core::InstanceId::parse(instance_id);
-    if (!parsed) return typed_failure<EffectiveProfile>(parsed.error().code, parsed.error().message);
+    if (!parsed) return typed_failure<CurrentInstancePlan>(parsed.error().code, parsed.error().message);
     const fs::path path = workspace / "instances" / fs::u8path(parsed.value().str()) / "instance-overrides.v1.json";
-    if (!fs::exists(path)) return effective_profile(workspace, profile_id);
-    auto text = stable_text(path);
-    if (!text) return typed_failure<EffectiveProfile>(text.error().code, text.error().message, path);
-    auto document = json::parse(text.value());
+    auto source = current_overrides(path.parent_path());
+    if (!source) return typed_failure<CurrentInstancePlan>(source.error().code, source.error().message, path);
+    CurrentInstancePlan output;
+    output.request.instance_id = instance_id;
+    output.request.profile_id = profile_id;
+    output.overrides_present = source.value().present;
+    if (!output.overrides_present) return facman::core::Result<CurrentInstancePlan>::success(std::move(output));
+    output.overrides_sha256 = text_sha256(source.value().text);
+    auto document = json::parse(source.value().text);
     if (!document || !document.value().is_object() ||
         object_string(document.value(), "schema") != "factorio.instance_overrides.v1" ||
         object_string(document.value(), "instance_id") != parsed.value().str() ||
         object_string(document.value(), "profile_id") != profile_id) {
-        return typed_failure<EffectiveProfile>("profile_overrides_invalid", "Instance profile overrides are invalid", path);
+        return typed_failure<CurrentInstancePlan>("profile_overrides_invalid", "Instance profile overrides are invalid", path);
+    }
+    const std::set<std::string> allowed_document_fields {"schema", "instance_id", "profile_id", "values"};
+    for (const std::string& key : document.value().object_keys()) {
+        if (allowed_document_fields.count(key) == 0U) return typed_failure<CurrentInstancePlan>(
+            "profile_overrides_invalid", "Stored override document field is not supported: " + key, path);
     }
     const json::Value* values = document.value().find("values");
-    if (values == nullptr || !values->is_object()) return typed_failure<EffectiveProfile>(
+    if (values == nullptr || !values->is_object()) return typed_failure<CurrentInstancePlan>(
         "profile_overrides_invalid", "Instance profile override values are missing", path);
+    const std::set<std::string> allowed_fields {"window_mode", "graphics_quality", "audio",
+        "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments"};
+    for (const std::string& key : values->object_keys()) {
+        if (allowed_fields.count(key) == 0U) return typed_failure<CurrentInstancePlan>(
+            "profile_overrides_invalid", "Stored override field is not supported: " + key, path);
+    }
+    for (const char* field : {"window_mode", "graphics_quality", "audio", "selection_mode",
+            "selection", "launch_mode", "benchmark_ticks"}) {
+        const json::Value* value = values->find(field);
+        if (value != nullptr && !value->string_value()) return typed_failure<CurrentInstancePlan>(
+            "profile_overrides_invalid", "Stored override settings must be strings", path);
+    }
     Patch patch;
     patch.window_mode = object_string(*values, "window_mode");
     patch.graphics_quality = object_string(*values, "graphics_quality");
@@ -597,17 +619,81 @@ facman::core::Result<EffectiveProfile> effective_profile_for_instance(
     patch.benchmark_ticks = object_string(*values, "benchmark_ticks");
     const json::Value* arguments = values->find("additional_arguments");
     if (arguments != nullptr) {
-        if (!arguments->is_array() || arguments->size() > 32U) return typed_failure<EffectiveProfile>(
+        if (!arguments->is_array() || arguments->size() > 32U) return typed_failure<CurrentInstancePlan>(
             "profile_overrides_invalid", "Instance profile override arguments are invalid", path);
         for (std::size_t index = 0; index < arguments->size(); ++index) {
             const json::Value* item = arguments->at(index);
             auto value = item == nullptr ? facman::core::Result<std::string>::failure(
                 {"profile_overrides_invalid", "Override argument is missing", "additional_arguments"}) : item->string_value();
-            if (!value) return typed_failure<EffectiveProfile>("profile_overrides_invalid", value.error().message, path);
+            if (!value) return typed_failure<CurrentInstancePlan>("profile_overrides_invalid", value.error().message, path);
             patch.additional_arguments.push_back(value.take_value());
         }
     }
-    return effective_profile(workspace, profile_id, patch);
+    output.request.overrides = std::move(patch);
+    return facman::core::Result<CurrentInstancePlan>::success(std::move(output));
+}
+} // namespace
+
+facman::core::Result<EffectiveProfile> effective_profile_for_instance(
+    const fs::path& workspace, const std::string& instance_id, const std::string& profile_id)
+{
+    auto current = current_instance_request(workspace, instance_id, profile_id);
+    if (!current) return facman::core::Result<EffectiveProfile>::failure(current.error());
+    return effective_profile(workspace, profile_id, current.value().request.overrides);
+}
+
+bool current_plan_matches_effective(const CurrentInstancePlan& plan, const EffectiveProfile& observed)
+{
+    auto report = json::parse(plan.report);
+    if (!report) return false;
+    const json::Value* settings = report.value().find("settings");
+    const json::Value* arguments = report.value().find("launch_arguments");
+    auto expected_settings = json::parse(settings_builder(observed.settings).serialize());
+    json::ArrayBuilder expected_arguments;
+    for (const std::string& argument : observed.launch_arguments) expected_arguments.add_string(argument);
+    auto expected_launch = json::parse(expected_arguments.serialize());
+    return settings != nullptr && arguments != nullptr && expected_settings && expected_launch &&
+        settings->serialize() == expected_settings.value().serialize() &&
+        arguments->serialize() == expected_launch.value().serialize() &&
+        object_string(report.value(), "profile_id") == observed.profile_id &&
+        object_string(report.value(), "template_id") == observed.template_id &&
+        object_string(report.value(), "source_profile_sha256") == observed.source_profile_sha256;
+}
+
+facman::core::Result<CurrentInstancePlan> plan_current_instance(
+    const fs::path& workspace, const std::string& instance_id, const std::string& profile_id,
+    const std::string& expected_manifest_sha256)
+{
+    if (profile_id.empty()) return typed_failure<CurrentInstancePlan>(
+        "profile_reference_missing", "Current-instance planning requires the exact current profile");
+    auto parsed = facman::core::InstanceId::parse(instance_id);
+    if (!parsed) return facman::core::Result<CurrentInstancePlan>::failure(parsed.error());
+    facman::workspace::InstanceRepository repository {facman::workspace::WorkspaceLayout(workspace)};
+    auto instance = repository.load(parsed.value());
+    if (!instance) return facman::core::Result<CurrentInstancePlan>::failure(instance.error());
+    if (instance.value().profile != profile_id) return typed_failure<CurrentInstancePlan>(
+        "instance_projection_inputs_changed", "Current profile binding changed before planning");
+    auto current = current_instance_request(workspace, instance_id, profile_id);
+    if (!current) return current;
+    current.value().request.expected_manifest_sha256 = expected_manifest_sha256;
+    auto plan = profiles_plan(workspace, current.value().request);
+    if (!plan) return facman::core::Result<CurrentInstancePlan>::failure(plan.error());
+    // Owner request recipe retains the Patch, not reconstructed effective settings.
+    json::ObjectBuilder recipe;
+    recipe.add_string("instance_id", instance_id);
+    recipe.add_string("profile_id", profile_id);
+    recipe.add_string("expected_manifest_sha256", expected_manifest_sha256);
+    auto patch = json::parse(overrides_json(current.value().request));
+    recipe.add_value("overrides", *patch.value().find("values"));
+    current.value().request_json = recipe.serialize();
+    current.value().report = plan.take_value();
+    auto after = current_instance_request(workspace, instance_id, profile_id);
+    if (!after || after.value().overrides_present != current.value().overrides_present ||
+        after.value().overrides_sha256 != current.value().overrides_sha256) {
+        return typed_failure<CurrentInstancePlan>("instance_projection_inputs_changed",
+            "Stored overrides changed during current-instance planning");
+    }
+    return current;
 }
 
 facman::core::Result<std::string> templates_list(const fs::path&)

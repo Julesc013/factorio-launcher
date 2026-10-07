@@ -218,3 +218,39 @@ remain unavailable, no permit is issued, and `real_play_gate_not_passed` remains
 Selected-save queries refuse linked/reparse instance, save, modset-context and
 association ancestors before observation. Optional evidence checks ancestors
 before and after a stable read; a late unsafe path blocks the observation.
+
+The existing readiness response now includes a closed `preparation_preview`;
+`instances.describe` and `presentation.query` carry the same composition. It is
+an advisory, read-only review of the exact bound installation, current profile,
+validated stored override Patch, launch intent and observed dependencies.
+Installation embeds the unmodified FacMan reconciliation plan with preserve
+policies and the recorded version/current target/source. Universal Setup's
+provider plan and mutation authority remain unavailable. Profiles embeds its
+unmodified current-instance plan and explicit request recipe; absence and raw
+stored override bytes remain distinct, including selected-save overrides and
+additional arguments. Generic profile selection and apply retain their existing
+semantics. Pending recovery blocks this preview without claiming combined
+rollback. The installation owner's rollback is retained, while profile recovery
+only references the existing two-file owner transaction.
+
+Root/configuration, modset verification and selected-world inspection remain
+observations with explicit observation-only, not-required or plan-unavailable
+dispositions. They are never attributed to profiles.apply as repair plans. Menu
+preview does not inspect implicit saves. Selected-world context and archive
+identities are bound only for load_save; gameplay compatibility stays unclaimed.
+Both public instance projections repeat the complete observation and owner
+planning before publication and refuse detected changes as
+`instance_projection_inputs_changed`. This proves observed point-in-time
+consistency only, not an atomic workspace snapshot. Preview identity is canonical
+and deterministic, expires_at is null, and all prospective use needs fresh
+revalidation. There is no preparation/apply/execution/permit route in this slice.
+CLI, Launch Deck and TUI show a concise advisory summary with apply unavailable;
+backend records retain owner plan bodies and identities for detailed review.
+
+The modset observation binds both raw local and shared lock presence/identity,
+including when verification refuses. Readiness retains its preferred shared
+lock body; the existing verification owner still reads the local lock. These
+are separate dependencies, even when a whitespace-only lock change leaves the
+verification report unchanged. Ancestor-safe observation precedes parsing and
+refusal paths, and observed lock changes during owner verification refuse the
+projection without inventing a modset repair plan.

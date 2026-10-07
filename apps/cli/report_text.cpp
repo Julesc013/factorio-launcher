@@ -104,6 +104,18 @@ std::optional<std::string> instance_readiness_text(const json::Value& report)
            << "\n  Configuration: " << text_field(*readiness, "configuration_state")
            << "\n  Preparation: " << text_field(*readiness, "preparation_state")
            << "\n  Play authority: " << text_field(*readiness, "play_authority_state") << '\n';
+    const json::Value* preview = readiness->find("preparation_preview");
+    if (preview != nullptr && preview->is_object()) {
+        output << "  Preparation preview: " << text_field(*preview, "composition_state") << "; apply unavailable\n";
+        for (const char* name : {"installation", "profile"}) {
+            const json::Value* owner = preview->find(name);
+            if (owner == nullptr || !owner->is_object()) continue;
+            output << "    " << name << ": " << text_field(*owner, "disposition");
+            const std::string refusal = text_field(*owner, "refusal");
+            if (!refusal.empty()) output << " (" << refusal << ')';
+            output << '\n';
+        }
+    }
     output << "Dimensions:\n";
     for (std::size_t index = 0; index < dimensions->size(); ++index) {
         const json::Value* item = dimensions->at(index);
