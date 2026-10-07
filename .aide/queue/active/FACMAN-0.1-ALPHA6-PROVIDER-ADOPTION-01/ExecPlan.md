@@ -371,3 +371,32 @@ above. Fresh validation and exact committed-source native/package
 qualification remain pending at this checkpoint. The WorkUnit's prior closure
 remains preserved; this successor update grants no release, publication,
 signing, real-game, route or live Setup authority.
+
+## 2026-10-03 current-head integration qualification
+
+PR #343's reviewed forward integration at
+`4753fb77563208786679c77d97a59804bb0c2289` includes current `dev`
+`cf82d7ebb5598021f4371fc116b8e0ddd158c576`. Its exact macOS SDK job
+`37116527407/111184315667` failed `facman_client_smoke` during source CTest:
+the test's 100 ms cancellation timer fired before confirmed process startup.
+The complete job log and artifact are retained in the existing owned adoption
+root; this failure was diagnosed rather than rerun as presumed infrastructure.
+
+That result also exposed a FacMan client defect: POSIX `pending` denotes
+post-fork uncertainty, but a missing confirmed PID was projected as
+`refused_before_effects`. The bounded successor correction preserves
+`outcome_unknown` for pending supervision, even without an identity or error
+text. Proven startup failures retain their refusal classification. Native
+regressions exercise both identity states and known startup failure; the real
+cancellation probe now confirms child creation before cancellation instead of
+using elapsed time as dispatch evidence. Process-tree and recovery assertions
+remain mandatory.
+
+Strict validation passes. A single owned Windows affected-test campaign is
+running with two native workers and MSBuild node reuse disabled. Its log is
+`evidence/20261003-process-affected.log` under
+`D:/Development/FacMan/repositories/factorio-launcher-5db2844e2f29/tasks/task-facman-u-507ecf4b41`.
+Independent review, native completion and successor-head hosted qualification
+remain pending here. The earlier candidate and owner comment do not qualify a
+changed head. Cross-provider produced-package maintenance remains a separate
+acceptance remainder; the original completed adoption history is preserved.

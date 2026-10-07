@@ -2,14 +2,18 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_self_setup.h"
+#include "facman_self_maintenance.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_local_operation_lock.h"
+#include "fl_path_safety.h"
 #include "fl_sha256.h"
 
 #include <array>
 #include <condition_variable>
 #include <cstdlib>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <iterator>
 #include <iostream>
@@ -93,6 +97,18 @@ struct Provider final : setup::ProviderEffects {
   std::string installed_lifecycle_status = "installed";
   std::string installed_source_digest = std::string(64, 'd');
   std::string plan_source_digest = std::string(64, 'd');
+  bool versioned_generation = false;
+  unsigned installed_abi_major = 1U;
+  unsigned installed_abi_minor = 0U;
+  std::string installed_provider_revision = setup::provider_revision();
+  std::string installed_recipe_digest = std::string(64, '3');
+  std::string installed_product_version = "1.0.0";
+  std::string installed_root_override;
+  std::string inspected_state_digest;
+  std::string plan_identity_field;
+  bool plan_envelope_valid = true;
+  fs::path lifecycle_lock;
+  bool both_locks_observed = false;
   std::mutex apply_mutex;
   std::condition_variable apply_condition;
   std::string last_transaction_id;
@@ -110,15 +126,26 @@ struct Provider final : setup::ProviderEffects {
       json::ArrayBuilder components;
       components.add_string("facman.product");
       json::ArrayBuilder entrypoints;
+      if (versioned_generation) {
+        components.add_string("facman.maintenance");
+        const auto entry = [&](const char *id, const char *kind, const std::string &path) {
+          json::ObjectBuilder value;
+          value.add_string("entrypoint_id", id); value.add_string("kind", kind);
+          value.add_string("relative_path", path); entrypoints.add_object(value);
+        };
+        entry("facman.gui", "application", "generations/" + installed_product_version + "/FacMan.exe");
+        entry("facman.cli", "tool", "generations/" + installed_product_version + "/bin/facman.exe");
+        entry("facman.setup", "tool", "maintenance/FacManSetup.exe");
+      }
       json::ObjectBuilder verification;
       verification.add_string("report_digest", std::string(64, '1'));
       verification.add_string("report_id", "verify.facman.self");
       verification.add_string("status", "pass");
       verification.add_string("verified_at", "2026-09-15T00:00:00Z");
       json::ObjectBuilder abi;
-      abi.add_unsigned_integer("major", 1U);
-      abi.add_unsigned_integer("minor", 0U);
-      abi.add_string("provider_revision", setup::provider_revision());
+      abi.add_unsigned_integer("major", installed_abi_major);
+      abi.add_unsigned_integer("minor", installed_abi_minor);
+      abi.add_string("provider_revision", installed_provider_revision);
       json::ObjectBuilder installed;
       installed.add_string("audit_chain_id", "audit.facman.self");
       installed.add_array("component_selection", components);
@@ -131,15 +158,27 @@ struct Provider final : setup::ProviderEffects {
       installed.add_string("ownership_manifest_digest", std::string(64, '2'));
       installed.add_string("ownership_manifest_ref", "ownership/facman.self.json");
       installed.add_string("product_id", "facman");
-      installed.add_string("product_version", "1.0.0");
-      installed.add_string("recipe_digest", std::string(64, '3'));
+      installed.add_string("product_version", installed_product_version);
+      installed.add_string("recipe_digest", installed_recipe_digest);
       installed.add_string("schema", "usk.installed_state.v1");
       installed.add_object("setup_abi", abi);
       installed.add_string("source_archive_digest", installed_source_digest);
-      installed.add_string("target_root", facman::platform::path_to_utf8(
-          coordinator_root.parent_path() / "install"));
+      installed.add_string("target_root", installed_root_override.empty()
+          ? facman::platform::path_to_utf8(coordinator_root.parent_path() / "install")
+          : installed_root_override);
       installed.add_string("target_scope", "portable");
       installed.add_string("transaction_id", "tx.facman.self.installed");
+      if (versioned_generation) {
+        auto document = json::parse(installed.serialize());
+        json::ObjectBuilder projection;
+        for (const char *key : {"audit_chain_id", "component_selection", "created_at",
+            "entrypoints", "install_id", "lifecycle_status", "ownership_manifest_digest",
+            "ownership_manifest_ref", "product_id", "product_version", "recipe_digest",
+            "setup_abi", "source_archive_digest", "target_root", "target_scope", "transaction_id"})
+          projection.add_value(key, *document.value().find(key));
+        auto projected = json::parse(projection.serialize());
+        inspected_state_digest = sha256_text(json::canonical_integer_json(projected.value()).value());
+      }
       json::ObjectBuilder envelope;
       if (installed_envelope_valid) {
         envelope.add_null("error");
@@ -150,6 +189,9 @@ struct Provider final : setup::ProviderEffects {
       return facman::core::Result<std::string>::success(envelope.serialize());
     }
     if (name == "install_local.plan" || name == "repair.plan" || name == "uninstall.plan") {
+      if (!lifecycle_lock.empty())
+        both_locks_observed = fs::is_regular_file(lifecycle_lock) &&
+            fs::is_regular_file(coordinator_root / "setup-operations/facman.self.lock");
       if (fail_plan) return facman::core::Result<std::string>::failure({"plan_refused", "injected pre-apply refusal", ""});
       const std::string id = name == "install_local.plan" ? string_member(payload, "request_id") :
           string_member(payload, "plan_id");
@@ -161,6 +203,29 @@ struct Provider final : setup::ProviderEffects {
             "\"status\":\"planned\",\"source\":{\"source_id\":\"source." +
             response_install_id + "\"},\"plan_id\":\"" + id +
             "\",\"plan_digest\":\"" + std::string(64, 'a') + "\"}}");
+      if (versioned_generation && name == "uninstall.plan") {
+        json::ObjectBuilder input;
+        const auto field = [&](const char *key, const std::string &value) {
+          input.add_string(key, plan_identity_field == key ? std::string(64, '9') : value);
+        };
+        field("source_digest", plan_source_digest);
+        field("provider_revision", installed_provider_revision);
+        field("recipe_digest", installed_recipe_digest);
+        field("installed_state_digest", inspected_state_digest);
+        field("ownership_manifest_digest", std::string(64, '2'));
+        field("policy_digest", std::string(64, '4'));
+        json::ObjectBuilder planned;
+        planned.add_string("schema", "usk.operation_plan.v1");
+        planned.add_string("operation", "uninstall"); planned.add_string("status", "planned");
+        planned.add_string("install_id", response_install_id); planned.add_string("plan_id", id);
+        planned.add_string("plan_digest", std::string(64, 'a')); planned.add_object("input_identity", input);
+        json::ObjectBuilder response;
+        if (plan_envelope_valid) {
+          response.add_null("error"); response.add_string("schema", "usk.command_response.v1");
+        }
+        response.add_string("status", "ok"); response.add_object("payload", planned);
+        return facman::core::Result<std::string>::success(response.serialize());
+      }
       return facman::core::Result<std::string>::success(
           "{\"status\":\"ok\",\"payload\":{\"schema\":\"usk.operation_plan.v1\","
           "\"operation\":\"" +
@@ -184,14 +249,18 @@ struct Provider final : setup::ProviderEffects {
         apply_condition.notify_all();
         apply_condition.wait(lock, [&] { return release_apply; });
       }
-      if (foreign_content_refusal) return facman::core::Result<std::string>::failure(
-          {"self_setup_provider_refused", "injected refusal", "{\"schema\":\"usk.command_response.v1\",\"status\":\"refused\",\"error\":{\"code\":\"foreign_content_review_required\"}}"});
-      if (generic_provider_refusal) return facman::core::Result<std::string>::failure(
-          {"self_setup_provider_refused", "injected refusal", "{\"schema\":\"usk.command_response.v1\",\"status\":\"refused\",\"error\":{\"code\":\"lifecycle_refused\"}}"});
+      if (foreign_content_refusal || generic_provider_refusal) {
+        facman::core::Error refusal{"self_setup_provider_refused", "injected refusal", ""};
+        refusal.detail = "{\"schema\":\"usk.command_response.v1\",\"status\":\"refused\",\"error\":{\"code\":\"" +
+            std::string(foreign_content_refusal ? "foreign_content_review_required" : "lifecycle_refused") + "\"}}";
+        return facman::core::Result<std::string>::failure(std::move(refusal));
+      }
       if (lose_apply_receipt)
         return facman::core::Result<std::string>::failure({"lost_receipt", "injected provider receipt loss", ""});
       return facman::core::Result<std::string>::success("{\"status\":\"ok\",\"payload\":{}}");
     }
+    if (name == "installed.verify")
+      return facman::core::Result<std::string>::success("{\"status\":\"ok\",\"payload\":{}}");
     if (name == "recovery.inspect") {
       recovery_state_root = state_root;
       recovery_identity_valid = string_member(payload, "schema") == "usk.recovery_inspect_request.v1" &&
@@ -337,7 +406,8 @@ fs::path active_journal_path(const Tree &tree) {
   std::error_code status;
   for (fs::directory_iterator iterator(directory, status), end;
        !status && iterator != end; iterator.increment(status)) {
-    if (iterator->is_regular_file(status) && !status)
+    if (iterator->is_regular_file(status) && !status &&
+        iterator->path().filename().string().find(".setup-operation.v") != std::string::npos)
       candidates.push_back(iterator->path());
   }
   return status || candidates.size() != 1U ? fs::path{} : candidates.front();
@@ -356,6 +426,246 @@ setup::Request request_for(const Tree &tree, Provider &provider, Native *native,
   request.apply = true; request.provider_effects = &provider; request.native_effects = native;
   request.clock = &provider.clock;
   return request;
+}
+
+struct RetirementAdmissionEffects final : facman::self_maintenance::RetirementEffects {
+  unsigned inspect_calls = 0U;
+  std::function<void(const facman::self_maintenance::Generation &,
+                     const facman::self_maintenance::CoordinatorLockToken &)> inspect;
+  facman::core::Result<void> inspect_retirement_generation(
+      const facman::self_maintenance::Generation &generation, bool,
+      const facman::self_maintenance::CoordinatorLockToken &token) override {
+    ++inspect_calls;
+    inspect(generation, token);
+    return facman::core::Result<void>::failure(
+        {"retirement_admission_complete", "fixture stops before outer retirement intent", {}});
+  }
+  facman::core::Result<void> uninstall_generation(
+      const facman::self_maintenance::Generation &, bool,
+      const facman::self_maintenance::CoordinatorLockToken &) override {
+    return facman::core::Result<void>::failure({"unexpected", "preview entered removal", {}});
+  }
+};
+
+void retirement_admission_cases() {
+  namespace maintenance = facman::self_maintenance;
+  Tree tree{fs::temp_directory_path() / "facman-self-setup-historical-retirement"};
+  std::error_code ignored;
+  fs::remove_all(tree.root, ignored); fs::create_directories(tree.root);
+  Provider provider; Native native;
+  auto request = request_for(tree, provider, &native, setup::Operation::uninstall);
+  request.state_root = tree.root / "provider-authority/epochs/historical/state";
+  fs::create_directories(request.state_root); fs::create_directories(request.install_root);
+  maintenance::PackageDescriptor descriptor{
+      "facman", "1.0.0", "generations/1.0.0", std::string(40, 'a'), std::string(40, 'd'),
+      "facman.self_maintenance.v1", "versioned_generation_with_maintenance_v1",
+      "FacMan.exe", "bin/facman.exe", "maintenance/FacManSetup.exe", false};
+  auto generation = maintenance::make_generation(descriptor, std::string(64, 'd'),
+      "facman.self", request.install_root, request.install_root, request.state_root, request.acceptance_root);
+  require(static_cast<bool>(generation), "historical retirement generation fixture is valid");
+  std::string detail;
+  require(facman::base::write_text_new_atomic(provider.coordinator_root / "generations" /
+      ("generation." + generation.value().generation_id + ".v1.json"),
+      maintenance::generation_record_bytes(generation.value()), detail), "generation record is retained");
+  json::ObjectBuilder previous; previous.add_string("name", ""); previous.add_string("sha256", "");
+  json::ObjectBuilder activation;
+  activation.add_string("operation", "migration"); activation.add_string("operation_id", "migration.genesis");
+  activation.add_object("previous", previous); activation.add_string("generation_id", generation.value().generation_id);
+  activation.add_string("product_id", "facman"); activation.add_string("schema", "facman.self_activation.v1");
+  require(facman::base::write_text_new_atomic(provider.coordinator_root / "activations" /
+      "activation.migration.genesis.v1.json", activation.serialize() + "\n", detail), "activation record is retained");
+  provider.versioned_generation = true;
+  provider.installed_provider_revision = descriptor.universal_setup_revision;
+  json::ObjectBuilder recipe;
+  recipe.add_string("schema", "facman.self_setup_recipe.v1"); recipe.add_string("product_id", "facman");
+  recipe.add_string("product_version", descriptor.product_version);
+  recipe.add_string("provider_revision", descriptor.universal_setup_revision);
+  recipe.add_string("source_sha256", generation.value().package_sha256);
+  recipe.add_string("target_layout", descriptor.package_layout);
+  provider.installed_recipe_digest = sha256_text(recipe.serialize());
+  RetirementAdmissionEffects effects;
+  effects.inspect = [&](const maintenance::Generation &retained, const maintenance::CoordinatorLockToken &token) {
+    request.coordinator_lock = &token; request.retirement_generation = &retained; request.apply = false;
+    require(static_cast<bool>(setup::execute(request)), "historical ABI1.0 uninstall preview binds original pin");
+    auto verification = request; verification.operation = setup::Operation::verify;
+    require(static_cast<bool>(setup::execute(verification)), "historical verification accepts the exact locked generation");
+    const auto refused_without_calls = [&](const setup::Request &changed, const char *message) {
+      const auto before = provider.command_install_ids.size();
+      auto response = setup::execute(changed);
+      require(!response && response.error().code == "self_setup_retirement_witness_invalid" &&
+          provider.command_install_ids.size() == before, message);
+    };
+    auto changed = request; changed.coordinator_lock = nullptr;
+    refused_without_calls(changed, "historical witness without lock refuses before dispatch");
+    auto changed_verification = verification; changed_verification.coordinator_lock = nullptr;
+    refused_without_calls(changed_verification, "verify cannot bypass historical lock admission");
+    const auto coordinator = provider.coordinator_root;
+    auto unbound = retained; unbound.facman_source_revision = std::string(40, 'b');
+    changed = request; changed.retirement_generation = &unbound;
+    refused_without_calls(changed, "retirement token rejects an altered generation record");
+    auto unrelated = retained; unrelated.package_sha256 = std::string(64, 'b');
+    changed.retirement_generation = &unrelated;
+    refused_without_calls(changed, "retirement token grants no authority to a different generation");
+    require(token.binds_generation(retained) && !token.binds_generation(unrelated),
+        "private per-step token binds exact generation-record bytes");
+    provider.coordinator_root = tree.root / "global-coordinator";
+    provider.installed_root_override = facman::platform::path_to_utf8(request.install_root);
+    provider.lifecycle_lock = coordinator / "setup-operations/facman.self.lock";
+    require(static_cast<bool>(setup::execute(request)) && provider.both_locks_observed,
+        "different-root uninstall holds both lifecycle and user-wide setup locks");
+    facman::base::StableLocalLock global_lock;
+    fs::create_directories(provider.coordinator_root / "setup-operations");
+    require(global_lock.create(provider.coordinator_root / "setup-operations/facman.self.lock").acquired(),
+        "contention fixture owns the separate global setup lock");
+    const auto before_contended = provider.command_install_ids.size();
+    auto contended = setup::execute(request);
+    require(!contended && contended.error().code == "self_setup_lock_contended" &&
+        provider.command_install_ids.size() == before_contended,
+        "different-root global lock contention refuses before provider dispatch");
+    std::string removed;
+    require(global_lock.remove_exact(removed), "contention fixture releases only its exact lock");
+    provider.lifecycle_lock.clear(); provider.installed_root_override.clear();
+    provider.coordinator_root = coordinator;
+    for (const auto operation : {setup::Operation::install, setup::Operation::repair}) {
+      changed = request; changed.operation = operation;
+      refused_without_calls(changed, "historical witness grants no install or repair authority");
+    }
+    for (int field = 0; field < 5; ++field) {
+      changed = request;
+      if (field == 0) changed.install_id = "facman.self.other";
+      if (field == 1) changed.product_version = "2.0.0";
+      if (field == 2) changed.install_root = tree.root / "other-install";
+      if (field == 3) changed.state_root = tree.root / "other-state";
+      if (field == 4) changed.acceptance_root = tree.root / "other-acceptance";
+      refused_without_calls(changed, "historical witness binds all request identity paths and version");
+    }
+    const auto original_pin = provider.installed_provider_revision;
+    const auto original_recipe = provider.installed_recipe_digest;
+    const auto original_source = provider.installed_source_digest;
+    for (int field = 0; field < 7; ++field) {
+      if (field == 0) provider.installed_provider_revision = setup::provider_revision();
+      if (field == 1) provider.installed_recipe_digest = std::string(64, '9');
+      if (field == 2) provider.installed_source_digest = std::string(64, '9');
+      if (field == 3) provider.installed_product_version = "2.0.0";
+      if (field == 4) provider.installed_root_override = facman::platform::path_to_utf8(tree.root / "other-install");
+      if (field == 5) provider.installed_abi_major = 2U;
+      if (field == 6) provider.installed_abi_minor = 1U;
+      auto refused = setup::execute(request);
+      require(!refused && refused.error().code == "self_setup_response_invalid" && provider.apply_calls == 0,
+          "historical installed identity and supported ABI are exact before preview");
+      provider.installed_provider_revision = original_pin; provider.installed_recipe_digest = original_recipe;
+      provider.installed_source_digest = original_source; provider.installed_product_version = "1.0.0";
+      provider.installed_root_override.clear(); provider.installed_abi_major = 1U; provider.installed_abi_minor = 0U;
+    }
+    for (const char *field : {"provider_revision", "source_digest", "recipe_digest",
+                             "installed_state_digest", "ownership_manifest_digest"}) {
+      provider.plan_identity_field = field;
+      auto refused = setup::execute(request);
+      require(!refused && refused.error().code == "self_setup_response_invalid" && provider.apply_calls == 0,
+          "historical preview rejects substituted uninstall plan input identity");
+    }
+    provider.plan_identity_field.clear();
+    provider.plan_envelope_valid = false;
+    auto malformed_plan = setup::execute(request);
+    require(!malformed_plan && malformed_plan.error().code == "self_setup_response_invalid" && provider.apply_calls == 0,
+        "historical preview rejects a malformed provider plan envelope");
+    provider.plan_envelope_valid = true;
+    changed = request; changed.retirement_generation = nullptr;
+    auto ordinary = setup::execute(changed);
+    require(!ordinary && ordinary.error().code == "self_setup_response_invalid",
+        "ordinary removal retains executing-provider admission");
+    request.apply = true;
+    InterruptAt after_plan(setup::DurableBoundary::provider_plan_reviewed);
+    request.durable_boundary_hook = &after_plan;
+    auto interrupted = setup::execute(request);
+    require(!interrupted && interrupted.error().code == "self_setup_interrupted" && provider.apply_calls == 0,
+        "historical uninstall records an exact generation-bound intent before effects");
+    require(nested_string_member(active_journal(tree), "provider", "revision") == setup::provider_revision(),
+        "journal execution provider remains current while installed original pin differs");
+    const auto replay_refusals = [&] {
+      const auto commands = provider.command_install_ids.size();
+      const auto native_calls = native.inspect_calls;
+      auto missing = request; missing.retirement_generation = nullptr;
+      auto result = setup::execute(missing);
+      require(!result && result.error().code == "self_setup_recovery_required",
+          "unfinished historical removal cannot resume without witness");
+      auto substituted = retained; substituted.facman_source_revision = std::string(40, 'b');
+      auto other = request; other.retirement_generation = &substituted;
+      result = setup::execute(other);
+      require(!result && result.error().code == "self_setup_retirement_witness_invalid" &&
+          provider.command_install_ids.size() == commands && native.inspect_calls == native_calls,
+          "substituted witness refuses before provider recovery and native continuation");
+      // Present a valid token to a well-formed pending ordinary uninstall
+      // journal. Its intent differs even though all request fields still bind.
+      const auto original = active_journal(tree);
+      const auto path = active_journal_path(tree);
+      auto document = json::parse(original);
+      const auto *old_provider = document.value().find("provider");
+      const auto ordinary_source = sha256_text("facman.setup.uninstall.v1\n" + string_member(original, "install_root"));
+      const auto ordinary_intent = sha256_text("facman.setup.intent.v2\n" +
+          string_member(original, "install_id") + "\n" + string_member(original, "operation") + "\n" +
+          string_member(original, "install_root_identity") + "\n" + string_member(original, "product_version") + "\n" +
+          string_member(original, "mode") + "\n" + ordinary_source + "\n" +
+          nested_string_member(original, "provider", "state_root") + "\n" +
+          nested_string_member(original, "provider", "acceptance_root"));
+      json::ObjectBuilder replacement_provider;
+      for (const auto &key : old_provider->object_keys()) {
+        if (key == "source_digest") replacement_provider.add_string(key, ordinary_source);
+        else replacement_provider.add_value(key, *old_provider->find(key));
+      }
+      json::ObjectBuilder replacement;
+      for (const auto &key : document.value().object_keys()) {
+        if (key == "provider") replacement.add_object(key, replacement_provider);
+        else if (key == "intent_digest") replacement.add_string(key, ordinary_intent);
+        else replacement.add_value(key, *document.value().find(key));
+      }
+      const auto replacement_path = path.parent_path() / ("facman.uninstall." +
+          string_member(original, "install_root_identity").substr(0, 32) + "." +
+          ordinary_intent.substr(0, 32) + ".setup-operation.v2.json");
+      fs::rename(path, replacement_path);
+      { std::ofstream output(replacement_path, std::ios::binary | std::ios::trunc); output << replacement.serialize(); }
+      result = setup::execute(request);
+      require(!result && result.error().code == "self_setup_recovery_required" &&
+          provider.command_install_ids.size() == commands && native.inspect_calls == native_calls,
+          "valid generation token cannot adopt a differently bound durable uninstall intent");
+      fs::rename(replacement_path, path);
+      { std::ofstream output(path, std::ios::binary | std::ios::trunc); output << original; }
+    };
+    replay_refusals();
+    request.durable_boundary_hook = nullptr;
+    require(static_cast<bool>(setup::execute(request)) && provider.apply_calls == 1,
+        "exact historical witness resumes the reviewed uninstall");
+    InterruptAt after_files(setup::DurableBoundary::files_applied);
+    request.durable_boundary_hook = &after_files;
+    interrupted = setup::execute(request);
+    require(!interrupted && interrupted.error().code == "self_setup_interrupted", "historical files boundary is durable");
+    replay_refusals();
+    const auto applied = provider.apply_calls;
+    request.durable_boundary_hook = nullptr;
+    require(static_cast<bool>(setup::execute(request)) && provider.apply_calls == applied,
+        "exact historical native continuation never replays provider effects");
+    provider.foreign_content_refusal = true;
+    auto foreign = setup::execute(request);
+    require(!foreign && foreign.error().code == "self_setup_provider_refused" &&
+        string_member(active_journal(tree), "state") == "abandoned",
+        "historical witness does not override SDK foreign-content refusal after planning");
+    provider.foreign_content_refusal = false;
+    provider.lose_apply_receipt = true; provider.rollback_available = true;
+    auto lost = setup::execute(request);
+    require(!lost, "historical provider outcome loss remains unfinished");
+    replay_refusals();
+    provider.lose_apply_receipt = false; request.apply = false;
+    auto rollback = setup::execute(request);
+    require(rollback && rollback.value().phase == "recovery_plan" && provider.recovery_identity_valid,
+        "exact historical witness can review the original provider rollback");
+  };
+  maintenance::RetirementRequest preview; preview.coordinator_root = provider.coordinator_root;
+  preview.apply = true;
+  auto result = maintenance::retire_active(preview, effects);
+  require(!result && effects.inspect_calls == 1U &&
+      result.error().detail.find("retirement_admission_complete") != std::string::npos &&
+      !fs::exists(provider.coordinator_root / "retirements"),
+      "historical admission matrix ran under the private retirement token before outer intent");
 }
 
 void cases() {
@@ -1033,4 +1343,4 @@ void cases() {
 }
 } // namespace
 
-int main() { cases(); std::cout << "PASS: " << checks << " self setup recovery checks\n"; }
+int main() { cases(); retirement_admission_cases(); std::cout << "PASS: " << checks << " self setup recovery checks\n"; }

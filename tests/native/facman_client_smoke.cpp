@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_client.h"
+#include "facman_client_internal.h"
+#include "fl_process_supervisor.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -75,7 +77,20 @@ std::size_t completed_count(const RecordingProgress& progress)
 int main()
 {
     namespace fs = std::filesystem;
+    facman::platform::ProcessResult uncertain_process;
+    if (facman::client::detail::process_failure_outcome(uncertain_process) !=
+            facman::client::OperationOutcome::outcome_unknown)
+        return fail(19, "unconfirmed_process_without_identity");
+    uncertain_process.identity.process_id = 42;
+    if (facman::client::detail::process_failure_outcome(uncertain_process) !=
+            facman::client::OperationOutcome::outcome_unknown)
+        return fail(19, "unconfirmed_process_with_identity");
+    uncertain_process.termination = facman::platform::ProcessTermination::start_failed;
+    if (facman::client::detail::process_failure_outcome(uncertain_process) !=
+            facman::client::OperationOutcome::refused_before_effects)
+        return fail(19, "proven_process_start_failure");
     const fs::path workspace = fs::temp_directory_path() / "facman-client-smoke";
+    fs::create_directories(workspace);
     facman::client::FacManClient client(
         std::make_unique<facman::client::DirectFlbTransport>(workspace));
     auto product = client.execute({"product.inspect", "{}", true});
@@ -206,10 +221,14 @@ int main()
         fs::exists(marker))
         return fail_response(11, "cli_process_timeout", process_timeout);
     const fs::path cancelled_marker = workspace / "cancelled-process-tree-survivor.txt";
+    const fs::path cancellation_ready = workspace / "cancellation-process-ready.txt";
+    fs::remove(cancellation_ready);
 #ifdef _WIN32
     _putenv_s("FACMAN_PROCESS_PROBE_MARKER", cancelled_marker.string().c_str());
+    _putenv_s("FACMAN_PROCESS_PROBE_READY", cancellation_ready.string().c_str());
 #else
     setenv("FACMAN_PROCESS_PROBE_MARKER", cancelled_marker.string().c_str(), 1);
+    setenv("FACMAN_PROCESS_PROBE_READY", cancellation_ready.string().c_str(), 1);
 #endif
     auto process_cancellation = std::make_shared<facman::client::CancellationToken>();
     facman::client::CommandRequest process_cancel_request {"product.inspect", "{}", true};
@@ -217,14 +236,23 @@ int main()
     process_cancel_request.timeout = std::chrono::seconds(5);
     auto cancellation_progress = std::make_shared<RecordingProgress>();
     process_cancel_request.progress = cancellation_progress;
-    std::thread canceller([process_cancellation]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        process_cancellation->request_cancellation();
+    std::atomic<bool> cancellation_dispatched {false};
+    std::thread canceller([process_cancellation, cancellation_ready, &cancellation_dispatched]() {
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (std::chrono::steady_clock::now() < deadline) {
+            std::error_code error;
+            if (fs::is_regular_file(cancellation_ready, error) && !error) {
+                cancellation_dispatched = true;
+                process_cancellation->request_cancellation();
+                return;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
     });
     auto process_cancelled = timeout_cli.execute(process_cancel_request);
     canceller.join();
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    if (!process_cancelled || process_cancelled.value().ok() ||
+    if (!cancellation_dispatched || !process_cancelled || process_cancelled.value().ok() ||
         process_cancelled.value().error_code != "client_operation_cancelled" ||
         process_cancelled.value().operation.outcome !=
             facman::client::OperationOutcome::outcome_unknown ||
@@ -238,9 +266,12 @@ int main()
         return fail_response(12, "cli_process_cancellation", process_cancelled);
 #ifdef _WIN32
     _putenv_s("FACMAN_PROCESS_PROBE_MARKER", "");
+    _putenv_s("FACMAN_PROCESS_PROBE_READY", "");
 #else
     unsetenv("FACMAN_PROCESS_PROBE_MARKER");
+    unsetenv("FACMAN_PROCESS_PROBE_READY");
 #endif
+    fs::remove(cancellation_ready);
     facman::client::FacManClient identity_probe_cli(
         std::make_unique<facman::client::CliProcessTransport>(
             fs::path(FACMAN_TEST_PROCESS_PROBE_PATH)));

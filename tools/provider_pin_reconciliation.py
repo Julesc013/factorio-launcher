@@ -54,9 +54,9 @@ PROVIDERS = {
         "source": "universal-setup",
         "repository": "Julesc013/universal-setup",
         "remote": "https://github.com/Julesc013/universal-setup.git",
-        "revision": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
-        "tree": "d0e4eef8cd6303079f1b25688d29a636a2e4c558",
-        "prior_revision": "279ad4876dc325f8e1fcdc918c91b098a11bc616",
+        "revision": "2749a15b835a6c1c9968598a2b434d85809691ad",
+        "tree": "5cfd42acea5242a5a04fc79140fcfdf7accf6ee4",
+        "prior_revision": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
         "package_version": "1.0.0",
         "cmake_package_version": "1.0.0",
         "abi_version": "1.0",
@@ -66,7 +66,7 @@ PROVIDERS = {
         "license": "MIT AND Zlib",
         "maturity": "canonical_main_sdk_qualified",
         "sdk_adoption": "accepted_non_authorizing_input",
-        "evidence_revision": "fa08d4e88e1a98881b95f69e12ddae367d469cdb",
+        "evidence_revision": "cd26c01453021edc8a43e8febc0ac6c6f60be901",
     },
 }
 AUTHORITY = {

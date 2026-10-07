@@ -80,11 +80,16 @@ class SelfSetupPackageTests(unittest.TestCase):
 
     def portable(self, path: Path, extra: str | None = None) -> None:
         with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
-            archive.writestr("bin/facman.exe", b"cli")
-            archive.writestr("bin/FacMan.WinForms.exe", b"gui")
-            archive.writestr("contracts/example.json", b"{}\n")
+            entries = [("bin/facman.exe", b"cli"),
+                       ("bin/FacMan.WinForms.exe", b"gui"),
+                       ("contracts/example.json", b"{}\n")]
             if extra is not None:
-                archive.writestr(extra, b"bad")
+                entries.append((extra, b"bad"))
+            # Rebuilding the same fixture must preserve the source archive's
+            # bytes, including ZIP timestamps, because its hash binds payload.
+            for name, content in entries:
+                info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+                archive.writestr(info, content)
 
     def build(self, root: Path, output_name: str) -> tuple[dict[str, object], Path]:
         portable = root / "FacMan-0.1.0-alpha.2-windows-x64-portable.zip"

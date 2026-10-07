@@ -45,6 +45,11 @@ whole-root `update.*` authority. Activation occurs only after the candidate and
 its installed files verify, followed by coordinated Start Menu and uninstall
 registration cutover.
 
+Historical installed-state reads support the exact Universal Setup ABI 1.0
+shape and preserve the original provider revision. Inspection and verification
+bind that revision and the recipe to the recorded package generation. New
+installation plans and apply bindings require the executing provider's exact pin.
+
 This checkpoint keeps completed generations for rollback. Repair accepts only
 the exact active generation after its chain roots and provider-installed
 identity bind. It routes the ordinary repair coordinator to that generation's
@@ -62,7 +67,16 @@ identity is recovery-required. Once the retirement intent exists, ordinary
 update, downgrade, rollback, verify, and repair discovery is blocked until the
 same retirement is resumed. Nested setup skips its own lock only when given the
 coordinator's call-scoped proof for that exact lock root; isolated fixtures with
-a different setup coordinator acquire both locks. Completed retirement hides
+a different setup coordinator acquire both locks. A historical verify/uninstall
+request additionally carries the exact generation witness under a private token
+bound to that validated retirement step. A separate user-wide Setup coordinator
+still requires its own lock; lifecycle authority never substitutes for it.
+Installed state and uninstall plan input bind the generation's original pin,
+archive, recipe and installed/ownership digests; the executing SDK and journal
+revision retain the current provider pin. The witness binds the durable uninstall
+intent, so omission or substitution refuses before recovery or native continuation.
+Ordinary Setup intent bytes and current-pin admission remain unchanged.
+Completed retirement hides
 the active chain but preserves activation and generation history. After a
 retained generation is removed, its exact digest-bound package, maintenance
 launcher, and custody receipt are removed from the pinned repair cache before
@@ -201,6 +215,41 @@ target generation, package, helper, shell choice, and provider identities.
 Terminal verification replays the deterministic read-only provider verification
 at the operation's recorded time; it does not depend on a mutable cached
 verification field.
+
+If the SDK completed an entered apply before FacMan recorded its outcome,
+USK's no-replace install planner refuses the existing target. Only that exact
+`target_not_empty` refusal can use completed transaction inspection instead.
+FacMan supplies the immutable original plan request, plan ID/digest and
+transaction to `recovery.inspect`; the SDK validates its original archive,
+source context and publication identity. Admission requires an exact installed
+identity and a canonical, digest-checked completed report with intact journal,
+snapshot and audit evidence, no selected action and no available effects.
+This recovery clears cached apply authority and grants only observation and
+completion. Missing context, noncompleted state, operator actions and other
+refusals remain recovery-required. Absent-target reconstruction retains the
+original fresh-plan semantic checks.
+
+Epoch generation v2 and handoff v3 also admit an exact additive
+`creating_provider_revision` shape for cross-provider creation. The field is a
+lowercase 40-hex revision distinct from the package's original
+`universal_setup_revision`; absence means the original provider created the
+installation. Existing serializers retain their exact bytes when it is absent.
+Generation records have two exact shapes; handoff records have four, because
+the existing optional deadline is independent of creator provenance. Unknown,
+empty, malformed and redundant creator fields are refused. Older controllers
+reject the extended shapes and cannot service such epochs.
+
+Fresh epoch planning freezes the actual executing SDK before provider review.
+Recovery reads the frozen creator from the immutable handoff, and provider
+creation or replay requires that SDK. The original package pin, source, archive
+checksum and generation ID remain unchanged. Recipes, installed-state checks,
+provider bindings and retirement witnesses bind the creator separately;
+internal generation binding bytes include it without widening flat v1 records.
+An immediate predecessor reactivation copies its complete retained generation,
+including creator, rather than assigning today's SDK to historical state.
+Conflicting records for the same generation ID are refused. The retained
+capable controller remains the epoch maintenance and recovery entry point after
+a downgrade; the older launcher embedded in the archive remains distinct.
 
 Pending discovery holds and revalidates the epoch namespace, operation names,
 records, retained inputs, and lifecycle tail. Inserted, replaced, linked, or

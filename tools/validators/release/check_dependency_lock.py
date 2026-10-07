@@ -158,8 +158,8 @@ def validate_universal_provider(
         "universal_setup": {
             "version": "1.0.0",
             "abi_contract_version": "1.0",
-            "pin": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
-            "tree": "d0e4eef8cd6303079f1b25688d29a636a2e4c558",
+            "pin": "2749a15b835a6c1c9968598a2b434d85809691ad",
+            "tree": "5cfd42acea5242a5a04fc79140fcfdf7accf6ee4",
             "remote": "https://github.com/Julesc013/universal-setup.git",
             "required_ref": "refs/heads/main",
             "reachability": "required_for_source_closure",
