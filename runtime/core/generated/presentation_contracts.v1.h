@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace facman::contracts::presentation_v1 {
-inline constexpr const char* kSourceDigest = "0ef73f830fd6c81090f0da7e6cff2dc0ca417e6eafa24d476779401b38455809";
+inline constexpr const char* kSourceDigest = "de9292a34796820270758d55570467a65cb0172e2c561bb62afa6867eaea31ff";
 
 struct SemanticActionRequest {
     std::string action_id;
@@ -37,6 +37,7 @@ struct SemanticActionRequest {
     std::optional<std::string> save;
     std::optional<std::string> selected_instance_id;
     std::optional<std::string> source_data_root;
+    std::optional<std::string> source_path;
     std::optional<std::string> template_id;
     std::optional<std::string> transaction_id;
 };
@@ -274,6 +275,9 @@ inline std::string encode_json(const SemanticActionRequest& value)
     if (value.source_data_root) {
         output.add_string("source_data_root", *value.source_data_root);
     }
+    if (value.source_path) {
+        output.add_string("source_path", *value.source_path);
+    }
     if (value.template_id) {
         output.add_string("template_id", *value.template_id);
     }
@@ -288,7 +292,7 @@ inline facman::core::Result<SemanticActionRequest> decode_semantic_action_reques
     auto document = facman::core::json::parse(raw);
     if (!document || !document.value().is_object())
         return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("contract is not an object"));
-    if (!detail::keys_allowed(document.value(), {"action_id", "expected_snapshot_revision", "request_id", "scope", "attempt_id", "confirmation", "display_name", "durable_operation_id", "idempotency_key", "installation_id", "installation_path", "launch_intent", "mod_identity", "new_instance_id", "output_path", "profile_id", "roots", "save", "selected_instance_id", "source_data_root", "template_id", "transaction_id"}, false))
+    if (!detail::keys_allowed(document.value(), {"action_id", "expected_snapshot_revision", "request_id", "scope", "attempt_id", "confirmation", "display_name", "durable_operation_id", "idempotency_key", "installation_id", "installation_path", "launch_intent", "mod_identity", "new_instance_id", "output_path", "profile_id", "roots", "save", "selected_instance_id", "source_data_root", "source_path", "template_id", "transaction_id"}, false))
         return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("contract contains an unknown field"));
     SemanticActionRequest value;
     const auto* field_action_id = document.value().find("action_id");
@@ -478,6 +482,14 @@ inline facman::core::Result<SemanticActionRequest> decode_semantic_action_reques
         if (!decoded_source_data_root_result) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("source_data_root has an invalid type or value"));
         std::string decoded_source_data_root = decoded_source_data_root_result.take_value();
         value.source_data_root = std::move(decoded_source_data_root);
+    }
+    const auto* field_source_path = document.value().find("source_path");
+    if (field_source_path != nullptr) {
+        if (!field_source_path->is_string()) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("source_path has an invalid type or value"));
+        auto decoded_source_path_result = field_source_path->string_value();
+        if (!decoded_source_path_result) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("source_path has an invalid type or value"));
+        std::string decoded_source_path = decoded_source_path_result.take_value();
+        value.source_path = std::move(decoded_source_path);
     }
     const auto* field_template_id = document.value().find("template_id");
     if (field_template_id != nullptr) {

@@ -7,7 +7,7 @@ namespace FacMan.WinForms.GeneratedContracts
 {
     public static class PresentationContractIdentity
     {
-        public const string SourceDigest = "0ef73f830fd6c81090f0da7e6cff2dc0ca417e6eafa24d476779401b38455809";
+        public const string SourceDigest = "de9292a34796820270758d55570467a65cb0172e2c561bb62afa6867eaea31ff";
     }
 
     public sealed class SemanticActionRequest
@@ -32,6 +32,7 @@ namespace FacMan.WinForms.GeneratedContracts
         public string Save { get; set; }
         public string SelectedInstanceId { get; set; }
         public string SourceDataRoot { get; set; }
+        public string SourcePath { get; set; }
         public string TemplateId { get; set; }
         public string TransactionId { get; set; }
     }

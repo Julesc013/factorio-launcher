@@ -104,6 +104,9 @@
           "source_data_root": {
             "type": "string"
           },
+          "source_path": {
+            "type": "string"
+          },
           "template_id": {
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
             "type": "string"
@@ -124,7 +127,7 @@
       },
       "schema_id": "https://facman.invalid/schema/command/presentation.action.request.v1.schema.json",
       "source_path": "contracts/schema/command/presentation.action.request.v1.schema.json",
-      "source_sha256": "88ec55a0b2555c3514cabcf28c4b1bb000696838137554fedb06a0a95bfc7eb6"
+      "source_sha256": "c73a226d29135275c9f21c337cc56ff7418fda9bd3b88b6b8f32022ad92f4f55"
     },
     {
       "behavior": "effect_input",
@@ -1095,5 +1098,5 @@
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "0ef73f830fd6c81090f0da7e6cff2dc0ca417e6eafa24d476779401b38455809"
+  "source_digest": "de9292a34796820270758d55570467a65cb0172e2c561bb62afa6867eaea31ff"
 }

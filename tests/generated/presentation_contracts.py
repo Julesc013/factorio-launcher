@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-SOURCE_DIGEST = "0ef73f830fd6c81090f0da7e6cff2dc0ca417e6eafa24d476779401b38455809"
+SOURCE_DIGEST = "de9292a34796820270758d55570467a65cb0172e2c561bb62afa6867eaea31ff"
 
 @dataclass
 class SemanticActionRequest:
@@ -30,6 +30,7 @@ class SemanticActionRequest:
     save: Optional[str] = None
     selected_instance_id: Optional[str] = None
     source_data_root: Optional[str] = None
+    source_path: Optional[str] = None
     template_id: Optional[str] = None
     transaction_id: Optional[str] = None
 
