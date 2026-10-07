@@ -1,0 +1,173 @@
+{
+  "schema": "facman.session_journal_retry_policy.v1",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "source_parent": "8d8a8e6e9a13471b191231a2686bae7a2973d5af",
+  "source_paths_sha256": {
+    "runtime/factorio/launch/flb_factorio_execution.cpp": "267775343c53fac5e915f8ece254232872b77581b7b8a893bc96befbac1d6de2",
+    "runtime/factorio/launch/flb_factorio_session_journal_retry_detail.h": "c6d5efba2385683f2e247c00e4dfb97381599aa286e9949e66dcd017ff68c8d2",
+    "tests/native/facman_execution_foundation_smoke.cpp": "637dff54daf2e14f8470219e6f1b1830bebec384c6fe5b3c2e9aa7f1c78bea95",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": "65b6c972651c70af6dc786b724486ba2472d360f5dd90eeb88b0db6167773c90"
+  },
+  "verdict": "PASS_SCOPED_RETRY_POLICY_STATIC_DEBUG_AND_SHARED_RELEASE",
+  "problem": "Hosted brief-contention fixture relies on asynchronous release within a real-clock admission window",
+  "hosted_failure": {
+    "pull_request": 396,
+    "source": "8d8a8e6e9a13471b191231a2686bae7a2973d5af",
+    "run": 37692298933,
+    "job": 113035241304,
+    "test": "facman_execution_foundation_smoke",
+    "exit": 101,
+    "presentation_pass_seconds": 13.29,
+    "log_sha256": "b2e448841bf60f30a285cf67c9d2e44c8d67470a89f520e0522148679ade3a63",
+    "release_timing": "not recorded",
+    "scheduler_attribution": "unconfirmed"
+  },
+  "correction": {
+    "private_windows_helper": true,
+    "public_API_added": false,
+    "production_policy_changed": false,
+    "retry_admission_ms": 500,
+    "sleep_cap_ms": 10,
+    "exact_error": "session_lock_unavailable",
+    "actual_production_SDK_and_steady_clock": true,
+    "posix_single_call": true
+  },
+  "qualification": {
+    "receipt_sha256": "e1d3bfee615092d13e21d3eaf3ac0cffc5a36cccd26e70f44c8f829e04036f63",
+    "source_review_sha256": "95e13b6187b5f17990f407bdd7b43f5bce25d4b617a219d0cd6639fcf1ac2481",
+    "configurations": [
+      {
+        "linkage": "static",
+        "configuration": "Debug",
+        "binaries": {
+          "facman_execution_foundation_smoke.exe": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Debug\\facman_execution_foundation_smoke.exe",
+            "sha256": "56f4671b916ecc924549a46f34181cceff4beafb97bbd7afed4285c9115576e8",
+            "bytes": 3235328
+          },
+          "facman_presentation_service_smoke.exe": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Debug\\facman_presentation_service_smoke.exe",
+            "sha256": "6f07077f3bf0abd188827e597c7f48880420d0e840857b252bafaf2e8443e938",
+            "bytes": 11953152
+          },
+          "facman_process_probe.exe": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Debug\\facman_process_probe.exe",
+            "sha256": "9492ae8fb72bd4843598cc6a3c46cc2b004b0f78e59ac0cb56ef887b3a367345",
+            "bytes": 2138112
+          },
+          "facman_ulk_session_last_run_provider_smoke.exe": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Debug\\facman_ulk_session_last_run_provider_smoke.exe",
+            "sha256": "a47e0841097fe26cd79821731cfca67c308a714d6a7f34d6ef9a8fb38a7cf7ca",
+            "bytes": 11485696
+          }
+        }
+      },
+      {
+        "linkage": "shared",
+        "configuration": "Release",
+        "binaries": {
+          "facman_execution_foundation_smoke.exe": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman_execution_foundation_smoke.exe",
+            "sha256": "5fbe4c488dcae2a665ebcaec7cb49e6df811ec457ebdae34f65ac42f58785206",
+            "bytes": 663552
+          },
+          "facman_presentation_service_smoke.exe": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman_presentation_service_smoke.exe",
+            "sha256": "ab0f705024cfce5084827b308cc3a0a2bbc11c9cf3dd9fabc7873b13ded0ccf2",
+            "bytes": 3204608
+          },
+          "facman_process_probe.exe": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman_process_probe.exe",
+            "sha256": "c586bf3e2ceabe942a55839a1a21a17f24c2c7d98875bc0871cdb52cd6d76f1d",
+            "bytes": 303616
+          },
+          "facman_ulk_session_last_run_provider_smoke.exe": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman_ulk_session_last_run_provider_smoke.exe",
+            "sha256": "74f2e5eabf719d817963a641c58fadade1f27006aed2d6e20e9737a2e3cb9977",
+            "bytes": 1795072
+          },
+          "ulk.dll": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\ulk.dll",
+            "sha256": "d96d05b33b0df2ee2659104125d8e0f70fbc6e48b82dc302b7eb0eb8ac6b6c31",
+            "bytes": 208384
+          },
+          "usk.dll": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\usk.dll",
+            "sha256": "99231fbff824df9446159cd91c2dfe01bb439a9f0c3138c9d9625e512696b873",
+            "bytes": 1516544
+          }
+        }
+      }
+    ],
+    "native_executions": 6,
+    "controlled_cases_skipped": 0,
+    "deterministic_clock_claim_only": true,
+    "real_lock_refusal_release_terminal_Last_Run": true,
+    "input_bytes_immutable": true,
+    "exact_deadline_and_overshoot": true,
+    "other_errors_and_error_change_not_retried": true,
+    "full_service_persistent_recovery_and_unchanged_running_preserved": true,
+    "existing_success_and_cancellation_oracles_unchanged": true,
+    "strict_and_generated_pass": true
+  },
+  "retained_prior_evidence": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/session-journal-contention-repair.v1.json",
+    "sha256": "d46f099060d0bedbee9138cd1b8c4e223c635a1b18fc5439937f5691d50842c5",
+    "local_q02_timeout_resolved": false,
+    "prior_full_local_campaign_complete": false,
+    "original_CI63_attribution": "unconfirmed",
+    "previous_receipts_rewritten": false
+  },
+  "integration_requires_current_hosted_checks_and_consequential_independent_review": true,
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/session-journal-retry-policy-custody.zip",
+    "sha256": "cd053f18c54bde1a7ecb293961f1553970234b6564f57ee388f917147a98b054",
+    "bytes": 46687,
+    "members": {
+      "session-journal-contention-source-windows-failure-job-113035241304.log": "b2e448841bf60f30a285cf67c9d2e44c8d67470a89f520e0522148679ade3a63",
+      "session-journal-retry-policy-q01-diff.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "session-journal-retry-policy-q01-doctor.log": "9a35a0e774e3ab0a1795856eeb597d3f195da163d1b7b8b998c4414a22f4d9cb",
+      "session-journal-retry-policy-q01-generated.log": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "session-journal-retry-policy-q01-paths.log": "ae07a55faa6f5daa6ec9c0c48b80ebcea30b6991e5cf2c1b0513eba676927b1b",
+      "session-journal-retry-policy-q01-shared-release-build.log": "1a1bfb60b4c656254f69ba61699f2fde2b7d4a2fc3b337d3bb7131f162e186dd",
+      "session-journal-retry-policy-q01-shared-release-configure.log": "4ae7eff8a2f07f9462a0cfd4e2c46f8d1f870c61b77ec1d3a4f4254df007d243",
+      "session-journal-retry-policy-q01-shared-release-foundation.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "session-journal-retry-policy-q01-shared-release-last-run.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "session-journal-retry-policy-q01-shared-release-presentation.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "session-journal-retry-policy-q01-static-debug-build.log": "fed43eabc24ff3b3088518db11bec5adee408082dabd3bda73f9edd38b439af2",
+      "session-journal-retry-policy-q01-static-debug-configure.log": "ec547e71b89c364f351cb54deb07cc4b44fd2d1df8e10fccad19ccc3bbb2c167",
+      "session-journal-retry-policy-q01-static-debug-foundation.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "session-journal-retry-policy-q01-static-debug-last-run.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "session-journal-retry-policy-q01-static-debug-presentation.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "session-journal-retry-policy-q01-strict.log": "e461ee70bee39a357e835dffcd60cc5a849f70f234c709b8edf1ab23ca143954",
+      "session-journal-retry-policy-qualification-01.json": "e1d3bfee615092d13e21d3eaf3ac0cffc5a36cccd26e70f44c8f829e04036f63",
+      "session-journal-retry-policy-source-freeze-01.json": "07017f7ea64db0c243d7947166cfe3e8e0da38dd69ac4891d190cd405a223c0d",
+      "session-journal-retry-policy-source-freeze-02.json": "2836fe28f53183dc160b3ed00af1df95d0a430ce6d9e8610a2ae2f2f32bd5c62",
+      "session-journal-retry-policy-source-review-02.json": "95e13b6187b5f17990f407bdd7b43f5bce25d4b617a219d0cd6639fcf1ac2481"
+    }
+  },
+  "resources": {
+    "new_roots": 0,
+    "new_clones": 0,
+    "new_worktrees": 0,
+    "new_candidates": 0,
+    "native_workers": 2,
+    "admission": {
+      "task_root_bytes": 11883743800,
+      "reserved_peak_bytes": 2147483648,
+      "actual_free_bytes": 168253181952,
+      "retained_findings": [
+        "unmanaged_secondary_worktrees_present",
+        "merged_local_task_branches_present"
+      ]
+    }
+  },
+  "boundaries": {
+    "provider_pins_changed": false,
+    "required_CI_pending": true,
+    "visible_UI_or_real_game_qualified": false,
+    "produced_package_repeated": false,
+    "beta_qualified": false,
+    "whole_workunit_closed": false
+  }
+}

@@ -113,3 +113,41 @@ existing import, no-replace publication and recovery owners, and distinguish
 retained partial effects from pre-effect refusal. This advances ordinary content
 preparation and recovery; composed Make Ready, real Play, human, host matrix
 and Beta gates remain unchanged. Reuse the existing owned root and native cache.
+
+PR395 integrated at 6d02caf. A subsequent required Windows shared Release run
+failed the existing Stop-session oracle (exit63); twenty diagnostic local runs
+passed, so its specific failing clause remains unconfirmed. A controlled native
+regression against the unchanged owner reproduces loss of terminal publication
+when the real Windows SDK journal lock is held after running publication.
+Continue that integration repair in the existing owned branch/root: retry only
+the exact pre-write session_lock_unavailable error within a 500ms retry-admission
+budget. Persistent contention must retain recovery_required and the unchanged
+running record; other errors, provider pins and the presentation oracle remain
+unchanged. Require independent review, focused native qualification and normal
+source/merge CI before advancing the ordinary Content export continuation.
+
+The corrected shared Release owner passed the controlled brief/persistent lock
+cases and Last Run. Its fourth presentation repetition then exceeded the
+unchanged 120s timeout during earlier SDK terminal atomic publication; the
+old running target and serialized terminal temporary remain in moved custody.
+Six unchanged-binary diagnostic replays passed without reproducing that stall.
+The complete local campaign remains incomplete, and original CI63 attribution
+remains unconfirmed. Independent review admits one normally committed corrective
+diagnostic PR for required exact-source hosted CI; integration requires those
+results and a further consequential decision review. Preserve the timeout and
+do not claim it resolved, relax its oracle or start Content export meanwhile.
+
+PR396 exact source8d8a8e6e required Windows static Debug check failed the
+new controlled brief-contention fixture (exit101); presentation smoke passed.
+The failed fixture depends on a background reader and100ms release inside the
+real500ms budget; hosted release timing is absent, so scheduling attribution
+remains unconfirmed. Replace that timing assumption with an internal Windows
+retry helper, unchanged fixed policy and real production SDK/steady-clock/sleep
+callbacks. Exercise the same helper with a real SDK lock, deterministic clock,
+actual first refusal, synchronous release, authoritative terminal/Last Run and
+immutable inputs; cover exact deadline, overshoot, other errors and error change.
+Retain full-service persistent-lock recovery and unchanged-running-record tests.
+This grants no real wall-time claim and resolves neither the retained q02 SDK
+publication stall nor original CI63 attribution. Require independent patch
+review, focused static Debug/shared Release qualification and current source/
+merge CI. No new roots, worktrees, clones, candidates or provider pin changes.

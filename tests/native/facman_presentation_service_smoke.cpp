@@ -1264,6 +1264,11 @@ int run_smoke()
             std::string::npos ||
         after_stop.find("\"outcome\":\"cancellation_requested_but_completed\"") ==
             std::string::npos) {
+        std::cerr << "stopped fixture session mismatch: status=" << hanging_result.status
+                  << " error=" << hanging_result.error_code << ":"
+                  << hanging_result.error_message
+                  << " launch=" << hanging_json
+                  << " after_stop=" << after_stop << '\n';
         return 63;
     }
 

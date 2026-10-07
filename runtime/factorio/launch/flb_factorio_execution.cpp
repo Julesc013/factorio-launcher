@@ -18,6 +18,12 @@
 #include <system_error>
 #include <utility>
 
+#ifdef _WIN32
+#include "flb_factorio_session_journal_retry_detail.h"
+#include <chrono>
+#include <thread>
+#endif
+
 namespace facman::factorio::launch {
 namespace fs = std::filesystem;
 namespace json = facman::core::json;
@@ -196,8 +202,17 @@ bool write_ulk_session_record(
     journal.root = ulk_view(root);
     journal.maximum_records = kMaximumUlkJournalRecords;
     ulk_error_v1 error {};
+#ifdef _WIN32
+    const int status = facman::factorio::launch::detail::write_session_journal_with_lock_retry(
+        [&](ulk_error_v1& attempt_error) {
+            return ulk_session_journal_write_v1(&journal, &record, &attempt_error);
+        }, [] { return std::chrono::steady_clock::now(); },
+        [](const auto& deadline) { std::this_thread::sleep_until(deadline); }, error);
+#else
     error.struct_size = sizeof(error);
-    if (ulk_session_journal_write_v1(&journal, &record, &error) == ULK_STATUS_OK) {
+    const int status = ulk_session_journal_write_v1(&journal, &record, &error);
+#endif
+    if (status == ULK_STATUS_OK) {
         detail.clear();
         return true;
     }
