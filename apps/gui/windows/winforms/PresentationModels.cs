@@ -227,6 +227,8 @@ namespace FacMan.WinForms
             FactorioVersion = PresentationJson.Text(value, "factorio_version");
             Profile = PresentationJson.Text(value, "profile");
             TemplateId = PresentationJson.Text(value, "template_id");
+            LaunchIntent = PresentationJson.Text(value, "launch_intent");
+            if (String.IsNullOrEmpty(LaunchIntent)) LaunchIntent = "menu";
         }
 
         public string InstanceId { get; private set; }
@@ -235,6 +237,7 @@ namespace FacMan.WinForms
         public string FactorioVersion { get; private set; }
         public string Profile { get; private set; }
         public string TemplateId { get; private set; }
+        public string LaunchIntent { get; private set; }
     }
 
     public sealed class PresentationReadiness

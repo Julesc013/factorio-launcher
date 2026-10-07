@@ -8,8 +8,12 @@
 
 #include <string>
 
+namespace facman::core::json { class Value; }
+
 namespace facman::factorio::application {
 
+std::string action_request_json(const SemanticActionRequest& request);
+bool recorded_action_request_shape(const facman::core::json::Value& request);
 bool effectful_semantic_action(const std::string& action_id);
 bool terminal_session_state(const std::string& state);
 std::string result_string(const ApplicationResult& result);

@@ -103,21 +103,8 @@ Options parse_options(int argc, char** argv)
     return options;
 }
 
-bool flag(const std::vector<std::string>& args, const std::string& value)
-{
-    if (std::find(args.begin(), args.end(), value) != args.end()) return true;
-    if (value != "--json") return false;
-    for (std::size_t index = 0; index + 1 < args.size(); ++index) {
-        if (args[index] == "--format" && args[index + 1] == "json") return true;
-    }
-    return false;
-}
-
-std::string option(const std::vector<std::string>& args, const std::string& name, const std::string& fallback = {})
-{
-    for (std::size_t index = 0; index + 1 < args.size(); ++index) if (args[index] == name) return args[index + 1];
-    return fallback;
-}
+using facman::cli::flag;
+using facman::cli::option;
 
 std::vector<std::string> option_values(const std::vector<std::string>& args, const std::string& name)
 {
@@ -1185,9 +1172,13 @@ int command_presentation(const Options& options)
 {
     if (options.args.size() < 3) return 2;
     const bool as_json = flag(options.args, "--json");
+    const bool intent_supplied = flag(options.args, "--intent");
+    const std::string intent = intent_supplied ? option(options.args, "--intent") : "menu";
+    if (intent_supplied && intent != "menu" && intent != "load_save") return 2;
     if (options.args[1] == "query") {
         return emit_basic(call(options, "presentation.query", fields_payload({
             {"scope", options.args[2]},
+            {"launch_intent", intent},
             {"selected_instance_id", option(options.args, "--instance")},
             {"search", option(options.args, "--search")},
             {"known_revision", option(options.args, "--known-revision")}})),
@@ -1199,6 +1190,7 @@ int command_presentation(const Options& options)
         const std::string request_id = option(options.args, "--request-id");
         if (scope.empty() || expected.empty() || request_id.empty()) return 2;
         json::ObjectBuilder payload;
+        payload.add_string("launch_intent", intent);
         payload.add_string("action_id", options.args[2]);
         payload.add_string("scope", scope);
         payload.add_string("expected_snapshot_revision", expected);

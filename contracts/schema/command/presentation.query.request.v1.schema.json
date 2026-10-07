@@ -9,6 +9,13 @@
       "pattern": "^[0-9a-f]{64}$",
       "type": "string"
     },
+    "launch_intent": {
+      "enum": [
+        "menu",
+        "load_save"
+      ],
+      "type": "string"
+    },
     "scope": {
       "enum": [
         "launch_deck",

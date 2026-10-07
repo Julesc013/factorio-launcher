@@ -100,6 +100,7 @@ struct PresentationQueryRequest {
     std::string selected_instance_id;
     std::string search;
     std::string known_revision;
+    std::string launch_intent = "menu";
 };
 struct SemanticActionRequest {
     std::string action_id;
@@ -123,6 +124,7 @@ struct SemanticActionRequest {
     std::string source_data_root;
     std::string transaction_id;
     std::vector<std::string> roots;
+    std::string launch_intent = "menu";
 };
 
 using ImportModRequest = modsets::ImportRequest;

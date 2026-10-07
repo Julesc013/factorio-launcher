@@ -34,6 +34,7 @@ allowed_paths:
   - "tools/command_contract_check.py"
   - "tools/frontend_contract_check.py"
   - "tools/instance_model_check.py"
+  - "tools/codegen/generate_metadata.py"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"

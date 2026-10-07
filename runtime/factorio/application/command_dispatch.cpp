@@ -576,7 +576,8 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "scope", typed.scope, detail) ||
             !optional_string(payload, "selected_instance_id", typed.selected_instance_id, detail) ||
             !optional_string(payload, "search", typed.search, detail) ||
-            !optional_string(payload, "known_revision", typed.known_revision, detail)) return false;
+            !optional_string(payload, "known_revision", typed.known_revision, detail) ||
+            !optional_string(payload, "launch_intent", typed.launch_intent, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::presentation_action: {
@@ -601,7 +602,8 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "output_path", typed.output_path, detail) ||
             !optional_string(payload, "source_data_root", typed.source_data_root, detail) ||
             !optional_string(payload, "transaction_id", typed.transaction_id, detail) ||
-            !optional_string_array(payload, "roots", typed.roots, detail)) return false;
+            !optional_string_array(payload, "roots", typed.roots, detail) ||
+            !optional_string(payload, "launch_intent", typed.launch_intent, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::legacy_setup_operation:

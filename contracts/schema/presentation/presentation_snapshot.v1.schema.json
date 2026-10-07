@@ -58,7 +58,7 @@
       }
     },
     "workspace_health": {"type": "object"},
-    "selected_context": {"type": "object"},
+    "selected_context": {"type": "object", "properties": {"launch_intent": {"type": "string", "enum": ["menu", "load_save"]}}},
     "page": {"type": "object"},
     "readiness": {"type": ["object", "null"]},
     "specific_blockers": {"type": "array", "items": {"type": "object"}},

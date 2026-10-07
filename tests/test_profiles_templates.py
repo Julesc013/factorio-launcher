@@ -365,6 +365,17 @@ class ProfileTemplateTests(unittest.TestCase):
                 assert_schema(self, result, "factorio_instance_readiness.v1.schema.json")
                 described = invoke_json(workspace, "instances", "describe", "main", "--intent", "load_save")
                 self.assertEqual(result, described["instance_readiness"])
+                presented = invoke_json(workspace, "presentation", "query", "launch_deck",
+                                        "--instance", "main", "--intent", "load_save")
+                self.assertEqual(result, presented["readiness"])
+                self.assertEqual("load_save", presented["selected_context"]["launch_intent"])
+                menu = invoke_json(workspace, "presentation", "query", "launch_deck", "--instance", "main")
+                explicit_menu = invoke_json(workspace, "presentation", "query", "launch_deck",
+                                            "--instance", "main", "--intent", "menu")
+                self.assertEqual(menu, explicit_menu)
+                self.assertNotEqual(menu["revision"], presented["revision"])
+                self.assertEqual("refused", next(a for a in presented["available_semantic_actions"]
+                                                 if a["action_id"] == "launch.play")["availability"])
                 self.assertEqual(result, invoke_json(workspace, "instances", "readiness", "main",
                                                      "--intent", "load_save"))
                 self.assertEqual(before, {p.relative_to(workspace): p.read_bytes()
