@@ -10,6 +10,15 @@ Every report states `deep_factorio_save_metadata = unsupported`. FacMan does not
 guess map version, map settings, DLC state, or mod lists from undocumented save
 internals. Structural inspection never modifies save content.
 
+Explicit `instances readiness --intent load_save` and `instances describe`
+observe only the exact ZIP filename selected by the effective profile, reusing
+the save owner's stable hash, archive and association checks. An unrelated
+unsafe archive does not block this observation. The selected file must remain
+a singly linked regular file under a safe save root; its exact path, structure,
+digest and declared context still bind readiness. Public save commands retain
+their existing whole-index inspection and filename, stem or hash selection.
+Readiness does not grant preparation, execution, a permit or gameplay compatibility.
+
 `saves associate` writes a separate `factorio.save_ref.v1` sidecar under managed
 instance metadata. It pins the save digest, instance, current modset digest,
 profile, source operation, backup history, creation time, and verification time.

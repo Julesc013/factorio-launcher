@@ -372,7 +372,7 @@ std::string backup_sidecar_status(const Instance& instance, const std::string& s
     if (!exists && !error) return "absent";
     if (error) return "unreadable";
     for (fs::directory_iterator item(root, error), end; item != end && !error; item.increment(error)) {
-        const std::string name = item->path().filename().string();
+        const std::string name = path_text(item->path().filename());
         if (item->is_regular_file(error) && name.find(save_name) == 0 && name.size() > 14U &&
             name.compare(name.size() - 14U, 14U, ".manifest.json") == 0) return "present";
     }
@@ -384,8 +384,8 @@ facman::core::Result<SaveRecord> read_save(
 {
     SaveRecord record;
     record.path = path;
-    record.file_name = path.filename().string();
-    record.name = path.stem().string();
+    record.file_name = path_text(path.filename());
+    record.name = path_text(path.stem());
     std::error_code error;
     record.mtime = fs::last_write_time(path, error);
     if (error) return failure<SaveRecord>("save_stable_read_failed", error.message(), path);
@@ -785,6 +785,34 @@ facman::core::Result<std::string> list(const fs::path& workspace, const Request&
 facman::core::Result<std::string> inspect(const fs::path& workspace, const Request& request)
 {
     auto value = selected_record(workspace, request.instance_id, request.save);
+    if (!value) return failure<std::string>(value.error().code, value.error().message, fs::u8path(value.error().path));
+    return facman::core::Result<std::string>::success(report("saves.inspect", request.instance_id, {value.value()}));
+}
+
+facman::core::Result<std::string> inspect_exact_filename(const fs::path& workspace, const Request& request)
+{
+    const fs::path name = fs::u8path(request.save);
+    if (request.save.empty() || request.save.size() > 255U || name != name.filename() ||
+        request.save.find_first_of("/\\:") != std::string::npos ||
+        request.save.find('\0') != std::string::npos || name.extension() != ".zip") {
+        return failure<std::string>("save_not_found", "An exact safe ZIP filename is required");
+    }
+    auto instance = load_instance(workspace, request.instance_id);
+    if (!instance) return failure<std::string>(instance.error().code, instance.error().message);
+    const fs::path root = instance.value().record.root / "saves";
+    const fs::path path = root / name;
+    std::string link_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, link_detail)) return failure<std::string>(
+        "save_root_unsafe", link_detail, path);
+    std::error_code error;
+    const auto status = fs::symlink_status(path, error);
+    if (error == std::errc::no_such_file_or_directory || (!error && status.type() == fs::file_type::not_found)) {
+        return failure<std::string>("save_not_found", "Save was not found in the managed instance", path);
+    }
+    if (error || !fs::is_regular_file(status)) return failure<std::string>(
+        "save_stable_read_failed", "Selected save is not a readable regular file", path);
+    // Reuse the stable hash/archive/association observation without indexing siblings.
+    auto value = read_save(instance.value(), path);
     if (!value) return failure<std::string>(value.error().code, value.error().message, fs::u8path(value.error().path));
     return facman::core::Result<std::string>::success(report("saves.inspect", request.instance_id, {value.value()}));
 }

@@ -666,8 +666,8 @@ void inspect_selected_save(Projection& projection, const fs::path& workspace)
     const fs::path association_path = projection.instance.root / "metadata" / "save-refs" /
         fs::u8path(projection.selected_save + ".save-ref.v1.json");
     // Effective-profile validation guards the selection filename. The reused
-    // inspector scans records and supports filename/stem/hash selection; this
-    // projection subsequently requires the exact selected filename and path.
+    // internal inspector reads only that exact archive; this projection also
+    // requires the exact selected filename and path in the returned evidence.
     const bool simple_name = safe_mod_file_name(projection.selected_save) &&
         projection.selected_save.find_first_of("/\\:") == std::string::npos;
     std::string path_detail;
@@ -688,7 +688,7 @@ void inspect_selected_save(Projection& projection, const fs::path& workspace)
         projection.selected_save_identity = "refused:instance_selected_save_path_unsafe";
         return;
     }
-    auto inspected = facman::factorio::saves::index::inspect(workspace, request);
+    auto inspected = facman::factorio::saves::index::inspect_exact_filename(workspace, request);
     if (!inspected) {
         projection.selected_save_code = inspected.error().code;
         projection.selected_save_detail = inspected.error().message;
@@ -797,7 +797,7 @@ facman::core::Result<Projection> project(
     inspect_modset(projection, workspace);
     if (projection.launch_intent == "load_save") {
         inspect_selected_save(projection, workspace);
-        // inspect() reloads instance/context. Reject mixed observations rather
+        // The save inspector reloads instance/context. Reject mixed observations rather
         // than presenting them as one coherent preparation plan.
         Projection current = projection;
         current.profile_valid = false;
