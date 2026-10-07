@@ -113,3 +113,26 @@ existing import, no-replace publication and recovery owners, and distinguish
 retained partial effects from pre-effect refusal. This advances ordinary content
 preparation and recovery; composed Make Ready, real Play, human, host matrix
 and Beta gates remain unchanged. Reuse the existing owned root and native cache.
+
+PR395 integrated at 6d02caf. A subsequent required Windows shared Release run
+failed the existing Stop-session oracle (exit63); twenty diagnostic local runs
+passed, so its specific failing clause remains unconfirmed. A controlled native
+regression against the unchanged owner reproduces loss of terminal publication
+when the real Windows SDK journal lock is held after running publication.
+Continue that integration repair in the existing owned branch/root: retry only
+the exact pre-write session_lock_unavailable error within a 500ms retry-admission
+budget. Persistent contention must retain recovery_required and the unchanged
+running record; other errors, provider pins and the presentation oracle remain
+unchanged. Require independent review, focused native qualification and normal
+source/merge CI before advancing the ordinary Content export continuation.
+
+The corrected shared Release owner passed the controlled brief/persistent lock
+cases and Last Run. Its fourth presentation repetition then exceeded the
+unchanged 120s timeout during earlier SDK terminal atomic publication; the
+old running target and serialized terminal temporary remain in moved custody.
+Six unchanged-binary diagnostic replays passed without reproducing that stall.
+The complete local campaign remains incomplete, and original CI63 attribution
+remains unconfirmed. Independent review admits one normally committed corrective
+diagnostic PR for required exact-source hosted CI; integration requires those
+results and a further consequential decision review. Preserve the timeout and
+do not claim it resolved, relax its oracle or start Content export meanwhile.

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_json.h"
+#include "fl_file_io.h"
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
 #include "fl_system_services.h"
@@ -16,6 +17,15 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <utility>
+#include <vector>
+
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 
 namespace {
 namespace fs = std::filesystem;
@@ -24,7 +34,16 @@ namespace application = facman::factorio::application;
 
 struct TemporaryTree {
     fs::path path;
-    ~TemporaryTree() { std::error_code ignored; fs::remove_all(path, ignored); }
+    bool preserve = false;
+    ~TemporaryTree()
+    {
+        if (preserve) {
+            std::cerr << "retained failed execution fixture: " << path << '\n';
+        } else {
+            std::error_code ignored;
+            fs::remove_all(path, ignored);
+        }
+    }
 };
 
 launch::LaunchExecutionRequest request_for(
@@ -140,6 +159,96 @@ public:
 
     std::size_t calls = 0;
 };
+
+#ifdef _WIN32
+std::string read_atomic_fixture(const fs::path& path)
+{
+    facman::platform::StableInputFile input;
+    if (!input.open_no_follow(path).ok() || input.size() > 64U * 1024U) return {};
+    std::string bytes(static_cast<std::size_t>(input.size()), '\0');
+    if (input.read_at(0U, bytes.data(), bytes.size()) != bytes.size()) return {};
+    return bytes;
+}
+
+// Use the existing supervisor seam to contend on the real SDK lock after its
+// running record is published. Release follows durable local completion, so
+// the fixture covers terminal publication rather than a sleep before dispatch.
+class JournalContendingSupervisor final : public launch::ProcessSupervisor {
+public:
+    JournalContendingSupervisor(fs::path root, fs::path local_journal, bool release_after_completion)
+        : root_(std::move(root)), local_journal_(std::move(local_journal)),
+          release_after_completion_(release_after_completion) {}
+    ~JournalContendingSupervisor() { release(); }
+
+    facman::platform::ProcessResult run(const facman::platform::ProcessRequest& request) override
+    {
+        facman::platform::ProcessResult result;
+        result.identity = {43001U, "fixture", "journal-contention-start"};
+        if (request.started) request.started(result.identity);
+        for (const auto& entry : fs::directory_iterator(root_ / "sessions")) {
+            records_.emplace_back(entry.path(), read_atomic_fixture(entry.path()));
+        }
+        lock_ = CreateFileW((root_ / ".ulk-session.lock").c_str(), GENERIC_READ | GENERIC_WRITE,
+            0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_HIDDEN, nullptr);
+        opened = lock_ != INVALID_HANDLE_VALUE;
+        if (opened && release_after_completion_) {
+            releaser_ = std::thread([this] {
+                const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+                while (!stop_.load() && std::chrono::steady_clock::now() < deadline) {
+                    const std::string local = read_atomic_fixture(local_journal_);
+                    if (local.find("\"current_state\":\"complete\"") != std::string::npos ||
+                        local.find("\"current_state\":\"recovery_required\"") != std::string::npos) {
+                        completion_observed = true;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        break;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                }
+                CloseHandle(lock_);
+                lock_ = INVALID_HANDLE_VALUE;
+            });
+        }
+        result.termination = facman::platform::ProcessTermination::exited;
+        result.exit_code = 0;
+        return result;
+    }
+
+    void release()
+    {
+        stop_ = true;
+        if (releaser_.joinable()) releaser_.join();
+        if (lock_ != INVALID_HANDLE_VALUE) {
+            CloseHandle(lock_);
+            lock_ = INVALID_HANDLE_VALUE;
+        }
+    }
+
+    bool records_unchanged() const
+    {
+        std::size_t count = 0;
+        for (const auto& entry : fs::directory_iterator(root_ / "sessions")) {
+            (void)entry;
+            ++count;
+        }
+        if (records_.empty() || count != records_.size()) return false;
+        for (const auto& record : records_) {
+            if (record.second.empty() || read_atomic_fixture(record.first) != record.second) return false;
+        }
+        return true;
+    }
+
+    bool opened = false;
+    std::atomic<bool> completion_observed {false};
+
+private:
+    fs::path root_, local_journal_;
+    bool release_after_completion_;
+    HANDLE lock_ = INVALID_HANDLE_VALUE;
+    std::thread releaser_;
+    std::atomic<bool> stop_ {false};
+    std::vector<std::pair<fs::path, std::string>> records_;
+};
+#endif
 
 bool has_state(const launch::LaunchSessionResult& session, const std::string& state)
 {
@@ -438,6 +547,48 @@ int main()
     auto recovery_provider = application::make_ulk_session_last_run_provider(recovery_workspace);
     if (recovery_provider->last_run(recovery_request.runnable_reference).state !=
         application::LastRunAuthorityState::recovery_required) return 25;
+
+#ifdef _WIN32
+    for (const bool brief : {true, false}) {
+        const std::string name = brief ? "brief-contention" : "persistent-contention";
+        const fs::path workspace = tree.path / name;
+        fs::create_directories(workspace, error);
+        auto request = request_for(workspace, "success");
+        request.session_id = name;
+        request.operation_id = "operation-" + name;
+        request.attempt_id = "attempt-" + name;
+        use_authoritative_journal(request, workspace, "facman.instance:" + name);
+        JournalContendingSupervisor contending(request.ulk_session_journal_root,
+            workspace / "state/run-sessions" / (name + ".launch-session.v1.json"), brief);
+        launch::LaunchExecutionService contention_service(contending, clock, ids);
+        const auto completed = contention_service.execute(request);
+        contending.release();
+        if (!completed || !contending.opened || !completed.value().authoritative_running_recorded) {
+            tree.preserve = true;
+            return process_failure(100, "controlled journal lock setup", completed);
+        }
+        const auto observed = application::make_ulk_session_last_run_provider(workspace)
+            ->last_run(request.runnable_reference);
+        const auto& session = completed.value();
+        const bool valid = brief
+            ? contending.completion_observed && session.operation_outcome == "completed" &&
+                session.authoritative_last_run_recorded && !session.recovery_required && session.complete &&
+                observed.state == application::LastRunAuthorityState::authoritative_record_available &&
+                observed.record_json.find("\"operation_id\":\"" + request.operation_id + "\"") != std::string::npos &&
+                observed.record_json.find("\"outcome\":\"completed\"") != std::string::npos
+            : session.operation_outcome == "recovery_required" && !session.authoritative_last_run_recorded &&
+                session.recovery_required && !session.complete &&
+                session.authoritative_journal_error.find("session_lock_unavailable") != std::string::npos &&
+                observed.state == application::LastRunAuthorityState::no_record &&
+                observed.detail == "latest_session_nonterminal" && contending.records_unchanged();
+        if (!valid) {
+            tree.preserve = true;
+            std::cerr << "controlled " << name << ": " << launch::launch_session_json(session)
+                      << " last_run=" << application::last_run_projection_json(observed) << '\n';
+            return brief ? 101 : 102;
+        }
+    }
+#endif
 
     const fs::path refused_workspace = tree.path / "refused-workspace";
     fs::create_directories(refused_workspace, error);
