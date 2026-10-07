@@ -5,7 +5,7 @@ cli = """facman presentation action <action-id> --scope <scope> \
   [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] \
   [--new-instance <id>] [--display-name <text>] [--template <id>] \
   [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] \
-  [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"""
+  [--source-data-root <path>] [--source-path <path>] [--transaction <id>] [--root <path>] --json"""
 effects = ["workspace_read", "workspace_write"]
 request_schema = "contracts/schema/command/presentation.action.request.v1.schema.json"
 response_schema = "contracts/schema/presentation/semantic_action_result.v1.schema.json"

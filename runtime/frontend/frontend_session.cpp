@@ -503,7 +503,7 @@ FrontendActionExecution FrontendSession::act(FrontendActionRequest request)
     static const std::set<std::string> allowed_inputs {
         "selected_instance_id", "installation_id", "installation_path",
         "new_instance_id", "display_name", "template_id", "profile_id",
-        "mod_identity", "save", "output_path", "source_data_root",
+        "mod_identity", "save", "output_path", "source_data_root", "source_path",
         "transaction_id"};
     for (const auto& item : request.inputs) {
         if (allowed_inputs.count(item.first) == 0U) {

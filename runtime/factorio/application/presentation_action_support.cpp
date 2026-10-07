@@ -25,6 +25,57 @@ std::string string_field(const json::Value& value, const char* key)
 
 } // namespace
 
+json::ObjectBuilder action_descriptor(
+    const char* action_id,
+    const char* command_id,
+    const char* label,
+    const char* role,
+    const char* effect,
+    bool available,
+    const char* refusal_code,
+    const char* confirmation,
+    const char* input_contract,
+    const std::vector<ActionInputField>& input_fields)
+{
+    json::ObjectBuilder action;
+    action.add_string("action_id", action_id);
+    action.add_string("command_id", command_id);
+    action.add_string("label", label);
+    action.add_string("accessibility_label", label);
+    action.add_string("role", role);
+    action.add_string("availability", available ? "available" : "refused");
+    json::ArrayBuilder effects;
+    effects.add_string(effect);
+    action.add_array("effects", effects);
+    action.add_string("confirmation", confirmation);
+    action.add_string("input_contract", input_contract);
+    json::ArrayBuilder fields;
+    for (const auto& field : input_fields) {
+        json::ObjectBuilder item;
+        item.add_string("field_id", field.id);
+        item.add_string("label", field.label);
+        item.add_string("type", field.type);
+        item.add_bool("required", field.required);
+        if (field.default_value.empty()) item.add_null("default");
+        else item.add_string("default", field.default_value);
+        json::ArrayBuilder choices;
+        for (const auto& choice : field.choices) choices.add_string(choice);
+        item.add_array("choices", choices);
+        fields.add_object(item);
+    }
+    action.add_array("input_fields", fields);
+    action.add_bool("backend_owned", true);
+    if (available) action.add_null("refusal");
+    else {
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", refusal_code == nullptr ? "action_unavailable" : refusal_code);
+        refusal.add_string("reason", "The backend has not admitted this action");
+        refusal.add_bool("recoverable", true);
+        action.add_object("refusal", refusal);
+    }
+    return action;
+}
+
 std::string action_request_json(const SemanticActionRequest& request)
 {
     json::ObjectBuilder input;
@@ -51,6 +102,8 @@ std::string action_request_json(const SemanticActionRequest& request)
     for (const auto& root : request.roots) roots.add_string(root);
     input.add_array("roots", roots);
     if (request.launch_intent == "load_save") input.add_string("launch_intent", request.launch_intent);
+    // Preserve the immutable legacy fingerprint when the new input is absent.
+    if (!request.source_path.empty()) input.add_string("source_path", request.source_path);
     return input.serialize();
 }
 
@@ -64,10 +117,14 @@ bool recorded_action_request_shape(const json::Value& request)
         "template_id", "profile_id", "mod_identity", "save", "output_path",
         "source_data_root", "transaction_id", "roots",
     };
-    // The only extension to the immutable legacy shape is a validated Selected Save intent.
+    // Optional extensions leave immutable legacy request bytes unchanged.
     if (request.find("launch_intent") != nullptr) {
         if (string_field(request, "launch_intent") != "load_save") return false;
         expected.emplace_back("launch_intent");
+    }
+    if (request.find("source_path") != nullptr) {
+        if (string_field(request, "source_path").empty()) return false;
+        expected.emplace_back("source_path");
     }
     auto actual = request.object_keys();
     std::sort(actual.begin(), actual.end());
@@ -174,6 +231,7 @@ bool effectful_semantic_action(const std::string& action_id)
         action_id == "profile.create" ||
         action_id == "profile.select" ||
         action_id == "modsets.apply" ||
+        action_id == "modsets.import" ||
         action_id == "modsets.rollback" ||
         action_id == "saves.associate" ||
         action_id == "saves.backup" ||

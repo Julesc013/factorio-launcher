@@ -423,8 +423,7 @@ namespace FacMan.WinForms
                 LastActionPayload = serializer.Serialize(receipt.ActionPayload);
                 if (receipt.ActionId == "doctor.run" && receipt.Doctor.Available)
                     LastDoctor = receipt.Doctor;
-                if (receipt.ReplacementSnapshot != null)
-                    snapshots[pending.Scope] = receipt.ReplacementSnapshot;
+                AcceptReplacementSnapshot(pending.Scope, receipt);
             }
             catch (InvalidDataException)
             {
@@ -435,6 +434,15 @@ namespace FacMan.WinForms
             }
             await RefreshAsync(cancellationToken).ConfigureAwait(false);
             return result;
+        }
+
+        private void AcceptReplacementSnapshot(string scope, SemanticActionReceipt receipt)
+        {
+            if (receipt.ReplacementSnapshot == null) return;
+            snapshots[scope] = receipt.ReplacementSnapshot;
+            if (receipt.ActionId == "modsets.import" && receipt.Outcome == "completed" &&
+                !String.IsNullOrWhiteSpace(receipt.ReplacementSnapshot.SelectedContext.InstanceId))
+                SelectedInstanceId = receipt.ReplacementSnapshot.SelectedContext.InstanceId;
         }
 
         private static CommandDefinition RequireRoute(string commandId)

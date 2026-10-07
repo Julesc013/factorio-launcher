@@ -8,9 +8,30 @@
 
 #include <string>
 
-namespace facman::core::json { class Value; }
+namespace facman::core::json { class Value; class ObjectBuilder; }
 
 namespace facman::factorio::application {
+
+struct ActionInputField {
+    std::string id;
+    std::string label;
+    std::string type;
+    bool required = false;
+    std::string default_value;
+    std::vector<std::string> choices;
+};
+
+facman::core::json::ObjectBuilder action_descriptor(
+    const char* action_id,
+    const char* command_id,
+    const char* label,
+    const char* role,
+    const char* effect,
+    bool available,
+    const char* refusal_code = nullptr,
+    const char* confirmation = "none",
+    const char* input_contract = "none",
+    const std::vector<ActionInputField>& input_fields = {});
 
 std::string action_request_json(const SemanticActionRequest& request);
 bool recorded_action_request_shape(const facman::core::json::Value& request);

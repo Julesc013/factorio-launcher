@@ -1206,6 +1206,11 @@
         "required": false
       },
       {
+        "kind": "path",
+        "name": "source_path",
+        "required": false
+      },
+      {
         "kind": "identifier",
         "name": "transaction_id",
         "required": false
@@ -1216,8 +1221,8 @@
         "required": false
       },
       {
-        "name": "launch_intent",
         "kind": "enum",
+        "name": "launch_intent",
         "required": false
       }
     ],
@@ -1243,8 +1248,8 @@
         "required": false
       },
       {
-        "name": "launch_intent",
         "kind": "enum",
+        "name": "launch_intent",
         "required": false
       }
     ],

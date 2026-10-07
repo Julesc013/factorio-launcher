@@ -1,0 +1,214 @@
+{
+  "behavior": "Content exposes explicit durable offline pack import through the existing import owner, including without a selected instance. Successful reconstruction selects the returned instance. Retained partial effects use typed recovery-required outcomes.",
+  "boundaries": {
+    "beta_qualified": false,
+    "human_ui_qualification": false,
+    "new_public_command": false,
+    "other_hosts_qualified": false,
+    "permit_issued": false,
+    "produced_package_qualification": false,
+    "provider_pins_changed": false,
+    "real_game_effects": false,
+    "whole_workunit_closed": false
+  },
+  "changed_paths_raw_sha256": {
+    ".aide/memory/project-state.md": "74198bae7ba917f62c3dc53514b3f1f7d37204a4c490a96a9d050b0edc3eb760",
+    ".aide/memory/project-state.v2.json": "26384c3bcdedefea41a8238f99417dea589d520fc8de2791864dbc7f6688d324",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": "2c84802fda8d6c15ef9c02a74177db5dc1bd871edca24b2c94ea10771d1499d5",
+    "README.md": "fd90d3c1c58525d99559a0bb8be115048466d1b6d4d783b7322cf0f0bbf23dd6",
+    "apps/cli/command_dispatch.cpp": "a2284b5e75b92ced8c1632ce6a4df2dc55e26ead45c1b6d5e7b471be88c662b5",
+    "apps/cli/completions/FacMan.ps1": "10d5fa0aa9daed2c6861878e070d28776c523ac37e54645f54cb7d0130a5c043",
+    "apps/cli/completions/_facman": "f2ec36b151cfd7abcfdb7ed3fd26f542fb45433ed9b30082d728de92528ab8f0",
+    "apps/cli/completions/facman.bash": "bc7722d0fc926597f0fc94e06b820622b713a63dba1eaa73c30870355a34ea9c",
+    "apps/cli/completions/facman.fish": "fa6b208ffe5ad586f92aa0da714ab033538c7fc4a0e927a318d39f3cff12fd23",
+    "apps/cli/generated/command_help.inc": "7f45b91f8fb60751c309c563b11b045abe60c13d17c6574e8b07a4c8e1bcbab0",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h": "3cb2ac757e0a87b8520b44f9d38b03eef09d7dc01a3b2793ff004843af7ec408",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m": "6dd8c030f3698db6bfb5fea1b0400bd4e8e19f3b01c183db2fe4aa713faadf15",
+    "apps/gui/windows/winforms/C1LivePresentationStore.cs": "e0fbf3c0fdb890032b5dc0b4160f5cbe2390512e381a18cb590152681b8c1a0f",
+    "apps/gui/windows/winforms/C1ShellForm.cs": "1c3e3f3b95a0bea3f8cba6d3323200560b3d5ddb1ef95ac9cf26c7e878277119",
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "cc1c719598c94f1058072f2ac6401ef1ec94919c372f84d3f793bae3e5bd83d7",
+    "apps/tui/generated_command_catalog.hpp": "4357d6a9591e048d1da1b1647d9dcc734beae2aaae857176c1c69f7756f929ea",
+    "contracts/command/factorio/presentation.action.v1.toml": "89020e844751ad25f7dd04e3f9ef725c07fbc00d782d2e044c0bc3e28e9e9fdc",
+    "contracts/command/request_fields.v1.json": "808583f3bfd7575f671b2fb6494acbd8409a03bceec7526f9eb4d040dced7e2f",
+    "contracts/generated-index/command_catalog.v2.json": "bcced2f04258fafb0059321addab930ae4a62d279f12fff49da9d8d438281342",
+    "contracts/generated-index/command_cli_grammar.v2.json": "575c08e7e6c3895812e589c0351259f9eed60f766450a98afde84254fb0670a6",
+    "contracts/generated-index/frontend_command_catalog.v1.json": "0134e168f66efa5b1ba1b7eb06c7e0207bab245c7c66ff97ddb2038478b70f2e",
+    "contracts/schema/command/presentation.action.request.v1.schema.json": "ba3ae71dd44bd570fef93adfef114f282f72ad2f6aeb7fcf8df2e069f162ed5b",
+    "docs/reference/generated-command-catalog.md": "4b163acf6eae23e00760e4743eaa117e2510404ad339160f33659401ad8dc4c5",
+    "docs/release/checkpoints/README.md": "7593f6677a4c8fcbffe1dce2a15dad285aafb244a79695fdcb66df6f7eafed99",
+    "docs/roadmap.md": "6e146a6c2be18f1f8da1daf9a9161e762e42ec2027260bf1ffce731edf23e148",
+    "release/index/current_state.v1.toml": "1619f8e716a12791efaeec8104224704991b65d1b79caad3f7c1046522a22c0f",
+    "runtime/core/generated/command_catalog.h": "cefdca122eb6d4ddddc00ff991819c9ecb3ed29ada96729d3400c75d9650e7f5",
+    "runtime/core/generated/version.h": "6cdbb3367cce95af0cdf5f5ba367784caccf981136e774792083dc658f0432e3",
+    "runtime/factorio/application/application_types.h": "b9fc4fb29869462a109d20395fbb5d547fa0518cdc604dc8378d265a2135b66d",
+    "runtime/factorio/application/command_dispatch.cpp": "f97fc6236620e87c8383c23d11d15974888a200b5c33dc960189edbaa60b9fba",
+    "runtime/factorio/application/generated/command_ids.inc": "ad970b7c4f9f1f6fe7db1b5ddfbc75b1c11247e73a5daa0ab03ac08861466c33",
+    "runtime/factorio/application/generated/command_lookup.inc": "48bde9894c7edc5d9ebbdea31d29804f3b07b5b0c6f7d0cffaf2e2ffac7f88a8",
+    "runtime/factorio/application/generated/command_names.inc": "063f93dab4ff3097afa290d8bae325593f98dc721e9a327867315b496ac83848",
+    "runtime/factorio/application/generated/command_writes.inc": "65eaf90fd2a12194b4512ec9217efe2f3efda5041253f049ff8bb8fa4dfb583f",
+    "runtime/factorio/application/generated/request_contracts.inc": "582dfffc5644d0fdb42394161c033443635a925f44afd1f462bbae0133a6ab7c",
+    "runtime/factorio/application/presentation_action_support.cpp": "a429e36eb373c496f6589394ce90a30ba98c3b50e5200fbb14def5be6adbc5b2",
+    "runtime/factorio/application/presentation_action_support.h": "7dfd21acd6f5e60c2d185ed0928adbdae29f0cc747530eef7cd4ff2d3c3dcb1d",
+    "runtime/factorio/application/presentation_service.cpp": "4761cd97b04edec914590e9bd1e8812218c1f36e619bebd0f7fb7d10a376e151",
+    "runtime/factorio/modsets/flb_factorio_modpack_import.cpp": "ec2e9af45bfa6d2edcce45a6d7ae0fc501d83c21d63ba39203ff0293e3095eb3",
+    "runtime/frontend/frontend_session.cpp": "366311a5e237f248cc3d08c9de6c413d4206c1a329a42755fb825d8d0c294792",
+    "tests/test_presentation_pack_import.py": "2c1db59cb72d49113f89c19da579794c7f48b834b38069be4985654188a1653a",
+    "tests/winforms_control_gallery/FacMan.PackImport.Harness.csproj": "310199b4fd3ff068c6ded0a344cf9442b541d8a4b8b03eab59033415dff79b58",
+    "tests/winforms_control_gallery/PackImportHarness.cs": "bbcd3568deb6ed5028ed1424f3a4a9613400f1a058a0cf23e5bf643f9268ab54"
+  },
+  "close_after": [
+    "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+    "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+    "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+    "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+    "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+  ],
+  "custody": {
+    "bytes": 62053,
+    "members": {
+      "ordinary-pack-import-admission-01.json": "5d7037b6be26887d3708b6556a620796f9f7d6bd69ea5bbe7287d711f9cd04c3",
+      "ordinary-pack-import-q01-build.log": "03db0a4fbb0c1dd68a2e95880ac5c7586d442885c50df7bcd03fe57ffcc2950e",
+      "ordinary-pack-import-q01-configure.log": "e06547d6ddb0dbb9a0e7a6dfce420de2060aa8a59f8690c709961f95a18df8a0",
+      "ordinary-pack-import-q01-doctor.log": "b84e26ace5df29b87d70fc81306c96882b43143a30de737217efa3b19ef41f2e",
+      "ordinary-pack-import-q02-focused.log": "9e0b7ff67424bb6642bbe5f344aa19f081361af10381d8769a9513acefff478d",
+      "ordinary-pack-import-q02-native.log": "635f570ca08fc590ee11ccd465c2075084a63f3d4b2d294f1488b67f7c26902c",
+      "ordinary-pack-import-q04-diff.log": "b4ae5b8f07b27c6ef19368c49b921db875df411e221fe3c3d2817388733dc441",
+      "ordinary-pack-import-q04-focused-repair.log": "f7ab210429f621439090834b7629b57c331f9907769fb0f6ce50f79d2e1bb447",
+      "ordinary-pack-import-q04-legacy-1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordinary-pack-import-q04-legacy-1.stdout": "102aabeeec66cd69ce6f37fd10e81a3ed3d7f507ea1780406ba89bb99996ab67",
+      "ordinary-pack-import-q04-legacy-2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordinary-pack-import-q04-legacy-2.stdout": "102aabeeec66cd69ce6f37fd10e81a3ed3d7f507ea1780406ba89bb99996ab67",
+      "ordinary-pack-import-q04-legacy-3.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordinary-pack-import-q04-legacy-3.stdout": "e62d57127f7a40cfde8c7c168171d4f8c02799629783a9ad204f004ce207d832",
+      "ordinary-pack-import-q04-strict.log": "0bcb42c26c4b709b5eeb5c88ed8f6123355d79f46623132e7fcaf6e532b15e52",
+      "ordinary-pack-import-qualification-01.json": "cbf3e756e7417f3210e91bc9509fd9232e7abf79628a2f533df9237459db584a",
+      "ordinary-pack-import-qualification-02.json": "b19892339586c88d01c115dd74951bdac8c0fd5bb6a07911e53e4a3dce0fee81",
+      "ordinary-pack-import-qualification-03.json": "b689d4f4864c17022deecc543b596449626bb21d307b3ccb21cc6961d373bcab",
+      "ordinary-pack-import-qualification-04.json": "9446424ddddbaaccaf49f75a41f83d97ee5cfdfb0bd1e04c9646d11e715a7842",
+      "ordinary-pack-import-source-freeze-02.json": "07fb30d9ed5145bdfcf43ab9d344b3796603d763c7d071c50d88810bfcd40aa4",
+      "ordinary-pack-import-source-freeze-04.json": "6659208df269f99afefe92e5d55fc2f1858ab5d6cf06415b62c32d0edbbcd405",
+      "ordinary-pack-import-source-freeze-05.json": "a514a043d54fbd4e02ca7c260a45d77794c71d616272693cdd77917b65429646",
+      "ordinary-pack-import-source-review-01.json": "68b96a2e3157af58324fefe728c34d40e33053b6d819c9b59e91c311e6f24f8c",
+      "ordinary-pack-import-source-review-02.json": "1b5888d96bff7bcc18cb977fb9cff1e757416bbae92de89c5031496682d28e02",
+      "ordinary-pack-import-source-review-03.json": "d9a9844312690a2f0119bde7b6dd2879e2d53ab53c2e22c879ff84894788950b"
+    },
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/ordinary-pack-import-custody.zip",
+    "sha256": "663cfe4da7ed0e34d94d635e0ae71d3c40db3b5be4fbdfde0fd185c34b353dde"
+  },
+  "historical_qualification_unchanged": true,
+  "historical_replay": {
+    "history_rewritten": false,
+    "receipt_sha256": "4eb747c09a58844b702a90d12b18460fe6918d8f5cdc29f2d604b79357f8c610",
+    "tests": [
+      {
+        "exit_code": 0,
+        "label": "absent-default",
+        "streams": {
+          "stderr": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\ordinary-pack-import-q04-legacy-1.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\ordinary-pack-import-q04-legacy-1.stdout",
+            "sha256": "102aabeeec66cd69ce6f37fd10e81a3ed3d7f507ea1780406ba89bb99996ab67"
+          }
+        },
+        "workspace_unchanged": true
+      },
+      {
+        "exit_code": 0,
+        "label": "explicit-menu",
+        "streams": {
+          "stderr": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\ordinary-pack-import-q04-legacy-2.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\ordinary-pack-import-q04-legacy-2.stdout",
+            "sha256": "102aabeeec66cd69ce6f37fd10e81a3ed3d7f507ea1780406ba89bb99996ab67"
+          }
+        },
+        "workspace_unchanged": true
+      },
+      {
+        "exit_code": 1,
+        "label": "different-intent-conflict",
+        "streams": {
+          "stderr": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\ordinary-pack-import-q04-legacy-3.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\ordinary-pack-import-q04-legacy-3.stdout",
+            "sha256": "e62d57127f7a40cfde8c7c168171d4f8c02799629783a9ad204f004ce207d832"
+          }
+        },
+        "workspace_unchanged": true
+      }
+    ]
+  },
+  "host_obligations": [
+    "  test_published_marker_substitution_refuses_and_preserves_incomplete_journal (test_portable_modpack_import.PortableModpackImportTests.test_published_marker_substitution_refuses_and_preserves_incomplete_journal) (point='published', substitution='dangling_symlink') ... skipped \"not_applicable: host cannot create symbolic links: [WinError 1314] A required privilege is not held by the client: 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.task-builds\\\\\\\\repositories\\\\\\\\factorio-launcher-5db2844e2f29\\\\\\\\tasks\\\\\\\\task-facman-w-bc5cd0812e\\\\\\\\t\\\\\\\\tmpuxnmkkl8\\\\\\\\foreign-missing-marker' -> 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.task-builds\\\\\\\\repositories\\\\\\\\factorio-launcher-5db2844e2f29\\\\\\\\tasks\\\\\\\\task-facman-w-bc5cd0812e\\\\\\\\t\\\\\\\\tmpuxnmkkl8\\\\\\\\instances\\\\\\\\reconstructed\\\\\\\\.facman-transaction-staging.v2.json'\"",
+    "  test_published_marker_substitution_refuses_and_preserves_incomplete_journal (test_portable_modpack_import.PortableModpackImportTests.test_published_marker_substitution_refuses_and_preserves_incomplete_journal) (point='committed', substitution='dangling_symlink') ... skipped \"not_applicable: host cannot create symbolic links: [WinError 1314] A required privilege is not held by the client: 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.task-builds\\\\\\\\repositories\\\\\\\\factorio-launcher-5db2844e2f29\\\\\\\\tasks\\\\\\\\task-facman-w-bc5cd0812e\\\\\\\\t\\\\\\\\tmprqgr0fvg\\\\\\\\foreign-missing-marker' -> 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.task-builds\\\\\\\\repositories\\\\\\\\factorio-launcher-5db2844e2f29\\\\\\\\tasks\\\\\\\\task-facman-w-bc5cd0812e\\\\\\\\t\\\\\\\\tmprqgr0fvg\\\\\\\\instances\\\\\\\\reconstructed\\\\\\\\.facman-transaction-staging.v2.json'\""
+  ],
+  "independent_source_review_sha256": "d9a9844312690a2f0119bde7b6dd2879e2d53ab53c2e22c879ff84894788950b",
+  "native_executable": {
+    "bytes": 6403584,
+    "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman.exe",
+    "sha256": "65768e7ad7044d81841789a2cb2ef664808d0cb293f7cd515e27ac5526864bab"
+  },
+  "native_tests": {
+    "passed": 4,
+    "skipped": 0
+  },
+  "oracle": {
+    "changed_source_key_conflict": true,
+    "compiled_winforms": "Actual production control click handler and models consume backend observations; typed fields, returned selection and immutable uncertain source. Headless, no visible UI or live GUI transport claim.",
+    "exact_selected_archives": true,
+    "fresh_process_exact_replay": true,
+    "ordinary_recovery_action": true,
+    "process_loss_recovery_boundaries": [
+      "verified",
+      "published",
+      "committed"
+    ],
+    "provenance_and_rebound_lock_verified": true,
+    "retained_partial_extraction_and_exact_replay": true,
+    "settings_absent_empty_binary": true,
+    "source_preserved": true,
+    "stale_input_and_foreign_target_preserved": true
+  },
+  "original_acceptance": [
+    "Make one typed readiness plan reconcile install, instance, content and selected world before launch.",
+    "Exercise stale inputs, recoverable partial preparation and selected-save mismatch through ordinary workflows."
+  ],
+  "public_tests": {
+    "actual_compiled_winforms_method_pass_retained": true,
+    "existing_host_skipped_subcases": 2,
+    "failed_methods_repaired": 3,
+    "methods": 36,
+    "new_method_skipped_cells": 0,
+    "new_methods": 6,
+    "no_passing_method_rerun": true
+  },
+  "qualification_sha256": "9446424ddddbaaccaf49f75a41f83d97ee5cfdfb0bd1e04c9646d11e715a7842",
+  "resources": {
+    "native_builds": 1,
+    "native_workers": 2,
+    "new_clones": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "product_candidates_dispatched": 0,
+    "provider_roots_reused_readonly": true
+  },
+  "retained_failures": [
+    "First source freeze halted after its successful C++ build when frontend/test scope advanced; build retained with unchanged C++ inputs.",
+    "Five failing subcases in three new methods expected exit zero for existing refusal/recovery/unknown outcomes. Only those three methods were rerun after correcting documented exit codes.",
+    "One preclaim controller expected the initial source-review phase label; no build or test had started. The corrected guard binds the exact retained review receipt."
+  ],
+  "schema": "facman.ordinary_pack_import.scoped_qualification.v1",
+  "source_freeze_sha256": "a514a043d54fbd4e02ca7c260a45d77794c71d616272693cdd77917b65429646",
+  "source_parent": "44d67b4f043354818a14e68a4da6620e564600c8",
+  "verdict": "PASS",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}

@@ -103,3 +103,13 @@ This keeps generated request schemas and frontend catalogs faithful to the
 canonical optional field. Existing command vocabularies and default menu
 behavior remain unchanged; no execution, preparation or release authority is
 added. Native, frontend and historical receipt qualification remain required.
+
+2026-10-07: Continue from checked dev 44d67b4 after repaired-provider adoption
+and AIDE integration. Expose existing rich-v1 offline pack reconstruction as
+the Content page's explicit, durable modsets.import semantic action, including
+when no instance is selected. Its source_path is an optional presentation input;
+absent input keeps immutable historical request bytes and fingerprints. Use the
+existing import, no-replace publication and recovery owners, and distinguish
+retained partial effects from pre-effect refusal. This advances ordinary content
+preparation and recovery; composed Make Ready, real Play, human, host matrix
+and Beta gates remain unchanged. Reuse the existing owned root and native cache.

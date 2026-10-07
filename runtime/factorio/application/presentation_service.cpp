@@ -478,66 +478,6 @@ void add_problem(
     problems.add_object(problem);
 }
 
-struct ActionInputField {
-    std::string id;
-    std::string label;
-    std::string type;
-    bool required = false;
-    std::string default_value;
-    std::vector<std::string> choices;
-};
-
-json::ObjectBuilder action_descriptor(
-    const char* action_id,
-    const char* command_id,
-    const char* label,
-    const char* role,
-    const char* effect,
-    bool available,
-    const char* refusal_code = nullptr,
-    const char* confirmation = "none",
-    const char* input_contract = "none",
-    const std::vector<ActionInputField>& input_fields = {})
-{
-    json::ObjectBuilder action;
-    action.add_string("action_id", action_id);
-    action.add_string("command_id", command_id);
-    action.add_string("label", label);
-    action.add_string("accessibility_label", label);
-    action.add_string("role", role);
-    action.add_string("availability", available ? "available" : "refused");
-    json::ArrayBuilder effects;
-    effects.add_string(effect);
-    action.add_array("effects", effects);
-    action.add_string("confirmation", confirmation);
-    action.add_string("input_contract", input_contract);
-    json::ArrayBuilder fields;
-    for (const auto& field : input_fields) {
-        json::ObjectBuilder item;
-        item.add_string("field_id", field.id);
-        item.add_string("label", field.label);
-        item.add_string("type", field.type);
-        item.add_bool("required", field.required);
-        if (field.default_value.empty()) item.add_null("default");
-        else item.add_string("default", field.default_value);
-        json::ArrayBuilder choices;
-        for (const auto& choice : field.choices) choices.add_string(choice);
-        item.add_array("choices", choices);
-        fields.add_object(item);
-    }
-    action.add_array("input_fields", fields);
-    action.add_bool("backend_owned", true);
-    if (available) action.add_null("refusal");
-    else {
-        json::ObjectBuilder refusal;
-        refusal.add_string("code", refusal_code == nullptr ? "action_unavailable" : refusal_code);
-        refusal.add_string("reason", "The backend has not admitted this action");
-        refusal.add_bool("recoverable", true);
-        action.add_object("refusal", refusal);
-    }
-    return action;
-}
-
 std::string recovery_json(const std::filesystem::path& workspace)
 {
     const transactions::Outcome outcome = transactions::inspect(workspace);
@@ -1303,6 +1243,13 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     };
     const std::vector<ActionInputField> recovery_input = {{
         "transaction_id", "Recovery transaction", "identifier", true, {}, {}}};
+    const std::vector<ActionInputField> pack_import_input = {
+        {"source_path", "Exported offline pack (.zip)", "path", true, {}, {}},
+        {"new_instance_id", "New instance ID", "identifier", true, "imported-instance", {}},
+        {"installation_id", "Installation", "enum", true,
+            install_choices.empty() ? std::string() : install_choices.front(), install_choices},
+        {"display_name", "Display name (optional)", "string", false, {}, {}},
+    };
     actions.add_object(action_descriptor(
         "presentation.refresh", "presentation.query", "Refresh", "secondary", "read_only", true));
     if (request.scope == "installations") {
@@ -1379,6 +1326,11 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "explicit", "facman.semantic_action_input.v1", profile_select_input));
     }
     if (request.scope == "content") {
+        actions.add_object(action_descriptor(
+            "modsets.import", "presentation.action", "Import offline pack into new instance",
+            "manage", "workspace_write", !installs.empty(),
+            installs.empty() ? "no_installations" : nullptr,
+            "explicit", "facman.semantic_action_input.v1", pack_import_input));
         actions.add_object(action_descriptor(
             "mods.inspect", "presentation.action", "Inspect local mod",
             "diagnostic", "read_only", !mod_identity_choices.empty(),
@@ -1704,6 +1656,10 @@ ApplicationResult PresentationService::action(
     } else if (request.action_id == "mods.inspect" &&
         (request.scope != "content" || request.mod_identity.empty())) {
         required_input = "mod_identity is required";
+    } else if (request.action_id == "modsets.import" &&
+        (request.scope != "content" || request.source_path.empty() ||
+            request.new_instance_id.empty() || request.installation_id.empty())) {
+        required_input = "source_path, new_instance_id, and installation_id are required";
     } else if ((request.action_id == "modsets.plan" ||
             request.action_id == "modsets.apply") &&
         (request.scope != "content" || request.selected_instance_id.empty() ||
@@ -1937,6 +1893,29 @@ ApplicationResult PresentationService::action(
             const ApplicationResult replacement = query(query_request);
             output = action_result_json(
                 request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(imported),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "modsets.import" && request.scope == "content") {
+        ImportModpackRequest import_request;
+        import_request.source_path = facman::platform::path_from_utf8(request.source_path);
+        import_request.instance_id = request.new_instance_id;
+        import_request.install_id = request.installation_id;
+        import_request.display_name = request.display_name;
+        const ApplicationResult imported = handlers::import_modpack(context_, import_request);
+        if (imported.status != ULK_STATUS_OK) {
+            const char* outcome = imported.outcome_kind == facman::core::OutcomeKind::recovery_required
+                ? "recovery_required" : "refused_before_effects";
+            output = action_result_json(request, outcome, current_snapshot,
+                result_string(imported), imported.error_code, imported.error_message,
+                false, {"workspace_write"});
+        } else {
+            query_request.selected_instance_id = request.new_instance_id;
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(request, "completed",
                 replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
                 result_string(imported),
                 replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
