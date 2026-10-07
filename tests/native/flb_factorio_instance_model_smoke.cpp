@@ -5,6 +5,7 @@
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_instance_model.h"
 #include "flb_factorio_launch_plan.h"
+#include "flb_factorio_profiles.h"
 
 #include <chrono>
 #include <filesystem>
@@ -175,6 +176,26 @@ int main()
         !bool_is(readiness.value().find("execution_started"), false) ||
         !bool_is(readiness.value().find("permit_issued"), false)) return 2;
 
+    const json::Value* preview = readiness.value().find("preparation_preview");
+    auto owner = facman::factorio::profiles::profiles_plan(workspace, {"main", "gui", {}, {}, {}});
+    auto owner_json = owner ? json::parse(owner.value()) : facman::core::Result<json::Value>::failure(owner.error());
+    if (preview == nullptr || !owner_json ||
+        !string_is(preview->find("mode"), "plan_only") ||
+        !bool_is(preview->find("preparation_available"), false) ||
+        !bool_is(preview->find("execution_available"), false) ||
+        preview->find("profile")->find("report")->serialize() != owner_json.value().serialize() ||
+        !string_is(preview->find("selected_world")->find("disposition"), "not_required") ||
+        !preview->find("selected_world")->find("record")->is_null() ||
+        !preview->find("expires_at")->is_null() || before != snapshot(fixture.path)) return 18;
+
+    auto current_owner = facman::factorio::profiles::plan_current_instance(workspace, "main", "gui", {});
+    auto observed_profile = facman::factorio::profiles::effective_profile_for_instance(workspace, "main", "gui");
+    if (!current_owner || !observed_profile ||
+        !facman::factorio::profiles::current_plan_matches_effective(current_owner.value(), observed_profile.value())) return 19;
+    observed_profile.value().settings.selection_mode = "load-save";
+    observed_profile.value().settings.selection = "different.zip";
+    if (facman::factorio::profiles::current_plan_matches_effective(current_owner.value(), observed_profile.value())) return 20;
+
     const json::Value* spec = view.value().find("instance_spec");
     const json::Value* binding = view.value().find("instance_binding");
     if (spec == nullptr || binding == nullptr ||
@@ -188,7 +209,22 @@ int main()
         !bool_is(version_requirement->find("exact_patch"), true) ||
         !string_is(version_requirement->find("support_claim"), "unclaimed")) return 8;
 
-    instance::ProjectionRequest unsupported {"main", "load_save"};
+    // Explicit load_save observes prerequisites and never borrows menu authority.
+    const auto load_inventory = snapshot(fixture.path);
+    auto load_result = instance::instance_readiness(workspace, {"main", "load_save"});
+    auto load_json = load_result ? json::parse(load_result.value())
+        : facman::core::Result<json::Value>::failure(load_result.error());
+    if (!load_json || !string_is(load_json.value().find("launch_intent"), "load_save") ||
+        !has_blocker(load_json.value(), "instance_launch_intent_mismatch") ||
+        !has_blocker(load_json.value(), "instance_selected_save_not_selected") ||
+        !has_blocker(load_json.value(), "real_play_gate_not_passed") ||
+        !bool_is(dimension(load_json.value(), "saves")->find("required"), true) ||
+        !bool_is(load_json.value().find("preparation_available"), false) ||
+        !bool_is(load_json.value().find("execution_available"), false) ||
+        !bool_is(load_json.value().find("permit_issued"), false) ||
+        load_inventory != snapshot(fixture.path)) return 17;
+
+    instance::ProjectionRequest unsupported {"main", "benchmark"};
     auto unsupported_result = instance::instance_readiness(workspace, unsupported);
     if (unsupported_result || unsupported_result.error().code != "unsupported_launch_intent") return 4;
 
@@ -241,6 +277,56 @@ int main()
         : facman::core::Result<json::Value>::failure(unresolved_result.error());
     if (!unresolved_result || !unresolved_json ||
         !has_blocker(unresolved_json.value(), "instance_installation_missing")) return 7;
+
+    // Registration survives loss of application files. Readiness must inspect
+    // the current image and leave the foreign tree and instance untouched.
+    make_workspace(workspace, install, true);
+    write_text(install / "saves" / "foreign.zip", "foreign-save");
+    write_text(install / "mods" / "foreign.zip", "foreign-mod");
+    write_text(install / "config" / "config.ini", "foreign-config");
+    const auto blocked_without_effects = [&](const std::string& code,
+                                            const std::string& dimension_id) {
+        const auto inventory = snapshot(fixture.path);
+        auto result = instance::instance_readiness(workspace, request);
+        if (!result) return false;
+        auto parsed = json::parse(result.value());
+        return parsed && has_blocker(parsed.value(), code) &&
+            dimension_state_is(parsed.value(), dimension_id, "blocked") &&
+            bool_is(parsed.value().find("mutation_executed"), false) &&
+            bool_is(parsed.value().find("execution_started"), false) &&
+            bool_is(parsed.value().find("permit_issued"), false) &&
+            inventory == snapshot(fixture.path);
+    };
+    fs::remove(executable_path(install));
+    if (!blocked_without_effects("instance_installation_unhealthy", "installation")) return 11;
+    make_install(install);
+    fs::remove(install / "data" / "base" / "info.json");
+    if (!blocked_without_effects("instance_required_content_missing", "content")) return 12;
+    make_install(install);
+    fs::rename(install / "data" / "base", install / "data" / "hidden-base");
+    if (!blocked_without_effects("instance_required_content_missing", "content")) return 15;
+    fs::rename(install / "data" / "hidden-base", install / "data" / "base");
+    fs::remove(workspace / "instances" / "main" / "config" / "config.ini");
+    if (!blocked_without_effects("instance_effective_config_invalid", "configuration")) return 13;
+    make_workspace(workspace, install, true);
+    const auto restored_inventory = snapshot(fixture.path);
+    auto restored = instance::instance_readiness(workspace, request);
+    auto restored_json = restored ? json::parse(restored.value())
+        : facman::core::Result<json::Value>::failure(restored.error());
+    if (!restored_json ||
+        !dimension_state_is(restored_json.value(), "installation", "satisfied") ||
+        !dimension_state_is(restored_json.value(), "content", "satisfied") ||
+        !dimension_state_is(restored_json.value(), "configuration", "satisfied") ||
+        !has_blocker(restored_json.value(), "real_play_gate_not_passed") ||
+        restored_inventory != snapshot(fixture.path)) return 16;
+
+    // An executable outside the supported layout cannot acquire structural
+    // installation identity by being present somewhere under the source root.
+    const fs::path unsupported_install = fixture.path / "unsupported-install";
+    make_install(unsupported_install);
+    fs::rename(executable_path(unsupported_install), unsupported_install / "factorio-custom");
+    make_workspace(workspace, unsupported_install, true);
+    if (!blocked_without_effects("instance_installation_unhealthy", "installation")) return 14;
 
     return 0;
 }

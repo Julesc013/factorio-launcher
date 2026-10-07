@@ -1,5 +1,5 @@
 command_id = "presentation.query"
-cli = "facman presentation query <scope> [--instance <id>] [--search <text>] [--known-revision <sha256>] --json"
+cli = "facman presentation query <scope> [--instance <id>] [--intent menu|load_save] [--search <text>] [--known-revision <sha256>] --json"
 effects = ["workspace_read"]
 request_schema = "contracts/schema/command/presentation.query.request.v1.schema.json"
 response_schema = "contracts/schema/presentation/presentation_snapshot.v1.schema.json"

@@ -11,6 +11,7 @@
     "instance_id": { "type": "string" },
     "factorio_version": { "type": "string" },
     "plan_id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "transaction_id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "current_state_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "desired_mods": { "type": "array", "items": { "type": "object" } },
     "changes": { "type": "array", "items": { "type": "object" } },

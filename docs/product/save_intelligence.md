@@ -10,11 +10,52 @@ Every report states `deep_factorio_save_metadata = unsupported`. FacMan does not
 guess map version, map settings, DLC state, or mod lists from undocumented save
 internals. Structural inspection never modifies save content.
 
+Explicit `instances readiness --intent load_save` and `instances describe`
+observe only the exact ZIP filename selected by the effective profile, reusing
+the save owner's stable hash, archive and association checks. An unrelated
+unsafe archive does not block this observation. The selected file must remain
+a singly linked regular file under a safe save root; its exact path, structure,
+digest and declared context still bind readiness. Public save commands retain
+their existing whole-index inspection and filename, stem or hash selection.
+Readiness does not grant preparation, execution, a permit or gameplay compatibility.
+
 `saves associate` writes a separate `factorio.save_ref.v1` sidecar under managed
 instance metadata. It pins the save digest, instance, current modset digest,
 profile, source operation, backup history, creation time, and verification time.
 If the save bytes change, verification reports `drifted`; it never silently
 rewrites the association.
+
+The optional typed `association.context` observation compares the recorded
+declared Factorio version and modset-lock digest with the current instance.
+It reports `match`, `drifted`, `unknown`, or `unavailable`, with each input and
+its diagnostic. Ordinary Saves snapshots forward the same owner observation
+and include it in their revision. This observation is read-only and does not
+claim gameplay compatibility or inspect save internals. Historical profile
+context remains provenance; changing the active profile does not imply drift.
+
+Legacy absent version evidence or an empty/invalid stored modset digest stays
+unknown. An absent lock differs from a present empty file. Current lock reads
+use bounded stable no-follow handles; unsafe paths, multiply linked files and
+unreadable inputs remain unavailable. Missing historical evidence cannot be
+reconstructed from a current observation. The original `association.status`
+and `verify.status` retain their save-byte-only meanings; neither is a Play
+readiness verdict. Observations do not claim an atomic game/content snapshot.
+
+The Windows Saves view keeps save-byte status in its own column and displays
+the owner's declared context state with its version and content states.
+A save can therefore have current bytes and drifted declared context, or
+drifted bytes and matching declared context. Older backend snapshots without
+the optional context field display `Not observed`. The frontend formats these
+observations without recomputing compatibility or granting Play authority.
+
+Readable `saves index`, `inspect`, `verify`, and `associate` output shows the
+owner's save-byte status and declared context separately, including recorded
+and current version and content evidence. A successful byte verification can
+still show drifted declared context. JSON output and command exit meanings
+remain the owner's existing result. The ordinary TUI labels save-byte status
+and shows the selected save's context, version, and content on separate lines
+in both renderers. Missing optional context displays `Not observed`; these
+observations do not confer gameplay compatibility or Play authority.
 
 `saves retention plan` applies keep-last, daily, weekly, byte, and minimum-age
 policy to backups in the selected instance's owned backup directory. A backup

@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace facman::contracts::presentation_v1 {
-inline constexpr const char* kSourceDigest = "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200";
+inline constexpr const char* kSourceDigest = "0ef73f830fd6c81090f0da7e6cff2dc0ca417e6eafa24d476779401b38455809";
 
 struct SemanticActionRequest {
     std::string action_id;
@@ -28,6 +28,7 @@ struct SemanticActionRequest {
     std::optional<std::string> idempotency_key;
     std::optional<std::string> installation_id;
     std::optional<std::string> installation_path;
+    std::optional<std::string> launch_intent;
     std::optional<std::string> mod_identity;
     std::optional<std::string> new_instance_id;
     std::optional<std::string> output_path;
@@ -43,6 +44,7 @@ struct SemanticActionRequest {
 struct PresentationQuery {
     std::string scope;
     std::optional<std::string> known_revision;
+    std::optional<std::string> launch_intent;
     std::optional<std::string> search;
     std::optional<std::string> selected_instance_id;
 };
@@ -241,6 +243,9 @@ inline std::string encode_json(const SemanticActionRequest& value)
     if (value.installation_path) {
         output.add_string("installation_path", *value.installation_path);
     }
+    if (value.launch_intent) {
+        output.add_string("launch_intent", *value.launch_intent);
+    }
     if (value.mod_identity) {
         output.add_string("mod_identity", *value.mod_identity);
     }
@@ -283,7 +288,7 @@ inline facman::core::Result<SemanticActionRequest> decode_semantic_action_reques
     auto document = facman::core::json::parse(raw);
     if (!document || !document.value().is_object())
         return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("contract is not an object"));
-    if (!detail::keys_allowed(document.value(), {"action_id", "expected_snapshot_revision", "request_id", "scope", "attempt_id", "confirmation", "display_name", "durable_operation_id", "idempotency_key", "installation_id", "installation_path", "mod_identity", "new_instance_id", "output_path", "profile_id", "roots", "save", "selected_instance_id", "source_data_root", "template_id", "transaction_id"}, false))
+    if (!detail::keys_allowed(document.value(), {"action_id", "expected_snapshot_revision", "request_id", "scope", "attempt_id", "confirmation", "display_name", "durable_operation_id", "idempotency_key", "installation_id", "installation_path", "launch_intent", "mod_identity", "new_instance_id", "output_path", "profile_id", "roots", "save", "selected_instance_id", "source_data_root", "template_id", "transaction_id"}, false))
         return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("contract contains an unknown field"));
     SemanticActionRequest value;
     const auto* field_action_id = document.value().find("action_id");
@@ -391,6 +396,15 @@ inline facman::core::Result<SemanticActionRequest> decode_semantic_action_reques
         std::string decoded_installation_path = decoded_installation_path_result.take_value();
         value.installation_path = std::move(decoded_installation_path);
     }
+    const auto* field_launch_intent = document.value().find("launch_intent");
+    if (field_launch_intent != nullptr) {
+        if (!field_launch_intent->is_string()) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("launch_intent has an invalid type or value"));
+        auto decoded_launch_intent_result = field_launch_intent->string_value();
+        if (!decoded_launch_intent_result) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("launch_intent has an invalid type or value"));
+        std::string decoded_launch_intent = decoded_launch_intent_result.take_value();
+        if ((decoded_launch_intent != "menu" && decoded_launch_intent != "load_save")) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("launch_intent has an invalid type or value"));
+        value.launch_intent = std::move(decoded_launch_intent);
+    }
     const auto* field_mod_identity = document.value().find("mod_identity");
     if (field_mod_identity != nullptr) {
         if (!field_mod_identity->is_string()) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("mod_identity has an invalid type or value"));
@@ -493,6 +507,9 @@ inline std::string encode_json(const PresentationQuery& value)
     if (value.known_revision) {
         output.add_string("known_revision", *value.known_revision);
     }
+    if (value.launch_intent) {
+        output.add_string("launch_intent", *value.launch_intent);
+    }
     if (value.search) {
         output.add_string("search", *value.search);
     }
@@ -507,7 +524,7 @@ inline facman::core::Result<PresentationQuery> decode_presentation_query(const s
     auto document = facman::core::json::parse(raw);
     if (!document || !document.value().is_object())
         return facman::core::Result<PresentationQuery>::failure(detail::invalid("contract is not an object"));
-    if (!detail::keys_allowed(document.value(), {"scope", "known_revision", "search", "selected_instance_id"}, false))
+    if (!detail::keys_allowed(document.value(), {"scope", "known_revision", "launch_intent", "search", "selected_instance_id"}, false))
         return facman::core::Result<PresentationQuery>::failure(detail::invalid("contract contains an unknown field"));
     PresentationQuery value;
     const auto* field_scope = document.value().find("scope");
@@ -529,6 +546,15 @@ inline facman::core::Result<PresentationQuery> decode_presentation_query(const s
         std::string decoded_known_revision = decoded_known_revision_result.take_value();
         if (decoded_known_revision.size() < 64U || decoded_known_revision.size() > 64U || !detail::sha256(decoded_known_revision)) return facman::core::Result<PresentationQuery>::failure(detail::invalid("known_revision has an invalid type or value"));
         value.known_revision = std::move(decoded_known_revision);
+    }
+    const auto* field_launch_intent = document.value().find("launch_intent");
+    if (field_launch_intent != nullptr) {
+        if (!field_launch_intent->is_string()) return facman::core::Result<PresentationQuery>::failure(detail::invalid("launch_intent has an invalid type or value"));
+        auto decoded_launch_intent_result = field_launch_intent->string_value();
+        if (!decoded_launch_intent_result) return facman::core::Result<PresentationQuery>::failure(detail::invalid("launch_intent has an invalid type or value"));
+        std::string decoded_launch_intent = decoded_launch_intent_result.take_value();
+        if ((decoded_launch_intent != "menu" && decoded_launch_intent != "load_save")) return facman::core::Result<PresentationQuery>::failure(detail::invalid("launch_intent has an invalid type or value"));
+        value.launch_intent = std::move(decoded_launch_intent);
     }
     const auto* field_search = document.value().find("search");
     if (field_search != nullptr) {

@@ -145,7 +145,10 @@ namespace FacMan.WinForms
             value["evidence_digest"] = EmptyAs(readiness.Digest, new string('0', 64));
             value["summary"] = "Backend readiness: " + EmptyAs(readiness.State, "unavailable") +
                 "; freshness: " + EmptyAs(readiness.Freshness, "unknown") +
-                "; Play authority: " + EmptyAs(readiness.PlayAuthorityState, "unavailable") + ".";
+                "; Play authority: " + EmptyAs(readiness.PlayAuthorityState, "unavailable") + "." +
+                (String.IsNullOrWhiteSpace(readiness.PreparationPreviewState) ? "" :
+                    " Preparation preview: " + readiness.PreparationPreviewState + "; apply unavailable. " +
+                    String.Join(" | ", new List<string>(readiness.PreparationOwnerSummaries).ToArray()));
             value["blockers"] = ProblemRecords(readiness.Blockers);
             return value;
         }
@@ -293,6 +296,10 @@ namespace FacMan.WinForms
                     { "identity", item.Identity },
                     { "sha256", item.Sha256 },
                     { "association_status", item.AssociationStatus },
+                    { "association_context_status", item.AssociationContextStatus },
+                    { "association_version_status", item.AssociationVersionStatus },
+                    { "association_modset_status", item.AssociationModsetStatus },
+                    { "association_context_summary", item.AssociationContextSummary },
                     { "backup_status", item.BackupStatus },
                     { "selected", item.Selected },
                 });

@@ -59,6 +59,7 @@ struct Association {
     std::string factorio_version_family;
     std::vector<std::string> backup_history;
     fs::path path;
+    json::ObjectBuilder context;
 };
 
 struct SaveRecord {
@@ -251,6 +252,118 @@ Association load_association(const Instance& instance, const std::string& file_n
     return output;
 }
 
+struct ModsetContext {
+    std::string presence = "unavailable";
+    std::string sha256;
+    std::string diagnostic;
+};
+
+bool context_path_safe(const fs::path& path, std::string& detail)
+{
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail)) return false;
+    std::error_code error;
+    const fs::path absolute = fs::absolute(path, error).lexically_normal();
+    if (error) { detail = "context_path_unresolved"; return false; }
+    fs::path current = absolute.root_path();
+    for (const fs::path& part : absolute.relative_path()) {
+        current /= part;
+        const auto status = fs::symlink_status(current, error);
+        if (fs::is_symlink(status)) { detail = "context_path_linked"; return false; }
+        if (error == std::errc::no_such_file_or_directory || (!error && status.type() == fs::file_type::not_found)) return true;
+        if (error) { detail = "context_path_unreadable"; return false; }
+    }
+    return true;
+}
+
+ModsetContext observe_modset_context(const Instance& instance)
+{
+    const fs::path path = instance.record.root / "mods" / "modset-lock.v1.json";
+    std::string detail;
+    if (!context_path_safe(path, detail)) {
+        return {"unavailable", {}, "modset_context_unsafe: " + detail};
+    }
+    std::error_code error;
+    const auto status = fs::symlink_status(path, error);
+    if (error == std::errc::no_such_file_or_directory || (!error && status.type() == fs::file_type::not_found)) {
+        return {"absent", {}, {}};
+    }
+    if (error || status.type() != fs::file_type::regular) {
+        return {"unavailable", {}, "modset_context_unreadable"};
+    }
+    auto text = stable_text(path);
+    if (!text) return {"unavailable", {}, "modset_context_unreadable: " + text.error().message};
+    if (!context_path_safe(path, detail)) return {"unavailable", {}, "modset_context_unsafe: " + detail};
+    return {"present", facman::base::sha256_hex_bytes(reinterpret_cast<const unsigned char*>(text.value().data()), text.value().size()), {}};
+}
+
+bool context_digest(const std::string& value)
+{
+    return value.size() == 64U && std::all_of(value.begin(), value.end(), [](unsigned char character) {
+        return (character >= '0' && character <= '9') || (character >= 'a' && character <= 'f');
+    });
+}
+
+bool exact_context_version(const std::string& value)
+{
+    const auto classified = facman::factorio::version::classify(value);
+    return classified.valid && classified.version.has_patch && facman::factorio::version::is_target_family(classified.family);
+}
+
+json::ObjectBuilder observe_association_context(const Instance& instance, const Association& association)
+{
+    const auto modset = observe_modset_context(instance);
+    std::string sidecar_detail;
+    const bool sidecar_safe = context_path_safe(association.path, sidecar_detail);
+    const bool historical = association.present && association.valid && sidecar_safe;
+    std::string version_status = "unknown";
+    std::string version_diagnostic = "recorded_version_unknown";
+    if (!sidecar_safe) {
+        version_status = "unavailable";
+        version_diagnostic = "association_context_unsafe";
+    } else if (!exact_context_version(instance.record.factorio_version)) {
+        version_status = "unavailable";
+        version_diagnostic = "current_version_unavailable";
+    } else if (historical && exact_context_version(association.factorio_version)) {
+        version_status = association.factorio_version == instance.record.factorio_version ? "match" : "drifted";
+        version_diagnostic = version_status == "match" ? "" : "declared_factorio_version_changed";
+    }
+    std::string modset_status = "unknown";
+    std::string modset_diagnostic = "recorded_modset_digest_unknown";
+    if (!sidecar_safe || modset.presence == "unavailable") {
+        modset_status = "unavailable";
+        modset_diagnostic = !sidecar_safe ? "association_context_unsafe" : modset.diagnostic;
+    } else if (historical && context_digest(association.modset_lock_sha256)) {
+        modset_status = modset.presence == "present" && association.modset_lock_sha256 == modset.sha256 ? "match" : "drifted";
+        modset_diagnostic = modset_status == "match" ? "" : "modset_lock_changed";
+    }
+    json::ObjectBuilder version;
+    version.add_string("status", version_status);
+    if (association.factorio_version.empty()) version.add_null("recorded");
+    else version.add_string("recorded", association.factorio_version);
+    version.add_string("current", instance.record.factorio_version);
+    version.add_string("diagnostic", version_diagnostic);
+    json::ObjectBuilder content;
+    content.add_string("status", modset_status);
+    if (association.modset_lock_sha256.empty()) content.add_null("recorded_sha256");
+    else content.add_string("recorded_sha256", association.modset_lock_sha256);
+    if (modset.sha256.empty()) content.add_null("current_sha256");
+    else content.add_string("current_sha256", modset.sha256);
+    content.add_string("current_presence", modset.presence);
+    content.add_string("diagnostic", modset_diagnostic);
+    std::string status = "match";
+    for (const char* candidate : {"unknown", "drifted", "unavailable"}) {
+        if (version_status == candidate || modset_status == candidate) status = candidate;
+    }
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.save_association_context.v1");
+    output.add_string("status", status);
+    output.add_object("factorio_version", version);
+    output.add_object("modset_lock", content);
+    output.add_string("observation_scope", "recorded_declared_context_only");
+    output.add_string("gameplay_compatibility", "unclaimed");
+    return output;
+}
+
 std::string backup_sidecar_status(const Instance& instance, const std::string& save_name)
 {
     const fs::path root = instance.record.root / "backups";
@@ -259,7 +372,7 @@ std::string backup_sidecar_status(const Instance& instance, const std::string& s
     if (!exists && !error) return "absent";
     if (error) return "unreadable";
     for (fs::directory_iterator item(root, error), end; item != end && !error; item.increment(error)) {
-        const std::string name = item->path().filename().string();
+        const std::string name = path_text(item->path().filename());
         if (item->is_regular_file(error) && name.find(save_name) == 0 && name.size() > 14U &&
             name.compare(name.size() - 14U, 14U, ".manifest.json") == 0) return "present";
     }
@@ -271,8 +384,8 @@ facman::core::Result<SaveRecord> read_save(
 {
     SaveRecord record;
     record.path = path;
-    record.file_name = path.filename().string();
-    record.name = path.stem().string();
+    record.file_name = path_text(path.filename());
+    record.name = path_text(path.stem());
     std::error_code error;
     record.mtime = fs::last_write_time(path, error);
     if (error) return failure<SaveRecord>("save_stable_read_failed", error.message(), path);
@@ -300,6 +413,7 @@ facman::core::Result<SaveRecord> read_save(
             "save_source_changed", "Save changed during structural inspection", path);
     if (include_association) {
         record.association = load_association(instance, record.file_name);
+        record.association.context = observe_association_context(instance, record.association);
         record.backup_sidecar_status = backup_sidecar_status(instance, record.name);
     }
     return facman::core::Result<SaveRecord>::success(std::move(record));
@@ -440,6 +554,7 @@ json::ObjectBuilder association_json(const SaveRecord& record)
     association.add_string("last_verified_utc", record.association.last_verified_utc);
     association.add_string("factorio_version", record.association.factorio_version);
     association.add_string("factorio_version_family", record.association.factorio_version_family);
+    association.add_object("context", record.association.context);
     return association;
 }
 
@@ -670,6 +785,34 @@ facman::core::Result<std::string> list(const fs::path& workspace, const Request&
 facman::core::Result<std::string> inspect(const fs::path& workspace, const Request& request)
 {
     auto value = selected_record(workspace, request.instance_id, request.save);
+    if (!value) return failure<std::string>(value.error().code, value.error().message, fs::u8path(value.error().path));
+    return facman::core::Result<std::string>::success(report("saves.inspect", request.instance_id, {value.value()}));
+}
+
+facman::core::Result<std::string> inspect_exact_filename(const fs::path& workspace, const Request& request)
+{
+    const fs::path name = fs::u8path(request.save);
+    if (request.save.empty() || request.save.size() > 255U || name != name.filename() ||
+        request.save.find_first_of("/\\:") != std::string::npos ||
+        request.save.find('\0') != std::string::npos || name.extension() != ".zip") {
+        return failure<std::string>("save_not_found", "An exact safe ZIP filename is required");
+    }
+    auto instance = load_instance(workspace, request.instance_id);
+    if (!instance) return failure<std::string>(instance.error().code, instance.error().message);
+    const fs::path root = instance.value().record.root / "saves";
+    const fs::path path = root / name;
+    std::string link_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, link_detail)) return failure<std::string>(
+        "save_root_unsafe", link_detail, path);
+    std::error_code error;
+    const auto status = fs::symlink_status(path, error);
+    if (error == std::errc::no_such_file_or_directory || (!error && status.type() == fs::file_type::not_found)) {
+        return failure<std::string>("save_not_found", "Save was not found in the managed instance", path);
+    }
+    if (error || !fs::is_regular_file(status)) return failure<std::string>(
+        "save_stable_read_failed", "Selected save is not a readable regular file", path);
+    // Reuse the stable hash/archive/association observation without indexing siblings.
+    auto value = read_save(instance.value(), path);
     if (!value) return failure<std::string>(value.error().code, value.error().message, fs::u8path(value.error().path));
     return facman::core::Result<std::string>::success(report("saves.inspect", request.instance_id, {value.value()}));
 }

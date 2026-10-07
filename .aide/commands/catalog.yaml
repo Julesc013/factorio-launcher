@@ -18,6 +18,14 @@ commands:
     owner_component: aide-lite-pack
     mutates_repo: false
     notes: canonical AIDE Lite validation command; no provider/model/network calls.
+  - id: aide-lite-plan-removal
+    display_name: AIDE Lite portable removal planner
+    invocation: py -3 .aide/scripts/aide_lite.py plan-removal --target <target-repo> [--json]
+    command_kind: repo-local-helper
+    status: implemented-portable-read-only
+    owner_component: aide-lite-pack
+    mutates_repo: false
+    notes: validates the portable import receipt and classifies only unchanged recorded managed bytes as future removal candidates; never deletes files or removes managed sections.
   - id: aide-lite-test-tier-model
     display_name: AIDE Lite validation tier planning
     invocation: py -3 .aide/scripts/aide_lite.py test <tiers|tier-plan|impact-plan|summary-validate|telemetry-status|full-discovery-handoff|slow-report-validate>

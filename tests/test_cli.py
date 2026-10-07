@@ -706,7 +706,7 @@ class CliTests(unittest.TestCase):
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "readiness", "main",
-                "--intent", "load_save", "--json",
+                "--intent", "benchmark", "--json",
             ])
             self.assertNotEqual(code, 0, stderr)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "unsupported_launch_intent")
@@ -1048,8 +1048,16 @@ class CliTests(unittest.TestCase):
             code, stdout, stderr = invoke(["--workspace", str(workspace), "modsets", "export", "modded", str(pack), "--json"])
             self.assertEqual(code, 0, stderr)
             exported = json.loads(stdout)
-            self.assertEqual(exported["files"], 2)
+            self.assertEqual(exported["files"], 3)
             self.assertTrue(pack.read_bytes().startswith(b"PK\x03\x04"))
+            with zipfile.ZipFile(pack) as archive:
+                self.assertEqual(set(archive.namelist()), {
+                    "modpack-manifest.v1.json", "modset-lock.v1.json", "mods/metadata-example_9.8.7.zip",
+                })
+                self.assertEqual(archive.read("mods/metadata-example_9.8.7.zip"), mod_zip.read_bytes())
+                manifest = json.loads(archive.read("modpack-manifest.v1.json"))
+                self.assertEqual(manifest["source_lock"]["blob"]["sha256"],
+                                 hashlib.sha256(archive.read("modset-lock.v1.json")).hexdigest())
 
     def test_managed_install_operations_are_setup_gated(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -2801,7 +2801,7 @@ def main() -> int:
     fixture = (contextlib.nullcontext(str(args.fixture_root)) if args.fixture_root is not None
                else tempfile.TemporaryDirectory(prefix=(
                    "facman-self-setup-ci-long-" if args.ci_length_root
-                   else "facman-self-setup-")))
+                   else "fss-")))
     with fixture as temporary:
         root = Path(temporary)
         version_prefix, version_number = version.rsplit(".", 1)

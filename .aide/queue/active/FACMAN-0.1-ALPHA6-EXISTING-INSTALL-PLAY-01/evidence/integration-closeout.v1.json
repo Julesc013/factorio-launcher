@@ -1,0 +1,187 @@
+{
+  "schema": "facman.exact_checked_integration.v1",
+  "status": "existing_install_source_runtime_acceptance_complete",
+  "work_item": "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+  "PR": 370,
+  "PR_url": "https://github.com/Julesc013/factorio-launcher/pull/370",
+  "expected_head": "13299fcf165ebda9d95ea9157b1f155eab244fee",
+  "expected_base": "78de939f19d8c165023358d4dac4c7d26ef7283d",
+  "source_tree": "1c2bd606afe06f88994750292f0a04bf8a2c6068",
+  "merge": "eada9df6eed0353671500e6d5a8e0bc0365300d8",
+  "merge_tree": "1c2bd606afe06f88994750292f0a04bf8a2c6068",
+  "parents": [
+    "78de939f19d8c165023358d4dac4c7d26ef7283d",
+    "13299fcf165ebda9d95ea9157b1f155eab244fee"
+  ],
+  "merge_method": "normal protected merge commit",
+  "merged_at": "2026-10-04T00:45:01Z",
+  "required_contexts": {
+    "task-to-dev-promotion-check": 15368,
+    "linux-native": 15368,
+    "windows-native-package": 15368,
+    "linux-coverage": 15368,
+    "macos-archive-core": 15368,
+    "macos-native-cli": 15368,
+    "appkit-compile": 15368,
+    "policy-check": 15368,
+    "development-only-cross-provider-fixture": 15368,
+    "c-cpp": 15368,
+    "python": 15368,
+    "csharp": 15368
+  },
+  "required_checks": [
+    {
+      "name": "policy-check",
+      "id": 111318745337,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527097/job/111318745337",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "development-only-cross-provider-fixture",
+      "id": 111318745419,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527088/job/111318745419",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "csharp",
+      "id": 111318745514,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527085/job/111318745514",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "task-to-dev-promotion-check",
+      "id": 111318774348,
+      "url": "https://github.com/Julesc013/factorio-launcher/runs/111318774348",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "c-cpp",
+      "id": 111318745625,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527085/job/111318745625",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "python",
+      "id": 111318745696,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527085/job/111318745696",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "linux-coverage",
+      "id": 111326533001,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527056/job/111326533001",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "macos-archive-core",
+      "id": 111326533711,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527056/job/111326533711",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "appkit-compile",
+      "id": 111326533852,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527056/job/111326533852",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "windows-native-package",
+      "id": 111326533963,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527056/job/111326533963",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "linux-native",
+      "id": 111326534316,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527056/job/111326534316",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "macos-native-cli",
+      "id": 111326548595,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37162527056/job/111326548595",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    }
+  ],
+  "trusted_publisher": {
+    "workflow_id": 354614721,
+    "ruleset_id": 23393886,
+    "main": "dc38a5ff2f613a1a13796e6610655bfdd1e00732",
+    "run_id": 37162527028,
+    "check_id": 111318774348,
+    "check_suite_id": 100661942706,
+    "hosted_status_archive_sha256": "39b07c235f59917b586cbf581f15b495c574d4409533746b7db14a84c69f0abf",
+    "observation": "admission"
+  },
+  "protected_bypass": false,
+  "protected_ref_push": false,
+  "acceptance": [
+    {
+      "criterion": "Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.",
+      "status": "PASS",
+      "evidence": "existing-install-acceptance-audit.json and independent existing-install-acceptance-current-13299fcf.review.json in custody"
+    },
+    {
+      "criterion": "Test stale plans, unsupported source, missing files, concurrent sessions and launch failure through actual runtime seams.",
+      "status": "PASS",
+      "evidence": "existing-install-acceptance-audit.json and independent existing-install-acceptance-current-13299fcf.review.json in custody"
+    }
+  ],
+  "historical_acceptance_FAIL_preserved": true,
+  "close_after": [],
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence/integration-validation-custody.zip",
+    "sha256": "e4b14f14c664907dcba8c1d8725f7782b7587f6a22b3a6643e04c893603ca6db",
+    "members": {
+      "existing-install-acceptance-audit.json": "f4e86ac78be5c0ed2293db0b10ab68ed809f5c6e991c44cbfb52c4cba2e2925a",
+      "existing-install-acceptance-current-13299fcf.review.json": "36cd8e176f4d65d1ee3b25d20c1c78fe8a7cc40d994e7b703c5961f1b71ca8d0",
+      "existing-install-acceptance.review.json": "4cc375a08b5f180448bd2f46ea2ac4c931c07ea4d856e4bdd9037ff8af3f55e1",
+      "preflight-final.review.json": "d08d657f9f9acc835acd02fd3310d1588cdc5a4455368b61dd8bd82d1e8f1ac1",
+      "preflight-checked-integration-rx3.review.json": "eaffb48c02404a010cd4fcdf0e962e47142028d0a3f794204dc0209844369f2b",
+      "preflight-checked-integration-plan-rx3.json": "f15ed87494ec7aab4db11c158666d7b7e73979d4a8731d2638f3ffe6bd8447c3",
+      "preflight-checked-integration.py": "b858428f973c20fe37c59bf91bdef516b3ba853dcd81e6c1f7666db95d11dbe8",
+      "preflight-integration-history.json": "4b49e21458ce7f062f3b1d2eba7dcb30f6584321b751914a536a9736adf7f6d9",
+      "preflight-integration-rx3-admission-trusted-publisher.json": "dbde4f7ae0245b6b0407a0207d6833c34c25040dc2052000db384e0e29a0d5ea",
+      "preflight-integration-rx3-admission-trusted-publisher.log": "892dd39f2cd41535b212fbf8d9ad362138baecb4a00d43324e651cd437fb99a4",
+      "preflight-integration-rx3-admission-producer-jobs.json": "f04b0f6937e88a11d559930fb2163a2ff32efad442f0a38d8bd211ae5bb5631c",
+      "preflight-integration-rx3-admission-trusted-status.zip": "39b07c235f59917b586cbf581f15b495c574d4409533746b7db14a84c69f0abf",
+      "preflight-coverage-single-retry.json": "acfd43101e8991e4425a975b12e59e0279167f3d5b1a746a4db10fdce04052fe",
+      "preflight-ci-after-retry.json": "56e093d82dd26d337e2124c33d8942b0839ed6a83464877e13b1a2f783d8be6c",
+      "preflight-ci-linux-coverage-111318745694.api.log": "d13b42c77ff92f08cb882490ad84cc08f20e3489564640f0a0824bde1c8e431e",
+      "preflight-source-integration-observation.json": "ebfa7bc2820b362b26bb694280459245bcff5e1d5ea0161a73a105821a52a1e1"
+    }
+  },
+  "source_qualification": "Fresh54 native tests; disclosed reuse of40 byte-identical Python modules and corrected19-test package module/2scoped skips; strict/format/diff and independent final review",
+  "automatic_merge_CI": {
+    "status": "automatic_merge_CI_observation",
+    "qualified": false,
+    "ownership": "Existing exclusive controller PID25236/session56436; no dispatch or duplicate observer",
+    "closure_basis": "Exact source-head required checks and normal checked integration; automatic merge-head checks are separately observed"
+  },
+  "qualification": {
+    "source_runtime": true,
+    "Factorio_game": false,
+    "human": false,
+    "packaged_Play": false,
+    "platform_support": false,
+    "release": false
+  },
+  "separate_open_gates": [
+    "Alpha7 exact packaged Play and approved input/host/game/menu acceptance",
+    "PR343 owner-only current-head control authorization",
+    "Human experience and release authority"
+  ],
+  "recorded_at_utc": "2026-10-04T00:57:31.314193+00:00"
+}

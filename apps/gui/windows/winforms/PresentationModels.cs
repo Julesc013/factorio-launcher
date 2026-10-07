@@ -98,6 +98,12 @@ namespace FacMan.WinForms
             Identity = PresentationJson.Text(value, "identity");
             Sha256 = PresentationJson.Text(value, "sha256");
             AssociationStatus = PresentationJson.Text(value, "association_status");
+            IDictionary<string, object> associationContext = PresentationJson.Record(value, "association_context");
+            AssociationContextStatus = PresentationJson.Text(associationContext, "status");
+            AssociationVersionStatus = PresentationJson.Text(
+                PresentationJson.Record(associationContext, "factorio_version"), "status");
+            AssociationModsetStatus = PresentationJson.Text(
+                PresentationJson.Record(associationContext, "modset_lock"), "status");
             BackupStatus = PresentationJson.Text(value, "backup_status");
             Platform = PresentationJson.Text(value, "platform");
             DistributionOrigin = PresentationJson.Text(value, "distribution_origin");
@@ -123,6 +129,20 @@ namespace FacMan.WinForms
         public string Identity { get; private set; }
         public string Sha256 { get; private set; }
         public string AssociationStatus { get; private set; }
+        public string AssociationContextStatus { get; private set; }
+        public string AssociationVersionStatus { get; private set; }
+        public string AssociationModsetStatus { get; private set; }
+        public string AssociationContextSummary
+        {
+            get
+            {
+                if (String.IsNullOrWhiteSpace(AssociationContextStatus)) return "Not observed";
+                return AssociationContextStatus + " (version " +
+                    (String.IsNullOrWhiteSpace(AssociationVersionStatus) ? "not observed" : AssociationVersionStatus) +
+                    "; content " +
+                    (String.IsNullOrWhiteSpace(AssociationModsetStatus) ? "not observed" : AssociationModsetStatus) + ")";
+            }
+        }
         public string BackupStatus { get; private set; }
         public string Platform { get; private set; }
         public string DistributionOrigin { get; private set; }
@@ -207,6 +227,8 @@ namespace FacMan.WinForms
             FactorioVersion = PresentationJson.Text(value, "factorio_version");
             Profile = PresentationJson.Text(value, "profile");
             TemplateId = PresentationJson.Text(value, "template_id");
+            LaunchIntent = PresentationJson.Text(value, "launch_intent");
+            if (String.IsNullOrEmpty(LaunchIntent)) LaunchIntent = "menu";
         }
 
         public string InstanceId { get; private set; }
@@ -215,6 +237,7 @@ namespace FacMan.WinForms
         public string FactorioVersion { get; private set; }
         public string Profile { get; private set; }
         public string TemplateId { get; private set; }
+        public string LaunchIntent { get; private set; }
     }
 
     public sealed class PresentationReadiness
@@ -226,6 +249,24 @@ namespace FacMan.WinForms
             Freshness = PresentationJson.Text(value, "freshness");
             PlayAuthorityState = PresentationJson.Text(value, "play_authority_state");
             Digest = PresentationJson.Text(value, "readiness_digest");
+            IDictionary<string, object> preview = PresentationJson.Record(value, "preparation_preview");
+            PreparationPreviewState = PresentationJson.Text(preview, "composition_state");
+            PreparationPreviewDigest = PresentationJson.Text(preview, "plan_digest");
+            PreparationApplyAvailable = false;
+            List<string> ownerSummaries = new List<string>();
+            foreach (string ownerName in new string[] { "installation", "profile" })
+            {
+                IDictionary<string, object> owner = PresentationJson.Record(preview, ownerName);
+                IDictionary<string, object> report = PresentationJson.Record(owner, "report");
+                string identity = PresentationJson.FirstText(report, "plan_digest", "plan_sha256");
+                if (ownerName == "installation") PreparationInstallationPlanDigest = identity;
+                else PreparationProfilePlanDigest = identity;
+                string refusal = PresentationJson.Text(owner, "refusal");
+                if (owner != null) ownerSummaries.Add(ownerName + ": " +
+                    PresentationJson.Text(owner, "disposition") +
+                    (String.IsNullOrWhiteSpace(refusal) ? "" : "; " + refusal));
+            }
+            PreparationOwnerSummaries = ownerSummaries.AsReadOnly();
             List<PresentationProblem> blockers = new List<PresentationProblem>();
             foreach (IDictionary<string, object> item in PresentationJson.Records(value, "blockers"))
                 blockers.Add(new PresentationProblem(item));
@@ -238,6 +279,12 @@ namespace FacMan.WinForms
         public string PlayAuthorityState { get; private set; }
         public string Digest { get; private set; }
         public IList<PresentationProblem> Blockers { get; private set; }
+        public string PreparationPreviewState { get; private set; }
+        public string PreparationPreviewDigest { get; private set; }
+        public string PreparationInstallationPlanDigest { get; private set; }
+        public string PreparationProfilePlanDigest { get; private set; }
+        public bool PreparationApplyAvailable { get; private set; }
+        public IList<string> PreparationOwnerSummaries { get; private set; }
     }
 
     public sealed class PresentationLastRun

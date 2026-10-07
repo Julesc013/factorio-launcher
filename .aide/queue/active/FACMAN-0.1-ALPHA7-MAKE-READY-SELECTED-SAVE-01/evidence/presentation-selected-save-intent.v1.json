@@ -1,0 +1,161 @@
+{
+  "author_receipt_sha256": "8543dc9a4fbc9328a792e5d530a78e9c1e497a90650f92999770f20bd383717c",
+  "behavior": "Explicit Menu or Selected Save observation is retained across CLI, presentation snapshots/actions and WinForms refreshes; default menu and old receipt canonical bytes remain compatible. Selected Save cannot consult or dispatch the permissive fixture executor.",
+  "boundaries": {
+    "beta_qualified": false,
+    "gameplay_compatibility": "unclaimed",
+    "human_ui_qualification": false,
+    "other_hosts_qualified": false,
+    "permit_issued": false,
+    "preparation_available": false,
+    "produced_package_qualification": false,
+    "real_game_effects": false,
+    "selected_save_execution_available": false,
+    "whole_workunit_closed": false
+  },
+  "changed_paths_raw_sha256": {
+    ".aide/memory/project-state.md": "7140dd3be1cfe87a068815d744f64cfedb11e557c4c7b6d4bf576b7d2886e845",
+    ".aide/memory/project-state.v2.json": "38b3a354e17c4196e1a8bb4a7b1de61f89e9e6ff4e2a21e077021477d3540c2a",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": "13e2d2f24ccbe362b1dc7ee65cde7988177e7a5980b862152b7c5925ee53dc4d",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml": "ff5233aef02d2f0ea9ffadc3648272a62c0064454b0c40ef3f8c78d34481f088",
+    "apps/cli/cli_text.h": "0b41975d6c59a7abb9916ac5bd7d5651b218d64ce1c84c548596022b64d7936f",
+    "apps/cli/command_dispatch.cpp": "e31fa52337916c7b1fa1c01f520924189503f1bf4b0818d507b8056f4ccce266",
+    "apps/cli/completions/FacMan.ps1": "f313f0a6bdf898a31ea55effd253c5ee67172995fe3caeb5958c79f3a74cd558",
+    "apps/cli/completions/_facman": "cb8292841f696b7aa3de4fd11129aeb77bb2e5ad67f2debd97ad8a4c234136b1",
+    "apps/cli/completions/facman.bash": "92d6b38d072d3ddf2817abad80fb6372a97493bf7a3aff6a70bf2c19c197d0b7",
+    "apps/cli/completions/facman.fish": "cf639497866b7b5b822e7d901726b933b1db7e463fd8eeabecc8276503653bf5",
+    "apps/cli/generated/command_help.inc": "35618b6140365f072805fdaac161d19970738e2fb1aa3e63b715b3ee0ec42bea",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h": "cfed9a330a8aee7f7a0bfeda93999527fb41265cb6fd6da7bac84f4837b346c5",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m": "33d03bbd6524232a28ebc8ab43069dbb3bd4f979333ff7d9642be174a3c38621",
+    "apps/gui/windows/winforms/C1LivePresentationStore.cs": "de8fdd69efd22dc3a76ce44b86295c1aaa1d8cc82c48a8ab02f5a319067ac860",
+    "apps/gui/windows/winforms/C1ShellForm.cs": "29654cb2eff9b28bb60c295cb3d595f170d71f726e5ef8492af75d14770cfdd9",
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "fbac2b18ec2a093ec6af7ca0c85f1d459f5d4e2c4f24edde7a0da75c74bd22f5",
+    "apps/gui/windows/winforms/GeneratedPresentationContracts.cs": "4bf67b323769a3acf37466e395d17ef78d457bdb0fc1c103938bf736101b0f04",
+    "apps/gui/windows/winforms/PresentationModels.cs": "900487cf63861da5d7b9828dce14767ee6b053458924286b6fdf139fe9da2938",
+    "apps/tui/generated_command_catalog.hpp": "2b18e7c79952a1ba1b0fcf0813f8c55b7a2c2e28472a4e66f888d7b096508911",
+    "content/factorio/strings/en-US.toml": "d7434940706a4d34248305ea5bab0673c66b415ded07781552e1c89e34315755",
+    "contracts/command/factorio/presentation.action.v1.toml": "aec6df31e14697d84e3022239028353ce0565c20d25a38efb122fc6b95220112",
+    "contracts/command/factorio/presentation.query.v1.toml": "0e93cd8dc448687fdae0359d7ba662b4b98ade2c0be3630bda47108663843130",
+    "contracts/command/request_fields.v1.json": "bab4f036cc16e9b52caaa755b4ab5bcc25d1a30219defce7f84624106fca25db",
+    "contracts/generated-index/command_catalog.v2.json": "2091f3faadf1a68308ea9c9aaeed105dbca23a4f5ca9ff3be4cd63f0e7c29d93",
+    "contracts/generated-index/command_cli_grammar.v2.json": "9d100db6a0c30b4927744fdd074b9addbc23a93690ea12ae2f9507a3db37c61f",
+    "contracts/generated-index/frontend_command_catalog.v1.json": "6c67dfbeb177f6dcef0afe612d630e39f1d184b3a0321cebf09832f2b0e55e13",
+    "contracts/generated-index/presentation_contracts.v1.bundle.json": "be43a727b9058462f6cb6472dc1c35d1e9021b3e37dbaffa996ef47080493093",
+    "contracts/schema/command/presentation.action.request.v1.schema.json": "9aa916df3fa29e3c17fe7a15d0159a8c4a5d736a899f1b34254acc65bf7454c3",
+    "contracts/schema/command/presentation.query.request.v1.schema.json": "dd88b577e4c3c54925cb999c9335467a3e401a6b3de17cae77f28ad2f2a0f266",
+    "contracts/schema/presentation/presentation_snapshot.v1.schema.json": "436884816d87df441950308f318b167fbbcc79df84c61e85c1bf4d14d26fe29e",
+    "docs/development/presentation-observation-intent.md": "0303dd38db39be58c5476325a0e5a08677d9d96abd12cfe8377f7a6628a22a15",
+    "docs/generated/contracts/presentation-foundation.md": "a804b09f551a823f0368069b6acd226ef55d88bcb7b8f5c9268da12f4d21d5b0",
+    "docs/reference/generated-command-catalog.md": "593d1eb16c4d1bf819eabd3ceb0d1d7e286184fdef45f61147f11b27133e5e7b",
+    "runtime/core/generated/command_catalog.h": "2782859096983cd9d4ec2a72172baacdc1f35cc1b33c8fddbbc81e72aada7c32",
+    "runtime/core/generated/presentation_contracts.v1.h": "b57d953b0602543355c26e17a1f05b9d00b9d352ed80b043beb49f16b4b6b9dd",
+    "runtime/core/generated/version.h": "ec9ebfbc6cd60a0172a8af670a3d92bebe81a61eae98c237f1114091b0cfb74f",
+    "runtime/factorio/application/application_types.h": "728e5878f18b72e057f3ea183b157c1ab6999d9edeadbb708ed08104df9dac75",
+    "runtime/factorio/application/command_dispatch.cpp": "091f9fd080f71686438d92deecf9df4fdea6a37b606916b411040f454ecdf060",
+    "runtime/factorio/application/generated/command_ids.inc": "0da7265b6075bfc2d0d29aa30333a6384cba4f6f8fa58bb11ecaabd1dd4e7e23",
+    "runtime/factorio/application/generated/command_lookup.inc": "b5397a92015e93354adb328d15a73ebde0926fed29bc97bc885e110f0a663488",
+    "runtime/factorio/application/generated/command_names.inc": "c27338c3b001735b7c1f342609836930e5309e55b1c0ffe2e45d3d09588b58d4",
+    "runtime/factorio/application/generated/command_writes.inc": "b990c40145c30049ad93f67dd4524210cf2034ec45b23a8ff0f797460576e6f4",
+    "runtime/factorio/application/generated/request_contracts.inc": "3e978520ecae8d18924c4b27e4286091aa46489c0446ab2f6e90a224950cdde9",
+    "runtime/factorio/application/presentation_action_support.cpp": "9740c0273a5ea792746f7a0b7b05b8e28cdf899ebca3b0bdfbf4833ca8e7c585",
+    "runtime/factorio/application/presentation_action_support.h": "9ae5b21e94e0078aa39c832154ad3d9ffcb070ea3e57b941f2a08442f8cb1a2b",
+    "runtime/factorio/application/presentation_service.cpp": "c7b2cd40de0e7fb13ba1c29976fde8431470f9d0321dc6ff3929eab022576858",
+    "tests/generated/presentation_contracts.py": "0c027a91a159b12599ed3b00a7a3e0ce193931187d7eb87ce7dad581c3632987",
+    "tests/native/facman_presentation_service_smoke.cpp": "dc48757e0ec2d6b6ac761663b3768ec8226d725bbf6548d68e143f0741901254",
+    "tests/test_contract_compiler.py": "9b2f51fc5853b23dc784717bde96452877b99d608b2fa6fc7c619aa4f8b568e7",
+    "tests/test_facman_winforms_c1_shell.py": "3a3d9666899a743e90cda50425faa63841fedd1fdcfccf1ae5e69d727f54627e",
+    "tests/test_presentation_intent.py": "d0623da6a3b96038f61662010f585cc9830bdb2322f0db0d0adee5d1dcd5957b",
+    "tests/test_profiles_templates.py": "16dc49c1ca8ee00daa66c01d3fb2978c148520e5a7ce92acbc5c86643c74b297",
+    "tests/winforms_control_gallery/ObservationIntentHarness.cs": "0a2d1b31bb060fcee7e98f71de24171a9725140e194a542eef17e7b4a0b988ca",
+    "tools/codegen/generate_metadata.py": "3d2d13c57cfe6879dbd17c491d0a6bf01c8627126b16c2365a39ab69bab5ae19"
+  },
+  "frontend_oracle": "Compiled headless product-state harness: default Menu, busy selector/action refusal, immutable uncertain intent/payload/identity; no form or process dispatch",
+  "historical_qualification_unchanged": true,
+  "independent_source_review_sha256": "432de8a6a2997e529f8a95d883a689bc650ba3f5e877c023a030105a6cb8f2e1",
+  "legacy_oracle": {
+    "absent_default_and_explicit_menu_exact_result_replay": true,
+    "changed_intent_idempotency_conflict": true,
+    "pre_change_receipt": "Generated by the actual pre-change native executable; original workspace and receipt preserved",
+    "whole_workspace_and_receipt_bytes_unchanged": true
+  },
+  "legacy_replay_sha256": "e446718b5a7f0ed7708c7a40a081a0659ce4929fe37ee64f98d481c404e0dcc2",
+  "native_executable_sha256": "92af0e1dc9a8cabcf485f29447bd93e9def456501d3b032b405c2dc12313508b",
+  "operating_scope": {
+    "existing_cache_reused": true,
+    "native_workers": 2,
+    "new_clones": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "product_candidates_dispatched": 0,
+    "source_fixture_only": true
+  },
+  "public_cli_tests": {
+    "methods": 13,
+    "passed": 13,
+    "skipped": 0
+  },
+  "qualification": [
+    {
+      "exit_code": 0,
+      "log_sha256": "a30b3d2f49cdb67b49295fea1e78872b94f1598d0385b2f53b8fffeccacc7500",
+      "name": "strict"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "d823af1264b45d3ce0dd57dda76e00cc2b8e090e85ab95e9c8931a7089c8406a",
+      "name": "configure"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "3f1a89997fff62080670ce94e61be4f7a1963a94e9e41273ca4ecccdff97580b",
+      "name": "build"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "f695f656169ef14ff4ab1d836df6dd9eb568086a8f64ee426ab90617b9fc1565",
+      "name": "native-smoke"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "f7c960ec01cd65eba5bda4cf9c25f6b0862c207d9a939df0e793ef2d79045557",
+      "name": "focused-cli"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "ceb8214b5e93ad57646ae6f1df73457e361e978840b34fb9cdbbed0dc9446b4f",
+      "name": "legacy-replay"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "547abb6a3e656a37cf6e056ec9f8e0b22519e8ef1888900ec9d25e9047ff0369",
+      "name": "winforms-build"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "3034a0b162c932b59739c892457c5e3a4c8daeceb93739552e9421e1c0b32ca8",
+      "name": "winforms-harness-build"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "cbff95e223741255b8b5444a4b84185e227ccf4cac7dd138962206984a7e84cf",
+      "name": "winforms-harness"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "76a201f485735c64941ec104318d7702de00bd780e61cd42818c0b89ebeada36",
+      "name": "diff"
+    }
+  ],
+  "qualification_sha256": "c29a10e8b8c46aad56d7b08cbf0c6a1f02c809ad6d7d7b55c3a96e0ae3b4048b",
+  "retained_failures": [
+    "Pre-build strict format/source-budget refusal; repaired through bounded existing-helper extraction without changing budgets",
+    "Close-during-refresh review finding; guarded completion before native qualification",
+    "Initial derived catalog-digest refusal; only target-local derived projections refreshed"
+  ],
+  "schema": "facman.presentation_selected_save_intent.scoped_qualification.v1",
+  "source_parent": "c23abf22b4e240e8528ba1e1fc06e2188d2e230d",
+  "verdict": "PASS",
+  "winforms_executable_sha256": "c2b0a64905f7326f4e7a90a28ea1f6b08aa39e5b8e0aeaab190e83d91d537d38",
+  "winforms_harness_sha256": "2364f64553ba191fd20ee2ed5f5033166cfe987d08ce746e4d75c60f38d8d7c1",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}

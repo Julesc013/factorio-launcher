@@ -19,7 +19,12 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include <utility>
 #include <vector>
+
+#if defined(_WIN32)
+#include <process.h>
+#endif
 
 namespace fs = std::filesystem;
 namespace setup = facman::self_setup;
@@ -370,7 +375,21 @@ struct InterruptAt final : setup::DurableBoundaryHook {
   }
 };
 
-struct Tree { fs::path root; ~Tree() { std::error_code ignored; fs::remove_all(root, ignored); } };
+struct Tree {
+  fs::path root;
+  explicit Tree(fs::path value) : root(std::move(value)) {
+#if defined(_WIN32)
+    // Leave room for the provider's journals under an owned external temp root.
+    // A live process owns its prefix; retain any directory from an earlier run.
+    static unsigned next = 0;
+    const fs::path parent = root.parent_path();
+    do {
+      root = parent / ("ssr" + std::to_string(_getpid()) + "-" + std::to_string(next++));
+    } while (fs::exists(root));
+#endif
+  }
+  ~Tree() { std::error_code ignored; fs::remove_all(root, ignored); }
+};
 
 fs::path active_journal_path(const Tree &tree);
 

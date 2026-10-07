@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_transaction.h"
+#include "fl_transaction_pack_import.h"
 
 #include "fl_archive.h"
 #include "fl_archive_platform.h"
@@ -413,6 +414,21 @@ bool verify_staging_marker(const Record& record, const fs::path& staging, std::s
 bool ensure_staging_markers(const Record& record, std::string& detail)
 {
     for (const fs::path& staging : record.staging_roots) {
+        facman::platform::StableDirectoryObject import_root;
+        if (record.command_id == "modsets.import") {
+            // Before the extractor's exclusive root_ready callback, this
+            // journal has no authority over any directory at the staging path.
+            if (record.effect_file_identity.empty()) continue;
+            facman::platform::PathIdentity presence;
+            const auto inspected = facman::platform::inspect_path_no_follow(staging, presence);
+            if (!inspected.ok()) { detail = inspected.detail; return false; }
+            if (!presence.exists) continue; // Whole-directory publication.
+            if (!import_root.open_no_follow(staging).ok() ||
+                directory_effect_identity(import_root) != record.effect_file_identity) {
+                detail = "Import staging root differs from its exclusively created object";
+                return false;
+            }
+        }
         std::error_code error;
         if (!fs::is_directory(staging, error) || error) continue;
         const fs::path marker = staging / transaction_marker_name();
@@ -425,9 +441,15 @@ bool ensure_staging_markers(const Record& record, std::string& detail)
         }
         if (marker_identity.exists) {
             if (!verify_staging_marker(record, staging, detail)) return false;
+            if (import_root.open() && !import_root.revalidate().ok()) {
+                detail = "Import staging root changed during marker verification"; return false;
+            }
             continue;
         }
         if (!facman::base::write_text_new_atomic(marker, marker_json(record), detail)) return false;
+        if (import_root.open() && !import_root.revalidate().ok()) {
+            detail = "Import staging root changed during marker creation"; return false;
+        }
     }
     return true;
 }
@@ -484,6 +506,11 @@ bool read_record(
     std::string& detail)
 {
     return load_record(workspace, transaction_id, record, detail);
+}
+
+bool verify_staging_ownership(const Record& record, const fs::path& staging, std::string& detail)
+{
+    return record.schema_version >= 2U && verify_staging_marker(record, staging, detail);
 }
 
 bool begin(const fs::path& workspace, Record& record, std::string& detail)
@@ -1198,6 +1225,11 @@ Outcome plan(const fs::path& workspace, const std::string& id)
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
     record.recovery_actions.clear();
     if (terminal(record.state)) record.recovery_actions.push_back("none");
+    else if (record.command_id == "modsets.import")
+        record.recovery_actions.push_back("verify_and_resume_owned_pack_instance");
+    else if (record.command_id == "modsets.export" &&
+             record.commit_strategy == "portable_modpack_export_destination_volume_atomic_no_replace")
+        record.recovery_actions.push_back("preserve_portable_export_staging_for_review");
     else if (record.command_id == "saves.retention.apply")
         record.recovery_actions.push_back("verify_and_resume_owned_backup_moves");
     else if (record.command_id == "profiles.apply" &&
@@ -1750,6 +1782,12 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     std::string detail;
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
     if (terminal(record.state)) return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+    if (record.command_id == "modsets.export" &&
+        record.commit_strategy == "portable_modpack_export_destination_volume_atomic_no_replace") {
+        return Refusal {"recovery_staging_unrecognized",
+            "Portable export staging requires review before cleanup",
+            "Retained export staging and any published target remain intact", false};
+    }
     const fs::path lock_path = recovery_lock_path(workspace, id);
     facman::base::StableLocalLock recovery_lock;
     facman::base::StableLockResult lock_result = recovery_lock.create(lock_path);
@@ -1761,8 +1799,12 @@ Outcome apply(const fs::path& workspace, const std::string& id)
         json::ObjectBuilder expected_lock;
         expected_lock.add_string("schema", "facman.recovery_lock.v1");
         expected_lock.add_string("identity", existing.identity_text());
-        if (existing_result.acquired() && record.command_id == "saves.retention.apply" &&
-            (existing_content.empty() || existing_content == expected_lock.serialize() + "\n")) {
+        const bool retention_lock = record.command_id == "saves.retention.apply" &&
+            (existing_content.empty() || existing_content == expected_lock.serialize() + "\n");
+        const bool import_lock = record.command_id == "modsets.import" &&
+            record.commit_strategy == "modpack_instance_no_replace_v1" &&
+            existing_content == expected_lock.serialize() + "\n";
+        if (existing_result.acquired() && (retention_lock || import_lock)) {
             recovery_lock = std::move(existing);
             lock_result = existing_result;
         } else if (existing_result.code == facman::base::StableLockCode::contended ||
@@ -1806,6 +1848,14 @@ Outcome apply(const fs::path& workspace, const std::string& id)
         (void)recovery_lock.remove_exact(ignored);
     };
     auto unlock_checked = [&]() { return recovery_lock.remove_exact(detail); };
+    if (record.command_id == "modsets.import") {
+        const bool recovered = recover_pack_import(workspace, record, detail);
+        if (!unlock_checked()) return Refusal {
+            "recovery_write_refused", "Recovery lock identity changed before release", detail, false};
+        if (!recovered) return Refusal {
+            "recovery_modpack_import_unsafe", "Import recovery retained all data", detail, false};
+        return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+    }
     if (record.command_id == "profiles.apply" && record.commit_strategy == "profile_apply_two_file_v1") {
         Outcome result = recover_profile_pair(workspace, record);
         if (!unlock_checked()) return Refusal {
@@ -1951,6 +2001,14 @@ Outcome apply(const fs::path& workspace, const std::string& id)
             unlock();
             return Refusal {"recovery_staging_unrecognized", "Transaction staging marker is invalid", detail, false};
         }
+    }
+    // A process can die before publication while its journal says committing.
+    // Reconcile that uncertainty only in recovery, after target absence and
+    // staging ownership are checked; normal committing rollback stays forbidden.
+    if (record.state == State::committing &&
+        !advance(workspace, record, "recovery_required", "unpublished_commit_recovery_selected", detail)) {
+        unlock();
+        return Refusal {"recovery_write_refused", "Prepublication recovery could not be durably recorded", detail, true};
     }
     if (!advance(workspace, record, "rollback_required", "recovery_apply_started", detail)) {
         unlock();

@@ -1,0 +1,47 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01
+title: Complete existing-install readiness and launch isolation
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-09-06
+owner: runtime-maintainer
+canonical_plan: release/index/plan.v1.toml
+admission_workunit: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
+objective: "Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state."
+source_bundles:
+  - "F06"
+allowed_paths:
+  - "README.md"
+  - ".aide/memory/project-state*"
+  - "release/index/current_state.v1.toml"
+  - "release/index/plan.v1.toml"
+  - ".aide/queue/index.yaml"
+  - "todo.md"
+  - "runtime/**"
+  - "contracts/**"
+  - "tests/**"
+  - "docs/**"
+  - "apps/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/**"
+forbidden_paths:
+  - ".git/**"
+  - ".aide.local/**"
+  - ".aide/history/**"
+acceptance:
+  - "Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state."
+  - "Test stale plans, unsupported source, missing files, concurrent sessions and launch failure through actual runtime seams."
+validation_protocol:
+  - "Inspect existing affected native/Python tests and strict validators before implementation; record exact commands and results."
+  - "Exercise applicable positive, refusal, concurrency, fault/recovery and package effects with independent oracles."
+  - "Retain source, base/head/tree, independent review, exact integration and evidence invalidation; source fixtures alone do not qualify real hosts."
+retained_boundaries:
+  - "No direct protected push, force push, self-approval or required-check bypass."
+  - "No production credentials, signing, billing or public publication."
+  - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
+commit_template: .aide/git/commit-template.md
+verified_pending_closeout_at: 2026-10-04T00:57:31Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-10-04T00:57:32Z
+closed_at: 2026-10-04T00:57:32Z

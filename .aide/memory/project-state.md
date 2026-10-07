@@ -16,9 +16,9 @@ Generate that fail-closed observation after checkout with
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-0-1-alpha6-workspace-migration-recovery`;
-- active WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
-- all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`;
-- next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
+- active WorkUnit: `FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01`;
+- all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`;
+- next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01`;
 - next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
 - truth scope: `phase0_governance_integrated_alpha6_workspace_migration_recovery_historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
 - alpha.5 exact candidate: source `4683ecd9a1b9ead5eb84be152760d12583da0f0e` (tree `c07938618bc0f533fd12756cba123f54b8592048`), run `33603385303` attempt `1`;
@@ -109,9 +109,9 @@ work or promote execution, network, credential, signing, or publication authorit
 
 ## Contract and validation identity
 
-- commands / registered routes: `131` / `129`;
-- schemas / refusal codes: `436` / `308`;
-- command catalog digest: `c7c6b8b02c4543f360fc958a3d8618cce8250a4b2edcf114b183c407de967c50`;
+- commands / registered routes: `132` / `130`;
+- schemas / refusal codes: `439` / `308`;
+- command catalog digest: `986b363d3eb5dbab67ab9f5a4cb4a4cd90ea91a9bb20d7601ecea0e8239f7e6f`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 

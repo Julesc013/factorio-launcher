@@ -165,6 +165,9 @@ struct WriteOptions {
     bool force_zip64 = false;
     Limits limits;
     WriteCheckpoint checkpoint;
+    // A caller with an identity-aware cleanup policy retains failed staging.
+    // Shared writer behavior stays unchanged unless this is explicitly enabled.
+    bool preserve_staging_on_failure = false;
 };
 
 struct WriteResult {

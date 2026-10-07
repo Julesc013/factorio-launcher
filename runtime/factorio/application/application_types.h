@@ -8,6 +8,7 @@
 #include "flb_factorio_install_model.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
+#include "flb_factorio_modpack_import.h"
 #include "flb_factorio_modset_solver.h"
 #include "flb_factorio_mods.h"
 #include "flb_factorio_save_operations.h"
@@ -99,6 +100,7 @@ struct PresentationQueryRequest {
     std::string selected_instance_id;
     std::string search;
     std::string known_revision;
+    std::string launch_intent = "menu";
 };
 struct SemanticActionRequest {
     std::string action_id;
@@ -122,12 +124,14 @@ struct SemanticActionRequest {
     std::string source_data_root;
     std::string transaction_id;
     std::vector<std::string> roots;
+    std::string launch_intent = "menu";
 };
 
 using ImportModRequest = modsets::ImportRequest;
 using ModInventoryRequest = facman::factorio::mods::InventoryRequest;
 using ModsetInstanceRequest = modsets::InstanceRequest;
 using ExportModsetRequest = modsets::ExportRequest;
+using ImportModpackRequest = modsets::PackImportRequest;
 using ModsetSolverRequest = facman::factorio::modsets::solver::Request;
 using ListSavesRequest = saves::InstanceRequest;
 using SaveIndexRequest = facman::factorio::saves::index::Request;
@@ -173,6 +177,7 @@ using ApplicationPayload = std::variant<
     ModInventoryRequest,
     ModsetInstanceRequest,
     ExportModsetRequest,
+    ImportModpackRequest,
     ModsetSolverRequest,
     ListSavesRequest,
     SaveIndexRequest,

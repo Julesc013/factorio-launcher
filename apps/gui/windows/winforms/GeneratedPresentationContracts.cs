@@ -7,7 +7,7 @@ namespace FacMan.WinForms.GeneratedContracts
 {
     public static class PresentationContractIdentity
     {
-        public const string SourceDigest = "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200";
+        public const string SourceDigest = "0ef73f830fd6c81090f0da7e6cff2dc0ca417e6eafa24d476779401b38455809";
     }
 
     public sealed class SemanticActionRequest
@@ -23,6 +23,7 @@ namespace FacMan.WinForms.GeneratedContracts
         public string IdempotencyKey { get; set; }
         public string InstallationId { get; set; }
         public string InstallationPath { get; set; }
+        public string LaunchIntent { get; set; }
         public string ModIdentity { get; set; }
         public string NewInstanceId { get; set; }
         public string OutputPath { get; set; }
@@ -39,6 +40,7 @@ namespace FacMan.WinForms.GeneratedContracts
     {
         public string Scope { get; set; }
         public string KnownRevision { get; set; }
+        public string LaunchIntent { get; set; }
         public string Search { get; set; }
         public string SelectedInstanceId { get; set; }
     }

@@ -86,6 +86,9 @@ struct TuiItem {
     std::string title;
     std::string detail;
     bool selected = false;
+    std::string save_context_status;
+    std::string save_context_version;
+    std::string save_context_content;
 };
 
 struct TuiAction {

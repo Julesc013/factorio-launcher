@@ -95,8 +95,6 @@ class SelfSetupPackageTests(unittest.TestCase):
         portable = root / "FacMan-0.1.0-alpha.2-windows-x64-portable.zip"
         setup = root / "FacManSetup.exe"
         output = root / output_name
-        self.portable(portable)
-        setup.write_bytes(b"MZ synthetic setup")
         record = MODULE.build(
             portable,
             setup,
@@ -111,6 +109,8 @@ class SelfSetupPackageTests(unittest.TestCase):
     def test_build_is_deterministic_and_versioned(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+            self.portable(root / "FacMan-0.1.0-alpha.2-windows-x64-portable.zip")
+            (root / "FacManSetup.exe").write_bytes(b"MZ synthetic setup")
             first, first_root = self.build(root, "first")
             second, second_root = self.build(root, "second")
             first_payload = first_root / first["payload"]["filename"]

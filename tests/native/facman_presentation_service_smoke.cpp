@@ -21,16 +21,45 @@
 #include <condition_variable>
 #include <exception>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 #include <variant>
 
 namespace fs = std::filesystem;
 using namespace facman::factorio::application;
 
 namespace {
+
+// Mutate the unselected profile after the owner plan has been observed in a
+// snapshot but before its revision is admitted and apply is dispatched. This
+// existing provider seam avoids a production pause hook for the boundary test.
+class ProfileChangingLastRunProvider final : public LastRunProvider {
+public:
+    ProfileChangingLastRunProvider(LastRunProvider& delegate, fs::path profile)
+        : delegate_(delegate), profile_(std::move(profile)) {}
+    const char* provider_id() const noexcept override { return delegate_.provider_id(); }
+    LastRunProjection last_run(const std::string& reference) const override
+    {
+        if (armed) {
+            armed = false;
+            std::ofstream changed(profile_, std::ios::app | std::ios::binary);
+            changed << "\n";
+            changed.close();
+            mutated = static_cast<bool>(changed);
+        }
+        return delegate_.last_run(reference);
+    }
+    mutable bool armed = false;
+    mutable bool mutated = false;
+
+private:
+    LastRunProvider& delegate_;
+    fs::path profile_;
+};
 
 std::string output(const ApplicationResult& result)
 {
@@ -133,6 +162,7 @@ public:
 
     bool available(const PresentationQueryRequest& request) const noexcept override
     {
+        ++availability_count;
         return request.selected_instance_id == selected_instance_id_ &&
             fs::is_regular_file(fs::path(FACMAN_TEST_PROCESS_PROBE_PATH));
     }
@@ -294,6 +324,7 @@ public:
 
     void sabotage_next_receipt_after_effect() { sabotage_next_receipt_ = true; }
 
+    mutable std::atomic<unsigned int> availability_count {0U};
     std::atomic<unsigned int> dispatch_count {0U};
 
 private:
@@ -398,6 +429,27 @@ int run_smoke()
         first.find("\"action_id\":\"doctor.run\"") == std::string::npos ||
         first.find("authority_state\":\"no_record") == std::string::npos) return 1;
     if (fs::exists(root)) return 2;
+    // Explicit menu is the legacy default; context alone changes no-instance revisions.
+    auto explicit_menu = query;
+    explicit_menu.launch_intent = "menu";
+    if (output(service.query(explicit_menu)) != first) return 110;
+    PresentationQueryRequest no_instance {"launch_deck", {}, {}, {}};
+    const std::string no_menu = output(service.query(no_instance));
+    no_instance.launch_intent = "load_save";
+    const std::string no_save = output(service.query(no_instance));
+    if (field(no_menu, "revision") == field(no_save, "revision") ||
+        no_save.find("\"launch_intent\":\"load_save\"") == std::string::npos || fs::exists(root)) return 111;
+    no_instance.launch_intent.clear();
+    if (service.query(no_instance).error_code != "unsupported_launch_intent") return 112;
+    no_instance.launch_intent = "benchmark";
+    if (service.query(no_instance).error_code != "unsupported_launch_intent") return 113;
+    SemanticActionRequest invalid_intent_action;
+    invalid_intent_action.launch_intent.clear();
+    if (service.action(invalid_intent_action).error_code != "unsupported_launch_intent" ||
+        fs::exists(root)) return 121;
+    invalid_intent_action.launch_intent = "benchmark";
+    if (service.action(invalid_intent_action).error_code != "unsupported_launch_intent" ||
+        fs::exists(root)) return 122;
 
     PresentationQueryRequest content_query {"content", {}, {}, {}};
     const std::string content_snapshot = output(service.query(content_query));
@@ -589,6 +641,48 @@ int run_smoke()
     if (launch_snapshot.find("\"action_id\":\"launch.play\"") == std::string::npos ||
         launch_snapshot.find("\"availability\":\"available\"") == std::string::npos ||
         launch_snapshot.find("\"confirmation\":\"explicit\"") == std::string::npos) return 20;
+
+    // The existing permissive executor deliberately ignores intent. Product admission must quarantine it.
+    auto save_query = launch_query;
+    save_query.launch_intent = "load_save";
+    const unsigned int menu_availability_calls = launch_executor.availability_count;
+    const std::string save_snapshot = output(launch_service.query(save_query));
+    if (launch_executor.availability_count != menu_availability_calls) return 120;
+    auto parsed_save = facman::core::json::parse(save_snapshot);
+    if (!parsed_save) return 114;
+    const auto* advertised = parsed_save.value().find("available_semantic_actions");
+    if (advertised == nullptr) return 115;
+    for (std::size_t index = 0U; index < advertised->size(); ++index) {
+        const auto* descriptor = advertised->at(index);
+        if (descriptor && field(descriptor->serialize(), "action_id") == "launch.play" &&
+            field(descriptor->serialize(), "availability") != "refused") return 116;
+    }
+    SemanticActionRequest save_play;
+    save_play.action_id = "launch.play";
+    save_play.scope = "launch_deck";
+    save_play.selected_instance_id = "main";
+    save_play.launch_intent = "load_save";
+    save_play.expected_snapshot_revision = field(save_snapshot, "revision");
+    save_play.request_id = "request-save-play";
+    save_play.idempotency_key = "idempotency-save-play";
+    save_play.durable_operation_id = "operation-save-play";
+    save_play.attempt_id = "attempt-save-play";
+    save_play.confirmation = "explicit";
+    if (launch_service.action(save_play, true).status == ULK_STATUS_OK ||
+        launch_executor.dispatch_count != 0U ||
+        launch_executor.availability_count != menu_availability_calls) return 117;
+    auto save_refresh = save_play;
+    save_refresh.action_id = "readiness.refresh";
+    save_refresh.request_id = "request-save-refresh";
+    save_refresh.idempotency_key = "idempotency-save-refresh";
+    save_refresh.expected_snapshot_revision = field(launch_snapshot, "revision");
+    const auto stale_save = launch_service.action(save_refresh);
+    if (stale_save.error_code != "stale_snapshot_revision" ||
+        output(stale_save).find("\"launch_intent\":\"load_save\"") == std::string::npos) return 118;
+    save_refresh.expected_snapshot_revision = field(save_snapshot, "revision");
+    const auto refreshed_save = launch_service.action(save_refresh);
+    if (refreshed_save.status != ULK_STATUS_OK ||
+        output(refreshed_save).find("\"launch_intent\":\"load_save\"") == std::string::npos) return 119;
 
     SemanticActionRequest play;
     play.action_id = "launch.play";
@@ -943,6 +1037,35 @@ int run_smoke()
     select_profile.idempotency_key = "idempotency-select-profile";
     select_profile.durable_operation_id = "operation-select-profile";
     select_profile.attempt_id = "attempt-select-profile";
+    ProfileChangingLastRunProvider changing_provider(
+        journey_context.last_run_provider(),
+        journey_context.workspace() / "profiles" / "quiet-gui" / "profile.v1.json");
+    PresentationActionLedger changing_ledger;
+    PresentationService changing_service(journey_context, changing_provider, changing_ledger);
+    SemanticActionRequest raced_profile = select_profile;
+    raced_profile.request_id = "request-raced-profile";
+    raced_profile.idempotency_key = "idempotency-raced-profile";
+    raced_profile.durable_operation_id = "operation-raced-profile";
+    raced_profile.attempt_id = "attempt-raced-profile";
+    const fs::path isolated_manifest = journey_context.workspace() / "instances" /
+        "fixture-isolated" / "instance.v1.json";
+    std::ifstream before_stream(isolated_manifest, std::ios::binary);
+    if (!before_stream) return 110;
+    const std::string manifest_before_race {
+        std::istreambuf_iterator<char>(before_stream), std::istreambuf_iterator<char>()};
+    before_stream.close();
+    changing_provider.armed = true;
+    const ApplicationResult raced_result = changing_service.action(raced_profile, true);
+    std::ifstream after_stream(isolated_manifest, std::ios::binary);
+    const std::string manifest_after_race {
+        std::istreambuf_iterator<char>(after_stream), std::istreambuf_iterator<char>()};
+    after_stream.close();
+    if (!changing_provider.mutated || after_stream.bad() ||
+        manifest_before_race != manifest_after_race ||
+        output(raced_result).find("profile_preparation_revision_changed") == std::string::npos ||
+        output(raced_result).find("refused_before_effects") == std::string::npos) return 111;
+    planning_snapshot = output(journey_service.query(selected_instances_query));
+    select_profile.expected_snapshot_revision = field(planning_snapshot, "revision");
     const ApplicationResult selected_profile_result =
         journey_service.action(select_profile, true);
     if (selected_profile_result.status != ULK_STATUS_OK ||

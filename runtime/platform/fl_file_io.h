@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -123,6 +124,9 @@ public:
     StableDirectoryObject& operator=(const StableDirectoryObject&) = delete;
 
     IoStatus open_no_follow(const std::filesystem::path& path);
+    // Read-only verification while a separate publication handle owns DELETE.
+    // Existing opens retain their original deny-delete sharing policy.
+    IoStatus open_no_follow_for_publication_verification(const std::filesystem::path& path);
     IoStatus open_no_follow_for_relative_writes(const std::filesystem::path& path);
     IoStatus revalidate() const;
     IoStatus validate_descendant(
@@ -153,6 +157,15 @@ public:
     IoStatus list_child_names_bounded(
         std::size_t maximum_entries,
         std::vector<std::filesystem::path>& names) const;
+    // Windows deletes through the same exclusive child handle used for identity
+    // and content verification. POSIX removes only the recorded leaf relative
+    // to the held parent after verification; its final-leaf replacement window
+    // remains because the platform has no atomic compare-and-unlink operation.
+    IoStatus remove_child_file_no_follow_if_matches(
+        const std::filesystem::path& leaf, const FileIdentity& expected,
+        const std::function<bool(const StableInputFile&)>& verify_content) const;
+    IoStatus remove_child_empty_directory_no_follow_if_matches(
+        const std::filesystem::path& leaf, const PathIdentity& expected) const;
     IoStatus create_child_file_exclusive(
         const std::filesystem::path& leaf,
         std::uint64_t maximum_size,
@@ -165,7 +178,8 @@ public:
 private:
     friend class DurableOutputFile;
     friend class PrivatePublicationFile;
-    IoStatus open_no_follow_impl(const std::filesystem::path& path, bool relative_writes);
+    IoStatus open_no_follow_impl(const std::filesystem::path& path, bool relative_writes,
+        bool allow_publication_handle = false);
     IoStatus open_child_directory_no_follow_impl(
         const std::filesystem::path& leaf,
         StableDirectoryObject& child,

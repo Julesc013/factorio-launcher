@@ -3,6 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01
+    status: passed
+    lifecycle_state: closed
+    title: Complete existing-install readiness and launch isolation
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence
   - id: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
     status: active_automated
     lifecycle_state: active_automated
@@ -46,8 +52,8 @@ items:
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence
   - id: FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01
-    status: active
-    lifecycle_state: active
+    status: blocked
+    lifecycle_state: blocked
     title: Complete independent FacMan self-maintenance
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/evidence
@@ -75,6 +81,24 @@ items:
     title: Close public workspace migration and recovery
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence
+  - id: FACMAN-0.1-ALPHA6-WORLD-BACKUP-01
+    status: passed
+    lifecycle_state: closed
+    title: Create consistent world backups and inspectable bundles
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence
+  - id: FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01
+    status: active
+    lifecycle_state: active
+    title: Converge Make Ready with selected-save Play
+    task: .aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence
+  - id: FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01
+    status: passed
+    lifecycle_state: closed
+    title: Restore worlds and apply explicit retention safely
+    task: .aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence
   - id: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
     status: closed
     lifecycle_state: closed
@@ -243,12 +267,6 @@ items:
     title: Prepare candidate custody trust and servicing
     task: .aide/queue/next/FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01/evidence
-  - id: FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01
-    status: planned
-    lifecycle_state: planned
-    title: Complete existing-install readiness and launch isolation
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence
   - id: FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01
     status: planned
     lifecycle_state: planned
@@ -261,12 +279,6 @@ items:
     title: Build matching Terminal and Desktop delivery profiles
     task: .aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01/evidence
-  - id: FACMAN-0.1-ALPHA6-WORLD-BACKUP-01
-    status: planned
-    lifecycle_state: planned
-    title: Create consistent world backups and inspectable bundles
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence
   - id: FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01
     status: planned
     lifecycle_state: planned
@@ -321,12 +333,6 @@ items:
     title: Resolve local content and modpacks reproducibly
     task: .aide/queue/next/FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01/evidence
-  - id: FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01
-    status: planned
-    lifecycle_state: planned
-    title: Converge Make Ready with selected-save Play
-    task: .aide/queue/next/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence
   - id: FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01
     status: planned
     lifecycle_state: planned
@@ -393,12 +399,6 @@ items:
     title: Complete ordinary WinForms setup and instance journeys
     task: .aide/queue/next/FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01/evidence
-  - id: FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01
-    status: planned
-    lifecycle_state: planned
-    title: Restore worlds and apply explicit retention safely
-    task: .aide/queue/next/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence
   - id: FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01
     status: planned
     lifecycle_state: planned
@@ -447,6 +447,12 @@ items:
     title: Freeze and qualify the complete beta subset
     task: .aide/queue/next/FACMAN-0.1-FEATURE-FREEZE-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-FEATURE-FREEZE-01/evidence
+  - id: FACMAN-AIDE-LITE-UPGRADE-01
+    status: planned
+    lifecycle_state: planned
+    title: Update portable AIDE while preserving FacMan controls
+    task: .aide/queue/next/FACMAN-AIDE-LITE-UPGRADE-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-AIDE-LITE-UPGRADE-01/evidence
   - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
     status: superseded
     lifecycle_state: superseded

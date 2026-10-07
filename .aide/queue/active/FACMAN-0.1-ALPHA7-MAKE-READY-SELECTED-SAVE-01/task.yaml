@@ -1,0 +1,54 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01
+title: Converge Make Ready with selected-save Play
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-09-06
+owner: runtime-maintainer
+canonical_plan: release/index/plan.v1.toml
+admission_workunit: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
+objective: "Make one typed readiness plan reconcile install, instance, content and selected world before launch."
+source_bundles:
+  - "F11"
+allowed_paths:
+  - "runtime/**"
+  - "contracts/**"
+  - "apps/**"
+  - "tests/**"
+  - "docs/**"
+  - ".aide/queue/next/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/**"
+  - ".aide/queue/index.yaml"
+  - "release/index/plan.v1.toml"
+  - "release/index/current_state.v1.toml"
+  - "release/index/project_status.v2.toml"
+  - ".aide/memory/project-state.md"
+  - ".aide/memory/project-state.v2.json"
+  - "README.md"
+  - "todo.md"
+  - "CMakeLists.txt"
+  - "content/factorio/strings/en-US.toml"
+  - "release/index/capability_frontend_matrix.v1.toml"
+  - "release/generated/technical_preview_command_api_conformance.v1.json"
+  - "tools/command_contract_check.py"
+  - "tools/frontend_contract_check.py"
+  - "tools/instance_model_check.py"
+  - "tools/codegen/generate_metadata.py"
+forbidden_paths:
+  - ".git/**"
+  - ".aide.local/**"
+  - ".aide/history/**"
+acceptance:
+  - "Make one typed readiness plan reconcile install, instance, content and selected world before launch."
+  - "Exercise stale inputs, recoverable partial preparation and selected-save mismatch through ordinary workflows."
+validation_protocol:
+  - "Inspect existing affected native/Python tests and strict validators before implementation; record exact commands and results."
+  - "Exercise applicable positive, refusal, concurrency, fault/recovery and package effects with independent oracles."
+  - "Retain source, base/head/tree, independent review, exact integration and evidence invalidation; source fixtures alone do not qualify real hosts."
+retained_boundaries:
+  - "No direct protected push, force push, self-approval or required-check bypass."
+  - "No production credentials, signing, billing or public publication."
+  - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
+commit_template: .aide/git/commit-template.md
+active_at: 2026-10-04T17:13:31Z

@@ -1,0 +1,305 @@
+{
+  "schema": "facman.world_backup_low_space_evidence.v1",
+  "status": "PASS",
+  "work_item": "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
+  "scope": "Original WorldBackup clauses: exact final803 package machine observations plus test-only concurrency follow-up; current-head checks/integration/closeout pending",
+  "source_base": "6668ef2c55f0e59ed40782121b832878c71e40c9",
+  "produced_package": {
+    "workflow_run": 37172494677,
+    "attempt": 1,
+    "artifact_id": 11292276358,
+    "artifact_zip_sha256": "94bc68070b61c19e20c0c66d0bdb264d822d031c7df288e992e18fa25f8d18ff",
+    "source_revision": "803bd98af05c7343977934a7c1b21c67ed897720",
+    "source_tree": "0a038464f24deb5ff946b091dd7b48a78a0ed995",
+    "assets": [
+      {
+        "bytes": 7458975,
+        "filename": "FacMan-0.1.0-alpha.6-windows-x64-portable.zip",
+        "sha256": "4763b01e068c2891de36ed85394fddf75327ddaaa99c9d1831d1456ef4ac0297"
+      },
+      {
+        "bytes": 21162351,
+        "filename": "FacMan-0.1.0-alpha.6-windows-x64-setup.exe",
+        "sha256": "7258c94ce585f70b461b22a5c4613403c87c8cfdb2607b4cd46fff490cddf627"
+      },
+      {
+        "bytes": 7623893,
+        "filename": "FacMan-0.1.0-alpha.6-macos-x64-portable.zip",
+        "sha256": "86d431b10e0d3d1807d36b1ba2428ee95c04098ea96e153595484414ebcbf759"
+      },
+      {
+        "bytes": 7623362,
+        "filename": "FacMan-0.1.0-alpha.6-macos-x64-setup.pkg",
+        "sha256": "8fb61a4ee299f89f177a0d18c964fd9ef2ffde8c00ec91cf25590127e7b4a29d"
+      },
+      {
+        "bytes": 5775363,
+        "filename": "FacMan-0.1.0-alpha.6-linux-x64-portable.tar.zst",
+        "sha256": "0c4330e8ccf5ee8523e2c0a2b64c0ea8981d1a101d44da8980c8cb90c92a9f94"
+      },
+      {
+        "bytes": 6743758,
+        "filename": "FacMan-0.1.0-alpha.6-linux-x64-setup.run",
+        "sha256": "5845856128f0ed65f63b6731bdf060023c9111fbf10de4cfe782b18eb1182a47"
+      }
+    ]
+  },
+  "regression": {
+    "path": "tests/test_save_transfer.py",
+    "sha256": "215b37b5a044a74295550f799899ba2a51133e1d44fc7c7dcf45ac42c895055d",
+    "linux_tests": 19,
+    "linux_skips": 0,
+    "windows_focused_tests": 1,
+    "windows_sharing_refusal": 32,
+    "same_inode_size_restored_mtime_posix": true,
+    "same_target_low_space_retry": true
+  },
+  "impact_binding": {
+    "changed_paths": [
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/produced-package-acceptance.v1.json",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/produced-package-validation-custody.zip",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/remaining-risks.md",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/validation.md",
+      "tests/test_save_transfer.py"
+    ],
+    "unchanged_producer_git_objects": {
+      "runtime": "a4c4e2286c70d9c7f44841c57d5b004545270c1c",
+      "contracts": "38c109f2d39220cdb8fdae53825d992aefe2d0f4",
+      "apps": "d388676c6b965a93a7eb1018106a586a04b5428d",
+      "content": "4e7932e63fd6bdcbe5dc24ff41bfef70f4523e81",
+      "cmake": "ae398064a3301606f0a123797c3e1063d1c5ced0",
+      "tools": "9dd6e3723024c7371e243c78cd8e82a209b92692",
+      ".github/workflows": "6812ed041cd50a2b598bd78da670a25e223bf2a2"
+    },
+    "review_sha256": "4103033e05162cb30d00614ba1620e3e28748b43d60c56f281c323c695f6c4db",
+    "final803_observations_reused": true,
+    "newer_head_package_provenance": false,
+    "reproducible_byte_equivalence": false,
+    "final_head_required_checks_and_integration_required": true
+  },
+  "public_custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/produced-package-validation-custody.zip",
+    "sha256": "c0f7d36e1c97ff55e437e456c54840909d71bfbdbbf277f666201e6b49a24727",
+    "members": [
+      {
+        "path": "world-backup-original-acceptance.review.json",
+        "bytes": 12091,
+        "sha256": "522a2fef98628824bed7146e2bc3dd9f96d95494a85907e4fe336d46f2906001"
+      },
+      {
+        "path": "world-backup-same-object-write-static.review.json",
+        "bytes": 6170,
+        "sha256": "d1939c867161ce09b226b653c11c75eaa06350ef5c584212f5a9fd9731a1a660"
+      },
+      {
+        "path": "world-backup-same-object-write-rx2-static.review.json",
+        "bytes": 4060,
+        "sha256": "5f3182a29040bc314c02f64f5bafc0aaa609f2c6c320f8b2ff2d47427038b1ad"
+      },
+      {
+        "path": "world-backup-final-produced-package-runtime.review.json",
+        "bytes": 14749,
+        "sha256": "4103033e05162cb30d00614ba1620e3e28748b43d60c56f281c323c695f6c4db"
+      },
+      {
+        "path": "world-backup-final-linux-proof.py",
+        "bytes": 11728,
+        "sha256": "bcba5091e79ebce25adee72f2e76c4efc6026d5291838fb62f74febf570cc0ac"
+      },
+      {
+        "path": "world-backup-final-linux-proof-static.review.json",
+        "bytes": 5531,
+        "sha256": "7187bd96d4bb8439356d3952bd336c07f257ced87b5b25ed39425ce5bea490bc"
+      },
+      {
+        "path": "world-backup-final-linux-proof-rx2.py",
+        "bytes": 11794,
+        "sha256": "4842483a13c4141d741d0e75301303b6944dacd6054385cd15fa6ae1dd5807b1"
+      },
+      {
+        "path": "world-backup-final-linux-proof-rx2-static.review.json",
+        "bytes": 4671,
+        "sha256": "fe6e14762d8bf790c22695110898965fd62cb5cf7a5ed521ab297bc9532da737"
+      },
+      {
+        "path": "world-backup-final-linux-proof-admission.json",
+        "bytes": 650,
+        "sha256": "e6770a945710cd2055b621f729cd26ee0ec86ebe6e257f050e70b93fd89a9595"
+      },
+      {
+        "path": "world-backup-final-linux-proof.json",
+        "bytes": 9742,
+        "sha256": "94677ba046356b342460670ee6aa43713e388a0e0097107750f1a7aae1c0a61c"
+      },
+      {
+        "path": "world-backup-final-linux-save-transfer.log",
+        "bytes": 3351,
+        "sha256": "b1c06b7cbd14f1808cea74b99d2b8ec74fab3ae24a8ff0df22c20307c45ad332"
+      },
+      {
+        "path": "world-backup-final-linux-low-space.json",
+        "bytes": 6065,
+        "sha256": "a50df12fbf7547b8427660dc1c5a94da7cd873f982b24cae699acf9e2bcd750d"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-supervisor.log",
+        "bytes": 303,
+        "sha256": "bb80a686cafe36420e9787fa6165d9747fe11f0f2444c291dd66b4e9853a4abb"
+      },
+      {
+        "path": "world-backup-final-linux-parent-postcheck.json",
+        "bytes": 988,
+        "sha256": "e8d5b4fcb1619bb707398c4c33add855c046efa912d10cfe1e7e5e15ea1fe60c"
+      },
+      {
+        "path": "world-backup-final-linux-proof.runner.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "world-backup-final-linux-low-space.runner.log",
+        "bytes": 2049,
+        "sha256": "885702cc02e6f60d6319dd8cf858a5ea0e7178ee178eaa17a43218d5939ceceb"
+      },
+      {
+        "path": "world-backup-final-windows-same-object-write.json",
+        "bytes": 781,
+        "sha256": "fe3df7997b20d3c4a11af64298682c28ba26a80fc4b3002ce52939b9a9cfd166"
+      },
+      {
+        "path": "world-backup-final-windows-same-object-write.log",
+        "bytes": 915,
+        "sha256": "1b507996d1ffa62149308c6ad9f00dfec1c68dd5ddf35f3a8d72f54f33aefee2"
+      },
+      {
+        "path": "world-backup-final-windows-same-object-write-rx2.json",
+        "bytes": 2962,
+        "sha256": "12dcf5c1802cedce65f86ed4d59302081d3e58e1d79bbb6fa8bfb057af9dce54"
+      },
+      {
+        "path": "world-backup-final-windows-same-object-write-rx2.log",
+        "bytes": 261,
+        "sha256": "9f7c264c1966a380c0e800c91722f70c53a836156ffbe2284e23da3d12abd53a"
+      },
+      {
+        "path": "world-backup-final-package-extraction-failures.json",
+        "bytes": 517,
+        "sha256": "b391dd997dce4fd2c8ff859fe27d1870d050a13ef9dc6eeb62d4e8852ef00a3c"
+      },
+      {
+        "path": "world-backup-final-bundle/product-candidate-bundle.v1.json",
+        "bytes": 3199,
+        "sha256": "3fa254e17fc21fe78b9a6a933b1b0470b5b345f9ffefa142cd212471766fb695"
+      },
+      {
+        "path": "world-backup-final-bundle/SHA256SUMS",
+        "bytes": 1260,
+        "sha256": "94bdf551b2b7d388e5607cfe04e21eddf7df40a662ee271e13e86942151ce70f"
+      },
+      {
+        "path": "world-backup-final-bundle/windows-candidate-evidence.v1.json",
+        "bytes": 1318,
+        "sha256": "5c36504027d4f1965df14b8a6459c1c38eb06b258be9dff3f4776965c2de12b1"
+      },
+      {
+        "path": "world-backup-final-bundle/windows-payload-equivalence.v1.json",
+        "bytes": 1064,
+        "sha256": "0d7f68ac9646b972b56ba32714aa83b7ec0559ac5cfb147ec0f2bc9ba0aa6aa3"
+      },
+      {
+        "path": "world-backup-final-bundle/macos-candidate-evidence.v1.json",
+        "bytes": 1302,
+        "sha256": "8841c397b0a27e781df3cab5dc139945f1721b74d4fc540f82f489121187361d"
+      },
+      {
+        "path": "world-backup-final-bundle/macos-payload-equivalence.v1.json",
+        "bytes": 934,
+        "sha256": "3e08c0111bb4162d768debfa614a90bc91f496d82698ac127f629b1fc7aa2adc"
+      },
+      {
+        "path": "world-backup-final-bundle/linux-candidate-evidence.v1.json",
+        "bytes": 1318,
+        "sha256": "6cb3834e4d3278f11c87e9e72b09021239a7f7ba80d33a30bcfac30d2a5d734f"
+      },
+      {
+        "path": "world-backup-final-bundle/linux-payload-equivalence.v1.json",
+        "bytes": 920,
+        "sha256": "bcd33eb44ed6153643038a077298454f8191a55f7a268ffe1da55bcb4a75f6a3"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/register.stdout",
+        "bytes": 2164,
+        "sha256": "971978d7863529a52365937e7caf3454e8b0643798df9118291c9bffb0505b81"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/register.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/instance.stdout",
+        "bytes": 1091,
+        "sha256": "0db7f7989f948fc78c5e3d17b3bb65629d6b2c47df4a532f9547c15c1a329faf"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/instance.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/positive.stdout",
+        "bytes": 1908,
+        "sha256": "4199d9e9f2ee2acd76065cf5a13976eb9bc31466c8c272af5bbce1f6cfa0330a"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/positive.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/refused.stdout",
+        "bytes": 1209,
+        "sha256": "51562a49456f593eaea3414e3c2f23696041ea0d1e891d81c640cdeb3350f02a"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/refused.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/same-target-retry.stdout",
+        "bytes": 1911,
+        "sha256": "49018f747c3345136e699bac4aaaaf09a495b35cda9239e02ca32b2a585c0cc5"
+      },
+      {
+        "path": "world-backup-final-linux-low-space-work/same-target-retry.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "preserved_failures": [
+    "Windows/WSL9fs case-fold extraction; task-child case flag denied",
+    "Original supervisor nested-session timeout escape rejected before execution",
+    "Original CRT winerror assertion failed; corrected native sharing oracle observed PASS"
+  ],
+  "resources": {
+    "new_roots": 0,
+    "builds": 0,
+    "CI_dispatches": 0,
+    "peak_private_tmpfs_bytes": 142606336,
+    "all_private_mounts_unmounted": true,
+    "parent_postcheck_sha256": "e8d5b4fcb1619bb707398c4c33add855c046efa912d10cfe1e7e5e15ea1fe60c"
+  },
+  "qualification": {
+    "whole_workunit": false,
+    "physical_host": false,
+    "game": false,
+    "human": false,
+    "release": false,
+    "signing": false,
+    "support": false
+  },
+  "model_effective": "unknown",
+  "usage_actual": "unknown"
+}

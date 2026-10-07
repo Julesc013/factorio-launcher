@@ -37,7 +37,7 @@ source_of_truth = [
 [execution_programme]
 id = "FACMAN-0.1-BETA1-COMPLETION-2026-09-06"
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-primary_workunit = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
+primary_workunit = "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
 status = "implementation_active"
 authority_basis = "Current user request: implement, test, remediate, document, sync, commit and merge; tag and publish qualified alpha milestones through Beta1."
 engineering_and_normal_integration_authorized = true
@@ -249,17 +249,19 @@ evidence = [
 id = "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01"
 title = "Complete existing-install readiness and launch isolation"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "planned"
-horizon = "backlog"
+status = "complete"
+horizon = "next"
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
+branch = "task/facman-existing-install-play-01"
+base_revision = "eada9df6eed0353671500e6d5a8e0bc0365300d8"
 repos = ["FacMan"]
 outcome = """Select an existing approved install, construct isolated instance state and reach a typed ready/blocked \
 outcome without changing foreign state."""
 source_bundles = ["F06"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml"
 depends_on = [
 
 ]
@@ -273,6 +275,11 @@ outcome without changing foreign state.""",
 actual runtime seams.""",
 ]
 
+
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence/integration-closeout.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence/integration-validation-custody.zip",
+]
 
 [[workunit]]
 id = "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01"
@@ -484,8 +491,15 @@ preserving foreign files.""",
 id = "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01"
 title = "Create consistent world backups and inspectable bundles"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "planned"
-horizon = "backlog"
+status = "complete"
+horizon = "next"
+branch = "task/facman-owned-backup-presentation-08"
+base_revision = "a108464b98b60fe4d39679dfd6a781db32ee4e3b"
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/integration-closeout.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/produced-package-acceptance.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/integration-validation-custody.zip",
+]
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
@@ -494,7 +508,7 @@ outcome = """Back up selected worlds consistently with exact source identity, st
 roots."""
 source_bundles = ["F10"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/task.yaml"
 depends_on = [
 
 ]
@@ -513,8 +527,8 @@ replacing valid backups.""",
 id = "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
 title = "Restore worlds and apply explicit retention safely"
 epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
-status = "planned"
-horizon = "backlog"
+status = "complete"
+horizon = "next"
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
@@ -523,7 +537,8 @@ outcome = """Restore and import selected world bundles using validated plans, at
 journals."""
 source_bundles = ["F10"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/task.yaml"
+execution_programme = "FACMAN-0.1-BETA1-COMPLETION-2026-09-06"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/task.yaml"
 depends_on = [
   "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
 ]
@@ -536,6 +551,12 @@ journals.""",
   "Test damaged sources, stale plans, live-session conflicts and retention restricted to proven owned backups.",
 ]
 
+
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/integration-closeout.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/prepublication-recovery.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/evidence/integration-validation-custody.zip",
+]
 
 [[workunit]]
 id = "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01"
@@ -570,8 +591,8 @@ transition.""",
 id = "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
 title = "Converge Make Ready with selected-save Play"
 epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
-status = "planned"
-horizon = "backlog"
+status = "active"
+horizon = "next"
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
@@ -579,7 +600,20 @@ repos = ["FacMan"]
 outcome = "Make one typed readiness plan reconcile install, instance, content and selected world before launch."
 source_bundles = ["F11"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml"
+execution_programme = "FACMAN-0.1-BETA1-COMPLETION-2026-09-06"
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/menu-intent.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/profile-preparation.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/presentation-profile-preparation.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/save-association-context.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/save-context-rendering.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/save-terminal-context.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/instance-configuration-produced.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/local-content-repair.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/local-content-publication-boundary.v1.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/local-content-selected-export.v1.json",
+]
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml"
 depends_on = [
 
 ]
@@ -641,7 +675,10 @@ outcome = """Persist and reconcile file/native-integration effects across instal
 interrupted rollback."""
 source_bundles = ["F12"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/integration-checkpoint.json"]
+evidence = [
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/integration-checkpoint.json",
+  ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/evidence/linux-rollback-restoration-custody.zip",
+]
 queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01/task.yaml"
 depends_on = [
   "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
@@ -660,8 +697,10 @@ interrupted rollback.""",
 id = "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01"
 title = "Complete independent FacMan self-maintenance"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "active"
+status = "blocked"
 horizon = "next"
+blocking_action = "Integrate reviewed PR343 at cdc4065247bd30826f363d90657d67b82c8448e7; exact-head protected-control check requires a genuine repository-owner issue comment."
+qualification_remaining = "Required CI, supported-package profile evidence and wider product/human gates remain open; Windows exact-package epoch campaign and independent assurance passed outside integrated dev."
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"

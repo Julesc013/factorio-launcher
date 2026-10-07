@@ -11,7 +11,7 @@
     "source_lock_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "instance_id": {"type": "string", "minLength": 1, "maxLength": 64},
     "factorio_version": {"type": "string", "minLength": 1, "maxLength": 128},
-    "startup_settings_state": {"type": "string", "enum": ["unbound", "sha256_bound"]},
+    "startup_settings_state": {"type": "string", "enum": ["unbound", "sha256_bound", "absent"]},
     "startup_settings_sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"},
     "local_artifacts_only": {"const": true},
     "network_authority": {"const": false},
@@ -42,6 +42,10 @@
       }
     }
   },
+  "allOf": [{
+    "if": {"properties": {"startup_settings_state": {"const": "absent"}}, "required": ["startup_settings_state"]},
+    "then": {"properties": {"startup_settings_sha256": {"const": ""}}}
+  }],
   "required": [
     "schema", "content_lock_sha256", "source_schema", "source_lock_sha256", "instance_id",
     "factorio_version", "startup_settings_state", "startup_settings_sha256", "local_artifacts_only",

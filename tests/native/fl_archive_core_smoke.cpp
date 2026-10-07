@@ -218,6 +218,28 @@ int prove_writer_and_reader(const fs::path& root, CompressionMethod method, bool
     return 0;
 }
 
+int prove_failed_writer_retention(const fs::path& root)
+{
+    const fs::path source = root / "failed-writer-source.txt";
+    if (!write_file(source, "source remains intact\n")) return 40;
+    const auto original = read_file(source);
+    for (const bool retain : {false, true}) {
+        WriteOptions options;
+        options.preserve_staging_on_failure = retain;
+        options.limits.maximum_archive_bytes = 1U;
+        const fs::path staging = root / (retain ? "retained-writer-failure" : "default-writer-failure");
+        WriteResult written;
+        const Status status = facman::archive::write_to_new_owned_staging(
+            staging, "partial.zip", {{"source.txt", source, false}}, options, written);
+        if (status.ok() || read_file(source) != original || fs::exists(staging) != retain) {
+            std::cerr << "failed-writer-retention=" << retain << " status=" << status.code << "\n";
+            return 41;
+        }
+        if (retain && !fs::is_regular_file(staging / facman::archive::owned_staging_marker_name())) return 42;
+    }
+    return 0;
+}
+
 } // namespace
 
 int main()
@@ -239,6 +261,7 @@ int main()
     int result = prove_writer_and_reader(root, CompressionMethod::stored, false);
     if (result == 0) result = prove_writer_and_reader(root, CompressionMethod::deflate, false);
     if (result == 0) result = prove_writer_and_reader(root, CompressionMethod::deflate, true);
+    if (result == 0) result = prove_failed_writer_retention(root);
     if (result != 0) std::cerr << "archive-core-smoke-stage-code=" << result << "\n";
     fs::remove_all(root, error);
     return result;

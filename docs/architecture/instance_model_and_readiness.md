@@ -23,15 +23,23 @@ temporary file.
 ## Commands
 
 ```text
-facman instances describe <instance-id> [--intent menu] --json
-facman instances readiness <instance-id> [--intent menu] --json
+facman instances describe <instance-id> [--intent menu|load_save] --json
+facman instances readiness <instance-id> [--intent menu|load_save] --json
 ```
 
 Omitting `--intent` means `menu`. The full launch-intent vocabulary is
 registered so requests can be represented consistently, but Gate 2 accepts
-only `menu`. Every other intent receives the typed
+`menu` and explicit `load_save`. Every other intent receives the typed
 `unsupported_launch_intent` refusal. No save, scenario, server, editor, or
 benchmark is inferred from instance contents.
+
+A valid profile or instance override that selects a save or benchmark does
+not satisfy menu readiness. The profile dimension is blocked with
+`instance_launch_intent_mismatch`, and the safe next action previews a menu
+profile. This read-only judgment does not change the profile, inspect an
+implicitly selected save, or grant execution authority.
+Human CLI readiness and describe show the same states, blockers, details and
+safe next actions as their JSON reports.
 
 Both command contracts have exactly the `workspace_read` effect and declare:
 
@@ -84,7 +92,7 @@ dependencies marked `revalidate_before_use` before a later operation.
 
 ## Computed `InstanceReadiness`
 
-`factorio.instance_readiness.v1` evaluates the exact `menu` intent across these
+`factorio.instance_readiness.v1` evaluates the exact requested `menu` or `load_save` intent across these
 initial dimensions:
 
 | Dimension | Gate 2 evaluation |
@@ -96,7 +104,7 @@ initial dimensions:
 | Configuration | Read-data routes to the installation and write-data/mods route to the instance |
 | Profile | Effective profile and override resolution |
 | Mod content | No external mods, explicitly degraded unlocked mods, or verified exact lock/artifacts/hashes/metadata/compatibility |
-| Saves | Informational; zero saves is valid for menu launch |
+| Saves | Informational for menu (zero saves valid); required selected archive and declared-context evidence for load_save |
 | Accounts | Not applicable to standalone menu readiness in this slice |
 | Recovery | Any incomplete or invalid transaction takes precedence |
 | Environment | Explicitly degraded until per-operation filesystem/process capabilities are proven |
@@ -189,3 +197,60 @@ anchors, and absence of mutation/process primitives.
 These tests establish the read-only software contract. They do not promote
 Play, installation mutation, credential, signing, release, or publication
 authority and do not replace the later human-reviewed real-product Play gate.
+
+Explicit `--intent load_save` requires an effective load-save profile selection.
+A menu or benchmark profile produces `instance_launch_intent_mismatch`. The
+required saves dimension consumes the save owner's existing inspection record
+through an internal exact-filename path that reads only the selected archive.
+Unrelated archives are not hashed or parsed; public save commands keep their
+whole-index filename/stem/hash selection semantics. For the selected archive,
+missing/unsafe inputs and malformed or unrecognized archives block readiness;
+recorded association-byte or declared version/modset drift blocks it separately.
+Absent association and unknown deep metadata degrade the saves dimension without
+claiming gameplay compatibility. A match means only recorded declared context.
+The selected record and refusal outcome participate in the binding dependencies
+and readiness digest. Evidence is query-only and point-in-time; changing outer
+instance/profile/config/install/modset inputs during observation refuses the query.
+The safe action has no shell command interpolated from the selected filename.
+Menu defaults and zero-save behavior remain unchanged. Preparation and execution
+remain unavailable, no permit is issued, and `real_play_gate_not_passed` remains.
+
+Selected-save queries refuse linked/reparse instance, save, modset-context and
+association ancestors before observation. Optional evidence checks ancestors
+before and after a stable read; a late unsafe path blocks the observation.
+
+The existing readiness response now includes a closed `preparation_preview`;
+`instances.describe` and `presentation.query` carry the same composition. It is
+an advisory, read-only review of the exact bound installation, current profile,
+validated stored override Patch, launch intent and observed dependencies.
+Installation embeds the unmodified FacMan reconciliation plan with preserve
+policies and the recorded version/current target/source. Universal Setup's
+provider plan and mutation authority remain unavailable. Profiles embeds its
+unmodified current-instance plan and explicit request recipe; absence and raw
+stored override bytes remain distinct, including selected-save overrides and
+additional arguments. Generic profile selection and apply retain their existing
+semantics. Pending recovery blocks this preview without claiming combined
+rollback. The installation owner's rollback is retained, while profile recovery
+only references the existing two-file owner transaction.
+
+Root/configuration, modset verification and selected-world inspection remain
+observations with explicit observation-only, not-required or plan-unavailable
+dispositions. They are never attributed to profiles.apply as repair plans. Menu
+preview does not inspect implicit saves. Selected-world context and archive
+identities are bound only for load_save; gameplay compatibility stays unclaimed.
+Both public instance projections repeat the complete observation and owner
+planning before publication and refuse detected changes as
+`instance_projection_inputs_changed`. This proves observed point-in-time
+consistency only, not an atomic workspace snapshot. Preview identity is canonical
+and deterministic, expires_at is null, and all prospective use needs fresh
+revalidation. There is no preparation/apply/execution/permit route in this slice.
+CLI, Launch Deck and TUI show a concise advisory summary with apply unavailable;
+backend records retain owner plan bodies and identities for detailed review.
+
+The modset observation binds both raw local and shared lock presence/identity,
+including when verification refuses. Readiness retains its preferred shared
+lock body; the existing verification owner still reads the local lock. These
+are separate dependencies, even when a whitespace-only lock change leaves the
+verification report unchanged. Ancestor-safe observation precedes parsing and
+refusal paths, and observed lock changes during owner verification refuse the
+projection without inventing a modset repair plan.

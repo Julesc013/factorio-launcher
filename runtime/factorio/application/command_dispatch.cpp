@@ -576,7 +576,8 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "scope", typed.scope, detail) ||
             !optional_string(payload, "selected_instance_id", typed.selected_instance_id, detail) ||
             !optional_string(payload, "search", typed.search, detail) ||
-            !optional_string(payload, "known_revision", typed.known_revision, detail)) return false;
+            !optional_string(payload, "known_revision", typed.known_revision, detail) ||
+            !optional_string(payload, "launch_intent", typed.launch_intent, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::presentation_action: {
@@ -601,7 +602,8 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "output_path", typed.output_path, detail) ||
             !optional_string(payload, "source_data_root", typed.source_data_root, detail) ||
             !optional_string(payload, "transaction_id", typed.transaction_id, detail) ||
-            !optional_string_array(payload, "roots", typed.roots, detail)) return false;
+            !optional_string_array(payload, "roots", typed.roots, detail) ||
+            !optional_string(payload, "launch_intent", typed.launch_intent, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::legacy_setup_operation:
@@ -886,12 +888,14 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     case CommandId::profiles_plan:
     case CommandId::profiles_apply: {
         const std::set<std::string> allowed = {"instance_id", "profile_id", "window_mode", "graphics_quality", "audio",
-            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments", "expected_manifest_sha256"};
+            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments", "expected_manifest_sha256",
+            "expected_plan_sha256"};
         if (!validate_fields(payload, allowed, detail)) return false;
         EffectiveProfileRequest typed;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
             !required_string(payload, "profile_id", typed.profile_id, detail) ||
             !optional_string(payload, "expected_manifest_sha256", typed.expected_manifest_sha256, detail) ||
+            !optional_string(payload, "expected_plan_sha256", typed.expected_plan_sha256, detail) ||
             !decode_profile_patch(payload, typed.overrides, detail)) return false;
         request.payload = std::move(typed); return true;
     }
@@ -945,6 +949,16 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;
         ModsetInstanceRequest typed;
         if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::modsets_import: {
+        if (!validate_fields(payload, {"instance_id", "install_id", "source_path", "display_name"}, detail)) return false;
+        ImportModpackRequest typed; std::string path;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "install_id", typed.install_id, detail) ||
+            !required_string(payload, "source_path", path, detail) ||
+            !optional_string(payload, "display_name", typed.display_name, detail)) return false;
+        typed.source_path = facman::platform::path_from_utf8(path);
         request.payload = std::move(typed); return true;
     }
     case CommandId::modsets_export: {

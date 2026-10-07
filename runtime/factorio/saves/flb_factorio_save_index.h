@@ -39,6 +39,9 @@ facman::core::Result<OwnedBackup> resolve_owned_backup(
 
 facman::core::Result<std::string> list(const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> inspect(const std::filesystem::path& workspace, const Request& request);
+// Internal readiness observation only; public save commands retain legacy selection.
+facman::core::Result<std::string> inspect_exact_filename(
+    const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> verify(const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> associate(const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> diff(const std::filesystem::path& workspace, const Request& request);

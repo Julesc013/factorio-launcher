@@ -450,6 +450,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Require exact USK/ULK source reachable from each provider main and package provenance before changing consumer pins.
+- [x] **FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01** — Complete existing-install readiness and launch isolation
+  - State: `complete`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
 - [x] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -458,6 +462,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Preserve human CLI and machine schemas while testing cancellation, resize, NO_COLOR, redirected IO, Unicode and bounded RPC failures.
+- [x] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
+  - State: `complete`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Back up selected worlds consistently with exact source identity, stable metadata and owned destination roots.
 - [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01** — Finish bounded managed install update repair and removal
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
@@ -471,7 +479,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`
   - Outcome: Persist and reconcile file/native-integration effects across install/update/repair/remove, including interrupted rollback.
 - [ ] **FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01** — Complete independent FacMan self-maintenance
-  - State: `active`; priority/size: `P1/M`
+  - State: `blocked`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none; closes after `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
   - Outcome: Update, repair and remove FacMan independently of Factorio install/content authority.
 - [x] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
@@ -503,6 +511,15 @@ Close local application and terminal routes on all declared targets, then a fres
 
 Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
+- [x] **FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01** — Restore worlds and apply explicit retention safely
+  - State: `complete`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-WORLD-BACKUP-01`
+  - Outcome: Restore and import selected world bundles using validated plans, atomic visibility and recoverable journals.
+- [ ] **FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01** — Converge Make Ready with selected-save Play
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none; closes after `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01`, `FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01`,
+    `FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01`, `FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01`
+  - Outcome: Make one typed readiness plan reconcile install, instance, content and selected world before launch.
 - [ ] **FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01** — Close content, modpack, world, and save routes
   - State: `planned`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`; closes after `FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01`, `FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01`,
@@ -571,14 +588,6 @@ independent preparation.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — admitted backlog
 
-- [ ] **FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01** — Complete existing-install readiness and launch isolation
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Select an existing approved install, construct isolated instance state and reach a typed ready/blocked outcome without changing foreign state.
-- [ ] **FACMAN-0.1-ALPHA6-WORLD-BACKUP-01** — Create consistent world backups and inspectable bundles
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Back up selected worlds consistently with exact source identity, stable metadata and owned destination roots.
 - [ ] **FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01** — Build matching Terminal and Desktop delivery profiles
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
@@ -610,15 +619,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: `FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01`; closure prerequisites: none
   - Outcome: Export/import/reconstruct modpack state with stable provenance and bounded local source custody.
-- [ ] **FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01** — Restore worlds and apply explicit retention safely
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: `FACMAN-0.1-ALPHA6-WORLD-BACKUP-01`; closure prerequisites: none
-  - Outcome: Restore and import selected world bundles using validated plans, atomic visibility and recoverable journals.
-- [ ] **FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01** — Converge Make Ready with selected-save Play
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01`, `FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01`,
-    `FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01`, `FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01`
-  - Outcome: Make one typed readiness plan reconcile install, instance, content and selected world before launch.
 - [ ] **FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01** — Reconcile recovery across installs content worlds and sessions
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01`, `FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01`, `FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01`,

@@ -581,3 +581,48 @@ are retained as `epoch-observer-validation-rx2.json` and
 application bytes and records its newer committed harness source separately;
 neither package is relabeled. Full epoch runtime qualification, supported-host
 and human gates remain due. This WorkUnit remains active.
+
+
+## 2026-10-04 exact-head integration gate and execution slot
+
+Reviewed PR #343 is pushed at
+`cdc4065247bd30826f363d90657d67b82c8448e7`. Genuine produced B remains
+`7096f28d976151ff7f77cbae898ce6b93055d5a2`; its separately identified committed
+harness completed Windows classic and real-epoch interruption/recovery,
+repair/reapply/rollback and public retirement. Independent runtime assurance
+hash-binds all 321 retained fixture files. These are not integrated-source,
+full supported-profile, human or release acceptance.
+
+The exact-head protected-control check currently refuses integration until the
+repository owner supplies the supported issue comment. One observer owns the
+remaining required CI. This WorkUnit records that specific blocked integration
+action and releases its implementation WIP slot; it retains all other missing
+qualification and close_after requirements. It is not complete. Independent
+existing-install Play work proceeds from the latest integrated dev while the
+branch, packages, failures and evidence remain preserved.
+
+
+## 2026-10-07 preserved provider adoption forward integration
+
+The existing adoption branch is forward-integrated with actual `dev`
+`53d9e821f8c10430acde0f985ab518d5a91ddfb1`, after PR #394 passed required
+source checks, merged normally and synchronized. The earlier dated failed
+campaign and pending-observer entries above remain historical diagnosis. The
+subsequent genuine produced A/B acceptance is preserved: native B source
+`7096f28d976151ff7f77cbae898ce6b93055d5a2`, distinct observer source
+`cdc4065247bd30826f363d90657d67b82c8448e7`, 27 public Setup commands and 44
+child receipts, actual process loss and external continuation, repair, five-node
+activation and public retirement. Independent runtime review hash-binds all
+321 retained fixture files; it does not qualify this new integrated source.
+Original A archive provenance and the separately frozen actual creating SDK
+remain unchanged. Full supported-host, human and release gates remain open.
+
+Repository-owner comment `5966998438` explicitly authorizes this continuation
+and supported head-specific control rebind after source changes. The remaining
+control check requires its exact current-head command through the trusted
+owner-comment workflow; standing permission is recorded, and technical
+materialization follows the final reviewed push. This grants no check bypass,
+human acceptance or release authority. Fresh combined-source qualification and
+independent conflict review are required before the forward merge is committed.
+The WorkUnit remains incomplete; no elapsed-time historical package rerun, new
+clone, worktree or task root is required for this source integration.

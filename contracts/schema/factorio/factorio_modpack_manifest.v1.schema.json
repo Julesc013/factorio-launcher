@@ -24,6 +24,49 @@
     "contains_credentials": {"const": false},
     "artifact_closure_complete": {"const": true},
     "startup_settings_bound": {"type": "boolean"},
+    "source_lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {"const": "modset-lock.v1.json"},
+        "blob": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {"const": "sha256"},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "size": {"type": "integer", "minimum": 1}
+          },
+          "required": ["algorithm", "sha256", "size"]
+        }
+      },
+      "required": ["path", "blob"]
+    },
+    "settings": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "allOf": [
+        {"contains": {"properties": {"path": {"const": "mods/mod-list.json"}}, "required": ["path"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"path": {"const": "mods/mod-settings.dat"}}, "required": ["path"]}, "minContains": 1, "maxContains": 1}
+      ],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {"enum": ["mods/mod-list.json", "mods/mod-settings.dat"]},
+          "state": {"enum": ["present", "absent"]},
+          "size": {"type": "integer", "minimum": 0},
+          "sha256": {"type": "string"}
+        },
+        "required": ["path", "state", "size", "sha256"],
+        "allOf": [{
+          "if": {"properties": {"state": {"const": "absent"}}},
+          "then": {"properties": {"size": {"const": 0}, "sha256": {"const": ""}}},
+          "else": {"properties": {"sha256": {"pattern": "^[0-9a-f]{64}$"}}}
+        }]
+      }
+    },
     "artifacts": {
       "type": "array",
       "maxItems": 4096,
@@ -48,6 +91,7 @@
       }
     }
   },
+  "dependentRequired": {"settings": ["source_lock"], "source_lock": ["settings"]},
   "required": [
     "schema", "modpack_manifest_sha256", "name", "content_lock", "content_lock_sha256",
     "portable", "local_artifacts_only", "network_authority", "contains_factorio_binaries",

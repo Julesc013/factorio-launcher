@@ -1,0 +1,136 @@
+{
+  "schema": "facman.scoped_produced_pack_reconstruction.v1",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "accepted_scope": "Actual admitted Windows produced CLI accepted for bounded offline selected content/settings-or-absence/provenance reconstruction into eight separate empty consumer workspaces, rebound local lock, verified/published/committed process-loss recovery and retry, and existing-target/foreign-staging preservation. Three existing public methods, eight cells, no skips.",
+  "verdict": "PASS",
+  "source_commit": "23a7668db1ba1ad2000f99eacc0dc1122b42bb6e",
+  "source_tree": "8f98bbcfc5d93e00a70a3de782224ce7beb79b23",
+  "producer": {
+    "run": 37501503739,
+    "job": 112399720566,
+    "artifact": 11433460374,
+    "run_url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37501503739",
+    "job_url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37501503739/job/112399720566",
+    "executable_sha256": "54e973bd45945a32cb9e3de752fc062c5ab4896a847c98abf65eb099c09ce2dc"
+  },
+  "test_result": {
+    "errors": 0,
+    "failures": 0,
+    "log_sha256": "a8b06a432bc5333d0fb902526aa17bd6cef63d4c6e051723a66ed50b8036de11",
+    "methods": 3,
+    "skips": 0
+  },
+  "cli_commands": 98,
+  "raw_streams": 196,
+  "clean_consumer_workspaces": 8,
+  "preserved_producer_workspaces": 8,
+  "cells": [
+    {
+      "accepted": true,
+      "archive_sha256": "03ca2c3649e9ce97bc233b44d87bafd8aeb175d82536b6648e8fe406f4b64016",
+      "cell": "settings_absent",
+      "consumer": 1,
+      "producer": 1,
+      "receipt_sha256": "7ed0500efaae3bbd11e7c3960b7de68e74d8ef2e6cc6cc56540d253e0b85cf63"
+    },
+    {
+      "accepted": true,
+      "archive_sha256": "d99ab898081d6ac16a37c068f564c5f126050ea6c880f15e4131b26e61162e45",
+      "cell": "settings_empty",
+      "consumer": 2,
+      "producer": 2,
+      "receipt_sha256": "0eca7edae6a636f2655722d5212f92823c4513eb5c194084dac6a7c4f36ce58a"
+    },
+    {
+      "accepted": true,
+      "archive_sha256": "7099b22772c8040682965b386ac72a4adb20b6ff492d9b5bb9db875b358b087d",
+      "cell": "settings_binary",
+      "consumer": 3,
+      "producer": 3,
+      "receipt_sha256": "e05dde91e5e61500539cc3f398cb095f7bfdb19e1fed7604be45e1702b6f5b1e"
+    },
+    {
+      "accepted": true,
+      "archive_sha256": "17ca7e8976872d26efd7b7e25d04f3d9ebad5ee45ca9ba8b8132d07a2897deea",
+      "cell": "loss_verified",
+      "consumer": 4,
+      "paused_journal_state": "verified",
+      "producer": 4,
+      "receipt_sha256": "499572f7d8849178f07f6f5aad8557213b633c330912373450a94bcf9221a65d"
+    },
+    {
+      "accepted": true,
+      "archive_sha256": "17ca7e8976872d26efd7b7e25d04f3d9ebad5ee45ca9ba8b8132d07a2897deea",
+      "cell": "loss_published",
+      "consumer": 5,
+      "paused_journal_state": "committing",
+      "producer": 5,
+      "receipt_sha256": "ec629f988871b14b269abb318194e6fcda83f3b3eb00c5ed743cecbfc07ccea9"
+    },
+    {
+      "accepted": true,
+      "archive_sha256": "17ca7e8976872d26efd7b7e25d04f3d9ebad5ee45ca9ba8b8132d07a2897deea",
+      "cell": "loss_committed",
+      "consumer": 6,
+      "paused_journal_state": "committed",
+      "producer": 6,
+      "receipt_sha256": "acc28f6d9f4a1a6549327154a3e81d722265a7b0dc3abd650c2c81849cf5575a"
+    },
+    {
+      "accepted": true,
+      "cell": "existing_target_refusal",
+      "consumer": 7,
+      "producer": 7,
+      "refusal": "persistent_target_exists"
+    },
+    {
+      "accepted": true,
+      "cell": "foreign_staging_refusal",
+      "consumer": 8,
+      "producer": 8,
+      "refusal": "staging_target_exists"
+    }
+  ],
+  "retained_evidence": [
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\produced-pack-reconstruction-admission.json",
+      "sha256": "248272c42ffb006e7c038908bfaea9d90ddd3d1726b00c3732ae0076584fa7c3"
+    },
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\produced-pack-reconstruction-final-review.json",
+      "sha256": "ddaa29482ca67f2213118fca761ce50d67ccc84c5bc4771a6f07bc63dd2a7656"
+    },
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\produced-pack-reconstruction-result.json",
+      "sha256": "24497d0b3b3b707856e37b87d1c6b65bf11f28927fdd5a1eb0750b20fc85ca1c"
+    },
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\produced-pack-reconstruction.py",
+      "sha256": "2cef908066a9021719927fdf22b9ac38cc0f91dbf0916ac3c1bd39b75b959b4d"
+    }
+  ],
+  "limits": [
+    "No reviewer test rerun, native build, source mutation or CI poll. Retained process streams/outcomes/fixture inventories audited; reviewed controller performed original execution and before/after guards.",
+    "Original provider ZIP/payload digests retained but original delivery archive bytes unavailable for independent replay; actual test-produced pack ZIP bytes retained and compared to reconstructed targets.",
+    "Synthetic local Factorio fixtures: no actual game, setup installation, clean-machine acceptance, whole product, WorkUnit, Beta or all-CI qualification.",
+    "Original affected 77-method suite remains FAIL with two failures/six skips; two-method replay PASS does not relabel it.",
+    "Incomplete extraction recovery deliberately unsupported; POSIX namespace publication unqualified."
+  ],
+  "historical_failed_suite": {
+    "methods": 77,
+    "failures": 2,
+    "skips": 6,
+    "relabelled_pass": false,
+    "unchanged_executable_two_method_replay": "PASS; original cause unestablished"
+  },
+  "new_jobs": 0,
+  "new_builds": 0,
+  "new_task_roots": 0,
+  "new_worktrees": 0,
+  "original_delivery_archive_bytes_retained": false,
+  "actual_factorio_execution": false,
+  "whole_workunit_closed": false,
+  "beta_qualified": false,
+  "full_programme_complete": false,
+  "invalidation": "Historical acceptance remains bound to the exact source, executable, captured streams and fixture bytes above. It does not automatically qualify later source, another platform, genuine game execution, human experience or whole-programme completion."
+}

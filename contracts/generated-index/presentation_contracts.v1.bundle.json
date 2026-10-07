@@ -48,6 +48,13 @@
           "installation_path": {
             "type": "string"
           },
+          "launch_intent": {
+            "enum": [
+              "menu",
+              "load_save"
+            ],
+            "type": "string"
+          },
           "mod_identity": {
             "type": "string"
           },
@@ -117,7 +124,7 @@
       },
       "schema_id": "https://facman.invalid/schema/command/presentation.action.request.v1.schema.json",
       "source_path": "contracts/schema/command/presentation.action.request.v1.schema.json",
-      "source_sha256": "15a16c135db0de97c6b9a6a1d28276e6ceda192da31b3bef2a9766644059d37e"
+      "source_sha256": "88ec55a0b2555c3514cabcf28c4b1bb000696838137554fedb06a0a95bfc7eb6"
     },
     {
       "behavior": "effect_input",
@@ -131,6 +138,13 @@
             "maxLength": 64,
             "minLength": 64,
             "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "launch_intent": {
+            "enum": [
+              "menu",
+              "load_save"
+            ],
             "type": "string"
           },
           "scope": {
@@ -162,7 +176,7 @@
       },
       "schema_id": "https://facman.invalid/schema/command/presentation.query.request.v1.schema.json",
       "source_path": "contracts/schema/command/presentation.query.request.v1.schema.json",
-      "source_sha256": "bae1061cc0581ab534f62474a4fc3d5a023b669c0315bd19e18feb1627dc875f"
+      "source_sha256": "9ae0ca36d927bd63ca354e8461223f1728897667c5126d2994a86073209e0be0"
     },
     {
       "behavior": "effect_input",
@@ -821,6 +835,81 @@
             "const": "presentation.query"
           },
           "dependency_identities": {
+            "properties": {
+              "profile_preparation": {
+                "items": {
+                  "additionalProperties": false,
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "plan_sha256": {
+                          "type": "string"
+                        },
+                        "refusal": {
+                          "type": "null"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "plan_sha256": {
+                          "type": "null"
+                        },
+                        "refusal": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  ],
+                  "properties": {
+                    "instance_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "plan_sha256": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "profile_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "refusal": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "detail": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "detail"
+                      ],
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "instance_id",
+                    "profile_id",
+                    "plan_sha256",
+                    "refusal"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
             "type": "object"
           },
           "freshness": {
@@ -852,6 +941,15 @@
             "const": "facman.presentation_snapshot.v1"
           },
           "selected_context": {
+            "properties": {
+              "launch_intent": {
+                "enum": [
+                  "menu",
+                  "load_save"
+                ],
+                "type": "string"
+              }
+            },
             "type": "object"
           },
           "snapshot_id": {
@@ -896,7 +994,7 @@
       },
       "schema_id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
       "source_path": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
-      "source_sha256": "62af1ffe2e6e0fc4a7477dee63e9ec44c5b883811656feacaa5750ee4deeb889"
+      "source_sha256": "5c331bf801cb8d2dc21dd830fd677dc231eeaa0ed73a45d4aebfd6e3b7450130"
     },
     {
       "behavior": "read_projection",
@@ -997,5 +1095,5 @@
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200"
+  "source_digest": "0ef73f830fd6c81090f0da7e6cff2dc0ca417e6eafa24d476779401b38455809"
 }

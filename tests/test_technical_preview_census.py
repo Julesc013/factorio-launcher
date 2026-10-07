@@ -64,7 +64,7 @@ class TechnicalPreviewCensusTests(unittest.TestCase):
             classification = item["observed_classification"]
             counts[classification] = counts.get(classification, 0) + 1
         self.assertEqual(counts["implemented_unqualified"], 14)
-        self.assertEqual(counts["unknown_unverified"], 80)
+        self.assertEqual(counts["unknown_unverified"], 81)
 
     def test_preview_scope_and_frontend_cut_are_frozen(self) -> None:
         self.assertEqual(self.scope["platform"], "windows_x64")
@@ -166,6 +166,9 @@ class TechnicalPreviewCensusTests(unittest.TestCase):
 
     def test_registration_does_not_upgrade_unknown_commands(self) -> None:
         ledger = technical_preview_census.build_ledger(self.matrix, self.catalog)
+        imported_pack = next(item for item in ledger["commands"] if item["command_id"] == "modsets.import")
+        self.assertEqual(imported_pack["availability"], "unspecified")
+        self.assertEqual(imported_pack["observed_classification"], "unknown_unverified")
         unspecified = [item for item in ledger["commands"] if item["availability"] == "unspecified"]
         self.assertTrue(unspecified)
         self.assertTrue(all(item["observed_classification"] in {"unknown_unverified", "outside_preview", "diagnostic_internal"} for item in unspecified))

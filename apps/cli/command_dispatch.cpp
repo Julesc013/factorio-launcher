@@ -103,21 +103,8 @@ Options parse_options(int argc, char** argv)
     return options;
 }
 
-bool flag(const std::vector<std::string>& args, const std::string& value)
-{
-    if (std::find(args.begin(), args.end(), value) != args.end()) return true;
-    if (value != "--json") return false;
-    for (std::size_t index = 0; index + 1 < args.size(); ++index) {
-        if (args[index] == "--format" && args[index + 1] == "json") return true;
-    }
-    return false;
-}
-
-std::string option(const std::vector<std::string>& args, const std::string& name, const std::string& fallback = {})
-{
-    for (std::size_t index = 0; index + 1 < args.size(); ++index) if (args[index] == name) return args[index + 1];
-    return fallback;
-}
+using facman::cli::flag;
+using facman::cli::option;
 
 std::vector<std::string> option_values(const std::vector<std::string>& args, const std::string& name)
 {
@@ -259,13 +246,14 @@ int emit_guidance(const CliResponse& response, bool as_json)
     return 0;
 }
 
-int emit_effective_profile(const CliResponse& response, bool as_json)
+int emit_report(const CliResponse& response, bool as_json,
+    std::optional<std::string> (*formatter)(const json::Value&), const char* missing, const char* invalid)
 {
     if (as_json) return emit_json(response);
     if (!response || !response.value().ok()) return emit_basic(response, false, "");
-    if (!response.value().parsed_payload) { std::cerr << "Effective profile response is missing\n"; return 1; }
-    auto report = facman::cli::effective_profile_text(*response.value().parsed_payload);
-    if (!report) { std::cerr << "Effective profile settings or provenance are missing\n"; return 1; }
+    if (!response.value().parsed_payload) { std::cerr << missing << '\n'; return 1; }
+    auto report = formatter(*response.value().parsed_payload);
+    if (!report) { std::cerr << invalid << '\n'; return 1; }
     std::cout << *report;
     return 0;
 }
@@ -321,8 +309,7 @@ std::string preferences_payload(const std::vector<std::string>& args)
     return output.serialize();
 }
 
-std::string profile_payload(
-    const std::vector<std::string>& args,
+std::string profile_payload(const std::vector<std::string>& args,
     const std::vector<std::pair<std::string, std::string>>& identity)
 {
     json::ObjectBuilder output;
@@ -332,6 +319,7 @@ std::string profile_payload(
              {"graphics_quality", option(args, "--graphics-quality")}, {"audio", option(args, "--audio")},
              {"selection_mode", option(args, "--selection-mode")}, {"selection", option(args, "--selection")},
              {"launch_mode", option(args, "--launch-mode")}, {"benchmark_ticks", option(args, "--benchmark-ticks")}, {"expected_manifest_sha256", option(args, "--expected-revision")},
+             {"expected_plan_sha256", option(args, "--expected-plan")},
          }) if (!field.second.empty()) output.add_string(field.first, field.second);
     const auto arguments = option_values(args, "--arg");
     if (!arguments.empty()) {
@@ -748,10 +736,11 @@ int command_instances(const Options& options)
             if (options.args[index] != "--intent" || index + 1 >= options.args.size()) return 2;
             ++index;
         }
-        return emit_basic(
+        return emit_report(
             call(options, "instances." + action, fields_payload({
                 {"instance_id", options.args[2]}, {"intent", option(options.args, "--intent")}})),
-            flag(options.args, "--json"), "Instance " + action + " completed");
+            flag(options.args, "--json"), facman::cli::instance_readiness_text,
+            "Instance readiness response is missing", "Instance readiness report is invalid");
     }
     if ((action == "inspect" || action == "verify" || action == "archive") && options.args.size() >= 3) {
         for (std::size_t index = 3; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;
@@ -805,17 +794,17 @@ int command_mods(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
-    if (action == "list") return emit_basic(call(options, "mods.list"), flag(options.args, "--json"), "Local mods listed");
+    if (action == "list") return emit_report(call(options, "mods.list"), flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     if (action == "index") {
         json::ArrayBuilder roots;
         for (const std::string& root : option_values(options.args, "--root")) roots.add_string(root);
         json::ObjectBuilder payload;
         payload.add_array("roots", roots);
-        return emit_basic(call(options, "mods.index", payload.serialize()), flag(options.args, "--json"), "Local mods indexed");
+        return emit_report(call(options, "mods.index", payload.serialize()), flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     }
-    if ((action == "inspect" || action == "verify" || action == "explain") && options.args.size() >= 3) return emit_basic(
+    if ((action == "inspect" || action == "verify" || action == "explain") && options.args.size() >= 3) return emit_report(
         call(options, "mods." + action, exact_fields_payload({{"identity", options.args[2]}})),
-        flag(options.args, "--json"), "Local mod " + action + " completed");
+        flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     if (action == "import" && options.args.size() >= 3) {
         const std::string instance = option(options.args, "--instance");
         return emit_basic(call(options, "mods.import", exact_fields_payload({{"source_path", options.args[2]}, {"instance_id", instance}}), false), flag(options.args, "--json"), "Mod imported");
@@ -912,23 +901,30 @@ int command_profiles(const Options& options)
         return emit_basic(call(options, "profiles." + action, exact_fields_payload(fields), action == "diff"), as_json,
             "Profile " + action + " completed");
     }
-    if ((action == "plan" || action == "apply") && options.args.size() >= 4) return emit_effective_profile(
+    if ((action == "plan" || action == "apply") && options.args.size() >= 4) return emit_report(
         call(options, "profiles." + action, profile_payload(options.args,
-            {{"instance_id", options.args[2]}, {"profile_id", options.args[3]}}), action == "plan"), as_json);
+            {{"instance_id", options.args[2]}, {"profile_id", options.args[3]}}), action == "plan"), as_json,
+        facman::cli::effective_profile_text, "Effective profile response is missing", "Effective profile settings or provenance are missing");
     return 2;
 }
 
-int command_modsets(const Options& options)
-{
+int command_modsets(const Options& options) {
     if (options.args.size() < 3) return 2;
     const std::string action = options.args[1], instance = options.args[2];
+    if (action == "import") {
+        const std::string destination = option(options.args, "--instance"), install = option(options.args, "--install");
+        if (destination.empty() || install.empty()) return 2;
+        return emit_basic(call(options, "modsets.import", exact_fields_payload({{"source_path", options.args[2]},
+            {"instance_id", destination}, {"install_id", install}, {"display_name", option(options.args, "--name")}}), false), flag(options.args, "--json"),
+            "Modpack imported into instance " + destination);
+    }
     if (action == "plan" || action == "diff" || action == "explain" || action == "apply") {
-        return emit_basic(call(options, "modsets." + action, modset_solver_payload(options.args, instance), action != "apply"),
-            flag(options.args, "--json"), "Modset " + action + " completed");
+        return emit_report(call(options, "modsets." + action, modset_solver_payload(options.args, instance), action != "apply"),
+            flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     }
     if (action == "rollback" && options.args.size() >= 4) {
-        return emit_basic(call(options, "modsets.rollback", modset_solver_payload(options.args, instance, options.args[3]), false),
-            flag(options.args, "--json"), "Modset rollback completed");
+        return emit_report(call(options, "modsets.rollback", modset_solver_payload(options.args, instance, options.args[3]), false),
+            flag(options.args, "--json"), facman::cli::local_content_text, "Local content report missing", "Local content report invalid");
     }
     if (action == "lock" || action == "verify") return emit_basic(call(options, "modsets." + action, exact_fields_payload({{"instance_id", instance}}), action == "verify"), flag(options.args, "--json"), "Modset " + action + " completed");
     if (action == "export" && options.args.size() >= 4) {
@@ -945,12 +941,14 @@ int command_saves(const Options& options)
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
     const std::string instance = option(options.args, "--instance");
-    if (action == "index") return emit_basic(call(options, "saves.index", save_index_payload(
-        options.args, {{"instance_id", instance}})), flag(options.args, "--json"), "Saves indexed");
+    if (action == "index") return emit_report(call(options, "saves.index", save_index_payload(
+        options.args, {{"instance_id", instance}})), flag(options.args, "--json"), facman::cli::save_intelligence_text,
+        "Save intelligence response is missing", "Save intelligence report is invalid");
     if ((action == "inspect" || action == "verify" || action == "associate") && options.args.size() >= 3) {
-        return emit_basic(call(options, "saves." + action, save_index_payload(options.args,
+        return emit_report(call(options, "saves." + action, save_index_payload(options.args,
             {{"instance_id", instance}, {"save", options.args[2]}}), action != "associate"),
-            flag(options.args, "--json"), "Save " + action + " completed");
+            flag(options.args, "--json"), facman::cli::save_intelligence_text,
+            "Save intelligence response is missing", "Save intelligence report is invalid");
     }
     if (action == "diff" && options.args.size() >= 4) return emit_basic(call(options, "saves.diff", save_index_payload(
         options.args, {{"instance_id", instance}, {"save", options.args[2]}, {"other_save", options.args[3]}})),
@@ -1174,9 +1172,13 @@ int command_presentation(const Options& options)
 {
     if (options.args.size() < 3) return 2;
     const bool as_json = flag(options.args, "--json");
+    const bool intent_supplied = flag(options.args, "--intent");
+    const std::string intent = intent_supplied ? option(options.args, "--intent") : "menu";
+    if (intent_supplied && intent != "menu" && intent != "load_save") return 2;
     if (options.args[1] == "query") {
         return emit_basic(call(options, "presentation.query", fields_payload({
             {"scope", options.args[2]},
+            {"launch_intent", intent},
             {"selected_instance_id", option(options.args, "--instance")},
             {"search", option(options.args, "--search")},
             {"known_revision", option(options.args, "--known-revision")}})),
@@ -1188,6 +1190,7 @@ int command_presentation(const Options& options)
         const std::string request_id = option(options.args, "--request-id");
         if (scope.empty() || expected.empty() || request_id.empty()) return 2;
         json::ObjectBuilder payload;
+        payload.add_string("launch_intent", intent);
         payload.add_string("action_id", options.args[2]);
         payload.add_string("scope", scope);
         payload.add_string("expected_snapshot_revision", expected);

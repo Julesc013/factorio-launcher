@@ -47,16 +47,30 @@ work unit establishes its portable manifest and hash contract.
 Two additive commands provide the instance-centric player model without
 changing the R3.7 lifecycle record or granting lifecycle authority:
 
-- `instances.describe <id> [--intent menu]` returns
+- `instances.describe <id> [--intent menu|load_save]` returns
   `factorio.instance_view.v1`, which composes a portable `InstanceSpec`, local
   `InstanceBinding`, evidence-derived `InstanceReadiness`, and player summary;
-- `instances.readiness <id> [--intent menu]` returns the canonical readiness
+- `instances.readiness <id> [--intent menu|load_save]` returns the canonical readiness
   component directly.
 
-The default and only accepted Gate 2 intent is `menu`. Other registered launch
+The default intent is `menu`; explicit `load_save` is also a read-only query. Other registered launch
 intents receive `unsupported_launch_intent`; no save is inferred. Both commands
 are deterministic `workspace_read` operations. They do not rewrite
 `factorio.instance.v1`, prepare content, issue a permit, access credentials or
 the network, invoke Setup, or execute Factorio. See
 [`../architecture/instance_model_and_readiness.md`](../architecture/instance_model_and_readiness.md)
 for the component, digest, evidence, and readiness contracts.
+
+Explicit `--intent load_save` requires an effective load-save profile selection.
+A menu or benchmark profile produces `instance_launch_intent_mismatch`. The
+required saves dimension consumes the exact existing `saves.inspect` record:
+missing/unsafe inputs and malformed or unrecognized archives block readiness;
+recorded association-byte or declared version/modset drift blocks it separately.
+Absent association and unknown deep metadata degrade the saves dimension without
+claiming gameplay compatibility. A match means only recorded declared context.
+The selected record and refusal outcome participate in the binding dependencies
+and readiness digest. Evidence is query-only and point-in-time; changing outer
+instance/profile/config/install/modset inputs during observation refuses the query.
+The safe action has no shell command interpolated from the selected filename.
+Menu defaults and zero-save behavior remain unchanged. Preparation and execution
+remain unavailable, no permit is issued, and `real_play_gate_not_passed` remains.

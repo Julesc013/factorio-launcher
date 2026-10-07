@@ -30,6 +30,11 @@ ApplicationResult solver_result(const char* operation, facman::core::Result<std:
 }
 }
 
+ApplicationResult import_modpack(ApplicationContext& context, const ImportModpackRequest& request)
+{
+    return solver_result("modsets.import", modsets::import_modpack(context.workspace(), request));
+}
+
 ApplicationResult dispatch_modset_solver(ApplicationContext& context, const ApplicationRequest& request)
 {
     const auto& value = std::get<ModsetSolverRequest>(request.payload);
