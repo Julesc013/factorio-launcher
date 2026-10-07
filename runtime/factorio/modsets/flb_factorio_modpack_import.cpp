@@ -19,10 +19,11 @@ namespace content = facman::factorio::content;
 namespace discovery = facman::factorio::discovery;
 namespace lifecycle = facman::factorio::instance;
 namespace {
-facman::core::Result<std::string> failure(const std::string& code, const std::string& detail)
+facman::core::Result<std::string> failure(const std::string& code, const std::string& detail,
+    facman::core::OutcomeKind kind = facman::core::OutcomeKind::refused)
 {
     return facman::core::Result<std::string>::failure({code, detail, "",
-        facman::core::OutcomeKind::refused});
+        kind});
 }
 std::string digest(const std::string& bytes)
 {
@@ -121,17 +122,18 @@ facman::core::Result<std::string> import_modpack(const fs::path& workspace_input
     auto started = tx::TransactionSession::begin(workspace, std::move(record));
     if (!started) return failure(started.error().code, started.error().message);
     auto session = started.take_value();
+    auto retained = [&](const std::string& code, const std::string& error) {
+        session.require_recovery(error);
+        return failure(code, error + "; retained import data requires workspace recovery",
+            facman::core::OutcomeKind::recovery_required);
+    };
     OperationLock operation;
     auto acquired = operation.lock.create(tx::recovery_lock_path(workspace, session.record().transaction_id));
     json::ObjectBuilder lock_json;
     lock_json.add_string("schema", "facman.recovery_lock.v1");
     lock_json.add_string("identity", operation.lock.identity_text());
     if (!acquired.acquired() || !operation.lock.write_text(lock_json.serialize() + "\n", detail))
-        return failure("recovery_write_refused", "Import recovery lock could not be held");
-    auto retained = [&](const std::string& code, const std::string& error) {
-        session.require_recovery(error);
-        return failure(code, error + "; retained import data requires workspace recovery");
-    };
+        return retained("recovery_write_refused", "Import recovery lock could not be held");
     if (!pause(workspace, "precreate")) return retained("transaction_recovery_required", "Import paused before exclusive staging creation");
     if (!session.validated() || !session.planned()) return retained("recovery_write_refused", session.detail());
     const facman::archive::Limits limits;

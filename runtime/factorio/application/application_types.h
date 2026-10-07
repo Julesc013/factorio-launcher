@@ -125,6 +125,7 @@ struct SemanticActionRequest {
     std::string transaction_id;
     std::vector<std::string> roots;
     std::string launch_intent = "menu";
+    std::string source_path;
 };
 
 using ImportModRequest = modsets::ImportRequest;

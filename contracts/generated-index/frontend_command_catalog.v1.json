@@ -6597,7 +6597,7 @@
       "availability": "implemented",
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json",
+      "cli": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--source-path <path>] [--transaction <id>] [--root <path>] --json",
       "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
@@ -6633,7 +6633,7 @@
             "required": true
           }
         ],
-        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--source-path <path>] [--transaction <id>] [--root <path>] --json"
       },
       "command_id": "presentation.action",
       "contract_path": "contracts/command/factorio/presentation.action.v1.toml",
@@ -6837,6 +6837,15 @@
           "name": "source_data_root",
           "repeatable": false,
           "request_field": "source_data_root",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "source_path",
+          "repeatable": false,
+          "request_field": "source_path",
           "required": false,
           "type": "path"
         },
@@ -12068,7 +12077,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "986b363d3eb5dbab67ab9f5a4cb4a4cd90ea91a9bb20d7601ecea0e8239f7e6f",
+  "source_digest": "51ea90fdbe90c634d68b5db3b71419d3ac4229a896fff0dd899db0b632e597df",
   "workflows": [
     {
       "always_visible_fields": [

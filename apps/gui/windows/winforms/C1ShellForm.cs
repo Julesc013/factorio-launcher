@@ -325,6 +325,8 @@ namespace FacMan.WinForms
             FlowLayoutPanel actions = ActionRow();
             actions.AccessibleName = "Instance-local content actions";
             actions.Controls.Add(ScopedActionButton(
+                "&Import offline pack", "Import offline pack", "content", "modsets.import"));
+            actions.Controls.Add(ScopedActionButton(
                 "&Inspect mod", "Inspect local mod", "content", "mods.inspect"));
             actions.Controls.Add(ScopedActionButton(
                 "&Plan modset", "Plan instance-local modset", "content", "modsets.plan"));

@@ -601,6 +601,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "save", typed.save, detail) ||
             !optional_string(payload, "output_path", typed.output_path, detail) ||
             !optional_string(payload, "source_data_root", typed.source_data_root, detail) ||
+            !optional_string(payload, "source_path", typed.source_path, detail) ||
             !optional_string(payload, "transaction_id", typed.transaction_id, detail) ||
             !optional_string_array(payload, "roots", typed.roots, detail) ||
             !optional_string(payload, "launch_intent", typed.launch_intent, detail)) return false;

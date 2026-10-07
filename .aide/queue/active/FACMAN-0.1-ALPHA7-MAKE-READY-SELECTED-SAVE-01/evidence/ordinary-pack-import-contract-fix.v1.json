@@ -1,0 +1,94 @@
+{
+  "boundaries": {
+    "beta_qualified": false,
+    "new_candidates": 0,
+    "old_receipts_rewritten": false,
+    "produced_package_acceptance_repeated": false,
+    "provider_pins_changed": false,
+    "whole_workunit_closed": false
+  },
+  "cause": "Required macOS CI found stale presentation-contract outputs after the optional source_path schema extension.",
+  "custody": {
+    "bytes": 119796,
+    "members": {
+      "ordinary-pack-contract-fix-q01-build.log": "7410cef22543d6c4b1586d6c08677af4e9b8e090795e15368301264987bab5d5",
+      "ordinary-pack-contract-fix-q01-compiled-winforms.log": "ed2f089776590f2f4807cd341e09bc1f5cad863491080f6f5a0b7b2888286624",
+      "ordinary-pack-contract-fix-q01-configure.log": "4e7f7a2ce451fdffd6790937f18096a6fe4db8cd075e8f46fccdf23cd7da1fe4",
+      "ordinary-pack-contract-fix-q01-contract-generated.log": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "ordinary-pack-contract-fix-q01-diff.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordinary-pack-contract-fix-q01-doctor.log": "4f1dde564ef7a63709e8dcdf970247c3d8480a463ca53ab4812f45d6f3deb438",
+      "ordinary-pack-contract-fix-q01-native.log": "d54aa90cb4002faf40399ab271e5ca4e1ded9a9e7fce1e7e0b84634fcae1d454",
+      "ordinary-pack-contract-fix-q01-strict.log": "ff95e5b80fd298dc868f02277affa17cf8f6c133810b9cb4c2556c55f8bee4c0",
+      "ordinary-pack-contract-fix-qualification-01.json": "1406256347b4462d3e4075b23ea4fa04d2d81a144dfb7a9255f1a67a65656e74",
+      "ordinary-pack-import-contract-compiler-baseline.log": "8a4321f84dada16b59a3cfac93ddb2e63854ee33ea1217d88f737be47a4bd636",
+      "ordinary-pack-import-contract-compiler-corrected-02.log": "47154667f9f458e90818f931c4e0a7cbb9bc609a945672f8dac87cbcc1f95dcf",
+      "ordinary-pack-import-contract-compiler-corrected.log": "2ef2d0ebaa543569de3e985c1a6a66524997189bca890844f6aa08a45d02bf71",
+      "ordinary-pack-import-macos-job-direct.log": "b42dacddd5756548b966ebb000f90c71b246612ea98f8cf46db50fa6cb9fae79",
+      "ordinary-pack-import-source-failure.json": "5c55be1d76f5293514f48226c2722fa236181bd28ae1490bcc35790a9f4d99c1"
+    },
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/ordinary-pack-import-contract-fix-custody.zip",
+    "sha256": "887d6cd95a44f2b72aeee4086e2b2d5832e8f0b55f0b5b5e531e7a40e4ef624d"
+  },
+  "historical_qualification_unchanged": true,
+  "prior_native_custody_move": {
+    "copied": false,
+    "original_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman.exe",
+    "original_records_rewritten": false,
+    "preserved_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\ordinary-pack-import-qualified-13136408.exe",
+    "sha256": "65768e7ad7044d81841789a2cb2ef664808d0cb293f7cd515e27ac5526864bab"
+  },
+  "qualification": {
+    "affected_native_smokes": 2,
+    "compiled_winforms_methods": 1,
+    "contract_compiler_methods": 8,
+    "generated_state_current": true,
+    "native_executable": {
+      "bytes": 6403584,
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman.exe",
+      "sha256": "c515ef716d053e7b35ab0eca6b1d01d9b63884bae1860e8759d8aae443937a30"
+    },
+    "receipt_sha256": "1406256347b4462d3e4075b23ea4fa04d2d81a144dfb7a9255f1a67a65656e74",
+    "strict_pass": true
+  },
+  "repair": {
+    "contract_digest": "de9292a34796820270758d55570467a65cb0172e2c561bb62afa6867eaea31ff",
+    "generated_outputs": 5,
+    "generator": "py -3 tools/codegen/generate_contracts.py",
+    "source_paths_sha256": {
+      "apps/gui/windows/winforms/GeneratedPresentationContracts.cs": "e9dda87919323827184e56e5ce77fe031473b954c9d134326a141cd09eaf683f",
+      "contracts/generated-index/presentation_contracts.v1.bundle.json": "a69b3631e2ae7ae8638e693cf2104c3c4f4f31b0519b01d2f1f91e330712dcdc",
+      "docs/generated/contracts/presentation-foundation.md": "464d8908462a49838e48b9110375f802f53ba41a0870e764b11219da50b8544d",
+      "runtime/core/generated/presentation_contracts.v1.h": "a766cb8af7d32db7f962b8932ad2d7178fa023570ed14d797b2b098f53529ed5",
+      "tests/generated/presentation_contracts.py": "abe524e2c7e0e3fd20cdd7780c287ac4d77e44bfe3092f1755d3a52b19869aa0"
+    }
+  },
+  "required_failure": {
+    "job": 112718503998,
+    "log_sha256": "b42dacddd5756548b966ebb000f90c71b246612ea98f8cf46db50fa6cb9fae79",
+    "methods_failed": [
+      "test_generated_outputs_are_deterministic_and_current",
+      "test_generated_types_preserve_scalars_object_arrays_and_receipts"
+    ],
+    "run": 37599005560
+  },
+  "resources": {
+    "native_workers": 2,
+    "new_candidates": 0,
+    "new_clones": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "preserved_findings": [
+      "unmanaged_secondary_worktrees_present",
+      "merged_local_task_branches_present"
+    ],
+    "task_root_bytes_before": 11901690614
+  },
+  "retained_failures": [
+    "Original required macOS check and local two-method reproduction.",
+    "An unsupported --write generator argument performed no mutation; the following suite retained both failures. The actual default writer then repaired the generated state."
+  ],
+  "schema": "facman.ordinary_pack_import.generated_contract_fix.v1",
+  "source_parent": "131364089f0b7292c125c7072f4f4e07f30991a0",
+  "verdict": "PASS",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}

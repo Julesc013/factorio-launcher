@@ -1210,6 +1210,7 @@ int command_presentation(const Options& options)
         const std::string save = option(options.args, "--save");
         const std::string output_path = option(options.args, "--output");
         const std::string source_data_root = option(options.args, "--source-data-root");
+        const std::string source_path = option(options.args, "--source-path");
         const std::string transaction = option(options.args, "--transaction");
         if (!instance.empty()) payload.add_string("selected_instance_id", instance);
         if (!key.empty()) payload.add_string("idempotency_key", key);
@@ -1226,6 +1227,7 @@ int command_presentation(const Options& options)
         if (!save.empty()) payload.add_string("save", save);
         if (!output_path.empty()) payload.add_string("output_path", output_path);
         if (!source_data_root.empty()) payload.add_string("source_data_root", source_data_root);
+        if (!source_path.empty()) payload.add_string("source_path", source_path);
         if (!transaction.empty()) payload.add_string("transaction_id", transaction);
         const auto root_values = option_values(options.args, "--root");
         if (!root_values.empty()) {
