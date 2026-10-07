@@ -146,7 +146,7 @@ def validate() -> list[str]:
 
     for anchor in (
         'request.launch_intent != "menu" && request.launch_intent != "load_save"',
-        'saves::index::inspect(workspace, request)',
+        'saves::index::inspect_exact_filename(workspace, request)',
         '"gameplay_compatibility", "unclaimed"',
         '"instance_projection_inputs_changed"',
         'path_crosses_link_or_reparse_point(path, detail)',

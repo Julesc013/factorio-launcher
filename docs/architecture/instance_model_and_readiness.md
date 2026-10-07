@@ -200,7 +200,10 @@ authority and do not replace the later human-reviewed real-product Play gate.
 
 Explicit `--intent load_save` requires an effective load-save profile selection.
 A menu or benchmark profile produces `instance_launch_intent_mismatch`. The
-required saves dimension consumes the exact existing `saves.inspect` record:
+required saves dimension consumes the save owner's existing inspection record
+through an internal exact-filename path that reads only the selected archive.
+Unrelated archives are not hashed or parsed; public save commands keep their
+whole-index filename/stem/hash selection semantics. For the selected archive,
 missing/unsafe inputs and malformed or unrecognized archives block readiness;
 recorded association-byte or declared version/modset drift blocks it separately.
 Absent association and unknown deep metadata degrade the saves dimension without

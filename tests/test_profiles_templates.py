@@ -229,6 +229,91 @@ class ProfileTemplateTests(unittest.TestCase):
                         self.assertNotIn("instance_launch_intent_mismatch",
                                          {item["code"] for item in restored["blockers"]})
 
+    def test_load_save_readiness_isolates_exact_filename_from_unsafe_siblings(self) -> None:
+        for filename in ("selected.zip", "selected world.zip", "selected \u4e16\u754c.zip"):
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory(
+                prefix="facman exact selected "
+            ) as value:
+                fixture = Path(value)
+                workspace = fixture / "workspace"
+                instance = create_instance(workspace)
+                invoke_json(workspace, "profiles", "apply", "main", "gui", "--selection-mode", "load-save",
+                            "--selection", filename)
+                save = instance / "saves" / filename
+                entry = zipfile.ZipInfo("world/level-init.dat", (2026, 7, 12, 0, 0, 0))
+                entry.external_attr = 0o644 << 16
+                with zipfile.ZipFile(save, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                    archive.writestr(entry, b"exact selected opaque fixture")
+                expected_hash = hashlib.sha256(save.read_bytes()).hexdigest()
+
+                def query() -> dict:
+                    before = {p.relative_to(fixture): p.read_bytes()
+                              for p in fixture.rglob("*") if p.is_file()}
+                    readiness = invoke_json(workspace, "instances", "readiness", "main", "--intent", "load_save")
+                    described = invoke_json(workspace, "instances", "describe", "main", "--intent", "load_save")
+                    assert_schema(self, readiness, "factorio_instance_readiness.v1.schema.json")
+                    self.assertEqual(readiness, described["instance_readiness"])
+                    self.assertEqual(before, {p.relative_to(fixture): p.read_bytes()
+                                             for p in fixture.rglob("*") if p.is_file()})
+                    for field in ("preparation_available", "execution_available", "permit_issued",
+                                  "preparation_executed", "execution_started", "mutation_executed"):
+                        self.assertFalse(readiness[field], field)
+                    self.assertTrue(all(v is False for v in readiness["operation_guarantees"].values()))
+                    self.assertIn("real_play_gate_not_passed", {b["code"] for b in readiness["blockers"]})
+                    return readiness
+
+                baseline = query()
+                self.assertEqual("degraded", baseline["selected_save"]["state"])
+                record = baseline["selected_save"]["record"]
+                self.assertEqual(filename, record["filename"])
+                self.assertEqual(save, Path(record["path"]))
+                self.assertEqual(expected_hash, record["sha256"])
+                self.assertEqual("valid", record["archive_structure"]["status"])
+                self.assertTrue(record["factorio_save_recognized"])
+                self.assertEqual("unknown", record["association"]["context"]["status"])
+                # The public inspector keeps filename, stem and hash references.
+                for reference in (filename, save.stem, expected_hash):
+                    inspected = invoke_json(workspace, "saves", "inspect", reference, "--instance", "main")
+                    self.assertEqual(record, inspected["saves"][0])
+
+                external = fixture / "unselected-source.zip"
+                external.write_bytes(b"malformed unrelated archive")
+                sibling = instance / "saves" / "unselected.zip"
+                os.link(external, sibling)
+                isolated = query()
+                self.assertEqual("degraded", isolated["selected_save"]["state"])
+                self.assertEqual(record, isolated["selected_save"]["record"])
+                self.assertEqual(isolated, query())
+                # Public whole-index semantics still refuse the unsafe sibling.
+                before = {p.relative_to(fixture): p.read_bytes()
+                          for p in fixture.rglob("*") if p.is_file()}
+                for command in (("index",), ("inspect", filename), ("verify", save.stem),
+                                ("associate", filename), ("diff", filename, filename)):
+                    refused = invoke_json(workspace, "saves", *command, "--instance", "main", success=False)
+                    expected_code = "save_not_found" if command[0] == "diff" else "save_stable_read_failed"
+                    self.assertEqual(expected_code, refused["refusal"]["code"])
+                self.assertEqual(before, {p.relative_to(fixture): p.read_bytes()
+                                         for p in fixture.rglob("*") if p.is_file()})
+
+                # The selected file itself remains subject to the link-count guard.
+                os.link(save, fixture / "selected-alias.zip")
+                linked = query()
+                self.assertEqual("blocked", linked["selected_save"]["state"])
+                self.assertIsNone(linked["selected_save"]["record"])
+                self.assertIn("save_stable_read_failed", {b["code"] for b in linked["blockers"]})
+                self.assertNotEqual(isolated["readiness_digest"], linked["readiness_digest"])
+                # A filename-looking stem match must not satisfy exact selection.
+                save.rename(save.with_name(filename + ".zip"))
+                missing = query()
+                self.assertEqual("blocked", missing["selected_save"]["state"])
+                self.assertIsNone(missing["selected_save"]["record"])
+                self.assertIn("save_not_found", {b["code"] for b in missing["blockers"]})
+                save.mkdir()
+                non_regular = query()
+                self.assertEqual("blocked", non_regular["selected_save"]["state"])
+                self.assertIsNone(non_regular["selected_save"]["record"])
+                self.assertIn("save_stable_read_failed", {b["code"] for b in non_regular["blockers"]})
+
     def test_load_save_readiness_refuses_linked_save_and_context_ancestors(self) -> None:
         for relative in ("saves", "mods", "metadata/save-refs", "backups"):
             with self.subTest(ancestor=relative):
