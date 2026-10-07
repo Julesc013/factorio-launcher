@@ -136,3 +136,18 @@ remains unconfirmed. Independent review admits one normally committed corrective
 diagnostic PR for required exact-source hosted CI; integration requires those
 results and a further consequential decision review. Preserve the timeout and
 do not claim it resolved, relax its oracle or start Content export meanwhile.
+
+PR396 exact source8d8a8e6e required Windows static Debug check failed the
+new controlled brief-contention fixture (exit101); presentation smoke passed.
+The failed fixture depends on a background reader and100ms release inside the
+real500ms budget; hosted release timing is absent, so scheduling attribution
+remains unconfirmed. Replace that timing assumption with an internal Windows
+retry helper, unchanged fixed policy and real production SDK/steady-clock/sleep
+callbacks. Exercise the same helper with a real SDK lock, deterministic clock,
+actual first refusal, synchronous release, authoritative terminal/Last Run and
+immutable inputs; cover exact deadline, overshoot, other errors and error change.
+Retain full-service persistent-lock recovery and unchanged-running-record tests.
+This grants no real wall-time claim and resolves neither the retained q02 SDK
+publication stall nor original CI63 attribution. Require independent patch
+review, focused static Debug/shared Release qualification and current source/
+merge CI. No new roots, worktrees, clones, candidates or provider pin changes.

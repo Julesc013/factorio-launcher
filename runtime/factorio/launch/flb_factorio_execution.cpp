@@ -19,6 +19,7 @@
 #include <utility>
 
 #ifdef _WIN32
+#include "flb_factorio_session_journal_retry_detail.h"
 #include <chrono>
 #include <thread>
 #endif
@@ -202,28 +203,18 @@ bool write_ulk_session_record(
     journal.maximum_records = kMaximumUlkJournalRecords;
     ulk_error_v1 error {};
 #ifdef _WIN32
-    // Windows SDK lock acquisition fails immediately while a reader owns it.
-    // This exact error precedes record publication; other write errors may
-    // follow effects and must retain their existing recovery semantics.
-    const auto retry_deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
-#endif
-    for (;;) {
-        error = {};
-        error.struct_size = sizeof(error);
-        if (ulk_session_journal_write_v1(&journal, &record, &error) == ULK_STATUS_OK) {
-            detail.clear();
-            return true;
-        }
-#ifdef _WIN32
-        if (copy_ulk_view(error.detail) != "session_lock_unavailable") break;
-        const auto now = std::chrono::steady_clock::now();
-        if (now >= retry_deadline) break;
-        std::this_thread::sleep_until(std::min(
-            retry_deadline, now + std::chrono::milliseconds(10)));
-        if (std::chrono::steady_clock::now() >= retry_deadline) break;
+    const int status = facman::factorio::launch::detail::write_session_journal_with_lock_retry(
+        [&](ulk_error_v1& attempt_error) {
+            return ulk_session_journal_write_v1(&journal, &record, &attempt_error);
+        }, [] { return std::chrono::steady_clock::now(); },
+        [](const auto& deadline) { std::this_thread::sleep_until(deadline); }, error);
 #else
-        break;
+    error.struct_size = sizeof(error);
+    const int status = ulk_session_journal_write_v1(&journal, &record, &error);
 #endif
+    if (status == ULK_STATUS_OK) {
+        detail.clear();
+        return true;
     }
     detail = copy_ulk_view(error.detail);
     const std::string message = copy_ulk_view(error.message);
