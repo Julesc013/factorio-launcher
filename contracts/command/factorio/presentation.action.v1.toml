@@ -1,6 +1,6 @@
 command_id = "presentation.action"
 cli = """facman presentation action <action-id> --scope <scope> \
-  --expected-revision <sha256> --request-id <id> [--instance <id>] \
+  --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] \
   [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] \
   [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] \
   [--new-instance <id>] [--display-name <text>] [--template <id>] \

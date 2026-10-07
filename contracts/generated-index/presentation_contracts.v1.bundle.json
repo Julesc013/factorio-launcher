@@ -48,6 +48,13 @@
           "installation_path": {
             "type": "string"
           },
+          "launch_intent": {
+            "enum": [
+              "menu",
+              "load_save"
+            ],
+            "type": "string"
+          },
           "mod_identity": {
             "type": "string"
           },
@@ -117,7 +124,7 @@
       },
       "schema_id": "https://facman.invalid/schema/command/presentation.action.request.v1.schema.json",
       "source_path": "contracts/schema/command/presentation.action.request.v1.schema.json",
-      "source_sha256": "15a16c135db0de97c6b9a6a1d28276e6ceda192da31b3bef2a9766644059d37e"
+      "source_sha256": "88ec55a0b2555c3514cabcf28c4b1bb000696838137554fedb06a0a95bfc7eb6"
     },
     {
       "behavior": "effect_input",
@@ -131,6 +138,13 @@
             "maxLength": 64,
             "minLength": 64,
             "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "launch_intent": {
+            "enum": [
+              "menu",
+              "load_save"
+            ],
             "type": "string"
           },
           "scope": {
@@ -162,7 +176,7 @@
       },
       "schema_id": "https://facman.invalid/schema/command/presentation.query.request.v1.schema.json",
       "source_path": "contracts/schema/command/presentation.query.request.v1.schema.json",
-      "source_sha256": "bae1061cc0581ab534f62474a4fc3d5a023b669c0315bd19e18feb1627dc875f"
+      "source_sha256": "9ae0ca36d927bd63ca354e8461223f1728897667c5126d2994a86073209e0be0"
     },
     {
       "behavior": "effect_input",
@@ -927,6 +941,15 @@
             "const": "facman.presentation_snapshot.v1"
           },
           "selected_context": {
+            "properties": {
+              "launch_intent": {
+                "enum": [
+                  "menu",
+                  "load_save"
+                ],
+                "type": "string"
+              }
+            },
             "type": "object"
           },
           "snapshot_id": {
@@ -971,7 +994,7 @@
       },
       "schema_id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
       "source_path": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
-      "source_sha256": "2c24ea7f952295c87f112fcf1a7b0fb1b2cc9393afad0d87659eac9580673984"
+      "source_sha256": "5c331bf801cb8d2dc21dd830fd677dc231eeaa0ed73a45d4aebfd6e3b7450130"
     },
     {
       "behavior": "read_projection",
@@ -1072,5 +1095,5 @@
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "d1cf4f23ddc35592f60727b92958ff23fec4ed69f1ab446f0a25f2d1612ef669"
+  "source_digest": "0ef73f830fd6c81090f0da7e6cff2dc0ca417e6eafa24d476779401b38455809"
 }

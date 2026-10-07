@@ -95,3 +95,11 @@ to recognize menu and explicit load_save query intents while retaining default
 menu InstanceSpec and all preparation/execution/permit boundaries. Reuse the
 existing saves.inspect evidence; no archive subsystem or public command is added.
 Native qualification and independent review remain required after source edits.
+
+Presentation intent continuation from integrated dev c23abf22: admit exactly
+tools/codegen/generate_metadata.py for a command-specific enum_choices branch
+restricting presentation.query/action launch_intent to menu and load_save.
+This keeps generated request schemas and frontend catalogs faithful to the
+canonical optional field. Existing command vocabularies and default menu
+behavior remain unchanged; no execution, preparation or release authority is
+added. Native, frontend and historical receipt qualification remain required.

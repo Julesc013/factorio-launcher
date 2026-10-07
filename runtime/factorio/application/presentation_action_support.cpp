@@ -25,6 +25,56 @@ std::string string_field(const json::Value& value, const char* key)
 
 } // namespace
 
+std::string action_request_json(const SemanticActionRequest& request)
+{
+    json::ObjectBuilder input;
+    input.add_string("action_id", request.action_id);
+    input.add_string("scope", request.scope);
+    input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
+    input.add_string("request_id", request.request_id);
+    input.add_string("selected_instance_id", request.selected_instance_id);
+    input.add_string("durable_operation_id", request.durable_operation_id);
+    input.add_string("attempt_id", request.attempt_id);
+    input.add_string("confirmation", request.confirmation);
+    input.add_string("installation_id", request.installation_id);
+    input.add_string("installation_path", request.installation_path);
+    input.add_string("new_instance_id", request.new_instance_id);
+    input.add_string("display_name", request.display_name);
+    input.add_string("template_id", request.template_id);
+    input.add_string("profile_id", request.profile_id);
+    input.add_string("mod_identity", request.mod_identity);
+    input.add_string("save", request.save);
+    input.add_string("output_path", request.output_path);
+    input.add_string("source_data_root", request.source_data_root);
+    input.add_string("transaction_id", request.transaction_id);
+    json::ArrayBuilder roots;
+    for (const auto& root : request.roots) roots.add_string(root);
+    input.add_array("roots", roots);
+    if (request.launch_intent == "load_save") input.add_string("launch_intent", request.launch_intent);
+    return input.serialize();
+}
+
+bool recorded_action_request_shape(const json::Value& request)
+{
+    if (!request.is_object()) return false;
+    std::vector<std::string> expected = {
+        "action_id", "scope", "expected_snapshot_revision", "request_id",
+        "selected_instance_id", "durable_operation_id", "attempt_id", "confirmation",
+        "installation_id", "installation_path", "new_instance_id", "display_name",
+        "template_id", "profile_id", "mod_identity", "save", "output_path",
+        "source_data_root", "transaction_id", "roots",
+    };
+    // The only extension to the immutable legacy shape is a validated Selected Save intent.
+    if (request.find("launch_intent") != nullptr) {
+        if (string_field(request, "launch_intent") != "load_save") return false;
+        expected.emplace_back("launch_intent");
+    }
+    auto actual = request.object_keys();
+    std::sort(actual.begin(), actual.end());
+    std::sort(expected.begin(), expected.end());
+    return actual == expected;
+}
+
 bool lower_hex_digest(const std::string& value)
 {
     return value.size() == 64U && std::all_of(value.begin(), value.end(), [](char c) {

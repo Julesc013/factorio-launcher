@@ -41,6 +41,13 @@
     "installation_path": {
       "type": "string"
     },
+    "launch_intent": {
+      "enum": [
+        "menu",
+        "load_save"
+      ],
+      "type": "string"
+    },
     "mod_identity": {
       "type": "string"
     },

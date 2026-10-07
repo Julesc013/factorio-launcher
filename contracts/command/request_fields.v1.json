@@ -1214,6 +1214,11 @@
         "kind": "string_array",
         "name": "roots",
         "required": false
+      },
+      {
+        "name": "launch_intent",
+        "kind": "enum",
+        "required": false
       }
     ],
     "presentation.query": [
@@ -1235,6 +1240,11 @@
       {
         "kind": "sha256",
         "name": "known_revision",
+        "required": false
+      },
+      {
+        "name": "launch_intent",
+        "kind": "enum",
         "required": false
       }
     ],

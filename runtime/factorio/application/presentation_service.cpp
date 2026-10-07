@@ -98,34 +98,6 @@ bool semantic_outcome(const std::string& outcome)
         outcome == "recovery_required" || outcome == "outcome_unknown";
 }
 
-std::string action_request_json(const SemanticActionRequest& request)
-{
-    json::ObjectBuilder input;
-    input.add_string("action_id", request.action_id);
-    input.add_string("scope", request.scope);
-    input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
-    input.add_string("request_id", request.request_id);
-    input.add_string("selected_instance_id", request.selected_instance_id);
-    input.add_string("durable_operation_id", request.durable_operation_id);
-    input.add_string("attempt_id", request.attempt_id);
-    input.add_string("confirmation", request.confirmation);
-    input.add_string("installation_id", request.installation_id);
-    input.add_string("installation_path", request.installation_path);
-    input.add_string("new_instance_id", request.new_instance_id);
-    input.add_string("display_name", request.display_name);
-    input.add_string("template_id", request.template_id);
-    input.add_string("profile_id", request.profile_id);
-    input.add_string("mod_identity", request.mod_identity);
-    input.add_string("save", request.save);
-    input.add_string("output_path", request.output_path);
-    input.add_string("source_data_root", request.source_data_root);
-    input.add_string("transaction_id", request.transaction_id);
-    json::ArrayBuilder roots;
-    for (const auto& root : request.roots) roots.add_string(root);
-    input.add_array("roots", roots);
-    return input.serialize();
-}
-
 bool read_action_receipt(
     const fs::path& path,
     const SemanticActionRequest& request,
@@ -218,12 +190,7 @@ bool read_action_receipt(
         return false;
     }
     auto request_document = json::parse(decoded_request.value(), limits);
-    if (!request_document || !exact_keys(request_document.value(), {
-            "action_id", "scope", "expected_snapshot_revision", "request_id",
-            "selected_instance_id", "durable_operation_id", "attempt_id", "confirmation",
-            "installation_id", "installation_path", "new_instance_id", "display_name",
-            "template_id", "profile_id", "mod_identity", "save", "output_path",
-            "source_data_root", "transaction_id", "roots"})) {
+    if (!request_document || !recorded_action_request_shape(request_document.value())) {
         detail = "presentation action receipt request shape is invalid";
         return false;
     }
@@ -855,6 +822,10 @@ PresentationService::PresentationService(
 
 ApplicationResult PresentationService::query(const PresentationQueryRequest& request) const
 {
+    if (request.launch_intent != "menu" && request.launch_intent != "load_save") {
+        return service_refusal("presentation.query", "unsupported_launch_intent",
+            "Presentation intent must be menu or load_save", {}, facman::core::OutcomeKind::invalid_argument);
+    }
     if (request.scope != "launch_deck" && request.scope != "instances" &&
         request.scope != "installations" && request.scope != "content" &&
         request.scope != "saves" && request.scope != "activity_recovery" &&
@@ -1176,7 +1147,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     if (!request.selected_instance_id.empty()) {
         lifecycle::ProjectionRequest projection;
         projection.instance_id = request.selected_instance_id;
-        projection.launch_intent = "menu";
+        projection.launch_intent = request.launch_intent;
         auto projected = lifecycle::instance_readiness(context_.workspace(), projection);
         if (projected) readiness = projected.take_value();
     }
@@ -1378,7 +1349,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "secondary", "read_only", selected_exists,
             selected_exists ? nullptr : "no_instance_selected",
             "none", "facman.semantic_action_input.v1", instance_input));
-        const bool launch_available = launch_executor_ != nullptr &&
+        const bool launch_available = request.launch_intent == "menu" && launch_executor_ != nullptr &&
             launch_executor_->available(request);
         actions.add_object(action_descriptor(
             "launch.play", "run.execute",
@@ -1539,6 +1510,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         "incomplete_transactions", transactions::incomplete_count(context_.workspace()));
 
     json::ObjectBuilder selection;
+    selection.add_string("launch_intent", request.launch_intent);
     if (request.selected_instance_id.empty()) selection.add_null("instance_id");
     else selection.add_string("instance_id", request.selected_instance_id);
     if (!selected_exists) {
@@ -1627,6 +1599,10 @@ ApplicationResult PresentationService::action(
     const SemanticActionRequest& request,
     bool effectful_action_authorized)
 {
+    if (request.launch_intent != "menu" && request.launch_intent != "load_save") {
+        return service_refusal("presentation.action", "unsupported_launch_intent",
+            "Presentation intent must be menu or load_save", {}, facman::core::OutcomeKind::invalid_argument);
+    }
     const bool durable_action = effectful_semantic_action(request.action_id);
     const std::string canonical_request = action_request_json(request);
     // Durable records need a fixed, externally validated digest. Process-local
@@ -1664,6 +1640,7 @@ ApplicationResult PresentationService::action(
     }
 
     PresentationQueryRequest query_request;
+    query_request.launch_intent = request.launch_intent;
     query_request.scope = request.scope;
     query_request.selected_instance_id = request.selected_instance_id;
     ApplicationResult current = query(query_request);
@@ -2406,7 +2383,7 @@ ApplicationResult PresentationService::action(
                     ? std::string() : replacement.error_message,
                 false, {"process_control"});
         }
-    } else if (request.action_id == "launch.play" &&
+    } else if (request.action_id == "launch.play" && request.launch_intent == "menu" &&
                (request.scope == "launch_deck" || request.scope == "instances") &&
                launch_executor_ != nullptr) {
         PresentationLaunchExecution execution = launch_executor_->execute(request);

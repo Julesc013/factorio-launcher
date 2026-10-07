@@ -48,6 +48,7 @@ namespace FacMan.WinForms
 
         public C1LivePresentationStore()
         {
+            ObservationIntent = "menu";
             Workspace = Environment.GetEnvironmentVariable("FACMAN_WORKSPACE") ?? String.Empty;
             Current = BuildUnavailable("Backend presentation has not been queried yet.");
         }
@@ -57,6 +58,7 @@ namespace FacMan.WinForms
         public string SelectedInstanceId { get; private set; }
         public string LastActionPayload { get; private set; }
         public bool Busy { get; private set; }
+        public string ObservationIntent { get; private set; }
         public string LastRefusal { get; private set; }
         public PresentationDoctorReport LastDoctor { get; private set; }
         public bool HasUncertainAction { get { return uncertainAction != null; } }
@@ -98,6 +100,7 @@ namespace FacMan.WinForms
             Busy = true;
             LastRefusal = String.Empty;
             snapshots.Clear();
+            Current = BuildUnavailable("Refreshing readiness...");
             try
             {
                 BackendPresentationSnapshot instances = await QueryAsync(
@@ -147,6 +150,14 @@ namespace FacMan.WinForms
             }
         }
 
+        public async Task<bool> SelectObservationIntentAsync(string intent, CancellationToken cancellationToken)
+        {
+            if (Busy || (intent != "menu" && intent != "load_save")) return false;
+            ObservationIntent = intent;
+            await RefreshAsync(cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+
         public async Task<bool> SelectInstanceAsync(
             string instanceId, CancellationToken cancellationToken)
         {
@@ -181,7 +192,7 @@ namespace FacMan.WinForms
         public async Task SelectWorkspaceAsync(
             string workspace, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrWhiteSpace(workspace)) return;
+            if (Busy || String.IsNullOrWhiteSpace(workspace)) return;
             Workspace = Path.GetFullPath(workspace);
             SelectedInstanceId = String.Empty;
             LastDoctor = null;
@@ -317,6 +328,7 @@ namespace FacMan.WinForms
             CommandDefinition command = RequireRoute("presentation.query");
             Dictionary<string, object> payload = new Dictionary<string, object>();
             payload["scope"] = scope;
+            payload["launch_intent"] = ObservationIntent;
             if (!String.IsNullOrWhiteSpace(selectedInstanceId))
                 payload["selected_instance_id"] = selectedInstanceId;
             CommandResult result = await transport.InvokeAsync(
@@ -336,7 +348,7 @@ namespace FacMan.WinForms
             CancellationToken cancellationToken)
         {
             BackendPresentationSnapshot source = Snapshot(scope);
-            if (source == null)
+            if (Busy || source == null)
                 return CommandResult.Refusal(
                     "presentation.action", "presentation.action",
                     "presentation_snapshot_unavailable", "Refresh before invoking an action.");
@@ -371,10 +383,11 @@ namespace FacMan.WinForms
             payload["durable_operation_id"] = identity.OperationId;
             payload["attempt_id"] = identity.AttemptId;
             if (action.Effectful) payload["confirmation"] = "explicit";
-            if (!String.IsNullOrWhiteSpace(SelectedInstanceId))
-                payload["selected_instance_id"] = SelectedInstanceId;
+            if (!String.IsNullOrWhiteSpace(source.SelectedContext.InstanceId))
+                payload["selected_instance_id"] = source.SelectedContext.InstanceId;
             foreach (KeyValuePair<string, object> field in input)
                 payload[field.Key] = field.Value;
+            payload["launch_intent"] = source.SelectedContext.LaunchIntent;
 
             return await DispatchActionAsync(
                 new PendingSemanticAction(
