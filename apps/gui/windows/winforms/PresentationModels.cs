@@ -249,6 +249,24 @@ namespace FacMan.WinForms
             Freshness = PresentationJson.Text(value, "freshness");
             PlayAuthorityState = PresentationJson.Text(value, "play_authority_state");
             Digest = PresentationJson.Text(value, "readiness_digest");
+            IDictionary<string, object> preview = PresentationJson.Record(value, "preparation_preview");
+            PreparationPreviewState = PresentationJson.Text(preview, "composition_state");
+            PreparationPreviewDigest = PresentationJson.Text(preview, "plan_digest");
+            PreparationApplyAvailable = false;
+            List<string> ownerSummaries = new List<string>();
+            foreach (string ownerName in new string[] { "installation", "profile" })
+            {
+                IDictionary<string, object> owner = PresentationJson.Record(preview, ownerName);
+                IDictionary<string, object> report = PresentationJson.Record(owner, "report");
+                string identity = PresentationJson.FirstText(report, "plan_digest", "plan_sha256");
+                if (ownerName == "installation") PreparationInstallationPlanDigest = identity;
+                else PreparationProfilePlanDigest = identity;
+                string refusal = PresentationJson.Text(owner, "refusal");
+                if (owner != null) ownerSummaries.Add(ownerName + ": " +
+                    PresentationJson.Text(owner, "disposition") +
+                    (String.IsNullOrWhiteSpace(refusal) ? "" : "; " + refusal));
+            }
+            PreparationOwnerSummaries = ownerSummaries.AsReadOnly();
             List<PresentationProblem> blockers = new List<PresentationProblem>();
             foreach (IDictionary<string, object> item in PresentationJson.Records(value, "blockers"))
                 blockers.Add(new PresentationProblem(item));
@@ -261,6 +279,12 @@ namespace FacMan.WinForms
         public string PlayAuthorityState { get; private set; }
         public string Digest { get; private set; }
         public IList<PresentationProblem> Blockers { get; private set; }
+        public string PreparationPreviewState { get; private set; }
+        public string PreparationPreviewDigest { get; private set; }
+        public string PreparationInstallationPlanDigest { get; private set; }
+        public string PreparationProfilePlanDigest { get; private set; }
+        public bool PreparationApplyAvailable { get; private set; }
+        public IList<string> PreparationOwnerSummaries { get; private set; }
     }
 
     public sealed class PresentationLastRun

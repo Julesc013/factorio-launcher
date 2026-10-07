@@ -86,7 +86,19 @@ std::string readiness_text(const json::Value* readiness)
     if (!readiness->is_object()) return "Invalid readiness projection";
     const std::string value = first_string(
         *readiness, {"status", "state", "configuration_state", "outcome"});
-    return value.empty() ? "Available" : value;
+    std::string summary = value.empty() ? "Available" : value;
+    const json::Value* preview = readiness->find("preparation_preview");
+    if (preview != nullptr && preview->is_object()) {
+        summary += "; Preparation preview: " + string_member(*preview, "composition_state") + "; apply unavailable";
+        for (const char* name : {"installation", "profile"}) {
+            const json::Value* owner = preview->find(name);
+            if (owner == nullptr || !owner->is_object()) continue;
+            summary += "; " + std::string(name) + ": " + string_member(*owner, "disposition");
+            const std::string refusal = string_member(*owner, "refusal");
+            if (!refusal.empty()) summary += "; " + refusal;
+        }
+    }
+    return summary;
 }
 
 std::string last_run_text(const json::Value* last_run)

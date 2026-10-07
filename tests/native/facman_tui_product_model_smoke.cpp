@@ -369,5 +369,20 @@ int main()
         long_output.str().size() > 16U * 1024U ||
         long_output.str().find("Instance 9999") == std::string::npos ||
         long_output.str().find("... earlier content ...") == std::string::npos) return 27;
+    const TuiSnapshot preview_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "selected_context":{"instance_id":"main"},
+      "page":{"scope":"launch_deck","summary":"Launch","items":[]},
+      "readiness":{"configuration_state":"ready","execution_available":false,
+        "preparation_preview":{"composition_state":"partial","preparation_available":false,
+          "installation":{"disposition":"plan","report":{"plan_digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"refusal":null},
+          "profile":{"disposition":"refusal","report":null,"refusal":"profile_overrides_invalid"}}},
+      "available_semantic_actions":[], "active_operations":[]
+    })");
+    if (preview_snapshot.readiness.find("Preparation preview: partial; apply unavailable") == std::string::npos ||
+        preview_snapshot.readiness.find("profile_overrides_invalid") == std::string::npos ||
+        preview_snapshot.readiness.find(std::string(64U, 'a')) != std::string::npos ||
+        !preview_snapshot.actions.empty()) return 43;
     return 0;
 }

@@ -56,6 +56,22 @@ struct EffectiveProfile {
     std::string source_profile_sha256;
 };
 
+// Current-instance planning preserves the validated stored Patch, including absence.
+// This helper grants no apply authority and does not change profiles_plan semantics.
+struct CurrentInstancePlan {
+    EffectiveRequest request;
+    bool overrides_present = false;
+    std::string overrides_sha256;
+    std::string request_json;
+    std::string report;
+};
+bool current_plan_matches_effective(const CurrentInstancePlan& plan, const EffectiveProfile& observed);
+facman::core::Result<CurrentInstancePlan> plan_current_instance(
+    const std::filesystem::path& workspace,
+    const std::string& instance_id,
+    const std::string& profile_id,
+    const std::string& expected_manifest_sha256);
+
 facman::core::Result<std::string> templates_list(const std::filesystem::path& workspace);
 facman::core::Result<std::string> templates_inspect(const std::filesystem::path& workspace, const IdRequest& request);
 facman::core::Result<std::string> templates_validate(const std::filesystem::path& workspace, const IdRequest& request);

@@ -64,6 +64,7 @@
     "instance_binding_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "overall_state": {"enum": ["ready", "degraded", "blocked", "recovery_required"]},
     "configuration_state": {"enum": ["ready", "degraded", "blocked"]},
+    "preparation_preview": {"$ref": "factorio_preparation_preview.v1.schema.json"},
     "preparation_state": {"enum": ["already_prepared", "changes_required", "unavailable"]},
     "play_authority_state": {"const": "unavailable"},
     "dimensions": {
@@ -109,6 +110,6 @@
     "safe_next_actions", "dependency_identities", "freshness", "readiness_digest",
     "mutation_executed", "preparation_executed", "execution_started", "permit_issued",
     "credential_accessed", "network_accessed", "preparation_available", "execution_available",
-    "operation_guarantees"
+    "operation_guarantees", "preparation_preview"
   ]
 }

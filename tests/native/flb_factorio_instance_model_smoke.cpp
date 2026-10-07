@@ -5,6 +5,7 @@
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_instance_model.h"
 #include "flb_factorio_launch_plan.h"
+#include "flb_factorio_profiles.h"
 
 #include <chrono>
 #include <filesystem>
@@ -174,6 +175,26 @@ int main()
         !bool_is(readiness.value().find("mutation_executed"), false) ||
         !bool_is(readiness.value().find("execution_started"), false) ||
         !bool_is(readiness.value().find("permit_issued"), false)) return 2;
+
+    const json::Value* preview = readiness.value().find("preparation_preview");
+    auto owner = facman::factorio::profiles::profiles_plan(workspace, {"main", "gui", {}, {}, {}});
+    auto owner_json = owner ? json::parse(owner.value()) : facman::core::Result<json::Value>::failure(owner.error());
+    if (preview == nullptr || !owner_json ||
+        !string_is(preview->find("mode"), "plan_only") ||
+        !bool_is(preview->find("preparation_available"), false) ||
+        !bool_is(preview->find("execution_available"), false) ||
+        preview->find("profile")->find("report")->serialize() != owner_json.value().serialize() ||
+        !string_is(preview->find("selected_world")->find("disposition"), "not_required") ||
+        !preview->find("selected_world")->find("record")->is_null() ||
+        !preview->find("expires_at")->is_null() || before != snapshot(fixture.path)) return 18;
+
+    auto current_owner = facman::factorio::profiles::plan_current_instance(workspace, "main", "gui", {});
+    auto observed_profile = facman::factorio::profiles::effective_profile_for_instance(workspace, "main", "gui");
+    if (!current_owner || !observed_profile ||
+        !facman::factorio::profiles::current_plan_matches_effective(current_owner.value(), observed_profile.value())) return 19;
+    observed_profile.value().settings.selection_mode = "load-save";
+    observed_profile.value().settings.selection = "different.zip";
+    if (facman::factorio::profiles::current_plan_matches_effective(current_owner.value(), observed_profile.value())) return 20;
 
     const json::Value* spec = view.value().find("instance_spec");
     const json::Value* binding = view.value().find("instance_binding");

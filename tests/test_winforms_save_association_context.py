@@ -109,21 +109,32 @@ class WinFormsSaveAssociationContextTests(unittest.TestCase):
                 shutil.copyfile(fixture, evidence / "cases.json")
             self.assertEqual(0, build.returncode, build.stdout + build.stderr)
             binary = output / "FacMan.SaveContext.Harness.exe"
-            result = subprocess.run([str(binary), str(fixture)], cwd=root, capture_output=True,
-                text=True, encoding="utf-8", errors="replace", timeout=60)
+            rendered_output = []
+            for index, case in enumerate(cases):
+                # The gallery consumes one observation, not the aggregate of
+                # seven independent cases. Preserve its existing size bound.
+                case_fixture = root / f"case-{index}.json"
+                document = json.dumps(dict(cases=[case]), ensure_ascii=False) + "\n"
+                self.assertLessEqual(len(document), 1024 * 1024, case["name"])
+                case_fixture.write_text(document, encoding="utf-8")
+                result = subprocess.run([str(binary), str(case_fixture)], cwd=root, capture_output=True,
+                    text=True, encoding="utf-8", errors="replace", timeout=60)
+                rendered_output.append(result.stdout + result.stderr)
+                if evidence is not None:
+                    (evidence / "run.log").write_text("".join(rendered_output), encoding="utf-8")
+                self.assertEqual(0, result.returncode, case["name"] + ": " + result.stdout + result.stderr)
+                self.assertEqual(1, result.stdout.count("PASS "), case["name"])
             if evidence is not None:
-                (evidence / "run.log").write_text(result.stdout + result.stderr, encoding="utf-8")
                 identities = {}
                 for name in ("FacMan.exe", "FacMan.SaveContext.Harness.exe"):
                     path = output / name
                     identities[name] = hashlib.sha256(path.read_bytes()).hexdigest()
                     shutil.copyfile(path, evidence / name)
                 (evidence / "binary-identities.json").write_text(json.dumps(identities, indent=2) + "\n", encoding="utf-8")
-            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-            self.assertEqual(7, result.stdout.count("PASS "))
+            self.assertEqual(7, "".join(rendered_output).count("PASS "))
             self.assertEqual(before_render, inventory(workspace))
             self.assertEqual(original_sidecar, sidecar.read_bytes())
-            print(result.stdout, end="")
+            print("".join(rendered_output), end="")
 
 
 if __name__ == "__main__":
