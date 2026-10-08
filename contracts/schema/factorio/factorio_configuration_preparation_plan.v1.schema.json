@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_configuration_preparation_plan.v1.schema.json",
+  "title": "Missing routing configuration preparation plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "instance_id",
+    "launch_intent",
+    "component",
+    "composition",
+    "inputs_sha256",
+    "parent_before_identity",
+    "target",
+    "preparation_available",
+    "mutation_executed",
+    "execution_started",
+    "permit_issued",
+    "factorio_support_claim",
+    "plan_sha256",
+    "instance_root",
+    "config_text",
+    "config_sha256",
+    "existing_settings_modified"
+  ],
+  "properties": {
+    "schema": {
+      "const": "factorio.configuration_preparation_plan.v1"
+    },
+    "instance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "launch_intent": {
+      "enum": [
+        "menu",
+        "load_save"
+      ]
+    },
+    "component": {
+      "const": "missing_routing_configuration"
+    },
+    "composition": {
+      "const": "partial"
+    },
+    "inputs_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "parent_before_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "preparation_available": {
+      "const": true
+    },
+    "mutation_executed": {
+      "const": false
+    },
+    "execution_started": {
+      "const": false
+    },
+    "permit_issued": {
+      "const": false
+    },
+    "factorio_support_claim": {
+      "const": "unclaimed"
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "instance_root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536
+    },
+    "config_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536
+    },
+    "config_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "existing_settings_modified": {
+      "const": false
+    }
+  },
+  "additionalProperties": false
+}

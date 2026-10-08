@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_instance_model.h"
+#include "flb_factorio_instance_staging.h"
 
 #include "fl_file_io.h"
 #include "fl_json.h"
@@ -1915,6 +1916,175 @@ facman::core::Result<std::string> observe_selected_save_preparation_inputs(
     const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own)
 {
     return selected_context_inputs(workspace, request, own);
+}
+
+namespace {
+facman::core::Result<std::string> configuration_inputs(
+    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own,
+    Projection* snapshot = nullptr)
+{
+    auto observed = project(workspace, request);
+    if (!observed) return facman::core::Result<std::string>::failure(observed.error());
+    const auto& p = observed.value();
+    if (!p.root_safe || !p.install_present || !p.install_record || !p.install_ref ||
+        !p.installation_healthy || !p.version_family_eligible || !p.version_matches || !p.content_present ||
+        !p.profile_valid || !p.profile_plan || !p.modset_valid || !p.modset_lock || p.modset_status != "locked_verified" ||
+        (request.launch_intent == "load_save" && (p.selected_save.empty() || p.selected_save_state == "blocked" ||
+            p.selected_archive_identity.rfind("file:", 0) != 0)))
+        return fail<std::string>("configuration_prerequisites_unavailable",
+            "Missing configuration requires a valid current profile, registered installation and verified locked content");
+    auto parents = configuration_parent_identity(p.instance.root);
+    if (!parents) return parents;
+    if (lock_input_identity(p.instance.root / "config-path.cfg") != "absent" ||
+        lock_input_identity(p.instance.root / "config/config-path.cfg") != "absent")
+        return fail<std::string>("configuration_legacy_routing_present", "Existing legacy routing must be preserved");
+    const fs::path target = p.instance.root / "config/config.ini";
+    const std::string intended = instance_effective_config(p.instance, *p.install_ref);
+    const std::string target_status = lock_input_identity(target);
+    if (!own && target_status != "absent") return fail<std::string>(
+        "configuration_existing_leaf_preserved", "Existing configuration is outside missing-file preparation");
+    if (own) {
+        auto context = json::parse(own->operation_context);
+        if (!context || object_string(context.value(), "schema") != "factorio.configuration_preparation_commit.v1" ||
+            object_string(context.value(), "instance_id") != request.instance_id ||
+            object_string(context.value(), "launch_intent") != request.launch_intent ||
+            !same_path(fs::u8path(object_string(context.value(), "instance_root")), p.instance.root) ||
+            object_string(context.value(), "parent_before_identity") != parents.value() ||
+            object_string(context.value(), "config_text") != intended || own->target != target)
+            return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable configuration does not describe the current owner inputs");
+        if (target_status != "absent") {
+            facman::platform::StableInputFile file;
+            if (!p.config_valid || !p.config || p.config->text != intended || own->effect_file_identity.empty() ||
+                !file.open_no_follow_pinned(target).ok() || file.identity().link_count != 1U ||
+                std::to_string(file.identity().device) + ":" + std::to_string(file.identity().object) != own->effect_file_identity ||
+                !file.revalidate_path().ok())
+                return fail<std::string>("configuration_foreign_effect_preserved", "Existing configuration is not the exact journaled owner effect");
+        }
+    }
+    const auto recovery = tx::inspect(workspace);
+    const auto* report = std::get_if<tx::RecoveryResult>(&recovery);
+    auto document = report ? json::parse(report->json) : json::parse("null");
+    const auto* journals = document ? document.value().find("transactions") : nullptr;
+    if (!journals || !journals->is_array()) return fail<std::string>("recovery_journal_invalid", "Recovery journals could not be validated");
+    for (std::size_t i = 0; i < journals->size(); ++i) {
+        const auto* item = journals->at(i);
+        if (own && object_string(*item, "transaction_id") == own->transaction_id) continue;
+        auto state = tx::parse_state(object_string(*item, "state"));
+        if (!state || !tx::terminal(state.value())) return fail<std::string>(
+            "configuration_pending_recovery", "Another workspace transaction requires recovery");
+    }
+    for (const char* lock : {"run.lock", "save.write.lock"}) {
+        if (lock_input_identity(p.instance.root / "locks" / lock) != "absent")
+            return fail<std::string>("configuration_locked", "Configuration preparation conflicts with an instance writer");
+    }
+    const std::string executable = artifact_identity(p.install->executable);
+    const std::string mod_list = lock_input_identity(p.instance.root / "mods/mod-list.json");
+    const std::string mod_settings = lock_input_identity(p.instance.root / "mods/mod-settings.dat");
+    if (executable.rfind("file:", 0) != 0 ||
+        (mod_list != "absent" && mod_list.rfind("present:file:", 0) != 0) ||
+        (mod_settings != "absent" && mod_settings.rfind("present:file:", 0) != 0))
+        return fail<std::string>("configuration_inputs_unsafe", "Installation or content settings could not be stably observed");
+    json::ObjectBuilder inputs;
+    inputs.add_string("schema", "factorio.configuration_preparation_inputs.v1");
+    inputs.add_string("instance_id", p.instance.id.str());
+    inputs.add_string("launch_intent", request.launch_intent);
+    inputs.add_string("instance_record", p.instance_record.identity);
+    inputs.add_string("installation_record", p.install_record->identity);
+    inputs.add_string("installation_evidence", p.installation_evidence_digest);
+    inputs.add_string("installation_executable", executable);
+    inputs.add_string("parents", parents.value());
+    inputs.add_string("intended_config", intended);
+    inputs.add_string("profile", p.profile_digest);
+    inputs.add_string("profile_source", p.profile_source_identity);
+    inputs.add_string("current_profile_request", p.profile_plan->request_json);
+    inputs.add_string("overrides", p.overrides_input_identity);
+    inputs.add_string("local_lock", p.modset_local_lock_identity);
+    inputs.add_string("shared_lock", p.modset_shared_lock_identity);
+    inputs.add_array("artifacts", artifact_strings(p.modset_artifacts));
+    inputs.add_string("mod_list", mod_list);
+    inputs.add_string("mod_settings", mod_settings);
+    if (request.launch_intent == "load_save") {
+        inputs.add_string("selected_filename", p.selected_save);
+        inputs.add_string("selected_archive", p.selected_archive_identity);
+        inputs.add_string("selected_context", p.selected_context_identity);
+    }
+    const std::string sha = sha256_text(inputs.serialize());
+    if (snapshot) *snapshot = observed.take_value();
+    return facman::core::Result<std::string>::success(sha);
+}
+
+ConfigurationGuard configuration_guard(const fs::path& workspace, const ProjectionRequest& request,
+    const json::Value& context)
+{
+    ConfigurationGuard guard;
+    guard.inputs_sha256 = object_string(context, "inputs_sha256");
+    guard.parent_before_identity = object_string(context, "parent_before_identity");
+    guard.observe_inputs = [workspace, request](const tx::Record* own) {
+        return configuration_inputs(workspace, request, own);
+    };
+    return guard;
+}
+} // namespace
+
+facman::core::Result<std::string> configuration_preparation_plan(
+    const fs::path& workspace, const ProjectionRequest& request)
+{
+    if (!configuration_publication_available()) return fail<std::string>(
+        "configuration_publication_unavailable", "Missing configuration preparation is not qualified on this host");
+    // Common queries with an existing INI need no second content/archive scan.
+    auto id = facman::core::InstanceId::parse_legacy(request.instance_id);
+    if (!id) return facman::core::Result<std::string>::failure(id.error());
+    workspace_store::InstanceRepository repository {workspace_store::WorkspaceLayout(workspace)};
+    auto registered = repository.load(id.value());
+    if (!registered) return facman::core::Result<std::string>::failure(registered.error());
+    if (lock_input_identity(registered.value().root / "config/config.ini") != "absent")
+        return fail<std::string>("configuration_existing_leaf_preserved", "Existing configuration is outside missing-file preparation");
+    Projection p;
+    auto inputs = configuration_inputs(workspace, request, nullptr, &p);
+    if (!inputs) return inputs;
+    auto parents = configuration_parent_identity(p.instance.root);
+    auto current = configuration_inputs(workspace, request, nullptr);
+    if (!parents || !current || current.value() != inputs.value()) return fail<std::string>(
+        "configuration_inputs_changed", "Configuration owner inputs changed during planning");
+    const std::string bytes = instance_effective_config(p.instance, *p.install_ref);
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.configuration_preparation_plan.v1");
+    plan.add_string("instance_id", request.instance_id); plan.add_string("launch_intent", request.launch_intent);
+    plan.add_string("instance_root", path_string(p.instance.root));
+    plan.add_string("component", "missing_routing_configuration"); plan.add_string("composition", "partial");
+    plan.add_string("inputs_sha256", inputs.value()); plan.add_string("parent_before_identity", parents.value());
+    plan.add_string("target", path_string(p.instance.root / "config/config.ini"));
+    plan.add_string("config_text", bytes); plan.add_string("config_sha256", sha256_text(bytes));
+    plan.add_bool("preparation_available", true); plan.add_bool("mutation_executed", false);
+    plan.add_bool("execution_started", false); plan.add_bool("permit_issued", false);
+    plan.add_bool("existing_settings_modified", false); plan.add_string("factorio_support_claim", "unclaimed");
+    plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+    return facman::core::Result<std::string>::success(plan.serialize());
+}
+
+facman::core::Result<std::string> prepare_configuration(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& expected_plan_sha256,
+    const std::string& operation_id, const std::string& attempt_id)
+{
+    auto planned = configuration_preparation_plan(workspace, request);
+    if (!planned) return planned;
+    auto plan = json::parse(planned.value());
+    if (!plan || object_string(plan.value(), "plan_sha256") != expected_plan_sha256)
+        return fail<std::string>("configuration_plan_changed", "Configuration no longer matches its reviewed snapshot");
+    auto guard = configuration_guard(workspace, request, plan.value());
+    guard.operation_id = operation_id; guard.attempt_id = attempt_id;
+    return publish_missing_configuration(workspace, fs::u8path(object_string(plan.value(), "instance_root")),
+        request.instance_id, request.launch_intent, object_string(plan.value(), "config_text"), guard);
+}
+
+facman::core::Result<std::string> recover_configuration_preparation(const fs::path& workspace, const std::string& id)
+{
+    tx::Record record; std::string detail;
+    if (!tx::read_record(workspace, id, record, detail)) return fail<std::string>("recovery_journal_invalid", detail);
+    auto context = json::parse(record.operation_context);
+    if (!context || !context.value().is_object()) return fail<std::string>("recovery_journal_invalid", "Configuration context is invalid");
+    const ProjectionRequest request {object_string(context.value(), "instance_id"), object_string(context.value(), "launch_intent")};
+    return recover_missing_configuration(workspace, id, configuration_guard(workspace, request, context.value()));
 }
 
 } // namespace facman::factorio::instance

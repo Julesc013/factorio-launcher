@@ -39,6 +39,15 @@ facman::core::Result<std::string> prepare_selected_save(
 facman::core::Result<std::string> recover_selected_save_preparation(
     const std::filesystem::path& workspace, const std::string& transaction_id);
 
+
+facman::core::Result<std::string> configuration_preparation_plan(
+    const std::filesystem::path& workspace, const ProjectionRequest& request);
+facman::core::Result<std::string> prepare_configuration(
+    const std::filesystem::path& workspace, const ProjectionRequest& request,
+    const std::string& expected_plan_sha256, const std::string& operation_id, const std::string& attempt_id);
+facman::core::Result<std::string> recover_configuration_preparation(
+    const std::filesystem::path& workspace, const std::string& transaction_id);
+
 } // namespace facman::factorio::instance
 
 #endif

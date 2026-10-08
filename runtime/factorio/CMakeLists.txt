@@ -113,6 +113,7 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
 add_library(flb_factorio_instance_static
   instance/flb_factorio_instance_model.cpp
   instance/flb_factorio_selected_save_preparation.cpp
+  instance/flb_factorio_configuration_preparation.cpp
   instance/flb_factorio_permit_projection.cpp
   instance/flb_factorio_instance_lifecycle.cpp
   instance/flb_factorio_local_data_import.cpp)

@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace facman::contracts::presentation_v1 {
-inline constexpr const char* kSourceDigest = "82f220f37c72e2736ce767538988bd5a2c7c60ae2d7cf2a2c45940c20f10f0cb";
+inline constexpr const char* kSourceDigest = "a3ae9172078ae27cf84dff2da172833aa1a18a8d9de2d460f5502acb609db24b";
 
 struct SemanticActionRequest {
     std::string action_id;
