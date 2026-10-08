@@ -415,7 +415,9 @@ bool ensure_staging_markers(const Record& record, std::string& detail)
 {
     // This owner binds held directory/file objects. Its staging leaf must never
     // receive a path-based directory marker, even if a foreign object replaces it.
-    if (record.command_id == "readiness.prepare_selected_save" ||
+    if (record.command_id == "readiness.prepare_configuration" ||
+        record.commit_strategy == "missing_config_handle_no_replace_v1" ||
+record.command_id == "readiness.prepare_selected_save" ||
         record.commit_strategy == "selected_context_handle_no_replace_v1") return true;
     for (const fs::path& staging : record.staging_roots) {
         facman::platform::StableDirectoryObject import_root;
@@ -1229,9 +1231,13 @@ Outcome plan(const fs::path& workspace, const std::string& id)
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
     record.recovery_actions.clear();
     if (terminal(record.state)) record.recovery_actions.push_back("none");
-    else if (record.command_id == "readiness.prepare_selected_save" ||
+    else if (record.command_id == "readiness.prepare_configuration" ||
+        record.commit_strategy == "missing_config_handle_no_replace_v1" ||
+record.command_id == "readiness.prepare_selected_save" ||
              record.commit_strategy == "selected_context_handle_no_replace_v1")
-        record.recovery_actions.push_back("verify_and_resume_selected_context_owner_preserving_ambiguous_objects");
+        record.recovery_actions.push_back(record.command_id == "readiness.prepare_configuration"
+            ? "verify_and_resume_missing_configuration_owner_preserving_ambiguous_objects"
+            : "verify_and_resume_selected_context_owner_preserving_ambiguous_objects");
     else if (record.command_id == "modsets.import")
         record.recovery_actions.push_back("verify_and_resume_owned_pack_instance");
     else if (record.command_id == "modsets.export" &&
@@ -1788,7 +1794,9 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     Record record;
     std::string detail;
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
-    if (record.command_id == "readiness.prepare_selected_save" ||
+    if (record.command_id == "readiness.prepare_configuration" ||
+        record.commit_strategy == "missing_config_handle_no_replace_v1" ||
+record.command_id == "readiness.prepare_selected_save" ||
         record.commit_strategy == "selected_context_handle_no_replace_v1") return Refusal {
             "operation_specific_recovery_required", "Selected context requires its domain recovery path",
             "All selected context and staging objects are preserved", false};

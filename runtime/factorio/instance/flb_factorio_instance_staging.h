@@ -4,10 +4,24 @@
 #define FLB_FACTORIO_INSTANCE_STAGING_H
 #include "fl_workspace_store.h"
 #include "flb_factorio_discovery.h"
+#include <functional>
+namespace facman::transaction { struct Record; }
 namespace facman::factorio::instance {
 std::string instance_manifest_json(const facman::workspace::InstanceRecord& instance);
 std::string instance_effective_config(const facman::workspace::InstanceRecord& instance,
     const facman::factorio::discovery::InstallRef& install);
 bool prepare_instance_layout(const std::filesystem::path& staging, std::string& detail);
+struct ConfigurationGuard {
+    std::string inputs_sha256, parent_before_identity, operation_id, attempt_id;
+    std::function<facman::core::Result<std::string>(const facman::transaction::Record*)> observe_inputs;
+};
+bool configuration_publication_available() noexcept;
+facman::core::Result<std::string> configuration_parent_identity(const std::filesystem::path& instance_root);
+facman::core::Result<std::string> publish_missing_configuration(
+    const std::filesystem::path& workspace, const std::filesystem::path& instance_root,
+    const std::string& instance_id, const std::string& launch_intent, const std::string& bytes,
+    const ConfigurationGuard& guard);
+facman::core::Result<std::string> recover_missing_configuration(
+    const std::filesystem::path& workspace, const std::string& transaction_id, const ConfigurationGuard& guard);
 }
 #endif

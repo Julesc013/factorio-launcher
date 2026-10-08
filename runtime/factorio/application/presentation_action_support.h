@@ -65,6 +65,14 @@ facman::core::json::ObjectBuilder selected_save_action_descriptor(
 facman::core::Result<std::string> snapshot_selected_save_plan(const std::string& snapshot,
     const std::string& instance_id, const std::string& launch_intent);
 
+
+std::string configuration_preparation_json(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& launch_intent);
+facman::core::json::ObjectBuilder configuration_action_descriptor(
+    const std::string& preparation, const std::string& instance_id);
+facman::core::Result<std::string> snapshot_configuration_plan(const std::string& snapshot,
+    const std::string& instance_id, const std::string& launch_intent);
+
 } // namespace facman::factorio::application
 
 #endif

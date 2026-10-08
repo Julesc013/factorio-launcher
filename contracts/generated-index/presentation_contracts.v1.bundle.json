@@ -839,6 +839,80 @@
           },
           "dependency_identities": {
             "properties": {
+              "configuration_preparation": {
+                "additionalProperties": false,
+                "oneOf": [
+                  {
+                    "properties": {
+                      "plan": {
+                        "type": "object"
+                      },
+                      "refusal": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "plan": {
+                        "type": "null"
+                      },
+                      "refusal": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                ],
+                "properties": {
+                  "instance_id": {
+                    "type": "string"
+                  },
+                  "launch_intent": {
+                    "enum": [
+                      "menu",
+                      "load_save"
+                    ]
+                  },
+                  "plan": {
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "$ref": "../factorio/factorio_configuration_preparation_plan.v1.schema.json"
+                      }
+                    ]
+                  },
+                  "refusal": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "code": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "detail": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "detail"
+                    ],
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "instance_id",
+                  "launch_intent",
+                  "plan",
+                  "refusal"
+                ],
+                "type": "object"
+              },
               "profile_preparation": {
                 "items": {
                   "additionalProperties": false,
@@ -1067,7 +1141,7 @@
       },
       "schema_id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
       "source_path": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
-      "source_sha256": "ef76a98d54943e5fa196c5d3b3919be966ba95833415de32e90b4a930c6f73d4"
+      "source_sha256": "3439f56cb8ea5d02e79c1b107134c48988b940f73a0e86b52f548d91aacc3777"
     },
     {
       "behavior": "read_projection",
@@ -1168,5 +1242,5 @@
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "82f220f37c72e2736ce767538988bd5a2c7c60ae2d7cf2a2c45940c20f10f0cb"
+  "source_digest": "a3ae9172078ae27cf84dff2da172833aa1a18a8d9de2d460f5502acb609db24b"
 }
