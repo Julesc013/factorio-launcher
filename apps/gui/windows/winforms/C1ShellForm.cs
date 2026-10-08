@@ -240,6 +240,7 @@ namespace FacMan.WinForms
             planningActions.Controls.Add(ActionButton("Select p&rofile", "Select launch profile", "profile.select"));
             planningActions.Controls.Add(ActionButton("E&xplain config", "Explain effective configuration", "configuration.explain_effective"));
             planningActions.Controls.Add(ActionButton("Preview &menu", "Preview menu launch", "launch.menu_plan"));
+            planningActions.Controls.Add(ActionButton("Record selected &save context", "Record selected save context", "readiness.prepare_selected_save"));
             actions.Controls.Add(planningActions, 0, 1);
             actions.SetColumnSpan(planningActions, 3);
             refusalDetail = new TextBox();

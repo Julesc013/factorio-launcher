@@ -1016,6 +1016,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         context_.workspace(), request.selected_instance_id,
         selected_exists && (request.scope == "instances" || request.scope == "content")
             ? profile_choices : std::vector<std::string>());
+    const std::string selected_save_preparation = selected_save_preparation_json(
+        context_.workspace(), request.selected_instance_id, request.launch_intent);
     const std::string recovery = recovery_json(context_.workspace());
     const LastRunProjection last_run = request.selected_instance_id.empty()
         ? LastRunProjection {LastRunAuthorityState::no_record, last_run_provider_.provider_id(), {}, {}}
@@ -1223,6 +1225,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "none", "facman.semantic_action_input.v1", instance_input));
         const bool launch_available = request.launch_intent == "menu" && launch_executor_ != nullptr &&
             launch_executor_->available(request);
+        actions.add_object(selected_save_action_descriptor(selected_save_preparation, request.selected_instance_id));
         actions.add_object(action_descriptor(
             "launch.play", "run.execute",
             last_run.state == LastRunAuthorityState::authoritative_record_available
@@ -1425,6 +1428,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     revision_input.add_object("selected_context", selection);
     revision_input.add_object("page", page);
     add_json(revision_input, "profile_preparation", profile_preparation);
+    add_json(revision_input, "selected_save_preparation", selected_save_preparation);
     if (readiness.empty()) revision_input.add_null("readiness");
     else add_json(revision_input, "readiness", readiness);
     add_json(revision_input, "recovery", recovery);
@@ -1443,6 +1447,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     json::ObjectBuilder dependencies;
     dependencies.add_string("authoritative_digest", revision);
     add_json(dependencies, "profile_preparation", profile_preparation);
+    add_json(dependencies, "selected_save_preparation", selected_save_preparation);
     dependencies.add_string("workspace_store", "json_toml_v1");
     dependencies.add_string("readiness_owner", "facman.factorio.instance_readiness");
     dependencies.add_string("recovery_owner", "facman.workspace.transactions");
@@ -1637,8 +1642,10 @@ ApplicationResult PresentationService::action(
     }
 
     std::string profile_plan;
-    if (request.action_id == "profile.select") {
-        auto bound = snapshot_profile_plan(current_snapshot, request.selected_instance_id, request.profile_id);
+    if (request.action_id == "profile.select" || request.action_id == "readiness.prepare_selected_save") {
+        auto bound = request.action_id == "profile.select"
+            ? snapshot_profile_plan(current_snapshot, request.selected_instance_id, request.profile_id)
+            : snapshot_selected_save_plan(current_snapshot, request.selected_instance_id, request.launch_intent);
         if (!bound) {
             const std::string payload = action_result_json(
                 request, "refused_before_effects", current_snapshot, {},
@@ -1978,6 +1985,16 @@ ApplicationResult PresentationService::action(
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
         }
+    } else if (request.action_id == "readiness.prepare_selected_save") {
+        auto prepared = lifecycle::prepare_selected_save(context_.workspace(),
+            {request.selected_instance_id, request.launch_intent}, profile_plan, request.durable_operation_id, request.attempt_id);
+        const ApplicationResult replacement = query(query_request);
+        const auto kind = prepared ? facman::core::OutcomeKind::ok : prepared.error().kind;
+        output = action_result_json(request, prepared ? "completed" :
+            (kind == facman::core::OutcomeKind::recovery_required ? "recovery_required" : "refused_before_effects"),
+            replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+            prepared ? prepared.value() : std::string(), prepared ? std::string() : prepared.error().code,
+            prepared ? std::string() : prepared.error().message, false, {"workspace_write"});
     } else if (request.action_id == "configuration.explain_effective" &&
                (request.scope == "launch_deck" || request.scope == "instances" ||
                    request.scope == "content")) {

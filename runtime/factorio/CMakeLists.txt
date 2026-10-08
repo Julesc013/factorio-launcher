@@ -102,7 +102,8 @@ target_include_directories(flb_factorio_modsets_static PUBLIC ${CMAKE_CURRENT_SO
 target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static facman_workspace_static
   flb_factorio_launch_planning_static flb_factorio_discovery_static)
 
-add_library(flb_factorio_saves_static saves/flb_factorio_save_operations.cpp saves/flb_factorio_save_index.cpp)
+add_library(flb_factorio_saves_static saves/flb_factorio_save_operations.cpp saves/flb_factorio_save_index.cpp
+  saves/flb_factorio_selected_context.cpp)
 target_compile_features(flb_factorio_saves_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_saves_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/saves ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
 target_link_libraries(flb_factorio_saves_static PUBLIC
@@ -111,6 +112,7 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
 
 add_library(flb_factorio_instance_static
   instance/flb_factorio_instance_model.cpp
+  instance/flb_factorio_selected_save_preparation.cpp
   instance/flb_factorio_permit_projection.cpp
   instance/flb_factorio_instance_lifecycle.cpp
   instance/flb_factorio_local_data_import.cpp)

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "presentation_action_support.h"
+#include "flb_factorio_instance_model.h"
 
 #include "command_result.h"
 #include "fl_json.h"
@@ -223,9 +224,61 @@ facman::core::Result<std::string> snapshot_profile_plan(
     return Result::success(value);
 }
 
+std::string selected_save_preparation_json(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    auto planned = instance::selected_save_preparation_plan(workspace, {instance_id, launch_intent});
+    json::ObjectBuilder identity;
+    identity.add_string("instance_id", instance_id);
+    identity.add_string("launch_intent", launch_intent);
+    if (planned) {
+        add_json(identity, "plan", planned.value());
+        identity.add_null("refusal");
+    } else {
+        identity.add_null("plan");
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", planned.error().code);
+        refusal.add_string("detail", planned.error().message);
+        identity.add_object("refusal", refusal);
+    }
+    return identity.serialize();
+}
+
+json::ObjectBuilder selected_save_action_descriptor(const std::string& preparation, const std::string& instance_id)
+{
+    auto document = json::parse(preparation);
+    const auto* refusal = document ? document.value().find("refusal") : nullptr;
+    const bool available = refusal && refusal->is_null();
+    const std::string code = refusal ? string_field(*refusal, "code") : "selected_context_plan_invalid";
+    const std::vector<ActionInputField> fields {{"selected_instance_id", "Selected instance", "enum", true,
+        instance_id, instance_id.empty() ? std::vector<std::string>() : std::vector<std::string> {instance_id}}};
+    return action_descriptor("readiness.prepare_selected_save", "presentation.action", "Record selected save context",
+        "manage", "workspace_write", available, available ? nullptr : code.c_str(), "explicit",
+        "facman.semantic_action_input.v1", fields);
+}
+
+facman::core::Result<std::string> snapshot_selected_save_plan(const std::string& snapshot,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    using Result = facman::core::Result<std::string>;
+    auto document = json::parse(snapshot);
+    const auto* dependencies = document ? document.value().find("dependency_identities") : nullptr;
+    const auto* identity = dependencies ? dependencies->find("selected_save_preparation") : nullptr;
+    if (!identity || string_field(*identity, "instance_id") != instance_id ||
+        string_field(*identity, "launch_intent") != launch_intent) return Result::failure({
+            "selected_context_plan_invalid", "Snapshot does not bind this selected context component", {}});
+    const auto* refusal = identity->find("refusal");
+    const auto* plan = identity->find("plan");
+    if (refusal && refusal->is_object()) return Result::failure({string_field(*refusal, "code"), string_field(*refusal, "detail"), {}});
+    const std::string sha = plan ? string_field(*plan, "plan_sha256") : std::string();
+    if (!refusal || !refusal->is_null() || !lower_hex_digest(sha)) return Result::failure({
+        "selected_context_plan_invalid", "Selected context owner plan is invalid", {}});
+    return Result::success(sha);
+}
+
 bool effectful_semantic_action(const std::string& action_id)
 {
-    return action_id == "workspace.initialize" ||
+    return action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
         action_id == "installation.register_read_only" ||
         action_id == "instance.create_isolated" ||
         action_id == "profile.create" ||

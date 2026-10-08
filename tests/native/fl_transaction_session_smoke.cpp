@@ -277,6 +277,25 @@ int prove_commit_strategies_and_retention(const fs::path& workspace)
     return 0;
 }
 
+int prove_selected_context_generic_recovery_refuses(const fs::path& workspace)
+{
+    for (int variant = 0; variant < 3; ++variant) {
+        tx::Record record;
+        record.command_id = variant == 2 ? "saves.associate" : "readiness.prepare_selected_save";
+        record.commit_strategy = variant == 1 ? "durable_sidecar_create_no_save_mutation" : "selected_context_handle_no_replace_v1";
+        record.target = workspace / ("selected-context-target-" + std::to_string(variant));
+        std::string detail;
+        if (!tx::begin(workspace, record, detail) || !write_file(record.target, "preserved foreign bytes")) return 60;
+        const tx::Outcome recovered = tx::apply(workspace, record.transaction_id);
+        const auto* refusal = std::get_if<tx::Refusal>(&recovered);
+        if (!refusal || refusal->code != "operation_specific_recovery_required" ||
+            read_file(record.target) != "preserved foreign bytes") return 61;
+        tx::Record current;
+        if (!tx::read_record(workspace, record.transaction_id, current, detail) || current.state != tx::State::requested) return 62;
+    }
+    return 0;
+}
+
 } // namespace
 
 int main()
@@ -299,6 +318,7 @@ int main()
     if (result == 0) result = prove_precommit_cleanup_recovery(root);
     if (result == 0) result = prove_marker_substitution_and_raii(root);
     if (result == 0) result = prove_commit_strategies_and_retention(root);
+    if (result == 0) result = prove_selected_context_generic_recovery_refuses(root);
     fs::remove_all(root, error);
     if (error && result == 0) result = 2;
     if (result != 0) std::cerr << "transaction-session-smoke-stage-code=" << result << "\n";

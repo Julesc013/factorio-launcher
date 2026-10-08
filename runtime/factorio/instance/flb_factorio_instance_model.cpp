@@ -1782,4 +1782,139 @@ facman::core::Result<std::string> instance_readiness(
     return facman::core::Result<std::string>::success(readiness.encoded.text);
 }
 
+namespace {
+struct SelectedContextPlan {
+    Projection projection;
+    std::string inputs;
+    std::string parents;
+    std::string sha;
+    std::string text;
+};
+
+facman::core::Result<std::string> selected_context_inputs(
+    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own)
+{
+    auto observed = project(workspace, request);
+    if (!observed) return facman::core::Result<std::string>::failure(observed.error());
+    const auto& p = observed.value();
+    if (request.launch_intent != "load_save" || !p.root_safe || !p.install_present || !p.install_record ||
+        !p.installation_healthy || !p.version_family_eligible || !p.version_matches || !p.content_present ||
+        !p.config_valid || !p.config || !p.profile_valid || !p.profile_plan || !p.modset_valid ||
+        !p.modset_lock || p.modset_status != "locked_verified" || p.selected_save.empty() ||
+        p.selected_save_state == "blocked" || p.selected_archive_identity.rfind("file:", 0) != 0)
+        return fail<std::string>("selected_context_prerequisites_unavailable",
+            "Selected context requires a valid current profile, installation, configuration, locked content and recognized selected save");
+    const auto recovery = tx::inspect(workspace);
+    const auto* report = std::get_if<tx::RecoveryResult>(&recovery);
+    auto document = report ? json::parse(report->json) : json::parse("null");
+    const auto* journals = document ? document.value().find("transactions") : nullptr;
+    if (!journals || !journals->is_array()) return fail<std::string>("recovery_journal_invalid", "Recovery journals could not be validated");
+    for (std::size_t i = 0; i < journals->size(); ++i) {
+        const auto* item = journals->at(i);
+        if (own && object_string(*item, "transaction_id") == own->transaction_id) continue;
+        auto state = tx::parse_state(object_string(*item, "state"));
+        if (!state || !tx::terminal(state.value())) return fail<std::string>("selected_context_pending_recovery", "Another workspace transaction requires recovery");
+    }
+    for (const char* lock : {"run.lock", "save.write.lock"}) {
+        if (lock_input_identity(p.instance.root / "locks" / lock) != "absent")
+            return fail<std::string>("save_locked", "Selected context conflicts with an active or unsafe instance lock");
+    }
+    const std::string executable = artifact_identity(p.install->executable);
+    if (executable.rfind("file:", 0) != 0) return fail<std::string>("selected_context_installation_unsafe", "Installation executable could not be stably observed");
+    const std::string mod_list = lock_input_identity(p.instance.root / "mods" / "mod-list.json");
+    const std::string mod_settings = lock_input_identity(p.instance.root / "mods" / "mod-settings.dat");
+    if ((mod_list != "absent" && mod_list.rfind("present:file:", 0) != 0) ||
+        (mod_settings != "absent" && mod_settings.rfind("present:file:", 0) != 0))
+        return fail<std::string>("selected_context_settings_unsafe", "Instance content settings could not be stably observed");
+    auto save = json::parse(p.selected_save_evidence);
+    if (!save) return fail<std::string>("instance_selected_save_invalid", "Selected save evidence is unavailable");
+    if (own) {
+        auto context = json::parse(own->operation_context);
+        auto sidecar = context ? json::parse(object_string(context.value(), "sidecar_text")) : json::parse("null");
+        if (!context || !sidecar || !same_path(fs::u8path(object_string(context.value(), "instance_root")), p.instance.root) ||
+            object_string(context.value(), "instance_id") != p.instance.id.str() ||
+            object_string(context.value(), "save_filename") != p.selected_save ||
+            object_string(sidecar.value(), "save_sha256") != object_string(save.value(), "sha256") ||
+            object_string(sidecar.value(), "profile_id") != p.instance.profile ||
+            object_string(sidecar.value(), "factorio_version") != p.instance.factorio_version ||
+            object_string(sidecar.value(), "modset_lock_sha256") != p.modset_lock->digest)
+            return fail<std::string>("selected_context_journal_inputs_mismatch", "Immutable selected context bytes do not describe the current selected inputs");
+    }
+    json::ObjectBuilder inputs;
+    inputs.add_string("schema", "factorio.selected_context_inputs.v1");
+    inputs.add_string("instance_id", p.instance.id.str());
+    inputs.add_string("instance_record", p.instance_record.identity);
+    inputs.add_string("installation_record", p.install_record->identity);
+    inputs.add_string("installation_evidence", p.installation_evidence_digest);
+    inputs.add_string("installation_executable", executable);
+    inputs.add_string("configuration", p.config->identity);
+    inputs.add_string("profile", p.profile_digest);
+    inputs.add_string("profile_source", p.profile_source_identity);
+    inputs.add_string("overrides", p.overrides_input_identity);
+    inputs.add_string("local_lock", p.modset_local_lock_identity);
+    inputs.add_string("shared_lock", p.modset_shared_lock_identity);
+    inputs.add_array("artifacts", artifact_strings(p.modset_artifacts));
+    inputs.add_string("mod_list", mod_list);
+    inputs.add_string("mod_settings", mod_settings);
+    inputs.add_string("selected_filename", p.selected_save);
+    inputs.add_string("selected_archive", p.selected_archive_identity);
+    return facman::core::Result<std::string>::success(sha256_text(inputs.serialize()));
+}
+
+facman::core::Result<SelectedContextPlan> selected_context_plan(const fs::path& workspace, const ProjectionRequest& request)
+{
+    if (request.launch_intent != "load_save" || request.instance_id.empty()) return fail<SelectedContextPlan>(
+        "selected_context_load_save_required", "Select an instance and the load-save intent to record selected save context");
+    if (!saves::index::selected_association_publication_available()) return fail<SelectedContextPlan>(
+        "selected_context_publication_unavailable", "Selected context preparation is not qualified on this host");
+    auto inputs = selected_context_inputs(workspace, request, nullptr);
+    if (!inputs) return facman::core::Result<SelectedContextPlan>::failure(inputs.error());
+    auto p = project(workspace, request);
+    if (!p) return facman::core::Result<SelectedContextPlan>::failure(p.error());
+    saves::index::Request selected;
+    selected.instance_id = request.instance_id;
+    selected.save = p.value().selected_save;
+    selected.profile_id = p.value().instance.profile;
+    selected.source_operation = "readiness.prepare_selected_save";
+    auto exact = saves::index::prepare_exact_association(workspace, selected);
+    if (!exact) return facman::core::Result<SelectedContextPlan>::failure(exact.error());
+    auto parents = saves::index::selected_association_parent_identity(p.value().instance.root);
+    if (!parents) return facman::core::Result<SelectedContextPlan>::failure(parents.error());
+    auto current = selected_context_inputs(workspace, request, nullptr);
+    if (!current || current.value() != inputs.value()) return fail<SelectedContextPlan>("selected_context_inputs_changed", "Selected context inputs changed during planning");
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.selected_save_preparation_plan.v1");
+    plan.add_string("instance_id", request.instance_id);
+    plan.add_string("launch_intent", "load_save");
+    plan.add_string("selected_save", selected.save);
+    plan.add_string("profile_id", selected.profile_id);
+    plan.add_string("component", "selected_save_declared_context");
+    plan.add_string("composition", "partial");
+    plan.add_string("inputs_sha256", inputs.value());
+    plan.add_string("parent_before_identity", parents.value());
+    plan.add_string("target", path_string(exact.value().target));
+    plan.add_bool("preparation_available", true);
+    plan.add_bool("mutation_executed", false);
+    plan.add_bool("execution_started", false);
+    plan.add_bool("permit_issued", false);
+    plan.add_string("factorio_support_claim", "unclaimed");
+    const std::string sha = sha256_text(plan.serialize());
+    plan.add_string("plan_sha256", sha);
+    return facman::core::Result<SelectedContextPlan>::success({p.take_value(), inputs.take_value(), parents.take_value(), sha, plan.serialize()});
+}
+} // namespace
+
+facman::core::Result<std::string> selected_save_preparation_plan(const fs::path& workspace, const ProjectionRequest& request)
+{
+    auto plan = selected_context_plan(workspace, request);
+    if (!plan) return facman::core::Result<std::string>::failure(plan.error());
+    return facman::core::Result<std::string>::success(plan.value().text);
+}
+
+facman::core::Result<std::string> observe_selected_save_preparation_inputs(
+    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own)
+{
+    return selected_context_inputs(workspace, request, own);
+}
+
 } // namespace facman::factorio::instance
