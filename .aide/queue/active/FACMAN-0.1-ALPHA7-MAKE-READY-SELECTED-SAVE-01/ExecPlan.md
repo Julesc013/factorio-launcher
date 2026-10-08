@@ -178,3 +178,28 @@ source, timeout, hook, platform skip or provider pin changes are admitted by thi
 correction. The POSIX private-copy case requires current hosted qualification;
 Windows source fixtures cannot replace that platform evidence. Retain the failed
 job and publish one reviewed child to the existing PR for normal required CI.
+
+2026-10-08: PR397 source and merge qualification passed and all three primary
+repositories were synchronized. Continue from dev420022e4 in the existing owned
+task root after exact merged task references retired. Before admitting an
+executable selected-save context component, an actual public regression found
+that normal solver locks verify successfully but readiness misreads trusted
+built-in base as an instance-local ZIP and reports missing_artifacts. The first
+test fixture setup refusal and the two actual positive-case failures are
+retained separately. Correct this prerequisite inside readiness using the
+existing typed content parser and installation-specific trusted inventory,
+bounded stable metadata identities and unchanged content-owner verification.
+Bind artifact evidence into readiness dependencies and the selected-save
+coherence check. Qualify built-in-only and mixed locks, raw metadata drift,
+forged virtual entries, foreign source, changed/missing/malformed metadata and
+linked paths with read-only byte oracles. This grants no preparation execution,
+gameplay authority, human acceptance or original F11/close-after/Beta closure.
+
+The first correction campaign passed both affected native tests and 23 of
+24 focused methods. The new positive method passed locked_verified but wrongly
+expected whole-instance ready; actual environment capability remains degraded
+and Play blocked. Preserve that qualification failure and correct only the test
+to require mod_content satisfied and the existing environment/Play boundaries.
+Recheck only the failed method against the unchanged qualified binary, then
+complete immutable historical replay and generated/strict validation. This
+does not justify another native build or repeating already passing methods.
