@@ -4,6 +4,7 @@
 #include "handlers/recovery.h"
 
 #include "command_result.h"
+#include "flb_factorio_instance_model.h"
 
 namespace facman::factorio::application::handlers {
 ApplicationResult recovery_inspect(ApplicationContext& context)
@@ -18,6 +19,16 @@ ApplicationResult recovery_apply(ApplicationContext& context, const RecoveryRequ
 {
     transactions::Record record;
     std::string detail;
+    if (transactions::read_record(context.workspace(), request.transaction_id, record, detail) &&
+        (record.command_id == "readiness.prepare_selected_save" ||
+         record.commit_strategy == "selected_context_handle_no_replace_v1")) {
+        auto recovered = instance::recover_selected_save_preparation(context.workspace(), request.transaction_id);
+        if (!recovered) return refused(safety_refusal("workspace.recovery.apply", recovered.error().code,
+            recovered.error().message, request.transaction_id, true), recovered.error().code,
+            recovered.error().message, recovered.error().kind);
+        return from_completed_recovery_projection(
+            transactions::plan(context.workspace(), request.transaction_id), request.transaction_id);
+    }
     if (transactions::read_record(context.workspace(), request.transaction_id, record, detail) &&
         (record.command_id == "installs.uninstall.apply" ||
          record.command_id == "installs.repair.apply")) {

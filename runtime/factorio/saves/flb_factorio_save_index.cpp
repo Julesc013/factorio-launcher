@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cctype>
+#include <cstring>
 #include <cstdlib>
 #include <ctime>
 #include <iomanip>
@@ -789,32 +791,80 @@ facman::core::Result<std::string> inspect(const fs::path& workspace, const Reque
     return facman::core::Result<std::string>::success(report("saves.inspect", request.instance_id, {value.value()}));
 }
 
-facman::core::Result<std::string> inspect_exact_filename(const fs::path& workspace, const Request& request)
+namespace {
+// Admission uses the existing held relative publication leaf contract. Keep
+// unsupported legacy save names selectable; refuse only this bounded component.
+bool selected_context_leaf_supported(const fs::path& leaf)
+{
+    const std::string value = leaf.generic_u8string();
+    if (value.empty() || value.size() > 255U || leaf.has_root_path() || leaf.has_parent_path() ||
+        value == "." || value == ".." || value.find_first_of("\\/:") != std::string::npos ||
+        value.back() == '.' || value.back() == ' ') return false;
+    for (const unsigned char character : value) if (character < 0x21U || character > 0x7eU ||
+        std::strchr("<>\"|?*", static_cast<int>(character)) != nullptr) return false;
+    std::string base = value.substr(0, value.find('.'));
+    std::transform(base.begin(), base.end(), base.begin(), [](unsigned char character) { return static_cast<char>(std::toupper(character)); });
+    if (base == "CON" || base == "PRN" || base == "AUX" || base == "NUL") return false;
+    return !(base.size() == 4U && (base.rfind("COM", 0U) == 0U || base.rfind("LPT", 0U) == 0U) && base[3] >= '1' && base[3] <= '9');
+}
+
+facman::core::Result<SaveRecord> exact_record(const fs::path& workspace, const Request& request)
 {
     const fs::path name = fs::u8path(request.save);
     if (request.save.empty() || request.save.size() > 255U || name != name.filename() ||
         request.save.find_first_of("/\\:") != std::string::npos ||
         request.save.find('\0') != std::string::npos || name.extension() != ".zip") {
-        return failure<std::string>("save_not_found", "An exact safe ZIP filename is required");
+        return failure<SaveRecord>("save_not_found", "An exact safe ZIP filename is required");
     }
     auto instance = load_instance(workspace, request.instance_id);
-    if (!instance) return failure<std::string>(instance.error().code, instance.error().message);
+    if (!instance) return failure<SaveRecord>(instance.error().code, instance.error().message);
     const fs::path root = instance.value().record.root / "saves";
     const fs::path path = root / name;
     std::string link_detail;
-    if (facman::base::path_crosses_link_or_reparse_point(path, link_detail)) return failure<std::string>(
+    if (facman::base::path_crosses_link_or_reparse_point(path, link_detail)) return failure<SaveRecord>(
         "save_root_unsafe", link_detail, path);
     std::error_code error;
     const auto status = fs::symlink_status(path, error);
     if (error == std::errc::no_such_file_or_directory || (!error && status.type() == fs::file_type::not_found)) {
-        return failure<std::string>("save_not_found", "Save was not found in the managed instance", path);
+        return failure<SaveRecord>("save_not_found", "Save was not found in the managed instance", path);
     }
-    if (error || !fs::is_regular_file(status)) return failure<std::string>(
+    if (error || !fs::is_regular_file(status)) return failure<SaveRecord>(
         "save_stable_read_failed", "Selected save is not a readable regular file", path);
     // Reuse the stable hash/archive/association observation without indexing siblings.
-    auto value = read_save(instance.value(), path);
+    return read_save(instance.value(), path);
+}
+} // namespace
+
+facman::core::Result<std::string> inspect_exact_filename(const fs::path& workspace, const Request& request)
+{
+    auto value = exact_record(workspace, request);
     if (!value) return failure<std::string>(value.error().code, value.error().message, fs::u8path(value.error().path));
     return facman::core::Result<std::string>::success(report("saves.inspect", request.instance_id, {value.value()}));
+}
+
+facman::core::Result<SelectedAssociation> prepare_exact_association(const fs::path& workspace, const Request& request)
+{
+    auto instance = load_instance(workspace, request.instance_id);
+    if (!instance) return failure<SelectedAssociation>(instance.error().code, instance.error().message);
+    if (const auto lock = save_write_lock(instance.value())) return failure<SelectedAssociation>(
+        "save_locked", "Selected context conflicts with an active instance", *lock);
+    const auto version = facman::factorio::version::classify(instance.value().record.factorio_version);
+    if (!version.valid || !version.version.has_patch || !facman::factorio::version::is_target_family(version.family))
+        return failure<SelectedAssociation>("instance_version_family_unsupported", "An exact supported version is required");
+    auto value = exact_record(workspace, request);
+    if (!value) return failure<SelectedAssociation>(value.error().code, value.error().message);
+    if (!value.value().archive_structurally_valid || !value.value().factorio_save_recognized)
+        return failure<SelectedAssociation>("instance_selected_save_invalid", "Selected save is not a recognized Factorio archive");
+    if (request.profile_id != instance.value().record.profile) return failure<SelectedAssociation>(
+        "selected_context_profile_changed", "Selected context requires the current instance profile");
+    const fs::path target = sidecar_path(instance.value(), value.value().file_name);
+    if (!selected_context_leaf_supported(target.filename())) return failure<SelectedAssociation>(
+        "selected_context_filename_unsupported", "Selected save filename is not supported by the qualified context publication contract");
+    facman::platform::PathIdentity presence;
+    if (!facman::platform::inspect_path_no_follow(target, presence).ok() || presence.exists)
+        return failure<SelectedAssociation>("save_association_exists", "Existing selected context must be preserved", target);
+    return facman::core::Result<SelectedAssociation>::success({instance.value().record.root,
+        value.value().path, target, value.value().sha256, sidecar_json(instance.value(), value.value(), request)});
 }
 
 facman::core::Result<std::string> verify(const fs::path& workspace, const Request& request)

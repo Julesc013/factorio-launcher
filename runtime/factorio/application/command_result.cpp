@@ -202,6 +202,28 @@ ApplicationResult from_recovery_outcome(const transactions::Outcome& outcome)
     return result;
 }
 
+ApplicationResult from_completed_recovery_projection(
+    const transactions::Outcome& outcome, const std::string& transaction_id)
+{
+    // Component preparation has its own result. Shared recovery retains its
+    // established response contract after the domain owner verifies completion.
+    const auto* report = std::get_if<transactions::RecoveryResult>(&outcome);
+    auto parsed = facman::core::json::parse(report == nullptr ? "null" : report->json);
+    const auto* items = parsed ? parsed.value().find("transactions") : nullptr;
+    if (items == nullptr || !items->is_array()) return refused(safety_refusal(
+        "workspace.recovery.apply", "selected_context_recovery_projection_unavailable",
+        "Selected context completed but its recovery projection is unavailable", transaction_id, true),
+        "selected_context_recovery_projection_unavailable", "Inspect the completed owner journal before retrying",
+        facman::core::OutcomeKind::recovery_required);
+    facman::core::json::ObjectBuilder payload;
+    payload.add_string("schema", "facman.workspace_recovery.v1");
+    payload.add_string("command", "workspace.recovery.apply");
+    payload.add_value("transactions", *items);
+    ApplicationResult result;
+    result.output = payload.serialize();
+    return result;
+}
+
 ApplicationResult from_diagnostic_outcome(const diagnostics::ExportOutcome& outcome)
 {
     ApplicationResult result;

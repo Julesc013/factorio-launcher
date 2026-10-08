@@ -32,6 +32,76 @@
     "dependency_identities": {
       "type": "object",
       "properties": {
+        "selected_save_preparation": {
+          "type": "object",
+          "required": [
+            "instance_id",
+            "launch_intent",
+            "plan",
+            "refusal"
+          ],
+          "properties": {
+            "instance_id": {
+              "type": "string"
+            },
+            "launch_intent": {
+              "enum": [
+                "menu",
+                "load_save"
+              ]
+            },
+            "plan": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "refusal": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "code",
+                "detail"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "detail": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "plan": {
+                  "type": "object"
+                },
+                "refusal": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "plan": {
+                  "type": "null"
+                },
+                "refusal": {
+                  "type": "object"
+                }
+              }
+            }
+          ],
+          "additionalProperties": false
+        },
         "profile_preparation": {
           "type": "array",
           "items": {
