@@ -147,7 +147,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
                 workspace = Path(value); instance, original = self.prepare(workspace)
                 if variant == "valid": (instance / "config/config.ini").write_bytes(original)
                 elif variant == "custom": (instance / "config/config.ini").write_bytes(original + b"\n; user settings\n[graphics]\nmax-texture-size=4096\n")
-                elif variant == "wrong": (instance / "config/config.ini").write_bytes(b"; preserve me\n[path]\nread-data=wrong\nwrite-data=wrong\n")
+                elif variant == "wrong": (instance / "config/config.ini").write_bytes(b"; preserve me\n[path]\nread-data=wrong\nread-data=ambiguous\nwrite-data=wrong\n")
                 elif variant == "legacy": (instance / "config-path.cfg").write_bytes(b"config-path=foreign\n")
                 else: (instance / "config").rmdir()
                 old = self.query(workspace); before = snapshot(workspace)
@@ -319,28 +319,37 @@ class ConfigurationPreparationTests(unittest.TestCase):
             self.assertEqual("stale_snapshot_revision", json.loads(out)["error"]["code"])
             self.assertEqual(before, snapshot(workspace)); self.assertFalse((instance / "config/config.ini").exists())
 
-    @unittest.skipUnless(os.name == "nt", "unsupported: missing configuration publication is qualified only on Windows")
+    @unittest.skipUnless(os.name == "nt", "unsupported: routing configuration owners are qualified only on Windows")
     def test_compiled_fixed_control_dispatches_ordinary_owner_and_keeps_captured_intent(self) -> None:
+        from test_configuration_reconciliation import ExistingConfigurationTests
         with tempfile.TemporaryDirectory(prefix="configuration-control-") as value:
-            root = Path(value); workspace = root / "workspace"; self.prepare(workspace, "load_save", True)
-            scopes = ("launch_deck", "instances", "installations", "content", "saves", "activity_recovery", "settings_support")
-            gallery = root / "gallery.json"
-            gallery.write_text(json.dumps(dict(schema="facman.control_gallery_case.v1", state="blocked",
-                variant="configuration-component", observed_at="2026-10-08T00:00:00Z",
-                snapshots={scope: self.query(workspace, scope, "load_save") for scope in scopes}))+"\n", encoding="utf-8")
-            code, out, err = invoke_machine(self.args(workspace, self.query(workspace, intent="load_save")["revision"], intent="load_save"))
-            self.assertEqual((0, ""), (code, err), out)
-            receipt = root / "receipt.json"; receipt.write_text(out, encoding="utf-8")
-            before = snapshot(workspace); repository = Path(__file__).resolve().parents[1]
+            root = Path(value); repository = Path(__file__).resolve().parents[1]
             project = repository / "tests/winforms_control_gallery/FacMan.SelectedSave.Harness.csproj"
             build = subprocess.run([str(msbuild_executable()), str(project), "/p:Configuration=Release", "/p:Platform=x64",
                 "/p:OutputPath="+str(root / "bin")+"\\", "/p:BaseIntermediateOutputPath="+str(root / "obj")+"\\",
-                "/nr:false", "/m:2", "/v:quiet"], cwd=repository, text=True, capture_output=True)
+                "/nr:false", "/m:2", "/v:quiet"], cwd=repository, text=True, capture_output=True, timeout=120)
             self.assertEqual(0, build.returncode, build.stdout+build.stderr)
-            check = subprocess.run([str(root / "bin/FacMan.SelectedSave.Harness.exe"), str(gallery), str(receipt), "configuration"],
-                cwd=repository, text=True, capture_output=True)
-            self.assertEqual(0, check.returncode, check.stdout+check.stderr)
-            self.assertEqual(before, snapshot(workspace))
+            for component in ("missing", "existing"):
+                with self.subTest(component=component):
+                    workspace = root / component
+                    if component == "missing": self.prepare(workspace, "load_save", True)
+                    else: ExistingConfigurationTests.prepare(self, workspace, "load_save", True)
+                    scopes = ("launch_deck", "instances", "installations", "content", "saves", "activity_recovery", "settings_support")
+                    gallery = root / (component + "-gallery.json")
+                    gallery.write_text(json.dumps(dict(schema="facman.control_gallery_case.v1", state="blocked",
+                        variant="configuration-component", observed_at="2026-10-09T00:00:00Z",
+                        snapshots={scope: self.query(workspace, scope, "load_save") for scope in scopes}))+"\n", encoding="utf-8")
+                    old = self.query(workspace, intent="load_save"); frozen = snapshot(workspace)
+                    code, out, err = invoke_machine(self.args(workspace, old["revision"], intent="load_save", confirmation=False))
+                    self.assertNotEqual(0, code, out); self.assertEqual("", err, out); self.assertEqual(frozen, snapshot(workspace))
+                    code, out, err = invoke_machine(self.args(workspace, old["revision"], intent="load_save"))
+                    self.assertEqual((0, ""), (code, err), out)
+                    receipt = root / (component + "-receipt.json"); receipt.write_text(out, encoding="utf-8")
+                    before = snapshot(workspace)
+                    check = subprocess.run([str(root / "bin/FacMan.SelectedSave.Harness.exe"), str(gallery), str(receipt), "configuration"],
+                        cwd=repository, text=True, capture_output=True, timeout=30)
+                    self.assertEqual(0, check.returncode, check.stdout+check.stderr)
+                    self.assertEqual(before, snapshot(workspace))
 
 
 if __name__ == "__main__": unittest.main()

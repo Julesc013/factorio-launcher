@@ -304,7 +304,7 @@ json::ObjectBuilder configuration_action_descriptor(const std::string& preparati
     const std::string code = refusal ? string_field(*refusal, "code") : "configuration_plan_invalid";
     const std::vector<ActionInputField> fields {{"selected_instance_id", "Selected instance", "enum", true,
         instance_id, instance_id.empty() ? std::vector<std::string>() : std::vector<std::string> {instance_id}}};
-    return action_descriptor("readiness.prepare_configuration", "presentation.action", "Restore missing routing configuration",
+    return action_descriptor("readiness.prepare_configuration", "presentation.action", "Prepare routing configuration",
         "manage", "workspace_write", available, available ? nullptr : code.c_str(), "explicit",
         "facman.semantic_action_input.v1", fields);
 }

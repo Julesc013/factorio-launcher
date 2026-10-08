@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://facman.invalid/schema/factorio/factorio_configuration_preparation_plan.v1.schema.json",
-  "title": "Missing routing configuration preparation plan",
+  "title": "Routing configuration preparation plan",
   "type": "object",
   "required": [
     "schema",
@@ -38,7 +38,10 @@
       ]
     },
     "component": {
-      "const": "missing_routing_configuration"
+      "enum": [
+        "missing_routing_configuration",
+        "existing_routing_configuration"
+      ]
     },
     "composition": {
       "const": "partial"
@@ -90,7 +93,57 @@
     },
     "existing_settings_modified": {
       "const": false
+    },
+    "original_config_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536
+    },
+    "original_config_sha256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "original_metadata_identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 196608
+    },
+    "original_device": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "original_object": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "original_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "component": {
+            "const": "existing_routing_configuration"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "original_config_text",
+          "original_config_sha256",
+          "original_metadata_identity",
+          "original_device",
+          "original_object",
+          "original_size"
+        ]
+      }
+    }
+  ]
 }

@@ -17,7 +17,7 @@ internal static class SelectedSaveHarness
             Require(args.Length == 2 || args.Length == 3, "gallery and actual receipt required");
             bool configuration = args.Length == 3 && args[2] == "configuration";
             string action = configuration ? "readiness.prepare_configuration" : "readiness.prepare_selected_save";
-            string label = configuration ? "Restore missing routing configuration" : "Record selected save context";
+            string label = configuration ? "Prepare routing configuration" : "Record selected save context";
             var gallery = C1GallerySession.Parse(File.ReadAllText(args[0]));
             using (var form = new C1ShellForm(gallery))
             {

@@ -10,6 +10,8 @@
 #include "fl_system_services.h"
 #include "fl_transaction.h"
 
+#include <algorithm>
+#include <charconv>
 #include <chrono>
 #include <cstdlib>
 #include <thread>
@@ -368,4 +370,250 @@ Result recover_missing_configuration(const fs::path& workspace, const std::strin
         "Recovery journal immutable identity changed under its operation lock", facman::core::OutcomeKind::recovery_required);
     return continue_configuration(workspace, current, guard, locks);
 }
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+// Append within the existing instance configuration owner. Unapplied proposal.
+namespace {
+constexpr const char* kRewriteStrategy = "existing_config_retained_stream_rewrite_v1";
+constexpr const char* kRewriteSchema = "factorio.configuration_reconciliation_commit.v1";
+constexpr const char* kMutationAdmitted = "configuration_rewrite_mutation_authorized";
+constexpr const char* kEffectVerified = "configuration_rewrite_effect_verified";
+
+struct RewriteFaultHook {
+    RewriteFaultHook()
+    {
+        facman::platform::testing::set_retained_stream_rewrite_phase_hook([](const char* phase) {
+            const std::string name = std::string("rewrite_") + phase;
+            fault(name.c_str());
+        });
+    }
+    ~RewriteFaultHook() { facman::platform::testing::set_retained_stream_rewrite_phase_hook(nullptr); }
+};
+
+bool original_file_identity(const json::Value& context, facman::platform::FileIdentity& file)
+{
+    const auto identifier = [&](const char* name, std::uint64_t& value) {
+        const auto* member = context.find(name);
+        if (!member || !member->is_string()) return false;
+        const auto text = member->string_value();
+        if (!text || text.value().empty() || text.value().size() > 20U ||
+            (text.value().size() > 1U && text.value().front() == '0') ||
+            !std::all_of(text.value().begin(), text.value().end(), [](unsigned char c) { return c >= '0' && c <= '9'; }))
+            return false;
+        const auto parsed = std::from_chars(text.value().data(), text.value().data() + text.value().size(), value);
+        return parsed.ec == std::errc{} && parsed.ptr == text.value().data() + text.value().size();
+    };
+    const auto number = [&](const char* name, std::uint64_t& value) {
+        const auto* member = context.find(name);
+        const auto parsed = member ? member->unsigned_integer_value() : facman::core::Result<std::uint64_t>::failure({"missing", "missing", {}});
+        if (!parsed) return false;
+        value = parsed.value(); return true;
+    };
+    file = {};
+    file.link_count = 1U; file.regular_file = true;
+    return identifier("original_device", file.device) && identifier("original_object", file.object) &&
+        number("original_size", file.size) && file.size > 0U && file.size <= kMaximumBytes;
+}
+
+bool known_rewrite_authority(const tx::Record& record, bool& admitted, bool& verified)
+{
+    const auto count = std::count(record.completed_steps.begin(), record.completed_steps.end(), kMutationAdmitted);
+    const auto effect_count = std::count(record.completed_steps.begin(), record.completed_steps.end(), kEffectVerified);
+    admitted = count == 1;
+    verified = effect_count == 1;
+    if (count > 1 || effect_count > 1 || (verified && !admitted) ||
+        (record.state == tx::State::complete && !verified) || (record.state == tx::State::audited && !verified) ||
+        (tx::terminal(record.state) && record.state != tx::State::complete)) return false;
+    if (!admitted) return !tx::terminal(record.state) &&
+        (record.state == tx::State::requested || record.state == tx::State::recovery_required);
+    return record.state == tx::State::recovery_required || record.state == tx::State::audited ||
+        record.state == tx::State::complete;
+}
+
+Result continue_existing_configuration(const fs::path& workspace, tx::Record& record,
+    const ExistingConfigurationGuard& guard, Locks& locks)
+{
+    const auto uncertain = [](const std::string& detail) {
+        // A failed durable checkpoint may already have published a newer phase.
+        // Never overwrite that record from this possibly stale in-memory copy.
+        // Exact-lock recovery reloads the last actual journal before deciding.
+        return refused("configuration_reconciliation_recovery_required", detail, facman::core::OutcomeKind::recovery_required);
+    };
+    auto context = json::parse(record.operation_context);
+    if (!context || record.schema_version != 2U || record.command_id != kCommand || record.commit_strategy != kRewriteStrategy ||
+        field(context.value(), "schema") != kRewriteSchema || !guard.observe_inputs || !guard.validate_owner ||
+        field(context.value(), "inputs_sha256") != guard.inputs_sha256 ||
+        field(context.value(), "parent_before_identity") != guard.parent_before_identity)
+        return refused("recovery_journal_invalid", "Existing configuration journal does not bind the current owner guard",
+            facman::core::OutcomeKind::recovery_required);
+    const fs::path root_path = fs::u8path(field(context.value(), "instance_root"));
+    const fs::path target = root_path / "config/config.ini";
+    const std::string original = field(context.value(), "original_config_text");
+    const std::string intended = field(context.value(), "config_text");
+    const std::string metadata = field(context.value(), "original_metadata_identity");
+    facman::platform::FileIdentity original_identity;
+    bool admitted = false, verified = false;
+    if (!original_file_identity(context.value(), original_identity) || original_identity.size != original.size() ||
+        original.empty() || intended.empty() || original == intended || intended.size() > kMaximumBytes || metadata.empty() ||
+        metadata.size() > 3U * kMaximumBytes || field(context.value(), "original_config_sha256") != digest(original) ||
+        field(context.value(), "config_sha256") != digest(intended) ||
+        record.target != target || record.sources != std::vector<fs::path> {root_path / "instance.v1.json"} ||
+        !record.staging_roots.empty() || record.effect_file_identity != identity(original_identity) ||
+        record.effect_parent_identity != guard.parent_before_identity || record.expected_files.size() != 1U ||
+        record.expected_files.front().path.str() != "config.ini" ||
+        record.expected_files.front().sha256.str() != digest(intended) || record.expected_files.front().size != intended.size() ||
+        !known_rewrite_authority(record, admitted, verified))
+        return refused("recovery_journal_invalid", "Existing configuration manifest or durable pre-write authority is inconsistent",
+            facman::core::OutcomeKind::recovery_required);
+    const auto approved_root = guard.validate_owner(record);
+    if (!approved_root || fs::u8path(approved_root.value()) != root_path)
+        return uncertain("Journal root is not the current registered configuration owner root");
+    if (verified) {
+        facman::platform::PathIdentity present;
+        if (!facman::platform::inspect_path_no_follow(target, present).ok() || !present.exists ||
+            present.reparse_or_link || present.kind != facman::platform::PathObjectKind::regular_file ||
+            present.device != original_identity.device || present.object != original_identity.object)
+            return refused("configuration_terminal_effect_invalid", "Verified recovery cannot create or adopt a missing or foreign configuration",
+                facman::core::OutcomeKind::recovery_required);
+    }
+    std::string detail;
+    if (!lock_configuration(root_path, locks, detail)) return uncertain(detail);
+    facman::platform::StableDirectoryObject root, parent;
+    if (!root.open_no_follow_for_relative_writes(root_path).ok() ||
+        !root.open_child_directory_no_follow_for_relative_writes("config", parent).ok() ||
+        parent_identity(root, parent) != guard.parent_before_identity)
+        return uncertain("Existing configuration parents differ from their immutable original identities");
+    facman::platform::RetainedStreamRewriteFile file;
+    const auto state = verified ? facman::platform::RetainedStreamRewriteState::terminal_verify_only :
+        admitted ? facman::platform::RetainedStreamRewriteState::mutation_authorized :
+        facman::platform::RetainedStreamRewriteState::original_only;
+    auto status = parent.open_child_file_no_follow_for_retained_rewrite(
+        "config.ini", original_identity, original, intended, state, file);
+    if (!status.ok()) return uncertain(status.detail);
+    const auto observe = [&]() {
+        std::string current_metadata;
+        const auto current = guard.observe_inputs(&record, &file);
+        return current && current.value() == guard.inputs_sha256 &&
+            file.readable_metadata_identity(current_metadata).ok() && current_metadata == metadata &&
+            root.revalidate().ok() && parent.revalidate().ok() &&
+            locks.configuration.identity_matches_path(detail) && locks.recovery.identity_matches_path(detail);
+    };
+    if (!observe()) return uncertain("Configuration owner inputs or readable metadata changed under retained locks and file");
+    if (record.state != tx::State::complete) {
+        if (!verified) {
+        fault("rewrite_before_admission"); pause(root_path, "rewrite_before_admission");
+        if (!observe()) return uncertain("Configuration owner inputs changed before durable write admission");
+        if (!admitted) {
+            // A complete, durable journal checkpoint precedes every first effect.
+            // Keep the SAME original-only file handle across admission and writing.
+            if (!tx::advance(workspace, record, "recovery_required", kMutationAdmitted, detail)) return uncertain(detail);
+            fault("rewrite_after_admission"); pause(root_path, "rewrite_after_admission");
+            status = file.admit_durable_mutation();
+            if (!status.ok()) return uncertain(status.detail);
+        }
+        if (!observe()) return uncertain("Configuration owner inputs changed after durable admission and before the first write");
+        fault("rewrite_before_write");
+        RewriteFaultHook fault_hook;
+        status = file.rewrite_to_intended();
+        if (!status.ok()) return uncertain(status.detail);
+        fault("rewrite_after_write"); pause(root_path, "rewrite_after_write");
+        if (!file.verify_intended().ok() || !observe()) return uncertain("Rewritten configuration or other owner inputs changed");
+        if (!tx::checkpoint(workspace, record, kEffectVerified, detail)) return uncertain(detail);
+        fault("rewrite_after_verification_checkpoint");
+        }
+        if (!file.verify_intended().ok() || !observe()) return uncertain("Verified configuration or owner inputs changed before completion");
+        fault("rewrite_before_finalization");
+        if (record.state != tx::State::audited &&
+            !tx::advance(workspace, record, "audited", "configuration_rewrite_effect_audited", detail)) return uncertain(detail);
+        fault("rewrite_after_audit");
+        if (!tx::advance(workspace, record, "complete", "configuration_rewrite_journal_closed", detail)) return uncertain(detail);
+        fault("rewrite_after_finalization");
+    } else if (!file.verify_intended().ok() || !observe()) {
+        return uncertain("Terminal configuration recovery is verification only");
+    }
+    // Keep original target custody through journal completion and exact lock removal.
+    if (!locks.release(detail)) return uncertain(detail);
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.configuration_preparation_result.v1");
+    result.add_string("command", kCommand); result.add_string("status", "routing_configuration_reconciled");
+    result.add_string("instance_id", field(context.value(), "instance_id"));
+    result.add_string("transaction_id", record.transaction_id);
+    result.add_string("target", facman::platform::path_to_utf8(target));
+    result.add_string("composition", "partial"); result.add_bool("mutation_executed", true);
+    result.add_bool("existing_settings_modified", false); result.add_bool("routing_values_modified", true);
+    result.add_bool("original_file_preserved", true);
+    result.add_bool("execution_started", false); result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return Result::success(result.serialize());
+}
+} // namespace
+
+bool configuration_original_file_identity(const json::Value& context, facman::platform::FileIdentity& file)
+{
+    return original_file_identity(context, file);
+}
+
+Result reconcile_existing_configuration(const fs::path& workspace, const json::Value& plan,
+    const ExistingConfigurationGuard& guard)
+{
+    if (!configuration_publication_available()) return refused("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+    facman::platform::FileIdentity original;
+    if (!original_file_identity(plan, original) || !guard.observe_inputs || !guard.validate_owner ||
+        guard.inputs_sha256.size() != 64U || field(plan, "component") != "existing_routing_configuration")
+        return refused("configuration_guard_invalid", "A reviewed existing configuration owner plan is required");
+    const auto inputs = guard.observe_inputs(nullptr, nullptr);
+    if (!inputs || inputs.value() != guard.inputs_sha256)
+        return refused("configuration_inputs_changed", "Existing configuration changed before journal admission");
+    tx::Record record;
+    record.command_id = kCommand; record.commit_strategy = kRewriteStrategy;
+    const fs::path root = fs::u8path(field(plan, "instance_root"));
+    record.target = root / "config/config.ini"; record.sources = {root / "instance.v1.json"};
+    record.effect_parent_identity = guard.parent_before_identity; record.effect_file_identity = identity(original);
+    json::ObjectBuilder context;
+    context.add_string("schema", kRewriteSchema);
+    for (const char* key : {"instance_id", "launch_intent", "instance_root", "inputs_sha256", "parent_before_identity",
+            "config_text", "config_sha256", "original_config_text", "original_config_sha256", "original_metadata_identity"})
+        context.add_string(key, field(plan, key));
+    context.add_string("original_device", std::to_string(original.device));
+    context.add_string("original_object", std::to_string(original.object));
+    (void)context.add_unsigned_integer("original_size", original.size);
+    context.add_string("operation_id", guard.operation_id); context.add_string("attempt_id", guard.attempt_id);
+    record.operation_context = context.serialize();
+    if (json::quote_string(record.operation_context).size() > 512U * 1024U)
+        return refused("configuration_journal_size_limit", "Configuration recovery context exceeds its journal reserve");
+    auto leaf = tx::RelativePath::parse("config.ini");
+    auto sha = facman::core::Sha256Digest::parse(digest(field(plan, "config_text")));
+    if (!leaf || !sha) return refused("configuration_journal_invalid", "Existing configuration manifest is invalid");
+    record.expected_files.push_back({leaf.take_value(), sha.take_value(), field(plan, "config_text").size()});
+    std::string detail;
+    if (!tx::begin(workspace, record, detail)) return refused("configuration_journal_failed", detail);
+    Locks locks;
+    if (!lock_recovery(workspace, record, locks, detail)) return refused("configuration_reconciliation_recovery_required", detail,
+        facman::core::OutcomeKind::recovery_required);
+    fault("rewrite_after_manifest");
+    return continue_existing_configuration(workspace, record, guard, locks);
+}
+
+Result recover_existing_configuration(const fs::path& workspace, const std::string& id, const ExistingConfigurationGuard& guard)
+{
+    if (!configuration_publication_available()) return refused("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+    tx::Record record; std::string detail;
+    if (!tx::read_record(workspace, id, record, detail)) return refused("recovery_journal_invalid", detail);
+    if (record.command_id != kCommand || record.commit_strategy != kRewriteStrategy)
+        return refused("recovery_journal_invalid", "Existing configuration command and strategy must match exactly");
+    Locks locks;
+    if (!lock_recovery(workspace, record, locks, detail)) return refused("recovery_lock_contended", detail,
+        facman::core::OutcomeKind::recovery_required);
+    facman::platform::StableDirectoryObject workspace_pin;
+    if (!workspace_pin.open_no_follow(workspace).ok()) return refused("recovery_workspace_unsafe", "Recovery workspace is unsafe");
+    pause(workspace, "before_journal_reload");
+    tx::Record current;
+    if (!tx::read_record(workspace, id, current, detail)) return refused("recovery_journal_invalid", detail);
+    if (!same_configuration_journal_identity(record, current) || record.effect_file_identity != current.effect_file_identity ||
+        record.staging_roots != current.staging_roots || !workspace_pin.revalidate().ok())
+        return refused("recovery_journal_identity_changed", "Immutable original configuration journal changed under its recovery lock",
+            facman::core::OutcomeKind::recovery_required);
+    return continue_existing_configuration(workspace, current, guard, locks);
+}
+
 } // namespace facman::factorio::instance

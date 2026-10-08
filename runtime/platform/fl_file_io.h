@@ -114,6 +114,39 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
+// Distinct existing-file capability; read-only inputs retain their original rights.
+class RetainedStreamRewriteFile;
+enum class RetainedStreamRewriteState { original_only, mutation_authorized, terminal_verify_only };
+
+class RetainedStreamRewriteFile {
+public:
+    RetainedStreamRewriteFile();
+    RetainedStreamRewriteFile(RetainedStreamRewriteFile&&) noexcept;
+    RetainedStreamRewriteFile& operator=(RetainedStreamRewriteFile&&) noexcept;
+    ~RetainedStreamRewriteFile();
+    RetainedStreamRewriteFile(const RetainedStreamRewriteFile&) = delete;
+    RetainedStreamRewriteFile& operator=(const RetainedStreamRewriteFile&) = delete;
+
+    // Reads through the exact retained writer, without another path open.
+    IoStatus observe(std::string& bytes, FileIdentity& identity) const;
+    // Caller must durably admit mutation before opening as mutation_authorized.
+    // First write, recovery, and terminal verification remain domain authority.
+    IoStatus rewrite_to_intended();
+    // Caller must first persist its domain pre-write checkpoint. Keeps the
+    // same original-only handle; no release/reopen or file effect here.
+    IoStatus admit_durable_mutation();
+    IoStatus readable_metadata_identity(std::string& identity) const;
+    const std::filesystem::path& path() const noexcept;
+    IoStatus verify_intended() const;
+    bool open() const noexcept;
+
+private:
+    friend class StableDirectoryObject;
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+
+
 class StableDirectoryObject {
 public:
     StableDirectoryObject();
@@ -144,6 +177,10 @@ public:
         const std::filesystem::path& leaf, StableDirectoryObject& child) const;
     IoStatus open_child_file_no_follow_pinned(
         const std::filesystem::path& leaf, StableInputFile& child) const;
+    IoStatus open_child_file_no_follow_for_retained_rewrite(
+        const std::filesystem::path& leaf, const FileIdentity& original_identity,
+        const std::string& original, const std::string& intended,
+        RetainedStreamRewriteState state, RetainedStreamRewriteFile& file) const;
     // Re-adopts an already pinned, exact staging sibling for a no-replace
     // handle-relative publication after process-loss recovery.
     IoStatus reopen_child_file_no_follow_for_relative_publish(
@@ -273,6 +310,7 @@ void set_relative_publish_before_reopen_hook(RelativePublishBeforeReopenHook hoo
 
 } // namespace testing
 
+namespace testing { void set_retained_stream_rewrite_phase_hook(void (*hook)(const char*)); void set_retained_stream_rewrite_flush_fault(bool enabled); }
 } // namespace facman::platform
 
 #endif
