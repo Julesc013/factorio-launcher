@@ -457,27 +457,6 @@ std::string json_string(const json::Value& value)
     return decoded ? decoded.take_value() : std::string();
 }
 
-void add_json(json::ObjectBuilder& output, const char* key, const std::string& source)
-{
-    auto value = json::parse(source);
-    if (value) output.add_value(key, value.value());
-    else output.add_null(key);
-}
-
-void add_problem(
-    json::ArrayBuilder& problems,
-    const std::string& code,
-    const std::string& summary,
-    const std::string& detail = {})
-{
-    json::ObjectBuilder problem;
-    problem.add_string("code", code);
-    problem.add_string("summary", summary);
-    if (detail.empty()) problem.add_null("detail");
-    else problem.add_string("detail", detail);
-    problems.add_object(problem);
-}
-
 std::string recovery_json(const std::filesystem::path& workspace)
 {
     const transactions::Outcome outcome = transactions::inspect(workspace);
@@ -535,64 +514,6 @@ ApplicationResult service_refusal(
         code,
         message,
         kind);
-}
-
-std::string action_result_json(
-    const SemanticActionRequest& request,
-    const char* outcome,
-    const std::string& replacement_snapshot,
-    const std::string& action_payload,
-    const std::string& problem_code,
-    const std::string& problem_summary,
-    bool invalidated,
-    std::initializer_list<const char*> declared_effects = {})
-{
-    json::ObjectBuilder operation;
-    operation.add_string("request_id", request.request_id);
-    if (request.durable_operation_id.empty()) {
-        operation.add_null("operation_id");
-        operation.add_null("durable_operation_id");
-    } else {
-        operation.add_string("operation_id", request.durable_operation_id);
-        operation.add_string("durable_operation_id", request.durable_operation_id);
-    }
-    if (request.attempt_id.empty()) operation.add_null("attempt_id");
-    else operation.add_string("attempt_id", request.attempt_id);
-    const std::string& target_instance = request.new_instance_id.empty()
-        ? request.selected_instance_id : request.new_instance_id;
-    if (target_instance.empty()) operation.add_null("target_instance_id");
-    else operation.add_string("target_instance_id", target_instance);
-    if (request.installation_id.empty()) operation.add_null("target_installation_id");
-    else operation.add_string("target_installation_id", request.installation_id);
-    operation.add_string("outcome", outcome);
-
-    json::ArrayBuilder effects;
-    for (const char* effect : declared_effects) effects.add_string(effect);
-    json::ArrayBuilder diagnostics;
-    json::ArrayBuilder problems;
-    if (!problem_code.empty()) add_problem(problems, problem_code, problem_summary);
-    json::ObjectBuilder output;
-    output.add_string("schema", "facman.semantic_action_result.v1");
-    output.add_string("command", "presentation.action");
-    output.add_string("action_id", request.action_id);
-    output.add_string("request_id", request.request_id);
-    output.add_string("outcome", outcome);
-    output.add_object("operation", operation);
-    output.add_array("effects", effects);
-    output.add_array("diagnostics", diagnostics);
-    output.add_array("problems", problems);
-    if (replacement_snapshot.empty()) output.add_null("replacement_snapshot");
-    else add_json(output, "replacement_snapshot", replacement_snapshot);
-    if (action_payload.empty()) output.add_null("action_payload");
-    else add_json(output, "action_payload", action_payload);
-    if (!invalidated) output.add_null("invalidation");
-    else {
-        json::ObjectBuilder invalidation;
-        invalidation.add_bool("required", true);
-        invalidation.add_string("reason", "explicit_installation_scan_completed");
-        output.add_object("invalidation", invalidation);
-    }
-    return output.serialize();
 }
 
 ApplicationResult replayed_action_result(const std::string& source)
@@ -1250,6 +1171,10 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             install_choices.empty() ? std::string() : install_choices.front(), install_choices},
         {"display_name", "Display name (optional)", "string", false, {}, {}},
     };
+    const std::vector<ActionInputField> pack_export_input = {
+        {"selected_instance_id", "Instance", "enum", true, default_instance, instance_choices},
+        {"output_path", "Offline pack destination (.zip)", "path", true, {}, {}},
+    };
     actions.add_object(action_descriptor(
         "presentation.refresh", "presentation.query", "Refresh", "secondary", "read_only", true));
     if (request.scope == "installations") {
@@ -1331,6 +1256,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "manage", "workspace_write", !installs.empty(),
             installs.empty() ? "no_installations" : nullptr,
             "explicit", "facman.semantic_action_input.v1", pack_import_input));
+        actions.add_object(action_descriptor(
+            "modsets.export", "presentation.action", "Export offline pack",
+            "manage", "workspace_write", selected_exists && selected_modset_locked,
+            !selected_exists ? "no_instance_selected" :
+                (!selected_modset_locked ? "no_modset_lock" : nullptr),
+            "explicit", "facman.semantic_action_input.v1", pack_export_input));
         actions.add_object(action_descriptor(
             "mods.inspect", "presentation.action", "Inspect local mod",
             "diagnostic", "read_only", !mod_identity_choices.empty(),
@@ -1660,6 +1591,9 @@ ApplicationResult PresentationService::action(
         (request.scope != "content" || request.source_path.empty() ||
             request.new_instance_id.empty() || request.installation_id.empty())) {
         required_input = "source_path, new_instance_id, and installation_id are required";
+    } else if (request.action_id == "modsets.export" &&
+        (request.scope != "content" || request.selected_instance_id.empty() || request.output_path.empty())) {
+        required_input = "selected_instance_id and output_path are required";
     } else if ((request.action_id == "modsets.plan" ||
             request.action_id == "modsets.apply") &&
         (request.scope != "content" || request.selected_instance_id.empty() ||
@@ -1918,6 +1852,26 @@ ApplicationResult PresentationService::action(
             output = action_result_json(request, "completed",
                 replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
                 result_string(imported),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "modsets.export" && request.scope == "content") {
+        ExportModsetRequest export_request;
+        export_request.instance_id = request.selected_instance_id;
+        export_request.output_path = facman::platform::path_from_utf8(request.output_path);
+        const ApplicationResult exported = handlers::export_modset(context_, export_request);
+        if (exported.status != ULK_STATUS_OK) {
+            output = action_result_json(request,
+                exported.outcome_kind == facman::core::OutcomeKind::recovery_required
+                    ? "recovery_required" : "refused_before_effects",
+                current_snapshot, result_string(exported), exported.error_code,
+                exported.error_message, false, {"workspace_write"});
+        } else {
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(exported),
                 replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});

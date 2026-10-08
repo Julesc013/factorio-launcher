@@ -327,6 +327,8 @@ namespace FacMan.WinForms
             actions.Controls.Add(ScopedActionButton(
                 "&Import offline pack", "Import offline pack", "content", "modsets.import"));
             actions.Controls.Add(ScopedActionButton(
+                "&Export offline pack", "Export offline pack", "content", "modsets.export"));
+            actions.Controls.Add(ScopedActionButton(
                 "&Inspect mod", "Inspect local mod", "content", "mods.inspect"));
             actions.Controls.Add(ScopedActionButton(
                 "&Plan modset", "Plan instance-local modset", "content", "modsets.plan"));

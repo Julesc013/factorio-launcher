@@ -6,9 +6,10 @@
 
 #include "application_types.h"
 
+#include <initializer_list>
 #include <string>
 
-namespace facman::core::json { class Value; class ObjectBuilder; }
+namespace facman::core::json { class Value; class ObjectBuilder; class ArrayBuilder; }
 
 namespace facman::factorio::application {
 
@@ -38,6 +39,15 @@ bool recorded_action_request_shape(const facman::core::json::Value& request);
 bool effectful_semantic_action(const std::string& action_id);
 bool terminal_session_state(const std::string& state);
 std::string result_string(const ApplicationResult& result);
+void add_json(facman::core::json::ObjectBuilder& output, const char* key, const std::string& source);
+void add_problem(
+    facman::core::json::ArrayBuilder& problems,
+    const std::string& code, const std::string& summary, const std::string& detail = {});
+std::string action_result_json(
+    const SemanticActionRequest& request, const char* outcome,
+    const std::string& replacement_snapshot, const std::string& action_payload,
+    const std::string& problem_code, const std::string& problem_summary,
+    bool invalidated, std::initializer_list<const char*> declared_effects = {});
 bool lower_hex_digest(const std::string& value);
 std::string snapshot_revision(const std::string& snapshot);
 std::string profile_preparation_json(
