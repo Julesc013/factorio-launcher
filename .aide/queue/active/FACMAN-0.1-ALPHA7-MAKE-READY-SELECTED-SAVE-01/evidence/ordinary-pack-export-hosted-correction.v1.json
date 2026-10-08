@@ -1,0 +1,72 @@
+{
+  "schema": "facman.ordinary_pack_export_hosted_correction.v1",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "source_parent": "aad2f554a9459cac4b560eabb4221626bd2a665e",
+  "source_paths_sha256": {
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": "4d5cd36ecc72565eea48546db26777da6858a86d77a10c7c1c7febfa7f09e8b2",
+    "tests/test_modzip_depth.py": "063c648598d4cba8186fdba0053da0d09e50ec10a0222b7f451d9249bbd8da71"
+  },
+  "verdict": "PASS_WINDOWS_APPLICABLE_CASE_POSIX_HOSTED_PENDING",
+  "failed_hosted_job": {
+    "source": "aad2f554a9459cac4b560eabb4221626bd2a665e",
+    "pull_request": 397,
+    "run": 37712285926,
+    "job": 113100723910,
+    "log_sha256": "db34aa770544689a7d9966cdcd43e1b05c3b3c97afd42a43fe7a3ac9ac8916fc",
+    "native_tests_passed": 56,
+    "Python_methods_run": 1962,
+    "Python_failed_methods": 2,
+    "hosted_skipped_methods": 98,
+    "failure": "Existing retained-export tests expect generic refusal exit1 instead of truthful recovery-required exit3"
+  },
+  "correction": {
+    "methods": [
+      "test_export_refuses_replaced_archive_after_staging",
+      "test_export_publishes_private_verified_copy_after_staged_file_mutation"
+    ],
+    "expected_exit": 3,
+    "typed_transport_outcome": "recovery_required",
+    "effects_may_have_occurred": true,
+    "all_preservation_assertions_kept": true,
+    "product_source_changed": false,
+    "platform_skip_changed": false,
+    "native_rebuild": false
+  },
+  "local_qualification": {
+    "receipt_sha256": "93479ae771075cf7c333113880809a45a6b261d8d34169f468e2da5661ce15c6",
+    "applicable_Windows_method_passed": 1,
+    "skipped": 0,
+    "POSIX_private_copy_not_run": true,
+    "native_binary_sha256": "3ed40290f81ac48044992dc497b2863e91733d0bed1bf41c72a857cd98c96f34",
+    "strict_pass": true
+  },
+  "retained_original_qualification": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/ordinary-pack-export.v1.json",
+    "sha256": "7dab3890aad289e05f315fedc318ac3b5189f5f2710aa34fc92ce3a19c38a64c",
+    "rewritten": false
+  },
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/ordinary-pack-export-hosted-correction-custody.zip",
+    "sha256": "09455ca3d5a63946d922465a1afe6d2ad9de30fe0488f9c4e81f12389b789723",
+    "bytes": 107632,
+    "members": {
+      "ordinary-pack-export-hosted-correction-01-diff.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordinary-pack-export-hosted-correction-01-strict.log": "c2a064b5452cd334103513f6f62c5959a0c8a45c0eda82dcf88b0822f2a0ddcc",
+      "ordinary-pack-export-hosted-correction-01-windows-archive-replacement.log": "73fafcde8946f607079e8691e1ed7c4cdec79c4dc664aedb2dc6e21f5b8eb27c",
+      "ordinary-pack-export-hosted-correction-qualification-01.json": "93479ae771075cf7c333113880809a45a6b261d8d34169f468e2da5661ce15c6",
+      "ordinary-pack-export-source-failed-job-113100723910.log": "db34aa770544689a7d9966cdcd43e1b05c3b3c97afd42a43fe7a3ac9ac8916fc"
+    }
+  },
+  "integration_requires_current_required_source_and_merge_CI": true,
+  "boundaries": {
+    "new_roots": 0,
+    "new_clones": 0,
+    "new_worktrees": 0,
+    "new_candidates": 0,
+    "job_reruns": 0,
+    "full_workunit_closed": false,
+    "beta_qualified": false,
+    "original_CI63_attribution": "unconfirmed",
+    "prior_q02_publication_timeout_resolved": false
+  }
+}

@@ -730,7 +730,10 @@ class ModZipDepthTests(unittest.TestCase):
                 (staging / ".facman-modset-export-release").touch()
                 stdout, stderr = process.communicate(timeout=20)
                 if replaced:
-                    self.assertEqual(process.returncode, 1, stderr + stdout)
+                    self.assertEqual(process.returncode, 3, stderr + stdout)
+                    envelope = json.loads(stdout)
+                    self.assertEqual("recovery_required", envelope["outcome"])
+                    self.assertTrue(envelope["operation"]["effects_may_have_occurred"])
                     self.assertIn("transaction_recovery_required", stdout)
                     self.assertFalse(destination.exists())
                     self.assertTrue(staging.exists())
@@ -786,7 +789,10 @@ class ModZipDepthTests(unittest.TestCase):
                     archive.write(b"X")
                 (staging / ".facman-modset-private-copy-release").touch()
                 stdout, stderr = process.communicate(timeout=20)
-                self.assertEqual(process.returncode, 1, stderr + stdout)
+                self.assertEqual(process.returncode, 3, stderr + stdout)
+                envelope = json.loads(stdout)
+                self.assertEqual("recovery_required", envelope["outcome"])
+                self.assertTrue(envelope["operation"]["effects_may_have_occurred"])
                 self.assertIn("transaction_recovery_required", stdout)
                 with zipfile.ZipFile(destination) as archive:
                     self.assertEqual(sorted(archive.namelist()),

@@ -167,3 +167,14 @@ loss through the existing conservative recovery owner. Retained export staging
 requires review; automatic export resume is not admitted by this slice. Use the
 existing test fault/pause hooks and a compiled headless WinForms harness; no
 visible UI, real game, human, other-host, WorkUnit or Beta closure is claimed.
+
+PR397 source aad2f554 passed macOS56 native tests; required macOS Python
+qualification failed two existing adversarial export assertions that still
+expect generic refusal exit1 for retained data. Correct those exact expectations
+to recovery-required exit3 and require the machine envelope's typed outcome and
+effects_may_have_occurred. Preserve private verified publication, modified or
+foreign staging, and ordinary conservative recovery assertions. No product
+source, timeout, hook, platform skip or provider pin changes are admitted by this
+correction. The POSIX private-copy case requires current hosted qualification;
+Windows source fixtures cannot replace that platform evidence. Retain the failed
+job and publish one reviewed child to the existing PR for normal required CI.
