@@ -151,3 +151,19 @@ This grants no real wall-time claim and resolves neither the retained q02 SDK
 publication stall nor original CI63 attribution. Require independent patch
 review, focused static Debug/shared Release qualification and current source/
 merge CI. No new roots, worktrees, clones, candidates or provider pin changes.
+
+2026-10-08: PR396 source and merge CI passed at integrated dev35e8350;
+the exact task references were retired and all three primary checkouts synced.
+Continue ordinary Content export in the existing owned root from that dev head.
+Expose the existing rich-v1 exporter through explicit durable modsets.export,
+typed instance/destination fields and the fixed WinForms Content entry. Preserve
+request and result bytes for historical replay while moving unchanged JSON
+helpers to the existing presentation support file to respect source limits.
+When a staged archive is retained after staged/verified/committing journal
+failure, report transaction_recovery_required rather than pre-effect refusal.
+Qualify exact selected content, absent/empty/binary settings, raw provenance,
+offline reconstruction, fresh-process replay, destination conflict and process
+loss through the existing conservative recovery owner. Retained export staging
+requires review; automatic export resume is not admitted by this slice. Use the
+existing test fault/pause hooks and a compiled headless WinForms harness; no
+visible UI, real game, human, other-host, WorkUnit or Beta closure is claimed.

@@ -232,6 +232,7 @@ bool effectful_semantic_action(const std::string& action_id)
         action_id == "profile.select" ||
         action_id == "modsets.apply" ||
         action_id == "modsets.import" ||
+        action_id == "modsets.export" ||
         action_id == "modsets.rollback" ||
         action_id == "saves.associate" ||
         action_id == "saves.backup" ||
@@ -264,6 +265,9 @@ std::string result_string(const ApplicationResult& result)
     if (std::holds_alternative<modsets::VerifyResult>(result.output)) {
         return modsets::to_json(std::get<modsets::VerifyResult>(result.output));
     }
+    if (std::holds_alternative<modsets::ExportResult>(result.output)) {
+        return modsets::to_json(std::get<modsets::ExportResult>(result.output));
+    }
     if (std::holds_alternative<modsets::Refusal>(result.output)) {
         return modsets::to_json(std::get<modsets::Refusal>(result.output));
     }
@@ -283,6 +287,85 @@ std::string result_string(const ApplicationResult& result)
         return diagnostics::to_json(std::get<diagnostics::Refusal>(result.output));
     }
     return {};
+}
+
+void add_json(json::ObjectBuilder& output, const char* key, const std::string& source)
+{
+    auto value = json::parse(source);
+    if (value) output.add_value(key, value.value());
+    else output.add_null(key);
+}
+
+void add_problem(
+    json::ArrayBuilder& problems,
+    const std::string& code,
+    const std::string& summary,
+    const std::string& detail)
+{
+    json::ObjectBuilder problem;
+    problem.add_string("code", code);
+    problem.add_string("summary", summary);
+    if (detail.empty()) problem.add_null("detail");
+    else problem.add_string("detail", detail);
+    problems.add_object(problem);
+}
+
+std::string action_result_json(
+    const SemanticActionRequest& request,
+    const char* outcome,
+    const std::string& replacement_snapshot,
+    const std::string& action_payload,
+    const std::string& problem_code,
+    const std::string& problem_summary,
+    bool invalidated,
+    std::initializer_list<const char*> declared_effects)
+{
+    json::ObjectBuilder operation;
+    operation.add_string("request_id", request.request_id);
+    if (request.durable_operation_id.empty()) {
+        operation.add_null("operation_id");
+        operation.add_null("durable_operation_id");
+    } else {
+        operation.add_string("operation_id", request.durable_operation_id);
+        operation.add_string("durable_operation_id", request.durable_operation_id);
+    }
+    if (request.attempt_id.empty()) operation.add_null("attempt_id");
+    else operation.add_string("attempt_id", request.attempt_id);
+    const std::string& target_instance = request.new_instance_id.empty()
+        ? request.selected_instance_id : request.new_instance_id;
+    if (target_instance.empty()) operation.add_null("target_instance_id");
+    else operation.add_string("target_instance_id", target_instance);
+    if (request.installation_id.empty()) operation.add_null("target_installation_id");
+    else operation.add_string("target_installation_id", request.installation_id);
+    operation.add_string("outcome", outcome);
+
+    json::ArrayBuilder effects;
+    for (const char* effect : declared_effects) effects.add_string(effect);
+    json::ArrayBuilder diagnostics;
+    json::ArrayBuilder problems;
+    if (!problem_code.empty()) add_problem(problems, problem_code, problem_summary);
+    json::ObjectBuilder output;
+    output.add_string("schema", "facman.semantic_action_result.v1");
+    output.add_string("command", "presentation.action");
+    output.add_string("action_id", request.action_id);
+    output.add_string("request_id", request.request_id);
+    output.add_string("outcome", outcome);
+    output.add_object("operation", operation);
+    output.add_array("effects", effects);
+    output.add_array("diagnostics", diagnostics);
+    output.add_array("problems", problems);
+    if (replacement_snapshot.empty()) output.add_null("replacement_snapshot");
+    else add_json(output, "replacement_snapshot", replacement_snapshot);
+    if (action_payload.empty()) output.add_null("action_payload");
+    else add_json(output, "action_payload", action_payload);
+    if (!invalidated) output.add_null("invalidation");
+    else {
+        json::ObjectBuilder invalidation;
+        invalidation.add_bool("required", true);
+        invalidation.add_string("reason", "explicit_installation_scan_completed");
+        output.add_object("invalidation", invalidation);
+    }
+    return output.serialize();
 }
 
 } // namespace facman::factorio::application

@@ -172,7 +172,14 @@ ApplicationResult from_modset_outcome(const modsets::VerifyOutcome& outcome)
     }
     return result;
 }
-ApplicationResult from_modset_outcome(const modsets::ExportOutcome& outcome) { return modset_result<modsets::ExportResult>(outcome); }
+ApplicationResult from_modset_outcome(const modsets::ExportOutcome& outcome)
+{
+    ApplicationResult result = modset_result<modsets::ExportResult>(outcome);
+    if (result.error_code == "transaction_recovery_required") {
+        result.outcome_kind = facman::core::OutcomeKind::recovery_required;
+    }
+    return result;
+}
 ApplicationResult from_save_outcome(const saves::ListOutcome& outcome) { return save_result<saves::ListResult>(outcome); }
 ApplicationResult from_save_outcome(const saves::BackupOutcome& outcome) { return save_result<saves::BackupResult>(outcome); }
 ApplicationResult from_save_outcome(const saves::CloneOutcome& outcome) { return save_result<saves::CloneResult>(outcome); }

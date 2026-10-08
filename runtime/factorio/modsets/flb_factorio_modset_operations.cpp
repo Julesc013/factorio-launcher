@@ -795,7 +795,10 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     if (!session.staged("archive_written") ||
         !session.verified("archive_self_verified") ||
         !session.committing("no_clobber_commit_started")) {
-        return refuse(command, request.instance_id, "recovery_write_refused", "Modset export journal update failed", session.detail());
+        const std::string journal_error = session.detail();
+        session.require_recovery(journal_error);
+        return refuse(command, request.instance_id, "transaction_recovery_required",
+            "Modset export staging requires recovery after journal failure", journal_error, false);
     }
     const auto transaction_marker = content::bind_modpack_export_transaction_marker(staging_state, session.record());
     if (!transaction_marker.ok()) {
