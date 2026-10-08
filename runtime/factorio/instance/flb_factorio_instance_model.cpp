@@ -11,7 +11,9 @@
 #include "fl_workspace_store.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_install_model.h"
+#include "flb_factorio_content_records.h"
 #include "flb_factorio_launch_plan.h"
+#include "flb_factorio_mods.h"
 #include "flb_factorio_modset_operations.h"
 #include "flb_factorio_profiles.h"
 #include "flb_factorio_save_index.h"
@@ -112,7 +114,7 @@ struct Projection {
     std::string modset_local_lock_identity = "not_observed";
     std::string modset_shared_lock_identity = "not_observed";
     std::string modset_verification;
-    std::vector<std::string> modset_artifacts;
+    std::vector<std::pair<std::string, std::string>> modset_artifacts;
     std::optional<profiles::CurrentInstancePlan> profile_plan;
     std::string profile_plan_refusal;
     std::string profile_plan_refusal_message;
@@ -279,6 +281,13 @@ json::ArrayBuilder strings(const std::vector<std::string>& values)
 {
     json::ArrayBuilder output;
     for (const std::string& value : values) output.add_string(value);
+    return output;
+}
+
+json::ArrayBuilder artifact_strings(const std::vector<std::pair<std::string, std::string>>& values)
+{
+    json::ArrayBuilder output;
+    for (const auto& value : values) output.add_string(value.first + ":" + value.second);
     return output;
 }
 
@@ -627,6 +636,16 @@ std::string artifact_identity(const fs::path& path)
         ":" + std::to_string(identity.size) + ":sha256:" + hash.finish();
 }
 
+std::string builtin_metadata_identity(const fs::path& path)
+{
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail)) return "unavailable:unsafe_artifact";
+    auto observed = observe_file(path, 1024U * 1024U);
+    if (!observed || facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return "unavailable:builtin_metadata";
+    return observed.value().identity;
+}
+
 bool safe_mod_file_name(const std::string& value)
 {
     if (value.empty() || value.size() > 255U) return false;
@@ -732,32 +751,71 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         projection.modset_valid = false;
         return;
     }
-    for (std::size_t index = 0; index < mods->size(); ++index) {
-        const json::Value* item = mods->at(index);
-        if (item == nullptr || !item->is_object()) {
-            projection.modset_status = "invalid";
-            projection.modset_detail = "Modset lock contains a non-object entry";
-            projection.modset_valid = false;
-            return;
+    auto content_lock = facman::factorio::content::content_lock_from_modset_lock_json(
+        projection.modset_lock->text);
+    if (!content_lock || content_lock.value().instance_id != projection.instance.id.str()) {
+        projection.modset_status = "invalid";
+        projection.modset_detail = content_lock ? "Modset lock names another instance" : content_lock.error().message;
+        projection.modset_valid = false;
+        return;
+    }
+    std::vector<std::pair<fs::path, std::string>> observed_artifacts;
+    std::vector<std::pair<fs::path, std::string>> observed_builtins;
+    std::optional<std::vector<facman::factorio::mods::ModRef>> inventory;
+    for (const auto& entry : content_lock.value().entries) {
+        if (!entry.enabled) continue;
+        fs::path artifact = mods_root / fs::u8path(entry.file_name);
+        if (entry.virtual_package) {
+            if (!projection.install || entry.source != "install-data:" + projection.install->id.str() ||
+                !safe_mod_file_name(entry.file_name)) {
+                projection.modset_status = "invalid";
+                projection.modset_detail = "Built-in package is not bound to the selected installation";
+                projection.modset_valid = false;
+                return;
+            }
+            artifact = projection.install->root / "data" / fs::u8path(entry.file_name) / "info.json";
+            const std::string before = builtin_metadata_identity(artifact);
+            projection.modset_artifacts.emplace_back("builtin:" + entry.file_name, before);
+            if (before.rfind("file:", 0U) != 0U) {
+                projection.modset_status = "missing_artifacts";
+                projection.modset_detail = "Built-in package metadata is unavailable or unsafe: " + entry.file_name;
+                projection.modset_valid = false;
+                return;
+            }
+            if (!inventory) {
+                auto values = facman::factorio::mods::local_inventory(workspace);
+                if (!values) {
+                    projection.modset_status = "verification_failed";
+                    projection.modset_detail = values.error().message;
+                    projection.modset_valid = false;
+                    return;
+                }
+                inventory = values.take_value();
+            }
+            const auto trusted = std::find_if(inventory->begin(), inventory->end(), [&](const auto& value) {
+                return value.valid && value.virtual_package && value.metadata_source == "builtin_info_json" &&
+                    value.validation_status == "virtual" && value.source == entry.source &&
+                    value.name == entry.name && value.version == entry.version &&
+                    value.file_name == entry.file_name && same_path(value.file_path / "info.json", artifact);
+            });
+            if (trusted == inventory->end()) {
+                projection.modset_status = "verification_failed";
+                projection.modset_detail = "Built-in package does not match the selected installation: " + entry.name;
+                projection.modset_valid = false;
+                return;
+            }
+            observed_builtins.emplace_back(artifact, before);
+            continue;
         }
-        const bool enabled = object_bool(*item, "enabled", true);
-        const json::Value* file_field = item->find("file_name");
-        if (!enabled || file_field == nullptr || file_field->is_null()) continue;
-        auto file_name = file_field->string_value();
-        if (!file_name || !safe_mod_file_name(file_name.value())) {
-            projection.modset_status = "invalid";
-            projection.modset_detail = "Modset lock contains an unsafe artifact name";
-            projection.modset_valid = false;
-            return;
-        }
-        const fs::path artifact = mods_root / fs::u8path(file_name.value());
-        projection.modset_artifacts.push_back(file_name.value() + ":" + artifact_identity(artifact));
+        const std::string identity = artifact_identity(artifact);
+        projection.modset_artifacts.emplace_back(entry.file_name, identity);
+        observed_artifacts.emplace_back(artifact, identity);
         const auto status = fs::symlink_status(artifact, error);
         std::string detail;
         if (error || !fs::is_regular_file(status) ||
             facman::base::path_crosses_link_or_reparse_point(artifact, detail)) {
             projection.modset_status = "missing_artifacts";
-            projection.modset_detail = "Required mod artifact is unavailable: " + file_name.value();
+            projection.modset_detail = "Required mod artifact is unavailable: " + entry.file_name;
             projection.modset_valid = false;
             return;
         }
@@ -767,6 +825,12 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
     if (projection.modset_local_lock_identity != lock_input_identity(local) ||
         projection.modset_shared_lock_identity != lock_input_identity(shared))
         projection.owner_inputs_changed = true;
+    for (const auto& artifact : observed_artifacts) {
+        if (artifact.second != artifact_identity(artifact.first)) projection.owner_inputs_changed = true;
+    }
+    for (const auto& artifact : observed_builtins) {
+        if (artifact.second != builtin_metadata_identity(artifact.first)) projection.owner_inputs_changed = true;
+    }
     projection.modset_verification = std::visit([](const auto& value) {
         return modset_operations::to_json(value);
     }, verification);
@@ -963,6 +1027,7 @@ facman::core::Result<Projection> project(
         if (!unchanged(projection.instance.source_path, projection.instance_record) ||
             current.profile_valid != projection.profile_valid || current.profile_digest != projection.profile_digest ||
             current.modset_valid != projection.modset_valid || current.modset_status != projection.modset_status ||
+            current.modset_artifacts != projection.modset_artifacts ||
             current.modset_lock.has_value() != projection.modset_lock.has_value() ||
             (projection.modset_lock && current.modset_lock->identity != projection.modset_lock->identity) ||
             (projection.install_record && !unchanged(projection.install->source_path, *projection.install_record)) ||
@@ -1114,6 +1179,9 @@ json::ArrayBuilder binding_dependencies(const Projection& projection)
         projection.modset_lock ? "sha256:" + projection.modset_lock->digest : "not_observed",
         projection.modset_lock ? "observed" : "not_observed",
         true));
+    for (const auto& artifact : projection.modset_artifacts)
+        output.add_object(dependency("modset_artifact", artifact.first + ":" + artifact.second,
+            artifact.second.rfind("file:", 0U) == 0U ? "observed" : "unavailable", true));
     output.add_object(dependency(
         "recovery_state",
         "incomplete-transactions:" + std::to_string(projection.pending_transactions),
@@ -1279,7 +1347,7 @@ json::ObjectBuilder encode_preparation_preview(
     mods.add_string("shared_lock_identity", projection.modset_shared_lock_identity);
     if (projection.modset_lock) mods.add_string("lock_sha256", projection.modset_lock->digest);
     else mods.add_null("lock_sha256");
-    mods.add_array("artifact_identities", strings(projection.modset_artifacts));
+    mods.add_array("artifact_identities", artifact_strings(projection.modset_artifacts));
     if (projection.modset_verification.empty()) mods.add_null("verification");
     else mods.add_value("verification", parsed_value(projection.modset_verification));
 
