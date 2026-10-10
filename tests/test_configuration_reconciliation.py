@@ -84,6 +84,9 @@ class ExistingConfigurationTests(unittest.TestCase):
                 if not raw: self.assertFalse((instance / 'instance-overrides.v1.json').exists())
                 target = instance / 'config/config.ini'; before = self.preserved(instance)
                 stat = target.stat(); security = readable_security(target)
+                # Windows Python 3.11 exposes creation time as st_ctime_ns;
+                # Python 3.12+ provides the explicit st_birthtime_ns field.
+                creation_time_field = 'st_birthtime_ns' if hasattr(stat, 'st_birthtime_ns') else 'st_ctime_ns'
                 ads = [Path(str(target) + ':' + name) for name in ['facman-first', 'facman-second']]
                 for i, stream in enumerate(ads): stream.write_bytes(bytes([0, 255, i, 128, 13, 10]))
                 frozen = snapshot(workspace); old = self.query(workspace, scope, intent)
@@ -105,7 +108,7 @@ class ExistingConfigurationTests(unittest.TestCase):
                 self.assertTrue(effect['original_file_preserved']); self.assertFalse(effect['existing_settings_modified'])
                 self.assertEqual(expected, target.read_bytes()); self.assertEqual(before, self.preserved(instance))
                 self.assertEqual(stat.st_ino, target.stat().st_ino)
-                self.assertEqual(stat.st_birthtime_ns, target.stat().st_birthtime_ns)
+                self.assertEqual(getattr(stat, creation_time_field), getattr(target.stat(), creation_time_field))
                 self.assertEqual(security, readable_security(target))
                 for i, stream in enumerate(ads): self.assertEqual(bytes([0, 255, i, 128, 13, 10]), stream.read_bytes())
                 ready = result['replacement_snapshot']['readiness']
