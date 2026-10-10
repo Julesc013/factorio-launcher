@@ -83,45 +83,50 @@ public:
             fail("archive_staging_parent_invalid", parent.u8string());
         if (facman::base::path_crosses_link_or_reparse_point(parent, detail))
             fail("archive_staging_parent_link_refused", detail);
+        check(parent_.open_no_follow_for_relative_writes(parent));
         if (observation_) observation_->begin_create_attempt();
-        if (!fs::create_directory(root, error) || error)
-            fail("archive_staging_create_failed", error.message());
+        const auto created = parent_.create_child_directory_exclusive_utf8(root.filename().u8string(), directory_);
+        if (!created.ok()) fail("archive_staging_create_failed", created.detail);
+        // The existing directory capability returns the created handle atomically
+        // on Windows. POSIX creation/reopen still has its documented namespace
+        // window; this does not qualify an uncooperative POSIX namespace writer.
         // From here onward even marker/handle/exception failures retain state.
-        check(directory_.open_no_follow(root));
         point(std::numeric_limits<std::uint32_t>::max(), "root_created");
-        const auto marker = root / owned_staging_marker_name();
-        check(directory_.validate_descendant(marker, true));
         facman::platform::DurableOutputFile output;
         const std::string bytes = "schema=facman.archive_staging.v1\n";
-        check(output.create_exclusive(marker, bytes.size()));
+        check(directory_.create_child_file_exclusive(owned_staging_marker_name(), bytes.size(), output));
         if (output.write_at(0, bytes.data(), bytes.size()) != bytes.size())
             fail("archive_staging_marker_failed", "Retained marker write failed");
         check(output.flush_file_and_parent());
         point(std::numeric_limits<std::uint32_t>::max(), "root_ready");
     }
-    fs::path destination(const Entry& entry)
+    void create_output(const Entry& entry, facman::platform::DurableOutputFile& output)
     {
         guard();
+        auto* parent = &directory_;
         fs::path current = root;
         for (const auto& part : fs::u8path(entry.path).parent_path()) {
             current /= part;
             const auto held = parents_.find(current);
-            if (held != parents_.end()) { check(held->second->revalidate()); continue; }
-            check(directory_.validate_descendant(current, true));
-            std::error_code error;
-            if (!fs::create_directory(current, error) || error)
-                fail("archive_extract_directory_collision", current.u8string());
+            if (held != parents_.end()) {
+                check(held->second->revalidate());
+                parent = held->second.get();
+                continue;
+            }
             auto object = std::make_unique<facman::platform::StableDirectoryObject>();
-            check(object->open_no_follow(current));
+            const auto created = parent->create_child_directory_exclusive_utf8(part.u8string(), *object);
+            if (!created.ok()) fail("archive_extract_directory_collision", created.detail);
+            parent = object.get();
             parents_.emplace(current, std::move(object));
+            point(entry.index, "directory_created");
         }
-        const auto path = root / fs::u8path(entry.path);
-        check(directory_.validate_descendant(path, true));
-        return path;
+        check(parent->create_child_file_exclusive_utf8(fs::u8path(entry.path).filename().u8string(),
+            entry.expanded_size, output));
+        point(entry.index, "output_created");
     }
     fs::path root;
 private:
-    facman::platform::StableDirectoryObject directory_;
+    facman::platform::StableDirectoryObject parent_, directory_;
     std::map<fs::path, std::unique_ptr<facman::platform::StableDirectoryObject>> parents_;
     const Limits& limits_;
     const ExtractionCheckpoint& checkpoint_;
@@ -134,7 +139,7 @@ void extract_entry(const Plan& plan, const Entry& entry, const VerifiedEntry& ex
 {
     root.point(entry.index, "before_entry");
     facman::platform::DurableOutputFile output;
-    check(output.create_exclusive(root.destination(entry), entry.expanded_size));
+    root.create_output(entry, output);
     std::uint64_t offset = 0;
     facman::base::Sha256Hasher hash;
     Status sink_failure;
