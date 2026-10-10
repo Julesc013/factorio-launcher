@@ -3,6 +3,7 @@
 
 #include "flb_factorio_instance_model.h"
 #include "flb_factorio_instance_staging.h"
+#include "flb_factorio_routing_ini_delta.h"
 
 #include "fl_file_io.h"
 #include "fl_json.h"
@@ -589,6 +590,59 @@ void inspect_profile(Projection& projection, const fs::path& workspace)
     }
 }
 
+// Internal model seam proposed for the existing-file owner. No runtime API,
+// serialized override, launch authority or currently qualified source change.
+// Caller supplies the SAME retained capability bound by the domain owner.
+facman::core::Result<FileObservation> observe_owner_configuration(
+    const facman::platform::RetainedStreamRewriteFile& held)
+{
+    std::string bytes;
+    facman::platform::FileIdentity identity;
+    const auto status = held.observe(bytes, identity);
+    if (!status.ok()) return fail<FileObservation>(
+        "configuration_held_observation_unavailable", status.detail);
+    FileObservation result;
+    result.text = std::move(bytes);
+    result.digest = sha256_text(result.text);
+    result.identity = "file:" + std::to_string(identity.device) + ":" +
+        std::to_string(identity.object) + ":" + std::to_string(identity.size) +
+        ":" + std::to_string(identity.link_count) + ":sha256:" + result.digest;
+    return facman::core::Result<FileObservation>::success(std::move(result));
+}
+
+bool unchanged_owner_configuration(const FileObservation& before,
+    const facman::platform::RetainedStreamRewriteFile& held)
+{
+    const auto after = observe_owner_configuration(held);
+    return after && before.identity == after.value().identity &&
+        before.digest == after.value().digest && before.text == after.value().text;
+}
+
+// Replace only the internal inspect_configuration call/path-check branches
+// when project() receives a non-null, owner-held capability. Ordinary callers
+// retain all original path reads. The pure byte-parser overload must reuse the
+// original effective-config parser and all root/path checks, without opening
+// config.ini. Raw original/intended/partial membership is checked by the owner
+// and capability; this projection must never turn partial bytes into ready.
+bool inspect_owner_configuration(Projection& projection,
+    const facman::platform::RetainedStreamRewriteFile& held)
+{
+    if (!projection.root_safe || !same_path(held.path(), projection.instance.root / "config/config.ini")) return false;
+    const auto before = observe_owner_configuration(held);
+    if (!before) return false;
+    const auto effective = launch::parse_effective_config_bytes(
+        projection.instance.root / "config/config.ini",
+        projection.instance.root / "mods", before.value().text);
+    if (!unchanged_owner_configuration(before.value(), held)) return false;
+    projection.config = before.value();
+    projection.config_valid = effective.ok && projection.install &&
+        same_path(effective.read_data, projection.install->root / "data") &&
+        same_path(effective.write_data, projection.instance.root) &&
+        same_path(effective.mod_root, projection.instance.root / "mods");
+    return true;
+}
+
+
 void inspect_configuration(Projection& projection)
 {
     if (!projection.root_safe) return;
@@ -964,7 +1018,8 @@ bool unchanged(const fs::path& path, const FileObservation& expected)
 
 facman::core::Result<Projection> project(
     const fs::path& workspace,
-    const ProjectionRequest& request)
+    const ProjectionRequest& request,
+    const facman::platform::RetainedStreamRewriteFile* held_configuration = nullptr)
 {
     if (request.launch_intent != "menu" && request.launch_intent != "load_save") return fail<Projection>(
         "unsupported_launch_intent",
@@ -1010,7 +1065,8 @@ facman::core::Result<Projection> project(
         }
     }
     inspect_profile(projection, workspace);
-    inspect_configuration(projection);
+    if (held_configuration) (void)inspect_owner_configuration(projection, *held_configuration);
+    else inspect_configuration(projection);
     inspect_modset(projection, workspace);
     if (projection.launch_intent == "load_save") {
         inspect_selected_save(projection, workspace);
@@ -1032,7 +1088,9 @@ facman::core::Result<Projection> project(
             current.modset_lock.has_value() != projection.modset_lock.has_value() ||
             (projection.modset_lock && current.modset_lock->identity != projection.modset_lock->identity) ||
             (projection.install_record && !unchanged(projection.install->source_path, *projection.install_record)) ||
-            (projection.config && !unchanged(projection.instance.root / "config" / "config.ini", *projection.config))) {
+            (projection.config && !(held_configuration
+                ? unchanged_owner_configuration(*projection.config, *held_configuration)
+                : unchanged(projection.instance.root / "config" / "config.ini", *projection.config)))) {
             return fail<Projection>("instance_projection_inputs_changed",
                 "Instance, profile, configuration, installation or modset changed during selected-save observation");
         }
@@ -1921,9 +1979,11 @@ facman::core::Result<std::string> observe_selected_save_preparation_inputs(
 namespace {
 facman::core::Result<std::string> configuration_inputs(
     const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own,
-    Projection* snapshot = nullptr)
+    Projection* snapshot = nullptr,
+    const facman::platform::RetainedStreamRewriteFile* held_configuration = nullptr,
+    const json::Value* existing = nullptr)
 {
-    auto observed = project(workspace, request);
+    auto observed = project(workspace, request, held_configuration);
     if (!observed) return facman::core::Result<std::string>::failure(observed.error());
     const auto& p = observed.value();
     if (!p.root_safe || !p.install_present || !p.install_record || !p.install_ref ||
@@ -1939,26 +1999,84 @@ facman::core::Result<std::string> configuration_inputs(
         lock_input_identity(p.instance.root / "config/config-path.cfg") != "absent")
         return fail<std::string>("configuration_legacy_routing_present", "Existing legacy routing must be preserved");
     const fs::path target = p.instance.root / "config/config.ini";
-    const std::string intended = instance_effective_config(p.instance, *p.install_ref);
-    const std::string target_status = lock_input_identity(target);
-    if (!own && target_status != "absent") return fail<std::string>(
-        "configuration_existing_leaf_preserved", "Existing configuration is outside missing-file preparation");
-    if (own) {
-        auto context = json::parse(own->operation_context);
-        if (!context || object_string(context.value(), "schema") != "factorio.configuration_preparation_commit.v1" ||
-            object_string(context.value(), "instance_id") != request.instance_id ||
-            object_string(context.value(), "launch_intent") != request.launch_intent ||
-            !same_path(fs::u8path(object_string(context.value(), "instance_root")), p.instance.root) ||
-            object_string(context.value(), "parent_before_identity") != parents.value() ||
-            object_string(context.value(), "config_text") != intended || own->target != target)
-            return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable configuration does not describe the current owner inputs");
-        if (target_status != "absent") {
-            facman::platform::StableInputFile file;
-            if (!p.config_valid || !p.config || p.config->text != intended || own->effect_file_identity.empty() ||
-                !file.open_no_follow_pinned(target).ok() || file.identity().link_count != 1U ||
-                std::to_string(file.identity().device) + ":" + std::to_string(file.identity().object) != own->effect_file_identity ||
-                !file.revalidate_path().ok())
-                return fail<std::string>("configuration_foreign_effect_preserved", "Existing configuration is not the exact journaled owner effect");
+    std::string intended = instance_effective_config(p.instance, *p.install_ref);
+    const std::string target_status = held_configuration ? "present:held" : lock_input_identity(target);
+    if (existing) {
+        const std::string original = object_string(*existing, "original_config_text");
+        const auto delta = detail::routing_ini_delta(original,
+            path_string(fs::absolute(p.install->root / "data").lexically_normal()),
+            path_string(fs::absolute(p.instance.root).lexically_normal()));
+        const auto* device = existing->find("original_device");
+        const auto* object = existing->find("original_object");
+        const auto* size = existing->find("original_size");
+        if (!p.config || original.empty() || !delta.ok || delta.bytes == original ||
+            delta.bytes != object_string(*existing, "config_text") ||
+            sha256_text(original) != object_string(*existing, "original_config_sha256") ||
+            sha256_text(delta.bytes) != object_string(*existing, "config_sha256") ||
+            object_string(*existing, "instance_id") != request.instance_id ||
+            object_string(*existing, "launch_intent") != request.launch_intent ||
+            !same_path(fs::u8path(object_string(*existing, "instance_root")), p.instance.root) ||
+            object_string(*existing, "parent_before_identity") != parents.value() || !device || !object || !size)
+            return fail<std::string>("configuration_journal_inputs_mismatch", "Original and intended routing do not describe current owner inputs");
+        facman::platform::FileIdentity original_identity;
+        if (!configuration_original_file_identity(*existing, original_identity) || original_identity.size != original.size())
+            return fail<std::string>("configuration_journal_inputs_mismatch", "Original configuration identity is invalid");
+        if (own) {
+            auto context = json::parse(own->operation_context);
+            if (!context || !held_configuration || own->command_id != "readiness.prepare_configuration" ||
+                own->commit_strategy != "existing_config_retained_stream_rewrite_v1" || own->target != target ||
+                object_string(context.value(), "schema") != "factorio.configuration_reconciliation_commit.v1")
+                return fail<std::string>("configuration_journal_inputs_mismatch", "Existing configuration requires its exact held journal owner");
+            for (const char* key : {"instance_id", "launch_intent", "instance_root", "inputs_sha256", "parent_before_identity",
+                    "config_text", "config_sha256", "original_config_text", "original_config_sha256", "original_metadata_identity"}) {
+                if (object_string(context.value(), key) != object_string(*existing, key))
+                    return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable existing configuration guard changed");
+            }
+            for (const char* key : {"original_device", "original_object", "original_size"}) {
+                const auto* current = context.value().find(key); const auto* expected = existing->find(key);
+                if (!current || !expected || current->serialize() != expected->serialize())
+                    return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable original file identity changed");
+            }
+        } else if (p.config->text != original) {
+            return fail<std::string>("configuration_existing_bytes_changed", "Existing original configuration changed before admission");
+        }
+        std::string metadata;
+        if (held_configuration) {
+            if (!same_path(held_configuration->path(), target) || !held_configuration->readable_metadata_identity(metadata).ok())
+                return fail<std::string>("configuration_held_observation_unavailable", "Held configuration does not belong to this owner target");
+        } else {
+            facman::platform::StableDirectoryObject root, parent;
+            facman::platform::RetainedStreamRewriteFile file;
+            if (!root.open_no_follow_for_relative_writes(p.instance.root).ok() ||
+                !root.open_child_directory_no_follow_for_relative_writes("config", parent).ok() ||
+                !parent.open_child_file_no_follow_for_retained_rewrite("config.ini", original_identity, original, delta.bytes,
+                    facman::platform::RetainedStreamRewriteState::original_only, file).ok() ||
+                !file.readable_metadata_identity(metadata).ok() || !root.revalidate().ok() || !parent.revalidate().ok())
+                return fail<std::string>("configuration_original_custody_unavailable", "Existing configuration cannot retain its original object and bytes");
+        }
+        if (metadata != object_string(*existing, "original_metadata_identity"))
+            return fail<std::string>("configuration_original_metadata_changed", "Foreign readable metadata changed; preserve it without restoration");
+        intended = delta.bytes;
+    } else {
+        if (!own && target_status != "absent") return fail<std::string>(
+            "configuration_existing_leaf_preserved", "Existing configuration is outside missing-file preparation");
+        if (own) {
+            auto context = json::parse(own->operation_context);
+            if (!context || object_string(context.value(), "schema") != "factorio.configuration_preparation_commit.v1" ||
+                object_string(context.value(), "instance_id") != request.instance_id ||
+                object_string(context.value(), "launch_intent") != request.launch_intent ||
+                !same_path(fs::u8path(object_string(context.value(), "instance_root")), p.instance.root) ||
+                object_string(context.value(), "parent_before_identity") != parents.value() ||
+                object_string(context.value(), "config_text") != intended || own->target != target)
+                return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable configuration does not describe the current owner inputs");
+            if (target_status != "absent") {
+                facman::platform::StableInputFile file;
+                if (!p.config_valid || !p.config || p.config->text != intended || own->effect_file_identity.empty() ||
+                    !file.open_no_follow_pinned(target).ok() || file.identity().link_count != 1U ||
+                    std::to_string(file.identity().device) + ":" + std::to_string(file.identity().object) != own->effect_file_identity ||
+                    !file.revalidate_path().ok())
+                    return fail<std::string>("configuration_foreign_effect_preserved", "Existing configuration is not the exact journaled owner effect");
+            }
         }
     }
     const auto recovery = tx::inspect(workspace);
@@ -1985,7 +2103,13 @@ facman::core::Result<std::string> configuration_inputs(
         (mod_settings != "absent" && mod_settings.rfind("present:file:", 0) != 0))
         return fail<std::string>("configuration_inputs_unsafe", "Installation or content settings could not be stably observed");
     json::ObjectBuilder inputs;
-    inputs.add_string("schema", "factorio.configuration_preparation_inputs.v1");
+    inputs.add_string("schema", existing ? "factorio.configuration_reconciliation_inputs.v1" : "factorio.configuration_preparation_inputs.v1");
+    if (existing) {
+        for (const char* key : {"original_config_text", "original_config_sha256", "original_metadata_identity"})
+            inputs.add_string(key, object_string(*existing, key));
+        for (const char* key : {"original_device", "original_object", "original_size"})
+            inputs.add_value(key, *existing->find(key));
+    }
     inputs.add_string("instance_id", p.instance.id.str());
     inputs.add_string("launch_intent", request.launch_intent);
     inputs.add_string("instance_record", p.instance_record.identity);
@@ -2013,6 +2137,117 @@ facman::core::Result<std::string> configuration_inputs(
     return facman::core::Result<std::string>::success(sha);
 }
 
+facman::core::Result<std::string> existing_configuration_plan(
+    const fs::path& workspace, const ProjectionRequest& request)
+{
+    auto observed = project(workspace, request);
+    if (!observed) return facman::core::Result<std::string>::failure(observed.error());
+    const auto& p = observed.value();
+    if (!p.config || p.config->text.empty() || !p.install || !p.root_safe)
+        return fail<std::string>("configuration_existing_bytes_unavailable", "Existing configuration must be a bounded nonempty plain file");
+    const auto delta = detail::routing_ini_delta(p.config->text,
+        path_string(fs::absolute(p.install->root / "data").lexically_normal()),
+        path_string(fs::absolute(p.instance.root).lexically_normal()));
+    if (!delta.ok) return fail<std::string>(delta.refusal, "Ambiguous routing configuration must be preserved for explicit repair");
+    if (delta.bytes == p.config->text)
+        return fail<std::string>("configuration_already_current", "Routing is already current; preserve the existing configuration");
+    const auto effective = launch::parse_effective_config_bytes(
+        p.instance.root / "config/config.ini", p.instance.root / "mods", delta.bytes);
+    if (!effective.ok || !same_path(effective.read_data, p.install->root / "data") ||
+        !same_path(effective.write_data, p.instance.root) || !same_path(effective.mod_root, p.instance.root / "mods"))
+        return fail<std::string>("configuration_intended_routing_invalid", "Proposed routing did not pass the existing effective configuration parser");
+    facman::platform::FileIdentity original;
+    {
+        facman::platform::StableInputFile file;
+        if (!file.open_no_follow_pinned(p.instance.root / "config/config.ini").ok() ||
+            file.size() != p.config->text.size() || file.identity().link_count != 1U || !file.revalidate_path().ok())
+            return fail<std::string>("configuration_existing_bytes_changed", "Original file identity changed during planning");
+        std::string bytes(p.config->text.size(), '\0');
+        if (file.read_at(0, bytes.data(), bytes.size()) != bytes.size() || bytes != p.config->text || !file.revalidate_path().ok())
+            return fail<std::string>("configuration_existing_bytes_changed", "Original bytes changed during planning");
+        original = file.identity();
+    }
+    const auto parents = configuration_parent_identity(p.instance.root);
+    if (!parents) return parents;
+    std::string metadata;
+    {
+        facman::platform::StableDirectoryObject root, parent;
+        facman::platform::RetainedStreamRewriteFile file;
+        if (!root.open_no_follow_for_relative_writes(p.instance.root).ok() ||
+            !root.open_child_directory_no_follow_for_relative_writes("config", parent).ok() ||
+            !parent.open_child_file_no_follow_for_retained_rewrite("config.ini", original, p.config->text, delta.bytes,
+                facman::platform::RetainedStreamRewriteState::original_only, file).ok() ||
+            !file.readable_metadata_identity(metadata).ok() || !root.revalidate().ok() || !parent.revalidate().ok())
+            return fail<std::string>("configuration_original_custody_unavailable", "Original file cannot be retained safely for this repair");
+    }
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.configuration_preparation_plan.v1");
+    plan.add_string("instance_id", request.instance_id); plan.add_string("launch_intent", request.launch_intent);
+    plan.add_string("instance_root", path_string(p.instance.root));
+    plan.add_string("component", "existing_routing_configuration"); plan.add_string("composition", "partial");
+    plan.add_string("parent_before_identity", parents.value());
+    plan.add_string("target", path_string(p.instance.root / "config/config.ini"));
+    plan.add_string("config_text", delta.bytes); plan.add_string("config_sha256", sha256_text(delta.bytes));
+    plan.add_string("original_config_text", p.config->text); plan.add_string("original_config_sha256", p.config->digest);
+    plan.add_string("original_metadata_identity", metadata);
+    plan.add_string("original_device", std::to_string(original.device));
+    plan.add_string("original_object", std::to_string(original.object));
+    (void)plan.add_unsigned_integer("original_size", original.size);
+    auto context = json::parse(plan.serialize());
+    if (!context) return fail<std::string>("configuration_plan_invalid", "Original configuration plan is invalid");
+    const auto inputs = configuration_inputs(workspace, request, nullptr, nullptr, nullptr, &context.value());
+    const auto repeated = configuration_inputs(workspace, request, nullptr, nullptr, nullptr, &context.value());
+    if (!inputs || !repeated || inputs.value() != repeated.value())
+        return fail<std::string>("configuration_inputs_changed", "Configuration inputs changed during planning");
+    plan.add_string("inputs_sha256", inputs.value());
+    plan.add_bool("preparation_available", true); plan.add_bool("mutation_executed", false);
+    plan.add_bool("execution_started", false); plan.add_bool("permit_issued", false);
+    plan.add_bool("existing_settings_modified", false); plan.add_string("factorio_support_claim", "unclaimed");
+    plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+    return facman::core::Result<std::string>::success(plan.serialize());
+}
+
+ExistingConfigurationGuard existing_configuration_guard(const fs::path& workspace,
+    const ProjectionRequest& request, const json::Value& context)
+{
+    ExistingConfigurationGuard guard;
+    guard.inputs_sha256 = object_string(context, "inputs_sha256");
+    guard.parent_before_identity = object_string(context, "parent_before_identity");
+    const std::string immutable = context.serialize();
+    guard.validate_owner = [workspace, request, immutable](const tx::Record& record) {
+        const auto expected = json::parse(immutable);
+        const auto actual = json::parse(record.operation_context);
+        const auto id = facman::core::InstanceId::parse_legacy(request.instance_id);
+        if (!expected || !actual || !id || record.command_id != "readiness.prepare_configuration" ||
+            record.commit_strategy != "existing_config_retained_stream_rewrite_v1" ||
+            object_string(actual.value(), "schema") != "factorio.configuration_reconciliation_commit.v1" ||
+            object_string(actual.value(), "instance_id") != request.instance_id ||
+            object_string(actual.value(), "launch_intent") != request.launch_intent ||
+            object_string(actual.value(), "inputs_sha256") != object_string(expected.value(), "inputs_sha256"))
+            return fail<std::string>("configuration_owner_binding_invalid", "Configuration journal owner identity is invalid");
+        workspace_store::InstanceRepository repository {workspace_store::WorkspaceLayout(workspace)};
+        const auto loaded = repository.load(id.value());
+        if (!loaded) return facman::core::Result<std::string>::failure(loaded.error());
+        const auto& instance = loaded.value();
+        const auto parents = configuration_parent_identity(instance.root);
+        if (!same_path(fs::u8path(object_string(actual.value(), "instance_root")), instance.root) ||
+            record.target != instance.root / "config/config.ini" ||
+            record.sources != std::vector<fs::path> {instance.root / "instance.v1.json"} ||
+            !parents || parents.value() != object_string(actual.value(), "parent_before_identity") ||
+            record.effect_parent_identity != parents.value())
+            return fail<std::string>("configuration_owner_binding_invalid", "Journal target is outside the actual registered instance owner");
+        return facman::core::Result<std::string>::success(path_string(instance.root));
+    };
+    guard.observe_inputs = [workspace, request, immutable](const tx::Record* own,
+        const facman::platform::RetainedStreamRewriteFile* held) {
+        const auto original = json::parse(immutable);
+        if (!original) return fail<std::string>("configuration_journal_invalid", "Immutable configuration owner input is invalid");
+        return configuration_inputs(workspace, request, own, nullptr, held, &original.value());
+    };
+    return guard;
+}
+
+
 ConfigurationGuard configuration_guard(const fs::path& workspace, const ProjectionRequest& request,
     const json::Value& context)
 {
@@ -2038,7 +2273,7 @@ facman::core::Result<std::string> configuration_preparation_plan(
     auto registered = repository.load(id.value());
     if (!registered) return facman::core::Result<std::string>::failure(registered.error());
     if (lock_input_identity(registered.value().root / "config/config.ini") != "absent")
-        return fail<std::string>("configuration_existing_leaf_preserved", "Existing configuration is outside missing-file preparation");
+        return existing_configuration_plan(workspace, request);
     Projection p;
     auto inputs = configuration_inputs(workspace, request, nullptr, &p);
     if (!inputs) return inputs;
@@ -2071,6 +2306,11 @@ facman::core::Result<std::string> prepare_configuration(const fs::path& workspac
     auto plan = json::parse(planned.value());
     if (!plan || object_string(plan.value(), "plan_sha256") != expected_plan_sha256)
         return fail<std::string>("configuration_plan_changed", "Configuration no longer matches its reviewed snapshot");
+    if (object_string(plan.value(), "component") == "existing_routing_configuration") {
+        auto existing_guard = existing_configuration_guard(workspace, request, plan.value());
+        existing_guard.operation_id = operation_id; existing_guard.attempt_id = attempt_id;
+        return reconcile_existing_configuration(workspace, plan.value(), existing_guard);
+    }
     auto guard = configuration_guard(workspace, request, plan.value());
     guard.operation_id = operation_id; guard.attempt_id = attempt_id;
     return publish_missing_configuration(workspace, fs::u8path(object_string(plan.value(), "instance_root")),
@@ -2084,6 +2324,8 @@ facman::core::Result<std::string> recover_configuration_preparation(const fs::pa
     auto context = json::parse(record.operation_context);
     if (!context || !context.value().is_object()) return fail<std::string>("recovery_journal_invalid", "Configuration context is invalid");
     const ProjectionRequest request {object_string(context.value(), "instance_id"), object_string(context.value(), "launch_intent")};
+    if (record.commit_strategy == "existing_config_retained_stream_rewrite_v1")
+        return recover_existing_configuration(workspace, id, existing_configuration_guard(workspace, request, context.value()));
     return recover_missing_configuration(workspace, id, configuration_guard(workspace, request, context.value()));
 }
 

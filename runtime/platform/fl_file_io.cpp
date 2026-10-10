@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_file_io.h"
+#include "fl_retained_rewrite_state.h"
 
 #include "fl_system_services.h"
 #include "fl_windows_path.h"
@@ -1832,5 +1833,249 @@ IoStatus inspect_path_no_follow(
 
 std::filesystem::path path_from_utf8(const std::string& value) { return std::filesystem::u8path(value); }
 std::string path_to_utf8(const std::filesystem::path& value) { return value.u8string(); }
+
+// Append inside facman::platform in a private derivative for qualification.
+// No read-only input acquires write rights; no rename/security/ADS setter.
+namespace {
+thread_local void (*retained_stream_rewrite_phase_hook)(const char*) = nullptr;
+#ifdef _WIN32
+thread_local bool retained_stream_rewrite_flush_fault = false;
+bool flush_retained_rewrite(HANDLE handle)
+{
+    if (retained_stream_rewrite_flush_fault) {
+        retained_stream_rewrite_flush_fault = false;
+        SetLastError(ERROR_WRITE_FAULT); return false;
+    }
+    return FlushFileBuffers(handle) != 0;
+}
+#endif
+
+}
+
+struct RetainedStreamRewriteFile::Impl {
+    NativeHandle handle = kInvalidHandle;
+    NativeHandle parent = kInvalidHandle;
+    FileIdentity original_identity;
+    PathIdentity parent_identity;
+    std::filesystem::path path, parent_path;
+    std::string original, intended;
+    RetainedStreamRewriteState state = RetainedStreamRewriteState::original_only;
+    ~Impl()
+    {
+#ifdef _WIN32
+        if (handle != kInvalidHandle) CloseHandle(handle);
+        if (parent != kInvalidHandle) CloseHandle(parent);
+#else
+        if (handle != kInvalidHandle) ::close(handle);
+        if (parent != kInvalidHandle) ::close(parent);
+#endif
+    }
+};
+RetainedStreamRewriteFile::RetainedStreamRewriteFile() : impl_(std::make_unique<Impl>()) {}
+RetainedStreamRewriteFile::RetainedStreamRewriteFile(RetainedStreamRewriteFile&&) noexcept = default;
+RetainedStreamRewriteFile& RetainedStreamRewriteFile::operator=(RetainedStreamRewriteFile&&) noexcept = default;
+RetainedStreamRewriteFile::~RetainedStreamRewriteFile() = default;
+bool RetainedStreamRewriteFile::open() const noexcept
+{
+    return impl_ && impl_->handle != kInvalidHandle;
+}
+
+IoStatus RetainedStreamRewriteFile::observe(std::string& bytes, FileIdentity& identity) const
+{
+    bytes.clear(); identity = {};
+#ifdef _WIN32
+    if (!open()) return IoStatus::failure("retained_rewrite_not_open", "");
+    BY_HANDLE_FILE_INFORMATION parent {}, file {};
+    PathIdentity named_parent, named_file;
+    if (!GetFileInformationByHandle(impl_->parent, &parent) ||
+        !impl_->parent_identity.same_object(path_identity_from_info(impl_->parent_path, impl_->parent, parent)) ||
+        !inspect_path_no_follow(impl_->parent_path, named_parent).ok() ||
+        named_parent.reparse_or_link || !impl_->parent_identity.same_object(named_parent))
+        return IoStatus::failure("retained_rewrite_parent_changed", "Held parent no longer has the original namespace identity");
+    if (!GetFileInformationByHandle(impl_->handle, &file))
+        return IoStatus::failure("retained_rewrite_identity_failed", windows_error("GetFileInformationByHandle"));
+    identity = identity_from_info(file);
+    if (!identity.regular_file || identity.link_count != 1U || identity.size > 65536U ||
+        !impl_->original_identity.same_object(identity) || (file.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0 ||
+        !inspect_path_no_follow(impl_->path, named_file).ok() || named_file.reparse_or_link ||
+        named_file.kind != PathObjectKind::regular_file || named_file.device != identity.device ||
+        named_file.object != identity.object || named_file.size != identity.size)
+        return IoStatus::failure("retained_rewrite_identity_changed", "Original stream/file identity or attributes changed");
+    bytes.resize(static_cast<std::size_t>(identity.size));
+    LARGE_INTEGER offset {};
+    DWORD count = 0;
+    if (!SetFilePointerEx(impl_->handle, offset, nullptr, FILE_BEGIN) ||
+        !ReadFile(impl_->handle, bytes.data(), static_cast<DWORD>(bytes.size()), &count, nullptr) ||
+        count != bytes.size()) {
+        bytes.clear(); return IoStatus::failure("retained_rewrite_read_failed", windows_error("ReadFile"));
+    }
+    BY_HANDLE_FILE_INFORMATION after {};
+    if (!GetFileInformationByHandle(impl_->handle, &after) || !identity.unchanged(identity_from_info(after))) {
+        bytes.clear(); return IoStatus::failure("retained_rewrite_observation_changed", "Held stream changed during read");
+    }
+    return IoStatus::success();
+#else
+    return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
+#endif
+}
+
+IoStatus StableDirectoryObject::open_child_file_no_follow_for_retained_rewrite(
+    const std::filesystem::path& leaf, const FileIdentity& original_identity,
+    const std::string& original, const std::string& intended,
+    RetainedStreamRewriteState state, RetainedStreamRewriteFile& file) const
+{
+    std::string name;
+    if (!portable_leaf(leaf, name) || !original_identity.regular_file || original_identity.link_count != 1U ||
+        original_identity.size != original.size() || original.empty() || intended.empty() ||
+        original.size() > 65536U || intended.size() > 65536U || file.open() ||
+        !impl_ || !impl_->identity.fixed_local_volume || impl_->identity.filesystem_name != "NTFS")
+        return IoStatus::failure("retained_rewrite_admission_invalid", "Bound original/intended stream inputs are invalid");
+    const auto valid = revalidate(); if (!valid.ok()) return valid;
+#ifdef _WIN32
+    RetainedStreamRewriteFile candidate;
+    auto status = open_relative_windows(impl_->handle, name,
+        GENERIC_READ | GENERIC_WRITE | FILE_READ_ATTRIBUTES, 1, 0x00200040, candidate.impl_->handle, 0);
+    if (!status.ok()) return status;
+    if (!duplicate_handle(impl_->handle, candidate.impl_->parent))
+        return IoStatus::failure("retained_rewrite_parent_duplicate_failed", windows_error("DuplicateHandle"));
+    candidate.impl_->path = impl_->path / leaf;
+    candidate.impl_->parent_path = impl_->path;
+    candidate.impl_->parent_identity = impl_->identity;
+    candidate.impl_->original_identity = original_identity;
+    candidate.impl_->original = original; candidate.impl_->intended = intended;
+    candidate.impl_->state = state;
+    std::string observed; FileIdentity current;
+    status = candidate.observe(observed, current); if (!status.ok()) return status;
+    const bool authorized = state == RetainedStreamRewriteState::original_only ? observed == original :
+        state == RetainedStreamRewriteState::mutation_authorized ?
+            detail::retained_rewrite_bytes_admissible(original, intended, observed) :
+        state == RetainedStreamRewriteState::terminal_verify_only && observed == intended;
+    if (!authorized)
+        return IoStatus::failure("retained_rewrite_foreign_bytes_preserved", "Observed stream is outside its journal-authorized byte state");
+    file = std::move(candidate);
+    return IoStatus::success();
+#else
+    (void)state;
+    return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
+#endif
+}
+
+IoStatus RetainedStreamRewriteFile::verify_intended() const
+{
+    std::string observed; FileIdentity current;
+    const auto status = observe(observed, current); if (!status.ok()) return status;
+    return observed == impl_->intended ? IoStatus::success() :
+        IoStatus::failure("retained_rewrite_intended_not_observed", "Held exact stream is not the intended complete effect");
+}
+
+IoStatus RetainedStreamRewriteFile::rewrite_to_intended()
+{
+    if (!open() || impl_->state != RetainedStreamRewriteState::mutation_authorized)
+        return IoStatus::failure("retained_rewrite_mutation_not_admitted", "Durable domain pre-write authority is required");
+    std::string observed; FileIdentity current;
+    const auto admitted = observe(observed, current); if (!admitted.ok()) return admitted;
+    if (!detail::retained_rewrite_bytes_admissible(impl_->original, impl_->intended, observed))
+        return IoStatus::failure("retained_rewrite_foreign_bytes_preserved", "Held stream is outside its bound byte states");
+    if (observed == impl_->intended) {
+#ifdef _WIN32
+        if (!flush_retained_rewrite(impl_->handle))
+            return IoStatus::failure("retained_rewrite_effect_uncertain", "Intended cached bytes could not be flushed; preserve stream and journal");
+        return verify_intended();
+#else
+        return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
+#endif
+    }
+#ifdef _WIN32
+    if (retained_stream_rewrite_phase_hook) retained_stream_rewrite_phase_hook("before_write");
+    for (std::size_t written = 0; written < impl_->intended.size();) {
+        const auto count = std::min<std::size_t>(4096U, impl_->intended.size() - written);
+        LARGE_INTEGER offset {}; offset.QuadPart = static_cast<LONGLONG>(written);
+        DWORD actual = 0;
+        if (!SetFilePointerEx(impl_->handle, offset, nullptr, FILE_BEGIN) ||
+            !WriteFile(impl_->handle, impl_->intended.data() + written, static_cast<DWORD>(count), &actual, nullptr) ||
+            actual != count || !flush_retained_rewrite(impl_->handle))
+            return IoStatus::failure("retained_rewrite_effect_uncertain", "A prefix write/flush failed; preserve stream and journal");
+        written += count;
+        if (written < impl_->intended.size() && retained_stream_rewrite_phase_hook)
+            retained_stream_rewrite_phase_hook("after_prefix");
+    }
+    if (retained_stream_rewrite_phase_hook) retained_stream_rewrite_phase_hook("after_write");
+    LARGE_INTEGER end {}; end.QuadPart = static_cast<LONGLONG>(impl_->intended.size());
+    if (!SetFilePointerEx(impl_->handle, end, nullptr, FILE_BEGIN) ||
+        !SetEndOfFile(impl_->handle) || !flush_retained_rewrite(impl_->handle))
+        return IoStatus::failure("retained_rewrite_effect_uncertain", "Exact truncation/flush failed; preserve stream and journal");
+    if (retained_stream_rewrite_phase_hook) retained_stream_rewrite_phase_hook("after_truncate");
+    return verify_intended();
+#else
+    return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
+#endif
+}
+
+namespace testing {
+void set_retained_stream_rewrite_phase_hook(void (*hook)(const char*)) { retained_stream_rewrite_phase_hook = hook; }
+void set_retained_stream_rewrite_flush_fault(bool enabled)
+{
+#ifdef _WIN32
+    retained_stream_rewrite_flush_fault = enabled;
+#else
+    (void)enabled;
+#endif
+}
+}
+
+// Additive retained capability methods needed by its durable domain owner.
+const std::filesystem::path& RetainedStreamRewriteFile::path() const noexcept
+{
+    static const std::filesystem::path empty;
+    return impl_ ? impl_->path : empty;
+}
+
+IoStatus RetainedStreamRewriteFile::admit_durable_mutation()
+{
+    if (!open() || impl_->state != RetainedStreamRewriteState::original_only)
+        return IoStatus::failure("retained_rewrite_admission_invalid", "Only the same held original can be admitted");
+    std::string observed; FileIdentity identity;
+    const auto status = observe(observed, identity);
+    if (!status.ok()) return status;
+    if (observed != impl_->original)
+        return IoStatus::failure("retained_rewrite_foreign_bytes_preserved", "Original bytes changed before durable admission");
+    // The caller must already have persisted its complete domain pre-write phase.
+    // This method neither creates that authority nor releases/reopens the file.
+    impl_->state = RetainedStreamRewriteState::mutation_authorized;
+    return IoStatus::success();
+}
+
+IoStatus RetainedStreamRewriteFile::readable_metadata_identity(std::string& identity) const
+{
+    identity.clear();
+#ifdef _WIN32
+    if (!open()) return IoStatus::failure("retained_rewrite_not_open", "");
+    BY_HANDLE_FILE_INFORMATION file {};
+    if (!GetFileInformationByHandle(impl_->handle, &file))
+        return IoStatus::failure("retained_rewrite_metadata_unavailable", windows_error("GetFileInformationByHandle"));
+    constexpr SECURITY_INFORMATION wanted = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
+    DWORD required = 0;
+    if (GetKernelObjectSecurity(impl_->handle, wanted, nullptr, 0, &required) ||
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER || required == 0 || required > 65536U)
+        return IoStatus::failure("retained_rewrite_metadata_unavailable", "Readable security descriptor is unavailable or exceeds its bound");
+    std::vector<unsigned char> descriptor(required);
+    DWORD actual = 0;
+    if (!GetKernelObjectSecurity(impl_->handle, wanted,
+            reinterpret_cast<PSECURITY_DESCRIPTOR>(descriptor.data()), required, &actual) || actual != required)
+        return IoStatus::failure("retained_rewrite_metadata_unavailable", windows_error("GetKernelObjectSecurity"));
+    // Content writes may change archive/write/access metadata. Do not reset them.
+    // Owner/group/DACL, creation and all other readable attributes remain inputs.
+    identity = std::to_string(file.ftCreationTime.dwHighDateTime) + ":" +
+        std::to_string(file.ftCreationTime.dwLowDateTime) + ":" +
+        std::to_string(file.dwFileAttributes & ~static_cast<DWORD>(FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_NORMAL)) + ":";
+    constexpr char hex[] = "0123456789abcdef";
+    for (const unsigned char byte : descriptor) {
+        identity.push_back(hex[byte >> 4]); identity.push_back(hex[byte & 15U]);
+    }
+    return IoStatus::success();
+#else
+    return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
+#endif
+}
 
 } // namespace facman::platform

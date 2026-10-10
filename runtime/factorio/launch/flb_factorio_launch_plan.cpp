@@ -568,9 +568,10 @@ std::string effective_config_ini(
     return out.str();
 }
 
-EffectiveFactorioConfig parse_effective_config(
+EffectiveFactorioConfig parse_effective_config_bytes(
     const fs::path& config_file,
-    const fs::path& mod_root
+    const fs::path& mod_root,
+    const std::string& text
 )
 {
     EffectiveFactorioConfig result;
@@ -581,12 +582,10 @@ EffectiveFactorioConfig parse_effective_config(
         result.problems.push_back("config path is unsafe: " + link_detail);
         return result;
     }
-    StableTextRead read = read_small_file_stable(result.config_file, 65536);
-    if (!read.ok) {
-        result.problems.push_back(std::move(read.problem));
+    if (text.size() > 65536U) {
+        result.problems.push_back("config bytes exceed the existing bound");
         return result;
     }
-    const std::string& text = read.text;
 
     std::istringstream input(text);
     std::string line;
@@ -660,6 +659,20 @@ EffectiveFactorioConfig parse_effective_config(
     }
     result.ok = result.problems.empty();
     return result;
+}
+
+EffectiveFactorioConfig parse_effective_config(const fs::path& config_file, const fs::path& mod_root)
+{
+    EffectiveFactorioConfig result;
+    result.config_file = normalized_absolute(config_file);
+    result.mod_root = normalized_absolute(mod_root);
+    std::string link_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(result.config_file, link_detail)) {
+        result.problems.push_back("config path is unsafe: " + link_detail); return result;
+    }
+    StableTextRead read = read_small_file_stable(result.config_file, 65536);
+    if (!read.ok) { result.problems.push_back(std::move(read.problem)); return result; }
+    return parse_effective_config_bytes(config_file, mod_root, read.text);
 }
 
 std::vector<std::string> build_launch_args(const InstanceLaunchRef& instance)

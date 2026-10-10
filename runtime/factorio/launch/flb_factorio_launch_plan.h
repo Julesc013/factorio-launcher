@@ -130,6 +130,10 @@ std::string effective_config_ini(
     const InstallLaunchRef& install
 );
 
+// Parse owner-held bytes; grants no file, mutation or launch authority.
+EffectiveFactorioConfig parse_effective_config_bytes(const std::filesystem::path& config_file,
+    const std::filesystem::path& mod_root, const std::string& text);
+
 EffectiveFactorioConfig parse_effective_config(
     const std::filesystem::path& config_file,
     const std::filesystem::path& mod_root

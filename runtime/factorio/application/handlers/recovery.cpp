@@ -22,10 +22,12 @@ ApplicationResult recovery_apply(ApplicationContext& context, const RecoveryRequ
     if (transactions::read_record(context.workspace(), request.transaction_id, record, detail) &&
         (record.command_id == "readiness.prepare_configuration" ||
          record.commit_strategy == "missing_config_handle_no_replace_v1" ||
+        record.commit_strategy == "existing_config_retained_stream_rewrite_v1" ||
          record.command_id == "readiness.prepare_selected_save" ||
          record.commit_strategy == "selected_context_handle_no_replace_v1")) {
         const auto owner = record.command_id == "readiness.prepare_configuration" ||
-            record.commit_strategy == "missing_config_handle_no_replace_v1"
+            record.commit_strategy == "missing_config_handle_no_replace_v1" ||
+        record.commit_strategy == "existing_config_retained_stream_rewrite_v1"
                 ? instance::recover_configuration_preparation : instance::recover_selected_save_preparation;
         auto recovered = owner(context.workspace(), request.transaction_id);
         if (!recovered) return refused(safety_refusal("workspace.recovery.apply", recovered.error().code,
