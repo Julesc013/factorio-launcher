@@ -614,8 +614,14 @@ if(TARGET facman_cli)
     endforeach()
   endif()
   set(_facman_resource_fixture_timeout 30)
+  set(_facman_resource_cli_timeout 30)
+  set(_facman_resource_product_timeout 600)
   if(FACMAN_ENABLE_SANITIZERS OR FACMAN_ENABLE_COVERAGE)
     set(_facman_resource_fixture_timeout 60)
+  endif()
+  if(FACMAN_ENABLE_COVERAGE)
+    set(_facman_resource_cli_timeout 60)
+    set(_facman_resource_product_timeout 960)
   endif()
   add_test(NAME facman_resource_product_cli
     COMMAND ${Python3_EXECUTABLE}
@@ -624,12 +630,13 @@ if(TARGET facman_cli)
       --fixture $<TARGET_FILE:facman_resource_identity_smoke>
       ${_facman_resource_runtime_args}
       --fixture-timeout-seconds ${_facman_resource_fixture_timeout}
+      --cli-timeout-seconds ${_facman_resource_cli_timeout}
       --work-root ${CMAKE_CURRENT_BINARY_DIR}/resource-cli-runs)
-  # POSIX runs serialize one fixture child with a 60-second instrumented
-  # allowance and thirteen CLI children with 30-second allowances. Keep the
-  # parent bounded while allowing that complete semantic matrix to finish.
+  # Coverage runs serialize one fixture and fourteen CLI children with bounded
+  # 60-second allowances. Allow the complete matrix plus filesystem overhead;
+  # ordinary CLI and sanitizer allowances remain 30 seconds per CLI child.
   set_tests_properties(facman_resource_product_cli PROPERTIES
-    LABELS "contract;filesystem;package-runtime;security" TIMEOUT 600)
+    LABELS "contract;filesystem;package-runtime;security" TIMEOUT ${_facman_resource_product_timeout})
 endif()
 
 
