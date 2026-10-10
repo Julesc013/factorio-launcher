@@ -69,6 +69,36 @@ bool portable_leaf(const std::filesystem::path& leaf, std::string& value)
         base[3] >= '1' && base[3] <= '9' ? false : true;
 }
 
+// A namespace component, rather than the stricter portable identifier contract.
+bool relative_utf8_leaf(const std::string& name)
+{
+    if (name.empty() || name == "." || name == ".." ||
+        name.find_first_of("\\/:") != std::string::npos ||
+        name.find('\0') != std::string::npos) return false;
+    for (std::size_t index = 0; index < name.size();) {
+        const auto first = static_cast<unsigned char>(name[index]);
+        std::size_t count = 1;
+        std::uint32_t value = first;
+        if (first >= 0x80U) {
+            if ((first & 0xe0U) == 0xc0U) { count = 2; value = first & 0x1fU; }
+            else if ((first & 0xf0U) == 0xe0U) { count = 3; value = first & 0x0fU; }
+            else if ((first & 0xf8U) == 0xf0U) { count = 4; value = first & 0x07U; }
+            else return false;
+        }
+        if (count > name.size() - index) return false;
+        for (std::size_t offset = 1; offset < count; ++offset) {
+            const auto next = static_cast<unsigned char>(name[index + offset]);
+            if ((next & 0xc0U) != 0x80U) return false;
+            value = (value << 6U) | (next & 0x3fU);
+        }
+        if ((count == 2 && value < 0x80U) || (count == 3 && value < 0x800U) ||
+            (count == 4 && value < 0x10000U) || value > 0x10ffffU ||
+            (value >= 0xd800U && value <= 0xdfffU)) return false;
+        index += count;
+    }
+    return true;
+}
+
 #ifdef _WIN32
 using NativeHandle = HANDLE;
 const NativeHandle kInvalidHandle = INVALID_HANDLE_VALUE;
@@ -116,7 +146,19 @@ IoStatus open_relative_windows(
 {
     const OpenRelative open_relative = nt_create_file();
     if (!open_relative) return IoStatus::failure("relative_open_unavailable", "NtCreateFile unavailable");
-    std::wstring name(leaf.begin(), leaf.end());
+    if (leaf.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
+        return IoStatus::failure("relative_leaf_too_long", "UTF-8 input length is not representable");
+    const int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, leaf.data(),
+        static_cast<int>(leaf.size()), nullptr, 0);
+    if (count <= 0)
+        return IoStatus::failure("relative_leaf_invalid", "Invalid UTF-8 filename");
+    if (static_cast<std::size_t>(count) >
+        (std::numeric_limits<USHORT>::max)() / sizeof(wchar_t))
+        return IoStatus::failure("relative_leaf_too_long", "UTF-16 filename exceeds native length");
+    std::wstring name(static_cast<std::size_t>(count), L'\0');
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, leaf.data(),
+        static_cast<int>(leaf.size()), name.data(), count) != count)
+        return IoStatus::failure("relative_leaf_invalid", "UTF-8 filename conversion failed");
     UNICODE_STRING unicode {};
     unicode.Buffer = name.data();
     unicode.Length = static_cast<USHORT>(name.size() * sizeof(wchar_t));
@@ -837,6 +879,19 @@ IoStatus StableDirectoryObject::create_child_directory_exclusive(
 {
     std::string name;
     if (!portable_leaf(leaf, name)) return IoStatus::failure("relative_leaf_invalid", path_to_utf8(leaf));
+    return create_child_directory_exclusive_impl(leaf, name, child);
+}
+
+IoStatus StableDirectoryObject::create_child_directory_exclusive_utf8(
+    const std::string& leaf, StableDirectoryObject& child) const
+{
+    if (!relative_utf8_leaf(leaf)) return IoStatus::failure("relative_leaf_invalid", "Invalid UTF-8 component");
+    return create_child_directory_exclusive_impl(path_from_utf8(leaf), leaf, child);
+}
+
+IoStatus StableDirectoryObject::create_child_directory_exclusive_impl(
+    const std::filesystem::path& leaf, const std::string& name, StableDirectoryObject& child) const
+{
     if (!child.impl_ || child.open()) return IoStatus::failure("directory_object_already_open", name);
     const IoStatus valid = revalidate();
     if (!valid.ok()) return valid;
@@ -1103,6 +1158,20 @@ IoStatus StableDirectoryObject::create_child_file_exclusive(
 {
     std::string name;
     if (!portable_leaf(leaf, name)) return IoStatus::failure("relative_leaf_invalid", path_to_utf8(leaf));
+    return create_child_file_exclusive_impl(leaf, name, maximum_size, child);
+}
+
+IoStatus StableDirectoryObject::create_child_file_exclusive_utf8(
+    const std::string& leaf, std::uint64_t maximum_size, DurableOutputFile& child) const
+{
+    if (!relative_utf8_leaf(leaf)) return IoStatus::failure("relative_leaf_invalid", "Invalid UTF-8 component");
+    return create_child_file_exclusive_impl(path_from_utf8(leaf), leaf, maximum_size, child);
+}
+
+IoStatus StableDirectoryObject::create_child_file_exclusive_impl(
+    const std::filesystem::path& leaf, const std::string& name,
+    std::uint64_t maximum_size, DurableOutputFile& child) const
+{
     if (!child.impl_ || child.impl_->handle != kInvalidHandle ||
         child.impl_->parent_handle != kInvalidHandle ||
         child.impl_->relative_state != DurableOutputFile::Impl::RelativeNamespaceState::none)

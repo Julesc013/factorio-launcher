@@ -175,6 +175,11 @@ public:
         const std::filesystem::path& leaf, StableDirectoryObject& child) const;
     IoStatus create_child_directory_exclusive(
         const std::filesystem::path& leaf, StableDirectoryObject& child) const;
+    // Distinct single-component UTF-8 creation. Rejects namespace escapes and
+    // malformed UTF-8; preserves code points, spaces and platform name limits.
+    // Callers still admit complete paths/collisions under their domain policy.
+    IoStatus create_child_directory_exclusive_utf8(
+        const std::string& leaf, StableDirectoryObject& child) const;
     IoStatus open_child_file_no_follow_pinned(
         const std::filesystem::path& leaf, StableInputFile& child) const;
     IoStatus open_child_file_no_follow_for_retained_rewrite(
@@ -207,6 +212,9 @@ public:
         const std::filesystem::path& leaf,
         std::uint64_t maximum_size,
         DurableOutputFile& child) const;
+    IoStatus create_child_file_exclusive_utf8(
+        const std::string& leaf, std::uint64_t maximum_size,
+        DurableOutputFile& child) const;
     IoStatus flush_metadata() const;
     const PathIdentity& identity() const noexcept;
     const std::filesystem::path& path() const noexcept;
@@ -221,6 +229,12 @@ private:
         const std::filesystem::path& leaf,
         StableDirectoryObject& child,
         bool relative_writes) const;
+    IoStatus create_child_directory_exclusive_impl(
+        const std::filesystem::path& leaf, const std::string& name,
+        StableDirectoryObject& child) const;
+    IoStatus create_child_file_exclusive_impl(
+        const std::filesystem::path& leaf, const std::string& name,
+        std::uint64_t maximum_size, DurableOutputFile& child) const;
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
