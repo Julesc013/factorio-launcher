@@ -1,0 +1,110 @@
+{
+  "schema": "facman.scoped_self_setup_layout_source.v1",
+  "result": "PASS_SOURCE_FIXTURES",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base": "efef7657d5051a912acc19fdbbc4c519e45b2843",
+  "source_paths_sha256": {
+    "tools/self_setup_package.py": "86344c367e469a01b12398beae062ddd49e43745ab32d903b863407129124a36",
+    "tests/test_self_setup_package.py": "1eb549a52541be8d8163ea60a5ac6b6aeb6c7d723e71fba03d983d0360d42063",
+    ".github/workflows/ci.yml": "ce145c931a6f434ab4f33409bfe394ac610ed513942dddd79cb6234411213519",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/task.yaml": "fb45a516a40b04bbe73e1fdea4545f5341323df6abced70017655ccfd751babb",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": "21516c923f5b35fb82d33666abbee0a21e089823b6d9448c83c8f911933c5e56"
+  },
+  "proposal_sha256": "17916995a7b6b69fb907ec0c79eea76b34536bb54dc06b9e264ec58deb199b9e",
+  "application_sha256": "4f1196b421eb7d989b0e50f4cdf6b873a4609042cbdcbcdf3db1da88cc880d4b",
+  "prior_independent_source_review_sha256": "4a6d9c5c938f63fced8c0db0a2ff47b29b09e1a96efd3793617937094be0308f",
+  "driver_review_sha256": "6a1e0ab846d18d82c14a76c734647ea9033dc88277446e9807216c7591f1393f",
+  "evidence": [
+    {
+      "check": "focused-tests",
+      "receipt_sha256": "4724baf9316bfa3e053e45b23f64148d9d747c882a5ebbaca52297e013070190",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2453aa54f6478274c50061dcc226aba7713ace65e256359525a70ece569a4715",
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\Microsoft\\WindowsApps\\py.EXE",
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_self_setup_package",
+        "tests.test_ci_proof",
+        "tests.test_windows_package_build_composition"
+      ],
+      "exit_code": 0,
+      "primary_stopped": true,
+      "job_empty_observed": true
+    },
+    {
+      "check": "generated-contracts",
+      "receipt_sha256": "f0aa1ae9a3e50f0a5501f00753bc5b303aa343980f02597a971575a3f9f31237",
+      "stdout_sha256": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\Microsoft\\WindowsApps\\py.EXE",
+        "-3",
+        "-B",
+        "tools/codegen/generate_contracts.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "primary_stopped": true,
+      "job_empty_observed": true
+    },
+    {
+      "check": "strict",
+      "receipt_sha256": "07aa31fdf0d1bd84fa18434c003edf825b634857e827e85fbd9d1cfd8875fb4a",
+      "stdout_sha256": "f2ef3540657eadfb0c5704c585dbe6c4368e97d96d4c9ccdaf80e5022b6d80eb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\Microsoft\\WindowsApps\\py.EXE",
+        "-3",
+        "-B",
+        "tools/strict_check.py"
+      ],
+      "exit_code": 0,
+      "primary_stopped": true,
+      "job_empty_observed": true
+    },
+    {
+      "check": "final-diff-check",
+      "receipt_sha256": "423ffb1ac246ffd4536b9e710f6d4f71aa09e4f5d5243ced2d2a7c4b3e5252a8",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "C:\\Program Files\\Git\\cmd\\git.EXE",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "primary_stopped": true,
+      "job_empty_observed": true
+    }
+  ],
+  "tests_run": 35,
+  "skipped": 0,
+  "outcome": "Keep canonical Windows product GUI at the generation root, preserve bin CLI and resource-file bytes, and compose the existing one-file Setup overlay from the same payload and raw maintenance bootstrap.",
+  "qualification": "Synthetic package fixtures with maintained native-compatible overlay metadata/hash oracle; no actual PE, Setup, GUI, host or game execution.",
+  "final_frozen_source_assurance": "Required before commit; retained as a separate independently authored exact-hash receipt.",
+  "external_records": {
+    "application": "self-setup-gui-layout-applied-qualification-06.json",
+    "evidence_root": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence"
+  },
+  "authority": {
+    "new_native_builds": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "new_candidates": 0,
+    "pins_changed": false,
+    "protected_controls_changed": false,
+    "parallel_universal_primary_preserved": true
+  },
+  "excluded_scope": [
+    "Actual produced canonical GUI/Setup admission and execution",
+    "Incomplete pack extraction resume",
+    "Full Make Ready composition",
+    "Real Factorio Play",
+    "Genuine human and host acceptance",
+    "Full F11 or Beta closure"
+  ]
+}
