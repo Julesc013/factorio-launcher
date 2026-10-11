@@ -261,3 +261,51 @@ Exact applied retained-extraction source is bound to independently accepted priv
 2026-10-10 PR402 actual Linux coverage recovery:55/56 native tests passed, including archive smoke. The instrumented relocated resource verification exceeded its30-second semantic-test child deadline. Add a bounded60-second CLI allowance only for coverage and a matching960-second outer matrix bound (14 CLI children plus fixture and60-second receipt/filesystem margin); ordinary and sanitizer CLI allowances stay30 seconds, missing-runtime probes stay8 seconds, every semantic assertion remains. Preserve original failed source/job/log receipts; no blind rerun, source native rebuild or optional candidate. Qualify the actual helper flow and required CI on the corrected source before merge/package admission.
 
 The corrected source passed its required Linux coverage check. The macOS Python promotion suite then failed one stale architecture assertion among 2001 methods: it still required a literal600-second resource parent timeout. Correct that existing assertion to bind the policy variable already used by CTest. Requalify the affected architecture and resource helper tests under Python3.11 and3.14, plus strict/generated/diff checks, before advancing the same PR. Product, timeout-policy and helper bytes remain unchanged; preserve both failed campaigns and retain all source/merge/package gates.
+
+
+Make Ready ordinary preparation continuation: the preceding retained-extraction
+source and exact produced Windows public-owner proof are integrated and
+independently accepted. This slice reuses the ordinary presentation request
+and semantic receipt to dispatch exactly one routing-configuration or selected
+save context owner per fresh revision. Configuration takes priority; a later
+fresh action can record the selected context. Successful component results
+remain partial, reference the actual owner command/transaction/plan and require
+a fresh revision. The generic profile selector retains its stored patch.
+Unknown receipt replay never redispatches an owner; recovery remains with the
+existing domain journal. Installation, content and profile reconstruction,
+full Make Ready composition, Play, live click-to-backend and game/human/Beta
+acceptance remain open. Seven source/oracle files were reviewed before
+admission. Native, focused recovery, three-mode compiled controls, generated
+state, independent final review, required CI and exact produced-package
+qualification remain required before this new action is accepted. No new
+root, clone, worktree or optional platform campaign is created.
+
+
+Make Ready preflight01 failed the unchanged presentation-service complexity
+ratchet (497 points against494); no configure or native build ran. Preserve
+its exact source and strict evidence. Move the read-only four-action plan
+selector into existing action support, retaining the same refusal before
+durable claim and exactly one owner dispatch after claim. The corrected
+service has493 points; the budget and every behavioral oracle remain
+unchanged. Strict/generation, actual frozen-source assurance and first native
+qualification remain required; no failed preflight is qualified.
+
+
+Make Ready campaign01 passed the actual shared Release build and five native
+smokes, then its first new method failed because --dry-run is not a CLI
+option. Preserve the complete failed campaign and original oracle. Exercise
+real dry_run=true through the existing v2 rpc --stdio transport, requiring
+the matching presentation.action response, explicit-confirmation refusal
+and unchanged workspace. Product/compiled source and every native binary
+remain unchanged; native reuse requires separate exact frozen review02.
+All five new methods, three-mode control,67 regressions and historical
+replays remain outstanding. No new build, root, clone or candidate.
+
+
+Campaign02 reached the genuine RPC dry-run route and correctly rejected
+the oracle mismatching transport and semantic identities. Preserve that
+failed campaign and streams. Align request/operation/attempt identities
+and additionally assert the semantic refusal and returned identities.
+Unchanged compiled source/build/five smokes remain reusable only under
+new exact frozen review04. Focused/control/historical acceptance remains
+outstanding; no new build, root, clone or candidate.

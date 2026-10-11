@@ -15,9 +15,13 @@ internal static class SelectedSaveHarness
         try
         {
             Require(args.Length == 2 || args.Length == 3, "gallery and actual receipt required");
+            Require(args.Length == 2 || args[2] == "configuration" || args[2] == "make-ready", "unknown preparation control mode");
             bool configuration = args.Length == 3 && args[2] == "configuration";
-            string action = configuration ? "readiness.prepare_configuration" : "readiness.prepare_selected_save";
-            string label = configuration ? "Prepare routing configuration" : "Record selected save context";
+            bool makeReady = args.Length == 3 && args[2] == "make-ready";
+            string action = makeReady ? "readiness.prepare" :
+                configuration ? "readiness.prepare_configuration" : "readiness.prepare_selected_save";
+            string label = makeReady ? "Prepare this instance" :
+                configuration ? "Prepare routing configuration" : "Record selected save context";
             var gallery = C1GallerySession.Parse(File.ReadAllText(args[0]));
             using (var form = new C1ShellForm(gallery))
             {
@@ -32,6 +36,14 @@ internal static class SelectedSaveHarness
             var receipt = (SemanticActionReceipt)typeof(SemanticActionReceipt).GetMethod(
                 "ParseEnvelope", BindingFlags.Static | BindingFlags.NonPublic).Invoke(
                     null, new object[] { File.ReadAllText(args[1]) });
+            Require(receipt.ActionId == action, "actual receipt belongs to a different preparation action");
+            if (makeReady)
+            {
+                Require((string)receipt.ActionPayload["composition"] == "partial" &&
+                    !(bool)receipt.ActionPayload["readiness_complete"] &&
+                    !(bool)receipt.ActionPayload["execution_started"] &&
+                    !(bool)receipt.ActionPayload["permit_issued"], "partial control receipt claimed wider authority");
+            }
             Require(receipt.Outcome == "completed" && receipt.ReplacementSnapshot != null &&
                 receipt.ReplacementSnapshot.SelectedContext.InstanceId == "main" &&
                 receipt.ReplacementSnapshot.SelectedContext.LaunchIntent == "load_save",

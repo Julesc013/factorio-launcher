@@ -1229,6 +1229,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             launch_executor_->available(request);
         actions.add_object(selected_save_action_descriptor(selected_save_preparation, request.selected_instance_id));
         actions.add_object(configuration_action_descriptor(configuration_preparation, request.selected_instance_id));
+        actions.add_object(make_ready_action_descriptor(configuration_preparation, selected_save_preparation,
+            request.selected_instance_id, request.launch_intent));
         actions.add_object(action_descriptor(
             "launch.play", "run.execute",
             last_run.state == LastRunAuthorityState::authoritative_record_available
@@ -1646,14 +1648,10 @@ ApplicationResult PresentationService::action(
             payload, facman::core::OutcomeKind::invalid_argument);
     }
 
+    MakeReadyStage make_ready_stage;
     std::string profile_plan;
-    if (request.action_id == "profile.select" || request.action_id == "readiness.prepare_selected_save" ||
-        request.action_id == "readiness.prepare_configuration") {
-        auto bound = request.action_id == "profile.select"
-            ? snapshot_profile_plan(current_snapshot, request.selected_instance_id, request.profile_id)
-            : request.action_id == "readiness.prepare_configuration"
-                ? snapshot_configuration_plan(current_snapshot, request.selected_instance_id, request.launch_intent)
-                : snapshot_selected_save_plan(current_snapshot, request.selected_instance_id, request.launch_intent);
+    if (has_preparation_plan(request.action_id)) {
+        auto bound = snapshot_action_preparation_plan(current_snapshot, request, make_ready_stage);
         if (!bound) {
             const std::string payload = action_result_json(
                 request, "refused_before_effects", current_snapshot, {},
@@ -1993,6 +1991,23 @@ ApplicationResult PresentationService::action(
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
         }
+    } else if (request.action_id == "readiness.prepare") {
+        // Dispatch exactly one already reviewed owner. Newly available work must
+        // be admitted against a fresh revision; no combined rollback is promised.
+        const auto owner = make_ready_stage.component == MakeReadyComponent::routing_configuration
+            ? lifecycle::prepare_configuration : lifecycle::prepare_selected_save;
+        auto prepared = owner(context_.workspace(),
+            {request.selected_instance_id, request.launch_intent}, make_ready_stage.plan_sha256,
+            request.durable_operation_id, request.attempt_id);
+        if (prepared) prepared = make_ready_stage_result(make_ready_stage,
+            request.selected_instance_id, request.launch_intent, prepared.value());
+        const ApplicationResult replacement = query(query_request);
+        const auto kind = prepared ? facman::core::OutcomeKind::ok : prepared.error().kind;
+        output = action_result_json(request, prepared ? "completed" :
+            (kind == facman::core::OutcomeKind::recovery_required ? "recovery_required" : "refused_before_effects"),
+            replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+            prepared ? prepared.value() : std::string(), prepared ? std::string() : prepared.error().code,
+            prepared ? std::string() : prepared.error().message, false, {"workspace_write"});
     } else if (request.action_id == "readiness.prepare_selected_save" || request.action_id == "readiness.prepare_configuration") {
         const auto owner = request.action_id == "readiness.prepare_configuration"
             ? lifecycle::prepare_configuration : lifecycle::prepare_selected_save;

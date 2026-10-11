@@ -328,9 +328,118 @@ facman::core::Result<std::string> snapshot_configuration_plan(const std::string&
     return Result::success(sha);
 }
 
+facman::core::Result<MakeReadyStage> snapshot_make_ready_stage(const std::string& snapshot,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    using Result = facman::core::Result<MakeReadyStage>;
+    auto configuration = snapshot_configuration_plan(snapshot, instance_id, launch_intent);
+    if (configuration) return Result::success(
+        {MakeReadyComponent::routing_configuration, configuration.take_value()});
+    // Only a satisfied routing observation permits selected-context admission.
+    // Every other owner refusal remains a refusal, including missing repair support.
+    if (configuration.error().code != "configuration_already_current")
+        return Result::failure(configuration.error());
+    auto selected = snapshot_selected_save_plan(snapshot, instance_id, launch_intent);
+    if (!selected) return Result::failure(selected.error());
+    return Result::success({MakeReadyComponent::selected_save_declared_context, selected.take_value()});
+}
+
+json::ObjectBuilder make_ready_action_descriptor(const std::string& configuration,
+    const std::string& selected_save, const std::string& instance_id, const std::string& launch_intent)
+{
+    // These reports are the same reports bound into the presentation revision.
+    json::ObjectBuilder dependencies;
+    add_json(dependencies, "configuration_preparation", configuration);
+    add_json(dependencies, "selected_save_preparation", selected_save);
+    json::ObjectBuilder snapshot;
+    snapshot.add_object("dependency_identities", dependencies);
+    auto stage = snapshot_make_ready_stage(snapshot.serialize(), instance_id, launch_intent);
+    const std::vector<ActionInputField> fields {{"selected_instance_id", "Selected instance", "enum", true,
+        instance_id, instance_id.empty() ? std::vector<std::string>() : std::vector<std::string> {instance_id}}};
+    return action_descriptor("readiness.prepare", "presentation.action", "Make Ready",
+        "manage", "workspace_write", stage.ok(), stage ? nullptr : stage.error().code.c_str(), "explicit",
+        "facman.semantic_action_input.v1", fields);
+}
+
+facman::core::Result<std::string> make_ready_stage_result(const MakeReadyStage& stage,
+    const std::string& instance_id, const std::string& launch_intent, const std::string& owner_result)
+{
+    using Result = facman::core::Result<std::string>;
+    const bool configuration = stage.component == MakeReadyComponent::routing_configuration;
+    const char* owner_command = configuration ? "readiness.prepare_configuration" : "readiness.prepare_selected_save";
+    const char* owner_schema = configuration ? "factorio.configuration_preparation_result.v1"
+        : "factorio.selected_save_preparation_result.v1";
+    auto owner = json::parse(owner_result);
+    const auto false_field = [&](const char* name) {
+        const auto* field = owner ? owner.value().find(name) : nullptr;
+        auto value = field ? field->bool_value() : facman::core::Result<bool>::failure({"missing", "missing", {}});
+        return value && !value.value();
+    };
+    if (!owner || !owner.value().is_object() || string_field(owner.value(), "schema") != owner_schema ||
+        string_field(owner.value(), "command") != owner_command ||
+        string_field(owner.value(), "instance_id") != instance_id ||
+        string_field(owner.value(), "transaction_id").empty() ||
+        string_field(owner.value(), "composition") != "partial" ||
+        !false_field("execution_started") || !false_field("permit_issued") || !lower_hex_digest(stage.plan_sha256))
+        return Result::failure({"make_ready_owner_result_unknown",
+            "The owner may have committed; inspect its journal before any retry", {},
+            facman::core::OutcomeKind::recovery_required});
+    json::ObjectBuilder completed;
+    completed.add_string("component", configuration ? "routing_configuration" : "selected_save_declared_context");
+    completed.add_string("owner_command", owner_command);
+    completed.add_string("transaction_id", string_field(owner.value(), "transaction_id"));
+    completed.add_string("plan_sha256", stage.plan_sha256);
+    completed.add_value("owner_result", owner.value());
+    json::ArrayBuilder effects;
+    effects.add_object(completed);
+    json::ArrayBuilder deferred;
+    if (configuration && launch_intent == "load_save") {
+        json::ObjectBuilder next;
+        next.add_string("component", "selected_save_declared_context");
+        next.add_string("reason", "fresh_revision_required");
+        deferred.add_object(next);
+    }
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.make_ready_preparation_result.v1");
+    output.add_string("command", "readiness.prepare");
+    output.add_string("instance_id", instance_id);
+    output.add_string("launch_intent", launch_intent);
+    output.add_string("composition", "partial");
+    output.add_array("completed_components", effects);
+    output.add_array("deferred_components", deferred);
+    output.add_bool("fresh_revision_required", true);
+    output.add_bool("readiness_complete", false);
+    output.add_bool("execution_started", false);
+    output.add_bool("permit_issued", false);
+    output.add_string("factorio_support_claim", "unclaimed");
+    return Result::success(output.serialize());
+}
+
+bool has_preparation_plan(const std::string& action_id)
+{
+    return action_id == "profile.select" || action_id == "readiness.prepare_selected_save" ||
+        action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare";
+}
+
+facman::core::Result<std::string> snapshot_action_preparation_plan(const std::string& snapshot,
+    const SemanticActionRequest& request, MakeReadyStage& make_ready_stage)
+{
+    using Result = facman::core::Result<std::string>;
+    if (request.action_id != "readiness.prepare")
+        return request.action_id == "profile.select"
+            ? snapshot_profile_plan(snapshot, request.selected_instance_id, request.profile_id)
+            : request.action_id == "readiness.prepare_configuration"
+                ? snapshot_configuration_plan(snapshot, request.selected_instance_id, request.launch_intent)
+                : snapshot_selected_save_plan(snapshot, request.selected_instance_id, request.launch_intent);
+    auto bound = snapshot_make_ready_stage(snapshot, request.selected_instance_id, request.launch_intent);
+    if (!bound) return Result::failure(bound.error());
+    make_ready_stage = bound.take_value();
+    return Result::success(make_ready_stage.plan_sha256);
+}
+
 bool effectful_semantic_action(const std::string& action_id)
 {
-    return action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
+    return action_id == "readiness.prepare" || action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
         action_id == "installation.register_read_only" ||
         action_id == "instance.create_isolated" ||
         action_id == "profile.create" ||
