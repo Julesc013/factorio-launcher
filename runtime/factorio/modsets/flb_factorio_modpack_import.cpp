@@ -37,6 +37,44 @@ bool bind_text(tx::Record& record, const std::string& path, const std::string& b
     record.expected_files.push_back({relative.take_value(), hash.take_value(), bytes.size()});
     return true;
 }
+bool bind_pack_source(tx::Record& record, const pack_import::Source& source,
+    const PackImportRequest& request, std::string& detail)
+{
+    auto installed = json::parse(record.operation_context);
+    if (!installed || !installed.value().is_object()) {
+        detail = "Import installation binding is unavailable"; return false;
+    }
+    json::ObjectBuilder binding;
+    for (const auto& key : installed.value().object_keys()) {
+        const auto* value = installed.value().find(key);
+        if (!value || !binding.add_value(key, *value)) {
+            detail = "Import installation binding could not be retained"; return false;
+        }
+    }
+    json::ObjectBuilder source_binding;
+    source_binding.add_string("schema", "facman.modpack_import_source.v1");
+    source_binding.add_string("archive_sha256", source.archive_sha256);
+    (void)source_binding.add_unsigned_integer("archive_size", source.plan.archive_size);
+    source_binding.add_string("manifest_sha256", digest(source.manifest_json));
+    source_binding.add_string("lock_sha256", digest(source.lock_json));
+    source_binding.add_string("instance_id", request.instance_id);
+    source_binding.add_string("install_id", request.install_id);
+    source_binding.add_string("display_name", request.display_name.empty() ? source.manifest.name : request.display_name);
+    binding.add_object("source_binding", source_binding);
+    const auto context = binding.serialize();
+    if (context.size() > 256U * 1024U) {
+        detail = "Import source binding exceeds the journal budget"; return false;
+    }
+    for (const auto& file : source.files) {
+        auto relative = tx::RelativePath::parse(file.path);
+        auto hash = facman::core::Sha256Digest::parse(file.sha256);
+        if (!relative || !hash) { detail = "Unsafe import source inventory"; return false; }
+        record.expected_files.push_back({relative.take_value(), hash.take_value(), file.bytes});
+    }
+    record.operation_context = context;
+    record.completed_steps.push_back("pack_source_inventory_bound");
+    return true;
+}
 bool pause(const fs::path& workspace, const char* point)
 {
     const char* requested = std::getenv("FACMAN_TEST_MODPACK_IMPORT_PAUSE");
@@ -93,14 +131,19 @@ facman::core::Result<std::string> import_modpack(const fs::path& workspace_input
     if (!install_directory.open_no_follow(install_record.root).ok()) return failure("modpack_install_incompatible", "Local installation is unsafe");
     auto inventory = facman::factorio::mods::local_inventory(workspace);
     if (!inventory) return failure(inventory.error().code, inventory.error().message);
-    // Check virtual entries before producing any staging effects.
+    // Bind the same selected built-ins before any extraction effects.
+    std::vector<fs::path> builtin_metadata;
     for (const auto& entry : source.manifest.content_lock.entries) {
         if (!entry.virtual_package) continue;
         bool found = false;
         for (const auto& mod : inventory.value()) {
             if (mod.virtual_package && mod.valid && mod.source == "install-data:" + install_id.value().str() &&
                 mod.name == entry.name && mod.version == entry.version && mod.file_name == entry.file_name &&
-                !facman::base::path_crosses_link_or_reparse_point(mod.file_path / "info.json", detail)) found = true;
+                !facman::base::path_crosses_link_or_reparse_point(mod.file_path / "info.json", detail)) {
+                builtin_metadata.push_back(mod.file_path / "info.json");
+                found = true;
+                break;
+            }
         }
         if (!found) return failure("modpack_install_incompatible", "A selected built-in package is unavailable or incompatible: " + entry.name);
     }
@@ -119,6 +162,11 @@ facman::core::Result<std::string> import_modpack(const fs::path& workspace_input
     record.staging_roots = {staging};
     record.commit_strategy = "modpack_instance_no_replace_v1";
     record.effect_parent_identity = tx::directory_effect_identity(destination_parent);
+    // The existing first durable journal contains source/request/install truth.
+    // This does not authorize resuming legacy or incompletely extracted stages.
+    if (!tx::bind_pack_import_install(record, workspace, install_id.value().str(), builtin_metadata, detail) ||
+        !bind_pack_source(record, source, request, detail))
+        return failure("modpack_install_incompatible", detail);
     auto started = tx::TransactionSession::begin(workspace, std::move(record));
     if (!started) return failure(started.error().code, started.error().message);
     auto session = started.take_value();
@@ -156,9 +204,9 @@ facman::core::Result<std::string> import_modpack(const fs::path& workspace_input
         return retained("modpack_staging_changed", "Staged directory differs from its exclusively created object");
     auto selected = pack_import::validate_selected(source, staging, inventory.value(), install_id.value().str());
     if (!selected) return retained(selected.error().code, selected.error().message);
-    std::vector<fs::path> builtin_metadata;
-    for (const auto& mod : selected.value()) if (mod.virtual_package) builtin_metadata.push_back(mod.file_path / "info.json");
-    if (!tx::bind_pack_import_install(session.record(), workspace, install_id.value().str(), builtin_metadata, detail))
+    // Revalidate the original write-ahead binding; never replace it with later
+    // install metadata that changed during extraction.
+    if (!tx::verify_pack_import_install(session.record(), workspace, detail))
         return retained("modpack_install_incompatible", detail);
     facman::workspace::InstanceRecord instance;
     instance.id = id.take_value();
@@ -191,12 +239,6 @@ facman::core::Result<std::string> import_modpack(const fs::path& workspace_input
     receipt.add_bool("offline", true);
     const auto receipt_text = receipt.serialize() + "\n";
     if (!lifecycle::prepare_instance_layout(staging, detail)) return retained("persistent_write_refused", detail);
-    for (const auto& file : source.files) {
-        auto relative = tx::RelativePath::parse(file.path);
-        auto hash = facman::core::Sha256Digest::parse(file.sha256);
-        if (!relative || !hash) return retained("modpack_invalid", "Unsafe source inventory");
-        session.record().expected_files.push_back({relative.take_value(), hash.take_value(), file.bytes});
-    }
     const std::vector<std::pair<std::string, std::string>> generated {
         {"mods/modset-lock.v1.json", target_lock}, {"instance.v1.json", lifecycle::instance_manifest_json(instance)},
         {"config/config.ini", lifecycle::instance_effective_config(instance, install)}, {"modpack-import.v1.json", receipt_text}};

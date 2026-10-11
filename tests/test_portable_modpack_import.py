@@ -378,6 +378,55 @@ class PortableModpackImportTests(unittest.TestCase):
                 if change == "replacement":
                     self.assertEqual(snapshot(parked), snapshot(stage))
 
+    def test_extraction_retains_the_original_install_binding_on_metadata_drift(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="pack-install-drift-") as value:
+            workspace = Path(value)
+            source, pack = self.make_pack(workspace)
+            source_before = snapshot(source)
+            local_install = workspace / "local-install"
+            shutil.copytree(FIXTURE_INSTALL, local_install)
+            call(workspace, "installs", "import", str(local_install), "--id", "drift")
+            metadata = local_install / "data/base/info.json"
+            original = metadata.read_bytes()
+            process = subprocess.Popen([str(facman_executable()), "--workspace", str(workspace),
+                "modsets", "import", str(pack), "--instance", "reconstructed", "--install", "drift", "--json"],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                env=dict(os.environ, FACMAN_TEST_MODPACK_IMPORT_PAUSE="precreate"))
+            try:
+                signal = workspace / ".facman-modpack-import-precreate-paused"
+                deadline = time.monotonic() + 20
+                while not signal.exists() and process.poll() is None and time.monotonic() < deadline:
+                    time.sleep(0.05)
+                self.assertTrue(signal.exists(), "Import did not reach the write-ahead binding boundary")
+                self.assertFalse((workspace / ".facman-pack-import-reconstructed").exists())
+                metadata.write_bytes(original + b"\n ")
+                (workspace / ".facman-modpack-import-precreate-release").write_bytes(b"release\n")
+                out, err = process.communicate(timeout=20)
+                self.assertEqual((3, ""), (process.returncode, err), out)
+                envelope = json.loads(out)
+                self.assertEqual("facman.transport_response.v2", envelope["schema"])
+                payload = envelope.get("payload")
+                refusal_code = payload["refusal"]["code"] if payload is not None else envelope["error"]["code"]
+                self.assertEqual("modpack_install_incompatible", refusal_code)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate(timeout=10)
+            stage = workspace / ".facman-pack-import-reconstructed"
+            self.assertTrue(stage.is_dir())
+            self.assertFalse((stage / "instance.v1.json").exists())
+            self.assertFalse((stage / "config/config.ini").exists())
+            self.assertFalse((workspace / "instances/reconstructed").exists())
+            transactions = call(workspace, "workspace", "recovery", "inspect")["transactions"]
+            tx = next(item["transaction_id"] for item in transactions if item["command_id"] == "modsets.import")
+            journal = json.loads((workspace / "transactions" / f"{tx}.transaction.v1.json").read_bytes())
+            binding = json.loads(journal["operation_context"])
+            bound = next(item for item in binding["files"] if Path(item["path"]) == metadata)
+            self.assertEqual((len(original), digest(original)), (bound["size"], bound["sha256"]))
+            self.assertEqual(original + b"\n ", metadata.read_bytes())
+            self.assertNotIn("pack_inventory_bound", journal["completed_steps"])
+            self.assertEqual(source_before, snapshot(source))
+
     def test_incomplete_extraction_is_retained_and_recovery_does_not_delete_it(self) -> None:
         with tempfile.TemporaryDirectory() as value:
             workspace = Path(value)
@@ -389,9 +438,31 @@ class PortableModpackImportTests(unittest.TestCase):
             before = snapshot(stage)
             transactions = call(workspace, "workspace", "recovery", "inspect")["transactions"]
             tx = next(item["transaction_id"] for item in transactions if item["command_id"] == "modsets.import")
+            journal_path = workspace / "transactions" / f"{tx}.transaction.v1.json"
+            journal_before = journal_path.read_bytes()
+            journal = json.loads(journal_before)
+            self.assertIn("pack_source_inventory_bound", journal["completed_steps"])
+            self.assertNotIn("pack_inventory_bound", journal["completed_steps"])
+            binding = json.loads(journal["operation_context"])
+            self.assertEqual("facman.modpack_import_install.v1", binding["schema"])
+            self.assertTrue(binding["root_identity"])
+            self.assertTrue(binding["files"])
+            source_binding = binding["source_binding"]
+            with zipfile.ZipFile(pack) as archive:
+                expected = {name: (len(archive.read(name)), digest(archive.read(name))) for name in archive.namelist()}
+                self.assertEqual(expected, {item["path"]: (item["size"], item["sha256"]) for item in journal["expected_files"]})
+                self.assertEqual(dict(schema="facman.modpack_import_source.v1", archive_sha256=digest(pack.read_bytes()),
+                    archive_size=pack.stat().st_size, manifest_sha256=digest(archive.read("modpack-manifest.v1.json")),
+                    lock_sha256=digest(archive.read("modset-lock.v1.json")), instance_id="reconstructed", install_id="fixture",
+                    display_name="Restored pack"), source_binding)
+            workspace_before_plan = snapshot(workspace)
+            plan = call(workspace, "workspace", "recovery", "plan", tx)
+            self.assertEqual(["preserve_incomplete_pack_staging_for_review"], plan["transactions"][0]["actions"])
+            self.assertEqual(workspace_before_plan, snapshot(workspace))
             refused = call(workspace, "workspace", "recovery", "apply", tx, success=False)
             self.assertEqual("recovery_modpack_import_unsafe", refused["refusal"]["code"])
             self.assertEqual(before, snapshot(stage))
+            self.assertEqual(journal_before, journal_path.read_bytes())
             self.assertFalse((workspace / "instances/reconstructed").exists())
 
 
