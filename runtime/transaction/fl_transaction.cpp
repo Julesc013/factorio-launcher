@@ -1243,7 +1243,10 @@ record.command_id == "readiness.prepare_selected_save" ||
             ? "verify_and_resume_missing_configuration_owner_preserving_ambiguous_objects"
             : "verify_and_resume_selected_context_owner_preserving_ambiguous_objects");
     else if (record.command_id == "modsets.import")
-        record.recovery_actions.push_back("verify_and_resume_owned_pack_instance");
+        record.recovery_actions.push_back(
+            std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_inventory_bound") == record.completed_steps.end()
+                ? "preserve_incomplete_pack_staging_for_review"
+                : "verify_and_resume_owned_pack_instance");
     else if (record.command_id == "modsets.export" &&
              record.commit_strategy == "portable_modpack_export_destination_volume_atomic_no_replace")
         record.recovery_actions.push_back("preserve_portable_export_staging_for_review");
