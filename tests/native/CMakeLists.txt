@@ -38,13 +38,15 @@ if(TARGET facman_cli)
     LABELS "integration;filesystem;transaction;recovery;package-runtime"
     TIMEOUT 120)
   add_test(NAME facman_modpack_import_product
-    COMMAND ${Python3_EXECUTABLE} -m unittest discover
+    COMMAND ${Python3_EXECUTABLE} -m unittest discover -v
       -s ${PROJECT_SOURCE_DIR}/tests -p test_portable_modpack_import.py)
   set_tests_properties(facman_modpack_import_product PROPERTIES
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     ENVIRONMENT "FACMAN_CLI_EXE=$<TARGET_FILE:facman_cli>"
     LABELS "integration;filesystem;transaction;recovery;package-runtime"
-    TIMEOUT 180)
+    # The expanded loss/recovery matrix exceeds three minutes on Windows.
+    # Keep all product cases required under a bounded ten-minute allowance.
+    TIMEOUT 600)
 endif()
 
 if(WIN32 AND TARGET facman_setup)
