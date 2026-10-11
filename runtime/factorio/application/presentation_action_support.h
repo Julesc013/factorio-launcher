@@ -73,6 +73,22 @@ facman::core::json::ObjectBuilder configuration_action_descriptor(
 facman::core::Result<std::string> snapshot_configuration_plan(const std::string& snapshot,
     const std::string& instance_id, const std::string& launch_intent);
 
+enum class MakeReadyComponent { routing_configuration, selected_save_declared_context };
+struct MakeReadyStage {
+    MakeReadyComponent component = MakeReadyComponent::routing_configuration;
+    std::string plan_sha256;
+};
+facman::core::Result<MakeReadyStage> snapshot_make_ready_stage(const std::string& snapshot,
+    const std::string& instance_id, const std::string& launch_intent);
+facman::core::json::ObjectBuilder make_ready_action_descriptor(
+    const std::string& configuration, const std::string& selected_save,
+    const std::string& instance_id, const std::string& launch_intent);
+facman::core::Result<std::string> make_ready_stage_result(const MakeReadyStage& stage,
+    const std::string& instance_id, const std::string& launch_intent, const std::string& owner_result);
+bool has_preparation_plan(const std::string& action_id);
+facman::core::Result<std::string> snapshot_action_preparation_plan(const std::string& snapshot,
+    const SemanticActionRequest& request, MakeReadyStage& make_ready_stage);
+
 } // namespace facman::factorio::application
 
 #endif

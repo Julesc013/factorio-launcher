@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_make_ready_preparation_result.v1.schema.json",
+  "title": "Partial Make Ready owner result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "instance_id",
+    "launch_intent",
+    "composition",
+    "completed_components",
+    "deferred_components",
+    "fresh_revision_required",
+    "readiness_complete",
+    "execution_started",
+    "permit_issued",
+    "factorio_support_claim"
+  ],
+  "properties": {
+    "schema": {
+      "const": "factorio.make_ready_preparation_result.v1"
+    },
+    "command": {
+      "const": "readiness.prepare"
+    },
+    "instance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "launch_intent": {
+      "enum": [
+        "menu",
+        "load_save"
+      ]
+    },
+    "composition": {
+      "const": "partial"
+    },
+    "fresh_revision_required": {
+      "const": true
+    },
+    "readiness_complete": {
+      "const": false
+    },
+    "execution_started": {
+      "const": false
+    },
+    "permit_issued": {
+      "const": false
+    },
+    "factorio_support_claim": {
+      "const": "unclaimed"
+    },
+    "completed_components": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "component",
+          "owner_command",
+          "transaction_id",
+          "plan_sha256",
+          "owner_result"
+        ],
+        "properties": {
+          "component": {
+            "enum": [
+              "routing_configuration",
+              "selected_save_declared_context"
+            ]
+          },
+          "owner_command": {
+            "enum": [
+              "readiness.prepare_configuration",
+              "readiness.prepare_selected_save"
+            ]
+          },
+          "transaction_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "plan_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "owner_result": {
+            "type": "object"
+          }
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "component": {
+                "const": "routing_configuration"
+              },
+              "owner_command": {
+                "const": "readiness.prepare_configuration"
+              },
+              "owner_result": {
+                "$ref": "factorio_configuration_preparation_result.v1.schema.json"
+              }
+            }
+          },
+          {
+            "properties": {
+              "component": {
+                "const": "selected_save_declared_context"
+              },
+              "owner_command": {
+                "const": "readiness.prepare_selected_save"
+              },
+              "owner_result": {
+                "$ref": "factorio_selected_save_preparation_result.v1.schema.json"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "deferred_components": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "component",
+          "reason"
+        ],
+        "properties": {
+          "component": {
+            "const": "selected_save_declared_context"
+          },
+          "reason": {
+            "const": "fresh_revision_required"
+          }
+        }
+      }
+    }
+  }
+}
