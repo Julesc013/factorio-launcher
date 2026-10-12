@@ -13,6 +13,20 @@
 #include <string>
 #include <utility>
 
+#ifdef __linux__
+namespace {
+bool publication_staging_substituted = false;
+void substitute_publication_staging(const std::filesystem::path& path)
+{
+    std::error_code error;
+    std::filesystem::rename(path, path.parent_path() / "preserved-staging.tmp", error);
+    if (error) return;
+    std::ofstream(path, std::ios::binary) << "foreign staging bytes";
+    publication_staging_substituted = true;
+}
+}
+#endif
+
 int main()
 {
     namespace fs = std::filesystem;
@@ -133,6 +147,73 @@ int main()
         std::ifstream private_input(other_parent.path() / "private-published.txt", std::ios::binary);
         const std::string private_bytes{std::istreambuf_iterator<char>(private_input), {}};
         if (private_bytes != bounded_payload) return 62;
+#endif
+        // Actual Linux link-pair recovery and interference. Pinned input
+        // admission stays single-link; only a journal-bound owner reads pairs.
+#ifdef __linux__
+        for (const std::string variant : {"complete", "post_link_fault", "foreign_stage", "foreign_target",
+                "third_link", "missing_stage", "linked_stage", "changed_bytes", "cleanup_substitution"}) {
+            facman::platform::StableDirectoryObject owner;
+            if (!root_authority.create_child_directory_exclusive("owner-" + variant, owner).ok()) return 63;
+            facman::platform::DurableOutputFile owned;
+            if (!owner.create_child_file_exclusive("staging.tmp", 1024, owned).ok()) return 63;
+            const auto journal_identity = owned.identity();
+            if (owned.write_at(0, bounded_payload.data(), bounded_payload.size()) != bounded_payload.size()) return 63;
+            facman::platform::testing::set_relative_publish_post_rename_fault(variant == "post_link_fault");
+            const auto linked = owned.publish_in_directory_no_replace(owner, "target.txt");
+            facman::platform::testing::set_relative_publish_post_rename_fault(false);
+            if (variant == "post_link_fault" ? linked.code != "output_published_unverified" : !linked.ok()) return 63;
+            facman::platform::StableInputFile ordinary;
+            if (owner.open_child_file_no_follow_pinned("target.txt", ordinary).ok()) return 64;
+            const fs::path stage = owner.path() / "staging.tmp", target = owner.path() / "target.txt";
+            error.clear();
+            if (variant == "foreign_stage" || variant == "linked_stage") {
+                fs::rename(stage, owner.path() / "preserved.tmp", error);
+                if (error) return 65;
+                if (variant == "foreign_stage") std::ofstream(stage, std::ios::binary) << bounded_payload;
+                else { fs::create_symlink("target.txt", stage, error); if (error) return 65; }
+            } else if (variant == "foreign_target") {
+                fs::rename(target, owner.path() / "preserved.txt", error);
+                if (error) return 65;
+                std::ofstream(target, std::ios::binary) << bounded_payload;
+            } else if (variant == "third_link" || variant == "missing_stage") {
+                fs::create_hard_link(target, owner.path() / "third.txt", error);
+                if (error) return 65;
+                if (variant == "missing_stage") { fs::remove(stage, error); if (error) return 65; }
+            } else if (variant == "changed_bytes") std::ofstream(target, std::ios::binary) << "changed bytes";
+            facman::platform::StableInputFile recovery;
+            const auto adopted = owner.open_child_file_no_follow_for_publication_recovery("staging.tmp", "target.txt",
+                [&](const facman::platform::FileIdentity& value) { return journal_identity.same_object(value); },
+                bounded_payload, recovery);
+            const bool valid_pair = variant == "complete" || variant == "post_link_fault" || variant == "cleanup_substitution";
+            if (adopted.ok() != valid_pair) return 66;
+            if (!valid_pair) {
+                if (!fs::exists(target) || (variant != "missing_stage" && !fs::exists(stage))) return 67;
+                continue;
+            }
+            if (variant == "cleanup_substitution") {
+                publication_staging_substituted = false;
+                facman::platform::testing::set_publication_before_staging_remove_hook(substitute_publication_staging);
+            }
+            const auto cleaned = owner.finish_child_file_publication("staging.tmp", bounded_payload, recovery);
+            facman::platform::testing::set_publication_before_staging_remove_hook(nullptr);
+            if (variant == "cleanup_substitution") {
+                if (!publication_staging_substituted || cleaned.ok() || !fs::exists(stage) ||
+                    !fs::exists(owner.path() / "preserved-staging.tmp")) return 68;
+                std::ifstream foreign_stream(stage, std::ios::binary);
+                if (std::string(std::istreambuf_iterator<char>(foreign_stream), {}) != "foreign staging bytes") return 68;
+                continue;
+            }
+            if (!cleaned.ok() || fs::exists(stage) || recovery.identity().link_count != 1U ||
+                !journal_identity.same_object(recovery.identity())) return 69;
+            facman::platform::StableInputFile replay;
+            if (!owner.open_child_file_no_follow_for_publication_recovery("staging.tmp", "target.txt",
+                    [&](const facman::platform::FileIdentity& value) { return journal_identity.same_object(value); },
+                    bounded_payload, replay).ok() || !owner.finish_child_file_publication("staging.tmp", bounded_payload, replay).ok()) return 69;
+            facman::platform::StableInputFile pinned;
+            if (!owner.open_child_file_no_follow_pinned("target.txt", pinned).ok() ||
+                pinned.identity().link_count != 1U || !journal_identity.same_object(pinned.identity())) return 69;
+        }
 #endif
         facman::platform::DurableOutputFile substituted_staging;
         if (!bounded.create_child_file_exclusive("substitute-staging.tmp", 1024, substituted_staging).ok() ||

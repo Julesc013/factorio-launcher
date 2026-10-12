@@ -27,3 +27,27 @@ wiring and interpretation of separately supplied actual receipts; live
 click-to-backend dispatch, real game and human experience remain separate
 acceptance. Windows source fixtures do not establish other-host or Beta
 qualification.
+
+Linux missing-INI and new selected-save-reference publication retain the inode
+bound before the first write. Publication links the opened staging descriptor
+into the held destination directory without replacing an existing leaf. The
+owner alone can read the exact journal-bound two-link staging/destination pair;
+ordinary pinned readers still require one link. Before removing staging, it
+checks both names, device/inode, link count and intended bytes. Recovery can
+finish that pair or verify the same singly-linked destination after interrupted
+cleanup. Foreign same-byte objects, unknown staging, symlinks, additional links
+and substituted parents remain refused. Link and cleanup metadata flush failures
+retain the journal for recovery; successful recovery flushes the parent again.
+
+Linux uses the existing local-filesystem/operation-lock policy and requires the
+held-descriptor publication facility to be available. Its locks are advisory:
+uncooperative writes and rename are detected at bounded observations, not
+prevented. Staging removal retains the POSIX final compare/unlink window; this
+does not claim safety against a namespace writer racing that last interval or
+power-loss recovery. Source fixtures on tmpfs do not qualify ext4, physical
+hosts, produced packages, real Factorio or human experience.
+
+macOS still refuses these owners: its descriptor-source clone creates a different
+destination inode and cannot supply this journal's prebound effect identity.
+Existing-INI reconciliation remains Windows fixed-local-NTFS only; enabling Linux
+missing-file publication does not grant retained in-place rewrite capability.

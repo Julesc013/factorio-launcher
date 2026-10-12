@@ -318,3 +318,39 @@ PR406 is integrated at dce1ed5cabfd8af848c122dc063c1196b3c95772; its required so
 The self-setup artifact retained a real legacy GUI relocation/manifest defect. Its service-bound original portable ZIP was recovered byte-for-byte against the recorded original SHA, without editing the failed payload or fabricating a fixed Setup package. This proves the original legacy portable GUI, not the selected canonical installed Desktop product. Five failed client attempts and the focused diagnostics are preserved. A compiled NoInlining initializer fixes PowerShell default UIA proxy initialization; actual tab captions, nested modal windows and the dropdown ValuePattern are then exercised through standard UIA. No product metadata or source rewrite supplied this result.
 
 Durable receipt and compact synthetic-input/process custody are in evidence/pack-partial-produced.v1.json and evidence/pack-partial-produced-custody.zip. PR404 owner-only control authorization, canonical installed GUI/Setup, GUI process-loss, genuine game/human/fullscreen TUI, other-host, complete F09/F11 and Beta gates remain open. A torn-file refusal is not torn-file repair. The active WorkUnit remains partial; continue dependency-ready implementation rather than healthy CI observation turns.
+
+### Linux same-inode preparation publication and recovery
+
+The missing-INI and new selected-context owners now finish the exact journaled
+Linux staging/destination pair and preserve its inode. Ordinary pinned readers
+remain single-link. Fresh Make Ready creates routing, then selected context;
+interruption, replay, foreign objects, extra links, symlinks and actual final
+rename/write interference are exercised under uid65534 in private bounded tmpfs.
+Windows owner/native regressions and repository checks pass. Evidence and retained
+failed attempts are bound in evidence/posix-publication-native.v1.json and its
+custody archive. Mac publication, POSIX existing-INI rewriting, exact packages,
+physical ext4/power-loss, real game, human and full Make Ready/Beta remain open.
+
+### Checked dev integration and combined qualification
+
+PR408 is integrated at 0b8e8b6. PR410 originally used an older base;
+its promotion check correctly refused it. A normal merge retains both
+published histories. All ten preparation source hashes remain unchanged.
+The combined source passes 24 Linux owner tests, with four explicit
+Windows-only skips, plus the rebuilt Windows native and owner regressions
+and strict/AIDE checks. The stale-base failure and scoped requalification
+are bound in evidence/posix-publication-combined.v1.json and its custody
+archive. Required CI and exact packages remain required. Broader host,
+existing POSIX INI, game, human, full Make Ready and Beta gates remain open.
+
+### Hosted Linux warnings-as-errors correction
+
+The Linux source job failed a temporary-string loop-reference warning in
+the native adversarial test. The single Linux-only binding now uses an
+explicit string value; all nine cases and runtime source hashes remain.
+Strict GCC reproduces the old failure and accepts the correction. The
+rebuilt native smoke passes unprivileged on owned private tmpfs. Existing
+combined Linux owner and Windows qualification remains bound and reused.
+Evidence is in evidence/posix-publication-ci-warning.v1.json and custody.
+The failed job and the corrected local test result remain distinct;
+required source CI and produced-package acceptance remain outstanding.

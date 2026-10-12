@@ -193,6 +193,21 @@ public:
         const FileIdentity& expected,
         std::uint64_t maximum_size,
         DurableOutputFile& child) const;
+    // Linux owner recovery only: accept a journal-bound inode with either one
+    // destination link or the exact staging/destination two-link pair. The
+    // callback binds device/object; bytes are checked through the held reader.
+    // Ordinary pinned reads still require one link. This grants no cleanup.
+    IoStatus open_child_file_no_follow_for_publication_recovery(
+        const std::filesystem::path& staging_leaf,
+        const std::filesystem::path& destination_leaf,
+        const std::function<bool(const FileIdentity&)>& matches_journal,
+        const std::string& expected_bytes, StableInputFile& child) const;
+    // Remove only the verified second staging link, then retain the destination
+    // as a singly-linked reader. POSIX compare/unlink is not atomic against
+    // uncooperative namespace writers; callers retain that platform limitation.
+    IoStatus finish_child_file_publication(
+        const std::filesystem::path& staging_leaf, const std::string& expected_bytes,
+        StableInputFile& destination) const;
     // Returns the conservative leaf names currently visible through this held
     // directory object.  The result is cleared before every attempt and on
     // failure, is sorted bytewise, and never follows a child.
@@ -321,6 +336,7 @@ void set_relative_publish_post_rename_fault(bool enabled) noexcept;
 void set_relative_publish_pre_rename_fault_countdown(unsigned count) noexcept;
 using RelativePublishBeforeReopenHook = void (*)(const std::filesystem::path&);
 void set_relative_publish_before_reopen_hook(RelativePublishBeforeReopenHook hook) noexcept;
+void set_publication_before_staging_remove_hook(RelativePublishBeforeReopenHook hook) noexcept;
 
 } // namespace testing
 

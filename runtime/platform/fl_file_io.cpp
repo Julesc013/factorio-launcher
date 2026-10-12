@@ -41,6 +41,8 @@ thread_local bool relative_publish_post_rename_fault_for_testing = false;
 thread_local unsigned relative_publish_pre_rename_fault_countdown_for_testing = 0U;
 thread_local testing::RelativePublishBeforeReopenHook
     relative_publish_before_reopen_hook_for_testing = nullptr;
+thread_local testing::RelativePublishBeforeReopenHook
+    publication_before_staging_remove_hook_for_testing = nullptr;
 
 IoStatus published_unverified_failure(const IoStatus& underlying)
 {
@@ -357,6 +359,11 @@ void set_relative_publish_pre_rename_fault_countdown(unsigned count) noexcept
 void set_relative_publish_before_reopen_hook(RelativePublishBeforeReopenHook hook) noexcept
 {
     relative_publish_before_reopen_hook_for_testing = hook;
+}
+
+void set_publication_before_staging_remove_hook(RelativePublishBeforeReopenHook hook) noexcept
+{
+    publication_before_staging_remove_hook_for_testing = hook;
 }
 
 } // namespace testing
@@ -972,6 +979,109 @@ IoStatus StableDirectoryObject::open_child_file_no_follow_pinned(
     child.impl_->handle = handle;
     child.impl_->path = impl_->path / leaf;
     return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::open_child_file_no_follow_for_publication_recovery(
+    const std::filesystem::path& staging_leaf, const std::filesystem::path& destination_leaf,
+    const std::function<bool(const FileIdentity&)>& matches_journal,
+    const std::string& expected_bytes, StableInputFile& child) const
+{
+#ifdef __linux__
+    std::string staging, destination;
+    if (!portable_leaf(staging_leaf, staging) || !portable_leaf(destination_leaf, destination) ||
+        staging == destination || !matches_journal || expected_bytes.empty() || expected_bytes.size() > 65536U)
+        return IoStatus::failure("publication_recovery_inputs_invalid", "Bound publication inputs are required");
+    if (!child.impl_ || child.open()) return IoStatus::failure("input_already_open", destination);
+    const auto valid = revalidate(); if (!valid.ok()) return valid;
+    StableInputFile candidate;
+    candidate.impl_->handle = ::openat(impl_->handle, destination.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (candidate.impl_->handle < 0) return IoStatus::failure("publication_recovery_open_failed", std::strerror(errno));
+    struct stat held {}, source {};
+    if (::fstat(candidate.impl_->handle, &held) != 0)
+        return IoStatus::failure("publication_recovery_identity_failed", std::strerror(errno));
+    candidate.impl_->identity = identity_from_stat(held);
+    candidate.impl_->path = impl_->path / destination_leaf;
+    const auto& actual = candidate.identity();
+    if (!actual.regular_file || (actual.link_count != 1U && actual.link_count != 2U) ||
+        actual.size != expected_bytes.size() || !matches_journal(actual))
+        return IoStatus::failure("publication_recovery_identity_changed", destination);
+    const int source_status = ::fstatat(impl_->handle, staging.c_str(), &source, AT_SYMLINK_NOFOLLOW);
+    if ((actual.link_count == 1U && (source_status == 0 || errno != ENOENT)) ||
+        (actual.link_count == 2U && (source_status != 0 || !actual.unchanged(identity_from_stat(source)))))
+        return IoStatus::failure("publication_recovery_staging_changed", staging);
+    std::string bytes(expected_bytes.size(), '\0');
+    if (candidate.read_at(0, bytes.data(), bytes.size()) != bytes.size() || bytes != expected_bytes ||
+        !candidate.revalidate_path().ok() || !revalidate().ok())
+        return IoStatus::failure("publication_recovery_bytes_changed", destination);
+    // Check both names again after the read; one link with absent staging is
+    // also a valid interrupted cleanup result, never authority to adopt bytes.
+    const int source_after = ::fstatat(impl_->handle, staging.c_str(), &source, AT_SYMLINK_NOFOLLOW);
+    if ((actual.link_count == 1U && (source_after == 0 || errno != ENOENT)) ||
+        (actual.link_count == 2U && (source_after != 0 || !actual.unchanged(identity_from_stat(source)))))
+        return IoStatus::failure("publication_recovery_staging_changed", staging);
+    child = std::move(candidate);
+    return IoStatus::success();
+#else
+    (void)staging_leaf; (void)destination_leaf; (void)matches_journal; (void)expected_bytes; (void)child;
+    return IoStatus::failure("publication_recovery_unsupported", "Same-inode publication recovery is Linux only");
+#endif
+}
+
+IoStatus StableDirectoryObject::finish_child_file_publication(
+    const std::filesystem::path& staging_leaf, const std::string& expected_bytes,
+    StableInputFile& destination) const
+{
+#ifdef __linux__
+    std::string staging, target;
+    if (!open() || !portable_leaf(staging_leaf, staging) || !destination.open() ||
+        destination.impl_->path.parent_path() != impl_->path ||
+        !portable_leaf(destination.impl_->path.filename(), target) || staging == target)
+        return IoStatus::failure("publication_cleanup_inputs_invalid", "A held sibling publication is required");
+    const FileIdentity expected = destination.identity();
+    if (!expected.regular_file || expected_bytes.empty() || expected_bytes.size() > 65536U ||
+        expected.size != expected_bytes.size() || (expected.link_count != 1U && expected.link_count != 2U))
+        return IoStatus::failure("publication_cleanup_identity_invalid", target);
+    if (publication_before_staging_remove_hook_for_testing != nullptr)
+        publication_before_staging_remove_hook_for_testing(impl_->path / staging_leaf);
+    if (!revalidate().ok() || !destination.revalidate_path().ok())
+        return IoStatus::failure("publication_cleanup_identity_changed", target);
+    struct stat source {}, named_target {};
+    const int source_status = ::fstatat(impl_->handle, staging.c_str(), &source, AT_SYMLINK_NOFOLLOW);
+    if ((expected.link_count == 1U && (source_status == 0 || errno != ENOENT)) ||
+        (expected.link_count == 2U && (source_status != 0 || !expected.unchanged(identity_from_stat(source)))) ||
+        ::fstatat(impl_->handle, target.c_str(), &named_target, AT_SYMLINK_NOFOLLOW) != 0 ||
+        !expected.unchanged(identity_from_stat(named_target)))
+        return IoStatus::failure("publication_cleanup_identity_changed", staging);
+    std::string bytes(expected_bytes.size(), '\0');
+    if (destination.read_at(0, bytes.data(), bytes.size()) != bytes.size() || bytes != expected_bytes ||
+        !destination.revalidate_path().ok())
+        return IoStatus::failure("publication_cleanup_bytes_changed", target);
+    const int source_after = ::fstatat(impl_->handle, staging.c_str(), &source, AT_SYMLINK_NOFOLLOW);
+    if ((expected.link_count == 1U && (source_after == 0 || errno != ENOENT)) ||
+        (expected.link_count == 2U && (source_after != 0 || !expected.unchanged(identity_from_stat(source)))) ||
+        ::fstatat(impl_->handle, target.c_str(), &named_target, AT_SYMLINK_NOFOLLOW) != 0 ||
+        !expected.unchanged(identity_from_stat(named_target)) || !revalidate().ok())
+        return IoStatus::failure("publication_cleanup_identity_changed", staging);
+    // No atomic compare-and-unlink exists here. The final-leaf replacement
+    // interval remains outside the uncooperative namespace-writer guarantee.
+    if (expected.link_count == 2U && ::unlinkat(impl_->handle, staging.c_str(), 0) != 0)
+        return IoStatus::failure("publication_cleanup_remove_failed", std::strerror(errno));
+    struct stat after {};
+    if (::fstat(destination.impl_->handle, &after) != 0)
+        return IoStatus::failure("publication_cleanup_identity_failed", std::strerror(errno));
+    FileIdentity single = expected; single.link_count = 1U;
+    if (!single.unchanged(identity_from_stat(after)))
+        return IoStatus::failure("publication_cleanup_identity_changed", target);
+    destination.impl_->identity = single;
+    const auto flushed = flush_directory_handle(impl_->handle);
+    if (!flushed.ok()) return flushed;
+    if (!revalidate().ok() || !destination.revalidate_path().ok())
+        return IoStatus::failure("publication_cleanup_identity_changed", target);
+    return flushed;
+#else
+    (void)staging_leaf; (void)expected_bytes; (void)destination;
+    return IoStatus::failure("publication_recovery_unsupported", "Same-inode publication recovery is Linux only");
+#endif
 }
 
 IoStatus StableDirectoryObject::list_child_names_bounded(
