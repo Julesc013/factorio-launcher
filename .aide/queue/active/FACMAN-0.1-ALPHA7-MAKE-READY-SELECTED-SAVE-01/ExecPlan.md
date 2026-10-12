@@ -341,3 +341,20 @@ controls. Inputs, deadlines, cancellation, resize, exit and no-color assertions
 remain unchanged. Independent exact-source review and the native help receipt
 are bound in evidence/tui-selected-save-pty-correction.v1.json. Current required
 POSIX checks must qualify the correction before integration.
+
+### Produced Linux terminal and offline reconstruction
+
+The existing c95809b6 producer artifact has an identical reviewed source
+tree and verified provider/package inventory. Its actual TUI passes five
+ordinary/PTY methods, including resize, no-color and terminal restoration.
+The same image passes all seven selected offline import methods and244
+native calls, preserving selected content, settings, provenance and known
+objects through supported losses and replay. Changed, foreign and torn
+entries are preserved/refused. Every selected subcase ran unfiltered.
+Package and checkout were read-only; workspaces used owned unprivileged
+bounded private tmpfs. The initial v2 probe-oracle failure is retained.
+The TUI branch also normally merges checked dev0b8e8b6 and requalifies
+Windows native, ordinary and ConPTY behavior. See the produced Linux
+receipt and custody in evidence/produced-linux-tui-and-pack.v1.json.
+USK extraction, uncooperative POSIX namespaces, physical ext4/APFS,
+genuine game/human, canonical installed Desktop and Beta remain open.
