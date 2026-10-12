@@ -358,3 +358,44 @@ Windows native, ordinary and ConPTY behavior. See the produced Linux
 receipt and custody in evidence/produced-linux-tui-and-pack.v1.json.
 USK extraction, uncooperative POSIX namespaces, physical ext4/APFS,
 genuine game/human, canonical installed Desktop and Beta remain open.
+### Linux same-inode preparation publication and recovery
+
+The missing-INI and new selected-context owners now finish the exact journaled
+Linux staging/destination pair and preserve its inode. Ordinary pinned readers
+remain single-link. Fresh Make Ready creates routing, then selected context;
+interruption, replay, foreign objects, extra links, symlinks and actual final
+rename/write interference are exercised under uid65534 in private bounded tmpfs.
+Windows owner/native regressions and repository checks pass. Evidence and retained
+failed attempts are bound in evidence/posix-publication-native.v1.json and its
+custody archive. Mac publication, POSIX existing-INI rewriting, exact packages,
+physical ext4/power-loss, real game, human and full Make Ready/Beta remain open.
+
+### Checked dev integration and combined qualification
+
+PR408 is integrated at 0b8e8b6. PR410 originally used an older base;
+its promotion check correctly refused it. A normal merge retains both
+published histories. All ten preparation source hashes remain unchanged.
+The combined source passes 24 Linux owner tests, with four explicit
+Windows-only skips, plus the rebuilt Windows native and owner regressions
+and strict/AIDE checks. The stale-base failure and scoped requalification
+are bound in evidence/posix-publication-combined.v1.json and its custody
+archive. Required CI and exact packages remain required. Broader host,
+existing POSIX INI, game, human, full Make Ready and Beta gates remain open.
+
+### Hosted Linux warnings-as-errors correction
+
+The Linux source job failed a temporary-string loop-reference warning in
+the native adversarial test. The single Linux-only binding now uses an
+explicit string value; all nine cases and runtime source hashes remain.
+Strict GCC reproduces the old failure and accepts the correction. The
+rebuilt native smoke passes unprivileged on owned private tmpfs. Existing
+combined Linux owner and Windows qualification remains bound and reused.
+Evidence is in evidence/posix-publication-ci-warning.v1.json and custody.
+The failed job and the corrected local test result remain distinct;
+required source CI and produced-package acceptance remain outstanding.
+
+### Combined ordinary Linux selected-save Make Ready qualification
+
+Normal integration retains both the TUI and POSIX-publication evidence. Ordinary Linux TUI controls cancel a pending confirmation after observation changes, then publish missing configuration and selected-save context under two fresh explicit confirmations. The test binds exact request/result digests, plan/input/parent identities, completed journals, published bytes and inode identities. Installation files, content, saves, overrides and the first configuration remain unchanged. Three native tests and six ordinary/PTY methods pass as uid/gid 65534 without skips in a private 128 MiB tmpfs. This proves fixture preparation and terminal behavior; game execution, physical ext4, existing-INI owner admission, canonical Desktop, Beta and RC remain open. Combined-source hosted checks remain required.
+
+Evidence: `evidence/tui-linux-make-ready-combined.v1.json` and its hash-closed custody archive.

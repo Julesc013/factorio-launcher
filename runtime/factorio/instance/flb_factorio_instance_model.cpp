@@ -1856,11 +1856,34 @@ facman::core::Result<std::string> selected_context_inputs(
     auto observed = project(workspace, request);
     if (!observed) return facman::core::Result<std::string>::failure(observed.error());
     const auto& p = observed.value();
+    bool owned_publication_context = false;
+#ifdef __linux__
+    // Ordinary inspection correctly refuses a two-link sidecar. Only this
+    // journal owner may read its exact staging/destination pair during recovery.
+    if (own && p.selected_save_code == "instance_selected_save_context_unavailable") {
+        const auto context = json::parse(own->operation_context);
+        const fs::path target = p.instance.root / "metadata/save-refs" / fs::u8path(p.selected_save + ".save-ref.v1.json");
+        const fs::path staging = fs::u8path(".facman-selected-context-" + own->transaction_id);
+        facman::platform::StableDirectoryObject root, metadata, refs;
+        facman::platform::StableInputFile file;
+        if (context && own->command_id == "readiness.prepare_selected_save" &&
+            own->commit_strategy == "selected_context_handle_no_replace_v1" && own->target == target &&
+            object_string(context.value(), "schema") == "factorio.selected_context_commit.v1" &&
+            root.open_no_follow(p.instance.root).ok() && root.open_child_directory_no_follow("metadata", metadata).ok() &&
+            metadata.open_child_directory_no_follow("save-refs", refs).ok()) {
+            owned_publication_context = refs.open_child_file_no_follow_for_publication_recovery(
+                staging, target.filename(), [&](const facman::platform::FileIdentity& identity) {
+                    return std::to_string(identity.device) + ":" + std::to_string(identity.object) == own->effect_file_identity;
+                }, object_string(context.value(), "sidecar_text"), file).ok() && root.revalidate().ok() &&
+                metadata.revalidate().ok() && refs.revalidate().ok();
+        }
+    }
+#endif
     if (request.launch_intent != "load_save" || !p.root_safe || !p.install_present || !p.install_record ||
         !p.installation_healthy || !p.version_family_eligible || !p.version_matches || !p.content_present ||
         !p.config_valid || !p.config || !p.profile_valid || !p.profile_plan || !p.modset_valid ||
         !p.modset_lock || p.modset_status != "locked_verified" || p.selected_save.empty() ||
-        p.selected_save_state == "blocked" || p.selected_archive_identity.rfind("file:", 0) != 0)
+        (p.selected_save_state == "blocked" && !owned_publication_context) || p.selected_archive_identity.rfind("file:", 0) != 0)
         return fail<std::string>("selected_context_prerequisites_unavailable",
             "Selected context requires a valid current profile, installation, configuration, locked content and recognized selected save");
     const auto recovery = tx::inspect(workspace);
@@ -2071,10 +2094,22 @@ facman::core::Result<std::string> configuration_inputs(
                 return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable configuration does not describe the current owner inputs");
             if (target_status != "absent") {
                 facman::platform::StableInputFile file;
+#ifdef __linux__
+                facman::platform::StableDirectoryObject root, config;
+                if (own->command_id != "readiness.prepare_configuration" ||
+                    own->commit_strategy != "missing_config_handle_no_replace_v1" || own->effect_file_identity.empty() ||
+                    !root.open_no_follow(p.instance.root).ok() || !root.open_child_directory_no_follow("config", config).ok() ||
+                    !config.open_child_file_no_follow_for_publication_recovery(
+                        fs::u8path(".facman-configuration-" + own->transaction_id), "config.ini",
+                        [&](const facman::platform::FileIdentity& identity) {
+                            return std::to_string(identity.device) + ":" + std::to_string(identity.object) == own->effect_file_identity;
+                        }, intended, file).ok() || !root.revalidate().ok() || !config.revalidate().ok())
+#else
                 if (!p.config_valid || !p.config || p.config->text != intended || own->effect_file_identity.empty() ||
                     !file.open_no_follow_pinned(target).ok() || file.identity().link_count != 1U ||
                     std::to_string(file.identity().device) + ":" + std::to_string(file.identity().object) != own->effect_file_identity ||
                     !file.revalidate_path().ok())
+#endif
                     return fail<std::string>("configuration_foreign_effect_preserved", "Existing configuration is not the exact journaled owner effect");
             }
         }
@@ -2151,6 +2186,9 @@ facman::core::Result<std::string> existing_configuration_plan(
     if (!delta.ok) return fail<std::string>(delta.refusal, "Ambiguous routing configuration must be preserved for explicit repair");
     if (delta.bytes == p.config->text)
         return fail<std::string>("configuration_already_current", "Routing is already current; preserve the existing configuration");
+#ifndef _WIN32
+    return fail<std::string>("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+#endif
     const auto effective = launch::parse_effective_config_bytes(
         p.instance.root / "config/config.ini", p.instance.root / "mods", delta.bytes);
     if (!effective.ok || !same_path(effective.read_data, p.install->root / "data") ||
