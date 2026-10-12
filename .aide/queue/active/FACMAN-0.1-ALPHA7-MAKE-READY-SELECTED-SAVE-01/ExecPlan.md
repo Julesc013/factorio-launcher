@@ -330,3 +330,15 @@ Windows owner/native regressions and repository checks pass. Evidence and retain
 failed attempts are bound in evidence/posix-publication-native.v1.json and its
 custody archive. Mac publication, POSIX existing-INI rewriting, exact packages,
 physical ext4/power-loss, real game, human and full Make Ready/Beta remain open.
+
+### Checked dev integration and combined qualification
+
+PR408 is integrated at 0b8e8b6. PR410 originally used an older base;
+its promotion check correctly refused it. A normal merge retains both
+published histories. All ten preparation source hashes remain unchanged.
+The combined source passes 24 Linux owner tests, with four explicit
+Windows-only skips, plus the rebuilt Windows native and owner regressions
+and strict/AIDE checks. The stale-base failure and scoped requalification
+are bound in evidence/posix-publication-combined.v1.json and its custody
+archive. Required CI and exact packages remain required. Broader host,
+existing POSIX INI, game, human, full Make Ready and Beta gates remain open.
