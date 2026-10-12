@@ -1,0 +1,199 @@
+{
+  "schema": "facman.pack-recovery-ci-timeout-proof.v1",
+  "source_parent": "839c94247827cfe34eadbe4f8e61f529f1fc0984",
+  "integration_base": "fd2ba47a1f53fd1ab2b6cf287b080e0bf45e712b",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "pull_request": 406,
+  "behavior": "Keep every pack-import product case required with a finite 600-second suite allowance and per-case diagnostics.",
+  "diagnosed_failure": {
+    "run": 38178475809,
+    "job": 114585792943,
+    "source": "839c94247827cfe34eadbe4f8e61f529f1fc0984",
+    "log_sha256": "80f5e3911159f585f762a3845a249421c53c9a5536fc8d442f7aeb06dde8c3b2",
+    "native_passed": 54,
+    "native_total": 55,
+    "pack_suite_timeout_seconds": 180.04
+  },
+  "correction": {
+    "path": "tests/native/CMakeLists.txt",
+    "sha256": "0f9a79f00f00d0046875d36c1c8f36bfab26af2aedfc1e120ca9f47c6fba4760",
+    "ctest": "facman_modpack_import_product",
+    "timeout_seconds": 600,
+    "verbose_case_output": true,
+    "oracles_and_labels_unchanged": true
+  },
+  "observed": {
+    "interpreter": "Python 3.11",
+    "methods": 26,
+    "seconds": 360.234,
+    "skipped_subcases": 2,
+    "skip_reason": "Two Windows dangling-symlink subcases require WinError1314 privilege; required Linux CI owns those cases.",
+    "binaries": {
+      "Release/facman.exe": "f84a48e900fe6fac8a73e9a3ac6c5a55564d91a0968e14736e89902681836192",
+      "Release/ulk.dll": "d96d05b33b0df2ee2659104125d8e0f70fbc6e48b82dc302b7eb0eb8ac6b6c31",
+      "Release/usk.dll": "99231fbff824df9446159cd91c2dfe01bb439a9f0c3138c9d9625e512696b873"
+    },
+    "new_builds": 0,
+    "selected_release_binaries_unchanged": true,
+    "compiled_binary_hash_scope": [
+      "Release/facman.exe",
+      "Release/ulk.dll",
+      "Release/usk.dll"
+    ],
+    "other_cache_configurations_hash_qualified": false
+  },
+  "commands": [
+    {
+      "name": "initial-branch",
+      "receipt_sha256": "e5c3bddb6a0f99e8cd7969b3aae815783363977ee477a87bfd89194f92fa6c2e",
+      "exit": 0
+    },
+    {
+      "name": "initial-head",
+      "receipt_sha256": "96da84c1844579941191a382bc8b3cadfbd97d24f7ddee9b6c07ca9bce17c5f0",
+      "exit": 0
+    },
+    {
+      "name": "initial-clean",
+      "receipt_sha256": "75a0404df9bf4125e669caeddb1f8854e74a771f99991172e2ee09dbffd497bf",
+      "exit": 0
+    },
+    {
+      "name": "task-inspect",
+      "receipt_sha256": "0e594c4c9468111610df23fcebfeabc4adcdea7759020877d9e20347ca1b00b4",
+      "exit": 0
+    },
+    {
+      "name": "task-noop-check",
+      "receipt_sha256": "95ea1f7a219c37fbfa65e04744762b25231848c51f8a7e7c1753411801da7859",
+      "exit": 0
+    },
+    {
+      "name": "task-recover",
+      "receipt_sha256": "1664115576e2723f4469816a51283e9028e7a503aaba235aad235987543aa406",
+      "exit": 0
+    },
+    {
+      "name": "git-policy",
+      "receipt_sha256": "54caa3e3f87e8aac3fef2608cd3c3e991f186634be0da3196d9fc03df95d2394",
+      "exit": 0
+    },
+    {
+      "name": "git-detect",
+      "receipt_sha256": "6abc1752cbce9bc4a3389d04684ea36fe936a889988a31763f71552c7e604ed6",
+      "exit": 0
+    },
+    {
+      "name": "git-plan",
+      "receipt_sha256": "9d5766b1ece3d9e59c5256b11d581439a981d0eaf344ed6d9cefca4faaf7b03a",
+      "exit": 0
+    },
+    {
+      "name": "hygiene-paths",
+      "receipt_sha256": "9730967273d2293853277dfbf38fc3c86ccc3b99138fec07e06fa72a6e36f9b4",
+      "exit": 0
+    },
+    {
+      "name": "hygiene-doctor",
+      "receipt_sha256": "301459f723a73a1cad3bb786b7081ba369741d07e1610545f183b2d4c2deeaaf",
+      "exit": 1
+    },
+    {
+      "name": "diff-check",
+      "receipt_sha256": "f3dcce0b034f65ddd5c5aa7af1436d2c2f1130ada4f9478a7953ca9bf6cd3d93",
+      "exit": 0
+    },
+    {
+      "name": "generated-check",
+      "receipt_sha256": "c6b1b6137b63b457c1190d7822e380d856499749e8a2bc32b3709fedf68d39f3",
+      "exit": 0
+    },
+    {
+      "name": "strict-check",
+      "receipt_sha256": "80c08df66611e1876fe9dc826226e7d2bd4ddb6f23214cd87734b5d3807b71de",
+      "exit": 0
+    },
+    {
+      "name": "cmake-architecture-tests",
+      "receipt_sha256": "67ae700249e0cdfc07ddfcea75fda513c32506550b21983d4d2f1e56f7b0f6a6",
+      "exit": 0
+    },
+    {
+      "name": "configure-existing-cache-py311",
+      "receipt_sha256": "7aa9cc1c21ad349cc778a741ce02d8ff5bafd092d163c8bd8aa2af4fdc176251",
+      "exit": 0
+    },
+    {
+      "name": "generated-ctest-inventory",
+      "receipt_sha256": "883377ec1ebf66a6911067d39b161c20cadb43a7cef70106692290c10db624d0",
+      "exit": 0
+    },
+    {
+      "name": "actual-modpack-product-ctest",
+      "receipt_sha256": "f8d48ab79c62a90527e0a86127922c9e48409284880dd5c88f8dc90db52de849",
+      "exit": 0
+    },
+    {
+      "name": "final-head",
+      "receipt_sha256": "8cc52e7003bef4ae797e604c2ade824724053bc970e3b81d0a58c8a00d24ec55",
+      "exit": 0
+    },
+    {
+      "name": "exact-source-path",
+      "receipt_sha256": "95d22e95aef4a37d98c1b130091a0d76154aeb73c04f2b265517054a6c749391",
+      "exit": 0
+    },
+    {
+      "name": "empty-index",
+      "receipt_sha256": "c0ba993fda02e5a4780ea38540d6028248fe0a05a0c9da0778244806e70c8850",
+      "exit": 0
+    }
+  ],
+  "custody": [
+    {
+      "name": "pack-partial-recovery-ci-timeout-proposal-02.json",
+      "sha256": "f37426eea5ec3f00a64fa9564d358d7e90c9278f072f66bd3fd765f047a1e77a"
+    },
+    {
+      "name": "pack-partial-recovery-ci-timeout-proposal-review-02.json",
+      "sha256": "a857023dd606e8170b05e5b4a7df9d1986cac98406c79e776386ee30bb03e704"
+    },
+    {
+      "name": "qualify-pack-partial-recovery-ci-timeout-01.py",
+      "sha256": "b2eb53cc5559bcce1aef51b92ecd8f21a4e3ad23b9d6162c09f1d4362e1d20bd"
+    },
+    {
+      "name": "pack-partial-recovery-ci-timeout-qualification-01.json",
+      "sha256": "293dba5997216ebd6c34e9f0146a08ff464b2a6c2e4c7c998b81dd6292a91f71"
+    },
+    {
+      "name": "pack-partial-recovery-windows-ci-839c9424-failed.log",
+      "sha256": "80f5e3911159f585f762a3845a249421c53c9a5536fc8d442f7aeb06dde8c3b2"
+    },
+    {
+      "name": "pack-partial-recovery-presentation-result-01.json",
+      "sha256": "ac2b52088eeb7c6c82d361c033fb0df765a6bad945e8501b6133f4663da52b26"
+    },
+    {
+      "name": "pack-partial-recovery-presentation-acceptance-review-01.json",
+      "sha256": "b2a47238ba99daf5bedf6438a1f8dd40bcd332a635e6c15d9c4fac5a0196b5eb"
+    }
+  ],
+  "gates": {
+    "independent_actual_evidence_and_exact_commit_review_required": true,
+    "required_corrected_source_and_merge_ci_pending": true,
+    "produced_package_accepted": false,
+    "full_F09_closed": false,
+    "full_F11_closed": false,
+    "beta_qualified": false
+  },
+  "limits": {
+    "new_clones": 0,
+    "new_roots": 0,
+    "new_worktrees": 0,
+    "new_builds": 0,
+    "new_candidates": 0,
+    "duplicate_job_reruns": 0
+  },
+  "recorded_at": "2026-10-11T22:33:07.031032+00:00"
+}

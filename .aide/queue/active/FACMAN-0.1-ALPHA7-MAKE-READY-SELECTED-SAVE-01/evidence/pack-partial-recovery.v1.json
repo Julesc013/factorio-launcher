@@ -1,0 +1,289 @@
+{
+  "schema": "facman.pack-partial-recovery-native-proof.v1",
+  "recorded_at": "2026-10-11T21:53:23.948331+00:00",
+  "base_commit": "fd2ba47a1f53fd1ab2b6cf287b080e0bf45e712b",
+  "task_branch": "task/facman-pack-partial-recovery-01",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "behavior": "Recover source-bound interruption before staging creation or during complete raw/generated entries; create only missing data and retain original authority and verified objects.",
+  "source_files": [
+    {
+      "path": "runtime/archive/fl_archive.h",
+      "sha256": "e080d2408fe2df9bc79e4f452a7e19d94757a0256e129a763fbefc864e8f479f"
+    },
+    {
+      "path": "runtime/archive/fl_archive_retained_extraction.cpp",
+      "sha256": "fe7c3ce202dba8d881dbb40b81e1b3cad6221628d761864931898bd0acefa4e1"
+    },
+    {
+      "path": "runtime/factorio/modsets/flb_factorio_modpack_import.cpp",
+      "sha256": "9d1053d0d3e0e95b1c857d20f48cbecf384f7bc77bda2814fbb03b6e2b0a8e29"
+    },
+    {
+      "path": "runtime/factorio/modsets/flb_factorio_modpack_import.h",
+      "sha256": "92b8b28463681df8e6b5556ef4c39d4b003d7ed4c047e6217bac37925dfce3f9"
+    },
+    {
+      "path": "runtime/factorio/application/handlers/recovery.cpp",
+      "sha256": "009988ff66929254199b8c2c86bde9eddf9eed6c8ce5985adf8059d2aa6df91f"
+    },
+    {
+      "path": "runtime/transaction/fl_transaction.cpp",
+      "sha256": "a224f5759d8fb2ff647d271fbc7b12902b10dd2927d873339c4455cbf5e2cf0e"
+    },
+    {
+      "path": "tests/test_portable_modpack_import.py",
+      "sha256": "e0f2e2a60905433d41c39e84ff86ca2edd5a1f0d81f0c59d5dff7ccb34ed7e18"
+    }
+  ],
+  "documentation": {
+    "path": "docs/product/modpack_import.md",
+    "sha256": "df41d0974eef2730e7c606a0663319e73921969e2d4a81ea15843b7afe8de0a5",
+    "proposal_sha256": "81fff820659175f2a85841f7137755eaf09881b3713818ba6f65891110ca3caa"
+  },
+  "native": {
+    "successful_builds": 1,
+    "cache": "existing native-developer",
+    "workers": 2,
+    "cli_sha256": "f84a48e900fe6fac8a73e9a3ac6c5a55564d91a0968e14736e89902681836192",
+    "focused_methods": 32,
+    "test_seconds": 370.066,
+    "skipped_subcases": 2,
+    "skipped_subcases_reason": "Windows dangling-symbolic-link published/committed subcases require unavailable WinError1314 privilege; required Linux CI owns that coverage."
+  },
+  "observed_oracles": [
+    "Actual process loss before any staging, followed by exact offline reconstruction",
+    "Supported original/recovery early journal boundaries; contradictory later/unknown/duplicate evidence refuses before writes",
+    "Second recovery extraction interruption and late foreign staging preservation",
+    "Offline exact selected-content reconstruction with settings and provenance",
+    "Repeated missing raw-entry and generated-entry fault-return interruptions",
+    "Actual process kills during raw extraction and generation, exact stale-lock adoption and normal recovery",
+    "Retained existing bytes and file identities through recovery",
+    "Malformed source, context, inventory, workspace, markers, numeric sizes and generated-intent refusal without further writes",
+    "Foreign/torn entries, live lock contention, late known/unknown entries and original installation drift preservation",
+    "Existing full-inventory process-loss and presentation recovery regressions"
+  ],
+  "command_evidence": [
+    {
+      "name": "initial-branch",
+      "receipt_sha256": "e9a2445680b49681f1504e614ba1a9d727da0a5cbdfe7fe7f4002553cc8b8547",
+      "exit": 0
+    },
+    {
+      "name": "initial-head",
+      "receipt_sha256": "1a371b6b19533467cd82bcb2cd6f980b112731aedef4b6919ae9098d4ce284fc",
+      "exit": 0
+    },
+    {
+      "name": "initial-status",
+      "receipt_sha256": "1a2610ceaeed4c0a0f070b25f9201ad853f5022fa2efa5ebbbc4dac9dbce43d4",
+      "exit": 0
+    },
+    {
+      "name": "tracked-dev",
+      "receipt_sha256": "f7544bcb17074a5bf72fb3fa0e68a0c0c7552dac4aba558af8c0eb0552e95a38",
+      "exit": 0
+    },
+    {
+      "name": "local-dev",
+      "receipt_sha256": "e0e136161e5ae3be248d635afca6465ebfa499da555af39caa717ce111383606",
+      "exit": 0
+    },
+    {
+      "name": "preserved-blocked-gui-task",
+      "receipt_sha256": "62493ed5d011a64b448e9d80c38cd926013af98dd9d264b7ba7963eca2e33876",
+      "exit": 0
+    },
+    {
+      "name": "interactive-identity",
+      "receipt_sha256": "eb09b4a81b1f3ba9cb6281b03f109d9856847e52273760e9f97653e1b9f400a2",
+      "exit": 0
+    },
+    {
+      "name": "github-auth-status",
+      "receipt_sha256": "5d35f27fb3151b4c79e8daf475529e069ba930042d288840a0f893c7406a9fc6",
+      "exit": 0
+    },
+    {
+      "name": "github-user",
+      "receipt_sha256": "cf29a62394151a2e381fa12acccfc84372cf0a1fe86967b609fbf7eaf6d8eada",
+      "exit": 0
+    },
+    {
+      "name": "fetch-current-dev",
+      "receipt_sha256": "c2f964fed89de63413d4d3dd5c6e4e7985a20434562b29ba04bee8e0d065aac0",
+      "exit": 0
+    },
+    {
+      "name": "fresh-tracked-dev",
+      "receipt_sha256": "e4624f9adcef890a704f4403784d794e175adf362332998d2c925471b782601d",
+      "exit": 0
+    },
+    {
+      "name": "fresh-remote-dev",
+      "receipt_sha256": "564e216a2ef2d2e5634fa5915fc41327f962547fec477a68f6901d2a7b9d163a",
+      "exit": 0
+    },
+    {
+      "name": "task-inspect",
+      "receipt_sha256": "d64c9253e1d13ac78f76323aa55e4688dadd7c7a925793e90777f1f094838b7e",
+      "exit": 0
+    },
+    {
+      "name": "task-noop-check",
+      "receipt_sha256": "8e71160534239c1d9a2192a1b26f32e251856f0ad4d2fe299bafcb5f9490a7ff",
+      "exit": 0
+    },
+    {
+      "name": "task-recover",
+      "receipt_sha256": "fe26fee7aaf3de41e3922c8e9500f9f64babeb1bb92e2e96dcbe3152e8426dc6",
+      "exit": 0
+    },
+    {
+      "name": "git-policy",
+      "receipt_sha256": "f987b8c3bc94e73ab80e3a6bb65e804018b2e20e0a27c935c85f56769b789a47",
+      "exit": 0
+    },
+    {
+      "name": "git-detect",
+      "receipt_sha256": "4215816b495ff57223e0de03da56d13ef05cde2f6966fcc089d7893c8943af7f",
+      "exit": 0
+    },
+    {
+      "name": "git-plan",
+      "receipt_sha256": "5cf56824644382bee95783aeee5b4f762189301a2a9d193d8b7dad8b7af8041f",
+      "exit": 0
+    },
+    {
+      "name": "hygiene-paths",
+      "receipt_sha256": "8cd317ff538cd5ee93899e1cf764e33597869b4ad71befd247d159e6c764d19d",
+      "exit": 0
+    },
+    {
+      "name": "hygiene-doctor",
+      "receipt_sha256": "1dfcfbf2adf4aa5e062fc11e29df51ce14cc98dc38477cc654da12c299d10c56",
+      "exit": 1
+    },
+    {
+      "name": "new-branch-absence",
+      "receipt_sha256": "c145b99ead3d8cd8d4bd9ed414e983e8d7a5a69997c23a3ef054957356c21acd",
+      "exit": 0
+    },
+    {
+      "name": "new-remote-branch-absence",
+      "receipt_sha256": "28949dbfa117cc0b5840eecd73ea1024ad1a8ab2169dc410ffa6de745a7ba728",
+      "exit": 0
+    },
+    {
+      "name": "heavy-local-admission",
+      "receipt_sha256": "6ff01e044ece72acf91be66e1f659b40f57563c61e092040b55f6ad13ec43749",
+      "exit": 0
+    },
+    {
+      "name": "pre-mutation-clean",
+      "receipt_sha256": "d32f63565548fc85e2cbc284104586d12959b203ce272b6bc933e8a71d230aa9",
+      "exit": 0
+    },
+    {
+      "name": "pre-mutation-head",
+      "receipt_sha256": "366e9458fc94f48c2484238c692571dfdfb52df1d1c017a04ed4863d546a3a1a",
+      "exit": 0
+    },
+    {
+      "name": "create-owned-task",
+      "receipt_sha256": "cf79e382f81291836ae522ce1e238b754c589c5ec09c99bd9ab5835829f49408",
+      "exit": 0
+    },
+    {
+      "name": "diff-check",
+      "receipt_sha256": "da08307976dfdce20ffe3131ceaa7e69c8773d9a117d4eefefb8346734d8b2e2",
+      "exit": 0
+    },
+    {
+      "name": "generated-check",
+      "receipt_sha256": "41d51dfc53121e6855f0a20c60c9f1400b00ed76a93c4eef9db0e0ca6a006c0c",
+      "exit": 0
+    },
+    {
+      "name": "strict-check",
+      "receipt_sha256": "70b13c57c489bb4df8ebf3a29b4ebe6db89da8f5852b6bac0b8a5129bb60b615",
+      "exit": 0
+    },
+    {
+      "name": "native-cli-build",
+      "receipt_sha256": "97e1c4aeaa1b2335f57b94f8aa466d9068b803689701ff0ef63c73025e9bae21",
+      "exit": 0
+    },
+    {
+      "name": "focused-native-regressions",
+      "receipt_sha256": "c0bdc6365a0c6eb0523ed011cdbc11c1a986f08d1374feffaec513146d8dec9a",
+      "exit": 0
+    },
+    {
+      "name": "final-branch",
+      "receipt_sha256": "4575b33359304f83672f7422efc68c6c8d3cf2f5c300cd62b0d6c6850e844425",
+      "exit": 0
+    },
+    {
+      "name": "final-head",
+      "receipt_sha256": "708c7d417e9d431578518fd743801ff9d87d3e6caba96f2699de7dbddef0b945",
+      "exit": 0
+    },
+    {
+      "name": "final-exact-paths",
+      "receipt_sha256": "8f070220f277da9e0e509e971869bdd3b5ec63b53bd1d8a59a900624cbc105b9",
+      "exit": 0
+    },
+    {
+      "name": "final-empty-index",
+      "receipt_sha256": "c62febc64fa0acf8abce45035df8282d7564f57343eee133a56dd9b1cb50c805",
+      "exit": 0
+    }
+  ],
+  "custody": [
+    {
+      "name": "pack-import-recovery-proposal-09.json",
+      "sha256": "5d6b0827546f004e65fb5941c1b482fa1548877657e1ed62674f8207ebb6fbcb"
+    },
+    {
+      "name": "pack-import-recovery-proposal-review-06.json",
+      "sha256": "d500aab986083e66d97fe2cdc69838a78f7969f450f756f7cc3dfddac4f260f2"
+    },
+    {
+      "name": "apply-and-qualify-pack-partial-recovery-05.py",
+      "sha256": "4916acffe6bfbe5f1e01d06a96bf6f355ac0968c459fa48796a47f0f0631b1d4"
+    },
+    {
+      "name": "pack-partial-recovery-apply-driver-review-05.json",
+      "sha256": "3cf3ac20c3ce4e4a5adccb1fe548a822a4e13ed0c76ef6b63b294ee9b9dd255e"
+    },
+    {
+      "name": "pack-partial-recovery-applied-qualification-05.json",
+      "sha256": "34a9dd4f363da97a2c7f778f533c1a50e65df64550cdfad8ee57fd5a1de03005"
+    },
+    {
+      "name": "pack-partial-recovery-frozen-native-review-packet-03.json",
+      "sha256": "db519b294ed3dec72a09292f9544ef41dc55b65ff391c3b835cdad5b948f2d1f"
+    }
+  ],
+  "evidence_location": "Existing marker-owned FacMan task evidence; complete command logs remain there.",
+  "limits": {
+    "new_clones": 0,
+    "new_worktrees": 0,
+    "new_task_roots": 0,
+    "new_product_candidates": 0,
+    "simultaneous_heavy_local_jobs": 1
+  },
+  "authority": {
+    "native_independent_review_required_before_commit": true,
+    "complete_entry_only_resume": true,
+    "torn_existing_files_overwritten": false,
+    "provider_pins_changed": false,
+    "hostile_writer_atomicity_claimed": false,
+    "largest_admitted_pack_completed": false,
+    "produced_package_accepted": false,
+    "host_or_game_accepted": false,
+    "full_F09_closed": false,
+    "full_F11_closed": false,
+    "beta_qualified": false
+  }
+}

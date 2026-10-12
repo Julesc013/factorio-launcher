@@ -341,7 +341,7 @@ bool load_record(const fs::path& workspace, const std::string& id, Record& recor
             auto size = size_value->number_value();
             auto path = RelativePath::parse(relative);
             auto hash = facman::core::Sha256Digest::parse(digest);
-            if (!size || size.value() < 0 || !path || !hash) { detail = "expected file is invalid"; return false; }
+            if (!size || size.value() < 0 || size.value() >= 18446744073709551616.0 || !path || !hash) { detail = "expected file is invalid"; return false; }
             record.expected_files.push_back({path.take_value(), hash.take_value(), static_cast<std::uint64_t>(size.value())});
         }
     }
@@ -1245,7 +1245,8 @@ record.command_id == "readiness.prepare_selected_save" ||
     else if (record.command_id == "modsets.import")
         record.recovery_actions.push_back(
             std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_inventory_bound") == record.completed_steps.end()
-                ? "preserve_incomplete_pack_staging_for_review"
+                ? (std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_source_inventory_bound") != record.completed_steps.end()
+                    ? "verify_bound_source_and_resume_missing_pack_files" : "preserve_incomplete_pack_staging_for_review")
                 : "verify_and_resume_owned_pack_instance");
     else if (record.command_id == "modsets.export" &&
              record.commit_strategy == "portable_modpack_export_destination_volume_atomic_no_replace")
@@ -1815,6 +1816,11 @@ record.command_id == "readiness.prepare_selected_save" ||
             "Portable export staging requires review before cleanup",
             "Retained export staging and any published target remain intact", false};
     }
+    if (record.command_id == "modsets.import" &&
+        std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_source_inventory_bound") != record.completed_steps.end() &&
+        std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_inventory_bound") == record.completed_steps.end())
+        return Refusal {"operation_specific_recovery_required", "Incomplete import requires original selected-content recovery",
+            "Retained import data is preserved", false};
     const fs::path lock_path = recovery_lock_path(workspace, id);
     facman::base::StableLocalLock recovery_lock;
     facman::base::StableLockResult lock_result = recovery_lock.create(lock_path);

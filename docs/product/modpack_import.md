@@ -30,15 +30,26 @@ bindings. Larger inventories are refused without publication.
 
 After interruption, inspect and plan the transaction with `facman workspace
 recovery inspect --json` and `facman workspace recovery plan <transaction-id>
---json`. `facman workspace recovery apply <transaction-id> --json` can publish a
-fully verified staged instance or finalize a verified committed instance. It
-checks journal ownership, directory identity, complete file and directory
-inventory, exact hashes, and the registered install and built-in metadata.
-Foreign targets, foreign staged entries, changed files, and changed install
-metadata remain untouched. Incomplete extraction is retained for review and
-cannot be resumed automatically; recovery does not delete it. Windows holds the
-staging root during extraction and publishes the verified directory through its
-held source handle into the held destination parent. Concurrent POSIX namespace
+--json`. `facman workspace recovery apply <transaction-id> --json` resumes a
+source-bound interrupted import, publishes a fully verified staged instance, or
+finalizes a verified committed instance. Recovery uses the original archive,
+selected inventory, instance request, workspace and registered installation.
+Keep that original archive and installation available until recovery completes.
+
+If interruption happened before staging was created, recovery exclusively
+creates the still-absent directory. Otherwise its directory identity and
+ownership markers must match the original journal. Recovery verifies every
+existing file and creates only missing entries. It records the expected generated
+configuration, local lock and provenance receipt before creating them, then
+verifies the complete instance before publication. Verified existing files retain
+their bytes and file identities through repeated interruptions.
+
+Foreign targets or staging, changed source or installation metadata, unknown
+entries, and incomplete or changed existing files are refused and preserved.
+Recovery does not overwrite torn files, adopt unjournaled staging, or delete
+retained data. Legacy journals without the original source binding require
+review. Windows holds the staging root during extraction and publishes the
+verified directory through its held source handle into the held destination parent. Concurrent POSIX namespace
 substitution during extraction and publication remains unqualified: pathname
 replacement can redirect extraction or ownership-marker effects before the next
 held-root revalidation detects it. POSIX also retains its final pathname-rename
