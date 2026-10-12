@@ -1,0 +1,101 @@
+{
+  "schema": "facman.make_ready_delivered_gui_acceptance.v1",
+  "status": "PASS_SCOPED_ORDINARY_PORTABLE_GUI_TWO_PARTIAL_STAGES",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "source": "5cb795a12521e926d9335da9cc66b6868a2319c8",
+  "proof_checkout_base": "dce1ed5cabfd8af848c122dc063c1196b3c95772",
+  "producer_run": 38185248142,
+  "producer_job": 114606077437,
+  "legacy_portable_profile": true,
+  "owned_commands": 13,
+  "ordinary_gui_confirmed_effects": 2,
+  "independent_result_review": {
+    "schema": "facman.make_ready_delivered_gui_result_review.v1",
+    "verdict": "PASS",
+    "independent": true,
+    "non_authoring": true,
+    "reviewer": "/root",
+    "author": "/root/make_ready_package_clause",
+    "result_sha256": "99e0e9006987bb7d3d7b517b7163c07580ba75ff3ba59270d4af1b15dc5fa203",
+    "execution_review_sha256": "bf7e8d80d44b886bb4dbf35df9e91a1f18766096c974ded52b8c15df53aec69f",
+    "source": "5cb795a12521e926d9335da9cc66b6868a2319c8",
+    "source_base": "dce1ed5cabfd8af848c122dc063c1196b3c95772",
+    "owned_commands": 13,
+    "actual_gui_effects": 2,
+    "whole_retained_preexisting_data_preserved": true,
+    "delivery_unchanged": true,
+    "visible_observations": [
+      {
+        "stage": 1,
+        "displayed_chars": 1335,
+        "exact_payload_observed": true,
+        "partial_state_visible": true,
+        "component": "routing_configuration"
+      },
+      {
+        "stage": 2,
+        "displayed_chars": 1222,
+        "exact_payload_observed": true,
+        "partial_state_visible": true,
+        "component": "selected_save_declared_context"
+      }
+    ],
+    "decision": "Accept exact two partial MakeReady owner effects through ordinary delivered portable GUI. Both actual visible payloads were complete and exact; truncation hypothesis did not reproduce.",
+    "human_qualified": false,
+    "canonical_installed_desktop_qualified": false,
+    "game_executed": false,
+    "play_qualified": false,
+    "readiness_complete": false,
+    "workunit_closed": false,
+    "beta_qualified": false
+  },
+  "effects": [
+    {
+      "component": "routing_configuration",
+      "receipt_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\make-ready-delivered-live-ui-proof-01\\consumer\\.facman\\action-receipts-v2\\711026c7b53cdd9943cb6220c0b0f561bb8ac29b97a6474626e458da994408c0.v2.json",
+      "receipt_sha256": "1c323d17d78dde6556696c1d0fa4a3393d177632e75394c29c267e007bc52d5f",
+      "operation_id": "op-741753fd9f3d41c786d272c01cc8fada",
+      "transaction_id": "tx-dfee0588279f6ad20cdd23e435f95ddb",
+      "ui_output_sha256": "07223535c144bc17815b503b6352198081c192643fc4c395b87f84a5225130e6",
+      "display_truncated": false,
+      "workspace_changes": [
+        ".facman/action-receipts-v2/711026c7b53cdd9943cb6220c0b0f561bb8ac29b97a6474626e458da994408c0.v2.json",
+        ".facman/action-receipts-v2/workspace-admission.v1.json",
+        "instances/main/config/config.ini",
+        "transactions/tx-dfee0588279f6ad20cdd23e435f95ddb.transaction.v1.json"
+      ]
+    },
+    {
+      "component": "selected_save_declared_context",
+      "receipt_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\make-ready-delivered-live-ui-proof-01\\consumer\\.facman\\action-receipts-v2\\5438c568a38cc4c99d3d5aa06fb2b84b2c798ac197550021c8a1a2e210673c84.v2.json",
+      "receipt_sha256": "49395e2ecae32b852fefaf6467fdda076bbba9a069088079e6f9df6566715c2f",
+      "operation_id": "op-409e58e6365042d2af9ff3081242140c",
+      "transaction_id": "tx-e460d0815c7dc75791fb29e4b35a80a4",
+      "ui_output_sha256": "2e1c79c7ae48831753745f369981cc2c41eb883f5c5beb54cb0da9ec01b7a048",
+      "display_truncated": false,
+      "workspace_changes": [
+        ".facman/action-receipts-v2/5438c568a38cc4c99d3d5aa06fb2b84b2c798ac197550021c8a1a2e210673c84.v2.json",
+        "instances/main/metadata/save-refs/selected.zip.save-ref.v1.json",
+        "transactions/tx-e460d0815c7dc75791fb29e4b35a80a4.transaction.v1.json"
+      ]
+    }
+  ],
+  "visible_payloads_complete": true,
+  "truncation_reproduced": false,
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/make-ready-delivered-gui-custody.v1.zip",
+    "sha256": "efa536dc2658476c412437f9dd22b577edd8ca08ff7e812f212e0a8d58698bfd",
+    "bytes": 261685,
+    "members": 101
+  },
+  "evidence_reuse": "Exact original portable admitted by earlier produced-package acceptance PR407; original artifact/package/source unchanged. No new build or product candidate.",
+  "limitations": [
+    "Synthetic owned instance and save only; no genuine Factorio or human-experience qualification.",
+    "Each owner stage remains partial and requires fresh revision; complete readiness, permit, Play and game execution remain unavailable.",
+    "Canonical installed Desktop/Setup and other hosts remain unqualified. Whole WorkUnit and Beta remain open."
+  ],
+  "source_native_tui_gap": "The same delivered ordinary TUI cannot select save observation; maintained TUI repair underway in this WorkUnit.",
+  "workunit_closed": false,
+  "beta_qualified": false,
+  "release_qualified": false
+}

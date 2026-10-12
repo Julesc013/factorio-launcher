@@ -35,6 +35,7 @@ enum class TuiEventKind {
     operation_event,
     transport_disconnected,
     snapshot_received,
+    observe_launch_intent,
 };
 
 enum class TuiFocusRegion {
@@ -120,6 +121,7 @@ struct TuiSnapshot {
     std::vector<std::string> blockers;
     std::vector<TuiAction> actions;
     std::vector<TuiItem> items;
+    std::string launch_intent;
 };
 
 struct TuiEvent {
@@ -153,6 +155,7 @@ struct TuiState {
     std::size_t action_sequence = 0U;
     TuiSnapshot snapshot;
     TuiForm form;
+    std::string launch_intent = "menu";
 };
 
 struct TuiActionIdentity {

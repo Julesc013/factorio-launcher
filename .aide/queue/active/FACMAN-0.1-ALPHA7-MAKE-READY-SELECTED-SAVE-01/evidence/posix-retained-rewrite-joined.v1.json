@@ -1,0 +1,52 @@
+{
+  "schema": "facman.posix_retained_rewrite_joined_qualification.v1",
+  "base": "d68d6a9981dbd72b9e755ee4efa1bdb9f4f1f181",
+  "integration_parent": "0ff2bf7430ac1d8e279b9403daae72b8fd2661bd",
+  "qualification_summary_sha256": "706ab533db54badf4a3255dd85c22d4d88532b18d3e6ed78c44ab935c43e262a",
+  "source_file_count": 1945,
+  "task_source_path_count": 9,
+  "primitive_source_unchanged": true,
+  "source_files_sha256": {
+    "runtime/platform/fl_local_filesystem.h": "67bd92c6cf1d345c4db8c7802a02d16e15719aeff404f128f470d4ef1ce894dd",
+    "runtime/base/fl_local_operation_lock.cpp": "391b0519873bcc18f0f66cceb242c925fb97f0e8baafd7e27700b8979feea676",
+    "runtime/platform/fl_file_io.h": "60c9dc46bcf01a7f69d372bf96995bf9c8f6fe88ba74879fc44aadb5d6f439bb",
+    "runtime/platform/fl_file_io.cpp": "793c6126823f1905858e82433cdffd42ca7c85045583b66cb73b43ecc9495262",
+    "tests/native/fl_retained_rewrite_smoke.cpp": "262bf323d9f72d972322273aabbb0755ef7d877f6628f23a96456eed98dd8440",
+    "tests/native/CMakeLists.txt": "41c47dc0560e4b7f74db8ff5fadca6495d45cf155322cfcf8b6a8ae52af98013",
+    "tests/test_posix_retained_rewrite_admission.py": "559a6959d4347ff7ead18ba64f8ebe3e382d5a86329acf583017f06596571d52",
+    "docs/development/existing-configuration-reconciliation.md": "11cc63a806844aa3812dc6f0d2d413dbd4dbb2786097e801e2ebf896a2a292ba",
+    "tools/local_lock_check.py": "780e2541a32d3e972e4ea6ed12f0958ed998ad237a9501787932720544dce9ec"
+  },
+  "original_independent_review_sha256": "7fb8c3e3da5de9f425aeed0c1905eb62b304054609aee384bfa660e42bcb159f",
+  "linux_cli_sha256": "f037bb30ebc220874f9dc231f93de173892eb0925d157f5c6898a8774ad337af",
+  "linux_tests_passed": 43,
+  "explicit_windows_only_skips": 4,
+  "real_sigkill_phases": [
+    "after_prefix",
+    "after_write",
+    "after_truncate"
+  ],
+  "uid": 65534,
+  "gid": 65534,
+  "groups": [],
+  "private_tmpfs_bytes": 134217728,
+  "drained": true,
+  "windows_scoped_reuse_sha256": "1983dde85f9134eee359a3d80c36c16cff7e96a2cbcc452afd91a494eea6e35b",
+  "required_cross_platform_checks_pending": true,
+  "custody": "posix-retained-rewrite-joined-custody.v1.zip",
+  "custody_sha256": "e6d59665b1d20e4efbdba3c4826e3434345163ffa0b133b52be992e3f7f852c4",
+  "custody_members": 33,
+  "owner_admitted": false,
+  "macos_runtime_qualified": false,
+  "physical_ext4": false,
+  "power_loss": false,
+  "game_execution": false,
+  "beta": false,
+  "rc": false,
+  "authority_delta": "none",
+  "original_commit_evidence_paths": [
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/posix-retained-rewrite.v1.json",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/posix-retained-rewrite-custody.v1.zip"
+  ]
+}

@@ -16,7 +16,7 @@ int main()
     const std::string source = R"({
       "schema":"facman.presentation_snapshot.v1",
       "revision":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-      "selected_context":{"instance_id":"main"},
+      "selected_context":{"instance_id":"main","launch_intent":"menu"},
       "page":{"scope":"launch_deck","summary":"Launch Deck for main","items":[
         {"instance_id":"main","display_name":"Main world","factorio_version":"2.0.77","profile":"default","selected":true},
         {"instance_id":"test","display_name":"Test world","factorio_version":"2.0.77","profile":"safe","selected":false}
@@ -198,6 +198,28 @@ int main()
     })";
     if (parse_presentation_snapshot(completed_source).last_run != "completed") return 16;
 
+    if (snapshot.launch_intent != "menu") return 40;
+    auto invalid_intent_snapshot = parse_presentation_snapshot(
+        "{\"revision\":\"abc\",\"selected_context\":{\"launch_intent\":\"benchmark\"}}");
+    if (invalid_intent_snapshot.launch_intent != "benchmark") return 41;
+    TuiState observing;
+    observing.snapshot = snapshot;
+    observing.pending_action = "readiness.prepare";
+    observing.form.id = "readiness.prepare";
+    TuiEvent observation;
+    observation.kind = TuiEventKind::observe_launch_intent;
+    observation.value = "load_save";
+    observing = reduce_tui_state(observing, observation);
+    if (observing.launch_intent != "load_save" || !observing.pending_action.empty() ||
+        !observing.form.id.empty() || !observing.snapshot.revision.empty() ||
+        !observing.refresh_requested) return 42;
+    observation.value = "benchmark";
+    observing = reduce_tui_state(observing, observation);
+    if (observing.launch_intent != "load_save") return 43;
+    observation.value = "menu";
+    observing = reduce_tui_state(observing, observation);
+    if (observing.launch_intent != "menu") return 44;
+
     TuiState state;
     TuiEvent received;
     received.kind = TuiEventKind::snapshot_received;
@@ -268,7 +290,7 @@ int main()
 
     TuiRenderModel model = make_tui_render_model(state, false);
     if (model.navigation.size() != 8U || model.active_navigation != 1U ||
-        model.launch_deck.size() != 6U || model.actions.size() != 4U ||
+        model.launch_deck.size() != 7U || model.actions.size() != 4U ||
         model.active_action != 0U || model.primary_action != "Refresh" ||
         model.focus != "Search: test") return 6;
     std::ostringstream linear;

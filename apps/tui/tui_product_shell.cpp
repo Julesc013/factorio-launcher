@@ -55,7 +55,8 @@ std::string lower(std::string value)
 bool refresh(CommandClient& client, TuiState& state, std::ostream& error)
 {
     const std::string scope = scope_for(state.page);
-    auto identity = client.negotiate(scope, state.snapshot.selected_instance_id, state.search);
+    auto identity = client.negotiate(
+        scope, state.snapshot.selected_instance_id, state.search, state.launch_intent);
     if (!identity) {
         TuiEvent event;
         event.kind = TuiEventKind::transport_disconnected;
@@ -65,10 +66,10 @@ bool refresh(CommandClient& client, TuiState& state, std::ostream& error)
         return false;
     }
     TuiSnapshot snapshot = parse_presentation_snapshot(identity.value().raw_snapshot);
-    if (snapshot.revision.empty()) {
+    if (snapshot.revision.empty() || snapshot.launch_intent != state.launch_intent) {
         TuiEvent event;
         event.kind = TuiEventKind::transport_disconnected;
-        event.value = "Presentation snapshot could not be decoded";
+        event.value = "Presentation snapshot could not be decoded or observation did not match";
         state = reduce_tui_state(state, event);
         error << event.value << '\n';
         return false;
@@ -81,8 +82,14 @@ bool refresh(CommandClient& client, TuiState& state, std::ostream& error)
     if (snapshot.selected_instance_id.empty() && !snapshot.items.empty() &&
         (state.page == TuiPage::home || state.page == TuiPage::instances)) {
         const std::string selection = snapshot.items.front().id;
-        auto selected = client.negotiate(scope, selection, state.search);
+        auto selected = client.negotiate(scope, selection, state.search, state.launch_intent);
         if (selected) snapshot = parse_presentation_snapshot(selected.value().raw_snapshot);
+    }
+    if (snapshot.launch_intent != state.launch_intent) {
+        state.transport_connected = false;
+        state.refresh_requested = false;
+        state.status = "Presentation observation did not match";
+        return false;
     }
     TuiEvent event;
     event.kind = TuiEventKind::snapshot_received;
@@ -132,11 +139,20 @@ void select_action_relative(TuiState& state, int direction)
     state = reduce_tui_state(state, event);
 }
 
+void observe_launch_intent(TuiState& state, const std::string& intent)
+{
+    TuiEvent event;
+    event.kind = TuiEventKind::observe_launch_intent;
+    event.value = intent;
+    state = reduce_tui_state(state, event);
+}
+
 void toggle_help(TuiState& state)
 {
     state.help_visible = !state.help_visible;
     state.status = state.help_visible
-        ? "Help: use numbered pages, j/k or arrows, Enter, Tab/Shift+Tab, Space, /, Ctrl+R, Esc, Ctrl+C, q"
+        ? "Help: m Menu, s Selected Save, numbered pages, j/k or arrows, Enter, "
+          "Tab/Shift+Tab, Space, /, Ctrl+R, Esc, Ctrl+C, q"
         : "Help closed";
 }
 
@@ -213,6 +229,12 @@ int activate_selected_action(CommandClient& client, TuiState& state)
     }
     const std::size_t index = (std::min)(state.selected_action, state.snapshot.actions.size() - 1U);
     const TuiAction action = state.snapshot.actions[index];
+    if (!state.transport_connected || state.refresh_requested || state.snapshot.revision.empty() ||
+        state.snapshot.launch_intent != state.launch_intent) {
+        state.pending_action.clear();
+        state.status = "Action refused before effects: refresh the selected observation";
+        return 0;
+    }
     if (!action.available) {
         state.status = "Action refused before effects: " + action.blocker;
         return 0;
@@ -268,6 +290,7 @@ int activate_selected_action(CommandClient& client, TuiState& state)
     facman::core::json::ObjectBuilder payload;
     payload.add_string("action_id", action.id);
     payload.add_string("scope", scope_for(state.page));
+    payload.add_string("launch_intent", state.snapshot.launch_intent);
     payload.add_string("expected_snapshot_revision", state.snapshot.revision);
     payload.add_string("request_id", identity.request_id);
     payload.add_string("idempotency_key", identity.idempotency_key);
@@ -315,7 +338,8 @@ int activate_selected_action(CommandClient& client, TuiState& state)
         response.value().payload_member_json("replacement_snapshot");
     if (replacement_json != "null") {
         TuiSnapshot replacement = parse_presentation_snapshot(replacement_json);
-        if (replacement.revision.empty() || replacement.scope != scope_for(state.page)) {
+        if (replacement.revision.empty() || replacement.scope != scope_for(state.page) ||
+            replacement.launch_intent != state.launch_intent) {
             state.status = "Action response invalid: replacement snapshot did not match the active scope";
             return 0;
         }
@@ -346,6 +370,12 @@ int process_line(CommandClient& client, TuiState& state, std::string command)
     }
     if (normalized == "help" || normalized == "f1" || normalized == "?") {
         toggle_help(state);
+        return 0;
+    }
+    if (normalized == "m" || normalized == "menu" ||
+        normalized == "s" || normalized == "selected-save") {
+        observe_launch_intent(
+            state, normalized == "m" || normalized == "menu" ? "menu" : "load_save");
         return 0;
     }
     if (normalized == "r" || normalized == "refresh") {
@@ -698,6 +728,9 @@ int run_full_screen(
         if (key == kTerminalNoInput) continue;
         if (key == EOF || key == 'q') break;
         if (key >= '1' && key <= '8') navigate(state, static_cast<std::size_t>(key - '1'));
+        else if (key == 'm' || key == 's') {
+            observe_launch_intent(state, key == 'm' ? "menu" : "load_save");
+        }
         else if (key == 'j') select_relative(state, 1);
         else if (key == 'k') select_relative(state, -1);
         else if (key == '\t') select_action_relative(state, 1);

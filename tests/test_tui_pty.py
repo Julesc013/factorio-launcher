@@ -111,7 +111,7 @@ class TuiPtyTests(unittest.TestCase):
 
             os.write(master, b"\x1bOP")  # F1
             self.assertTrue(
-                read_until(master, output, b"Help: use numbered pages"),
+                read_until(master, output, b"Help: m Menu, s Selected Save"),
                 "the TUI did not acknowledge F1 before the next input",
             )
             os.write(master, b"\x03")  # Ctrl+C is a typed cancel event, not process death
@@ -143,7 +143,7 @@ class TuiPtyTests(unittest.TestCase):
                 )
             drain_pty(master, output)
             self.assertEqual(return_code, 0)
-            self.assertIn(b"Help: use numbered pages", output)
+            self.assertIn(b"Help: m Menu, s Selected Save", output)
             self.assertIn(b"without manufacturing an operation outcome", output)
             self.assertIn(b"Switched to portable linear mode", output)
             self.assertIn(b"\x1b[?1049l", output)
