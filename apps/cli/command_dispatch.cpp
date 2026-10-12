@@ -704,7 +704,10 @@ int command_installs(const Options& options)
             flag(options.args, "--json"),
             "Managed install plan created through Universal Setup.");
     }
-    if ((action == "verify" || action == "repair" || action == "uninstall") && options.args.size() >= 3) {
+    if (action == "verify" && options.args.size() >= 3) return emit_report(
+        call(options, "installs.verify", fields_payload({{"id", options.args[2]}})), flag(options.args, "--json"),
+        facman::cli::managed_install_verification_text, "Managed verification report is missing", "Managed verification report is invalid");
+    if ((action == "repair" || action == "uninstall") && options.args.size() >= 3) {
         return emit_basic(call(options, "installs." + action, fields_payload({{"id", options.args[2]}})), flag(options.args, "--json"), "Setup operation previewed");
     }
     return 2;

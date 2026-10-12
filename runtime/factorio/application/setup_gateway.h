@@ -384,6 +384,16 @@ struct SetupRefusal {
     std::string reason;
 };
 
+struct InstallVerifyRequest {
+    UninstallPlanRequest installed;
+    std::string report_id;
+    std::string verified_at;
+};
+
+facman::core::Result<std::string> decode_install_verification_report(
+    const std::string& response, const InstallVerifyRequest& request,
+    const std::string& installed_state_digest, const std::string& ownership_manifest_digest);
+
 class SetupGateway {
 public:
     virtual ~SetupGateway() = default;
@@ -411,7 +421,7 @@ public:
         const UninstallApplyRequest& request) = 0;
     virtual facman::core::Result<UninstallRecoveryInspection> inspect_uninstall_recovery(
         const UninstallRecoveryRequest& request) = 0;
-    virtual facman::core::Result<SetupRefusal> verify_install(const std::string& install_id) = 0;
+    virtual facman::core::Result<std::string> verify_install(const InstallVerifyRequest& request) = 0;
     virtual facman::core::Result<SetupRefusal> repair_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> uninstall_install(const std::string& install_id) = 0;
 };

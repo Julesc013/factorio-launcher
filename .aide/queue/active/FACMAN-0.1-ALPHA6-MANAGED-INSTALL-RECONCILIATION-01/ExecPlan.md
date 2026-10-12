@@ -243,3 +243,15 @@ separate. Unavailable host/input cells block their own qualification only.
 - The WorkUnit remains active. Cross-operation coordination, the remaining
   install/move/verify/adoption lifecycle, genuine Factorio and physical host
   qualification, packaging, signing and release acceptance remain open.
+
+## 2026-10-13 — read-only managed installation verification
+
+- Implemented registered installs.verify using pinned Universal Setup read-only inspection/verification with exact provider, record, ownership and report bindings. The default unconfigured capability remains unavailable.
+- Verified healthy, damaged and absent targets, archive independence, preserved foreign data, and record/provider/link refusals. Ordinary CLI, JSON and declared v2 stdio RPC report actual observations without mutation.
+- Accepted 27 real public CLI calls including 8 human-format calls, one RPC call, native decoder smoke, strict gate and AIDE. See evidence/managed-verification-native.v1.json and its hash-closed custody for exact source/images, independent review, failures and owned execution receipts.
+- Scoped source-native synthetic engineering acceptance only. Produced packages, genuine host/game/human acceptance, remaining lifecycle transitions and complete F11/Beta remain open; the WorkUnit stays active.
+
+## 2026-10-13 — PR408 census assertion correction
+
+- Required macOS complete-suite execution found the old fixed implemented-unqualified count (14). Registered verification correctly adds one unqualified implementation, making the exact count15. Corrected only that expectation after independent non-authoring review; unknown81 and every scope/release assertion stay unchanged.
+- Focused census tests pass. Runtime/native/provider sources and earlier scoped native proof are retained; fresh required checks remain necessary. See evidence/pr408-census-correction.v1.json. No WorkUnit or Beta gate is closed.
