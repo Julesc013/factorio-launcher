@@ -29,20 +29,26 @@ extern char** environ;
 namespace facman::platform {
 namespace {
 
-void write_exec_error(int descriptor, int child_error) noexcept
+bool write_exec_status_frame(int descriptor, int value) noexcept
 {
-    const auto* bytes = reinterpret_cast<const unsigned char*>(&child_error);
+    const auto* bytes = reinterpret_cast<const unsigned char*>(&value);
     std::size_t offset = 0;
-    while (offset < sizeof(child_error)) {
-        const ssize_t count = write(descriptor, bytes + offset, sizeof(child_error) - offset);
+    while (offset < sizeof(value)) {
+        const ssize_t count = write(descriptor, bytes + offset, sizeof(value) - offset);
         if (count > 0) {
             offset += static_cast<std::size_t>(count);
         } else if (count < 0 && errno == EINTR) {
             continue;
         } else {
-            break;
+            return false;
         }
     }
+    return true;
+}
+
+void write_exec_error(int descriptor, int child_error) noexcept
+{
+    (void)write_exec_status_frame(descriptor, child_error);
 }
 
 std::vector<std::string> environment(const ProcessRequest& request)
@@ -399,8 +405,14 @@ ProcessResult supervise_process(const ProcessRequest& request)
             result.termination = ProcessTermination::pending;
         }
         if (child == 0) {
-            if (setpgid(0, 0) != 0 ||
-                (!working_directory.empty() && chdir(working_directory.c_str()) != 0) ||
+            if (setpgid(0, 0) != 0) {
+                const int child_error = errno;
+                write_exec_error(pipes.exec_status[1], child_error);
+                _exit(126);
+            }
+            if (!write_exec_status_frame(pipes.exec_status[1],
+                    detail::kChildGroupSetupAcknowledgement)) _exit(126);
+            if ((!working_directory.empty() && chdir(working_directory.c_str()) != 0) ||
                 dup2(pipes.input[0], STDIN_FILENO) < 0 ||
                 dup2(pipes.output[1], STDOUT_FILENO) < 0 ||
                 dup2(pipes.error[1], STDERR_FILENO) < 0) {
@@ -457,10 +469,14 @@ ProcessResult supervise_process(const ProcessRequest& request)
                     // Close-on-exec may already prove dispatch when cancellation
                     // races the first ordinary pump round. Observe that one
                     // nonblocking endpoint before typing the cancellation.
-                    if (!outcome.observe_exec_status(pump)) break;
+                    const bool status_ok = outcome.observe_exec_status(pump);
+                    (void)owned.lifecycle.confirm_group_setup(pump.group_setup_acknowledged());
+                    if (!status_ok) break;
                     if (!announce_if_ready()) break;
                     if (outcome.cancelled(request)) break;
-                    if (!outcome.step(pump, 10)) break;
+                    const bool step_ok = outcome.step(pump, 10);
+                    (void)owned.lifecycle.confirm_group_setup(pump.group_setup_acknowledged());
+                    if (!step_ok) break;
                     if (!announce_if_ready()) break;
                     if (pump.overflow()) {
                         outcome.reason(ProcessTermination::output_limit, "process output limit exceeded");
@@ -481,6 +497,9 @@ ProcessResult supervise_process(const ProcessRequest& request)
                 outcome.uncertain("process cancellation callback or pipe processing threw");
             }
         }
+        // Retain an already decoded frame even if a callback, deadline or
+        // another endpoint stopped the loop before execution was announced.
+        (void)owned.lifecycle.confirm_group_setup(pump.group_setup_acknowledged());
         pump.close_input();
         owned.shutdown(terminal_observed ? std::chrono::milliseconds(0) :
             request.termination_grace_period);

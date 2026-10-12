@@ -22,6 +22,11 @@ void require(bool value, const char* message)
     if (!value) throw std::runtime_error(message);
 }
 
+std::string status_frame(int value)
+{
+    return {reinterpret_cast<const char*>(&value), sizeof(value)};
+}
+
 struct ReadAction {
     std::string bytes;
     int error = 0;
@@ -108,10 +113,78 @@ struct Fixture {
     Fixture() : pump(operations, input, output, error, exec, request, result) {}
     void exec_success()
     {
+        operations.pending[6].push_back({status_frame(kChildGroupSetupAcknowledgement)});
         operations.pending[6].push_back({""});
-        require(pump.step(0) && pump.exec_ready(), "empty closed exec status must admit exec");
+        require(pump.step(0) && pump.group_setup_acknowledged() && !pump.exec_ready(),
+            "group setup must be decoded independently of exec");
+        require(pump.step(0) && pump.exec_ready(), "acknowledged closed exec status must admit exec");
     }
 };
+
+void group_setup_frames()
+{
+    Fixture missing;
+    missing.operations.pending[6].push_back({""});
+    require(!missing.pump.observe_exec_status() && missing.pump.exec_failed() &&
+        !missing.pump.group_setup_acknowledged() && !missing.pump.exec_ready() &&
+        missing.pump.reliable_exec_error() == 0,
+        "a child killed before setup cannot grant group or dispatch proof through EOF");
+
+    const auto ack = status_frame(kChildGroupSetupAcknowledgement);
+    Fixture fragmented;
+    fragmented.operations.pending[6].push_back({ack.substr(0, 1)});
+    require(fragmented.pump.observe_exec_status() && !fragmented.pump.group_setup_acknowledged(),
+        "partial acknowledgement granted cleanup authority");
+    fragmented.operations.pending[6].push_back({"", EINTR});
+    const auto calls = fragmented.operations.calls;
+    require(fragmented.pump.observe_exec_status() && fragmented.operations.calls == calls + 1 &&
+        !fragmented.pump.group_setup_acknowledged(), "interrupted acknowledgement read was retried or admitted");
+    fragmented.operations.pending[6].push_back({ack.substr(1)});
+    require(fragmented.pump.observe_exec_status() && fragmented.pump.group_setup_acknowledged() &&
+        !fragmented.pump.exec_ready(), "complete fragmented setup lost its independent proof");
+    fragmented.operations.pending[6].push_back({""});
+    require(fragmented.pump.observe_exec_status() && fragmented.pump.exec_ready(),
+        "acknowledged EOF failed dispatch control");
+
+    for (int invalid : {0, -2}) {
+        Fixture malformed;
+        malformed.operations.pending[6].push_back({status_frame(invalid)});
+        require(!malformed.pump.observe_exec_status() && !malformed.pump.group_setup_acknowledged() &&
+            !malformed.pump.exec_ready() && malformed.pump.reliable_exec_error() == 0,
+            "malformed setup frame granted authority or a reliable errno");
+    }
+    Fixture duplicate;
+    duplicate.operations.pending[6].push_back({ack});
+    duplicate.operations.pending[6].push_back({ack});
+    require(!duplicate.pump.observe_exec_status() && duplicate.pump.group_setup_acknowledged() &&
+        !duplicate.pump.exec_ready() &&
+        duplicate.pump.reliable_exec_error() == 0, "duplicate setup frame was accepted");
+
+    Fixture error_after_setup;
+    error_after_setup.operations.pending[6].push_back({ack});
+    require(error_after_setup.pump.observe_exec_status() && error_after_setup.pump.group_setup_acknowledged(),
+        "setup proof missing before exec failure");
+    error_after_setup.operations.pending[6].push_back({status_frame(ENOENT)});
+    require(!error_after_setup.pump.observe_exec_status() && error_after_setup.pump.group_setup_acknowledged() &&
+        !error_after_setup.pump.exec_ready() && error_after_setup.pump.reliable_exec_error() == ENOENT,
+        "later errno erased group proof or was mislabeled as dispatch");
+
+    for (bool after_setup : {false, true}) {
+        Fixture partial;
+        if (after_setup) {
+            partial.operations.pending[6].push_back({ack});
+            require(partial.pump.observe_exec_status(), "setup control before partial errno");
+        }
+        partial.operations.pending[6].push_back({status_frame(after_setup ? EACCES :
+            kChildGroupSetupAcknowledgement).substr(0, 1)});
+        require(partial.pump.observe_exec_status(), "partial frame was not retained");
+        partial.operations.pending[6].push_back({""});
+        require(!partial.pump.observe_exec_status() && !partial.pump.exec_ready() &&
+            partial.pump.reliable_exec_error() == 0 &&
+            partial.pump.group_setup_acknowledged() == after_setup,
+            "partial EOF granted errno/dispatch or erased a prior group proof");
+    }
+}
 
 void fairness()
 {
@@ -306,7 +379,7 @@ void post_fork_controls()
         outcome.finish(0, true, true, 0);
         require(fixture.result.termination == ProcessTermination::pending, "later drain failure lost pending");
     }
-    for (const int number : {ENOENT, 0, -1}) {
+    for (const int number : {ENOENT, 0, -2}) {
         for (const int exit_code : {126,127,0}) {
             Fixture fixture; PosixProcessOutcome outcome(fixture.result);
             fixture.operations.pending[6].push_back(
@@ -341,12 +414,15 @@ void cancellation_exec_status_observation()
     for (const bool exec_confirmed : {false, true}) {
         Fixture fixture;
         fixture.request.cancellation_requested = []() { return true; };
-        if (exec_confirmed) fixture.operations.pending[6].push_back({""});
+        if (exec_confirmed) {
+            fixture.operations.pending[6].push_back({status_frame(kChildGroupSetupAcknowledgement)});
+            fixture.operations.pending[6].push_back({""});
+        }
         PosixProcessOutcome outcome(fixture.result);
         const auto calls_before = fixture.operations.calls;
         require(outcome.observe_exec_status(fixture.pump),
             "bounded exec-status observation failed");
-        require(fixture.operations.calls == calls_before + 1,
+        require(fixture.operations.calls == calls_before + (exec_confirmed ? 2U : 1U),
             "exec-status observation waited or advanced another endpoint");
         if (fixture.pump.exec_ready()) {
             require(outcome.announce(true, fixture.request,
@@ -363,15 +439,92 @@ void cancellation_exec_status_observation()
 
     Fixture failed;
     const int exec_error = ENOENT;
+    failed.operations.pending[6].push_back({status_frame(kChildGroupSetupAcknowledgement)});
     failed.operations.pending[6].push_back(
         {std::string(reinterpret_cast<const char*>(&exec_error), sizeof(exec_error))});
     PosixProcessOutcome failed_outcome(failed.result);
+    const auto before = failed.operations.calls;
     require(!failed_outcome.observe_exec_status(failed.pump),
         "exec failure frame was treated as a successful observation");
+    require(failed.operations.calls == before + 2 && failed.pump.group_setup_acknowledged(),
+        "buffered setup plus errno was not resolved before cancellation");
     failed_outcome.finish(126 << 8, false, false, failed.pump.reliable_exec_error());
     require(failed.result.termination == ProcessTermination::start_failed &&
         failed.result.identity.process_id == 0,
         "reliable exec failure was relabelled as post-dispatch cancellation");
+}
+
+struct StartupChildOperations {
+    std::vector<pid_t> signal_targets;
+    int consumes = 0;
+    bool consumed = false;
+    int native_status = 0;
+    ChildPoll observe(pid_t child, int options) {
+        require(!consumed && options == (WEXITED | WNOHANG | WNOWAIT),
+            "startup observation lost exclusive unreaped ownership");
+        ChildPoll result; result.info.si_pid = child; result.info.si_code = CLD_EXITED; return result;
+    }
+    ChildWait consume(pid_t child) {
+        require(!consumed, "startup child was consumed twice");
+        consumed = true; ++consumes; return {child, 0, native_status};
+    }
+    ChildSignal signal(pid_t target, int) {
+        require(!consumed, "startup proof signaled a replacement numeric group");
+        signal_targets.push_back(target); return {0, 0};
+    }
+    ChildGroupSnapshot observe_group(pid_t) {
+        require(!consumed, "startup proof inspected a replacement numeric group");return {};
+    }
+    std::chrono::steady_clock::time_point now() { return {}; }
+    void pause(std::chrono::milliseconds) {}
+};
+
+void startup_group_lookup_race()
+{
+    for (const std::string mode : {"success", "exec-error", "callback-error", "missing", "partial", "malformed"}) {
+        Fixture fixture;
+        const bool acknowledged = mode == "success" || mode == "exec-error" || mode == "callback-error";
+        const auto ack = status_frame(kChildGroupSetupAcknowledgement);
+        if (acknowledged) fixture.operations.pending[6].push_back({ack});
+        else if (mode == "partial") fixture.operations.pending[6].push_back({ack.substr(0, 1)});
+        else if (mode == "malformed") fixture.operations.pending[6].push_back({status_frame(-2)});
+        fixture.operations.pending[6].push_back({mode == "exec-error" ? status_frame(ENOENT) : ""});
+        StartupChildOperations operations;
+        if (mode == "exec-error") operations.native_status = 126 << 8;
+        // Both parent numeric group probes failed, but the exact child is
+        // still exclusively waitable. Only the child frame can repair proof.
+        PosixChildLifecycle<StartupChildOperations> child(45, false, operations);
+        PosixProcessOutcome outcome(fixture.result);
+        if (mode == "callback-error") fixture.request.started = [](const ProcessIdentity&) { throw 17; };
+        for (int round = 0; round < 2; ++round) {
+            const bool ok = outcome.observe_exec_status(fixture.pump);
+            (void)child.confirm_group_setup(fixture.pump.group_setup_acknowledged());
+            if (!ok) break;
+            if (fixture.pump.exec_ready()) {
+                (void)outcome.announce(true, fixture.request, ProcessIdentity {45, "fixture", "fixture-start"});
+                break;
+            }
+        }
+        require(child.observe() == ChildObservation::terminal, "startup terminal wait proof missing");
+        bool tree = false;
+        require(child.finish(std::chrono::milliseconds(0), tree) && operations.consumes == 1 &&
+            child.status() && *child.status() == operations.native_status,
+            "startup repair changed exact consuming status");
+        require(tree == acknowledged && child.error().empty() == acknowledged,
+            "startup cleanup erased refusal or lost valid setup proof");
+        for (auto target : operations.signal_targets)
+            require(target == (acknowledged ? -45 : 45), "startup cleanup used unproved group authority");
+        if (!child.error().empty()) outcome.uncertain(child.error());
+        outcome.finish(child.status(), mode == "success", false, fixture.pump.reliable_exec_error());
+        require(fixture.result.termination == (mode == "success" ? ProcessTermination::exited :
+            mode == "exec-error" ? ProcessTermination::start_failed : ProcessTermination::pending),
+            "startup repair laundered uncertain execution or lost a reliable exec failure");
+        const auto signals = operations.signal_targets.size();
+        require(!child.confirm_group_setup(true), "late acknowledgement reacquired consumed ownership");
+        child.terminate(std::chrono::milliseconds(0), tree);
+        require(operations.signal_targets.size() == signals && !child.reap(),
+            "late setup proof reused a consumed numeric group");
+    }
 }
 
 struct InterruptedWait {
@@ -537,6 +690,8 @@ int main(int argc, char** argv)
         socket_and_close_controls();
         post_fork_controls();
         cancellation_exec_status_observation();
+        group_setup_frames();
+        startup_group_lookup_race();
         finite_reap_control();
         deadline_range_controls();
         fairness();
