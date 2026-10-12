@@ -318,3 +318,15 @@ PR406 is integrated at dce1ed5cabfd8af848c122dc063c1196b3c95772; its required so
 The self-setup artifact retained a real legacy GUI relocation/manifest defect. Its service-bound original portable ZIP was recovered byte-for-byte against the recorded original SHA, without editing the failed payload or fabricating a fixed Setup package. This proves the original legacy portable GUI, not the selected canonical installed Desktop product. Five failed client attempts and the focused diagnostics are preserved. A compiled NoInlining initializer fixes PowerShell default UIA proxy initialization; actual tab captions, nested modal windows and the dropdown ValuePattern are then exercised through standard UIA. No product metadata or source rewrite supplied this result.
 
 Durable receipt and compact synthetic-input/process custody are in evidence/pack-partial-produced.v1.json and evidence/pack-partial-produced-custody.zip. PR404 owner-only control authorization, canonical installed GUI/Setup, GUI process-loss, genuine game/human/fullscreen TUI, other-host, complete F09/F11 and Beta gates remain open. A torn-file refusal is not torn-file repair. The active WorkUnit remains partial; continue dependency-ready implementation rather than healthy CI observation turns.
+
+### Linux same-inode preparation publication and recovery
+
+The missing-INI and new selected-context owners now finish the exact journaled
+Linux staging/destination pair and preserve its inode. Ordinary pinned readers
+remain single-link. Fresh Make Ready creates routing, then selected context;
+interruption, replay, foreign objects, extra links, symlinks and actual final
+rename/write interference are exercised under uid65534 in private bounded tmpfs.
+Windows owner/native regressions and repository checks pass. Evidence and retained
+failed attempts are bound in evidence/posix-publication-native.v1.json and its
+custody archive. Mac publication, POSIX existing-INI rewriting, exact packages,
+physical ext4/power-loss, real game, human and full Make Ready/Beta remain open.

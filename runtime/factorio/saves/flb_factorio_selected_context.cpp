@@ -282,6 +282,15 @@ Result continue_publication(const fs::path& workspace, tx::Record& record,
     const bool published = !absent(record.target);
     facman::platform::StableInputFile published_file;
     if (published) {
+#ifdef __linux__
+        if (!tx::terminal(record.state)) {
+            if (record.effect_file_identity.empty() || !refs.open_child_file_no_follow_for_publication_recovery(
+                    staging.filename(), record.target.filename(), [&](const facman::platform::FileIdentity& file) {
+                        return file_identity(file) == record.effect_file_identity;
+                    }, bytes, published_file).ok() || !refs.finish_child_file_publication(staging.filename(), bytes, published_file).ok())
+                return uncertain("Existing selected context publication or owned staging cleanup is inconsistent");
+        } else
+#endif
         if (record.effect_file_identity.empty() || !verify_file(refs, record.target.filename(), record, bytes, nullptr, &published_file))
             return uncertain("Existing selected context is foreign or differs from its journaled object and bytes");
     } else {
@@ -319,7 +328,18 @@ Result continue_publication(const fs::path& workspace, tx::Record& record,
         output.close_without_flush();
         fault("after_publication");
         pause(root_path, "after_publication");
+#ifdef __linux__
+        inputs = guard.observe_inputs(&record);
+        if (!inputs || inputs.value() != guard.inputs_sha256)
+            return uncertain("Selected context inputs changed before owned staging cleanup");
+        if (!refs.open_child_file_no_follow_for_publication_recovery(staging.filename(), record.target.filename(),
+                [&](const facman::platform::FileIdentity& file) { return file_identity(file) == record.effect_file_identity; },
+                bytes, published_file).ok() || !refs.finish_child_file_publication(staging.filename(), bytes, published_file).ok())
+            return uncertain("Published selected context or owned staging cleanup changed");
+        fault("after_staging_cleanup");
+#else
         if (!verify_file(refs, record.target.filename(), record, bytes, nullptr, &published_file)) return uncertain("Published selected context identity or bytes changed");
+#endif
     }
     pause(root_path, "before_final_observation");
     inputs = guard.observe_inputs(&record);
@@ -338,11 +358,10 @@ Result continue_publication(const fs::path& workspace, tx::Record& record,
 
 bool selected_association_publication_available() noexcept
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__linux__)
     return true;
 #else
-    // Recovery requires the destination to retain the journaled staging inode.
-    // The POSIX donor APIs have different publication/cleanup contracts.
+    // macOS cloning does not retain the durably journaled staging inode.
     return false;
 #endif
 }

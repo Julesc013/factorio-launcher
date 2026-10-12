@@ -225,6 +225,15 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
          !tx::advance(workspace, record, "staging", "configuration_staging_started", detail))) return uncertain(detail);
     facman::platform::StableInputFile published;
     if (!absent(target)) {
+#ifdef __linux__
+        if (!tx::terminal(record.state)) {
+            if (record.effect_file_identity.empty() || !config.open_child_file_no_follow_for_publication_recovery(
+                    staging.filename(), target.filename(), [&](const facman::platform::FileIdentity& file) {
+                        return identity(file) == record.effect_file_identity;
+                    }, bytes, published).ok() || !config.finish_child_file_publication(staging.filename(), bytes, published).ok())
+                return uncertain("Existing configuration publication or owned staging cleanup is inconsistent");
+        } else
+#endif
         if (record.effect_file_identity.empty() || !verify_file(config, target.filename(), record, bytes, nullptr, &published))
             return uncertain("Existing configuration is foreign or differs from the journaled object and bytes");
     } else {
@@ -255,8 +264,19 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
             return uncertain("Configuration publication did not return a verified no-replace result");
         output.close_without_flush();
         fault("after_publication"); pause(root_path, "after_publication");
+#ifdef __linux__
+        inputs = guard.observe_inputs(&record);
+        if (!inputs || inputs.value() != guard.inputs_sha256)
+            return uncertain("Configuration inputs changed before owned staging cleanup");
+        if (!config.open_child_file_no_follow_for_publication_recovery(staging.filename(), target.filename(),
+                [&](const facman::platform::FileIdentity& file) { return identity(file) == record.effect_file_identity; },
+                bytes, published).ok() || !config.finish_child_file_publication(staging.filename(), bytes, published).ok())
+            return uncertain("Published configuration or owned staging cleanup changed");
+        fault("after_staging_cleanup");
+#else
         if (!verify_file(config, target.filename(), record, bytes, nullptr, &published))
             return uncertain("Published configuration identity or bytes changed");
+#endif
     }
     pause(root_path, "before_final_observation");
     inputs = guard.observe_inputs(&record);
@@ -276,7 +296,7 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
 
 bool configuration_publication_available() noexcept
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__linux__)
     return true;
 #else
     return false;
@@ -556,7 +576,9 @@ bool configuration_original_file_identity(const json::Value& context, facman::pl
 Result reconcile_existing_configuration(const fs::path& workspace, const json::Value& plan,
     const ExistingConfigurationGuard& guard)
 {
-    if (!configuration_publication_available()) return refused("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+#ifndef _WIN32
+    return refused("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+#endif
     facman::platform::FileIdentity original;
     if (!original_file_identity(plan, original) || !guard.observe_inputs || !guard.validate_owner ||
         guard.inputs_sha256.size() != 64U || field(plan, "component") != "existing_routing_configuration")
@@ -596,7 +618,9 @@ Result reconcile_existing_configuration(const fs::path& workspace, const json::V
 
 Result recover_existing_configuration(const fs::path& workspace, const std::string& id, const ExistingConfigurationGuard& guard)
 {
-    if (!configuration_publication_available()) return refused("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+#ifndef _WIN32
+    return refused("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+#endif
     tx::Record record; std::string detail;
     if (!tx::read_record(workspace, id, record, detail)) return refused("recovery_journal_invalid", detail);
     if (record.command_id != kCommand || record.commit_strategy != kRewriteStrategy)
