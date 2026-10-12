@@ -63,7 +63,7 @@ class TechnicalPreviewCensusTests(unittest.TestCase):
         for item in ledger["commands"]:
             classification = item["observed_classification"]
             counts[classification] = counts.get(classification, 0) + 1
-        self.assertEqual(counts["implemented_unqualified"], 14)
+        self.assertEqual(counts["implemented_unqualified"], 15)
         self.assertEqual(counts["unknown_unverified"], 81)
 
     def test_preview_scope_and_frontend_cut_are_frozen(self) -> None:

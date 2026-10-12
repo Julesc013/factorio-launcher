@@ -149,6 +149,122 @@ class PublicInstallProof:
                     "facman_sha256": digest(self.executable), "steps": self.steps, "open_gaps": self.open_gaps}
         (self.root/"receipt.json").write_text(json.dumps(document, indent=2))
 
+    def verification(self) -> None:
+        case = self.case("verification")
+        self.run(case, self.apply_args(case, self.plan(case)))
+        self.verify(case)
+
+        def snapshot() -> dict:
+            return {str(path.relative_to(case)): ("directory" if path.is_dir() else digest(path))
+                    for path in sorted(case.rglob("*"))}
+
+        def check(status="", code="", configured=True, missing=0, changed=0, damaged=(), unknown=()) -> dict:
+            before = snapshot()
+            payload = self.run(case, ["installs", "verify", "managed-test"],
+                               outcome=("unavailable" if code == "live_target_acceptance_required" and not configured
+                                        else "refused" if code else "ok"), code=code, configured=configured)
+            assert snapshot() == before, "read-only verification changed retained bytes or paths"
+            if code:
+                response = self.steps[-1]["response"]
+                assert response["effects"] == []
+                assert not response["operation"]["effects_may_have_occurred"]
+                assert not response["operation"]["recovery"]["required"]
+                if configured:
+                    assert payload["refusal"]["detail"] != "capability remains quarantined"
+            if status:
+                assert payload["schema"] == "usk.verification_report.v1" and payload["status"] == status
+                unsigned = {key: value for key, value in payload.items() if key not in {"schema", "report_digest"}}
+                canonical = json.dumps(unsigned, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+                assert hashlib.sha256(canonical).hexdigest() == payload["report_digest"]
+                human = subprocess.run([str(self.executable), "--workspace", str(case/"workspace"),
+                                        "installs", "verify", "managed-test"],
+                                       env=self.environment(case), capture_output=True, text=True, timeout=40)
+                self.steps.append({"case": case.name, "command": ["installs", "verify", "managed-test"],
+                                   "format": "human", "exit": human.returncode,
+                                   "stdout": human.stdout, "stderr": human.stderr})
+                self.receipt("running")
+                assert human.returncode == 0 and not human.stderr, human.stderr
+                assert snapshot() == before, "human verification changed retained bytes or paths"
+                assert f"Verification: {status}" in human.stdout and "Install: managed-test" in human.stdout
+                assert f"Owned files: 2; missing: {missing}; changed: {changed}" in human.stdout
+                assert "Setup operation previewed" not in human.stdout
+                if status == "fail":
+                    assert "Verification: pass" not in human.stdout
+                    assert "Damaged owned paths: none" not in human.stdout
+                for path, observed in damaged:
+                    assert f"{path}: {observed}" in human.stdout
+                assert f"Preserved unknown paths ({len(unknown)}):" in human.stdout
+                for path in unknown:
+                    assert path in human.stdout.split("Preserved unknown paths", 1)[1]
+            return payload
+
+        check(code="live_target_acceptance_required", configured=False)
+        check("pass")
+        # Verification does not depend on the original archive surviving.
+        (case/"source.zip").unlink()
+        check("pass")
+        foreign = case/"target/user-data.txt"
+        foreign.write_bytes(b"foreign bytes must survive")
+        warn = check("warn", unknown=("user-data.txt",))
+        assert warn["unknown_paths"] == ["user-data.txt"]
+        executable = case/"target/bin/x64/factorio.exe"
+        executable.write_bytes(b"modified owned bytes")
+        failed = check("fail", changed=1, damaged=(("bin/x64/factorio.exe", "modified"),), unknown=("user-data.txt",))
+        assert failed["summary"]["modified_files"] == 1
+        executable.unlink()
+        failed = check("fail", missing=1, damaged=(("bin/x64/factorio.exe", "missing"),), unknown=("user-data.txt",))
+        assert failed["summary"]["missing_files"] == 1
+        executable.mkdir()
+        failed = check("fail", changed=1, damaged=(("bin/x64/factorio.exe", "wrong_type"),), unknown=("user-data.txt",))
+        assert failed["summary"]["modified_files"] == 1
+        assert any(row["status"] == "wrong_type" for row in failed["files"])
+        executable.rmdir()
+        executable.write_bytes(BYTES)
+        sentinel = case/"foreign-sentinel"
+        sentinel.mkdir()
+        (sentinel/"untouched.txt").write_bytes(b"foreign sentinel bytes")
+        junction = case/"target/foreign-junction"
+        subprocess.run(["cmd", "/c", "mklink", "/J", str(junction), str(sentinel)],
+                       check=True, capture_output=True, text=True)
+        try:
+            check(code="ownership_denied")
+            assert (sentinel/"untouched.txt").read_bytes() == b"foreign sentinel bytes"
+        finally:
+            os.rmdir(junction)
+        retained_target = case/"temporarily-retained-target"
+        (case/"target").rename(retained_target)
+        try:
+            failed = check("fail", missing=2, damaged=(("bin/x64/factorio.exe", "missing"),
+                                                      ("data/base/info.json", "missing")))
+            assert failed["summary"]["missing_files"] == failed["summary"]["owned_files"]
+            assert not (case/"target").exists()
+        finally:
+            retained_target.rename(case/"target")
+        original = self.record(case).read_bytes()
+        record = json.loads(original)
+        for field, value, code in [
+            ("ownership", "external", "ownership_denied"),
+            ("provider_id", "foreign-provider", "managed_install_provider_mismatch"),
+            ("state_revision", "stale-revision", "setup_installed_state_response_invalid"),
+            ("last_verification_identity", "0"*64, "setup_installed_state_response_invalid"),
+            ("setup_state_ref", str(case/"foreign-state.json"), "setup_installed_state_response_invalid"),
+        ]:
+            changed = dict(record)
+            changed[field] = value
+            self.record(case).write_text(json.dumps(changed))
+            check(code=code)
+            self.record(case).write_bytes(original)
+        before = snapshot()
+        self.run(case, ["installs", "verify", "unknown-install"], outcome="refused", code="unknown_install")
+        assert snapshot() == before
+        # A registered managed record outside the explicit acceptance root stays foreign.
+        changed = dict(record)
+        changed["root"] = str(case.parent/"foreign-target")
+        self.record(case).write_text(json.dumps(changed))
+        check(code="ownership_denied")
+        self.record(case).write_bytes(original)
+        check("warn", unknown=("user-data.txt",))
+
     def interrupt_provider(self, phase="streaming") -> None:
         case = self.case("os-gen" if phase == "genesis" else "os-stream" if phase == "streaming" else "os-stage")
         with zipfile.ZipFile(case/"source.zip", "a", zipfile.ZIP_STORED) as archive:
@@ -427,13 +543,15 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--facman", type=Path, required=True)
     parser.add_argument("--root", type=Path, required=True)
-    parser.add_argument("--scenario", choices=["all", "streaming", "genesis", "earliest"], default="all")
+    parser.add_argument("--scenario", choices=["all", "streaming", "genesis", "earliest", "verification"], default="all")
     args = parser.parse_args()
     if os.name != "nt":
         parser.error("this proof covers the admitted Windows portable ZIP recipe")
     proof = PublicInstallProof(args.facman, args.root)
     try:
-        if args.scenario != "all":
+        if args.scenario == "verification":
+            proof.verification()
+        elif args.scenario != "all":
             proof.interrupt_provider(args.scenario)
         else:
             proof.exercise()

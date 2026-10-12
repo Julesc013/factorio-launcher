@@ -6,9 +6,9 @@ Commands: 132. Product mapping is many-to-many and never creates a completion cl
 
 | Observed classification | Commands |
 | --- | --- |
-| backend_only | 6 |
+| backend_only | 5 |
 | diagnostic_internal | 6 |
-| implemented_unqualified | 14 |
+| implemented_unqualified | 15 |
 | outside_preview | 25 |
 | unknown_unverified | 81 |
 
