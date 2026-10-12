@@ -130,14 +130,10 @@ def portable_entries(path: Path) -> list[InputEntry]:
     observed = {entry.path.casefold() for entry in entries}
     if "bin/facman.exe" not in observed:
         raise ValueError("portable ZIP lacks setup entrypoint: bin/facman.exe")
-    gui_candidates = {
-        "facman.exe",
-        "bin/facman.winforms.exe",
-    } & observed
-    if len(gui_candidates) != 1:
+    if "facman.exe" not in observed or "bin/facman.winforms.exe" in observed:
         raise ValueError(
-            "portable ZIP must contain exactly one supported GUI entrypoint: "
-            "FacMan.exe or bin/FacMan.WinForms.exe"
+            "self-setup requires the canonical root GUI entrypoint FacMan.exe; "
+            "legacy WinForms archives must not be relocated"
         )
     return entries
 
@@ -197,19 +193,18 @@ def build(
 ) -> dict[str, object]:
     portable = portable.resolve(strict=True)
     setup_exe = setup_exe.resolve(strict=True)
-    output.mkdir(parents=True, exist_ok=True)
     if not portable.is_file() or not setup_exe.is_file():
         raise ValueError("portable package and setup executable must be regular files")
+    generation_entries = portable_entries(portable)
+    output.mkdir(parents=True, exist_ok=True)
     portable_hash = sha256_file(portable)
     setup_bytes = setup_exe.read_bytes()
     setup_hash = sha256_bytes(setup_bytes)
     generation_prefix = f"facman/generations/{version}/"
-    entries = []
-    for entry in portable_entries(portable):
-        installed_path = entry.path
-        if entry.path.casefold() == "bin/facman.winforms.exe":
-            installed_path = "FacMan.exe"
-        entries.append(InputEntry(generation_prefix + installed_path, entry.data))
+    # Preserve the producer's exact GUI layout and manifest closure. Renaming
+    # a portable entrypoint invalidates both component and hash manifests.
+    entries = [InputEntry(generation_prefix + entry.path, entry.data)
+               for entry in generation_entries]
     entries.append(InputEntry("facman/maintenance/FacManSetup.exe", setup_bytes))
     entries.append(InputEntry(
         "facman/state/self-maintenance-package.v1.json",

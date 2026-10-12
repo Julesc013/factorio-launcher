@@ -309,3 +309,55 @@ and additionally assert the semantic refusal and returned identities.
 Unchanged compiled source/build/five smokes remain reusable only under
 new exact frozen review04. Focused/control/historical acceptance remains
 outstanding; no new build, root, clone or candidate.
+
+## Produced GUI package closure correction
+
+An independent read-only review of the accepted PR402 self-setup extraction
+found that the genuine GUI had been renamed from `bin/FacMan.WinForms.exe` to
+`FacMan.exe`, while the portable package, component and hash manifests retained
+the original path. Production backend discovery correctly refuses that closure.
+The earlier produced CLI acceptance is retained; it never qualified GUI discovery.
+
+The bounded prerequisite repair reuses the existing `windows_product_x64`
+profile from the existing shared build and preserves every portable input entry
+byte-for-byte. The self-setup producer refuses legacy layouts before creating
+outputs. The existing Windows job keeps legacy compatibility/composition proofs
+and additionally verifies the product closure/runtime before self-setup.
+No identity validation, provider pin, protected check or release gate changes.
+
+Focused source regressions and independent review precede normal publication.
+Actual checked integration and a separately admitted new produced extraction
+must precede genuine GUI discovery. Control-gallery fixtures, synthetic closure
+tests and previous CLI proof do not qualify that live GUI path. Full Make Ready,
+human experience, playable-instance and Beta acceptance remain open.
+
+The existing Windows CI delivery is a split bootstrap/payload used for explicit
+package CLI qualification. Its raw bootstrap has no default argv0 overlay;
+this does not invalidate its retained CLI evidence. The maintained
+`tools/self_contained_setup.py` already produces the canonical single-file
+Setup for the product-candidate path. Reuse that unchanged builder in the
+same existing Windows job, with the exact product portable and native bootstrap.
+Preserve both split artifacts and independently bind identical payload bytes
+through the existing native-compatible overlay identity reader. Exercise the
+produced single-file Setup default-package preview without --package or --yes,
+then run the existing lifecycle harness against that produced executable.
+Every child has an immediate exit guard; no additional CI job or local build.
+The default preview has shell integration disabled. It proves payload binding,
+not real current-user native effects or whole epoch/maintenance acceptance.
+The additional consumer-oracle test is synthetic and cannot close those gates.
+Preserve the original application02 and reviewed application05 executions.
+Their actual terminal receipts must prove zero branch/source effects before
+the separately reviewed recovery application06 can own this primary checkout.
+If application05 succeeds, consume that qualified result and do not run06.
+The admitted06 recovery handles only the known pre-application refusal caused
+by requiring all three primary checkouts to be clean on dev while the parallel
+Universal Setup worker owns its canary branch. Require PR403 terminal checked
+integration, synchronization of eligible clean dev primaries with explicit
+preservation of the active Universal checkout, and the actual five-method
+produced proof. Retain the false all-three-synchronized fact; neither switch
+the foreign branch nor relabel its preservation as synchronization.
+Bind proposal06 to exact current FacMan dev and pass fresh AIDE/resource gates.
+Unexpected failures or any earlier source effect require diagnosis, not replay.
+Final frozen qualification and independent review precede publication.
+Future artifact admission/probe bindings must follow the actual applied
+proposal; genuine produced-package/default Setup/GUI/native gates remain open.

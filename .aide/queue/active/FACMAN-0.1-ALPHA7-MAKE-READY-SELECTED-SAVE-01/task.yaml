@@ -35,6 +35,9 @@ allowed_paths:
   - "tools/frontend_contract_check.py"
   - "tools/instance_model_check.py"
   - "tools/codegen/generate_metadata.py"
+  # Reviewed produced-GUI prerequisite: preserve canonical package closure.
+  - "tools/self_setup_package.py"
+  - ".github/workflows/ci.yml"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
