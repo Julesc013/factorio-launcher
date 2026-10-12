@@ -1,0 +1,18 @@
+{
+  "schema": "facman.managed_verification_census_correction.v1",
+  "verdict": "PASS_TEST_ONLY_CORRECTION",
+  "source": "4af113acf1748cd8f4787f5315baba5a0c0c7a54",
+  "failed_run": 38261356720,
+  "failed_job": 114852378245,
+  "failed_job_log_sha256": "e3f3e3c6cc1c86885115c8fd584eb39108f6e80b3c1fa88576b006dd937dc6ea",
+  "failure": "Complete macOS portable suite:2042 tests, one failure,154 skips; new implemented_unqualified count15 versus stale expectation14.",
+  "change": "One expected implemented_unqualified count14 to15. Unknown81 and all product/scope/release assertions unchanged.",
+  "reviewer": "/root/managed_verify_impl",
+  "test_author": "/root",
+  "non_authoring_delta_review": true,
+  "runtime_and_native_sources_unchanged": true,
+  "focused_test_receipt_sha256": "6b77f21f0faa8d5bb6356eee8506413a57b398e97c755c589cce524fbdf3eafd",
+  "native_qualification_reused": "Earlier exact runtime slices and moved qualified native images; no runtime/CLI/backend/provider/schema change in this repair.",
+  "workunit_closed": false,
+  "beta_qualified": false
+}

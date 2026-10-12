@@ -250,4 +250,52 @@ std::optional<std::string> local_content_text(const json::Value& report)
     return output.str();
 }
 
+std::optional<std::string> managed_install_verification_text(const json::Value& report)
+{
+    const std::string status = guidance_field(report, "status");
+    const std::string install_id = guidance_field(report, "install_id");
+    const auto* summary = report.find("summary");
+    const auto* files = report.find("files");
+    const auto* directories = report.find("directories");
+    const auto* unknown = report.find("unknown_paths");
+    if (guidance_field(report, "schema") != "usk.verification_report.v1" || install_id.empty() ||
+        (status != "pass" && status != "warn" && status != "fail") ||
+        !summary || !summary->is_object() || !files || !files->is_array() ||
+        !directories || !directories->is_array() || !unknown || !unknown->is_array()) return std::nullopt;
+    for (const auto* key : {"owned_files", "missing_files", "modified_files", "unknown_paths"}) {
+        const auto* value = summary->find(key);
+        if (!value || !value->unsigned_integer_value()) return std::nullopt;
+    }
+    std::ostringstream damaged;
+    std::size_t damaged_count = 0;
+    for (const auto* rows : {files, directories}) {
+        for (std::size_t index = 0; index < rows->size(); ++index) {
+            const auto* row = rows->at(index);
+            if (!row || !row->is_object()) return std::nullopt;
+            const auto path = guidance_field(*row, "relative_path");
+            const auto observed = guidance_field(*row, "status");
+            if (path.empty() || (observed != "present" && observed != "missing" && observed != "modified" &&
+                observed != "wrong_type" && observed != "unreadable")) return std::nullopt;
+            if (observed != "present") {
+                ++damaged_count;
+                damaged << "  - " << path << ": " << observed << '\n';
+            }
+        }
+    }
+    std::ostringstream output;
+    output << "Verification: " << status << "\nInstall: " << install_id << "\nOwned files: "
+           << text_field(*summary, "owned_files") << "; missing: " << text_field(*summary, "missing_files")
+           << "; changed: " << text_field(*summary, "modified_files") << '\n';
+    output << "Damaged owned paths: " << (damaged_count == 0 ? "none\n" : "\n") << damaged.str();
+    output << "Preserved unknown paths (" << text_field(*summary, "unknown_paths") << "):"
+           << (unknown->size() == 0 ? " none\n" : "\n");
+    for (std::size_t index = 0; index < unknown->size(); ++index) {
+        const auto* path = unknown->at(index);
+        if (!path || !path->is_string()) return std::nullopt;
+        output << "  - " << path->string_value().value() << '\n';
+    }
+    output << "Read-only verification; no files or installed state changed.\n";
+    return output.str();
+}
+
 } // namespace facman::cli

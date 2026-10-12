@@ -17,6 +17,7 @@
 #include <set>
 #include <system_error>
 #include <tuple>
+#include <vector>
 
 #ifndef FACMAN_WITH_SETUP
 #define FACMAN_WITH_SETUP 0
@@ -98,9 +99,9 @@ public:
     {
         return facman::core::Result<UninstallRecoveryInspection>::failure(unavailable_error());
     }
-    facman::core::Result<SetupRefusal> verify_install(const std::string&) override
+    facman::core::Result<std::string> verify_install(const InstallVerifyRequest&) override
     {
-        return facman::core::Result<SetupRefusal>::failure(unavailable_error());
+        return facman::core::Result<std::string>::failure(unavailable_error());
     }
     facman::core::Result<SetupRefusal> repair_install(const std::string&) override
     {
@@ -262,6 +263,21 @@ bool safe_relative_path(const std::string& value)
         const std::size_t end = value.find('/', begin);
         const std::string component = value.substr(begin, end - begin);
         if (component.empty() || component == "." || component == "..") return false;
+        if (end == std::string::npos) return true;
+        begin = end + 1;
+    }
+    return false;
+}
+
+bool safe_verification_path(const std::string& path)
+{
+    if (!safe_relative_path(path) || path.back() == '/' ||
+        std::any_of(path.begin(), path.end(), [](unsigned char ch) { return ch < 32U; })) return false;
+    std::size_t begin = 0;
+    while (begin < path.size()) {
+        const auto end = path.find('/', begin);
+        const auto last = (end == std::string::npos ? path.size() : end) - 1;
+        if (path[last] == '.' || path[last] == ' ') return false;
         if (end == std::string::npos) return true;
         begin = end + 1;
     }
@@ -2776,11 +2792,163 @@ public:
         return facman::core::Result<UninstallRecoveryInspection>::success(std::move(result));
     }
 
-    facman::core::Result<SetupRefusal> verify_install(const std::string&) override
+    facman::core::Result<std::string> verify_install(const InstallVerifyRequest& request) override
     {
-        return unsupported(
-            "live_target_acceptance_required",
-            "Managed-target verification authority is unavailable until its separate live-target policy gate passes");
+        const auto fail = [](const std::string& code, const std::string& detail) {
+            return facman::core::Result<std::string>::failure({code,
+                "Managed installed-state verification refused", detail});
+        };
+        if (!configuration_.configured()) return fail("live_target_acceptance_required",
+            "Managed-target verification requires the bounded live-target policy gate");
+        if (!configuration_.mutation_configured()) return fail("setup_configuration_incomplete",
+            "Verification requires state, acceptance-root, and operator_acceptance_candidate together");
+        const auto& binding = request.installed;
+        std::string identifier_detail;
+        if (!facman::base::validate_identifier(binding.install_id, identifier_detail) ||
+            request.report_id.empty() || request.report_id.size() > 256 ||
+            !valid_utc_seconds(request.verified_at) || binding.target.empty() ||
+            binding.setup_state_ref.empty() || binding.last_verification_identity.empty() ||
+            binding.state_revision.empty()) return fail("invalid_argument", "verification identity or record binding");
+        const auto safe_absolute = [](const std::filesystem::path& path) {
+            return path.is_absolute() && safe_verification_path(path.relative_path().generic_string());
+        };
+        if (!safe_absolute(binding.target) ||
+            !safe_absolute(facman::platform::path_from_utf8(binding.setup_state_ref)) ||
+            !safe_absolute(facman::platform::path_from_utf8(configuration_.acceptance_root)) ||
+            !safe_absolute(facman::platform::path_from_utf8(configuration_.state_root)))
+            return fail("ownership_denied", "unsafe absolute path spelling");
+        auto target = absolute_normalized(binding.target, "target");
+        auto acceptance = absolute_normalized(facman::platform::path_from_utf8(configuration_.acceptance_root), "acceptance root");
+        auto state_root = absolute_normalized(facman::platform::path_from_utf8(configuration_.state_root), "state root");
+        std::string unsafe;
+        if (!target || !acceptance || !state_root) return fail("ownership_denied", "root binding");
+        const auto relative = target.value().lexically_relative(acceptance.value());
+        if (relative.empty() || !safe_relative_path(relative.generic_string()) ||
+            facman::base::path_crosses_link_or_reparse_point(target.value(), unsafe) ||
+            facman::base::path_crosses_link_or_reparse_point(state_root.value(), unsafe) ||
+            facman::base::path_crosses_link_or_reparse_point(
+                facman::platform::path_from_utf8(binding.setup_state_ref), unsafe))
+            return fail("ownership_denied", "unsafe or foreign target/state root");
+        // Path checks are observations, not retained ancestry handles. Absence is
+        // a valid verification failure; present non-directory targets refuse.
+        std::error_code target_error;
+        const auto target_status = std::filesystem::symlink_status(target.value(), target_error);
+        const bool target_absent = target_status.type() == std::filesystem::file_type::not_found;
+        if ((!target_absent && target_error) || (!target_absent && !std::filesystem::is_directory(target_status)))
+            return fail("ownership_denied", "present target root is unsafe or not a directory");
+        // Enumerate one level at a time so observed Windows junctions are never followed.
+        std::vector<std::filesystem::path> pending;
+        if (!target_absent) pending.push_back(target.value());
+        std::size_t observed_entries = 0;
+        while (!pending.empty()) {
+            const auto directory = pending.back();
+            pending.pop_back();
+            std::error_code error;
+            std::filesystem::directory_iterator entries(directory, error);
+            if (error) return fail("ownership_denied", "target cannot be enumerated safely");
+            for (const auto& entry : entries) {
+                if (++observed_entries > 1000000 ||
+                    facman::base::path_crosses_link_or_reparse_point(entry.path(), unsafe))
+                    return fail("ownership_denied", "target has links, reparse points, or exceeds observation budget");
+                const auto status = entry.symlink_status(error);
+                if (error || std::filesystem::is_symlink(status)) return fail("ownership_denied", "unsafe target entry");
+                if (std::filesystem::is_directory(status)) pending.push_back(entry.path());
+            }
+        }
+        facman::core::json::ObjectBuilder inspect;
+        inspect.add_string("schema", "usk.installed_inspect_request.v1");
+        inspect.add_string("request_id", binding.request_id + ".inspect");
+        inspect.add_string("install_id", binding.install_id);
+        auto before_response = execute_setup("installed.inspect", inspect.serialize(), configuration_);
+        if (!before_response) return facman::core::Result<std::string>::failure(before_response.error());
+        auto before = decode_installed_state(before_response.value(), binding, configuration_);
+        if (!before) return facman::core::Result<std::string>::failure(before.error());
+        const auto& ownership_ref = before.value().ownership_manifest_ref;
+        if (!safe_verification_path(ownership_ref) || ownership_ref.rfind("ownership/", 0) != 0 ||
+            ownership_ref.find('/', 10) != std::string::npos)
+            return fail("ownership_denied", "unsafe ownership reference");
+        auto ownership_path = absolute_normalized(state_root.value() / "state" /
+            facman::platform::path_from_utf8(ownership_ref), "ownership reference");
+        if (!ownership_path || !safe_relative_path(ownership_path.value().lexically_relative(state_root.value()).generic_string()) ||
+            facman::base::path_crosses_link_or_reparse_point(ownership_path.value(), unsafe))
+            return fail("ownership_denied", "unsafe ownership reference");
+        auto ownership_before = read_provider_snapshot(ownership_path.value());
+        if (!ownership_before) return fail("setup_installed_state_response_invalid", ownership_before.error().message);
+        auto ownership = facman::core::json::parse(ownership_before.value());
+        if (!ownership || !exact_members(ownership.value(), {"schema", "manifest_id", "manifest_digest", "install_id",
+            "target_root", "created_by_transaction_id", "files", "directories"}) ||
+            string_field(ownership.value(), "schema") != "usk.ownership_manifest.v1" ||
+            string_field(ownership.value(), "install_id") != binding.install_id ||
+            string_field(ownership.value(), "manifest_digest") != before.value().ownership_manifest_digest ||
+            !normalized_absolute_path(string_field(ownership.value(), "target_root"), target.value()) ||
+            ownership_ref != "ownership/" + string_field(ownership.value(), "manifest_id") + ".json")
+            return fail("setup_installed_state_response_invalid", "ownership identity");
+        facman::core::json::ObjectBuilder ownership_payload;
+        for (const auto& key : ownership.value().object_keys()) {
+            if (key != "manifest_digest") ownership_payload.add_value(key, *ownership.value().find(key));
+        }
+        auto ownership_document = facman::core::json::parse(ownership_payload.serialize());
+        auto ownership_canonical = ownership_document ? facman::core::json::canonical_integer_json(ownership_document.value()) :
+            facman::core::Result<std::string>::failure({"invalid_json", "Invalid ownership", ""});
+        if (!ownership_canonical || facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(ownership_canonical.value().data()), ownership_canonical.value().size()) !=
+            before.value().ownership_manifest_digest) return fail("setup_installed_state_response_invalid", "ownership digest");
+        const auto* owned_files = ownership.value().find("files");
+        const auto* owned_directories = ownership.value().find("directories");
+        if (!owned_files || !owned_files->is_array() || !owned_directories || !owned_directories->is_array())
+            return fail("setup_installed_state_response_invalid", "ownership members");
+        // Check every owned ancestor before the provider reads it; unknown links are never traversed.
+        for (const auto* rows : {owned_files, owned_directories}) {
+            for (std::size_t index = 0; index < rows->size(); ++index) {
+                const auto* row = rows->at(index);
+                if (!row || !safe_verification_path(string_field(*row, "relative_path")) ||
+                    facman::base::path_crosses_link_or_reparse_point(
+                        target.value() / facman::platform::path_from_utf8(string_field(*row, "relative_path")), unsafe))
+                    return fail("ownership_denied", "unsafe owned path");
+            }
+        }
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.installed_verify_request.v1");
+        payload.add_string("request_id", binding.request_id);
+        payload.add_string("install_id", binding.install_id);
+        payload.add_string("report_id", request.report_id);
+        payload.add_string("verified_at", request.verified_at);
+        auto response = execute_setup("installed.verify", payload.serialize(), configuration_);
+        if (!response) return facman::core::Result<std::string>::failure(response.error());
+        auto report = decode_install_verification_report(response.value(), request,
+            before.value().installed_state_digest, before.value().ownership_manifest_digest);
+        if (!report) return report;
+        auto report_document = facman::core::json::parse(report.value());
+        if (!report_document) return fail("setup_installed_state_response_invalid", "report document");
+        const auto* reported_files = report_document.value().find("files");
+        const auto* reported_directories = report_document.value().find("directories");
+        if (!reported_files || reported_files->size() != owned_files->size() ||
+            !reported_directories || reported_directories->size() != owned_directories->size())
+            return fail("setup_installed_state_response_invalid", "owned report coverage");
+        for (std::size_t index = 0; index < owned_files->size(); ++index) {
+            const auto* owned = owned_files->at(index);
+            const auto* observed = reported_files->at(index);
+            if (!exact_members(*owned, {"relative_path", "sha256", "size_bytes"}) ||
+                !owned->find("size_bytes")->unsigned_integer_value() ||
+                string_field(*owned, "relative_path") != string_field(*observed, "relative_path") ||
+                string_field(*owned, "sha256") != string_field(*observed, "expected_sha256"))
+                return fail("setup_installed_state_response_invalid", "owned file binding");
+        }
+        for (std::size_t index = 0; index < owned_directories->size(); ++index) {
+            if (!exact_members(*owned_directories->at(index), {"relative_path"}) ||
+                string_field(*owned_directories->at(index), "relative_path") !=
+                string_field(*reported_directories->at(index), "relative_path"))
+                return fail("setup_installed_state_response_invalid", "owned directory binding");
+        }
+        auto after_response = execute_setup("installed.inspect", inspect.serialize(), configuration_);
+        if (!after_response) return facman::core::Result<std::string>::failure(after_response.error());
+        auto after = decode_installed_state(after_response.value(), binding, configuration_);
+        auto ownership_after = read_provider_snapshot(ownership_path.value());
+        if (!after || after_response.value() != before_response.value() ||
+            after.value().installed_state_digest != before.value().installed_state_digest ||
+            !ownership_after || ownership_after.value() != ownership_before.value())
+            return fail("stale_plan", "installed state or ownership changed during verification");
+        return report;
     }
     facman::core::Result<SetupRefusal> repair_install(const std::string&) override
     {
@@ -3304,6 +3472,113 @@ bool valid_utc_seconds(const std::string& value) noexcept
     const bool leap = year % 4U == 0U && (year % 100U != 0U || year % 400U == 0U);
     if (month == 2U && leap) maximum_day = 29U;
     return day != 0U && day <= maximum_day;
+}
+
+facman::core::Result<std::string> decode_install_verification_report(
+    const std::string& response, const InstallVerifyRequest& request,
+    const std::string& state_digest, const std::string& ownership_digest)
+{
+#if FACMAN_WITH_SETUP
+    const auto invalid = [](const std::string& detail) {
+        return facman::core::Result<std::string>::failure({
+            "setup_installed_state_response_invalid", "Invalid managed verification report", detail});
+    };
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 32U * 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 1000000;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(response, limits);
+    const facman::core::json::Value* report = nullptr;
+    if (!document || !response_envelope(document.value(), report) ||
+        !exact_members(*report, {"directories", "files", "install_id", "installed_state_digest",
+            "ownership_manifest_digest", "report_digest", "report_id", "schema", "status",
+            "summary", "unknown_paths", "verified_at"}) ||
+        string_field(*report, "schema") != "usk.verification_report.v1" ||
+        string_field(*report, "install_id") != request.installed.install_id || !bounded_string(*report, "install_id", 256) ||
+        string_field(*report, "report_id") != request.report_id || !bounded_string(*report, "report_id", 256) ||
+        string_field(*report, "verified_at") != request.verified_at || !valid_utc_seconds(request.verified_at) ||
+        string_field(*report, "installed_state_digest") != state_digest || !sha256_field(state_digest) ||
+        string_field(*report, "ownership_manifest_digest") != ownership_digest || !sha256_field(ownership_digest) ||
+        !sha256_field(string_field(*report, "report_digest"))) return invalid("report identity");
+    const auto* files = report->find("files");
+    const auto* directories = report->find("directories");
+    const auto* unknown = report->find("unknown_paths");
+    const auto* summary = report->find("summary");
+    if (!files || !files->is_array() || files->size() == 0 || !directories || !directories->is_array() ||
+        !unknown || !unknown->is_array() || !summary ||
+        !exact_members(*summary, {"owned_files", "missing_files", "modified_files", "unknown_paths"}))
+        return invalid("report members");
+    std::set<std::string> paths;
+    std::uint64_t missing = 0, modified = 0;
+    for (std::size_t index = 0; index < files->size(); ++index) {
+        const auto* file = files->at(index);
+        const bool actual = file && file->find("actual_sha256");
+        if (!file || !(actual ? exact_members(*file, {"relative_path", "status", "expected_sha256", "actual_sha256"}) :
+            exact_members(*file, {"relative_path", "status", "expected_sha256"})) ||
+            !safe_verification_path(string_field(*file, "relative_path")) ||
+            !paths.insert(string_field(*file, "relative_path")).second ||
+            !sha256_field(string_field(*file, "expected_sha256")) ||
+            (actual && !sha256_field(string_field(*file, "actual_sha256")))) return invalid("file shape or path");
+        const std::string status = string_field(*file, "status");
+        if (status == "present") {
+            if (!actual || string_field(*file, "actual_sha256") != string_field(*file, "expected_sha256"))
+                return invalid("present file digest");
+        } else if (status == "missing") {
+            if (actual) return invalid("missing file digest");
+            ++missing;
+        } else if (status == "modified") {
+            if (!actual) return invalid("modified file digest");
+            ++modified;
+        } else if (status == "wrong_type" || status == "unreadable") {
+            if (actual) return invalid("unreadable file digest");
+            ++modified;
+        } else return invalid("file status");
+    }
+    bool directory_failure = false;
+    for (std::size_t index = 0; index < directories->size(); ++index) {
+        const auto* directory = directories->at(index);
+        if (!directory || !exact_members(*directory, {"relative_path", "status"}) ||
+            !safe_verification_path(string_field(*directory, "relative_path")) ||
+            !paths.insert(string_field(*directory, "relative_path")).second) return invalid("directory shape or path");
+        const auto status = string_field(*directory, "status");
+        if (status != "present" && status != "missing" && status != "wrong_type") return invalid("directory status");
+        directory_failure = directory_failure || status != "present";
+    }
+    std::string previous;
+    for (std::size_t index = 0; index < unknown->size(); ++index) {
+        const auto* item = unknown->at(index);
+        if (!item || !item->is_string()) return invalid("unknown path type");
+        const auto path = item->string_value().value();
+        if (!safe_verification_path(path) || !paths.insert(path).second || (!previous.empty() && path <= previous))
+            return invalid("unknown path or order");
+        previous = path;
+    }
+    const auto count = [&](const char* key, std::uint64_t expected) {
+        const auto* value = summary->find(key);
+        return value && value->unsigned_integer_value() && value->unsigned_integer_value().value() == expected;
+    };
+    if (!count("owned_files", files->size()) || !count("missing_files", missing) ||
+        !count("modified_files", modified) || !count("unknown_paths", unknown->size())) return invalid("summary counts");
+    const std::string expected_status = missing || modified ? "fail" : unknown->size() ? "warn" : "pass";
+    if (string_field(*report, "status") != expected_status ||
+        (directory_failure && expected_status != "fail")) return invalid("report status");
+    facman::core::json::ObjectBuilder unsigned_report;
+    for (const auto& key : report->object_keys()) {
+        if (key == "schema" || key == "report_digest") continue;
+        if (!unsigned_report.add_value(key, *report->find(key))) return invalid("digest input");
+    }
+    auto unsigned_document = facman::core::json::parse(unsigned_report.serialize(), limits);
+    if (!unsigned_document) return invalid("digest document");
+    auto canonical = facman::core::json::canonical_integer_json(unsigned_document.value());
+    if (!canonical || facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(canonical.value().data()), canonical.value().size()) !=
+        string_field(*report, "report_digest")) return invalid("report digest mismatch");
+    return facman::core::Result<std::string>::success(report->serialize());
+#else
+    (void)response; (void)request; (void)state_digest; (void)ownership_digest;
+    return facman::core::Result<std::string>::failure(unavailable_error());
+#endif
 }
 
 std::unique_ptr<SetupGateway> make_setup_gateway(const SetupConfiguration& configuration)

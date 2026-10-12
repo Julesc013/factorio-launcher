@@ -47,8 +47,29 @@ Managed install planning, repair plan/apply, uninstall plan/apply, and
 operation-specific recovery inspect/apply are implemented through the accepted
 Universal Setup gateway. They remain unavailable unless the process has an
 absolute owned setup root, an accepted parent root, and the explicit setup
-policy activation. Install apply, move plan/apply, and live verify remain
-`unavailable_until_gateway` pending their recorded acceptance work.
+policy activation. Move plan/apply remain `unavailable_until_gateway` pending their recorded
+acceptance work. Install apply uses its explicit bounded configuration gate.
+
+`installs.verify` now calls the public read-only USK `installed.verify` route
+for registered Universal Setup managed records under the existing explicit
+`operator_acceptance_candidate` configuration. The default unconfigured route
+retains `live_target_acceptance_required`. Verification needs no archive,
+permit, confirmation, repair, launch or network authority.
+
+The response preserves the exact provider pass/warn/fail report, owned file
+and directory observations, unknown paths, identities and canonical digest.
+FacMan binds report coverage and expected hashes to the retained ownership
+manifest, validates counts/status/member shapes, and re-inspects provider and
+FacMan record preimages before returning it. Unsafe targets and links/junctions
+refuse before target verification. All target bytes, references, provider state
+and audit remain unchanged. A failed owned directory paired with provider
+pass/warn is conservatively refused; directory `unreadable` also refuses
+because the pinned verifier does not emit that status.
+
+This route reports a bounded observation, not an atomic target snapshot or
+authority to repair. Concurrent target changes after the observation remain
+possible. Synthetic fixture coverage does not qualify a genuine Factorio
+install, human experience, additional hosts or a release gate.
 
 Repair and uninstall apply persist their FacMan coordinator before provider
 entry. A known pre-effect refusal can close safely; any ambiguous or post-effect
