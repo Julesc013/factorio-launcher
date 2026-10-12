@@ -354,3 +354,20 @@ combined Linux owner and Windows qualification remains bound and reused.
 Evidence is in evidence/posix-publication-ci-warning.v1.json and custody.
 The failed job and the corrected local test result remain distinct;
 required source CI and produced-package acceptance remain outstanding.
+
+
+### POSIX retained-stream primitive and real process death
+
+The retained rewrite primitive now holds the original single-link inode on
+reviewed local POSIX filesystems, bounds readable metadata and checks complete
+bytes and namespace identity before each effect. Four native checks and25
+Linux owner/publication/admission tests pass, with four Windows-only skips.
+Real parent-delivered SIGKILL at all three reachable phases proves flock
+release, exact inode/metadata recovery and terminal immutability. Existing
+INI application admission remains closed. Actual MSVC preprocessing proves
+Windows runtime tokens unchanged; existing Windows evidence is reused.
+The opener refusal predicate and shared-policy checker corrections, failed
+helpers and actual results are retained in evidence/posix-retained-rewrite.v1.json
+and its compact custody. Full compiler captures stay in managed evidence.
+Fresh required CI, named host/packages, physical ext4/APFS, power loss, game,
+human and full Make Ready/Beta acceptance remain open.
