@@ -333,3 +333,11 @@ Durable receipt and compact synthetic-input/process custody are in evidence/pack
 - Three native smokes, three focused ordinary tests and both fullscreen ConPTY tests pass. Real ordinary inputs perform the two selected-save preparation owners with fresh confirmations and exact receipt/journal/plan identities, while preserving config inode and unrelated inputs. Menu routing and subsequent refusal, cancellation, empty workspace, resize and no-color behavior are retained.
 - Independent review, failed source/runner/build/skip-label stages and exact images/postimages are in evidence/tui-selected-save-native.v1.json and hash-closed custody. Experimental C++ frontend consumers were rebuilt; no normative CLI/RPC/provider ABI or pin changed.
 - This accepts source-native Windows behavior only. Produced corrected TUI and Linux/Intel-mac host/package acceptance, POSIX owner implementation, real Play/human experience and complete MakeReady/Beta remain open.
+
+### POSIX F1 help qualification correction
+
+Both stale PTY markers now acknowledge the existing Menu and Selected Save
+controls. Inputs, deadlines, cancellation, resize, exit and no-color assertions
+remain unchanged. Independent exact-source review and the native help receipt
+are bound in evidence/tui-selected-save-pty-correction.v1.json. Current required
+POSIX checks must qualify the correction before integration.
