@@ -309,3 +309,12 @@ and additionally assert the semantic refusal and returned identities.
 Unchanged compiled source/build/five smokes remain reusable only under
 new exact frozen review04. Focused/control/historical acceptance remains
 outstanding; no new build, root, clone or candidate.
+
+
+### Produced Windows recovery and actual portable GUI acceptance (2026-10-12)
+
+PR406 is integrated at dce1ed5cabfd8af848c122dc063c1196b3c95772; its required source/merge checks and SDK lanes passed. The existing exact producer artifact qualified 174 native commands across thirteen fresh consumers: all seven recovery methods passed, and changed-source, conflicting-raw and torn-generated cells were preserved and refused. The genuine packaged WinForms Content button then completed an ordinary typed, explicitly confirmed offline import in a separate consumer, preserving binary settings/provenance and returning the new selected instance. Independent actual-result reviews accepted both scoped outcomes; terminal job receipts prove all GUI/backend descendants drained. No product build, candidate, clone or new task root was dispatched.
+
+The self-setup artifact retained a real legacy GUI relocation/manifest defect. Its service-bound original portable ZIP was recovered byte-for-byte against the recorded original SHA, without editing the failed payload or fabricating a fixed Setup package. This proves the original legacy portable GUI, not the selected canonical installed Desktop product. Five failed client attempts and the focused diagnostics are preserved. A compiled NoInlining initializer fixes PowerShell default UIA proxy initialization; actual tab captions, nested modal windows and the dropdown ValuePattern are then exercised through standard UIA. No product metadata or source rewrite supplied this result.
+
+Durable receipt and compact synthetic-input/process custody are in evidence/pack-partial-produced.v1.json and evidence/pack-partial-produced-custody.zip. PR404 owner-only control authorization, canonical installed GUI/Setup, GUI process-loss, genuine game/human/fullscreen TUI, other-host, complete F09/F11 and Beta gates remain open. A torn-file refusal is not torn-file repair. The active WorkUnit remains partial; continue dependency-ready implementation rather than healthy CI observation turns.
