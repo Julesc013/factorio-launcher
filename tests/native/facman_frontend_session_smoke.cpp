@@ -42,6 +42,17 @@ int main()
         return 2;
     }
 
+    facman::frontend::FrontendNegotiationRequest selected_observation;
+    selected_observation.launch_intent = "load_save";
+    auto selected_identity = direct.negotiate(selected_observation);
+    if (!selected_identity || selected_identity.value().raw_snapshot.find(
+        "\"launch_intent\":\"load_save\"") == std::string::npos ||
+        selected_identity.value().snapshot_revision == direct_identity.value().snapshot_revision ||
+        fs::exists(workspace)) return 40;
+    facman::frontend::FrontendQueryRequest invalid_observation;
+    invalid_observation.launch_intent = "benchmark";
+    if (direct.query(invalid_observation) || fs::exists(workspace)) return 41;
+
     FrontendSessionOptions process_options;
     process_options.workspace = workspace;
     process_options.transport = TransportKind::process;

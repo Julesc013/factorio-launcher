@@ -318,3 +318,18 @@ PR406 is integrated at dce1ed5cabfd8af848c122dc063c1196b3c95772; its required so
 The self-setup artifact retained a real legacy GUI relocation/manifest defect. Its service-bound original portable ZIP was recovered byte-for-byte against the recorded original SHA, without editing the failed payload or fabricating a fixed Setup package. This proves the original legacy portable GUI, not the selected canonical installed Desktop product. Five failed client attempts and the focused diagnostics are preserved. A compiled NoInlining initializer fixes PowerShell default UIA proxy initialization; actual tab captions, nested modal windows and the dropdown ValuePattern are then exercised through standard UIA. No product metadata or source rewrite supplied this result.
 
 Durable receipt and compact synthetic-input/process custody are in evidence/pack-partial-produced.v1.json and evidence/pack-partial-produced-custody.zip. PR404 owner-only control authorization, canonical installed GUI/Setup, GUI process-loss, genuine game/human/fullscreen TUI, other-host, complete F09/F11 and Beta gates remain open. A torn-file refusal is not torn-file repair. The active WorkUnit remains partial; continue dependency-ready implementation rather than healthy CI observation turns.
+
+## 2026-10-13 — actual delivered GUI Make Ready owner stages
+
+- Reused the admitted original Windows portable package and ordinary WinForms controls with explicit confirmations. Thirteen owned commands include two actual GUI effects: in-place routing configuration, then selected-save declared context after a fresh observation.
+- Independent result review binds actual GUI-created requests, receipts and complete journals, exact configuration/inode and save/profile/version/lock identities, full preimages and unchanged delivered files. All pre-existing data except the admitted configuration bytes is preserved.
+- Both displayed payloads were complete (1335 and 1222 characters), including partial composition and false readiness/permit/execution fields. The suspected truncation did not reproduce; no GUI repair is inferred from that hypothesis.
+- See evidence/make-ready-delivered-gui.v1.json and hash-closed custody. This accepts synthetic legacy-portable GUI behavior only; real game/human/host, canonical installed Desktop, complete Make Ready/Play and Beta remain open.
+- Actual delivered ordinary TUI baseline has no Selected Save observation selector and reports selected_context_load_save_required. Its shared linear/fullscreen frontend observation/dispatch path is the next bounded repair.
+
+## 2026-10-13 — ordinary TUI selected-save observation
+
+- Added Menu/Selected Save controls to both renderers, optional typed frontend query intent, backend-selected snapshot intent and revision-bound action dispatch. Observation changes invalidate confirmation and form; default Menu remains compatible.
+- Three native smokes, three focused ordinary tests and both fullscreen ConPTY tests pass. Real ordinary inputs perform the two selected-save preparation owners with fresh confirmations and exact receipt/journal/plan identities, while preserving config inode and unrelated inputs. Menu routing and subsequent refusal, cancellation, empty workspace, resize and no-color behavior are retained.
+- Independent review, failed source/runner/build/skip-label stages and exact images/postimages are in evidence/tui-selected-save-native.v1.json and hash-closed custody. Experimental C++ frontend consumers were rebuilt; no normative CLI/RPC/provider ABI or pin changed.
+- This accepts source-native Windows behavior only. Produced corrected TUI and Linux/Intel-mac host/package acceptance, POSIX owner implementation, real Play/human experience and complete MakeReady/Beta remain open.

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -156,6 +157,136 @@ class TuiProductTests(unittest.TestCase):
                 self.assertIn("FacMan - Factorio Manager", process.stdout)
                 self.assertIn("Authoritative snapshot", process.stdout)
                 self.assertFalse(workspace.exists())
+
+    def test_ordinary_observation_choice_preserves_empty_workspace(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-tui-observation-") as temporary:
+            workspace = Path(temporary) / "absent"
+            result = self.invoke(
+                ["--workspace", str(workspace), "--ordinary", "--plain"],
+                stdin="s\n2\nmenu\nselected-save\nm\nq\n",
+            )
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertIn("Observation: Selected Save", result.stdout)
+            self.assertIn("Observation: Menu", result.stdout)
+            self.assertNotIn("observation did not match", result.stderr)
+            self.assertFalse(workspace.exists())
+
+    @unittest.skipUnless(os.name == "nt", "unsupported: preparation owners are Windows qualified")
+    def test_ordinary_selected_save_preparation_and_changed_observation_confirmation(self) -> None:
+        from test_configuration_reconciliation import ExistingConfigurationTests
+        from test_make_ready_preparation import MakeReadyPreparationTests
+        from test_local_modset_solver import snapshot
+
+        def make_ready_input(projected: dict) -> str:
+            actions = projected["available_semantic_actions"]
+            self.assertEqual("presentation.refresh", actions[0]["action_id"])
+            index = next(i for i, action in enumerate(actions)
+                         if action["action_id"] == "readiness.prepare")
+            descriptor = actions[index]
+            self.assertEqual("available", descriptor["availability"])
+            self.assertEqual("explicit", descriptor["confirmation"])
+            self.assertEqual(["selected_instance_id"],
+                             [field["field_id"] for field in descriptor["input_fields"]])
+            self.assertEqual("main", descriptor["input_fields"][0]["default"])
+            return "tab\n" * index
+
+        for intent in ("menu", "load_save"):
+            with self.subTest(intent=intent), tempfile.TemporaryDirectory(prefix="tui-make-ready-") as temporary:
+                workspace = Path(temporary)
+                instance, original, expected = ExistingConfigurationTests.prepare(
+                    self, workspace, "load_save", raw=True, crlf=True)
+                target = instance / "config/config.ini"
+                identity = (target.stat().st_dev, target.stat().st_ino)
+                preserved = MakeReadyPreparationTests.preserved_inputs(self, instance)
+                sidecar = instance / "metadata/save-refs/selected.zip.save-ref.v1.json"
+                selected = ExistingConfigurationTests.query(self, workspace, "instances", "load_save")
+                tabs = make_ready_input(selected)
+                before = snapshot(workspace)
+                # Open the actual Make Ready form and confirmation, then switch away/back.
+                cancelled = self.invoke(
+                    ["--workspace", str(workspace), "--ordinary", "--plain"],
+                    stdin="s\n2\n" + tabs + "space\nm\ns\nspace\nq\n")
+                self.assertEqual(0, cancelled.returncode, cancelled.stderr)
+                self.assertIn("Confirm Make Ready", cancelled.stdout)
+                self.assertEqual(original, target.read_bytes())
+                self.assertFalse(sidecar.exists())
+                self.assertEqual(before, snapshot(workspace))
+                receipt_root = workspace / ".facman/action-receipts-v2"
+                old_receipts = set(receipt_root.glob("*.v2.json"))
+                choice = "s\n" if intent == "load_save" else ""
+                components = ["routing_configuration"]
+                if intent == "load_save":
+                    components.append("selected_save_declared_context")
+                for component in components:
+                    reviewed = ExistingConfigurationTests.query(self, workspace, "instances", intent)
+                    tabs = make_ready_input(reviewed)
+                    result = self.invoke(
+                        ["--workspace", str(workspace), "--ordinary", "--plain"],
+                        stdin=choice + "2\n" + tabs + "space\nspace\nq\n")
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertIn("Confirm Make Ready", result.stdout)
+                    new_receipts = set(receipt_root.glob("*.v2.json")) - old_receipts
+                    self.assertEqual(1, len(new_receipts), result.stdout)
+                    receipt = json.loads(new_receipts.pop().read_bytes())
+                    request = json.loads(receipt["request_json"])
+                    semantic = json.loads(receipt["result_json"])
+                    self.assertEqual("readiness.prepare", request["action_id"])
+                    self.assertTrue(request["request_id"].startswith("tui-readiness-prepare-"))
+                    self.assertEqual("instances", request["scope"])
+                    self.assertEqual("main", request["selected_instance_id"])
+                    self.assertEqual("explicit", request["confirmation"])
+                    self.assertEqual(intent, request.get("launch_intent", "menu"))
+                    self.assertEqual(reviewed["revision"], request["expected_snapshot_revision"])
+                    self.assertEqual(hashlib.sha256(receipt["request_json"].encode()).hexdigest(),
+                                     receipt["request_fingerprint"])
+                    self.assertEqual(hashlib.sha256(receipt["result_json"].encode()).hexdigest(),
+                                     receipt["result_digest"])
+                    self.assertEqual(request["request_id"], semantic["request_id"])
+                    self.assertEqual("completed", semantic["outcome"])
+                    payload = semantic["action_payload"]
+                    self.assertEqual(intent, payload["launch_intent"])
+                    self.assertEqual("partial", payload["composition"])
+                    self.assertFalse(payload["execution_started"])
+                    self.assertFalse(payload["permit_issued"])
+                    effect, = payload["completed_components"]
+                    self.assertEqual(component, effect["component"])
+                    dependency = ("configuration_preparation" if component == "routing_configuration"
+                                  else "selected_save_preparation")
+                    self.assertEqual(reviewed["dependency_identities"][dependency]["plan"]["plan_sha256"],
+                                     effect["plan_sha256"])
+                    owner_command = ("readiness.prepare_configuration" if component == "routing_configuration"
+                                     else "readiness.prepare_selected_save")
+                    self.assertEqual(owner_command, effect["owner_command"])
+                    owner_path = workspace / "transactions" / (effect["transaction_id"] + ".transaction.v1.json")
+                    owner = json.loads(owner_path.read_bytes())
+                    self.assertEqual(effect["owner_result"]["transaction_id"], owner["transaction_id"])
+                    self.assertEqual(owner_command, owner["command_id"])
+                    self.assertEqual("complete", owner["state"])
+                    context = json.loads(owner["operation_context"])
+                    self.assertEqual(request["durable_operation_id"], context["operation_id"])
+                    self.assertEqual(request["attempt_id"], context["attempt_id"])
+                    self.assertEqual(request["durable_operation_id"], semantic["operation"]["durable_operation_id"])
+                    self.assertEqual(request["attempt_id"], semantic["operation"]["attempt_id"])
+                    replacement = semantic["replacement_snapshot"]
+                    self.assertEqual(intent, replacement["selected_context"]["launch_intent"])
+                    self.assertNotEqual(reviewed["revision"], replacement["revision"])
+                    self.assertFalse(replacement["readiness"]["execution_available"])
+                    old_receipts = set(receipt_root.glob("*.v2.json"))
+                self.assertEqual(expected, target.read_bytes())
+                if intent == "menu":
+                    self.assertFalse(sidecar.exists())
+                    self.assertIn("selected_context_load_save_required", result.stdout)
+                else:
+                    document = json.loads(sidecar.read_bytes())
+                    self.assertEqual(hashlib.sha256((instance / "saves/selected.zip").read_bytes()).hexdigest(),
+                                     document["save_sha256"])
+                    self.assertEqual("gui", document["profile_id"])
+                    registry = json.loads((instance / "instance.v1.json").read_bytes())
+                    self.assertEqual(registry["factorio_version"], document["factorio_version"])
+                    self.assertEqual(hashlib.sha256((instance / "mods/modset-lock.v1.json").read_bytes()).hexdigest(),
+                                     document["modset_lock_sha256"])
+                self.assertEqual(identity, (target.stat().st_dev, target.stat().st_ino))
+                self.assertEqual(preserved, MakeReadyPreparationTests.preserved_inputs(self, instance))
 
     def test_catalog_and_empty_unicode_workspace(self) -> None:
         version = self.invoke(["--version"])
