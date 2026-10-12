@@ -342,3 +342,15 @@ and strict/AIDE checks. The stale-base failure and scoped requalification
 are bound in evidence/posix-publication-combined.v1.json and its custody
 archive. Required CI and exact packages remain required. Broader host,
 existing POSIX INI, game, human, full Make Ready and Beta gates remain open.
+
+### Hosted Linux warnings-as-errors correction
+
+The Linux source job failed a temporary-string loop-reference warning in
+the native adversarial test. The single Linux-only binding now uses an
+explicit string value; all nine cases and runtime source hashes remain.
+Strict GCC reproduces the old failure and accepts the correction. The
+rebuilt native smoke passes unprivileged on owned private tmpfs. Existing
+combined Linux owner and Windows qualification remains bound and reused.
+Evidence is in evidence/posix-publication-ci-warning.v1.json and custody.
+The failed job and the corrected local test result remain distinct;
+required source CI and produced-package acceptance remain outstanding.

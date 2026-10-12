@@ -151,7 +151,7 @@ int main()
         // Actual Linux link-pair recovery and interference. Pinned input
         // admission stays single-link; only a journal-bound owner reads pairs.
 #ifdef __linux__
-        for (const std::string& variant : {"complete", "post_link_fault", "foreign_stage", "foreign_target",
+        for (const std::string variant : {"complete", "post_link_fault", "foreign_stage", "foreign_target",
                 "third_link", "missing_stage", "linked_stage", "changed_bytes", "cleanup_substitution"}) {
             facman::platform::StableDirectoryObject owner;
             if (!root_authority.create_child_directory_exclusive("owner-" + variant, owner).ok()) return 63;
