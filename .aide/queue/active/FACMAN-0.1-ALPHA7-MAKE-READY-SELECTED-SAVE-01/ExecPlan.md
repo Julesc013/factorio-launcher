@@ -319,6 +319,45 @@ The self-setup artifact retained a real legacy GUI relocation/manifest defect. I
 
 Durable receipt and compact synthetic-input/process custody are in evidence/pack-partial-produced.v1.json and evidence/pack-partial-produced-custody.zip. PR404 owner-only control authorization, canonical installed GUI/Setup, GUI process-loss, genuine game/human/fullscreen TUI, other-host, complete F09/F11 and Beta gates remain open. A torn-file refusal is not torn-file repair. The active WorkUnit remains partial; continue dependency-ready implementation rather than healthy CI observation turns.
 
+## 2026-10-13 — actual delivered GUI Make Ready owner stages
+
+- Reused the admitted original Windows portable package and ordinary WinForms controls with explicit confirmations. Thirteen owned commands include two actual GUI effects: in-place routing configuration, then selected-save declared context after a fresh observation.
+- Independent result review binds actual GUI-created requests, receipts and complete journals, exact configuration/inode and save/profile/version/lock identities, full preimages and unchanged delivered files. All pre-existing data except the admitted configuration bytes is preserved.
+- Both displayed payloads were complete (1335 and 1222 characters), including partial composition and false readiness/permit/execution fields. The suspected truncation did not reproduce; no GUI repair is inferred from that hypothesis.
+- See evidence/make-ready-delivered-gui.v1.json and hash-closed custody. This accepts synthetic legacy-portable GUI behavior only; real game/human/host, canonical installed Desktop, complete Make Ready/Play and Beta remain open.
+- Actual delivered ordinary TUI baseline has no Selected Save observation selector and reports selected_context_load_save_required. Its shared linear/fullscreen frontend observation/dispatch path is the next bounded repair.
+
+## 2026-10-13 — ordinary TUI selected-save observation
+
+- Added Menu/Selected Save controls to both renderers, optional typed frontend query intent, backend-selected snapshot intent and revision-bound action dispatch. Observation changes invalidate confirmation and form; default Menu remains compatible.
+- Three native smokes, three focused ordinary tests and both fullscreen ConPTY tests pass. Real ordinary inputs perform the two selected-save preparation owners with fresh confirmations and exact receipt/journal/plan identities, while preserving config inode and unrelated inputs. Menu routing and subsequent refusal, cancellation, empty workspace, resize and no-color behavior are retained.
+- Independent review, failed source/runner/build/skip-label stages and exact images/postimages are in evidence/tui-selected-save-native.v1.json and hash-closed custody. Experimental C++ frontend consumers were rebuilt; no normative CLI/RPC/provider ABI or pin changed.
+- This accepts source-native Windows behavior only. Produced corrected TUI and Linux/Intel-mac host/package acceptance, POSIX owner implementation, real Play/human experience and complete MakeReady/Beta remain open.
+
+### POSIX F1 help qualification correction
+
+Both stale PTY markers now acknowledge the existing Menu and Selected Save
+controls. Inputs, deadlines, cancellation, resize, exit and no-color assertions
+remain unchanged. Independent exact-source review and the native help receipt
+are bound in evidence/tui-selected-save-pty-correction.v1.json. Current required
+POSIX checks must qualify the correction before integration.
+
+### Produced Linux terminal and offline reconstruction
+
+The existing c95809b6 producer artifact has an identical reviewed source
+tree and verified provider/package inventory. Its actual TUI passes five
+ordinary/PTY methods, including resize, no-color and terminal restoration.
+The same image passes all seven selected offline import methods and244
+native calls, preserving selected content, settings, provenance and known
+objects through supported losses and replay. Changed, foreign and torn
+entries are preserved/refused. Every selected subcase ran unfiltered.
+Package and checkout were read-only; workspaces used owned unprivileged
+bounded private tmpfs. The initial v2 probe-oracle failure is retained.
+The TUI branch also normally merges checked dev0b8e8b6 and requalifies
+Windows native, ordinary and ConPTY behavior. See the produced Linux
+receipt and custody in evidence/produced-linux-tui-and-pack.v1.json.
+USK extraction, uncooperative POSIX namespaces, physical ext4/APFS,
+genuine game/human, canonical installed Desktop and Beta remain open.
 ### Linux same-inode preparation publication and recovery
 
 The missing-INI and new selected-context owners now finish the exact journaled
@@ -354,3 +393,15 @@ combined Linux owner and Windows qualification remains bound and reused.
 Evidence is in evidence/posix-publication-ci-warning.v1.json and custody.
 The failed job and the corrected local test result remain distinct;
 required source CI and produced-package acceptance remain outstanding.
+
+### Combined ordinary Linux selected-save Make Ready qualification
+
+Normal integration retains both the TUI and POSIX-publication evidence. Ordinary Linux TUI controls cancel a pending confirmation after observation changes, then publish missing configuration and selected-save context under two fresh explicit confirmations. The test binds exact request/result digests, plan/input/parent identities, completed journals, published bytes and inode identities. Installation files, content, saves, overrides and the first configuration remain unchanged. Three native tests and six ordinary/PTY methods pass as uid/gid 65534 without skips in a private 128 MiB tmpfs. This proves fixture preparation and terminal behavior; game execution, physical ext4, existing-INI owner admission, canonical Desktop, Beta and RC remain open. Combined-source hosted checks remain required.
+
+Evidence: `evidence/tui-linux-make-ready-combined.v1.json` and its hash-closed custody archive.
+
+### Required macOS short-lived-child startup repair
+
+The combined-source macOS presentation fixture executed and exited zero, but parent process-group lookup had lost setup proof and cleanup recorded an unknown outcome. The child now emits a fixed-width acknowledgement after successful group setup. The supervisor retains that proof before callbacks, cancellation and cleanup; it remains separate from exec success. One immediate bounded nonblocking follow-up observes buffered EOF or errno before cancellation. Missing, partial, duplicate and malformed frames cannot grant dispatch authority, and no acknowledgement restores numeric signaling after consuming wait. Independent review and eight native plus six ordinary/PTY Linux checks pass without skips. Original failures and corrections remain in custody. macOS runtime qualification and all required combined-source checks remain pending; this closes no game, Beta or RC gate.
+
+Evidence: `evidence/posix-child-group-startup-ack.v1.json` and its hash-closed custody archive.

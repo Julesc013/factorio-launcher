@@ -77,6 +77,8 @@ struct FrontendNegotiationRequest {
     std::chrono::milliseconds deadline {0};
     std::shared_ptr<facman::client::CancellationToken> cancellation;
     std::shared_ptr<facman::client::ProgressSink> progress;
+    // Optional: absence preserves the historical Menu query bytes.
+    std::string launch_intent;
 };
 
 struct FrontendQueryRequest {
@@ -90,6 +92,8 @@ struct FrontendQueryRequest {
     std::chrono::milliseconds deadline {0};
     std::shared_ptr<facman::client::CancellationToken> cancellation;
     std::shared_ptr<facman::client::ProgressSink> progress;
+    // Optional: absence preserves the historical Menu query bytes.
+    std::string launch_intent;
 };
 
 struct FrontendQueryResult {

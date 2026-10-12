@@ -259,6 +259,19 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
 {
     TuiState next = state;
     switch (event.kind) {
+    case TuiEventKind::observe_launch_intent:
+        if (event.value != "menu" && event.value != "load_save") {
+            next.status = "Unsupported observation; choose Menu or Selected Save";
+            break;
+        }
+        if (next.launch_intent == event.value) break;
+        next.launch_intent = event.value;
+        next.pending_action.clear();
+        next.form = {};
+        next.snapshot.revision.clear();
+        next.refresh_requested = true;
+        next.status = "Observation changed; refreshing authoritative state";
+        break;
     case TuiEventKind::navigate:
         next.page = event.page;
         next.focus_region = TuiFocusRegion::navigation;
@@ -409,6 +422,8 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
             ? (state.snapshot.active_operation.empty() ? "None" : state.snapshot.active_operation)
             : state.operation_status),
         "Last Run: " + (state.snapshot.last_run.empty() ? "Unavailable" : state.snapshot.last_run),
+        std::string("Observation: ") + (state.snapshot.launch_intent == "menu" ? "Menu"
+            : state.snapshot.launch_intent == "load_save" ? "Selected Save" : "Unavailable"),
     };
     model.page_title = tui_page_name(state.page);
     if (!state.snapshot.summary.empty()) model.body.push_back(state.snapshot.summary);
@@ -497,7 +512,8 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
         break;
     }
     model.status = state.status;
-    model.footer = "F1 Help | Tab Actions | Space Run | 1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
+    model.footer = "m Menu | s Selected Save | F1 Help | Tab Actions | Space Run | "
+        "1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
     return model;
 }
 
@@ -511,6 +527,7 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
     const json::Value* selected = root.find("selected_context");
     if (selected != nullptr && selected->is_object()) {
         snapshot.selected_instance_id = string_member(*selected, "instance_id");
+        snapshot.launch_intent = string_member(*selected, "launch_intent");
     }
     const json::Value* page = root.find("page");
     if (page != nullptr && page->is_object()) {

@@ -36,7 +36,8 @@ public:
     facman::core::Result<facman::frontend::FrontendSessionIdentity> negotiate(
         const std::string& scope = "launch_deck",
         const std::string& selected_instance_id = {},
-        const std::string& search = {});
+        const std::string& search = {},
+        const std::string& launch_intent = {});
     const char* transport_name() const noexcept;
 
 private:

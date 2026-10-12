@@ -70,6 +70,16 @@ consume backend presentation scopes rather than redirecting ordinary reads to
 Advanced. Existing CLI JSON, direct/process transport, cancellation, and
 generated-form tests remain unchanged.
 
+Ordinary observation controls are `m` for Menu (the default) and `s` for
+Selected Save; the linear shell also accepts `menu` and `selected-save`.
+The Launch Deck displays the backend-selected observation. Changing it clears
+pending confirmation and action inputs, discards the old revision, and queries
+fresh backend state. Ordinary Make Ready uses that exact observation and
+revision, with two activations for explicit confirmation. Each successful
+component requires a fresh review before the next component. Selected Save
+observes the current profile's selected save; it grants no Play or game authority.
+Native and produced-terminal qualification for these controls remains pending.
+
 Contextual actions are backend-advertised data rather than a page-specific TUI
 command table. Tab and Shift+Tab move action focus, Space dispatches the
 selected descriptor through `presentation.action`, and Enter retains item
