@@ -1,0 +1,141 @@
+{
+  "schema": "facman.managed_verification_native_acceptance.v1",
+  "status": "PASS_SCOPED_SOURCE_NATIVE_ENGINEERING",
+  "work_item": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+  "source_base": "dce1ed5cabfd8af848c122dc063c1196b3c95772",
+  "source_branch": "task/facman-managed-verify-02",
+  "source_files_sha256": {
+    "apps/cli/completions/FacMan.ps1": "b692644a3db7ca9fe80ea1ebe3be1b4c411a45d28d58515c84c7407e0e1b4b36",
+    "apps/cli/completions/_facman": "d88e1026ca4cd99f8ff028a749b75a8def140f80c7aa843ba3bad2e8700ef0d3",
+    "apps/cli/completions/facman.bash": "de0c3fb89b1828e2e0a6314d867eb340d55025a81906048f8bfbeee627986c20",
+    "apps/cli/completions/facman.fish": "823934fbb2aa11eb57e6e3dfb4c2fe448fae8b81cf9a5b31085c4c5ffb98e8d7",
+    "apps/cli/generated/command_help.inc": "aee8d14ba3c7ad8c5fcce6eaf78e7074d562cc2114f69c335ea993ba1ff77dcb",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h": "7ccd900f134b9ad98d4515c154b8fe6d748b3e66222269a51f3fa78c48c68c97",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m": "8f9414cd518ac2395521079e933f9c63591fd19158f652bf880e02052dcfe359",
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "8cb1e13027f209ccbbff48274651c5c1e45f1e310e2f2e88a87d8fbaa2c161fd",
+    "apps/tui/generated_command_catalog.hpp": "da00275878799056f6efdc05beec5c234805b63b302de7600cc68c753b886ec2",
+    "contracts/command/factorio/installs.verify.v1.toml": "370c54139f4ad55e4b6a9748e20eede4e0732aa02cae3b5d4f838dd97c3b7e17",
+    "contracts/generated-index/command_catalog.v2.json": "10a9357073e95380453fc8b3bacd380719cb31b3807da1b6d04cefe9dacea96b",
+    "contracts/generated-index/command_cli_grammar.v2.json": "be97a39760dd5077cc65b39371c4ea05ed25366423e14ded731007406d0c1776",
+    "contracts/generated-index/frontend_command_catalog.v1.json": "ebbc7d572bfefd9a8a44ad8f15909aa3852f432337792ac2266cca1f954fabd3",
+    "contracts/schema/factorio/usk_verification_report.v1.schema.json": "b7626308b6654baebe923bf7be397bfb9b8bac340482b1c8bf6669dc9682ceb0",
+    "docs/architecture/managed-setup-command-workflows.v1.md": "59af572af1d796e4fd31bbc55b73b5ce4a7dcc6dfb02ba88df1e5bf3fd187923",
+    "docs/reference/generated-command-catalog.md": "a5237c868065ab75d95b11c5e404416c37d4a50c1730a2782e62dc60c22a0eeb",
+    "runtime/core/generated/command_catalog.h": "0539aae61a0f7cb994082921b9d45632a16790f52a94eccfc5006291815999ef",
+    "runtime/core/generated/version.h": "aa26db0db5d7a699168f932914da29867ed3993c21b68d1fa83eff7b85e09447",
+    "runtime/factorio/application/generated/command_ids.inc": "48712e8f1145549505f36e9c9b94af9d26dca70c5479a5312cea6c34db32379b",
+    "runtime/factorio/application/generated/command_lookup.inc": "b8a1a76ba86fc78445d2b33ecf327df528d2ad036598ac329e56ebb94c012249",
+    "runtime/factorio/application/generated/command_names.inc": "ce5d4f10a80c83e11a930d44907d037aedb5260e095cbc5492fb1ddd39d2522c",
+    "runtime/factorio/application/generated/command_writes.inc": "3848fc8d57709c577fc12f7429a5b476442f4a55a9744198a65bb51c256bc39b",
+    "runtime/factorio/application/generated/request_contracts.inc": "0aba68656a004db4fc972b26c63d7245c9ff22cac78497aa3756b8b45b34b286",
+    "runtime/factorio/application/handlers/setup.cpp": "165ee8b6963c4e235801dba0c9c77340d802f4edc7cdfd9966429433b6fa6512",
+    "runtime/factorio/application/setup_gateway.cpp": "4a9a3b5fefaccde846eee9e1074256877c297826c43348ec6519679af186908e",
+    "runtime/factorio/application/setup_gateway.h": "f07602eb848eb486e383170dc033ff03d1090f2462a37513d2a902fcaebc406d",
+    "tests/golden/commands/installs.verify.success.json": "a35d73cb4792856b02cf7366050264f007c6bd461ae2921b8641d7310e62110e",
+    "tests/integration/facman_managed_install_lifecycle.py": "ce878675728e571709c8c9950876d76b869983d1c0978e271353a2c4285c911f",
+    "tests/native/flb_setup_gateway_smoke.cpp": "48f5e63c2cebfacf7c54bca252cf50ab8db6b2c22f26847d2fbee00f52bfe752",
+    "tests/test_managed_verification_contract.py": "5a8b1a293cf796dec03abee96dd31ca3df9c1351409b59b192084d32941b6421",
+    "tools/setup_workflow_check.py": "922494e01e58bbb93c29e4d34d2b1875c73e6eba28215c4eb864d4192a61afa1",
+    ".aide/memory/project-state.md": "89a5a2e6a0f9abe84d5ce7230b1b258cbb9f5b422223280c948703dff9324ad2",
+    ".aide/memory/project-state.v2.json": "b8b5f969700a7d984215178b6a067904b7f3d24b3f3f2626e460582cf6dc4336",
+    "README.md": "4257e0745538d7c4afcfd3158013809f21a2f91ccbbbe737077967173d03e14c",
+    "docs/generated/technical_preview/command-api-conformance.md": "200fd8ffa816afa9890a53888ae278f8d277957b4cb5d7cb5fc7eb0108d000fe",
+    "release/generated/technical_preview_command_api_conformance.v1.json": "38b4515dd0f465385cfe135694b034aed9280772208c04f4bf022be3468d061c",
+    "apps/cli/report_text.h": "dba250be56ba59d46b0425088410c7a6bdde26f7465e62467f8c5df12375278a",
+    "apps/cli/report_text.cpp": "2f215f4ae07718d8f5f78d62f7ba2aa34c540f6512dce2b93dfb2ca6651bbcea",
+    "apps/cli/command_dispatch.cpp": "ddfd36c1a47fa027a79a2611eb77f825cfee18af74fb73c003417d575b0831ef"
+  },
+  "cli_sha256": "eca5c98d45b4bc2b2db28b4f8dc655e99e2028a854ebe24b2fe86f1b8dfee38a",
+  "parser_sha256": "e3f8bed51bb0a19ce8d151e3800ca4ed0f5a7b05b0389d7deb77c0a2cd4e4fc2",
+  "provider_sha256": {
+    "ulk.dll": "d96d05b33b0df2ee2659104125d8e0f70fbc6e48b82dc302b7eb0eb8ac6b6c31",
+    "usk.dll": "99231fbff824df9446159cd91c2dfe01bb439a9f0c3138c9d9625e512696b873"
+  },
+  "proof_calls": 27,
+  "human_cli_calls": 8,
+  "json_rpc_calls": 1,
+  "observations": [
+    "Registered installation verified through pinned Universal Setup installed.inspect and installed.verify; no archive or mutation needed.",
+    "Healthy, changed, missing, wrong-type and wholly absent target reports; unknown data reported/preserved. Unsafe record/provider/link states refused.",
+    "Human CLI prints provider status, owned/missing/changed counts, damaged paths and preserved unknown paths. JSON and declared v2 stdio RPC work.",
+    "Every positive/refused public observation preserves retained target/workspace/provider bytes and paths. Native parser smoke, strict repository and AIDE pass."
+  ],
+  "independent_source_review": {
+    "reviewer": "/root",
+    "author": "/root/managed_verify_impl",
+    "non_authoring": true,
+    "packet_sha256": "6b9e53cd8c9c61b951793ef8526961425c32251235d4f512054334367ce6007c"
+  },
+  "final_qualification_sha256": "d3b71a88ecfbf5a7358d4a83c8fe6973b305dc91e4444da9bdacc489054c8384",
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/managed-verification-native-custody.v1.zip",
+    "sha256": "41f9ecb9b1e731ea5c552d882fda4c65b8161f9ffe6d82385327b42888e39e9d",
+    "bytes": 195174,
+    "members": 171
+  },
+  "preserved_failures": [
+    "Native test used remapped __FILE__ for fixture location; embedded exact fixture corrected.",
+    "Root partial MSBuild invocation failed to link and hit its own execution allowance; normal targeted Build corrected.",
+    "Public proof misexpected default unavailable gate; oracle and configured refusal envelope corrected.",
+    "Strict gate found five stale generated files; refreshed without milestone closure.",
+    "Actual human CLI printed generic preview; formatter and native namespace correction qualified against real calls.",
+    "Extra RPC probe omitted dry_run and used wrong payload field; invalid packet retained, declared schema request qualified.",
+    "Root script budget exceeded helper maximum; no job dispatched; budget corrected."
+  ],
+  "limitations": [
+    "Explicit acceptance configuration required; unconfigured production capability remains unavailable.",
+    "Read-only observations are not an atomic target snapshot and grant no mutation, permit, repair or game execution.",
+    "Synthetic source-native evidence only; no produced-package, human, physical-host, other-platform, F11 closure or Beta qualification.",
+    "Present wrong-type roots and observed reparse links are conservatively refused; torn repair not claimed."
+  ],
+  "commands": [
+    {
+      "name": "cli-build",
+      "exit": 0,
+      "termination": "completed",
+      "primary_stopped": true,
+      "job_empty": true,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\managed-verify-02-cli-build-execution-08\\receipt.json",
+      "sha256": "c7adbb89de1797e604579a0a8b6881952ef7fd49f8e3bdf2df4fb10716ae8191"
+    },
+    {
+      "name": "public",
+      "exit": 0,
+      "termination": "completed",
+      "primary_stopped": true,
+      "job_empty": true,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\managed-verify-02-public-execution-08\\receipt.json",
+      "sha256": "1f80d0ad2ce9fa3ad3ecd0e1a4f4a8f0387f2c6e1f7cfd5f2bd9965ed674af10"
+    },
+    {
+      "name": "rpc",
+      "exit": 0,
+      "termination": "completed",
+      "primary_stopped": true,
+      "job_empty": true,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\managed-verify-02-rpc-execution-08\\receipt.json",
+      "sha256": "e550ca4e485c4fe37d053bfe979294f7fa221586c5220e5d4bc72c43222e103a"
+    },
+    {
+      "name": "strict",
+      "exit": 0,
+      "termination": "completed",
+      "primary_stopped": true,
+      "job_empty": true,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\managed-verify-02-strict-execution-08\\receipt.json",
+      "sha256": "94e3bad00664ceaad543d374a045f093d4ddeee64e272472c41d9091501ab243"
+    },
+    {
+      "name": "aide",
+      "exit": 0,
+      "termination": "completed",
+      "primary_stopped": true,
+      "job_empty": true,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\managed-verify-02-aide-execution-08\\receipt.json",
+      "sha256": "79e0680e0f02934952f7165398ebd74fc3f4a1e9e00c8f3ef89d83e86a91ab24"
+    }
+  ],
+  "workunit_closed": false,
+  "beta_qualified": false,
+  "release_qualified": false
+}

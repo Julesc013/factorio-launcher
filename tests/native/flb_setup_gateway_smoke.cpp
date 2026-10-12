@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: MIT
 
 #include "setup_gateway.h"
+#include "fl_json.h"
+#include "fl_sha256.h"
 
 #include <chrono>
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -182,8 +185,142 @@ fs::path make_archive(
     return archive_path;
 }
 
+bool verification_report_cases()
+{
+    // Keep the parser input independent of CTest's working directory and the
+    // reproducible-build source-path remapping. This is the public success golden.
+    const char* text = R"verify_fixture({
+  "schema": "usk.verification_report.v1",
+  "report_id": "verify-test",
+  "report_digest": "6d6336df782737ff4e36f353f264f25cd250165a001819cc8a88af35deaff498",
+  "install_id": "managed-test",
+  "installed_state_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "ownership_manifest_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "verified_at": "2026-10-12T01:00:00Z",
+  "status": "pass",
+  "files": [
+    {
+      "relative_path": "bin/x64/factorio.exe",
+      "status": "present",
+      "expected_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "actual_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "directories": [
+    {
+      "relative_path": "bin",
+      "status": "present"
+    },
+    {
+      "relative_path": "bin/x64",
+      "status": "present"
+    }
+  ],
+  "unknown_paths": [],
+  "summary": {
+    "owned_files": 1,
+    "missing_files": 0,
+    "modified_files": 0,
+    "unknown_paths": 0
+  }
+})verify_fixture";
+    auto baseline = facman::core::json::parse(text);
+    if (!baseline) {
+        std::fprintf(stderr, "verification case fixture: invalid embedded JSON: %s\n",
+            baseline.error().message.c_str());
+        return false;
+    }
+    application::InstallVerifyRequest request;
+    request.installed.install_id = "managed-test";
+    request.report_id = "verify-test";
+    request.verified_at = "2026-10-12T01:00:00Z";
+    const auto run = [&](const std::string& name, bool expected,
+        const std::vector<std::pair<std::string, std::string>>& changes, bool recalculate = true) {
+        const auto input_failure = [&](const char* stage) {
+            std::fprintf(stderr, "verification case %s: fixture construction failed at %s\n",
+                name.c_str(), stage);
+            return false;
+        };
+        facman::core::json::ObjectBuilder unsigned_report;
+        for (const auto& key : baseline.value().object_keys()) {
+            if (key == "schema" || key == "report_digest") continue;
+            const auto changed = std::find_if(changes.begin(), changes.end(), [&](const auto& value) { return value.first == key; });
+            if (changed == changes.end()) unsigned_report.add_value(key, *baseline.value().find(key));
+            else {
+                auto value = facman::core::json::parse(changed->second);
+                if (!value) return input_failure("replacement JSON");
+                unsigned_report.add_value(key, value.value());
+            }
+        }
+        auto parsed = facman::core::json::parse(unsigned_report.serialize());
+        if (!parsed) return input_failure("unsigned report JSON");
+        auto canonical = facman::core::json::canonical_integer_json(parsed.value());
+        if (!canonical) return input_failure("canonical report");
+        facman::core::json::ObjectBuilder report;
+        for (const auto& key : parsed.value().object_keys()) report.add_value(key, *parsed.value().find(key));
+        report.add_string("schema", "usk.verification_report.v1");
+        report.add_string("report_digest", recalculate ? facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(canonical.value().data()), canonical.value().size()) : std::string(64, '0'));
+        facman::core::json::ObjectBuilder envelope;
+        envelope.add_string("schema", "usk.command_response.v1");
+        envelope.add_string("status", "ok");
+        auto null_value = facman::core::json::parse("null");
+        envelope.add_value("error", null_value.value());
+        auto report_value = facman::core::json::parse(report.serialize());
+        if (!report_value) return input_failure("report JSON");
+        envelope.add_value("payload", report_value.value());
+        auto decoded = application::decode_install_verification_report(envelope.serialize(), request,
+            std::string(64, 'a'), std::string(64, 'b'));
+        if (decoded.ok() != expected) {
+            std::fprintf(stderr, "verification case %s: expected %s, received %s: %s: %s (%s)\n",
+                name.c_str(), expected ? "acceptance" : "refusal", decoded ? "acceptance" : "refusal",
+                decoded ? "" : decoded.error().code.c_str(), decoded ? "" : decoded.error().message.c_str(),
+                decoded ? "" : decoded.error().path.c_str());
+            return false;
+        }
+        return true;
+    };
+    if (!run("healthy pass", true, {}) || !run("report digest mismatch", false, {}, false)) return false;
+    const std::string hash(64, 'c');
+    const std::string missing = "[{\"relative_path\":\"bin/x64/factorio.exe\",\"status\":\"missing\",\"expected_sha256\":\"" + hash + "\"}]";
+    if (!run("missing owned file", true, {{"files", missing}, {"status", "\"fail\""},
+        {"summary", R"({"owned_files":1,"missing_files":1,"modified_files":0,"unknown_paths":0})"}})) return false;
+    if (!run("preserved foreign path warning", true, {{"unknown_paths", R"(["foreign.txt"])"}, {"status", "\"warn\""},
+        {"summary", R"({"owned_files":1,"missing_files":0,"modified_files":0,"unknown_paths":1})"}})) return false;
+    const std::vector<std::pair<std::string, std::string>> invalid {
+        {"install_id", "\"other\""}, {"report_id", "\"other\""}, {"verified_at", "\"2026-02-30T00:00:00Z\""},
+        {"installed_state_digest", "\"" + std::string(64, 'd') + "\""},
+        {"ownership_manifest_digest", "\"" + std::string(64, 'd') + "\""},
+        {"status", "\"warn\""}, {"files", "[]"}, {"files", missing},
+        {"files", "[{\"relative_path\":\"bin/x64/factorio.exe\",\"status\":\"present\",\"expected_sha256\":\"" + hash + "\"}]"},
+        {"files", "[{\"relative_path\":\"bin/x64/factorio.exe\",\"status\":\"modified\",\"expected_sha256\":\"" + hash + "\"}]"},
+        {"files", "[{\"relative_path\":\"bin/x64/factorio.exe\",\"status\":\"wrong_type\",\"expected_sha256\":\"" + hash + "\",\"actual_sha256\":\"" + hash + "\"}]"},
+        {"files", "[{\"relative_path\":\"bin/x64/factorio.exe\",\"status\":\"present\",\"expected_sha256\":\"" + hash + "\",\"actual_sha256\":\"" + std::string(64, 'd') + "\"}]"},
+        {"unknown_paths", R"(["../foreign.txt"])"},
+        {"unknown_paths", R"(["foreign\u0000.txt"])"}, {"unknown_paths", R"(["foreign.txt "])"},
+        {"unknown_paths", R"(["foreign.txt/"])"}, {"unknown_paths", R"(["foreign.txt","foreign.txt"])"},
+        {"unknown_paths", R"(["bin"])"},
+        {"summary", R"({"owned_files":2,"missing_files":0,"modified_files":0,"unknown_paths":0})"},
+        // Pinned provider can report pass with a failed directory; FacMan must refuse it.
+        {"directories", R"([{"relative_path":"bin","status":"missing"}])"},
+        {"directories", R"([{"relative_path":"bin","status":"wrong_type"}])"},
+        {"directories", R"([{"relative_path":"bin","status":"present","extra":true}])"},
+        {"directories", R"([{"relative_path":"../bin","status":"present"}])"},
+        {"directories", R"([{"relative_path":"bin","status":"invalid"}])"}
+    };
+    for (const auto& change : invalid) {
+        if (!run("invalid " + change.first + ": " + change.second, false, {change})) return false;
+    }
+    if (application::decode_install_verification_report("{", request, std::string(64, 'a'), std::string(64, 'b'))) {
+        std::fprintf(stderr, "verification case malformed envelope: expected refusal, received acceptance\n");
+        return false;
+    }
+    return true;
+}
+
 int main()
 {
+    if (!verification_report_cases()) return 20;
     Fixture fixture;
     const fs::path valid = make_archive(fixture.root, "valid", true, true);
     auto gateway = application::make_setup_gateway();

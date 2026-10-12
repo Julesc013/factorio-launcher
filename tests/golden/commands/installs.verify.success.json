@@ -1,0 +1,35 @@
+{
+  "schema": "usk.verification_report.v1",
+  "report_id": "verify-test",
+  "report_digest": "6d6336df782737ff4e36f353f264f25cd250165a001819cc8a88af35deaff498",
+  "install_id": "managed-test",
+  "installed_state_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "ownership_manifest_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "verified_at": "2026-10-12T01:00:00Z",
+  "status": "pass",
+  "files": [
+    {
+      "relative_path": "bin/x64/factorio.exe",
+      "status": "present",
+      "expected_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "actual_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "directories": [
+    {
+      "relative_path": "bin",
+      "status": "present"
+    },
+    {
+      "relative_path": "bin/x64",
+      "status": "present"
+    }
+  ],
+  "unknown_paths": [],
+  "summary": {
+    "owned_files": 1,
+    "missing_files": 0,
+    "modified_files": 0,
+    "unknown_paths": 0
+  }
+}

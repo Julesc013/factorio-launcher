@@ -959,9 +959,64 @@ ApplicationResult verify_package(ApplicationContext& context, const ServiceOpera
 ApplicationResult verify_install(ApplicationContext& context, const ServiceOperationRequest& request)
 {
 #if FACMAN_WITH_SETUP
-    auto provider = context.setup().verify_install(request.id);
-    if (!provider) return unavailable(context, "installs.verify", provider.error().code, provider.error().message);
-    return unavailable(context, "installs.verify", provider.value().code, provider.value().reason);
+    if (!context.configuration().setup().configured()) return unavailable(context, "installs.verify",
+        "live_target_acceptance_required", "Managed-target verification requires the bounded live-target policy gate");
+    const auto decline = [](const std::string& code, const std::string& reason,
+        const std::string& detail, bool recoverable = true,
+        facman::core::OutcomeKind kind = facman::core::OutcomeKind::refused) {
+        return refused(safety_refusal("installs.verify", code, reason, detail, recoverable), code, reason, kind);
+    };
+    const std::string install_id = request.install_id.empty() ? request.id : request.install_id;
+    auto parsed = facman::core::InstallId::parse_legacy(install_id);
+    if (!parsed) return decline(parsed.error().code, "Install id is invalid",
+        parsed.error().message, false, parsed.error().kind);
+    auto loaded = context.installs().load(parsed.value());
+    if (!loaded) return decline("unknown_install", "Install reference is not registered", install_id);
+    const auto& record = loaded.value();
+    if (record.ownership != "managed") return decline("ownership_denied", "Verification requires a registered managed install", record.ownership);
+    if (record.provider_id != "universal-setup" || record.source != "universal-setup") return decline("managed_install_provider_mismatch", "Verification requires a Universal Setup record",
+        record.provider_id + ":" + record.source);
+    if (record.lifecycle_status != "active" && record.lifecycle_status != "verification_failed" &&
+        record.lifecycle_status != "recovery_required") return decline("managed_install_evidence_incomplete", "Verification requires a nonterminal managed lifecycle",
+            record.lifecycle_status);
+    const std::string preimage = read_text(record.source_path);
+    if (preimage.empty()) return decline("workspace_record_read_failed", "Managed install record cannot be read stably",
+        facman::platform::path_to_utf8(record.source_path));
+    // Reload after the preimage read to bind decoded fields to the same retained bytes.
+    auto bound = context.installs().load(parsed.value());
+    if (!bound || bound.value().source_path != record.source_path || read_text(record.source_path) != preimage ||
+        bound.value().root != record.root || bound.value().setup_state_ref != record.setup_state_ref ||
+        bound.value().last_verification_identity != record.last_verification_identity ||
+        bound.value().state_revision != record.state_revision || bound.value().lifecycle_status != record.lifecycle_status ||
+        bound.value().ownership != record.ownership || bound.value().provider_id != record.provider_id ||
+        bound.value().source != record.source) return decline("stale_plan", "Install reference changed before verification", install_id);
+    InstallVerifyRequest verify;
+    verify.report_id = context.ids().next("verification");
+    verify.verified_at = context.clock().now_utc();
+    verify.installed.request_id = verify.report_id;
+    verify.installed.install_id = record.id.str();
+    verify.installed.target = record.root;
+    verify.installed.setup_state_ref = record.setup_state_ref;
+    verify.installed.last_verification_identity = record.last_verification_identity;
+    verify.installed.state_revision = record.state_revision;
+    verify.installed.lifecycle_status = record.lifecycle_status;
+    auto provider = context.setup().verify_install(verify);
+    if (!provider) {
+        const auto& error = provider.error();
+        // These are explicit read-only binding/report declines. Older decoders
+        // leave Error.kind at its default; they are not quarantined capabilities.
+        const bool validation_decline = error.code == "setup_installed_state_response_invalid" ||
+            error.code == "ownership_denied" || error.code == "setup_configuration_incomplete" ||
+            error.code == "invalid_argument" || error.code == "stale_plan";
+        return decline(error.code, error.message, error.path.empty() ? error.message : error.path,
+            true, validation_decline ? facman::core::OutcomeKind::refused : error.kind);
+    }
+    auto retained = context.installs().load(parsed.value());
+    if (!retained || retained.value().source_path != record.source_path || read_text(record.source_path) != preimage)
+        return decline("stale_plan", "Install reference changed during verification", install_id);
+    ApplicationResult result;
+    result.output = provider.take_value();
+    return result;
 #else
     (void)request;
     return unavailable(context, "installs.verify", "setup_unavailable", "Universal Setup support is disabled in this build");

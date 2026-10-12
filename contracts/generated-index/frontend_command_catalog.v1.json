@@ -2592,8 +2592,8 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs verify <install-id> --json",
       "cli_aliases": [],
@@ -2624,11 +2624,14 @@
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "dry_run_default": false,
       "effects": [
+        "workspace_read",
         "setup_preview"
       ],
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.verify.refusal.json",
+      "golden_success": "tests/golden/commands/installs.verify.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.verify.title",
         "command.installs.verify.description"
@@ -2636,6 +2639,12 @@
       "mutates_workspace": false,
       "native_id": "installs_verify",
       "owner": "facman",
+      "refusal_codes": [
+        "ownership_denied",
+        "managed_install_provider_mismatch",
+        "managed_install_evidence_incomplete",
+        "live_target_acceptance_required"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_verify",
@@ -2652,9 +2661,10 @@
       ],
       "request_schema": "contracts/schema/command/installs.verify.request.v1.schema.json",
       "required_capabilities": [
+        "workspace_read",
         "setup_preview"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/usk_verification_report.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "installs.verify",
@@ -12077,7 +12087,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "51ea90fdbe90c634d68b5db3b71419d3ac4229a896fff0dd899db0b632e597df",
+  "source_digest": "bdc43f47d4676f60931a4ce7a139985c44e69fa68f371c17b5d92015f30d4739",
   "workflows": [
     {
       "always_visible_fields": [

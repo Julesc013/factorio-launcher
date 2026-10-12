@@ -57,6 +57,7 @@ def validate() -> list[str]:
                 "installs.uninstall.apply",
                 "installs.recovery.inspect",
                 "installs.recovery.apply",
+                "installs.verify",
             }
             else "unavailable_until_gateway"
         )
