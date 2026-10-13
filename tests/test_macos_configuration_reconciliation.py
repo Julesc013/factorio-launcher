@@ -599,26 +599,43 @@ class MacOSExistingConfigurationTests(unittest.TestCase):
                     worker = pwd.getpwnam('nobody'); self.assertNotEqual(0, worker.pw_uid)
                     for owned in [workspace, *workspace.rglob('*')]: os.chown(owned, worker.pw_uid, worker.pw_gid)
                     credentials = dict(user=worker.pw_uid, group=worker.pw_gid, extra_groups=[])
+
+                def other_owned_bytes():
+                    # Exclude the denied target before asking for file status.
+                    return {p.relative_to(instance).as_posix(): p.read_bytes() for p in instance.rglob('*')
+                            if p != target and p.is_file()}
+
+                held = other_owned_bytes(); journal = path.read_bytes(); held_metadata = metadata(target)
+                self.assertEqual(original, target.read_bytes()); self.assertIsNone(held_metadata[-1])
                 # This test owns the file and grants no writes; remove this test ACL during fixture retirement.
                 subprocess.run(['/bin/chmod', '+a', 'group:everyone deny ' + permission, str(target)],
                                check=True, capture_output=True)
                 try:
-                    held = snapshot(instance); journal = path.read_bytes(); mode = target.stat().st_mode
                     probe_code = ('import os,pathlib,sys; assert os.geteuid() != 0; '
                                   'sys.path[:0] = [sys.argv[1], sys.argv[2]]; '
                                   'import test_macos_configuration_reconciliation as m; '
                                   'p=pathlib.Path(sys.argv[3]); '
                                   + ('m.metadata(p)' if permission == 'readsecurity' else 'm.get_xattr(p, "user.facman")'))
-                    probe = subprocess.run([sys.executable, '-c', probe_code, str(ROOT / 'tests'), str(ROOT), str(target)],
-                                           cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **credentials)
-                    self.assertNotEqual(0, probe.returncode); self.assertIn(b'PermissionError', probe.stderr)
+
+                    def assert_permission_denied():
+                        probe = subprocess.run([sys.executable, '-c', probe_code, str(ROOT / 'tests'), str(ROOT), str(target)],
+                                               cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **credentials)
+                        self.assertNotEqual(0, probe.returncode); self.assertIn(b'PermissionError', probe.stderr)
+
+                    assert_permission_denied()
                     process = subprocess.run([str(facman_executable()), *self.recover_args(workspace, record)],
                         cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **credentials)
                     self.assertEqual((3, ''), (process.returncode, process.stderr), process.stdout)
-                    self.assertEqual(held, snapshot(instance)); self.assertEqual(journal, path.read_bytes())
-                    self.assertEqual(original, target.read_bytes()); self.assertEqual(mode, target.stat().st_mode)
+                    self.assertEqual(held, other_owned_bytes()); self.assertEqual(journal, path.read_bytes())
+                    assert_permission_denied()  # The same actual denial must remain after the refusal.
                 finally:
-                    subprocess.run(['/bin/chmod', '-N', str(target)], check=True, capture_output=True)
+                    primary_error = sys.exc_info()[1]
+                    try:
+                        subprocess.run(['/bin/chmod', '-N', str(target)], check=True, capture_output=True)
+                    except Exception as cleanup_error:
+                        if primary_error is None: raise
+                        primary_error.add_note('Test-owned ACL cleanup also failed: ' + repr(cleanup_error))
+                self.assertEqual(original, target.read_bytes()); self.assertEqual(held_metadata, metadata(target))
                 self.assertIsNone(metadata(target)[-1]); self.assertEqual(b'owned-readable-metadata', get_xattr(target, 'user.facman'))
 
     def test_checkpoint_parent_permission_denial_preserves_actual_durable_journal(self):
