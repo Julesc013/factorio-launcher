@@ -1,0 +1,42 @@
+{
+  "schema": "facman.linux_existing_ini_hosted_regression_qualification.v1",
+  "base_head": "504cb739f315e8fadaf1c11d8f09320a448b2bad",
+  "files_sha256": {
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "ba17cc65d7bc0d151f93239d58886dca4aa1b758044c15b45a8432009ad6e3fb",
+    "runtime/factorio/instance/flb_factorio_configuration_preparation.cpp": "e41a673ccc55903f3cb31dbea7e1f15e747664ce91ea22c00a58a179997c2ac2",
+    "tests/test_posix_retained_rewrite_admission.py": "2e8956b5c7fba8ebd40d7fbbb1ee1b8fd4a7db1cc7cb57623976975c229216a6",
+    "tests/test_linux_configuration_reconciliation.py": "3b966d202317f1a1a3e7593f30261c9dd03201d931ea8520107ca6f4fb21661c",
+    "docs/development/existing-configuration-reconciliation.md": "712fbdcca91d85fd1f90b144e6c9d2b2003985a5f66daa6f76dd6d50e30b5375",
+    "tests/test_posix_preparation_publication.py": "c063dc02d872e1fb1ada769d025a6f11ac9e35c5571ccf64638fce00f481c1dd"
+  },
+  "qualification_summary_sha256": "131a1203a962ea685c1cf9b320f403c1af644f4a24c97b92ea144ffbf43fd50c",
+  "independent_review_sha256": "4db657d65e0d757761ae51a2da651808b3fa143ae41262cc714b3f678f8a7fd5",
+  "combined_accepted_counts": {
+    "retained_passed": 56,
+    "fresh_passed": 6,
+    "total_passed": 62,
+    "explicit_windows_only_skips_retained": 4,
+    "new_skips": 0
+  },
+  "fresh_tests_passed": 6,
+  "retained_passes": 56,
+  "actual_readable_xattr_bytes": 40000,
+  "verified_private_tmpfs": true,
+  "hosted_dev_shm_fallback_locally_executed": false,
+  "compiled_images_unchanged": true,
+  "linux_cli_sha256": "16be67894b52000e07c1222eafbe2412781f45b5eb7178a182f0e2952a94fdd2",
+  "no_rebuild": true,
+  "prior_hosted_failure_preserved": true,
+  "custody": "linux-existing-ini-hosted-regressions-custody.v1.zip",
+  "custody_sha256": "5837a1f1b331141d44b2046679392b576280851db1d1347de5f7e25537750171",
+  "custody_members": 20,
+  "required_new_source_ci_pending": true,
+  "authority_delta": "none beyond prior Linux owner admission",
+  "darwin_owner_admitted": false,
+  "physical_ext4": false,
+  "apfs": false,
+  "power_loss": false,
+  "game": false,
+  "beta": false,
+  "rc": false
+}

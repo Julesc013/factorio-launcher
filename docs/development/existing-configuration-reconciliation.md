@@ -9,7 +9,7 @@ files, legacy config-path.cfg and unsupported targets remain unchanged.
 
 The existing-file owner is qualified separately from missing-file publication.
 It binds the original and intended bytes, exact original file and parent
-identities, readable owner/group/DACL and creation/attribute inputs, and current
+identities, platform-specific readable metadata inputs, and current
 install/profile/content/settings/selected-save inputs to its durable journal.
 Device and file identifiers use canonical unsigned decimal strings to retain all
 64 bits. Numeric, noncanonical and overflowing journal identifiers are refused
@@ -26,7 +26,8 @@ Unfamiliar bytes, a substituted file/parent, extra links, readonly files,
 changed readable metadata or context, incompatible writers and changed journal
 ownership remain preserved for review. Recovery never restores old permissions.
 
-The operation changes only the unnamed stream on Windows fixed local NTFS.
+On Windows fixed local NTFS the operation changes only the unnamed stream.
+Its readable metadata identity binds owner/group/DACL and creation/attribute inputs.
 It does not replace the file or set security descriptors or alternate streams.
 Opaque SACL equality, frozen foreign ADS/security writers and power-loss
 recovery are unqualified. Content writes may update write/access timestamps and
@@ -36,11 +37,12 @@ This component does not establish full Make Ready, Play authority, game
 compatibility, installed GUI experience, other-host or Beta acceptance. Prior
 SDK q02 timeout and original CI63 attribution remain unresolved/unconfirmed.
 
-The POSIX retained rewrite primitive is available for native qualification,
-while existing-INI planner, reconcile and recovery mutation admission remains
-Windows only. Linux missing-file publication has a separate qualification.
-An already-current INI remains a read-only observation before the POSIX mutation
-refusal; primitive availability must not enable its application owner.
+The existing-INI planner, reconcile and recovery owner admits Windows and Linux
+explicitly. Linux reuses the retained original-inode primitive through the same
+ordinary instances/launch_deck action, owner guard, durable journal, operation
+locks and recovery state machine. Linux missing-file publication has a separate
+qualification. Darwin existing-INI mutation admission remains closed even where
+its primitive is available. An already-current INI remains a read-only observation.
 
 The Linux/macOS primitive retains the original single-link inode opened relative
 to a held parent with no-follow O_RDWR and a nonblocking exclusive advisory
@@ -62,5 +64,18 @@ Unreadable/oversized metadata, set-ID bits, read-only mode, security xattrs and
 Darwin content-sensitive compression or non-nodump flags are refused. Metadata
 not exposed by readable enumeration is outside this scoped identity; equality
 does not establish inaccessible metadata preservation. Native host/filesystem
-qualification, including named Intel macOS APFS targets, remains outstanding.
+qualification on physical ext4 and named Intel macOS APFS targets remains outstanding.
 Process-loss reachable prefixes are supported; power-loss recovery is unclaimed.
+
+The Linux owner regression suite uses the shared fixture builders without
+changing the Windows DACL/ADS/creation/file-attribute tests. It exercises ordinary
+menu/load-save commands in both scopes, byte-preserving repairs, readable xattrs
+and Linux access ACLs, all eleven durable owner interruption boundaries, real
+CLI SIGKILL after prefix/write/truncate, repeated interruption during recovery,
+and verification-only closure. Its permission-denial case blocks atomic journal
+checkpoint creation in the owned transactions parent under an unprivileged UID,
+proves that denial with a sibling-create probe, checks the last actual journal,
+and recovers after restoring the parent permissions. A chmod on the journal
+itself does not establish this Linux atomic-checkpoint failure.
+These proofs concern bounded synthetic host/filesystem targets and do not grant
+physical-filesystem, power-loss, game, full Make Ready, Play, Beta or RC acceptance.
