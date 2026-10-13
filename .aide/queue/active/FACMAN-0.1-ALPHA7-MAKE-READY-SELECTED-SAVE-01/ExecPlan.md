@@ -394,6 +394,22 @@ Evidence is in evidence/posix-publication-ci-warning.v1.json and custody.
 The failed job and the corrected local test result remain distinct;
 required source CI and produced-package acceptance remain outstanding.
 
+
+### POSIX retained-stream primitive and real process death
+
+The retained rewrite primitive now holds the original single-link inode on
+reviewed local POSIX filesystems, bounds readable metadata and checks complete
+bytes and namespace identity before each effect. Four native checks and25
+Linux owner/publication/admission tests pass, with four Windows-only skips.
+Real parent-delivered SIGKILL at all three reachable phases proves flock
+release, exact inode/metadata recovery and terminal immutability. Existing
+INI application admission remains closed. Actual MSVC preprocessing proves
+Windows runtime tokens unchanged; existing Windows evidence is reused.
+The opener refusal predicate and shared-policy checker corrections, failed
+helpers and actual results are retained in evidence/posix-retained-rewrite.v1.json
+and its compact custody. Full compiler captures stay in managed evidence.
+Fresh required CI, named host/packages, physical ext4/APFS, power loss, game,
+human and full Make Ready/Beta acceptance remain open.
 ### Combined ordinary Linux selected-save Make Ready qualification
 
 Normal integration retains both the TUI and POSIX-publication evidence. Ordinary Linux TUI controls cancel a pending confirmation after observation changes, then publish missing configuration and selected-save context under two fresh explicit confirmations. The test binds exact request/result digests, plan/input/parent identities, completed journals, published bytes and inode identities. Installation files, content, saves, overrides and the first configuration remain unchanged. Three native tests and six ordinary/PTY methods pass as uid/gid 65534 without skips in a private 128 MiB tmpfs. This proves fixture preparation and terminal behavior; game execution, physical ext4, existing-INI owner admission, canonical Desktop, Beta and RC remain open. Combined-source hosted checks remain required.
@@ -405,3 +421,15 @@ Evidence: `evidence/tui-linux-make-ready-combined.v1.json` and its hash-closed c
 The combined-source macOS presentation fixture executed and exited zero, but parent process-group lookup had lost setup proof and cleanup recorded an unknown outcome. The child now emits a fixed-width acknowledgement after successful group setup. The supervisor retains that proof before callbacks, cancellation and cleanup; it remains separate from exec success. One immediate bounded nonblocking follow-up observes buffered EOF or errno before cancellation. Missing, partial, duplicate and malformed frames cannot grant dispatch authority, and no acknowledgement restores numeric signaling after consuming wait. Independent review and eight native plus six ordinary/PTY Linux checks pass without skips. Original failures and corrections remain in custody. macOS runtime qualification and all required combined-source checks remain pending; this closes no game, Beta or RC gate.
 
 Evidence: `evidence/posix-child-group-startup-ack.v1.json` and its hash-closed custody archive.
+
+### Retained rewrite joined with checked TUI and startup repair
+
+The existing primitive branch joins checked dev without changing its nine task paths or thirteen owner/context inputs. The only merge conflict was appended acceptance notes; both sequences are retained. Actual joined Linux source passes four primitive native checks, eight child-setup/frontend checks, twenty-five owner/publication/admission checks and six ordinary/PTY methods, with four explicit Windows-only skips. Real SIGKILL recovery retains inode and readable metadata, releases flock, and preserves terminal read-only behavior. The owned namespace and private mounts drain. Raw Git index bytes are excluded as mutable bookkeeping; exact staged entries, source hashes and merge identities remain guarded. Scoped Windows equivalence is retained; fresh required Windows/macOS/Linux checks remain pending. Existing-INI owner admission, physical ext4, APFS, power loss, game, Beta and RC remain open.
+
+Evidence: `evidence/posix-retained-rewrite-joined.v1.json` and its hash-closed custody archive.
+
+### Darwin retained-file ACL absence correction
+
+Required macOS CI built successfully and passed 56 of 57 native checks; the retained rewrite fixture failed when opening its first clean inode without an extended ACL. Apple Libc confirms that the old getter collapses absent ACL and failed reads into null results. The correction admits absence only after successful retained-descriptor security retrieval and an explicit presence query, encodes it distinctly, and retains present-ACL encoding and all refusal guards. Apple-only regression proves clean-inode absence preservation and refuses ACL addition/removal before writing. Independent source review and actual compiler token equivalence permit reuse of scoped Linux/Windows evidence; fresh required CI, including actual macOS execution, remains pending. Application owner admission and broader host/product/release gates remain open.
+
+Evidence: `evidence/posix-retained-darwin-acl-absence.v1.json` and its hash-closed custody archive.

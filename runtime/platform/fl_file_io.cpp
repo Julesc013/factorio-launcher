@@ -3,6 +3,7 @@
 
 #include "fl_file_io.h"
 #include "fl_retained_rewrite_state.h"
+#include "fl_local_filesystem.h"
 
 #include "fl_system_services.h"
 #include "fl_windows_path.h"
@@ -26,11 +27,14 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/file.h>
+#include <sys/xattr.h>
 #include <unistd.h>
 #if defined(__linux__)
 #include <sys/syscall.h>
 #elif defined(__APPLE__)
 #include <sys/clonefile.h>
+#include <sys/acl.h>
 #endif
 #endif
 
@@ -2017,8 +2021,8 @@ std::string path_to_utf8(const std::filesystem::path& value) { return value.u8st
 // No read-only input acquires write rights; no rename/security/ADS setter.
 namespace {
 thread_local void (*retained_stream_rewrite_phase_hook)(const char*) = nullptr;
-#ifdef _WIN32
 thread_local bool retained_stream_rewrite_flush_fault = false;
+#ifdef _WIN32
 bool flush_retained_rewrite(HANDLE handle)
 {
     if (retained_stream_rewrite_flush_fault) {
@@ -2026,6 +2030,140 @@ bool flush_retained_rewrite(HANDLE handle)
         SetLastError(ERROR_WRITE_FAULT); return false;
     }
     return FlushFileBuffers(handle) != 0;
+}
+#else
+bool flush_retained_rewrite(int handle)
+{
+    if (retained_stream_rewrite_flush_fault) {
+        retained_stream_rewrite_flush_fault = false;
+        errno = EIO; return false;
+    }
+    return ::fsync(handle) == 0;
+}
+
+IoStatus retained_local_filesystem(int handle)
+{
+    struct statfs value {};
+    if (::fstatfs(handle, &value) != 0 || !detail::supported_posix_local_filesystem(value))
+        return IoStatus::failure("retained_rewrite_unsupported_filesystem",
+            "Held object uses an unavailable, remote or unclassified filesystem");
+    return IoStatus::success();
+}
+
+// Encode bounded fields with explicit lengths; timestamps changed by normal
+// content/access operations (atime/mtime/ctime) are deliberately excluded.
+IoStatus retained_posix_metadata(int handle, std::string& identity)
+{
+    identity.clear();
+    constexpr std::size_t maximum = 65536U;
+    struct stat info {};
+    if (::fstat(handle, &info) != 0 || !S_ISREG(info.st_mode) ||
+        (info.st_mode & (S_ISUID | S_ISGID)) != 0 || (info.st_mode & 0222) == 0)
+        return IoStatus::failure("retained_rewrite_metadata_unavailable",
+            "Metadata is unavailable, read-only or content writes could change set-ID privilege bits");
+#if defined(__APPLE__)
+    // Compression, immutable/append-only and other flags are not restorable by
+    // this capability. Only the content-independent nodump flag is admitted.
+    if ((info.st_flags & ~static_cast<unsigned int>(UF_NODUMP)) != 0)
+        return IoStatus::failure("retained_rewrite_metadata_unavailable", "Unsafe Darwin file flags");
+    identity = "darwin-retained-metadata.v1:";
+#else
+    identity = "linux-retained-metadata.v1:";
+#endif
+    identity += std::to_string(info.st_mode) + ":" + std::to_string(info.st_uid) +
+        ":" + std::to_string(info.st_gid) + ":";
+    auto append = [&](const char* bytes, std::size_t count) {
+        if (identity.size() > maximum || count > (maximum - identity.size()) / 2U) return false;
+        const std::string length = std::to_string(count) + ":";
+        if (identity.size() + length.size() + count * 2U > maximum) return false;
+        identity += length;
+        constexpr char hex[] = "0123456789abcdef";
+        for (std::size_t index = 0; index < count; ++index) {
+            const auto byte = static_cast<unsigned char>(bytes[index]);
+            identity.push_back(hex[byte >> 4U]); identity.push_back(hex[byte & 15U]);
+        }
+        return true;
+    };
+#if defined(__APPLE__)
+    identity += std::to_string(info.st_birthtimespec.tv_sec) + ":" +
+        std::to_string(info.st_birthtimespec.tv_nsec) + ":" + std::to_string(info.st_flags) + ":";
+    // Darwin's acl_get_fd_np returns null/ENOENT for an absent ACL, but
+    // that wrapper also hides whether the security metadata read succeeded.
+    // Query presence only after a successful read from this retained FD.
+    filesec_t security = ::filesec_init();
+    if (!security) return IoStatus::failure("retained_rewrite_metadata_unavailable",
+        "Darwin security metadata allocation failed: " + std::string(std::strerror(errno)));
+    struct stat security_info {};
+    int acl_present = 0;
+    acl_t acl = nullptr;
+    const bool security_ok = ::fstatx_np(handle, &security_info, security) == 0 &&
+        ::filesec_query_property(security, FILESEC_ACL, &acl_present) == 0 &&
+        (!acl_present || (::filesec_get_property(security, FILESEC_ACL, &acl) == 0 && acl));
+    const int security_error = security_ok ? 0 : errno;
+    ::filesec_free(security);
+    if (!security_ok) {
+        if (acl) ::acl_free(acl);
+        return IoStatus::failure("retained_rewrite_metadata_unavailable",
+            "Readable Darwin ACL unavailable: " + std::string(std::strerror(security_error)));
+    }
+    // A zero-length ACL field represents verified absence and cannot collide
+    // with any present external ACL, including an ACL with zero entries.
+    bool acl_ok = !acl_present && append(nullptr, 0);
+    if (acl_present) {
+        const ssize_t acl_bytes = ::acl_size(acl);
+        acl_ok = acl_bytes > 0 && static_cast<std::size_t>(acl_bytes) <= maximum;
+        if (acl_ok) {
+            std::vector<char> external(static_cast<std::size_t>(acl_bytes));
+            acl_ok = ::acl_copy_ext(external.data(), acl, external.size()) == acl_bytes &&
+                append(external.data(), external.size());
+        }
+        ::acl_free(acl);
+    }
+    if (!acl_ok) return IoStatus::failure("retained_rewrite_metadata_unavailable", "Darwin ACL unavailable or oversized");
+    auto list = [&](char* data, std::size_t count) { return ::flistxattr(handle, data, count, 0); };
+    auto get = [&](const char* name, void* data, std::size_t count) { return ::fgetxattr(handle, name, data, count, 0, 0); };
+#else
+    // Linux access ACLs are captured as the system.posix_acl_access xattr;
+    // no libacl dependency or ACL setter is introduced.
+    auto list = [&](char* data, std::size_t count) { return ::flistxattr(handle, data, count); };
+    auto get = [&](const char* name, void* data, std::size_t count) { return ::fgetxattr(handle, name, data, count); };
+#endif
+    const ssize_t required = list(nullptr, 0);
+    if (required < 0 || static_cast<std::size_t>(required) > maximum)
+        return IoStatus::failure("retained_rewrite_metadata_unavailable", "Readable xattr list unavailable or oversized");
+    std::vector<char> raw(static_cast<std::size_t>(required));
+    if (required > 0 && list(raw.data(), raw.size()) != required)
+        return IoStatus::failure("retained_rewrite_metadata_unavailable", "Readable xattr list changed");
+    std::vector<std::string> names;
+    for (std::size_t offset = 0; offset < raw.size();) {
+        const auto end = std::find(raw.begin() + static_cast<std::ptrdiff_t>(offset), raw.end(), '\0');
+        if (end == raw.end() || end == raw.begin() + static_cast<std::ptrdiff_t>(offset))
+            return IoStatus::failure("retained_rewrite_metadata_unavailable", "Malformed xattr list");
+        names.emplace_back(raw.data() + offset, static_cast<std::size_t>(end - raw.begin()) - offset);
+        if (names.size() > 256U)
+            return IoStatus::failure("retained_rewrite_metadata_unavailable", "Readable xattr count exceeds its bound");
+        offset = static_cast<std::size_t>(end - raw.begin()) + 1U;
+    }
+    std::sort(names.begin(), names.end());
+    if (std::adjacent_find(names.begin(), names.end()) != names.end())
+        return IoStatus::failure("retained_rewrite_metadata_unavailable", "Duplicate xattr names");
+    for (const auto& name : names) {
+        // Security/integrity privilege state and compressed data can change on
+        // ordinary writes. Preserve/refuse instead of attempting restoration.
+        if (name.rfind("security.", 0U) == 0U || name == "com.apple.decmpfs")
+            return IoStatus::failure("retained_rewrite_metadata_unavailable", "Content-sensitive xattr refused");
+        const ssize_t size = get(name.c_str(), nullptr, 0);
+        if (size < 0 || static_cast<std::size_t>(size) > maximum)
+            return IoStatus::failure("retained_rewrite_metadata_unavailable", "Readable xattr unavailable or oversized");
+        std::vector<char> value(static_cast<std::size_t>(size));
+        // Non-null pointer is required to distinguish an empty value read from
+        // a size query. The exact returned length must match the bounded query.
+        char empty = 0;
+        if (get(name.c_str(), value.empty() ? &empty : value.data(), value.size()) != size ||
+            !append(name.data(), name.size()) || !append(value.data(), value.size()))
+            return IoStatus::failure("retained_rewrite_metadata_unavailable", "Readable xattr changed or metadata exceeded its bound");
+    }
+    return IoStatus::success();
 }
 #endif
 
@@ -2038,6 +2176,9 @@ struct RetainedStreamRewriteFile::Impl {
     PathIdentity parent_identity;
     std::filesystem::path path, parent_path;
     std::string original, intended;
+#ifndef _WIN32
+    std::string leaf, metadata_identity;
+#endif
     RetainedStreamRewriteState state = RetainedStreamRewriteState::original_only;
     ~Impl()
     {
@@ -2094,7 +2235,61 @@ IoStatus RetainedStreamRewriteFile::observe(std::string& bytes, FileIdentity& id
     }
     return IoStatus::success();
 #else
-    return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
+    if (!open()) return IoStatus::failure("retained_rewrite_not_open", "");
+    struct stat parent {}, file {}, named_file {};
+    PathIdentity named_parent;
+    if (::fstat(impl_->parent, &parent) != 0 ||
+        !impl_->parent_identity.same_object(path_identity_from_stat(parent)) ||
+        !inspect_path_no_follow(impl_->parent_path, named_parent).ok() ||
+        named_parent.reparse_or_link || !impl_->parent_identity.same_object(named_parent))
+        return IoStatus::failure("retained_rewrite_parent_changed", "Held parent no longer has the original namespace identity");
+    if (!retained_local_filesystem(impl_->parent).ok() || !retained_local_filesystem(impl_->handle).ok())
+        return IoStatus::failure("retained_rewrite_unsupported_filesystem", "Held parent/file filesystem admission changed");
+    if (::fstat(impl_->handle, &file) != 0)
+        return IoStatus::failure("retained_rewrite_identity_failed", std::strerror(errno));
+    identity = identity_from_stat(file);
+    auto named_matches = [&]() {
+        return ::fstatat(impl_->parent, impl_->leaf.c_str(), &named_file, AT_SYMLINK_NOFOLLOW) == 0 &&
+            identity.unchanged(identity_from_stat(named_file));
+    };
+    if (!identity.regular_file || identity.link_count != 1U || identity.size > 65536U ||
+        !impl_->original_identity.same_object(identity) || !named_matches())
+        return IoStatus::failure("retained_rewrite_identity_changed", "Original file identity or link count changed");
+    std::string metadata;
+    auto status = retained_posix_metadata(impl_->handle, metadata);
+    if (!status.ok()) return status;
+    if (metadata != impl_->metadata_identity)
+        return IoStatus::failure("retained_rewrite_metadata_changed", "Readable retained metadata changed");
+    bytes.resize(static_cast<std::size_t>(identity.size));
+    std::size_t offset = 0;
+    while (offset < bytes.size()) {
+        const ssize_t count = ::pread(impl_->handle, bytes.data() + offset,
+            bytes.size() - offset, static_cast<off_t>(offset));
+        if (count <= 0) {
+            bytes.clear(); return IoStatus::failure("retained_rewrite_read_failed", "Held bounded read did not complete");
+        }
+        offset += static_cast<std::size_t>(count);
+    }
+    struct stat after {};
+    std::string metadata_after;
+    bool stable_times = false;
+    if (::fstat(impl_->handle, &after) == 0) {
+#if defined(__APPLE__)
+        stable_times = file.st_mtimespec.tv_sec == after.st_mtimespec.tv_sec &&
+            file.st_mtimespec.tv_nsec == after.st_mtimespec.tv_nsec &&
+            file.st_ctimespec.tv_sec == after.st_ctimespec.tv_sec && file.st_ctimespec.tv_nsec == after.st_ctimespec.tv_nsec;
+#else
+        stable_times = file.st_mtim.tv_sec == after.st_mtim.tv_sec && file.st_mtim.tv_nsec == after.st_mtim.tv_nsec &&
+            file.st_ctim.tv_sec == after.st_ctim.tv_sec && file.st_ctim.tv_nsec == after.st_ctim.tv_nsec;
+#endif
+    }
+    if (!stable_times || !identity.unchanged(identity_from_stat(after)) || !named_matches() ||
+        !retained_posix_metadata(impl_->handle, metadata_after).ok() || metadata != metadata_after ||
+        !inspect_path_no_follow(impl_->parent_path, named_parent).ok() ||
+        named_parent.reparse_or_link || !impl_->parent_identity.same_object(named_parent)) {
+        bytes.clear(); return IoStatus::failure("retained_rewrite_observation_changed", "Held bytes, metadata or namespace changed during read");
+    }
+    return IoStatus::success();
 #endif
 }
 
@@ -2107,16 +2302,45 @@ IoStatus StableDirectoryObject::open_child_file_no_follow_for_retained_rewrite(
     if (!portable_leaf(leaf, name) || !original_identity.regular_file || original_identity.link_count != 1U ||
         original_identity.size != original.size() || original.empty() || intended.empty() ||
         original.size() > 65536U || intended.size() > 65536U || file.open() ||
-        !impl_ || !impl_->identity.fixed_local_volume || impl_->identity.filesystem_name != "NTFS")
+        !impl_
+#ifdef _WIN32
+        || !impl_->identity.fixed_local_volume || impl_->identity.filesystem_name != "NTFS"
+#else
+        || impl_->handle == kInvalidHandle
+#endif
+        )
         return IoStatus::failure("retained_rewrite_admission_invalid", "Bound original/intended stream inputs are invalid");
     const auto valid = revalidate(); if (!valid.ok()) return valid;
-#ifdef _WIN32
     RetainedStreamRewriteFile candidate;
+#ifdef _WIN32
     auto status = open_relative_windows(impl_->handle, name,
         GENERIC_READ | GENERIC_WRITE | FILE_READ_ATTRIBUTES, 1, 0x00200040, candidate.impl_->handle, 0);
     if (!status.ok()) return status;
     if (!duplicate_handle(impl_->handle, candidate.impl_->parent))
         return IoStatus::failure("retained_rewrite_parent_duplicate_failed", windows_error("DuplicateHandle"));
+#else
+    auto status = retained_local_filesystem(impl_->handle);
+    if (!status.ok()) return status;
+    // O_NONBLOCK prevents a substituted special file from blocking before the
+    // exact regular-file observation. It has no effect on regular-file IO.
+    candidate.impl_->handle = ::openat(impl_->handle, name.c_str(),
+        O_RDWR | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
+    if (candidate.impl_->handle < 0)
+        return IoStatus::failure("retained_rewrite_open_failed", std::strerror(errno));
+    struct stat opened {};
+    if (::fstat(candidate.impl_->handle, &opened) != 0 || !S_ISREG(opened.st_mode) ||
+        opened.st_nlink != 1 || !original_identity.same_object(identity_from_stat(opened)))
+        return IoStatus::failure("retained_rewrite_identity_changed", "Opened child is not the bound single-link regular file");
+    status = retained_local_filesystem(candidate.impl_->handle);
+    if (!status.ok()) return status;
+    if (::flock(candidate.impl_->handle, LOCK_EX | LOCK_NB) != 0)
+        return IoStatus::failure("retained_rewrite_contended", "Nonblocking advisory writer lock was not acquired");
+    if (!duplicate_handle(impl_->handle, candidate.impl_->parent))
+        return IoStatus::failure("retained_rewrite_parent_duplicate_failed", std::strerror(errno));
+    candidate.impl_->leaf = name;
+    status = retained_posix_metadata(candidate.impl_->handle, candidate.impl_->metadata_identity);
+    if (!status.ok()) return status;
+#endif
     candidate.impl_->path = impl_->path / leaf;
     candidate.impl_->parent_path = impl_->path;
     candidate.impl_->parent_identity = impl_->identity;
@@ -2133,10 +2357,6 @@ IoStatus StableDirectoryObject::open_child_file_no_follow_for_retained_rewrite(
         return IoStatus::failure("retained_rewrite_foreign_bytes_preserved", "Observed stream is outside its journal-authorized byte state");
     file = std::move(candidate);
     return IoStatus::success();
-#else
-    (void)state;
-    return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
-#endif
 }
 
 IoStatus RetainedStreamRewriteFile::verify_intended() const
@@ -2156,13 +2376,9 @@ IoStatus RetainedStreamRewriteFile::rewrite_to_intended()
     if (!detail::retained_rewrite_bytes_admissible(impl_->original, impl_->intended, observed))
         return IoStatus::failure("retained_rewrite_foreign_bytes_preserved", "Held stream is outside its bound byte states");
     if (observed == impl_->intended) {
-#ifdef _WIN32
         if (!flush_retained_rewrite(impl_->handle))
             return IoStatus::failure("retained_rewrite_effect_uncertain", "Intended cached bytes could not be flushed; preserve stream and journal");
         return verify_intended();
-#else
-        return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
-#endif
     }
 #ifdef _WIN32
     if (retained_stream_rewrite_phase_hook) retained_stream_rewrite_phase_hook("before_write");
@@ -2186,7 +2402,39 @@ IoStatus RetainedStreamRewriteFile::rewrite_to_intended()
     if (retained_stream_rewrite_phase_hook) retained_stream_rewrite_phase_hook("after_truncate");
     return verify_intended();
 #else
-    return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
+    // Advisory flock cannot exclude an uncooperative writer. Before every
+    // effect, compare the complete expected reachable bytes and bound metadata;
+    // reobserve after every write/flush. Residual observation intervals remain.
+    std::string expected = observed;
+    auto revalidate_expected = [&]() {
+        std::string bytes; FileIdentity identity;
+        const auto status = observe(bytes, identity);
+        if (!status.ok()) return status;
+        return bytes == expected ? IoStatus::success() :
+            IoStatus::failure("retained_rewrite_foreign_bytes_preserved", "Held bytes changed between admitted effects");
+    };
+    if (retained_stream_rewrite_phase_hook) retained_stream_rewrite_phase_hook("before_write");
+    for (std::size_t written = 0; written < impl_->intended.size();) {
+        auto status = revalidate_expected(); if (!status.ok()) return status;
+        const std::size_t count = std::min<std::size_t>(4096U, impl_->intended.size() - written);
+        const ssize_t actual = ::pwrite(impl_->handle, impl_->intended.data() + written,
+            count, static_cast<off_t>(written));
+        if (actual != static_cast<ssize_t>(count) || !flush_retained_rewrite(impl_->handle))
+            return IoStatus::failure("retained_rewrite_effect_uncertain", "A prefix write/flush failed; preserve file and journal");
+        if (expected.size() < written + count) expected.resize(written + count);
+        expected.replace(written, count, impl_->intended, written, count);
+        written += count;
+        status = revalidate_expected(); if (!status.ok()) return status;
+        if (written < impl_->intended.size() && retained_stream_rewrite_phase_hook)
+            retained_stream_rewrite_phase_hook("after_prefix");
+    }
+    if (retained_stream_rewrite_phase_hook) retained_stream_rewrite_phase_hook("after_write");
+    const auto before_truncate = revalidate_expected(); if (!before_truncate.ok()) return before_truncate;
+    if (::ftruncate(impl_->handle, static_cast<off_t>(impl_->intended.size())) != 0 ||
+        !flush_retained_rewrite(impl_->handle))
+        return IoStatus::failure("retained_rewrite_effect_uncertain", "Exact truncation/flush failed; preserve file and journal");
+    if (retained_stream_rewrite_phase_hook) retained_stream_rewrite_phase_hook("after_truncate");
+    return verify_intended();
 #endif
 }
 
@@ -2194,11 +2442,7 @@ namespace testing {
 void set_retained_stream_rewrite_phase_hook(void (*hook)(const char*)) { retained_stream_rewrite_phase_hook = hook; }
 void set_retained_stream_rewrite_flush_fault(bool enabled)
 {
-#ifdef _WIN32
     retained_stream_rewrite_flush_fault = enabled;
-#else
-    (void)enabled;
-#endif
 }
 }
 
@@ -2253,7 +2497,13 @@ IoStatus RetainedStreamRewriteFile::readable_metadata_identity(std::string& iden
     }
     return IoStatus::success();
 #else
-    return IoStatus::failure("retained_rewrite_unsupported", "Windows-only retained stream capability");
+    if (!open()) return IoStatus::failure("retained_rewrite_not_open", "");
+    auto status = retained_posix_metadata(impl_->handle, identity);
+    if (!status.ok()) { identity.clear(); return status; }
+    if (identity != impl_->metadata_identity) {
+        identity.clear(); return IoStatus::failure("retained_rewrite_metadata_changed", "Readable retained metadata changed");
+    }
+    return IoStatus::success();
 #endif
 }
 

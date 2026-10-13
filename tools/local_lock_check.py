@@ -13,6 +13,7 @@ def validate() -> list[str]:
     problems: list[str] = []
     header = (ROOT / "runtime/base/fl_local_operation_lock.h").read_text(encoding="utf-8")
     source = (ROOT / "runtime/base/fl_local_operation_lock.cpp").read_text(encoding="utf-8")
+    filesystem = (ROOT / "runtime/platform/fl_local_filesystem.h").read_text(encoding="utf-8")
     launch_header = (ROOT / "runtime/factorio/launch/flb_factorio_launch_plan.h").read_text(
         encoding="utf-8"
     )
@@ -40,12 +41,15 @@ def validate() -> list[str]:
         "::flock(",
         "O_NOFOLLOW",
         "::lstat(",
-        "MNT_LOCAL",
+        '#include "fl_local_filesystem.h"',
+        "facman::platform::detail::supported_posix_local_filesystem(value)",
         "unreviewed Linux filesystem type",
         "st_nlink != 1",
     ):
         if anchor not in source:
             problems.append(f"stable lock platform proof anchor missing: {anchor}")
+    if "MNT_LOCAL" not in filesystem:
+        problems.append("stable lock shared filesystem proof anchor missing: MNT_LOCAL")
     if "stable_handle" not in launch_header or "identity" not in launch_header:
         problems.append("run lock does not retain stable handle and identity")
     for consumer, text in (("run", launch), ("recovery", recovery)):

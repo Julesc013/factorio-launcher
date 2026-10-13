@@ -115,6 +115,9 @@ private:
 };
 
 // Distinct existing-file capability; read-only inputs retain their original rights.
+// POSIX custody uses a nonblocking advisory flock and bounded FD/path/metadata
+// observations. Uncooperative writers/renames retain observation intervals.
+// This primitive does not grant an existing-configuration owner admission.
 class RetainedStreamRewriteFile;
 enum class RetainedStreamRewriteState { original_only, mutation_authorized, terminal_verify_only };
 
