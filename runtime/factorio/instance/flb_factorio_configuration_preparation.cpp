@@ -399,24 +399,24 @@ constexpr const char* kRewriteSchema = "factorio.configuration_reconciliation_co
 constexpr const char* kMutationAdmitted = "configuration_rewrite_mutation_authorized";
 constexpr const char* kEffectVerified = "configuration_rewrite_effect_verified";
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
 thread_local fs::path rewrite_pause_root;
 #endif
 
 struct RewriteFaultHook {
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
     explicit RewriteFaultHook(const fs::path& root)
 #else
     RewriteFaultHook()
 #endif
     {
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
         rewrite_pause_root = root;
 #endif
         facman::platform::testing::set_retained_stream_rewrite_phase_hook([](const char* phase) {
             const std::string name = std::string("rewrite_") + phase;
             fault(name.c_str());
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
             pause(rewrite_pause_root, name.c_str());
 #endif
         });
@@ -424,7 +424,7 @@ struct RewriteFaultHook {
     ~RewriteFaultHook()
     {
         facman::platform::testing::set_retained_stream_rewrite_phase_hook(nullptr);
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
         rewrite_pause_root.clear();
 #endif
     }
@@ -553,7 +553,7 @@ Result continue_existing_configuration(const fs::path& workspace, tx::Record& re
         }
         if (!observe()) return uncertain("Configuration owner inputs changed after durable admission and before the first write");
         fault("rewrite_before_write");
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
         RewriteFaultHook fault_hook(root_path);
 #else
         RewriteFaultHook fault_hook;
@@ -600,8 +600,8 @@ bool configuration_original_file_identity(const json::Value& context, facman::pl
 Result reconcile_existing_configuration(const fs::path& workspace, const json::Value& plan,
     const ExistingConfigurationGuard& guard)
 {
-#if !defined(_WIN32) && !defined(__linux__)
-    return refused("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows and Linux");
+#if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
+    return refused("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows, Linux and macOS");
 #endif
     facman::platform::FileIdentity original;
     if (!original_file_identity(plan, original) || !guard.observe_inputs || !guard.validate_owner ||
@@ -642,8 +642,8 @@ Result reconcile_existing_configuration(const fs::path& workspace, const json::V
 
 Result recover_existing_configuration(const fs::path& workspace, const std::string& id, const ExistingConfigurationGuard& guard)
 {
-#if !defined(_WIN32) && !defined(__linux__)
-    return refused("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows and Linux");
+#if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
+    return refused("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows, Linux and macOS");
 #endif
     tx::Record record; std::string detail;
     if (!tx::read_record(workspace, id, record, detail)) return refused("recovery_journal_invalid", detail);

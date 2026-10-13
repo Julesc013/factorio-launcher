@@ -2186,8 +2186,8 @@ facman::core::Result<std::string> existing_configuration_plan(
     if (!delta.ok) return fail<std::string>(delta.refusal, "Ambiguous routing configuration must be preserved for explicit repair");
     if (delta.bytes == p.config->text)
         return fail<std::string>("configuration_already_current", "Routing is already current; preserve the existing configuration");
-#if !defined(_WIN32) && !defined(__linux__)
-    return fail<std::string>("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows and Linux");
+#if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
+    return fail<std::string>("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows, Linux and macOS");
 #endif
     const auto effective = launch::parse_effective_config_bytes(
         p.instance.root / "config/config.ini", p.instance.root / "mods", delta.bytes);
@@ -2302,8 +2302,10 @@ ConfigurationGuard configuration_guard(const fs::path& workspace, const Projecti
 facman::core::Result<std::string> configuration_preparation_plan(
     const fs::path& workspace, const ProjectionRequest& request)
 {
+#if !defined(__APPLE__)
     if (!configuration_publication_available()) return fail<std::string>(
         "configuration_publication_unavailable", "Missing configuration preparation is not qualified on this host");
+#endif
     // Common queries with an existing INI need no second content/archive scan.
     auto id = facman::core::InstanceId::parse_legacy(request.instance_id);
     if (!id) return facman::core::Result<std::string>::failure(id.error());
@@ -2312,6 +2314,11 @@ facman::core::Result<std::string> configuration_preparation_plan(
     if (!registered) return facman::core::Result<std::string>::failure(registered.error());
     if (lock_input_identity(registered.value().root / "config/config.ini") != "absent")
         return existing_configuration_plan(workspace, request);
+#if defined(__APPLE__)
+    // Darwin existing-file admission is separate from missing-file publication.
+    if (!configuration_publication_available()) return fail<std::string>(
+        "configuration_publication_unavailable", "Missing configuration preparation is not qualified on this host");
+#endif
     Projection p;
     auto inputs = configuration_inputs(workspace, request, nullptr, &p);
     if (!inputs) return inputs;
