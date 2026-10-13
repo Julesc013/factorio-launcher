@@ -3,6 +3,7 @@
 
 #include "presentation_service.h"
 #include "presentation_action_support.h"
+#include "presentation_joined_preparation.h"
 
 #include "command_result.h"
 #include "facman/build_identity.hpp"
@@ -643,9 +644,16 @@ bool PresentationActionLedger::remember(
         detail.clear();
         return true;
     }
+    return replace_accepted(workspace, request, fingerprint, result, true, detail);
+}
+
+bool PresentationActionLedger::replace_accepted(const fs::path& workspace,
+    const SemanticActionRequest& request, const std::string& fingerprint,
+    const std::string& result, bool terminal, std::string& detail)
+{
     const fs::path path = action_receipt_path(workspace, request.idempotency_key);
     const std::string receipt = action_receipt_json(
-        request, fingerprint, "terminal", result);
+        request, fingerprint, terminal ? "terminal" : "accepted_outcome_unknown", result);
     facman::platform::PathIdentity identity;
     const auto inspected = facman::platform::inspect_path_no_follow(path, identity);
     if (!inspected.ok()) {
@@ -667,6 +675,13 @@ bool PresentationActionLedger::remember(
         return false;
     }
     return replace_action_receipt(path, receipt, detail);
+}
+
+bool PresentationActionLedger::checkpoint(const fs::path& workspace,
+    const SemanticActionRequest& request, const std::string& fingerprint,
+    const std::string& pending_result, std::string& detail)
+{
+    return replace_accepted(workspace, request, fingerprint, pending_result, false, detail);
 }
 
 PresentationService::PresentationService(
@@ -1020,6 +1035,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         context_.workspace(), request.selected_instance_id, request.launch_intent);
     const std::string configuration_preparation = configuration_preparation_json(
         context_.workspace(), request.selected_instance_id, request.launch_intent);
+    const std::string joined_preparation = joined_preparation_json(
+        context_.workspace(), request.selected_instance_id, request.launch_intent);
     const std::string recovery = recovery_json(context_.workspace());
     const LastRunProjection last_run = request.selected_instance_id.empty()
         ? LastRunProjection {LastRunAuthorityState::no_record, last_run_provider_.provider_id(), {}, {}}
@@ -1231,6 +1248,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         actions.add_object(configuration_action_descriptor(configuration_preparation, request.selected_instance_id));
         actions.add_object(make_ready_action_descriptor(configuration_preparation, selected_save_preparation,
             request.selected_instance_id, request.launch_intent));
+        actions.add_object(joined_preparation_descriptor(joined_preparation));
         actions.add_object(action_descriptor(
             "launch.play", "run.execute",
             last_run.state == LastRunAuthorityState::authoritative_record_available
@@ -1435,6 +1453,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     add_json(revision_input, "profile_preparation", profile_preparation);
     add_json(revision_input, "selected_save_preparation", selected_save_preparation);
     add_json(revision_input, "configuration_preparation", configuration_preparation);
+    add_json(revision_input, "joined_preparation", joined_preparation);
     if (readiness.empty()) revision_input.add_null("readiness");
     else add_json(revision_input, "readiness", readiness);
     add_json(revision_input, "recovery", recovery);
@@ -1455,6 +1474,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     add_json(dependencies, "profile_preparation", profile_preparation);
     add_json(dependencies, "selected_save_preparation", selected_save_preparation);
     add_json(dependencies, "configuration_preparation", configuration_preparation);
+    add_json(dependencies, "joined_preparation", joined_preparation);
     dependencies.add_string("workspace_store", "json_toml_v1");
     dependencies.add_string("readiness_owner", "facman.factorio.instance_readiness");
     dependencies.add_string("recovery_owner", "facman.workspace.transactions");
@@ -1661,6 +1681,7 @@ ApplicationResult PresentationService::action(
         }
         profile_plan = bound.take_value();
     }
+    const std::string joined_plan = request.action_id == "readiness.prepare_joined" ? profile_plan : std::string();
 
     const char* durable_effect = request.action_id == "launch.play"
         ? "process_execution"
@@ -1706,7 +1727,8 @@ ApplicationResult PresentationService::action(
                 facman::core::OutcomeKind::refused);
         }
         const std::string pending = action_result_json(
-            request, "outcome_unknown", {}, {},
+            request, "outcome_unknown", {}, joined_plan.empty() ? std::string() :
+                joined_preparation_result(joined_plan, {}, {}),
             "semantic_action_dispatch_uncertain",
             "A durable action was accepted; inspect the receipt before retrying if dispatch is interrupted",
             false, {durable_effect});
@@ -1991,6 +2013,15 @@ ApplicationResult PresentationService::action(
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
         }
+    } else if (request.action_id == "readiness.prepare_joined") {
+        auto prepared = prepare_joined(context_.workspace(), request, joined_plan,
+                [&](const std::string& pending, std::string& detail) {
+                    return action_ledger_.checkpoint(context_.workspace(), request, fingerprint, pending, detail);
+                });
+        const auto replacement = query(query_request);
+        output = action_result_json(request, prepared.outcome,
+            replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+            prepared.payload, prepared.problem_code, prepared.problem_detail, false, {"workspace_write"});
     } else if (request.action_id == "readiness.prepare") {
         // Dispatch exactly one already reviewed owner. Newly available work must
         // be admitted against a fresh revision; no combined rollback is promised.

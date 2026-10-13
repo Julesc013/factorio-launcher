@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_make_ready_joined_result.v1.schema.json",
+  "title": "Joined preparation effects and independent readiness observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "command", "plan", "plan_sha256", "completed_components", "continuation", "completed_effects_verified", "remaining_effects_blocked_before_effects", "readiness_observation", "preparation_complete", "fresh_revision_required", "readiness_complete", "execution_started", "permit_issued", "factorio_support_claim"],
+  "properties": {
+    "schema": {"const": "factorio.make_ready_joined_result.v1"},
+    "command": {"const": "readiness.prepare_joined"},
+    "plan": {"$ref": "factorio_make_ready_joined_plan.v1.schema.json"},
+    "plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "completed_components": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {"$ref": "factorio_make_ready_preparation_result.v1.schema.json#/properties/completed_components/items"}
+    },
+    "continuation": {"enum": ["inspect_original_request", "inspect_domain_recovery", "fresh_request_after_input_correction", "observe_readiness"]},
+    "completed_effects_verified": {"type": "boolean"},
+    "remaining_effects_blocked_before_effects": {"type": "boolean"},
+    "readiness_observation": {"oneOf": [{"type": "null"}, {"$ref": "factorio_instance_readiness.v1.schema.json"}]},
+    "preparation_complete": {"type": "boolean"},
+    "fresh_revision_required": {"type": "boolean"},
+    "readiness_complete": {"const": false},
+    "execution_started": {"const": false},
+    "permit_issued": {"const": false},
+    "factorio_support_claim": {"const": "unclaimed"}
+  },
+  "allOf": [{
+    "if": {"properties": {"continuation": {"const": "fresh_request_after_input_correction"}}},
+    "then": {"properties": {
+      "completed_components": {"minItems": 1},
+      "completed_effects_verified": {"const": true},
+      "remaining_effects_blocked_before_effects": {"const": true},
+      "readiness_observation": {"type": "null"},
+      "preparation_complete": {"const": false}
+    }},
+    "else": {"properties": {"remaining_effects_blocked_before_effects": {"const": false}}}
+  }, {
+    "if": {"properties": {"preparation_complete": {"const": true}}},
+    "then": {"properties": {
+      "fresh_revision_required": {"const": false},
+      "readiness_observation": {"type": "object", "properties": {
+        "configuration_state": {"const": "ready"},
+        "preparation_state": {"const": "already_prepared"}
+      }}
+    }},
+    "else": {"properties": {"fresh_revision_required": {"const": true}}}
+  }]
+}

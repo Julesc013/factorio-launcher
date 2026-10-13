@@ -463,6 +463,192 @@ namespace FacMan.WinForms
         }
     }
 
+    internal static class MakeReadyContinuation
+    {
+        private static bool Exact(IDictionary<string, object> value, params string[] keys)
+        {
+            if (value == null || value.Count != keys.Length) return false;
+            foreach (string key in keys) if (!value.ContainsKey(key)) return false;
+            return true;
+        }
+
+        private static bool Flag(IDictionary<string, object> value, string key, bool expected)
+        {
+            object item;
+            return value != null && value.TryGetValue(key, out item) && item is bool && (bool)item == expected;
+        }
+
+        private static bool Strings(IDictionary<string, object> value, params string[] keys)
+        {
+            if (value == null) return false;
+            foreach (string key in keys) if (!value.ContainsKey(key) || !(value[key] is string)) return false;
+            return true;
+        }
+
+        private static bool Digest(string value)
+        {
+            if (value.Length != 64) return false;
+            foreach (char c in value) if (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f')) return false;
+            return true;
+        }
+
+        private static bool SameTarget(string actual, string expected)
+        {
+            if (actual == null || expected == null) return false;
+            if (Path.DirectorySeparatorChar == '\\')
+            {
+                actual = actual.Replace('/', '\\');
+                expected = expected.Replace('/', '\\');
+                foreach (string value in new[] { actual, expected })
+                    if (value.StartsWith(@"\\?\", StringComparison.Ordinal) ||
+                        value.StartsWith(@"\\.\", StringComparison.Ordinal) ||
+                        value.StartsWith(@"\??\", StringComparison.Ordinal)) return false;
+            }
+            return String.Equals(actual, expected, StringComparison.Ordinal);
+        }
+
+        // Only the versioned known-partial directive can release frontend memory.
+        // Domain journals and the original backend receipt remain authoritative.
+        internal static bool CanStartFreshRequest(CommandResult result, SemanticActionReceipt receipt,
+            IDictionary<string, object> input, TransportIdentity identity)
+        {
+            if (result == null || receipt == null || input == null || identity == null ||
+                result.CommandId != "presentation.action" || result.BackendId != "presentation.action" ||
+                result.ExitCode != 3 || !result.Refused || result.Outcome != "recovery_required" ||
+                result.OperationOutcome != "recovery_required" || !result.RecoveryRequired || !result.EffectsMayHaveOccurred ||
+                result.OperationId != identity.OperationId || result.AttemptId != identity.AttemptId ||
+                receipt.ActionId != "readiness.prepare_joined" || PresentationJson.Text(input, "action_id") != receipt.ActionId ||
+                receipt.RequestId != identity.RequestId || receipt.OperationId != identity.OperationId ||
+                receipt.AttemptId != identity.AttemptId || receipt.Outcome != "recovery_required" || receipt.Problems.Count == 0 ||
+                receipt.ReplacementSnapshot == null || !Digest(receipt.ReplacementSnapshot.Revision) ||
+                receipt.ReplacementSnapshot.Page.Scope != PresentationJson.Text(input, "scope") ||
+                receipt.ReplacementSnapshot.SelectedContext.InstanceId != PresentationJson.Text(input, "selected_instance_id") ||
+                receipt.ReplacementSnapshot.SelectedContext.LaunchIntent != PresentationJson.Text(input, "launch_intent"))
+                return false;
+            try
+            {
+                var envelope = StrictTransportJson.ParseObject(result.Stdout, 16 * 1024 * 1024);
+                var semantic = PresentationJson.Record(envelope, "payload");
+                var operation = PresentationJson.Record(semantic, "operation");
+                if (PresentationJson.Text(envelope, "request_id") != identity.RequestId ||
+                    PresentationJson.Text(operation, "request_id") != identity.RequestId ||
+                    PresentationJson.Text(operation, "durable_operation_id") != identity.OperationId ||
+                    PresentationJson.Text(operation, "outcome") != "recovery_required" ||
+                    PresentationJson.Text(operation, "target_instance_id") != PresentationJson.Text(input, "selected_instance_id") ||
+                    PresentationJson.Text(operation, "target_installation_id") != PresentationJson.Text(input, "installation_id")) return false;
+                var payload = PresentationJson.Record(semantic, "action_payload");
+                if (!Exact(payload, "schema", "command", "plan", "plan_sha256", "completed_components", "continuation",
+                        "completed_effects_verified", "remaining_effects_blocked_before_effects", "readiness_observation",
+                        "preparation_complete", "fresh_revision_required", "readiness_complete", "execution_started", "permit_issued", "factorio_support_claim") ||
+                    !Strings(payload, "schema", "command", "plan_sha256", "continuation", "factorio_support_claim") ||
+                    PresentationJson.Text(payload, "schema") != "factorio.make_ready_joined_result.v1" ||
+                    PresentationJson.Text(payload, "command") != receipt.ActionId ||
+                    PresentationJson.Text(payload, "continuation") != "fresh_request_after_input_correction" ||
+                    !Flag(payload, "completed_effects_verified", true) || !Flag(payload, "remaining_effects_blocked_before_effects", true) ||
+                    !Flag(payload, "preparation_complete", false) || !Flag(payload, "fresh_revision_required", true) ||
+                    !Flag(payload, "readiness_complete", false) || !Flag(payload, "execution_started", false) ||
+                    !Flag(payload, "permit_issued", false) || payload["readiness_observation"] != null ||
+                    PresentationJson.Text(payload, "factorio_support_claim") != "unclaimed") return false;
+                var plan = PresentationJson.Record(payload, "plan");
+                var desired = PresentationJson.Record(plan, "desired_state");
+                if (!Exact(plan, "schema", "instance_id", "launch_intent", "desired_state", "inputs_sha256", "configuration_plan",
+                        "configuration_sha256", "configuration_before_identity", "selected_context_before_identity", "selected_parent_before_identity",
+                        "selected_context_target", "selected_context_required", "selected_save_sha256", "plan_sha256") ||
+                    !Strings(plan, "schema", "instance_id", "launch_intent", "inputs_sha256", "configuration_sha256", "plan_sha256") ||
+                    PresentationJson.Text(plan, "schema") != "factorio.make_ready_joined_plan.v1" ||
+                    PresentationJson.Text(plan, "instance_id") != PresentationJson.Text(input, "selected_instance_id") ||
+                    PresentationJson.Text(plan, "launch_intent") != PresentationJson.Text(input, "launch_intent") ||
+                    !Digest(PresentationJson.Text(plan, "inputs_sha256")) || !Digest(PresentationJson.Text(plan, "configuration_sha256")) ||
+                    !Digest(PresentationJson.Text(plan, "plan_sha256")) || PresentationJson.Text(plan, "plan_sha256") != PresentationJson.Text(payload, "plan_sha256") ||
+                    !Exact(desired, "installation_id", "profile_id", "selected_save", "modset_lock_sha256") ||
+                    !Strings(desired, "installation_id", "profile_id", "selected_save", "modset_lock_sha256") ||
+                    PresentationJson.Text(desired, "installation_id") != PresentationJson.Text(input, "installation_id") ||
+                    PresentationJson.Text(desired, "profile_id") != PresentationJson.Text(input, "profile_id") ||
+                    PresentationJson.Text(desired, "selected_save") != PresentationJson.Text(input, "save") ||
+                    !Digest(PresentationJson.Text(desired, "modset_lock_sha256")) || !(plan["selected_context_required"] is bool)) return false;
+                foreach (string key in new[] { "configuration_before_identity", "selected_context_before_identity", "selected_parent_before_identity", "selected_context_target", "selected_save_sha256" })
+                    if (!(plan[key] is string)) return false;
+                if (String.IsNullOrEmpty(PresentationJson.Text(plan, "instance_id")) ||
+                    String.IsNullOrEmpty(PresentationJson.Text(desired, "installation_id")) ||
+                    String.IsNullOrEmpty(PresentationJson.Text(desired, "profile_id")) ||
+                    String.IsNullOrEmpty(PresentationJson.Text(plan, "configuration_before_identity")) ||
+                    String.IsNullOrEmpty(PresentationJson.Text(plan, "selected_context_before_identity"))) return false;
+                string intent = PresentationJson.Text(plan, "launch_intent");
+                if (intent != "menu" && intent != "load_save") return false;
+                if (intent == "load_save" && (!Digest(PresentationJson.Text(plan, "selected_save_sha256")) ||
+                    String.IsNullOrWhiteSpace(PresentationJson.Text(plan, "selected_context_target")))) return false;
+                if (intent == "menu" && ((bool)plan["selected_context_required"] ||
+                    PresentationJson.Text(desired, "selected_save") != "" || PresentationJson.Text(plan, "selected_save_sha256") != "" ||
+                    PresentationJson.Text(plan, "selected_context_target") != "")) return false;
+                var configuration = PresentationJson.Record(plan, "configuration_plan");
+                if (plan["configuration_plan"] != null && (!Exact(configuration, "plan_sha256", "component", "target") ||
+                    !Strings(configuration, "plan_sha256", "component", "target") ||
+                    !Digest(PresentationJson.Text(configuration, "plan_sha256")) || String.IsNullOrWhiteSpace(PresentationJson.Text(configuration, "target")) ||
+                    (PresentationJson.Text(configuration, "component") != "missing_routing_configuration" &&
+                     PresentationJson.Text(configuration, "component") != "existing_routing_configuration"))) return false;
+                var components = payload["completed_components"] as object[];
+                if (components == null || components.Length < 1 || components.Length > 2) return false;
+                var commands = new HashSet<string>(StringComparer.Ordinal);
+                var transactions = new HashSet<string>(StringComparer.Ordinal);
+                foreach (object item in components)
+                {
+                    var effect = item as IDictionary<string, object>;
+                    var owner = PresentationJson.Record(effect, "owner_result");
+                    string component = PresentationJson.Text(effect, "component");
+                    bool config = component == "routing_configuration";
+                    string command = config ? "readiness.prepare_configuration" : "readiness.prepare_selected_save";
+                    string status = PresentationJson.Text(owner, "status");
+                    if (!Exact(effect, "component", "owner_command", "transaction_id", "plan_sha256", "owner_result") ||
+                        !Strings(effect, "component", "owner_command", "transaction_id", "plan_sha256") ||
+                        !Strings(owner, "schema", "command", "status", "instance_id", "transaction_id", "target", "composition", "factorio_support_claim") ||
+                        (!config && component != "selected_save_declared_context") || !commands.Add(command) ||
+                        PresentationJson.Text(effect, "owner_command") != command || !Digest(PresentationJson.Text(effect, "plan_sha256")) ||
+                        String.IsNullOrWhiteSpace(PresentationJson.Text(effect, "transaction_id")) || !transactions.Add(PresentationJson.Text(effect, "transaction_id")) ||
+                        PresentationJson.Text(owner, "transaction_id") != PresentationJson.Text(effect, "transaction_id") ||
+                        PresentationJson.Text(owner, "command") != command || PresentationJson.Text(owner, "instance_id") != PresentationJson.Text(plan, "instance_id") ||
+                        PresentationJson.Text(owner, "schema") != (config ? "factorio.configuration_preparation_result.v1" : "factorio.selected_save_preparation_result.v1") ||
+                        PresentationJson.Text(owner, "composition") != "partial" || !Flag(owner, "mutation_executed", true) ||
+                        !Flag(owner, "execution_started", false) || !Flag(owner, "permit_issued", false) ||
+                        PresentationJson.Text(owner, "factorio_support_claim") != "unclaimed") return false;
+                    var ownerKeys = new List<string> { "schema", "command", "status", "instance_id", "transaction_id", "target", "composition",
+                        "mutation_executed", "execution_started", "permit_issued", "factorio_support_claim", config ? "existing_settings_modified" : "save_content_modified" };
+                    if (!Flag(owner, config ? "existing_settings_modified" : "save_content_modified", false)) return false;
+                    if (config)
+                    {
+                        if (configuration == null || PresentationJson.Text(effect, "plan_sha256") != PresentationJson.Text(configuration, "plan_sha256") ||
+                            !SameTarget(PresentationJson.Text(owner, "target"), PresentationJson.Text(configuration, "target")) ||
+                            (status != "routing_configuration_created" && status != "routing_configuration_reconciled")) return false;
+                        if (PresentationJson.Text(configuration, "component") !=
+                            (status == "routing_configuration_created" ? "missing_routing_configuration" : "existing_routing_configuration")) return false;
+                        foreach (string key in new[] { "routing_values_modified", "original_file_preserved" })
+                            if (owner.ContainsKey(key)) { if (!Flag(owner, key, true)) return false; ownerKeys.Add(key); }
+                        if (status == "routing_configuration_reconciled" && ownerKeys.Count != 14) return false;
+                    }
+                    else if (!(bool)plan["selected_context_required"] || status != "selected_context_recorded" ||
+                        (configuration != null && !commands.Contains("readiness.prepare_configuration")) ||
+                        !SameTarget(PresentationJson.Text(owner, "target"), PresentationJson.Text(plan, "selected_context_target"))) return false;
+                    if (!Exact(owner, ownerKeys.ToArray())) return false;
+                }
+                return true;
+            }
+            catch (InvalidDataException) { return false; }
+            catch (ArgumentException) { return false; }
+        }
+
+        internal static string Summary(IDictionary<string, object> payload, bool knownPartial)
+        {
+            if (PresentationJson.Text(payload, "schema") != "factorio.make_ready_joined_result.v1") return String.Empty;
+            string continuation = PresentationJson.Text(payload, "continuation");
+            if (continuation == "fresh_request_after_input_correction")
+                return knownPartial ? "Applied preparation is retained. Correct the changed inputs, refresh, and confirm a new request." :
+                    "Preparation needs attention. Inspect the original request before continuing.";
+            if (continuation == "inspect_domain_recovery") return "Preparation needs attention. Inspect domain recovery before continuing.";
+            if (continuation == "inspect_original_request") return "Preparation outcome is unknown. Inspect the original request before continuing.";
+            if (continuation == "observe_readiness") return "Current settings were prepared. Review the remaining readiness checks. Play remains unavailable.";
+            return String.Empty;
+        }
+    }
+
     internal static class PresentationJson
     {
         internal static IDictionary<string, object> Payload(string json)

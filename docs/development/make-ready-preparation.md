@@ -1,7 +1,64 @@
 # Make Ready preparation
 
+**Make Ready with current settings** uses the ordinary
+`readiness.prepare_joined` action. It prepares an existing instance using its
+explicit current installation, profile and exact menu or selected-save intent.
+The read-only `factorio.make_ready_joined_plan.v1` binds the verified locked
+content and current settings as well as the planned routing and save-context
+effects. Missing installations, invalid profiles/content and conflicting save
+contexts remain explicit prerequisite refusals for their existing owners.
+This path does not acquire an installation or reconstruct a profile or content.
+
+One confirmed request can invoke the existing routing configuration owner and
+then the existing selected-save context owner. After each effect, fresh owner
+observations must match the plan's unchanged installation, profile, overrides,
+content, settings, selected archive and parent identities. Configuration must
+be either the exact unchanged original or the completed operation's journaled
+inode and bytes. Before selected context dispatch, its original leaf and parent
+observations must still match, and a fresh selected-context owner plan must
+bind those inputs. Final observation verifies the same completed journaled
+context and desired save/profile/version/content; it cannot adopt a foreign
+same-byte configuration or sidecar.
+
+The separate `factorio.make_ready_joined_result.v1` retains the original plan
+and each actual completed component receipt. `preparation_complete` is true
+only when the final independent readiness owner reports
+`configuration_state=ready` and `preparation_state=already_prepared`.
+The current owner's unproven environment dimension remains degraded, including
+in source fixtures, so successfully applying all admitted components does not
+manufacture that predicate. The final owner observation exposes the remaining
+checks. `readiness_complete`, `permit_issued` and `execution_started` stay false.
+
+The existing durable semantic receipt binds the whole original request and
+typed plan before effects. After each verified component, a checkpoint retains
+its completed receipt while the outer request's outcome remains unknown until
+finalization. Interrupted or concurrent exact replay observes that receipt and
+never redispatches an owner. Loss before a checkpoint remains uncertain and the
+existing operation-bound domain journal is the recovery authority. Incomplete
+or unknown child effects require ordinary domain recovery. A known completed
+child followed by a changed-input refusal is reported as `recovery_required`
+with its completed receipts; inspect current inputs and use a fresh revision
+and new request after correction. It does not invent an incomplete child
+transaction or roll back completed preparation.
+
+The joined result's continuation is `inspect_original_request` while pending,
+`inspect_domain_recovery` when an owner or effect is uncertain,
+`fresh_request_after_input_correction` for a known partial result whose completed
+effects have been independently reverified and whose remaining work stopped
+before further effects, or `observe_readiness` after admitted preparation.
+The known-partial directive also requires `completed_effects_verified=true`
+and `remaining_effects_blocked_before_effects=true`. WinForms releases its
+frontend uncertainty guard only for that strict versioned directive with
+matching validated transport, request, operation, attempt, desired-state and
+component identities and a matching replacement observation. The original
+backend receipt and journals stay unchanged. Pending, unknown, mismatched or
+malformed results keep the guard. Failed final receipt persistence returns
+`outcome_unknown` without a clearing directive. Other actions retain their
+existing uncertainty behavior. The TUI and GUI describe the same continuation
+without asking the user to enter a plan or content digest.
+
 The ordinary `readiness.prepare` action and the Instances **Make Ready**
-control prepare one currently admitted component. The request binds the
+compatibility control still prepare one currently admitted component. The request binds the
 current presentation revision, instance, profile and menu or selected-save
 intent, with explicit confirmation and the existing idempotency identity.
 
@@ -21,8 +78,8 @@ save preparation controls remain available.
 
 This component preserves stored launch overrides, custom routing INI bytes
 and identity where admitted, selected content/settings and save archives.
-Installation/content/profile reconstruction and complete Make Ready
-orchestration remain open. The compiled gallery harness establishes button
+Installation/content/profile reconstruction beyond this existing-instance
+path and full readiness/Play qualification remain open. The compiled gallery harness establishes button
 wiring and interpretation of separately supplied actual receipts; live
 click-to-backend dispatch, real game and human experience remain separate
 acceptance. Windows source fixtures do not establish other-host or Beta

@@ -89,6 +89,15 @@ bool has_preparation_plan(const std::string& action_id);
 facman::core::Result<std::string> snapshot_action_preparation_plan(const std::string& snapshot,
     const SemanticActionRequest& request, MakeReadyStage& make_ready_stage);
 
+std::string joined_preparation_json(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& launch_intent);
+facman::core::json::ObjectBuilder joined_preparation_descriptor(const std::string& preparation);
+facman::core::Result<std::string> snapshot_joined_plan(const std::string& snapshot,
+    const SemanticActionRequest& request);
+std::string joined_preparation_result(const std::string& plan,
+    const std::vector<std::string>& components, const std::string& readiness,
+    const std::string& continuation = "inspect_original_request", bool effects_verified = false);
+
 } // namespace facman::factorio::application
 
 #endif

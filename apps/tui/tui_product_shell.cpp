@@ -202,6 +202,30 @@ std::string operation_feedback(const facman::client::CommandResponse& response)
     const std::string outcome = semantic_action
         ? response.payload_string("outcome")
         : facman::client::operation_outcome_name(response.operation.outcome);
+    const auto* preparation = response.parsed_payload ? response.parsed_payload->find("action_payload") : nullptr;
+    if (preparation && preparation->is_object() && response.payload_string("action_id") == "readiness.prepare_joined") {
+        const auto text = [preparation](const char* key) {
+            const auto* field = preparation->find(key);
+            auto value = field ? field->string_value() : facman::core::Result<std::string>::success({});
+            return value ? value.value() : std::string();
+        };
+        const auto flag = [preparation](const char* key, bool expected) {
+            const auto* field = preparation->find(key);
+            auto value = field ? field->bool_value() : facman::core::Result<bool>::failure({"missing", "missing", {}});
+            return value && value.value() == expected;
+        };
+        if (text("schema") == "factorio.make_ready_joined_result.v1" &&
+            flag("execution_started", false) && flag("permit_issued", false) && flag("readiness_complete", false)) {
+            const auto continuation = text("continuation");
+            if (outcome == "completed" && continuation == "observe_readiness")
+                return "Current settings were prepared; review remaining readiness checks; Play remains unavailable";
+            const auto* effects = preparation->find("completed_components");
+            if (outcome == "recovery_required" && continuation == "fresh_request_after_input_correction" &&
+                effects && effects->is_array() && effects->size() != 0U && flag("completed_effects_verified", true) &&
+                flag("remaining_effects_blocked_before_effects", true))
+                return "Applied preparation is retained; correct changed inputs, refresh and confirm a new request";
+        }
+    }
     if (outcome == "outcome_unknown") {
         return "Outcome unknown; effects may have occurred; inspect recovery before retrying";
     }
@@ -829,6 +853,7 @@ std::string action_response_status(
         ? response.payload_string("outcome")
         : facman::client::operation_outcome_name(response.operation.outcome);
     if (action_outcome != "completed") return semantic;
+    if (action.id == "readiness.prepare_joined") return semantic;
     return action.label + " completed";
 }
 
