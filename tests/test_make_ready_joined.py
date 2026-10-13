@@ -15,12 +15,13 @@ import threading
 import time
 import unittest
 from pathlib import Path
+from contextlib import contextmanager
 
 import test_configuration_preparation as missing
 import test_configuration_reconciliation as existing
 import test_make_ready_preparation as legacy
 import test_tui_product as tui
-from native_cli import ROOT, invoke_machine
+from native_cli import ROOT, facman_executable, invoke_machine
 from test_local_modset_solver import snapshot
 from test_presentation_profile_preparation import factorio_validator
 from tools.winforms_build import msbuild_executable
@@ -60,6 +61,75 @@ def file_identity(path: Path) -> str:
     finally:
         if not api.CloseHandle(handle):
             raise ctypes.WinError(ctypes.get_last_error())
+
+
+class PausedAction:
+    """Own the real child while fixture code observes an explicit test pause."""
+
+    def __init__(self, args: list[str], env: dict[str, str]) -> None:
+        self.process = None
+        self.response = None
+        self.error = ""
+        self.cancel = threading.Event()
+        self.thread = threading.Thread(target=self.run, args=(args, env), daemon=True)
+        self.thread.start()
+
+    def run(self, args: list[str], env: dict[str, str]) -> None:
+        try:
+            self.process = subprocess.Popen([str(facman_executable()), *args], cwd=ROOT,
+                encoding="utf-8", env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if self.cancel.is_set():
+                self.process.kill()
+            try:
+                out, err = self.process.communicate(timeout=45)
+            except subprocess.TimeoutExpired:
+                self.error = "Owned CLI did not finish within its bounded communication wait"
+                self.process.kill()
+                out, err = self.process.communicate(timeout=10)
+            self.response = (self.process.returncode, out, err)
+        except Exception as error:
+            self.error = repr(error)[:1024]
+            if self.process is not None and self.process.poll() is None:
+                self.process.kill()
+                try:
+                    out, err = self.process.communicate(timeout=10)
+                    self.response = (self.process.returncode, out, err)
+                except Exception as cleanup_error:
+                    self.error += "; cleanup: " + repr(cleanup_error)[:1024]
+
+    def running(self) -> bool:
+        return self.thread.is_alive() and (self.process is None or self.process.poll() is None)
+
+    def summary(self) -> str:
+        terminal = None if self.response is None else dict(exit_code=self.response[0],
+            stdout=self.response[1][:1024], stderr=self.response[2][:1024])
+        return json.dumps(dict(terminal=terminal, error=self.error, worker_alive=self.thread.is_alive(),
+            child_exit_code=None if self.process is None else self.process.poll()))
+
+    def finish(self) -> None:
+        self.thread.join(timeout=15)
+        safety_termination = self.thread.is_alive() or (self.process is not None and self.process.poll() is None)
+        if safety_termination:
+            self.cancel.set()
+            if self.process is not None and self.process.poll() is None:
+                self.process.kill()
+            self.thread.join(timeout=10)
+        if self.thread.is_alive() or safety_termination or self.error or self.response is None:
+            raise AssertionError("Owned paused CLI failed to finish normally: " + self.summary())
+
+
+def wait_for_owned_marker(worker: PausedAction, marker: Path, release: Path) -> None:
+    started = time.monotonic()
+    deadline = started + 30
+    while True:
+        if marker.is_file() and worker.process is not None:
+            if marker.read_bytes() != b"ready\n" or release.exists() or not worker.running():
+                raise AssertionError("Marker does not prove a live unreleased owned pause: " + worker.summary())
+            return
+        if not worker.thread.is_alive() or time.monotonic() >= deadline:
+            worker.thread.join(timeout=0.1)
+            raise AssertionError(f"Owned marker {marker.name} absent after {time.monotonic() - started:.3f}s: " + worker.summary())
+        worker.thread.join(timeout=min(0.025, max(0, deadline - time.monotonic())))
 
 
 @unittest.skipUnless(os.name == "nt" or sys.platform in ("linux", "darwin"),
@@ -229,26 +299,38 @@ class JoinedMakeReadyTests(unittest.TestCase):
                 self.assertIsNone(initial["dependency_identities"]["joined_preparation"]["plan"])
                 self.assertEqual(frozen, snapshot(workspace))
 
-    def paused(self, workspace: Path, args: list[str], mutation) -> tuple[dict, dict[str, bytes]]:
+    @contextmanager
+    def owned_pause(self, workspace: Path, args: list[str], context: bool = False, final: bool = False):
         instance = workspace / "instances/main"
-        worker_results = []
-        worker = threading.Thread(target=lambda: worker_results.append(invoke_machine(args,
-            env=dict(os.environ, FACMAN_TEST_MAKE_READY_PAUSE_BEFORE_CONTEXT="1"))))
-        worker.start()
+        env = dict(os.environ)
+        if context:
+            env["FACMAN_TEST_MAKE_READY_PAUSE_BEFORE_CONTEXT"] = "1"
+        if final:
+            env["FACMAN_TEST_MAKE_READY_PAUSE_BEFORE_FINAL_RECEIPT"] = "1"
+        worker = PausedAction(args, env)
         try:
-            marker = instance / ".facman-test-make-ready-before-context"
-            for _ in range(200):
-                if marker.exists():
-                    break
-                time.sleep(0.025)
-            self.assertTrue(marker.is_file(), "joined request did not checkpoint its first completed owner")
-            mutation(instance)
-            frozen = snapshot(workspace)
+            yield worker
         finally:
-            (instance / ".facman-test-make-ready-context-release").write_text("continue\n")
-            worker.join(timeout=15)
-        self.assertFalse(worker.is_alive())
-        return self.result(worker_results[0], 3), frozen
+            try:
+                for needed, name in ((context, ".facman-test-make-ready-context-release"),
+                                     (final, ".facman-test-make-ready-final-receipt-release")):
+                    if needed:
+                        (instance / name).write_text("continue\n")
+            finally:
+                worker.finish()
+
+    def wait_marker(self, workspace: Path, worker: PausedAction, final: bool = False) -> None:
+        name = "final-receipt" if final else "context"
+        instance = workspace / "instances/main"
+        wait_for_owned_marker(worker, instance / (".facman-test-make-ready-before-" + name),
+                              instance / (".facman-test-make-ready-" + name + "-release"))
+
+    def paused(self, workspace: Path, args: list[str], mutation) -> tuple[dict, dict[str, bytes]]:
+        with self.owned_pause(workspace, args, context=True) as worker:
+            self.wait_marker(workspace, worker)
+            mutation(workspace / "instances/main")
+            frozen = snapshot(workspace)
+        return self.result(worker.response, 3), frozen
 
     def test_unrelated_drift_and_foreign_targets_after_configuration_stop_with_visible_partial_effects(self) -> None:
         for changed in ("settings", "archive", "sidecar", "configuration"):
@@ -304,23 +386,11 @@ class JoinedMakeReadyTests(unittest.TestCase):
                 self.assertEqual("idempotency_key_conflict", json.loads(out)["error"]["code"])
                 self.assertEqual(frozen, snapshot(workspace))
             # The helper expects a stopped partial result; this request completes.
-            worker_results = []
-            worker = threading.Thread(target=lambda: worker_results.append(invoke_machine(args,
-                env=dict(os.environ, FACMAN_TEST_MAKE_READY_PAUSE_BEFORE_CONTEXT="1"))))
-            worker.start()
             instance = workspace / "instances/main"
-            try:
-                for _ in range(200):
-                    if (instance / ".facman-test-make-ready-before-context").exists():
-                        break
-                    time.sleep(0.025)
-                self.assertTrue((instance / ".facman-test-make-ready-before-context").is_file())
+            with self.owned_pause(workspace, args, context=True) as worker:
+                self.wait_marker(workspace, worker)
                 replay(instance)
-            finally:
-                (instance / ".facman-test-make-ready-context-release").write_text("continue\n")
-                worker.join(timeout=15)
-            self.assertFalse(worker.is_alive())
-            result = self.result(worker_results[0])
+            result = self.result(worker.response)
             self.assert_effects(workspace, result, ["readiness.prepare_configuration", "readiness.prepare_selected_save"])
             self.assertFalse(result["action_payload"]["preparation_complete"])
 
@@ -412,32 +482,17 @@ class JoinedMakeReadyTests(unittest.TestCase):
             workspace = Path(value)
             instance, _, expected = existing.ExistingConfigurationTests.prepare(self, workspace, "load_save")
             args = self.arguments(workspace, self.query(workspace, "instances", "load_save"), "joined-final-receipt")
-            results = []
-            worker = threading.Thread(target=lambda: results.append(invoke_machine(args, env=dict(os.environ,
-                FACMAN_TEST_MAKE_READY_PAUSE_BEFORE_CONTEXT="1", FACMAN_TEST_MAKE_READY_PAUSE_BEFORE_FINAL_RECEIPT="1"))))
-            worker.start()
-            def wait_marker(name: str) -> None:
-                for _ in range(300):
-                    if (instance / name).is_file():
-                        break
-                    time.sleep(0.025)
-                self.assertTrue((instance / name).is_file(), name)
-            try:
-                wait_marker(".facman-test-make-ready-before-context")
+            with self.owned_pause(workspace, args, context=True, final=True) as worker:
+                self.wait_marker(workspace, worker)
                 (instance / "mods/mod-settings.dat").write_bytes(b"changed\n")
                 (instance / ".facman-test-make-ready-context-release").write_text("continue\n")
-                wait_marker(".facman-test-make-ready-before-final-receipt")
+                self.wait_marker(workspace, worker, final=True)
                 receipt = workspace / ".facman/action-receipts-v2" / (hashlib.sha256(b"joined-final-receipt").hexdigest() + ".v2.json")
                 retained = receipt.with_suffix(".retained-test-receipt")
                 original = receipt.read_bytes()
                 receipt.rename(retained)
                 receipt.mkdir()  # Actual wrong-type namespace target blocks final persistence.
-            finally:
-                (instance / ".facman-test-make-ready-context-release").write_text("continue\n")
-                (instance / ".facman-test-make-ready-final-receipt-release").write_text("continue\n")
-                worker.join(timeout=15)
-            self.assertFalse(worker.is_alive())
-            code, out, err = results[0]
+            code, out, err = worker.response
             self.assertEqual((4, ""), (code, err), out)
             result = json.loads(out)["payload"]
             self.assertEqual("outcome_unknown", result["outcome"])
@@ -456,27 +511,16 @@ class JoinedMakeReadyTests(unittest.TestCase):
             workspace = Path(value)
             instance, _, expected = existing.ExistingConfigurationTests.prepare(self, workspace, "load_save")
             args = self.arguments(workspace, self.query(workspace, "instances", "load_save"), "joined-final-effect")
-            responses = []
-            worker = threading.Thread(target=lambda: responses.append(invoke_machine(args, env=dict(os.environ,
-                FACMAN_TEST_MAKE_READY_PAUSE_BEFORE_FINAL_RECEIPT="1"))))
-            worker.start()
-            try:
-                for _ in range(300):
-                    if (instance / ".facman-test-make-ready-before-final-receipt").is_file():
-                        break
-                    time.sleep(0.025)
-                self.assertTrue((instance / ".facman-test-make-ready-before-final-receipt").is_file())
+            with self.owned_pause(workspace, args, final=True) as worker:
+                self.wait_marker(workspace, worker, final=True)
                 target = instance / "config/config.ini"
                 retained = instance / ".facman-test-verified-config"
                 target.rename(retained)
                 target.write_bytes(expected)
                 foreign_identity = target.stat().st_ino
-            finally:
-                (instance / ".facman-test-make-ready-final-receipt-release").write_text("continue\n")
-                worker.join(timeout=15)
-            self.assertFalse(worker.is_alive())
-            result = self.result(responses[0], 3)
+            result = self.result(worker.response, 3)
             self.assertEqual("recovery_required", result["outcome"])
+            self.assertEqual("make_ready_completed_effect_unknown", result["problems"][0]["code"])
             self.assertEqual("inspect_domain_recovery", result["action_payload"]["continuation"])
             self.assertFalse(result["action_payload"]["completed_effects_verified"])
             self.assertIsNone(result["action_payload"]["readiness_observation"])
