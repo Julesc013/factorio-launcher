@@ -76,7 +76,7 @@ class PosixPreparationPublicationTests(unittest.TestCase):
                 self.assertEqual(1, (instance / relative).stat().st_nlink)
             self.assertEqual(before, preserved())
 
-    def test_existing_ini_reconciliation_remains_refused_before_effects(self) -> None:
+    def test_existing_ini_reconciliation_plan_requires_explicit_confirmation_before_effects(self) -> None:
         with tempfile.TemporaryDirectory(prefix="posix-existing-ini-refusal-") as value:
             workspace = Path(value)
             owner, instance, _, _, _ = self.prepare_owner("configuration", workspace)
@@ -85,11 +85,23 @@ class PosixPreparationPublicationTests(unittest.TestCase):
             frozen = self.filesystem(workspace)
             projection = owner.query(workspace, intent="load_save")
             component = projection["dependency_identities"]["configuration_preparation"]
-            self.assertIsNone(component["plan"])
-            self.assertEqual("configuration_publication_unavailable", component["refusal"]["code"])
-            code, out, err = invoke_machine(owner.args(workspace, projection["revision"], intent="load_save"))
+            plan = component["plan"]
+            self.assertIsNotNone(plan, component["refusal"])
+            self.assertEqual("existing_routing_configuration", plan["component"])
+            self.assertEqual(str(target), plan["target"])
+            self.assertEqual(target.read_text(), plan["original_config_text"])
+            self.assertEqual(str(target.stat().st_dev), plan["original_device"])
+            self.assertEqual(str(target.stat().st_ino), plan["original_object"])
+            self.assertTrue(plan["original_metadata_identity"])
+            descriptor = next(action for action in projection["available_semantic_actions"]
+                              if action["action_id"] == "readiness.prepare_configuration")
+            self.assertEqual("available", descriptor["availability"])
+            self.assertEqual(frozen, self.filesystem(workspace), "Query must preserve existing INI and workspace")
+            code, out, err = invoke_machine(owner.args(workspace, projection["revision"], intent="load_save",
+                                                      confirmation=False))
             self.assertIn(code, (1, 3), out)
             self.assertEqual("", err)
+            self.assertEqual("semantic_action_effect_confirmation_required", json.loads(out)["error"]["code"])
             self.assertEqual(frozen, self.filesystem(workspace))
 
     def filesystem(self, root: Path) -> dict:

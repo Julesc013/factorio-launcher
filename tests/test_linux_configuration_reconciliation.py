@@ -205,11 +205,49 @@ class LinuxExistingConfigurationTests(unittest.TestCase):
 
     def test_unsafe_objects_metadata_drift_and_flock_preserve_owned_inputs(self):
         import fcntl
+
+        def oversized_fixture_parent() -> Path:
+            # The default ext4 xattr block may reject 40 KiB before the owner can observe it.
+            # Keep qualification's private TMPDIR when it is already tmpfs; otherwise use
+            # the existing hosted /dev/shm mount. Never mount or skip the actual guard proof.
+            mountinfo = Path('/proc/self/mountinfo').read_text().splitlines()
+            reasons = []
+            for candidate in dict.fromkeys((Path(tempfile.gettempdir()).absolute(), Path('/dev/shm'))):
+                if not candidate.is_dir() or candidate.resolve() != candidate:
+                    reasons.append(f'{candidate}: missing or linked directory'); continue
+                device = candidate.stat().st_dev
+                device_number = f'{os.major(device)}:{os.minor(device)}'
+                matching = []
+                for line in mountinfo:
+                    fields, filesystem = line.split(' - ', 1)
+                    mount_fields = fields.split()
+                    if mount_fields[2] != device_number: continue
+                    mount = mount_fields[4]
+                    for escaped, decoded in (('\\040', ' '), ('\\011', '\t'), ('\\012', '\n'), ('\\134', '\\')):
+                        mount = mount.replace(escaped, decoded)
+                    mount = Path(mount)
+                    if candidate.is_relative_to(mount): matching.append((len(mount.parts), filesystem.split()[0]))
+                if not matching or max(matching, key=lambda entry: entry[0])[1] != 'tmpfs':
+                    reasons.append(f'{candidate}: filesystem is not tmpfs'); continue
+                budget = os.statvfs(candidate)
+                if budget.f_bavail * budget.f_frsize < 8 * 1024 * 1024 or budget.f_favail < 128:
+                    self.fail('Host fixture limitation: oversized readable-metadata guard was not tested; '
+                              f'selected tmpfs {candidate} lacks an 8 MiB/128 inode budget')
+                return candidate
+            self.fail('Host fixture limitation: oversized readable-metadata guard was not tested; '
+                      'no existing nonlinked tmpfs with an 8 MiB/128 inode budget: ' + '; '.join(reasons))
+
         variants = ('foreign', 'missing', 'target_symlink', 'substituted', 'parent_symlink', 'parent_substituted',
                     'extra_link', 'readonly', 'set_id', 'mode', 'xattr', 'acl', 'oversized_metadata', 'flock')
         for variant in variants:
-            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as folder:
+            fixture_parent = oversized_fixture_parent() if variant == 'oversized_metadata' else None
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory(
+                    prefix='linux-existing-ini-metadata-', dir=fixture_parent) as folder:
                 workspace = Path(folder); instance, _, expected = self.prepare(workspace)
+                self.assertEqual(os.geteuid(), workspace.stat().st_uid)
+                if fixture_parent is not None:
+                    self.assertEqual(fixture_parent, workspace.parent)
+                    self.assertEqual(fixture_parent.stat().st_dev, workspace.stat().st_dev)
                 target = instance / 'config/config.ini'
                 os.setxattr(target, 'user.facman', b'original')
                 os.setxattr(target, 'system.posix_acl_access', access_acl())
@@ -230,7 +268,9 @@ class LinuxExistingConfigurationTests(unittest.TestCase):
                 elif variant == 'mode': target.chmod(0o600)
                 elif variant == 'xattr': os.setxattr(target, 'user.facman', b'changed')
                 elif variant == 'acl': os.setxattr(target, 'system.posix_acl_access', access_acl(65532))
-                elif variant == 'oversized_metadata': os.setxattr(target, 'user.large', b'x' * 40000)
+                elif variant == 'oversized_metadata':
+                    os.setxattr(target, 'user.large', b'x' * 40000)
+                    self.assertEqual(b'x' * 40000, os.getxattr(target, 'user.large'))
                 else: handle = target.open('r+b'); fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 try:
                     held = snapshot(instance); journal = path.read_bytes()
@@ -241,6 +281,7 @@ class LinuxExistingConfigurationTests(unittest.TestCase):
                 finally:
                     if handle is not None: handle.close()
                     if variant in ('readonly', 'set_id'): target.chmod(0o644)
+            self.assertFalse(workspace.exists(), 'TemporaryDirectory must retire its owned fixture')
 
     def test_invalid_journal_authority_ids_and_foreign_root_remain_readonly(self):
         variants = ('unadmitted_partial', 'unadmitted_marker', 'duplicate_marker', 'verified_without_admission',
