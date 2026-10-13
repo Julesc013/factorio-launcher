@@ -21,7 +21,7 @@ from test_presentation_profile_preparation import factorio_validator
 import test_selected_save_preparation as selected_save_fixtures
 
 
-PUBLICATION_SUPPORTED = os.name == "nt" or sys.platform == "linux"
+PUBLICATION_SUPPORTED = os.name == "nt" or sys.platform in ("linux", "darwin")
 
 
 class ConfigurationPreparationTests(unittest.TestCase):
@@ -98,7 +98,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
                 self.assertFalse(projected["readiness"]["execution_available"])
             self.assertEqual(before, snapshot(workspace))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_ordinary_repair_preserves_absent_and_raw_overrides_content_and_selected_context(self) -> None:
         for scope in ("instances", "launch_deck"):
             for intent, raw in (("menu", False), ("menu", True), ("load_save", True)):
@@ -123,9 +123,9 @@ class ConfigurationPreparationTests(unittest.TestCase):
                     self.assertEqual(result, json.loads(replay)["payload"])
                     self.assertEqual(frozen, snapshot(workspace))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_interruption_recovers_owned_effect_and_preserves_unbound_creation(self) -> None:
-        for phase in ("after_manifest", "after_file_create", "before_publication", "after_publication", "before_finalization") + (("after_staging_cleanup",) if sys.platform == "linux" else ()):
+        for phase in ("after_manifest", "after_file_create", "before_publication", "after_publication", "before_finalization") + (("after_staging_cleanup",) if sys.platform in ("linux", "darwin") else ()):
             with self.subTest(phase=phase), tempfile.TemporaryDirectory(prefix="configuration-loss-") as value:
                 workspace = Path(value); instance, expected = self.prepare(workspace, "load_save", True)
                 before = self.preserved(instance)
@@ -144,7 +144,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
                     self.assertEqual(0, again, output); self.assertEqual(frozen, snapshot(workspace))
                 self.assertEqual(before, self.preserved(instance))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_existing_custom_wrong_routing_and_legacy_configuration_are_preserved(self) -> None:
         for variant in ("valid", "custom", "wrong", "legacy", "missing_parent"):
             with self.subTest(variant=variant), tempfile.TemporaryDirectory(prefix="configuration-existing-") as value:
@@ -160,7 +160,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
                 self.assertIn(code, (1, 3), out); self.assertEqual("", err, out)
                 self.assertEqual(before, snapshot(workspace))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_foreign_same_byte_objects_directories_and_strategy_drift_are_preserved(self) -> None:
         for variant in ("stage", "target", "directory", "strategy"):
             with self.subTest(variant=variant), tempfile.TemporaryDirectory(prefix="configuration-foreign-") as value:
@@ -184,7 +184,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
                 self.assertIn(code, (1, 3), output); self.assertEqual(held, snapshot(instance))
                 if variant == "directory": self.assertEqual(["foreign.txt"], [p.name for p in stage.iterdir()])
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_terminal_missing_effect_is_never_recreated(self) -> None:
         with tempfile.TemporaryDirectory(prefix="configuration-terminal-") as value:
             workspace = Path(value); instance, _ = self.prepare(workspace)
@@ -195,7 +195,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
             self.assertEqual(3, code, output); self.assertEqual(held, snapshot(instance))
             self.assertFalse((instance / "config/config.ini").exists())
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_configuration_lock_custody_preserves_unfamiliar_and_compatible_files(self) -> None:
         for content in (b"", b"foreign\n", b"facman.instance_configuration_lock.v1\ninstance_id=main\n"):
             with self.subTest(content=content), tempfile.TemporaryDirectory(prefix="configuration-lock-") as value:
@@ -233,7 +233,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
             finally:
                 release.write_bytes(b"release"); worker.join(30)
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_late_context_drift_preserves_unpublished_or_published_effect_and_changed_inputs(self) -> None:
         for phase in ("before_publication", "after_publication"):
             with self.subTest(phase=phase), tempfile.TemporaryDirectory(prefix="configuration-drift-") as value:
@@ -262,7 +262,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
                 finally:
                     release.write_bytes(b"release"); worker.join(30)
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_stale_snapshot_and_missing_confirmation_refuse_before_effects(self) -> None:
         for variant in ("stale", "confirmation"):
             with self.subTest(variant=variant), tempfile.TemporaryDirectory(prefix="configuration-admission-") as value:
@@ -276,7 +276,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
                 self.assertEqual(before, snapshot(workspace)); self.assertFalse((instance / "config/config.ini").exists())
 
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_immutable_reload_drift_refuses_under_the_original_recovery_lock(self) -> None:
         with tempfile.TemporaryDirectory(prefix="configuration-reload-") as value:
             workspace = Path(value); instance, _ = self.prepare(workspace)
@@ -308,7 +308,7 @@ class ConfigurationPreparationTests(unittest.TestCase):
             finally:
                 release.write_bytes(b"release"); worker.join(30)
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_same_path_new_parent_object_invalidates_the_snapshot_without_effects(self) -> None:
         with tempfile.TemporaryDirectory(prefix="configuration-parent-") as value:
             workspace = Path(value); instance, _ = self.prepare(workspace)

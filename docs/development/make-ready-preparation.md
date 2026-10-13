@@ -47,7 +47,33 @@ does not claim safety against a namespace writer racing that last interval or
 power-loss recovery. Source fixtures on tmpfs do not qualify ext4, physical
 hosts, produced packages, real Factorio or human experience.
 
-macOS still refuses these owners: its descriptor-source clone creates a different
-destination inode and cannot supply this journal's prebound effect identity.
-Existing-INI reconciliation remains Windows fixed-local-NTFS only; enabling Linux
-missing-file publication does not grant retained in-place rewrite capability.
+macOS missing-INI and selected-save-reference owners explicitly use an observed
+staging-name hard link inside the held sibling directory. The separate helper
+checks the retained and named staging inode, intended bytes and parent before
+publication, then verifies the destination against that same prebound inode.
+The default descriptor-source publication API still clones on macOS and remains
+unchanged. A different destination inode is never adopted by matching bytes.
+These owners use the same journal-bound one/two-link recovery and owned staging
+cleanup as Linux; a created but unverified destination requires recovery and is
+preserved. Unbound staging, foreign same-byte objects, changed bytes and unsafe
+parents remain refused and preserved.
+
+The macOS helper additionally retains a source compare/link interval: Darwin
+`linkat` accepts a source name, not an expected-inode argument. A namespace writer
+racing that interval can cause a foreign inode to acquire the destination name.
+The owner refuses that object and preserves both names; it never replaces a
+destination or removes the foreign staging object. This is an explicit opt-in
+to the existing cooperative-writer/advisory-lock policy, not a descriptor-atomic
+publication or malicious-writer exclusion claim. Staging cleanup also retains
+the POSIX compare/unlink interval. Actual macOS native and public owner tests are
+required for qualification; source checks do not establish physical APFS hosts,
+power-loss recovery, produced packages, real game, human experience or Beta.
+The helper uses `linkat` with flags zero so a raced final symlink is not followed.
+Darwin kernels accept that flag value; filesystems that do not support this link
+operation refuse it and preserve the bound staging file. API source inspection
+and a newer hosted macOS result do not qualify the declared minimum macOS host.
+
+Existing-INI reconciliation is admitted on Windows fixed-local-NTFS and supported
+local Linux/macOS filesystems through the retained-original-inode owner. Its
+source acceptance is distinct from named physical-host and power-loss evidence;
+missing-file publication grants no broader configuration or Play authority.

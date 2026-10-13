@@ -22,7 +22,7 @@ from test_presentation_profile_preparation import factorio_validator
 from tools.winforms_build import msbuild_executable
 
 
-PUBLICATION_SUPPORTED = os.name == "nt" or sys.platform == "linux"
+PUBLICATION_SUPPORTED = os.name == "nt" or sys.platform in ("linux", "darwin")
 
 
 class SelectedSavePreparationTests(unittest.TestCase):
@@ -95,7 +95,7 @@ class SelectedSavePreparationTests(unittest.TestCase):
                 self.assertFalse(projected["readiness"]["execution_available"])
             self.assertEqual(before, snapshot(workspace))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_ordinary_selected_context_and_fresh_process_replay_preserve_all_selected_inputs(self) -> None:
         for scope in ("instances", "launch_deck"):
             with self.subTest(scope=scope), tempfile.TemporaryDirectory(prefix="selected-context-apply-") as value:
@@ -128,10 +128,10 @@ class SelectedSavePreparationTests(unittest.TestCase):
                 self.assertEqual(result, json.loads(replay)["payload"])
                 self.assertEqual(frozen, snapshot(workspace))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_process_loss_resumes_exact_owned_effect_and_preserves_ambiguous_creation(self) -> None:
         for phase in ("after_manifest", "after_directory_create", "after_file_create",
-                      "before_publication", "after_publication", "before_finalization") + (("after_staging_cleanup",) if sys.platform == "linux" else ()):
+                      "before_publication", "after_publication", "before_finalization") + (("after_staging_cleanup",) if sys.platform in ("linux", "darwin") else ()):
             with self.subTest(phase=phase), tempfile.TemporaryDirectory(prefix="selected-context-loss-") as value:
                 workspace = Path(value)
                 instance = self.prepare(workspace)
@@ -157,7 +157,7 @@ class SelectedSavePreparationTests(unittest.TestCase):
                     self.assertEqual(frozen, snapshot(workspace))
                 self.assertEqual(before, self.preserved(instance))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_same_byte_foreign_objects_and_mismatched_strategy_are_preserved(self) -> None:
         for variant in ("stage", "target", "strategy"):
             with self.subTest(variant=variant), tempfile.TemporaryDirectory(prefix="selected-context-foreign-") as value:
@@ -183,7 +183,7 @@ class SelectedSavePreparationTests(unittest.TestCase):
                 self.assertIn(code, (1, 3), output)
                 self.assertEqual(retained, snapshot(instance))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_unsupported_selected_filenames_refuse_during_read_only_admission(self) -> None:
         for name in ("My World.zip", "selected-\u2603.zip"):
             with self.subTest(name=name), tempfile.TemporaryDirectory(prefix="selected-context-name-") as value:
@@ -235,7 +235,7 @@ class SelectedSavePreparationTests(unittest.TestCase):
                 (instance / ".facman-test-selected-context-release").write_bytes(b"release")
                 worker.join(30)
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_terminal_invalid_or_missing_owned_effect_never_creates_directories_or_republishes(self) -> None:
         for state in ("complete", "refused", "cancelled", "rolled_back"):
             with self.subTest(state=state), tempfile.TemporaryDirectory(prefix="selected-context-terminal-") as value:
@@ -266,7 +266,7 @@ class SelectedSavePreparationTests(unittest.TestCase):
             self.assertEqual(before, snapshot(instance))
             self.assertFalse(target.exists())
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_shared_configuration_lock_preserves_empty_unfamiliar_and_borrowed_compatible_objects(self) -> None:
         for content in (b"", b"foreign owner\n", b"facman.instance_configuration_lock.v1\ninstance_id=main\n"):
             with self.subTest(content=content), tempfile.TemporaryDirectory(prefix="selected-context-lock-") as value:
@@ -312,7 +312,7 @@ class SelectedSavePreparationTests(unittest.TestCase):
             self.assertEqual(1, result.stdout.count("PASS "))
             self.assertEqual(before, snapshot(workspace))
 
-    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication is Windows or Linux only")
+    @unittest.skipUnless(PUBLICATION_SUPPORTED, "unsupported: same-inode publication requires Windows, Linux or macOS")
     def test_stale_inputs_confirmation_and_late_context_drift_do_not_claim_completion(self) -> None:
         with tempfile.TemporaryDirectory(prefix="selected-context-admission-") as value:
             workspace = Path(value)
