@@ -57,6 +57,7 @@ namespace FacMan.WinForms
         public string Workspace { get; set; }
         public string SelectedInstanceId { get; private set; }
         public string LastActionPayload { get; private set; }
+        public string LastActionSummary { get; private set; }
         public bool Busy { get; private set; }
         public string ObservationIntent { get; private set; }
         public string LastRefusal { get; private set; }
@@ -161,6 +162,7 @@ namespace FacMan.WinForms
         public async Task<bool> SelectInstanceAsync(
             string instanceId, CancellationToken cancellationToken)
         {
+            LastActionSummary = String.Empty;
             if (String.IsNullOrWhiteSpace(instanceId)) return false;
             Dictionary<string, object> input = new Dictionary<string, object>();
             input["selected_instance_id"] = instanceId;
@@ -282,6 +284,7 @@ namespace FacMan.WinForms
 
         public Task<CommandResult> PlayAsync(CancellationToken cancellationToken)
         {
+            LastActionSummary = String.Empty;
             if (String.IsNullOrWhiteSpace(SelectedInstanceId))
                 return Task.FromResult(CommandResult.Refusal(
                     "presentation.action", "presentation.action",
@@ -294,6 +297,7 @@ namespace FacMan.WinForms
 
         public Task<CommandResult> StopSessionAsync(CancellationToken cancellationToken)
         {
+            LastActionSummary = String.Empty;
             if (String.IsNullOrWhiteSpace(SelectedInstanceId))
                 return Task.FromResult(CommandResult.Refusal(
                     "presentation.action", "presentation.action",
@@ -307,6 +311,7 @@ namespace FacMan.WinForms
         public Task<CommandResult> InspectUncertainActionAsync(
             CancellationToken cancellationToken)
         {
+            LastActionSummary = String.Empty;
             PendingSemanticAction pending = uncertainAction;
             if (pending == null)
                 return Task.FromResult(CommandResult.Refusal(
@@ -347,6 +352,7 @@ namespace FacMan.WinForms
             IDictionary<string, object> input,
             CancellationToken cancellationToken)
         {
+            LastActionSummary = String.Empty;
             BackendPresentationSnapshot source = Snapshot(scope);
             if (Busy || source == null)
                 return CommandResult.Refusal(
@@ -399,6 +405,7 @@ namespace FacMan.WinForms
             PendingSemanticAction pending,
             CancellationToken cancellationToken)
         {
+            LastActionSummary = String.Empty;
             CommandDefinition command = RequireRoute("presentation.action");
             CommandResult result = await transport.InvokeAsync(
                 command, pending.Payload, Workspace, String.Empty, pending.DryRun,
@@ -421,6 +428,7 @@ namespace FacMan.WinForms
                 SemanticActionReceipt receipt = SemanticActionReceipt.ParseEnvelope(result.Stdout);
                 JavaScriptSerializer serializer = new JavaScriptSerializer();
                 LastActionPayload = serializer.Serialize(receipt.ActionPayload);
+                AcceptMakeReadyContinuation(result, receipt, pending);
                 if (receipt.ActionId == "doctor.run" && receipt.Doctor.Available)
                     LastDoctor = receipt.Doctor;
                 AcceptReplacementSnapshot(pending.Scope, receipt);
@@ -434,6 +442,20 @@ namespace FacMan.WinForms
             }
             await RefreshAsync(cancellationToken).ConfigureAwait(false);
             return result;
+        }
+
+        private bool AcceptMakeReadyContinuation(CommandResult result, SemanticActionReceipt receipt,
+            PendingSemanticAction pending)
+        {
+            LastActionSummary = String.Empty;
+            if (pending.ActionId != "readiness.prepare_joined" || receipt.ActionId != pending.ActionId)
+                return false;
+            bool knownPartial = MakeReadyContinuation.CanStartFreshRequest(result, receipt, pending.Payload, pending.Identity);
+            LastActionSummary = MakeReadyContinuation.Summary(receipt.ActionPayload, knownPartial);
+            if (!result.Success && PresentationJson.Text(receipt.ActionPayload, "continuation") == "observe_readiness")
+                LastActionSummary = "Preparation needs attention. Inspect the original request before continuing.";
+            if (Object.ReferenceEquals(uncertainAction, pending) && knownPartial) uncertainAction = null;
+            return knownPartial;
         }
 
         private void AcceptReplacementSnapshot(string scope, SemanticActionReceipt receipt)

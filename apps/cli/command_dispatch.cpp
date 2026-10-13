@@ -1241,7 +1241,9 @@ int command_presentation(const Options& options)
         return emit_basic(call(
                 options, "presentation.action", payload.serialize(),
                 confirmation != "explicit", request_id, operation, attempt),
-            as_json, "Presentation action completed");
+            as_json, options.args[2] == "readiness.prepare_joined" ?
+                "Current settings prepared; review remaining readiness checks. Play remains unavailable." :
+                "Presentation action completed");
     }
     return 2;
 }

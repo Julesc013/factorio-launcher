@@ -240,6 +240,9 @@ namespace FacMan.WinForms
             planningActions.Controls.Add(ActionButton("Select p&rofile", "Select launch profile", "profile.select"));
             planningActions.Controls.Add(ActionButton("E&xplain config", "Explain effective configuration", "configuration.explain_effective"));
             planningActions.Controls.Add(ActionButton("Preview &menu", "Preview menu launch", "launch.menu_plan"));
+            Button makeReadyJoined = ActionButton("Make Ready with current &settings", "Make Ready with the current profile, content and selected world", "readiness.prepare_joined");
+            makeReadyJoined.Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold);
+            planningActions.Controls.Add(makeReadyJoined);
             planningActions.Controls.Add(ActionButton("Make &Ready", "Prepare this instance", "readiness.prepare"));
             planningActions.Controls.Add(ActionButton("Record selected &save context", "Record selected save context", "readiness.prepare_selected_save"));
             planningActions.Controls.Add(ActionButton("Prepare &configuration", "Prepare routing configuration", "readiness.prepare_configuration"));
@@ -1092,11 +1095,17 @@ namespace FacMan.WinForms
             CommandResult result = await liveStore.ExecuteDescriptorActionAsync(
                 scope, actionId, input, CancellationToken.None);
             if (!CanUpdateWindow) return true;
-            ShowResultIfRefused(result, descriptor.Label + " refused");
+            if (result.Refused && actionId == "readiness.prepare_joined" &&
+                !String.IsNullOrWhiteSpace(liveStore.LastActionSummary))
+                MessageBox.Show(this, liveStore.LastActionSummary, descriptor.Label,
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else ShowResultIfRefused(result, descriptor.Label + " refused");
             if (result.Success &&
                 !String.IsNullOrWhiteSpace(liveStore.LastActionPayload))
             {
                 string detail = liveStore.LastActionPayload;
+                if (actionId == "readiness.prepare_joined" &&
+                    !String.IsNullOrWhiteSpace(liveStore.LastActionSummary)) detail = liveStore.LastActionSummary;
                 if (detail.Length > 6000) detail = detail.Substring(0, 6000) + "...";
                 MessageBox.Show(this, detail, descriptor.Label,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);

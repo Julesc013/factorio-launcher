@@ -417,7 +417,7 @@ facman::core::Result<std::string> make_ready_stage_result(const MakeReadyStage& 
 
 bool has_preparation_plan(const std::string& action_id)
 {
-    return action_id == "profile.select" || action_id == "readiness.prepare_selected_save" ||
+    return action_id == "readiness.prepare_joined" || action_id == "profile.select" || action_id == "readiness.prepare_selected_save" ||
         action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare";
 }
 
@@ -425,6 +425,7 @@ facman::core::Result<std::string> snapshot_action_preparation_plan(const std::st
     const SemanticActionRequest& request, MakeReadyStage& make_ready_stage)
 {
     using Result = facman::core::Result<std::string>;
+    if (request.action_id == "readiness.prepare_joined") return snapshot_joined_plan(snapshot, request);
     if (request.action_id != "readiness.prepare")
         return request.action_id == "profile.select"
             ? snapshot_profile_plan(snapshot, request.selected_instance_id, request.profile_id)
@@ -439,7 +440,7 @@ facman::core::Result<std::string> snapshot_action_preparation_plan(const std::st
 
 bool effectful_semantic_action(const std::string& action_id)
 {
-    return action_id == "readiness.prepare" || action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
+    return action_id == "readiness.prepare_joined" || action_id == "readiness.prepare" || action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
         action_id == "installation.register_read_only" ||
         action_id == "instance.create_isolated" ||
         action_id == "profile.create" ||
@@ -580,6 +581,101 @@ std::string action_result_json(
         output.add_object("invalidation", invalidation);
     }
     return output.serialize();
+}
+
+std::string joined_preparation_json(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    auto planned = instance::joined_preparation_plan(workspace, {instance_id, launch_intent});
+    json::ObjectBuilder report;
+    if (planned) {
+        add_json(report, "plan", planned.value());
+        report.add_null("refusal");
+    } else {
+        report.add_null("plan");
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", planned.error().code);
+        refusal.add_string("detail", planned.error().message);
+        report.add_object("refusal", refusal);
+    }
+    return report.serialize();
+}
+
+json::ObjectBuilder joined_preparation_descriptor(const std::string& preparation)
+{
+    auto report = json::parse(preparation);
+    const auto* plan = report ? report.value().find("plan") : nullptr;
+    const auto* refusal = report ? report.value().find("refusal") : nullptr;
+    const auto* desired = plan ? plan->find("desired_state") : nullptr;
+    const bool available = plan && plan->is_object() && desired && refusal && refusal->is_null();
+    std::vector<ActionInputField> fields;
+    if (available) {
+        const auto add = [&](const char* id, const char* label, const std::string& value) {
+            fields.push_back({id, label, "enum", true, value, {value}});
+        };
+        add("selected_instance_id", "Instance", string_field(*plan, "instance_id"));
+        add("installation_id", "Registered installation", string_field(*desired, "installation_id"));
+        add("profile_id", "Current profile", string_field(*desired, "profile_id"));
+        if (string_field(*plan, "launch_intent") == "load_save")
+            add("save", "Exact selected save", string_field(*desired, "selected_save"));
+    }
+    const auto code = refusal ? string_field(*refusal, "code") : "make_ready_plan_invalid";
+    return action_descriptor("readiness.prepare_joined", "presentation.action", "Make Ready with current settings",
+        "primary", "workspace_write", available, available ? nullptr : code.c_str(),
+        "explicit", "facman.semantic_action_input.v1", fields);
+}
+
+facman::core::Result<std::string> snapshot_joined_plan(const std::string& snapshot,
+    const SemanticActionRequest& request)
+{
+    using Result = facman::core::Result<std::string>;
+    auto document = json::parse(snapshot);
+    const auto* dependencies = document ? document.value().find("dependency_identities") : nullptr;
+    const auto* report = dependencies ? dependencies->find("joined_preparation") : nullptr;
+    const auto* plan = report ? report->find("plan") : nullptr;
+    const auto* desired = plan ? plan->find("desired_state") : nullptr;
+    if (!desired || !request.new_instance_id.empty() || string_field(*plan, "instance_id") != request.selected_instance_id ||
+        string_field(*plan, "launch_intent") != request.launch_intent ||
+        string_field(*desired, "installation_id") != request.installation_id ||
+        string_field(*desired, "profile_id") != request.profile_id ||
+        string_field(*desired, "selected_save") != request.save ||
+        !lower_hex_digest(string_field(*plan, "plan_sha256")))
+        return Result::failure({"make_ready_desired_state_mismatch",
+            "Desired installation, current profile and selected save must match the reviewed plan and its locked content", {}, facman::core::OutcomeKind::refused});
+    return Result::success(plan->serialize());
+}
+
+std::string joined_preparation_result(const std::string& source,
+    const std::vector<std::string>& components, const std::string& readiness,
+    const std::string& continuation, bool effects_verified)
+{
+    auto plan = json::parse(source);
+    auto observed = json::parse(readiness);
+    const bool complete = observed && string_field(observed.value(), "configuration_state") == "ready" &&
+        string_field(observed.value(), "preparation_state") == "already_prepared";
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.make_ready_joined_result.v1");
+    result.add_string("command", "readiness.prepare_joined");
+    add_json(result, "plan", source);
+    result.add_string("plan_sha256", plan ? string_field(plan.value(), "plan_sha256") : "");
+    json::ArrayBuilder completed;
+    for (const auto& component : components) {
+        auto receipt = json::parse(component);
+        const auto* effects = receipt ? receipt.value().find("completed_components") : nullptr;
+        if (effects && effects->size() == 1U) completed.add_value(*effects->at(0));
+    }
+    result.add_array("completed_components", completed);
+    result.add_string("continuation", continuation);
+    result.add_bool("completed_effects_verified", effects_verified);
+    result.add_bool("remaining_effects_blocked_before_effects", continuation == "fresh_request_after_input_correction");
+    add_json(result, "readiness_observation", readiness);
+    result.add_bool("preparation_complete", complete);
+    result.add_bool("fresh_revision_required", !complete);
+    result.add_bool("readiness_complete", false);
+    result.add_bool("execution_started", false);
+    result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return result.serialize();
 }
 
 } // namespace facman::factorio::application

@@ -59,12 +59,20 @@ PACK_FAULTS = {
     PACK_SCENARIOS[6]: {"PAUSE": {"verified", "published", "committed"}},
 }
 
+JOINED_SCENARIOS = (
+    "test_one_ordinary_request_prepares_routing_and_exact_world_with_independent_receipts",
+    "test_ordinary_tui_dispatches_one_confirmed_request_for_both_components",
+)
+
 
 class PackConsumerDriver:
     """Bound every source-scenario child and retain bytes before fixture cleanup."""
 
-    def __init__(self, owner, scenario: str) -> None:
+    def __init__(self, owner, scenario: str, fault_controls: dict | None = None) -> None:
         self.owner, self.scenario = owner, scenario
+        self.fault_controls = ({"FACMAN_TEST_MODPACK_IMPORT_" + key: values
+                               for key, values in PACK_FAULTS[scenario].items()}
+                              if fault_controls is None else fault_controls)
         self.calls: list[dict] = []
         self.files: dict[str, bytes] = {}
         self.children: list = []
@@ -98,8 +106,7 @@ class PackConsumerDriver:
         # Only its explicitly authored, scenario-specific hook values survive.
         hooks = {name: value for name, value in supplied.items()
                  if name.startswith("FACMAN_TEST_")}
-        allowed = {"FACMAN_TEST_MODPACK_IMPORT_" + key: values
-                   for key, values in PACK_FAULTS[self.scenario].items()}
+        allowed = self.fault_controls
         for name, value in hooks.items():
             self.owner.assertIn(name, allowed)
             self.owner.assertIn(value, allowed[name])
@@ -112,6 +119,8 @@ class PackConsumerDriver:
                       ("PATH", "TERM", "LANG", *sorted(hooks))},
                   "source_backend_provider_overrides": [], "before": self.snapshot(workspace)}
         self.calls.append(record)
+        if "input" in kwargs:
+            record["stdin"] = kwargs["input"]
         return record, workspace
 
     def finish(self, record: dict, workspace: Path, code: int, stdout, stderr) -> None:
@@ -613,3 +622,87 @@ class MacosDeliveredTuiTests(unittest.TestCase):
 
     def test_delivered_pack_ordinary_semantic_recovery(self) -> None:
         self.exercise_delivered_pack(PACK_SCENARIOS[6])
+
+    def exercise_delivered_joined(self, scenario: str) -> None:
+        import test_make_ready_joined as joined
+        import test_local_modset_solver as solver
+        import test_readiness_builtin_content as readiness
+
+        self.assertIn(scenario, JOINED_SCENARIOS)
+        # Both positive scenarios require no fault hooks. Retain the existing
+        # bounded call/CAS custody and one package fixture for their real child calls.
+        driver = PackConsumerDriver(self, scenario, fault_controls={})
+        proxy = types.SimpleNamespace(run=driver.run, Popen=driver.popen, PIPE=subprocess.PIPE)
+        temporary = types.SimpleNamespace(TemporaryDirectory=lambda **kwargs:
+            tempfile.TemporaryDirectory(**dict(kwargs, dir=self.consumer)))
+        result = unittest.TestResult()
+        passed = False
+        try:
+            self.assertEqual([], package_hash_manifest.verify_manifest(self.package))
+            with ExitStack() as stack:
+                stack.enter_context(patch.dict(os.environ, consumer_environment(dict(os.environ)), clear=True))
+                stack.enter_context(patch.dict(os.environ, FACMAN_CLI_EXE=str(self.executable)))
+                for source in (native_cli, joined):
+                    stack.enter_context(patch.object(source, "subprocess", proxy))
+                for source in (solver, readiness):
+                    stack.enter_context(patch.object(source, "FIXTURE_INSTALL", self.fixture_install))
+                stack.enter_context(patch.object(joined, "tempfile", temporary))
+                stack.enter_context(patch.object(test_tui_product, "tui_executable", return_value=self.executable))
+                joined.JoinedMakeReadyTests(scenario).run(result)
+            self.assertEqual(1, result.testsRun)
+            self.assertEqual([], result.skipped, "Darwin joined scenarios must execute, never skip")
+            self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
+            self.assertTrue(driver.calls)
+            self.assertTrue(all(all(key in call for key in ("exit_code", "stdout", "stderr", "after"))
+                                for call in driver.calls))
+            self.assertTrue(all(child.poll() is not None for child in driver.children),
+                            "Source scenario must finish every owned child before acceptance")
+            self.assertEqual([], package_hash_manifest.verify_manifest(self.package))
+            for path in self.modes:
+                self.assertEqual(0, stat.S_IMODE(path.stat().st_mode) & 0o222)
+            passed = True
+        finally:
+            live_before_drain = [child.pid for child in driver.children if child.poll() is None]
+            cleanup_terminations = driver.drain()
+            if live_before_drain:
+                passed = False
+            mode = "joined-" + scenario.removeprefix("test_")
+            effects = {"schema": "facman.macos_delivered_joined_calls.v1", "source_test_id":
+                       joined.__name__ + ".JoinedMakeReadyTests." + scenario,
+                       "calls": driver.calls, "tests_run": result.testsRun,
+                       "errors": [error for _, error in result.errors],
+                       "failures": [failure for _, failure in result.failures],
+                       "skips": [reason for _, reason in result.skipped],
+                       "live_child_pids_before_safety_drain": live_before_drain,
+                       "safety_cleanup_terminations": cleanup_terminations,
+                       "call_count": len(driver.calls), "raw_stream_size_bytes": driver.stream_bytes,
+                       "scenario_elapsed_seconds": time.monotonic() - driver.started,
+                       "limits": {"calls": MAX_PACK_CALLS, "seconds": MAX_PACK_SECONDS,
+                                  "raw_stream_bytes": MAX_CUSTODY_RAW_BYTES},
+                       "all_owned_children_drained": all(child.poll() is not None for child in driver.children)}
+            raw = json.dumps(effects, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            files = dict(driver.files, **{"calls.json": raw})
+            receipt = dict(self.binding, mode=mode, test_id=self.id(),
+                           result="pass" if passed else "fail", source_test_id=effects["source_test_id"],
+                           calls_sha256=hashlib.sha256(raw).hexdigest(),
+                           source_test_sha256=hashlib.sha256(Path(joined.__file__).read_bytes()).hexdigest(),
+                           fault_controls={},
+                           evidence_scope="produced_package_joined_preparation_source_fixture; no_real_game_or_human_claim")
+            try:
+                custody = custody_record(receipt, files)
+                receipt.update(custody_canonical_json_sha256=custody["canonical_json_sha256"],
+                               custody_compressed_sha256=custody["compressed_sha256"])
+                print("delivered-tui-custody: " + json.dumps(custody, sort_keys=True, separators=(",", ":")), flush=True)
+            except ValueError as error:
+                receipt.update(result="fail", custody_export_error=str(error))
+                raise
+            finally:
+                (self.evidence_root / f"{mode}.v1.json").write_text(
+                    json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                print("delivered-tui-evidence: " + json.dumps(receipt, sort_keys=True), flush=True)
+
+    def test_delivered_joined_make_ready_routing_and_exact_selected_context(self) -> None:
+        self.exercise_delivered_joined(JOINED_SCENARIOS[0])
+
+    def test_delivered_joined_make_ready_ordinary_linear_tui(self) -> None:
+        self.exercise_delivered_joined(JOINED_SCENARIOS[1])

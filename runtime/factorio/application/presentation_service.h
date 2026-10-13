@@ -38,8 +38,15 @@ public:
         const std::string& result,
         bool durable,
         std::string& detail);
+    bool checkpoint(
+        const std::filesystem::path& workspace, const SemanticActionRequest& request,
+        const std::string& fingerprint, const std::string& pending_result,
+        std::string& detail);
 
 private:
+    bool replace_accepted(const std::filesystem::path& workspace,
+        const SemanticActionRequest& request, const std::string& fingerprint,
+        const std::string& result, bool terminal, std::string& detail);
     struct Entry { std::string fingerprint; std::string result; };
     mutable std::mutex mutex_;
     std::unordered_map<std::string, Entry> entries_;
