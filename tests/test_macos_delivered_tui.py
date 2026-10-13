@@ -65,6 +65,70 @@ def consumer_environment(environment: dict[str, str]) -> dict[str, str]:
     return result
 
 
+def terminal_attributes(attributes: list) -> list:
+    """Keep every field, including control-character bytes, JSON-safe for custody."""
+    return [*attributes[:6], [value[0] if isinstance(value, bytes) else value for value in attributes[6]]]
+
+
+def queued_input(descriptor: int) -> int:
+    import array
+    import fcntl
+    import termios
+
+    count = array.array("i", [0])
+    fcntl.ioctl(descriptor, termios.FIONREAD, count, True)
+    return count[0]
+
+
+def darwin_terminal_control() -> dict:
+    """Prove the kernel's retype transition on a separate owned PTY, without flushing."""
+    import copy
+    import pty
+    import termios
+
+    # Missing platform API symbols are failures on the required Darwin lane.
+    symbols = {"PENDIN": termios.PENDIN, "FIONREAD": termios.FIONREAD}
+    master, slave = pty.openpty()
+    tester = unittest.TestCase()
+    observations = []
+    try:
+        original = termios.tcgetattr(slave)
+        tester.assertTrue(original[3] & termios.ICANON)
+        tester.assertFalse(original[3] & termios.PENDIN)
+        raw = copy.deepcopy(original)
+        raw[3] &= ~(termios.ICANON | termios.ECHO | termios.ISIG | termios.IEXTEN)
+        raw[0] &= ~(termios.IXON | termios.ICRNL)
+        raw[6][termios.VMIN], raw[6][termios.VTIME] = 1, 0
+        os.set_blocking(slave, False)
+        for pending in (b"", b"facman-control-preserved\n"):
+            termios.tcsetattr(slave, termios.TCSANOW, raw)
+            if pending:
+                tester.assertEqual(len(pending), os.write(master, pending))
+            termios.tcsetattr(slave, termios.TCSANOW, original)
+            immediate = termios.tcgetattr(slave)
+            expected = copy.deepcopy(original)
+            expected[3] |= termios.PENDIN
+            tester.assertEqual(expected, immediate, "normal raw-to-canonical must expose kernel retype state")
+            count = queued_input(slave)
+            final = termios.tcgetattr(slave)
+            observations.append({"original": terminal_attributes(original),
+                                 "immediate_after_restore": terminal_attributes(immediate),
+                                 "fionread_count": count, "after_fionread": terminal_attributes(final),
+                                 "pending_input_base64": base64.b64encode(pending).decode("ascii")})
+            tester.assertEqual(len(pending), count)
+            tester.assertEqual(original, final, "FIONREAD must complete retyping without rewriting settings")
+            recovered = os.read(slave, count) if count else b""
+            observations[-1]["recovered_input_base64"] = base64.b64encode(recovered).decode("ascii")
+            tester.assertEqual(pending, recovered, "the pending input must survive retyping exactly")
+            tester.assertEqual(0, queued_input(slave))
+            tester.assertEqual(original, termios.tcgetattr(slave))
+        return {"schema": "facman.darwin_terminal_control.v1", "result": "pass",
+                "symbols": symbols, "observations": observations}
+    finally:
+        os.close(slave)
+        os.close(master)
+
+
 @unittest.skipUnless(sys.platform == "darwin", "not_applicable: delivered macOS TUI requires Darwin")
 class MacosDeliveredTuiTests(unittest.TestCase):
     # Reuse precisely one scenario, without inheriting the source-build campaign.
@@ -79,6 +143,7 @@ class MacosDeliveredTuiTests(unittest.TestCase):
         candidate = os.environ.get("FACMAN_TUI_EXE") or os.environ.get("FACMAN_CLI_EXE")
         if not candidate or Path(candidate).resolve(strict=True) != build_root / "facman":
             raise AssertionError("Darwin delivered TUI requires the current explicit build-root candidate")
+        cls.terminal_control = darwin_terminal_control()
         cls._temporary = tempfile.TemporaryDirectory(prefix="delivered-tui-", dir=build_root)
         cls.addClassCleanup(cls._temporary.cleanup)
         cls.root = Path(cls._temporary.name).resolve()
@@ -228,7 +293,18 @@ class MacosDeliveredTuiTests(unittest.TestCase):
                 drain_pty(master, output, timeout=0.2)
             code = process.wait(timeout=5)
             drain_pty(master, output)
-            self.assertEqual(original, termios.tcgetattr(slave), "terminal flags must be restored")
+            immediate = termios.tcgetattr(slave)
+            # Darwin TCSANOW raw→canonical sets PENDIN itself. A queue query
+            # completes kernel retyping; it neither rewrites settings nor flushes.
+            count = queued_input(slave)
+            restored = termios.tcgetattr(slave)
+            self.terminal_states.append({"session_index": len(self.terminal_states),
+                                         "original": terminal_attributes(original),
+                                         "immediate_after_exit": terminal_attributes(immediate),
+                                         "fionread_count": count,
+                                         "after_fionread": terminal_attributes(restored)})
+            self.assertEqual(0, count, "the candidate must consume all typed scenario input")
+            self.assertEqual(original, restored, "terminal flags must be restored exactly after kernel retyping")
             self.assertIn(b"\x1b[?25h\x1b[?1049l", output)
             self.assertNotIn(b"Switched to portable linear mode", output)
             return subprocess.CompletedProcess(process.args, code, output.decode("utf-8"), "")
@@ -247,6 +323,7 @@ class MacosDeliveredTuiTests(unittest.TestCase):
         self.mode = mode
         self.outputs: list[str] = []
         self.scenario_evidence: list[dict] = []
+        self.terminal_states: list[dict] = []
         # All existing fixture setup and fresh queries select only produced bytes.
         # Keep their child subprocess environments and cwd consumer-isolated too.
         driver = types.SimpleNamespace(run=self.run_cli, PIPE=subprocess.PIPE)
@@ -258,6 +335,7 @@ class MacosDeliveredTuiTests(unittest.TestCase):
                     patch.object(test_readiness_builtin_content, "FIXTURE_INSTALL", self.fixture_install):
                 self.exercise_scenario(evidence=self.scenario_evidence)
             self.assertEqual(2, len(self.scenario_evidence))
+            self.assertEqual(3 if mode == "fullscreen" else 0, len(self.terminal_states))
             self.assertEqual([], package_hash_manifest.verify_manifest(self.package))
             for path in self.modes:
                 self.assertEqual(0, stat.S_IMODE(path.stat().st_mode) & 0o222)
@@ -267,11 +345,19 @@ class MacosDeliveredTuiTests(unittest.TestCase):
             log.write_text("\n".join(self.outputs), encoding="utf-8")
             effects = self.evidence_root / f"{mode}.effects.json"
             effects.write_text(json.dumps(self.scenario_evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            terminal_state = self.evidence_root / f"{mode}.terminal-state.json"
+            terminal_state.write_text(json.dumps(
+                {"schema": "facman.macos_delivered_tui_terminal_state.v1", "mode": mode,
+                 "control": self.terminal_control, "candidate_sessions": self.terminal_states},
+                indent=2, sort_keys=True) + "\n", encoding="utf-8")
             receipt = dict(self.binding, mode=mode, result="pass" if passed else "fail",
                            test_id=self.id(), terminal_log_sha256=hashlib.sha256(log.read_bytes()).hexdigest(),
+                           terminal_state_sha256=hashlib.sha256(terminal_state.read_bytes()).hexdigest(),
+                           terminal_control_result=self.terminal_control["result"],
                            effects_sha256=hashlib.sha256(effects.read_bytes()).hexdigest())
             try:
-                custody = custody_record(receipt, {log.name: log.read_bytes(), effects.name: effects.read_bytes()})
+                custody = custody_record(receipt, {log.name: log.read_bytes(), effects.name: effects.read_bytes(),
+                                                  terminal_state.name: terminal_state.read_bytes()})
                 receipt.update(custody_canonical_json_sha256=custody["canonical_json_sha256"],
                                custody_compressed_sha256=custody["compressed_sha256"])
                 print("delivered-tui-custody: " + json.dumps(custody, sort_keys=True, separators=(",", ":")), flush=True)

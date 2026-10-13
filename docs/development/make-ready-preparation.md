@@ -95,6 +95,22 @@ neither step grants Play. Full-screen input uses real typed keys, requires compl
 terminal frames and checks original terminal flags, cursor and screen restoration
 on exit. Darwin missing artifacts or incoherent metadata fail rather than skip.
 
+Darwin's raw-to-canonical `TCSANOW` restoration sets the kernel's `PENDIN`
+retyping state even when the application restores the saved attributes correctly.
+The fixture records immediate post-exit attributes, queries `FIONREAD` on the
+held slave, requires zero queued scenario input, and then compares every saved
+attribute exactly. This queue query completes pending retyping; it neither
+rewrites attributes nor flushes input. The candidate PTY receives no `tcsetattr`
+after exit. A separate control PTY first proves the same transition with an empty
+queue and with known pending input, verifies exact settings after the query,
+and reads back the pending bytes without loss. These observed attributes, queue
+counts and control input/output bytes are retained in each mode's hashed
+`terminal-state.json`; full-screen requires all three candidate sessions, while
+linear requires zero. This follows the same mechanism in Apple's
+[pinned current XNU](https://github.com/apple-oss-distributions/xnu/blob/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/kern/tty.c#L1358)
+and [macOS 13-era XNU](https://github.com/apple-oss-distributions/xnu/blob/xnu-8792.41.9/bsd/kern/tty.c#L1247).
+It adds no runtime workaround and does not establish a minimum-host result.
+
 The tests print compact package/source/build/provider identities and hashes with
 their actual result into the job log. The existing validated CLI integration
 source observation corroborates the same source/providers/build; it does not
