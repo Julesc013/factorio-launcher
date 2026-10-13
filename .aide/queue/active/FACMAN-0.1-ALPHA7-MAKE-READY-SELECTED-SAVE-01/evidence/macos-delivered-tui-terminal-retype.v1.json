@@ -1,0 +1,36 @@
+{
+  "schema": "facman.macos_delivered_tui_reviewed_candidate.v1",
+  "base_head": "6af0c4338bb7ff893c7ff868d9f13d5094bfec01",
+  "files_sha256": {
+    "docs/development/make-ready-preparation.md": "22746f7debc45f19f8331431ec1590ba7b72baceb20694c89e33e1e6f8c2f59a",
+    "tests/test_macos_delivered_tui.py": "6942f31b66fe4536b9f6fa58a74753d0475af0e222ef64e6aaf8b4a0939724cd",
+    "tests/test_tui_product.py": "46922dae959ab5403d250800e40c4b2bbb8e632e806b8eff7bda16cbccc95109"
+  },
+  "independent_review_sha256": "df88876c9566f6083316e2d621be717cf46f805dffa1426bb126ceb65465f791",
+  "frozen_packet_sha256": "481357ac8f9f38f81a862e4e5cf904c6ad01810e8fbd39ad3baffea60c456e04",
+  "original_linux_campaign_ast_unchanged": true,
+  "standalone_darwin_methods_required": [
+    "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_linear_selected_save_make_ready",
+    "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_fullscreen_selected_save_make_ready_restores_terminal"
+  ],
+  "local_darwin_skips_counted_as_acceptance": 0,
+  "produced_profile": "macos_portable_tui_x64",
+  "normal_clean_canonical_package_factory": true,
+  "custody": "macos-delivered-tui-terminal-retype-custody.v1.zip",
+  "custody_sha256": "3b19ed44631aebf70b2e2b378ad5dfc7a167dbfb4db9ce68651ba62cf3ca11b6",
+  "actual_mac_package_pending": true,
+  "required_checks_pending": true,
+  "failed_mac_job": 115306606290,
+  "failed_job_log_sha256": "5f52538d049e549a2bd4b459f45cbc5fc5734e2db1e9b5c971fe55007660e363",
+  "primary_apple_mechanism_sha256": "97718c9d121be2ade95932bb6782e9bf923c6ceda0e5c7506ca7f2c4405414c8",
+  "exact_terminal_equality_after_nonflushing_retype": true,
+  "authority_delta": "none",
+  "minimum_mac13_physical_host_qualified": false,
+  "named_physical_host": false,
+  "game": false,
+  "human": false,
+  "canonical_installed_desktop": false,
+  "full_make_ready": false,
+  "beta": false,
+  "rc": false
+}
