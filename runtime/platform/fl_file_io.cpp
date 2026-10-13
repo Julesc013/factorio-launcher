@@ -47,6 +47,10 @@ thread_local testing::RelativePublishBeforeReopenHook
     relative_publish_before_reopen_hook_for_testing = nullptr;
 thread_local testing::RelativePublishBeforeReopenHook
     publication_before_staging_remove_hook_for_testing = nullptr;
+#ifdef __APPLE__
+thread_local testing::RelativePublishBeforeReopenHook observed_publication_before_check_hook_for_testing = nullptr;
+thread_local testing::RelativePublishBeforeReopenHook observed_publication_before_link_hook_for_testing = nullptr;
+#endif
 
 IoStatus published_unverified_failure(const IoStatus& underlying)
 {
@@ -369,6 +373,16 @@ void set_publication_before_staging_remove_hook(RelativePublishBeforeReopenHook 
 {
     publication_before_staging_remove_hook_for_testing = hook;
 }
+#ifdef __APPLE__
+void set_observed_publication_before_check_hook(RelativePublishBeforeReopenHook hook) noexcept
+{
+    observed_publication_before_check_hook_for_testing = hook;
+}
+void set_observed_publication_before_link_hook(RelativePublishBeforeReopenHook hook) noexcept
+{
+    observed_publication_before_link_hook_for_testing = hook;
+}
+#endif
 
 } // namespace testing
 
@@ -990,7 +1004,7 @@ IoStatus StableDirectoryObject::open_child_file_no_follow_for_publication_recove
     const std::function<bool(const FileIdentity&)>& matches_journal,
     const std::string& expected_bytes, StableInputFile& child) const
 {
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
     std::string staging, destination;
     if (!portable_leaf(staging_leaf, staging) || !portable_leaf(destination_leaf, destination) ||
         staging == destination || !matches_journal || expected_bytes.empty() || expected_bytes.size() > 65536U)
@@ -1035,7 +1049,7 @@ IoStatus StableDirectoryObject::finish_child_file_publication(
     const std::filesystem::path& staging_leaf, const std::string& expected_bytes,
     StableInputFile& destination) const
 {
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
     std::string staging, target;
     if (!open() || !portable_leaf(staging_leaf, staging) || !destination.open() ||
         destination.impl_->path.parent_path() != impl_->path ||
@@ -1599,6 +1613,85 @@ IoStatus DurableOutputFile::publish_in_directory_no_replace(
 {
     return publish_relative_no_replace(&destination_parent, destination_leaf);
 }
+
+#ifdef __APPLE__
+IoStatus DurableOutputFile::publish_observed_sibling_no_replace(
+    const StableDirectoryObject& parent, const std::filesystem::path& destination_leaf,
+    const std::string& expected_bytes)
+{
+    std::string destination;
+    if (!portable_leaf(destination_leaf, destination) || destination == impl_->staging_leaf ||
+        expected_bytes.empty() || expected_bytes.size() > 65536U)
+        return IoStatus::failure("observed_publication_inputs_invalid", path_to_utf8(destination_leaf));
+    if (impl_->handle == kInvalidHandle || impl_->parent_handle == kInvalidHandle ||
+        !impl_->relative_created || !impl_->relative_reopened ||
+        impl_->relative_state != Impl::RelativeNamespaceState::staging ||
+        impl_->identity.size != expected_bytes.size() || !impl_->identity.regular_file ||
+        impl_->identity.link_count != 1U || impl_->path.parent_path() != parent.path())
+        return IoStatus::failure("observed_publication_source_unbound", destination);
+    const std::string staging = impl_->staging_leaf;
+    const std::filesystem::path source_path = impl_->path;
+    const auto verify_source = [&](std::uint64_t links) {
+        struct stat held {}, named {}, directory {};
+        FileIdentity expected = impl_->identity; expected.link_count = links;
+        if (!parent.revalidate().ok() || ::fstat(impl_->parent_handle, &directory) != 0 ||
+            !S_ISDIR(directory.st_mode) || static_cast<std::uint64_t>(directory.st_dev) != parent.identity().device ||
+            static_cast<std::uint64_t>(directory.st_ino) != parent.identity().object ||
+            ::fstat(impl_->handle, &held) != 0 || !expected.unchanged(identity_from_stat(held)) ||
+            ::fstatat(impl_->parent_handle, staging.c_str(), &named, AT_SYMLINK_NOFOLLOW) != 0 ||
+            !expected.unchanged(identity_from_stat(named))) return false;
+        std::string bytes(expected_bytes.size(), '\0');
+        if (::pread(impl_->handle, bytes.data(), bytes.size(), 0) != static_cast<ssize_t>(bytes.size()) ||
+            bytes != expected_bytes || ::fstat(impl_->handle, &held) != 0 ||
+            !expected.unchanged(identity_from_stat(held)) ||
+            ::fstatat(impl_->parent_handle, staging.c_str(), &named, AT_SYMLINK_NOFOLLOW) != 0 ||
+            !expected.unchanged(identity_from_stat(named)) || !parent.revalidate().ok()) return false;
+        return true;
+    };
+    if (observed_publication_before_check_hook_for_testing != nullptr)
+        observed_publication_before_check_hook_for_testing(source_path);
+    if (::fsync(impl_->handle) != 0) return IoStatus::failure("output_flush_failed", std::strerror(errno));
+    if (!verify_source(1U)) return IoStatus::failure("commit_source_identity_changed", staging);
+    if (relative_publish_pre_rename_fault_countdown_for_testing != 0U &&
+        --relative_publish_pre_rename_fault_countdown_for_testing == 0U)
+        return IoStatus::failure("output_pre_rename_fault_injected", "test seam");
+    // There is no atomic expected-inode linkat on Darwin. This explicit owner
+    // contract retains the compare/link interval; no foreign source is removed.
+    if (observed_publication_before_link_hook_for_testing != nullptr)
+        observed_publication_before_link_hook_for_testing(source_path);
+    // Flags zero leaves a raced final symlink unfollowed and is accepted by
+    // older Darwin linkat masks. Unsupported filesystems refuse without effect.
+    if (::linkat(impl_->parent_handle, staging.c_str(), parent.impl_->handle,
+            destination.c_str(), 0) != 0)
+        return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
+    impl_->relative_state = Impl::RelativeNamespaceState::published_unverified;
+    impl_->path = parent.path() / destination_leaf;
+    const auto uncertain = [&](IoStatus failure) {
+        impl_->close_owned_handles_noexcept();
+        return published_unverified_failure(failure);
+    };
+    if (relative_publish_post_rename_fault_for_testing)
+        return uncertain(IoStatus::failure("output_post_rename_fault_injected", "test seam"));
+    FileIdentity pair = impl_->identity; pair.link_count = 2U;
+    struct stat target {};
+    if (!verify_source(2U) ||
+        ::fstatat(parent.impl_->handle, destination.c_str(), &target, AT_SYMLINK_NOFOLLOW) != 0 ||
+        !pair.unchanged(identity_from_stat(target)) || !parent.revalidate().ok())
+        return uncertain(IoStatus::failure("commit_destination_identity_changed", destination));
+    const auto flushed = flush_directory_handle(parent.impl_->handle);
+    if (!flushed.ok()) return uncertain(flushed);
+    if (!verify_source(2U) ||
+        ::fstatat(parent.impl_->handle, destination.c_str(), &target, AT_SYMLINK_NOFOLLOW) != 0 ||
+        !pair.unchanged(identity_from_stat(target)))
+        return uncertain(IoStatus::failure("commit_destination_identity_changed", destination));
+    const auto file_closed = close_native_handle(impl_->handle, "output_close_failed");
+    if (!file_closed.ok()) return uncertain(file_closed);
+    const auto parent_closed = close_native_handle(impl_->parent_handle, "output_parent_close_failed");
+    if (!parent_closed.ok()) return uncertain(parent_closed);
+    impl_->reset_relative_state();
+    return flushed;
+}
+#endif
 
 IoStatus DurableOutputFile::publish_relative_no_replace(
     const StableDirectoryObject* destination_parent,

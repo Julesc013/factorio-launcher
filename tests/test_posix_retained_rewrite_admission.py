@@ -61,7 +61,8 @@ class PosixRetainedRewriteAdmissionTests(unittest.TestCase):
                 finally:
                     target.chmod(0o644)
             if sys.platform == "darwin":
-                # Removing only this owned fixture must not admit missing-file publication.
+                # Missing-file planning is separately admitted; it remains
+                # read-only and cannot dispatch without explicit confirmation.
                 target = instance / "config/config.ini"
                 target.unlink()
                 absent_snapshot = snapshot(workspace)
@@ -70,12 +71,13 @@ class PosixRetainedRewriteAdmissionTests(unittest.TestCase):
                     component = projected["dependency_identities"]["configuration_preparation"]
                     action = next(a for a in projected["available_semantic_actions"]
                                   if a["action_id"] == "readiness.prepare_configuration")
-                    self.assertIsNone(component["plan"])
-                    self.assertEqual("configuration_publication_unavailable", component["refusal"]["code"])
-                    self.assertEqual("refused", action["availability"])
+                    self.assertIsNotNone(component["plan"], component["refusal"])
+                    self.assertEqual("missing_routing_configuration", component["plan"]["component"])
+                    self.assertEqual("available", action["availability"])
                     self.assertEqual(absent_snapshot, snapshot(workspace))
-                    code, out, err = invoke_machine(self.args(workspace, projected["revision"], scope=scope))
+                    code, out, err = invoke_machine(self.args(workspace, projected["revision"], scope=scope,
+                                                            confirmation=False))
                     self.assertNotEqual(0, code, out); self.assertEqual("", err, out)
-                    self.assertIsInstance(json.loads(out), dict)
+                    self.assertEqual("semantic_action_effect_confirmation_required", json.loads(out)["error"]["code"])
                     self.assertFalse(target.exists())
                     self.assertEqual(absent_snapshot, snapshot(workspace))

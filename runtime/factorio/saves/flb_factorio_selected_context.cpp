@@ -282,7 +282,7 @@ Result continue_publication(const fs::path& workspace, tx::Record& record,
     const bool published = !absent(record.target);
     facman::platform::StableInputFile published_file;
     if (published) {
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
         if (!tx::terminal(record.state)) {
             if (record.effect_file_identity.empty() || !refs.open_child_file_no_follow_for_publication_recovery(
                     staging.filename(), record.target.filename(), [&](const facman::platform::FileIdentity& file) {
@@ -323,12 +323,16 @@ Result continue_publication(const fs::path& workspace, tx::Record& record,
             (!tx::advance(workspace, record, "staged", "selected_context_bytes_flushed", detail) ||
              !tx::advance(workspace, record, "verified", "selected_context_inputs_revalidated", detail) ||
              !tx::advance(workspace, record, "committing", "selected_context_publication_started", detail))) return uncertain(detail);
+#ifdef __APPLE__
+        if (!output.publish_observed_sibling_no_replace(refs, record.target.filename(), bytes).ok())
+#else
         if (!output.publish_in_directory_no_replace(refs, record.target.filename()).ok())
+#endif
             return uncertain("Selected context publication did not return a verified no-replace result");
         output.close_without_flush();
         fault("after_publication");
         pause(root_path, "after_publication");
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
         inputs = guard.observe_inputs(&record);
         if (!inputs || inputs.value() != guard.inputs_sha256)
             return uncertain("Selected context inputs changed before owned staging cleanup");
@@ -358,10 +362,9 @@ Result continue_publication(const fs::path& workspace, tx::Record& record,
 
 bool selected_association_publication_available() noexcept
 {
-#if defined(_WIN32) || defined(__linux__)
+#if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
     return true;
 #else
-    // macOS cloning does not retain the durably journaled staging inode.
     return false;
 #endif
 }

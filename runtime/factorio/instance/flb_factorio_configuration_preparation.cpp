@@ -225,7 +225,7 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
          !tx::advance(workspace, record, "staging", "configuration_staging_started", detail))) return uncertain(detail);
     facman::platform::StableInputFile published;
     if (!absent(target)) {
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
         if (!tx::terminal(record.state)) {
             if (record.effect_file_identity.empty() || !config.open_child_file_no_follow_for_publication_recovery(
                     staging.filename(), target.filename(), [&](const facman::platform::FileIdentity& file) {
@@ -260,11 +260,15 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
             (!tx::advance(workspace, record, "staged", "configuration_bytes_flushed", detail) ||
              !tx::advance(workspace, record, "verified", "configuration_inputs_revalidated", detail) ||
              !tx::advance(workspace, record, "committing", "configuration_publication_started", detail))) return uncertain(detail);
+#ifdef __APPLE__
+        if (!output.publish_observed_sibling_no_replace(config, "config.ini", bytes).ok())
+#else
         if (!output.publish_in_directory_no_replace(config, "config.ini").ok())
+#endif
             return uncertain("Configuration publication did not return a verified no-replace result");
         output.close_without_flush();
         fault("after_publication"); pause(root_path, "after_publication");
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
         inputs = guard.observe_inputs(&record);
         if (!inputs || inputs.value() != guard.inputs_sha256)
             return uncertain("Configuration inputs changed before owned staging cleanup");
@@ -296,7 +300,7 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
 
 bool configuration_publication_available() noexcept
 {
-#if defined(_WIN32) || defined(__linux__)
+#if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
     return true;
 #else
     return false;

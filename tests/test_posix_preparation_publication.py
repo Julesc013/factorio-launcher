@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
-"""Linux owner inode/custody fixtures; not physical-host or game acceptance."""
+"""Linux/macOS owner inode/custody fixtures; not physical-host or game acceptance."""
 from __future__ import annotations
 
 import json
 import os
+import signal
+import subprocess
 import sys
 import tempfile
 import threading
@@ -14,10 +16,10 @@ from pathlib import Path
 
 import test_configuration_preparation as configuration
 import test_selected_save_preparation as selected
-from native_cli import invoke_machine
+from native_cli import ROOT, facman_executable, invoke_machine
 
 
-@unittest.skipUnless(sys.platform == "linux", "unsupported: same-inode POSIX publication recovery is Linux only")
+@unittest.skipUnless(sys.platform in ("linux", "darwin"), "unsupported: same-inode POSIX publication recovery requires Linux or macOS")
 class PosixPreparationPublicationTests(unittest.TestCase):
     def prepare_owner(self, kind: str, workspace: Path):
         if kind == "configuration":
@@ -59,6 +61,15 @@ class PosixPreparationPublicationTests(unittest.TestCase):
                 descriptor = next(action for action in current["available_semantic_actions"] if action["action_id"] == action_id)
                 self.assertEqual("available", descriptor["availability"])
             self.assertNotEqual(args[args.index("--expected-revision") + 1], current["revision"])
+            if sys.platform == "darwin":
+                stale = selected.SelectedSavePreparationTests().arguments(workspace,
+                    args[args.index("--expected-revision") + 1], identity="selected-stale")
+                stale[4] = "readiness.prepare"
+                code, out, err = invoke_machine(stale)
+                self.assertEqual((1, ""), (code, err), out)
+                self.assertEqual("stale_snapshot_revision", json.loads(out)["error"]["code"])
+                self.assertFalse(json.loads(out)["operation"]["effects_may_have_occurred"])
+                self.assertEqual(frozen, self.filesystem(workspace))
             second_args = selected.SelectedSavePreparationTests().arguments(workspace, current["revision"], identity="selected-next")
             second_args[4] = "readiness.prepare"
             code, out, err = invoke_machine(second_args)
@@ -204,10 +215,99 @@ class PosixPreparationPublicationTests(unittest.TestCase):
                         self.assertFalse(worker.is_alive())
                         self.assertEqual((3, ""), (results[0][0], results[0][2]), results)
                         self.assertEqual("recovery_required", json.loads(results[0][1])["payload"]["outcome"])
+                        self.assertTrue(json.loads(results[0][1])["operation"]["effects_may_have_occurred"])
                         self.assertEqual(frozen, self.filesystem(target.parent))
                     finally:
                         release.write_bytes(b"release")
                         worker.join(30)
+
+    def start_paused(self, args: list[str], instance: Path, variable: str, phase: str) -> subprocess.Popen:
+        process = subprocess.Popen([str(facman_executable()), *args], cwd=ROOT,
+            env=dict(os.environ, **{variable + "_PAUSE": phase}), text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        prefix = ".facman-test-configuration-" if variable == "FACMAN_TEST_CONFIGURATION" else ".facman-test-selected-context-"
+        marker = instance / (prefix + phase)
+        deadline = time.monotonic() + 18
+        while not marker.exists() and process.poll() is None and time.monotonic() < deadline:
+            time.sleep(.01)
+        if not marker.exists():
+            process.kill(); out, err = process.communicate(timeout=10)
+            self.fail(f"Owner pause {phase} not reached: {process.returncode}: {out}: {err}")
+        return process
+
+    @unittest.skipUnless(sys.platform == "darwin", "unsupported: actual Darwin publication SIGKILL qualification")
+    def test_darwin_actual_sigkill_and_recovery_loss_preserve_bound_effect_and_unknown_request(self) -> None:
+        for kind in ("configuration", "selected"):
+            for phase in ("before_publication", "after_publication", "before_final_observation"):
+                with self.subTest(owner=kind, phase=phase), tempfile.TemporaryDirectory(prefix="darwin-publication-kill-") as value:
+                    workspace = Path(value).resolve()
+                    owner, instance, args, variable, text_key = self.prepare_owner(kind, workspace)
+                    args[4] = "readiness.prepare"
+                    before = owner.preserved(instance)
+                    process = self.start_paused(args, instance, variable, phase)
+                    try:
+                        _, record = owner.journal(workspace)
+                        stage, target = Path(record["owned_staging_roots"][0]), Path(record["target"])
+                        expected = json.loads(record["operation_context"])[text_key].encode()
+                        bound = record["effect_file_identity"]
+                        effect = target if target.exists() else stage
+                        self.assertEqual(bound, f"{effect.stat().st_dev}:{effect.stat().st_ino}")
+                        self.assertEqual(expected, effect.read_bytes())
+                        process.kill(); process.communicate(timeout=10)
+                        self.assertEqual(-signal.SIGKILL, process.returncode)
+                    finally:
+                        if process.poll() is None: process.kill(); process.communicate(timeout=10)
+                    frozen = self.filesystem(workspace)
+                    code, out, err = invoke_machine(args)
+                    self.assertEqual((4, ""), (code, err), out)
+                    self.assertEqual("outcome_unknown", json.loads(out)["payload"]["outcome"])
+                    self.assertEqual(frozen, self.filesystem(workspace), "Unknown Make Ready replay must not redispatch")
+                    prefix = ".facman-test-configuration-" if kind == "configuration" else ".facman-test-selected-context-"
+                    (instance / (prefix + phase)).unlink()
+                    recovery_args = ["--workspace", str(workspace), "workspace", "recovery", "apply",
+                                     record["transaction_id"], "--json"]
+                    process = self.start_paused(recovery_args, instance, variable, "before_final_observation")
+                    try:
+                        self.assertFalse(stage.exists())
+                        self.assertEqual(1, target.stat().st_nlink)
+                        self.assertEqual(bound, f"{target.stat().st_dev}:{target.stat().st_ino}")
+                        process.kill(); process.communicate(timeout=10)
+                        self.assertEqual(-signal.SIGKILL, process.returncode)
+                    finally:
+                        if process.poll() is None: process.kill(); process.communicate(timeout=10)
+                    code, output = owner.recover(workspace, record)
+                    self.assertEqual(0, code, output)
+                    self.assertEqual(expected, target.read_bytes())
+                    self.assertEqual(bound, f"{target.stat().st_dev}:{target.stat().st_ino}")
+                    self.assertEqual(before, owner.preserved(instance))
+                    frozen = self.filesystem(workspace)
+                    code, output = owner.recover(workspace, record)
+                    self.assertEqual(0, code, output)
+                    self.assertEqual(frozen, self.filesystem(workspace))
+
+    @unittest.skipUnless(sys.platform == "darwin", "unsupported: actual Darwin concurrent recovery qualification")
+    def test_darwin_live_recovery_lock_contention_preserves_exact_published_pair(self) -> None:
+        for kind in ("configuration", "selected"):
+            with self.subTest(owner=kind), tempfile.TemporaryDirectory(prefix="darwin-publication-contention-") as value:
+                workspace = Path(value).resolve()
+                owner, instance, args, variable, _ = self.prepare_owner(kind, workspace)
+                process = self.start_paused(args, instance, variable, "after_publication")
+                try:
+                    _, record = owner.journal(workspace)
+                    target, stage = Path(record["target"]), Path(record["owned_staging_roots"][0])
+                    self.assertEqual((2, 2), (target.stat().st_nlink, stage.stat().st_nlink))
+                    frozen = self.filesystem(instance)
+                    code, output = owner.recover(workspace, record)
+                    self.assertEqual(3, code, output)
+                    self.assertEqual(frozen, self.filesystem(instance))
+                    process.kill(); process.communicate(timeout=10)
+                    self.assertEqual(-signal.SIGKILL, process.returncode)
+                finally:
+                    if process.poll() is None: process.kill(); process.communicate(timeout=10)
+                code, output = owner.recover(workspace, record)
+                self.assertEqual(0, code, output)
+                self.assertFalse(stage.exists())
+                self.assertEqual(1, target.stat().st_nlink)
 
 
 if __name__ == "__main__": unittest.main()

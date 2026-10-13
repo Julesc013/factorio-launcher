@@ -196,7 +196,7 @@ public:
         const FileIdentity& expected,
         std::uint64_t maximum_size,
         DurableOutputFile& child) const;
-    // Linux owner recovery only: accept a journal-bound inode with either one
+    // Linux/macOS owner recovery only: accept a journal-bound inode with either one
     // destination link or the exact staging/destination two-link pair. The
     // callback binds device/object; bytes are checked through the held reader.
     // Ordinary pinned reads still require one link. This grants no cleanup.
@@ -296,6 +296,16 @@ public:
     IoStatus publish_in_directory_no_replace(
         const StableDirectoryObject& destination_parent,
         const std::filesystem::path& destination_leaf);
+#ifdef __APPLE__
+    // Explicit owner opt-in: link the observed staging sibling name, preserving
+    // its prebound inode. Unlike descriptor-source publication above, Darwin
+    // retains a final source compare/link interval for uncooperative writers.
+    // A created but unverified destination is preserved, never adopted by bytes.
+    IoStatus publish_observed_sibling_no_replace(
+        const StableDirectoryObject& parent,
+        const std::filesystem::path& destination_leaf,
+        const std::string& expected_bytes);
+#endif
     IoStatus discard_open();
     void close_without_flush() noexcept;
     const std::filesystem::path& path() const noexcept;
@@ -340,6 +350,10 @@ void set_relative_publish_pre_rename_fault_countdown(unsigned count) noexcept;
 using RelativePublishBeforeReopenHook = void (*)(const std::filesystem::path&);
 void set_relative_publish_before_reopen_hook(RelativePublishBeforeReopenHook hook) noexcept;
 void set_publication_before_staging_remove_hook(RelativePublishBeforeReopenHook hook) noexcept;
+#ifdef __APPLE__
+void set_observed_publication_before_check_hook(RelativePublishBeforeReopenHook hook) noexcept;
+void set_observed_publication_before_link_hook(RelativePublishBeforeReopenHook hook) noexcept;
+#endif
 
 } // namespace testing
 

@@ -1857,7 +1857,7 @@ facman::core::Result<std::string> selected_context_inputs(
     if (!observed) return facman::core::Result<std::string>::failure(observed.error());
     const auto& p = observed.value();
     bool owned_publication_context = false;
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
     // Ordinary inspection correctly refuses a two-link sidecar. Only this
     // journal owner may read its exact staging/destination pair during recovery.
     if (own && p.selected_save_code == "instance_selected_save_context_unavailable") {
@@ -2094,7 +2094,7 @@ facman::core::Result<std::string> configuration_inputs(
                 return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable configuration does not describe the current owner inputs");
             if (target_status != "absent") {
                 facman::platform::StableInputFile file;
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
                 facman::platform::StableDirectoryObject root, config;
                 if (own->command_id != "readiness.prepare_configuration" ||
                     own->commit_strategy != "missing_config_handle_no_replace_v1" || own->effect_file_identity.empty() ||
