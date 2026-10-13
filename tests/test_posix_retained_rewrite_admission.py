@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
-"""Linux owner admission is explicit; the Darwin owner remains closed."""
+"""Linux and Darwin existing-INI owner admission is explicit."""
 import json
 import os
 import sys
@@ -20,7 +20,7 @@ class PosixRetainedRewriteAdmissionTests(unittest.TestCase):
 
     def test_existing_ini_owner_host_boundary_and_unsafe_target_refusal(self):
         with tempfile.TemporaryDirectory(prefix="posix-retained-admission-") as value:
-            workspace = Path(value)
+            workspace = Path(value).resolve()
             instance, original, _ = reconciliation.ExistingConfigurationTests.prepare(self, workspace)
             frozen = snapshot(workspace)
             for scope in ("instances", "launch_deck"):
@@ -28,7 +28,7 @@ class PosixRetainedRewriteAdmissionTests(unittest.TestCase):
                 component = projected["dependency_identities"]["configuration_preparation"]
                 action = next(a for a in projected["available_semantic_actions"]
                               if a["action_id"] == "readiness.prepare_configuration")
-                if sys.platform == "linux":
+                if sys.platform in ("linux", "darwin"):
                     self.assertIsNotNone(component["plan"], component["refusal"])
                     self.assertEqual("existing_routing_configuration", component["plan"]["component"])
                     self.assertEqual("available", action["availability"])
@@ -43,7 +43,7 @@ class PosixRetainedRewriteAdmissionTests(unittest.TestCase):
                 self.assertIsInstance(json.loads(out), dict)
                 self.assertEqual(original, (instance / "config/config.ini").read_bytes())
                 self.assertEqual(frozen, snapshot(workspace))
-            if sys.platform == "linux":
+            if sys.platform in ("linux", "darwin"):
                 target = instance / "config/config.ini"
                 target.chmod(0o444)
                 try:

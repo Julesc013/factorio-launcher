@@ -2186,8 +2186,8 @@ facman::core::Result<std::string> existing_configuration_plan(
     if (!delta.ok) return fail<std::string>(delta.refusal, "Ambiguous routing configuration must be preserved for explicit repair");
     if (delta.bytes == p.config->text)
         return fail<std::string>("configuration_already_current", "Routing is already current; preserve the existing configuration");
-#if !defined(_WIN32) && !defined(__linux__)
-    return fail<std::string>("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows and Linux");
+#if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
+    return fail<std::string>("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows, Linux and macOS");
 #endif
     const auto effective = launch::parse_effective_config_bytes(
         p.instance.root / "config/config.ini", p.instance.root / "mods", delta.bytes);

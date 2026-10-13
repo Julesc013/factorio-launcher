@@ -37,12 +37,15 @@ This component does not establish full Make Ready, Play authority, game
 compatibility, installed GUI experience, other-host or Beta acceptance. Prior
 SDK q02 timeout and original CI63 attribution remain unresolved/unconfirmed.
 
-The existing-INI planner, reconcile and recovery owner admits Windows and Linux
-explicitly. Linux reuses the retained original-inode primitive through the same
+The existing-INI planner, reconcile and recovery owner admits Windows, Linux and
+Darwin explicitly. Linux and Darwin reuse the retained original-inode primitive
+through the same
 ordinary instances/launch_deck action, owner guard, durable journal, operation
-locks and recovery state machine. Linux missing-file publication has a separate
-qualification. Darwin existing-INI mutation admission remains closed even where
-its primitive is available. An already-current INI remains a read-only observation.
+locks and recovery state machine. Missing-file publication has a separate
+qualification and remains unavailable on Darwin. An already-current INI remains
+a read-only observation. Darwin admission requires candidate-bound mandatory Mac
+runtime qualification; source review or unsupported skips on other platforms
+do not establish that qualification.
 
 The Linux/macOS primitive retains the original single-link inode opened relative
 to a held parent with no-follow O_RDWR and a nonblocking exclusive advisory
@@ -79,3 +82,38 @@ and recovers after restoring the parent permissions. A chmod on the journal
 itself does not establish this Linux atomic-checkpoint failure.
 These proofs concern bounded synthetic host/filesystem targets and do not grant
 physical-filesystem, power-loss, game, full Make Ready, Play, Beta or RC acceptance.
+
+The Darwin owner suite shares fixture construction and transport assertions,
+with independent Darwin metadata oracles. It covers both ordinary scopes,
+menu/load-save intent, absent/raw overrides, LF/CRLF, shorter/equal/longer repairs,
+missing keys, verified ACL absence and nonempty extended ACLs, original inode,
+mode/uid/gid, birth-time nanoseconds, nodump flags and readable user xattrs.
+It exercises all eleven owner boundaries, repeated recovery, owned CLI SIGKILL
+after prefix/write/truncate, current file-backed profile and other input drift,
+malformed/unadmitted/foreign journal authority, object/parent substitution,
+symlinks, extra links, unsafe flags, metadata drift, ACL/xattr access denial and
+flock contention. Verified/audited/complete recovery must remain verification-only.
+The checkpoint denial proof removes create permission on the owned transactions
+parent and demonstrates sibling-create denial under an unprivileged identity
+before checking the last actual durable journal and resuming recovery.
+
+Python's standard xattr helpers are documented as Linux-only, so this suite
+uses explicit Darwin libc bindings for fd xattrs and security metadata. Its
+LP64 stat layout follows Apple's header, selects the Intel INODE64 symbol or
+arm64 symbol explicitly, and cross-checks native values against Python fstat.
+ACL absence is accepted only after a successful fstatx/filesec presence query;
+that query returns zero or a nonzero property-validity bitmask, rather than a
+normalized boolean. An ACL read error is never translated into absence. Test-only chmod ACL setters
+are restricted to newly owned synthetic files. Production adds no metadata
+setters and does not change the already-qualified retained rewrite primitive.
+The binding and fixture references are Apple's
+[stat header](https://raw.githubusercontent.com/apple-oss-distributions/xnu/main/bsd/sys/stat.h),
+[filesec declarations](https://raw.githubusercontent.com/apple-oss-distributions/xnu/main/bsd/sys/fcntl.h),
+[xattr header](https://raw.githubusercontent.com/apple-oss-distributions/xnu/main/bsd/sys/xattr.h),
+[ACL header](https://raw.githubusercontent.com/apple-oss-distributions/Libc/main/include/sys/acl.h),
+[filesec presence implementation](https://raw.githubusercontent.com/apple-oss-distributions/Libc/71bbe350ab79eef58113991d817ccc6165061a64/gen/filesec.c),
+[chmod manual](https://raw.githubusercontent.com/apple-oss-distributions/file_cmds/main/chmod/chmod.1)
+and [Python xattr availability](https://docs.python.org/3/library/os.html#linux-extended-attributes).
+Mandatory Mac runtime results are required before qualifying this admission;
+named Intel/APFS hosts, physical-filesystem and power-loss testing, real-game,
+human Terminal experience, full Make Ready, Play and Beta remain separate.
