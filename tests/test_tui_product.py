@@ -174,6 +174,11 @@ class TuiProductTests(unittest.TestCase):
 
     @unittest.skipUnless(sys.platform == "linux", "unsupported: ordinary POSIX publication is Linux only")
     def test_ordinary_selected_save_missing_configuration_then_context_linux(self) -> None:
+        self.exercise_ordinary_selected_save_missing_configuration_then_context()
+
+    def exercise_ordinary_selected_save_missing_configuration_then_context(
+        self, *, evidence: list[dict] | None = None,
+    ) -> None:
         from test_configuration_preparation import ConfigurationPreparationTests
         from test_local_modset_solver import snapshot
 
@@ -307,6 +312,14 @@ class TuiProductTests(unittest.TestCase):
                     self.assertEqual(configuration_identity,
                                      (target.stat().st_dev, target.stat().st_ino, target.stat().st_nlink, target.read_bytes()))
                 old_receipts = set(receipt_root.glob("*.v2.json"))
+                if evidence is not None:
+                    evidence.append({"component": component, "receipt": receipt,
+                                     "owner_journal": transaction, "reviewed_plan": plan,
+                                     "published_sha256": hashlib.sha256(published.read_bytes()).hexdigest(),
+                                     "published_file_identity": transaction["effect_file_identity"],
+                                     "preserved_instance_sha256": {
+                                         name: hashlib.sha256(value).hexdigest() for name, value in inputs.items()},
+                                     "install_preservation_verified": True})
             document = json.loads(sidecar.read_bytes())
             self.assertEqual(hashlib.sha256((instance / "saves/selected.zip").read_bytes()).hexdigest(), document["save_sha256"])
             self.assertEqual("gui", document["profile_id"])

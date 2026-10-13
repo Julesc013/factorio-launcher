@@ -77,3 +77,37 @@ Existing-INI reconciliation is admitted on Windows fixed-local-NTFS and supporte
 local Linux/macOS filesystems through the retained-original-inode owner. Its
 source acceptance is distinct from named physical-host and power-loss evidence;
 missing-file publication grants no broader configuration or Play authority.
+
+`tests/test_macos_delivered_tui.py` defines two mandatory Darwin consumer tests
+for `macos_portable_tui_x64`: ordinary linear Make Ready and actual PTY full-screen
+Make Ready with terminal restoration. They require explicit matching native
+candidate/build paths and stage one package through the existing package factory,
+which checks clean source and exact provider/build metadata. They relocate the
+package, remove its write permissions and run from a consumer directory outside
+the checkout with backend/source overrides removed and an empty executable PATH.
+Fixture setup and fresh CLI queries use that same produced executable.
+
+Both reuse the Linux ordinary selected-save scenario: changed observation cancels
+confirmation without effects, missing routing preparation changes the revision,
+and a fresh confirmation publishes selected-save context. Its independent
+receipt, owner-journal, digest, inode and input-preservation assertions remain;
+neither step grants Play. Full-screen input uses real typed keys, requires complete
+terminal frames and checks original terminal flags, cursor and screen restoration
+on exit. Darwin missing artifacts or incoherent metadata fail rather than skip.
+
+The tests print compact package/source/build/provider identities and hashes with
+their actual result into the job log. The existing validated CLI integration
+source observation corroborates the same source/providers/build; it does not
+establish a TUI composition or release-custody claim. Full terminal output and validated effects
+are retained beneath the build root's owned `delivered-tui-evidence` directory,
+with their hashes in each result. Before runner cleanup, each mode also emits one
+`delivered-tui-custody` record: zlib-compressed, base64-encoded canonical JSON
+containing the exact terminal/effect file bytes, lengths, hashes and result.
+The record binds the canonical JSON and compressed payload hashes; the separate
+compact result binds those custody hashes. Raw files are capped at 4 MiB combined,
+canonical JSON at 6 MiB, and encoded payload at 512 KiB. Overflow fails without
+truncation. The root observer must decode, verify and persist these files from the
+actual job log before integration. Non-Darwin skips and static source checks are
+not delivered macOS acceptance. Actual candidate-bound Darwin results remain
+required; minimum macOS, named physical hosts, real Factorio, human experience,
+complete Make Ready and Beta qualification remain separate.
