@@ -2087,16 +2087,38 @@ IoStatus retained_posix_metadata(int handle, std::string& identity)
 #if defined(__APPLE__)
     identity += std::to_string(info.st_birthtimespec.tv_sec) + ":" +
         std::to_string(info.st_birthtimespec.tv_nsec) + ":" + std::to_string(info.st_flags) + ":";
-    acl_t acl = ::acl_get_fd_np(handle, ACL_TYPE_EXTENDED);
-    if (!acl) return IoStatus::failure("retained_rewrite_metadata_unavailable", "Readable Darwin ACL unavailable");
-    const ssize_t acl_bytes = ::acl_size(acl);
-    bool acl_ok = acl_bytes > 0 && static_cast<std::size_t>(acl_bytes) <= maximum;
-    if (acl_ok) {
-        std::vector<char> external(static_cast<std::size_t>(acl_bytes));
-        acl_ok = ::acl_copy_ext(external.data(), acl, external.size()) == acl_bytes &&
-            append(external.data(), external.size());
+    // Darwin's acl_get_fd_np returns null/ENOENT for an absent ACL, but
+    // that wrapper also hides whether the security metadata read succeeded.
+    // Query presence only after a successful read from this retained FD.
+    filesec_t security = ::filesec_init();
+    if (!security) return IoStatus::failure("retained_rewrite_metadata_unavailable",
+        "Darwin security metadata allocation failed: " + std::string(std::strerror(errno)));
+    struct stat security_info {};
+    int acl_present = 0;
+    acl_t acl = nullptr;
+    const bool security_ok = ::fstatx_np(handle, &security_info, security) == 0 &&
+        ::filesec_query_property(security, FILESEC_ACL, &acl_present) == 0 &&
+        (!acl_present || (::filesec_get_property(security, FILESEC_ACL, &acl) == 0 && acl));
+    const int security_error = security_ok ? 0 : errno;
+    ::filesec_free(security);
+    if (!security_ok) {
+        if (acl) ::acl_free(acl);
+        return IoStatus::failure("retained_rewrite_metadata_unavailable",
+            "Readable Darwin ACL unavailable: " + std::string(std::strerror(security_error)));
     }
-    ::acl_free(acl);
+    // A zero-length ACL field represents verified absence and cannot collide
+    // with any present external ACL, including an ACL with zero entries.
+    bool acl_ok = !acl_present && append(nullptr, 0);
+    if (acl_present) {
+        const ssize_t acl_bytes = ::acl_size(acl);
+        acl_ok = acl_bytes > 0 && static_cast<std::size_t>(acl_bytes) <= maximum;
+        if (acl_ok) {
+            std::vector<char> external(static_cast<std::size_t>(acl_bytes));
+            acl_ok = ::acl_copy_ext(external.data(), acl, external.size()) == acl_bytes &&
+                append(external.data(), external.size());
+        }
+        ::acl_free(acl);
+    }
     if (!acl_ok) return IoStatus::failure("retained_rewrite_metadata_unavailable", "Darwin ACL unavailable or oversized");
     auto list = [&](char* data, std::size_t count) { return ::flistxattr(handle, data, count, 0); };
     auto get = [&](const char* name, void* data, std::size_t count) { return ::fgetxattr(handle, name, data, count, 0, 0); };

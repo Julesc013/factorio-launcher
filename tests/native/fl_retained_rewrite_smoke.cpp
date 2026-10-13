@@ -133,6 +133,32 @@ void set_access_acl(const fs::path& path)
     set_xattr(path, "system.posix_acl_access", acl);
 #endif
 }
+#if defined(__APPLE__)
+void require_absent_access_acl(const fs::path& path)
+{
+    const int fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC);
+    require(fd >= 0, "absent ACL fixture FD");
+    errno = 0;
+    acl_t acl = ::acl_get_fd_np(fd, ACL_TYPE_EXTENDED);
+    const int acl_error = errno;
+    if (acl) ::acl_free(acl);
+    ::close(fd);
+    require(!acl && acl_error == ENOENT, "Darwin fixture ACL verified absent via null/ENOENT");
+}
+void remove_access_acl(const fs::path& path)
+{
+    const int fd = ::open(path.c_str(), O_RDWR | O_CLOEXEC);
+    require(fd >= 0, "remove ACL fixture FD");
+    filesec_t security = ::filesec_init();
+    const bool removed = security &&
+        ::filesec_set_property(security, FILESEC_ACL, _FILESEC_REMOVE_ACL) == 0 &&
+        ::fchmodx_np(fd, security) == 0;
+    if (security) ::filesec_free(security);
+    ::close(fd);
+    require(removed, "remove Darwin ACL fixture");
+    require_absent_access_acl(path);
+}
+#endif
 constexpr const char* user_attribute =
 #if defined(__APPLE__)
     "com.facman.rewrite-test";
@@ -192,6 +218,44 @@ int main()
             require(authorized.rewrite_to_intended().code == "retained_rewrite_effect_uncertain", "terminal left flush seam unconsumed");
             require(authorized.rewrite_to_intended().ok(), "flush retry on authorized exact effect");
         }
+#if defined(__APPLE__)
+        // A clean file has no extended ACL: null/ENOENT is verified absence,
+        // not permission to omit a failed or unreadable metadata observation.
+        reset(parent_path, original);
+        require_absent_access_acl(target);
+        {
+            const auto bound = identity(target);
+            StableDirectoryObject parent; require(parent.open_no_follow(parent_path).ok(), "absent ACL parent");
+            RetainedStreamRewriteFile file;
+            const std::string intended(3000, 'i');
+            const auto opened = parent.open_child_file_no_follow_for_retained_rewrite("config.ini", bound,
+                original, intended, RetainedStreamRewriteState::mutation_authorized, file);
+            if (!opened.ok()) throw std::runtime_error("absent ACL open: " + opened.code + ": " + opened.detail);
+            const auto before = metadata(file);
+            std::string observed; FileIdentity current;
+            require(file.rewrite_to_intended().ok() && file.verify_intended().ok() &&
+                file.observe(observed, current).ok() && observed == intended && current.same_object(bound) &&
+                metadata(file) == before, "absent ACL rewrite preserves inode and readable metadata");
+            require_absent_access_acl(target);
+        }
+        for (const bool initially_present : {false, true}) {
+            reset(parent_path, original);
+            if (initially_present) set_access_acl(target);
+            else require_absent_access_acl(target);
+            const auto bound = identity(target);
+            StableDirectoryObject parent; require(parent.open_no_follow(parent_path).ok(), "ACL presence drift parent");
+            RetainedStreamRewriteFile file;
+            const auto opened = parent.open_child_file_no_follow_for_retained_rewrite("config.ini", bound,
+                original, "intended", RetainedStreamRewriteState::mutation_authorized, file);
+            if (!opened.ok()) throw std::runtime_error("ACL presence drift open: " + opened.code + ": " + opened.detail);
+            if (initially_present) remove_access_acl(target);
+            else set_access_acl(target);
+            require(file.rewrite_to_intended().code == "retained_rewrite_metadata_changed" &&
+                read(target) == original && identity(target).same_object(bound),
+                "ACL presence drift refuses before write and preserves inode and original bytes");
+        }
+        std::cout << "darwin-ACL-absence: clean inode rewrite preserved absence; addition/removal refused before write\n";
+#endif
         // Simulated interruption before and after exact truncation, plus a
         // flushed intermediate prefix. Resume through the bound original inode.
         for (const std::string phase : {"after_prefix", "after_write", "after_truncate"}) {
@@ -200,8 +264,14 @@ int main()
             StableDirectoryObject parent; require(parent.open_no_follow(parent_path).ok(), "loss parent");
             {
                 RetainedStreamRewriteFile file;
+#if defined(__APPLE__)
+                const auto opened = parent.open_child_file_no_follow_for_retained_rewrite("config.ini", bound, original,
+                    intended, RetainedStreamRewriteState::mutation_authorized, file);
+                if (!opened.ok()) throw std::runtime_error("loss bound open: " + opened.code + ": " + opened.detail);
+#else
                 require(parent.open_child_file_no_follow_for_retained_rewrite("config.ini", bound, original, intended,
                     RetainedStreamRewriteState::mutation_authorized, file).ok(), "loss bound open");
+#endif
                 hook_phase = phase; hook_effect = "loss"; testing::set_retained_stream_rewrite_phase_hook(phase_hook);
                 bool lost = false;
                 try { (void)file.rewrite_to_intended(); } catch (const std::runtime_error& e) {
