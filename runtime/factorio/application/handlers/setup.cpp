@@ -24,6 +24,15 @@
 #include <algorithm>
 #include <cstdlib>
 #include <memory>
+#include <chrono>
+#include <thread>
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include "fl_windows_path.h"
+#endif
 #endif
 #include <string>
 
@@ -272,6 +281,267 @@ private:
     bool owned_ = false;
 };
 
+// The requested coordinator is the durable locator before this lease is created.
+// All writers take the transaction lease, then this shared installation lease,
+// then provider/repository locks. Every acquisition is nonblocking.
+class ManagedInstallOperationLease {
+public:
+    static facman::core::Result<std::unique_ptr<ManagedInstallOperationLease>> acquire(
+        ApplicationContext& context, const facman::transaction::Record& journal,
+        bool adopt_existing)
+    {
+        using Result = facman::core::Result<std::unique_ptr<ManagedInstallOperationLease>>;
+        std::string install_id;
+        std::string detail;
+        if (!installation_identity(journal, install_id, detail)) return Result::failure({
+            "recovery_journal_invalid", "Managed installation coordinator identity is invalid", detail});
+        auto workspace_record = context.workspace_repository().load();
+        if (!workspace_record || workspace_record.value().id.str() != journal.workspace_id)
+            return Result::failure({"recovery_journal_invalid",
+                "Managed installation coordinator does not belong to this workspace", "workspace identity"});
+        const auto& configuration = context.configuration().setup();
+        if (!configuration.mutation_configured()) return Result::failure({
+            "recovery_write_refused", "Managed installation coordination requires configured Setup authority", ""});
+        std::error_code error;
+        fs::path state_root = fs::absolute(
+            facman::platform::path_from_utf8(configuration.state_root), error).lexically_normal();
+        if (error || state_root.filename().empty() ||
+            facman::base::path_crosses_link_or_reparse_point(state_root, detail)) return Result::failure({
+                "recovery_write_refused", "Managed installation coordination root is unsafe", detail});
+        fs::path workspace = fs::absolute(context.workspace(), error).lexically_normal();
+        if (error || facman::base::path_crosses_link_or_reparse_point(workspace, detail)) return Result::failure({
+            "recovery_write_refused", "Managed installation coordinator workspace is unsafe", detail});
+#ifdef _WIN32
+        // Expand existing 8.3 aliases before choosing the sibling name. For a
+        // first install only the parent exists; the leaf is already a long name.
+        const auto long_path = [](const fs::path& path) -> fs::path {
+            const auto extended = facman::platform::windows_extended_path(path);
+            const DWORD size = GetLongPathNameW(extended.c_str(), nullptr, 0);
+            if (size == 0U || size > 32768U) return {};
+            std::wstring value(size, L'\0');
+            const DWORD written = GetLongPathNameW(extended.c_str(), value.data(), size);
+            if (written == 0U || written >= size) return {};
+            value.resize(written);
+            if (value.rfind(L"\\\\?\\", 0) == 0) value.erase(0, 4);
+            return fs::path(value).lexically_normal();
+        };
+        const auto expanded_parent = long_path(state_root.parent_path());
+        if (expanded_parent.empty()) return Result::failure({"recovery_write_refused",
+            "Managed installation coordination requires an existing admitted parent", ""});
+        const auto expanded_root = long_path(state_root);
+        state_root = expanded_root.empty() ? expanded_parent / state_root.filename() : expanded_root;
+        workspace = long_path(workspace);
+        if (workspace.empty()) return Result::failure({"recovery_write_refused",
+            "Managed installation owner workspace could not be normalized", ""});
+#endif
+        const std::string state_leaf = facman::platform::path_to_utf8(state_root.filename());
+        if (!facman::base::validate_identifier(state_leaf, detail)) return Result::failure({"setup_plan_path_invalid",
+            "Managed installation coordination requires a portable ASCII Setup-root leaf",
+            "Unicode parent paths are supported; root leaf: " + detail,
+            facman::core::OutcomeKind::refused});
+        auto lease = std::unique_ptr<ManagedInstallOperationLease>(new ManagedInstallOperationLease());
+        const auto opened_parent = lease->parent_.open_no_follow(state_root.parent_path());
+        if (!opened_parent.ok()) return Result::failure({"recovery_write_refused",
+            "Managed installation coordination parent could not be retained", opened_parent.detail});
+        lease->workspace_ = workspace;
+        lease->transaction_id_ = journal.transaction_id;
+        lease->command_id_ = journal.command_id;
+        lease->target_ = journal.target;
+        // Fold legacy ASCII IDs on every host, conservatively sharing case aliases.
+        for (char& character : install_id) {
+            if (character >= 'A' && character <= 'Z') character += 'a' - 'A';
+        }
+        const std::string root_text = facman::platform::path_to_utf8(state_root);
+        // Parent filesystem identity also unifies aliases of its spelling.
+        const auto& parent_identity = lease->parent_.identity();
+        std::string namespace_key = std::to_string(parent_identity.device) + ":" +
+            std::to_string(parent_identity.object) + "\n" +
+            facman::platform::path_to_utf8(state_root.filename());
+        for (char& character : namespace_key) {
+            if (character >= 'A' && character <= 'Z') character += 'a' - 'A';
+        }
+        lease->path_ = state_root.parent_path() /
+            (".facman-managed-install-" + digest_text(namespace_key + "\n" + install_id) + ".lock");
+        const auto metadata_document = [&](const std::string& metadata_root,
+            const std::string& metadata_workspace, const std::string& identity) {
+            return encode_managed_install_operation_lock({install_id, metadata_root,
+                metadata_workspace, journal.command_id, journal.transaction_id, identity});
+        };
+        const std::string workspace_text = facman::platform::path_to_utf8(workspace);
+        // identity_text contains two uint64 decimal values and one separator.
+        // Bound the complete prospective serialization, including LF, before
+        // creating any cell; the real identity cannot exceed this placeholder.
+        if (metadata_document(root_text, workspace_text,
+                "18446744073709551615:18446744073709551615").size() > 8192U)
+            return Result::failure({"setup_plan_path_invalid",
+                "Managed installation lease metadata exceeds its recoverable bound", "8192 bytes including LF",
+                facman::core::OutcomeKind::refused});
+        auto acquired = lease->lock_.create(lease->path_);
+        lease->new_cell_ = acquired.acquired();
+        if (acquired.code == facman::base::StableLockCode::exists && adopt_existing) {
+            std::string stored;
+            acquired = lease->lock_.open_existing(lease->path_, 8192U, stored);
+            if (acquired.acquired()) {
+                ManagedInstallOperationLock metadata;
+                if (!decode_managed_install_operation_lock(stored, metadata, detail) ||
+                    metadata.install_id != install_id || !same_owner_path(metadata.state_root, state_root) ||
+                    !same_owner_path(metadata.workspace, workspace) ||
+                    metadata.command_id != journal.command_id || metadata.transaction_id != journal.transaction_id ||
+                    metadata.identity != lease->lock_.identity_text()) {
+                    return Result::failure({"recovery_write_refused",
+                        "Existing managed installation lease belongs to another owner or is invalid",
+                        facman::platform::path_to_utf8(lease->path_)});
+                }
+                lease->expected_metadata_ = metadata_document(
+                    metadata.state_root, metadata.workspace, lease->lock_.identity_text());
+                if (stored != lease->expected_metadata_) return Result::failure({"recovery_write_refused",
+                    "Existing managed installation lease bytes are not its deterministic owner serialization",
+                    facman::platform::path_to_utf8(lease->path_)});
+                if (!lease->revalidate(detail)) return Result::failure({"recovery_write_refused",
+                    "Managed installation lease changed during adoption", detail});
+                return Result::success(std::move(lease));
+            }
+        }
+        if (!acquired.acquired()) return Result::failure({
+            acquired.code == facman::base::StableLockCode::exists ||
+                acquired.code == facman::base::StableLockCode::contended
+                ? "recovery_lock_contended" : "recovery_write_refused",
+            "Managed installation lease could not be acquired", acquired.detail});
+        const auto parent = lease->parent_.revalidate();
+        if (!parent.ok() || !lease->lock_.identity_matches_path(detail)) return Result::failure({
+            "recovery_write_refused", "Managed installation lease namespace changed before metadata", parent.detail + detail});
+        lease->expected_metadata_ = metadata_document(root_text, workspace_text, lease->lock_.identity_text());
+        if (!lease->lock_.write_text(lease->expected_metadata_, detail)) return Result::failure({
+            "recovery_write_refused", "Managed installation lease metadata could not be persisted", detail});
+        if (!lease->revalidate(detail)) return Result::failure({"recovery_write_refused",
+            "Managed installation lease changed during creation", detail});
+        return Result::success(std::move(lease));
+    }
+
+    bool revalidate(std::string& detail) const
+    {
+        const auto parent = parent_.revalidate();
+        if (!parent.ok()) { detail = parent.detail; return false; }
+        std::string metadata;
+        if (!lock_.identity_matches_path(detail) ||
+            !lock_.read_text(8192U, metadata, detail)) return false;
+        if (metadata != expected_metadata_) {
+            detail = "Managed installation lease metadata changed while held";
+            return false;
+        }
+        return parent_.revalidate().ok() && lock_.identity_matches_path(detail);
+    }
+
+    bool newly_created() const noexcept { return new_cell_; }
+    bool held() const noexcept { return lock_.open(); }
+
+    // Only callers that proved no entry/effects or an exact terminal projection
+    // may release, after durable coordinator closure. Unknown outcomes retain it.
+    bool release_after_closure(std::string& detail)
+    {
+        if (!revalidate(detail)) return false;
+        facman::transaction::Record journal;
+        if (!facman::transaction::read_record(workspace_, transaction_id_, journal, detail) ||
+            journal.command_id != command_id_ || journal.target != target_ ||
+            (journal.state != facman::transaction::State::complete &&
+             journal.state != facman::transaction::State::refused)) {
+            detail = "Managed installation lease requires its exact durably closed coordinator";
+            return false;
+        }
+        return lock_.remove_exact(detail);
+    }
+
+private:
+    static bool same_owner_path(const std::string& stored, const fs::path& expected)
+    {
+        const auto path = facman::platform::path_from_utf8(stored);
+        if (!path.is_absolute() || path != path.lexically_normal()) return false;
+        if (path == expected) return true;
+#ifdef _WIN32
+        std::string unsafe;
+        if (facman::base::path_crosses_link_or_reparse_point(path, unsafe)) return false;
+        std::error_code error;
+        if (fs::equivalent(path, expected, error) && !error) return true;
+        // A not-yet-created provider leaf has no filesystem identity. Compare
+        // only normalized spellings whose existing parent is the same object.
+        error.clear();
+        if (!fs::equivalent(path.parent_path(), expected.parent_path(), error) || error) return false;
+        error.clear();
+        if (fs::exists(path, error) || error || fs::exists(expected, error) || error) return false;
+        std::wstring left = path.filename().native();
+        std::wstring right = expected.filename().native();
+        return CompareStringOrdinal(left.c_str(), static_cast<int>(left.size()),
+            right.c_str(), static_cast<int>(right.size()), TRUE) == CSTR_EQUAL;
+#else
+        return false;
+#endif
+    }
+
+    static bool installation_identity(const facman::transaction::Record& journal,
+        std::string& install_id, std::string& detail)
+    {
+        if (journal.schema_version != 2U) {
+            detail = "Managed installation coordinator schema is not supported";
+            return false;
+        }
+        std::string transaction_id;
+        std::string target;
+        if (journal.command_id == "installs.install.apply") {
+            if (journal.commit_strategy != "provider_install_then_durable_install_reference_create" ||
+                journal.sources.size() != 1U) { detail = "Install coordinator authority changed"; return false; }
+            ManagedInstallCoordinator coordinator;
+            if (!decode_managed_install_coordinator(journal.operation_context, coordinator, detail)) return false;
+            install_id = coordinator.apply.plan_request.install_id;
+            transaction_id = coordinator.logical_transaction_id;
+            target = facman::platform::path_to_utf8(coordinator.apply.plan_request.target);
+        } else if (journal.command_id == "installs.repair.apply") {
+            if (journal.commit_strategy != "provider_repair_then_durable_install_reference_replacement" ||
+                journal.sources.size() != 2U) { detail = "Repair coordinator authority changed"; return false; }
+            ManagedRepairCoordinator coordinator;
+            if (!decode_managed_repair_coordinator(journal.operation_context, coordinator, detail)) return false;
+            install_id = coordinator.install_id;
+            transaction_id = coordinator.transaction_id;
+            target = coordinator.target_root;
+        } else if (journal.command_id == "installs.uninstall.apply") {
+            if (journal.commit_strategy != "provider_uninstall_then_durable_install_reference_replacement" ||
+                journal.sources.size() != 1U) { detail = "Uninstall coordinator authority changed"; return false; }
+            ManagedUninstallCoordinator coordinator;
+            if (!decode_managed_uninstall_coordinator(journal.operation_context, coordinator, detail)) return false;
+            install_id = coordinator.install_id;
+            transaction_id = coordinator.transaction_id;
+            target = coordinator.target_root;
+        } else {
+            detail = "Coordinator does not identify a supported managed installation operation";
+            return false;
+        }
+        if (!facman::core::InstallId::parse_legacy(install_id) ||
+            transaction_id != journal.transaction_id ||
+            facman::platform::path_from_utf8(target) != journal.target) {
+            detail = "Coordinator installation, transaction, or target identity changed";
+            return false;
+        }
+        return true;
+    }
+
+    ManagedInstallOperationLease() = default;
+    facman::platform::StableDirectoryObject parent_;
+    facman::base::StableLocalLock lock_;
+    fs::path path_;
+    fs::path workspace_;
+    fs::path target_;
+    std::string transaction_id_;
+    std::string command_id_;
+    std::string expected_metadata_;
+    bool new_cell_ = false;
+};
+
+void managed_install_test_pause(const char* variable, unsigned seconds = 2U)
+{
+    const char* pause = std::getenv(variable);
+    if (pause != nullptr && std::string(pause) == "1")
+        std::this_thread::sleep_for(std::chrono::seconds(seconds));
+}
+
 std::string read_text(const fs::path& path)
 {
     facman::platform::StableInputFile input;
@@ -509,7 +779,14 @@ facman::core::Result<ManagedUninstallRecoveryPlan> build_uninstall_recovery_plan
         return facman::core::Result<ManagedUninstallRecoveryPlan>::failure({
             "recovery_journal_invalid", "Transaction is not an exact managed uninstall coordinator", detail});
     }
-    const bool pending_state = result.journal.state == facman::transaction::State::committing ||
+    const bool pending_state = result.journal.state == facman::transaction::State::requested ||
+        result.journal.state == facman::transaction::State::validated ||
+        result.journal.state == facman::transaction::State::planned ||
+        result.journal.state == facman::transaction::State::staging ||
+        result.journal.state == facman::transaction::State::staged ||
+        result.journal.state == facman::transaction::State::verified ||
+        result.journal.state == facman::transaction::State::failed_before_commit ||
+        result.journal.state == facman::transaction::State::committing ||
         result.journal.state == facman::transaction::State::commit_uncertain ||
         result.journal.state == facman::transaction::State::recovery_required;
     const bool prepared_state = pending_state ||
@@ -684,7 +961,14 @@ facman::core::Result<ManagedRepairRecoveryPlan> build_repair_recovery_plan(
         return facman::core::Result<ManagedRepairRecoveryPlan>::failure({
             "recovery_journal_invalid", "Transaction is not an exact managed repair coordinator", detail});
     }
-    const bool recoverable_state = result.journal.state == facman::transaction::State::committing ||
+    const bool recoverable_state = result.journal.state == facman::transaction::State::requested ||
+        result.journal.state == facman::transaction::State::validated ||
+        result.journal.state == facman::transaction::State::planned ||
+        result.journal.state == facman::transaction::State::staging ||
+        result.journal.state == facman::transaction::State::staged ||
+        result.journal.state == facman::transaction::State::verified ||
+        result.journal.state == facman::transaction::State::failed_before_commit ||
+        result.journal.state == facman::transaction::State::committing ||
         result.journal.state == facman::transaction::State::commit_uncertain ||
         result.journal.state == facman::transaction::State::recovery_required ||
         result.journal.state == facman::transaction::State::committed ||
@@ -1358,11 +1642,40 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
         plan_request, plan.value(), request.plan_id, request.plan_digest,
         request.transaction_id, request.applied_at, facman::platform::path_to_utf8(record.root),
         record_digest, "provider_entry_pending", nullptr, "");
+    auto coordinator_lease = ManagedInstallRecoveryLease::acquire(
+        context.workspace(), request.transaction_id, false);
+    if (!coordinator_lease) return repair_recovery_failure(
+        "installs.repair.apply", coordinator_lease.error());
     auto started = facman::transaction::TransactionSession::begin(context.workspace(), std::move(journal_record));
     if (!started) return refused(
         safety_refusal("installs.repair.apply", "recovery_write_refused", "Repair coordinator journal could not be prepared", started.error().message, true),
         "recovery_write_refused", started.error().message, facman::core::OutcomeKind::recovery_required);
     auto session = started.take_value();
+    auto operation_lease = ManagedInstallOperationLease::acquire(context, session.record(), false);
+    if (!operation_lease) {
+        if (!session.refused("No provider entry: " + operation_lease.error().message))
+            return repair_recovery_failure("installs.repair.apply", {"recovery_write_refused",
+                "Contending repair coordinator could not durably close its no-entry refusal", session.detail()});
+        return repair_recovery_failure("installs.repair.apply", operation_lease.error());
+    }
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+    const char* lease_fault = std::getenv("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE");
+    if (lease_fault != nullptr && std::string(lease_fault) == "1") return repair_recovery_failure(
+        "installs.repair.apply", {"transaction_recovery_required",
+            "Injected interruption after managed installation lease metadata", request.transaction_id});
+    auto current_record = context.installs().load(parsed_id.value());
+    auto current_plan = context.setup().plan_repair(plan_request);
+    auto current_envelope = current_plan ? encode_managed_repair_envelope(current_plan.value(), record_digest)
+        : facman::core::Result<ManagedRepairEnvelope>::failure(current_plan.error());
+    if (!current_record || read_text(current_record.value().source_path) != record_text ||
+        !current_envelope || current_envelope.value().digest != request.plan_digest) {
+        std::string detail;
+        if (!session.refused("No provider entry: reviewed repair preimage changed under lease") ||
+            !operation_lease.value()->release_after_closure(detail)) return repair_recovery_failure(
+                "installs.repair.apply", {"recovery_write_refused", "Repair refusal could not release its lease", detail});
+        return repair_recovery_failure("installs.repair.apply", {
+            "stale_plan", "Reviewed repair preimage changed under the installation lease", request.install_id});
+    }
     if (!session.validated("reviewed_outer_plan_bound") || !session.planned("exact_provider_plan_persisted") ||
         !session.staged("provider_entry_prepared") || !session.verified("current_record_bound")) {
         return refused(safety_refusal("installs.repair.apply", "recovery_write_refused", "Repair coordinator journal could not enter provider phase", session.detail(), true),
@@ -1372,6 +1685,9 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
         plan_request, plan.value(), request.plan_id, request.plan_digest,
         request.transaction_id, request.applied_at, facman::platform::path_to_utf8(record.root),
         record_digest, "provider_entry_started", nullptr, "");
+    std::string lease_detail;
+    if (!operation_lease.value()->revalidate(lease_detail)) return repair_recovery_failure(
+        "installs.repair.apply", {"recovery_write_refused", "Repair installation lease changed before provider entry", lease_detail});
     if (!session.committing("provider_entry_started")) return refused(
         safety_refusal("installs.repair.apply", "recovery_write_refused", "Repair provider-entry intent could not be recorded", session.detail(), true),
         "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
@@ -1398,6 +1714,9 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
                 return refused(safety_refusal("installs.repair.apply", "recovery_write_refused", "Provider repair refusal could not be durably closed", session.detail(), true),
                     "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
             }
+            std::string detail;
+            if (!operation_lease.value()->release_after_closure(detail)) return repair_recovery_failure(
+                "installs.repair.apply", {"recovery_write_refused", "Repair refusal could not release its lease", detail});
             return refused(safety_refusal("installs.repair.apply", report.error().code, "Universal Setup refused managed repair before mutation", report.error().message, true),
                 report.error().code, report.error().message, report.error().kind);
         }
@@ -1406,6 +1725,9 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
             "transaction_recovery_required", report.error().code + ": " + report.error().message,
             facman::core::OutcomeKind::recovery_required);
     }
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_PAUSE_BEFORE_PROJECTION");
+    if (!operation_lease.value()->revalidate(lease_detail)) return repair_recovery_failure(
+        "installs.repair.apply", {"recovery_write_refused", "Repair installation lease changed after provider effects", lease_detail});
     const std::string terminal_record = project_repaired_install_record(record_text, report.value());
     if (terminal_record.empty()) {
         session.failed("terminal record projection could not preserve the managed record");
@@ -1440,6 +1762,9 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
     if (!session.committed("repaired_reference_projected") || !session.complete()) return refused(
         safety_refusal("installs.repair.apply", "transaction_recovery_required", "Repair projection completed but its coordinator could not close", session.detail(), false),
         "transaction_recovery_required", session.detail(), facman::core::OutcomeKind::recovery_required);
+    std::string release_detail;
+    if (!operation_lease.value()->release_after_closure(release_detail)) return repair_recovery_failure(
+        "installs.repair.apply", {"recovery_write_refused", "Completed repair lease could not be released", release_detail});
     ApplicationResult result;
     result.output = managed_repair_result(request, plan.value(), report.value());
     return result;
@@ -1523,21 +1848,42 @@ ApplicationResult apply_uninstall_install(ApplicationContext& context, const Ser
     journal_record.operation_context = managed_uninstall_context(plan, request,
         facman::platform::path_to_utf8(record.root), facman::base::sha256_hex_bytes(
             reinterpret_cast<const unsigned char*>(record_text.data()), record_text.size()));
+    auto coordinator_lease = ManagedInstallRecoveryLease::acquire(
+        context.workspace(), request.transaction_id, false);
+    if (!coordinator_lease) return uninstall_recovery_failure(
+        "installs.uninstall.apply", coordinator_lease.error());
     auto started = facman::transaction::TransactionSession::begin(context.workspace(), std::move(journal_record));
     if (!started) return refused(
         safety_refusal("installs.uninstall.apply", "recovery_write_refused", "Uninstall coordinator journal could not be prepared", started.error().message, true),
         "recovery_write_refused", started.error().message);
     auto session = started.take_value();
-    auto coordinator_lease = ManagedInstallRecoveryLease::acquire(
-        context.workspace(), request.transaction_id, false);
-    if (!coordinator_lease) {
-        session.failed(coordinator_lease.error().code + ": " + coordinator_lease.error().message);
-        return refused(
-            safety_refusal("installs.uninstall.apply", coordinator_lease.error().code,
-                "Uninstall coordinator lease could not be acquired", coordinator_lease.error().message, true),
-            coordinator_lease.error().code, coordinator_lease.error().message,
-            facman::core::OutcomeKind::recovery_required);
+    auto operation_lease = ManagedInstallOperationLease::acquire(context, session.record(), false);
+    if (!operation_lease) {
+        if (!session.refused("No provider entry: " + operation_lease.error().message))
+            return uninstall_recovery_failure("installs.uninstall.apply", {"recovery_write_refused",
+                "Contending uninstall coordinator could not durably close its no-entry refusal", session.detail()});
+        return uninstall_recovery_failure("installs.uninstall.apply", operation_lease.error());
     }
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+    const char* lease_fault = std::getenv("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE");
+    if (lease_fault != nullptr && std::string(lease_fault) == "1") return uninstall_recovery_failure(
+        "installs.uninstall.apply", {"transaction_recovery_required",
+            "Injected interruption after managed installation lease metadata", request.transaction_id});
+    auto current_record = context.installs().load(parsed_id.value());
+    auto current_plan = context.setup().plan_uninstall(plan);
+    if (!current_record || read_text(current_record.value().source_path) != record_text ||
+        !current_plan || current_plan.value().plan_id != request.plan_id ||
+        current_plan.value().plan_digest != request.plan_digest) {
+        std::string detail;
+        if (!session.refused("No provider entry: reviewed uninstall preimage changed under lease") ||
+            !operation_lease.value()->release_after_closure(detail)) return uninstall_recovery_failure(
+                "installs.uninstall.apply", {"recovery_write_refused", "Uninstall refusal could not release its lease", detail});
+        return uninstall_recovery_failure("installs.uninstall.apply", {
+            "stale_plan", "Reviewed uninstall preimage changed under the installation lease", request.install_id});
+    }
+    std::string lease_detail;
+    if (!operation_lease.value()->revalidate(lease_detail)) return uninstall_recovery_failure(
+        "installs.uninstall.apply", {"recovery_write_refused", "Uninstall installation lease changed before provider entry", lease_detail});
     if (!session.validated("reviewed_plan_bound") || !session.planned("exact_plan_request_persisted") ||
         !session.staged("provider_entry_prepared") || !session.verified("current_record_bound") ||
         !session.committing("provider_entry_started")) return refused(
@@ -1568,6 +1914,9 @@ ApplicationResult apply_uninstall_install(ApplicationContext& context, const Ser
                     "recovery_write_refused", session.detail(),
                     facman::core::OutcomeKind::recovery_required);
             }
+            std::string detail;
+            if (!operation_lease.value()->release_after_closure(detail)) return uninstall_recovery_failure(
+                "installs.uninstall.apply", {"recovery_write_refused", "Uninstall refusal could not release its lease", detail});
             return refused(safety_refusal("installs.uninstall.apply", report.error().code,
                 "Universal Setup refused managed uninstall before mutation", report.error().message, true),
                 report.error().code, report.error().message, report.error().kind);
@@ -1578,6 +1927,9 @@ ApplicationResult apply_uninstall_install(ApplicationContext& context, const Ser
             "transaction_recovery_required", report.error().code + ": " + report.error().message,
             facman::core::OutcomeKind::recovery_required);
     }
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_PAUSE_BEFORE_PROJECTION");
+    if (!operation_lease.value()->revalidate(lease_detail)) return uninstall_recovery_failure(
+        "installs.uninstall.apply", {"recovery_write_refused", "Uninstall installation lease changed after provider effects", lease_detail});
     UninstallRecoveryRequest recovery_evidence_request;
     recovery_evidence_request.plan_request = plan;
     recovery_evidence_request.reviewed_plan_digest = request.plan_digest;
@@ -1658,6 +2010,9 @@ ApplicationResult apply_uninstall_install(ApplicationContext& context, const Ser
             "Uninstall provider result requires recovery before terminal projection is durable",
             session.detail(), false),
         "transaction_recovery_required", session.detail(), facman::core::OutcomeKind::recovery_required);
+    std::string release_detail;
+    if (!operation_lease.value()->release_after_closure(release_detail)) return uninstall_recovery_failure(
+        "installs.uninstall.apply", {"recovery_write_refused", "Completed uninstall lease could not be released", release_detail});
     ApplicationResult result;
     result.output = report.value().provider_response;
     return result;
@@ -1719,10 +2074,69 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
         return uninstall_recovery_failure("installs.recovery.apply", {
             "recovery_journal_invalid", "Managed install recovery journal is invalid", recovery_detail});
     }
+    auto coordinator_snapshot = context.transactions().load_journal(parsed.value());
+    if (!coordinator_snapshot) return uninstall_recovery_failure("installs.recovery.apply", {
+        "recovery_journal_invalid", "Managed install recovery journal cannot be retained", coordinator_snapshot.error().message});
+    const auto recovery_failure = [&](const facman::core::Error& error) {
+        if (recovery_journal.command_id == "installs.install.apply")
+            return install_recovery_failure("installs.recovery.apply", error);
+        if (recovery_journal.command_id == "installs.repair.apply")
+            return repair_recovery_failure("installs.recovery.apply", error);
+        return uninstall_recovery_failure("installs.recovery.apply", error);
+    };
+    // Reject malformed/stale terminal retries before creating a shared cell.
+    // The same read-only plan is rebuilt below while the shared lease is held.
+    const auto preflight = [&]() -> facman::core::Result<bool> {
+        using Result = facman::core::Result<bool>;
+        if (recovery_journal.command_id == "installs.install.apply") {
+            auto planned = build_new_install_recovery_plan(context, parsed.value().str());
+            if (!planned) return Result::failure(planned.error());
+            if (request.confirmation != "APPLY" || request.plan_id != planned.value().plan_id ||
+                request.plan_digest != planned.value().plan_digest) return Result::failure({
+                    "stale_plan", "Reviewed install recovery plan changed before apply", request.plan_id});
+            if (planned.value().action == "none") return Result::failure({"install_recovery_indeterminate",
+                "Provider install is not safely projectable", planned.value().inspection.provider_observed_state});
+        } else if (recovery_journal.command_id == "installs.repair.apply") {
+            auto planned = build_repair_recovery_plan(context, parsed.value().str());
+            if (!planned) return Result::failure(planned.error());
+            if (request.confirmation != "APPLY" || request.plan_id != planned.value().plan_id ||
+                request.plan_digest != planned.value().plan_digest) return Result::failure({
+                    "stale_plan", "Reviewed repair recovery plan changed before apply", request.plan_id});
+            if (planned.value().action == "none") return Result::failure({"repair_recovery_indeterminate",
+                "Provider repair is not safely projectable", planned.value().inspection.provider_observed_state});
+        } else {
+            auto planned = build_uninstall_recovery_plan(context, parsed.value().str());
+            if (!planned) return Result::failure(planned.error());
+            const bool checkpointed = !planned.value().coordinator.recovery_plan_id.empty();
+            const auto& plan_id = checkpointed ? planned.value().coordinator.recovery_plan_id : planned.value().plan_id;
+            const auto& plan_digest = checkpointed ? planned.value().coordinator.recovery_plan_digest : planned.value().plan_digest;
+            if (request.confirmation != "APPLY" || request.plan_id != plan_id ||
+                request.plan_digest != plan_digest) return Result::failure({
+                    "stale_plan", "Reviewed uninstall recovery plan changed before apply", request.plan_id});
+            if (planned.value().action == "none") return Result::failure({"uninstall_recovery_indeterminate",
+                "Provider uninstall is not safely projectable", planned.value().inspection.provider_observed_state});
+        }
+        return Result::success(true);
+    }();
+    if (!preflight) return recovery_failure(preflight.error());
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_RECOVERY_PAUSE_BEFORE_LEASE", 6U);
+    auto operation_lease = ManagedInstallOperationLease::acquire(context, recovery_journal, true);
+    if (!operation_lease) return recovery_failure(operation_lease.error());
+    const auto release_completed = [&]() -> facman::core::Result<bool> {
+        std::string detail;
+        if (!operation_lease.value()->release_after_closure(detail)) return facman::core::Result<bool>::failure({
+            "recovery_write_refused", "Recovered managed installation lease could not be released", detail});
+        return facman::core::Result<bool>::success(true);
+    };
+    const auto apply_under_lease = [&]() -> ApplicationResult {
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_RECOVERY_PAUSE_AFTER_LEASE");
     if (recovery_journal.command_id == "installs.install.apply") {
         auto planned = build_new_install_recovery_plan(context, parsed.value().str());
         if (!planned) return install_recovery_failure("installs.recovery.apply", planned.error());
         auto plan = planned.take_value();
+        std::string lease_detail;
+        if (!operation_lease.value()->revalidate(lease_detail)) return recovery_failure({
+            "recovery_write_refused", "Installation lease changed before install recovery", lease_detail});
         if (request.confirmation != "APPLY" || request.plan_id != plan.plan_id ||
             request.plan_digest != plan.plan_digest) return install_recovery_failure(
                 "installs.recovery.apply", {"stale_plan",
@@ -1733,6 +2147,8 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
         if (facman::transaction::terminal(plan.journal.state)) {
             if (plan.action == "rollback_provider" || plan.action == "replay_provider") return install_recovery_failure("installs.recovery.apply", {
                 "install_recovery_indeterminate", "Terminal coordinator conflicts with pending provider effects", request.transaction_id});
+            auto released = release_completed();
+            if (!released) return install_recovery_failure("installs.recovery.apply", released.error());
             ApplicationResult result;
             result.output = new_install_recovery_document(plan, "completed", request.plan_digest);
             return result;
@@ -1793,6 +2209,8 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
             return install_recovery_failure("installs.recovery.apply", {
                 "recovery_write_refused", "Install recovery postimage checkpoint failed", detail});
         }
+        if (!operation_lease.value()->revalidate(lease_detail)) return recovery_failure({
+            "recovery_write_refused", "Installation lease changed before recovered install projection", lease_detail});
         if (plan.action == "project_terminal" && plan.record_text.empty()) {
             facman::workspace::InstallRecord record;
             record.id = plan.install_id;
@@ -1815,6 +2233,15 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
                 "installs.recovery.apply", {"recovery_write_refused",
                     "Recovered install disposition could not be recorded", detail});
         }
+        if (plan.action == "close_no_provider_effect" &&
+            plan.journal.state != facman::transaction::State::audited &&
+            !facman::transaction::terminal(plan.journal.state) &&
+            !facman::transaction::can_transition(plan.journal.state, facman::transaction::State::audited)) {
+            if (!facman::transaction::advance(context.workspace(), plan.journal, "recovery_required",
+                    "confirmed_no_provider_effect_before_closure", detail)) return install_recovery_failure(
+                "installs.recovery.apply", {"recovery_write_refused",
+                    "No-provider-effect recovery closure could not be recorded", detail});
+        }
         if (plan.journal.state == facman::transaction::State::audited) {
             if (!facman::transaction::advance(context.workspace(), plan.journal, "complete",
                     "journal_closed", detail)) return install_recovery_failure(
@@ -1829,6 +2256,8 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
             "recovery_write_refused", "Completed install recovery journal cannot be read", final_journal.error().message});
         plan.journal_sha256 = digest_text(final_journal.value());
         plan.record_text = plan.action == "project_terminal" ? read_text(plan.record_path) : std::string();
+        auto released = release_completed();
+        if (!released) return install_recovery_failure("installs.recovery.apply", released.error());
         ApplicationResult result;
         result.output = new_install_recovery_document(plan, "completed", request.plan_digest);
         return result;
@@ -1839,6 +2268,9 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
             return repair_recovery_failure("installs.recovery.apply", planned_repair.error());
         }
         auto plan = planned_repair.take_value();
+        std::string lease_detail;
+        if (!operation_lease.value()->revalidate(lease_detail)) return recovery_failure({
+            "recovery_write_refused", "Installation lease changed before repair recovery", lease_detail});
         if (request.confirmation != "APPLY" || request.plan_id != plan.plan_id ||
             request.plan_digest != plan.plan_digest) {
             return repair_recovery_failure("installs.recovery.apply", {
@@ -1849,11 +2281,15 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
             "Universal Setup repair is not in a safely projectable terminal state",
             plan.inspection.provider_observed_state});
         if (facman::transaction::terminal(plan.journal.state)) {
+            auto released = release_completed();
+            if (!released) return repair_recovery_failure("installs.recovery.apply", released.error());
             ApplicationResult result;
             result.output = repair_recovery_document(plan, "completed", request.plan_digest);
             return result;
         }
         const std::string current_sha256 = digest_text(plan.install_record_text);
+        if (!operation_lease.value()->revalidate(lease_detail)) return recovery_failure({
+            "recovery_write_refused", "Installation lease changed before recovered repair projection", lease_detail});
         if (plan.action == "project_terminal" &&
             current_sha256 == plan.coordinator.pre_record_sha256) {
             auto replaced = context.installs().replace(
@@ -1894,6 +2330,15 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
                     "recovery_write_refused", "No-effect repair recovery could not be recorded", detail});
             }
         }
+        if (plan.action == "close_no_provider_effect" &&
+            plan.journal.state != facman::transaction::State::audited &&
+            !facman::transaction::terminal(plan.journal.state) &&
+            !facman::transaction::can_transition(plan.journal.state, facman::transaction::State::audited)) {
+            if (!facman::transaction::advance(context.workspace(), plan.journal, "recovery_required",
+                    "confirmed_no_provider_effect_before_closure", detail)) return repair_recovery_failure(
+                "installs.recovery.apply", {"recovery_write_refused",
+                    "No-provider-effect recovery closure could not be recorded", detail});
+        }
         if (plan.journal.state == facman::transaction::State::audited) {
             if (!facman::transaction::advance(
                     context.workspace(), plan.journal, "complete", "journal_closed", detail)) {
@@ -1914,6 +2359,8 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
         if (plan.install_record_text.empty()) return repair_recovery_failure("installs.recovery.apply", {
             "workspace_record_read_failed", "Completed repair recovery reference could not be read",
             facman::platform::path_to_utf8(plan.install.source_path)});
+        auto released = release_completed();
+        if (!released) return repair_recovery_failure("installs.recovery.apply", released.error());
         ApplicationResult result;
         result.output = repair_recovery_document(plan, "completed", request.plan_digest);
         return result;
@@ -1921,6 +2368,9 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
     auto planned = build_uninstall_recovery_plan(context, parsed.value().str());
     if (!planned) return uninstall_recovery_failure("installs.recovery.apply", planned.error());
     auto plan = planned.take_value();
+    std::string lease_detail;
+    if (!operation_lease.value()->revalidate(lease_detail)) return recovery_failure({
+        "recovery_write_refused", "Installation lease changed before uninstall recovery", lease_detail});
     const bool checkpointed_review = !plan.coordinator.recovery_plan_id.empty();
     const std::string expected_plan_id = checkpointed_review ?
         plan.coordinator.recovery_plan_id : plan.plan_id;
@@ -1950,6 +2400,8 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
     if (facman::transaction::terminal(plan.journal.state)) {
         plan.plan_id = request.plan_id;
         plan.plan_digest = request.plan_digest;
+        auto released = release_completed();
+        if (!released) return uninstall_recovery_failure("installs.recovery.apply", released.error());
         ApplicationResult result;
         result.output = uninstall_recovery_document(plan, "completed", request.plan_digest);
         return result;
@@ -1964,6 +2416,8 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
             "recovery_write_refused", "Uninstall terminal projection checkpoint failed", detail});
     }
     const std::string current_sha256 = digest_text(plan.install_record_text);
+    if (!operation_lease.value()->revalidate(lease_detail)) return recovery_failure({
+        "recovery_write_refused", "Installation lease changed before recovered uninstall projection", lease_detail});
     if (current_sha256 == plan.coordinator.pre_record_sha256) {
         auto replaced = context.installs().replace(
             plan.install, plan.coordinator.pre_record_sha256, plan.projected_record);
@@ -2001,6 +2455,15 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
                 "recovery_write_refused", "No-effect uninstall recovery could not be recorded", detail});
         }
     }
+    if (plan.action == "close_no_provider_effect" &&
+        plan.journal.state != facman::transaction::State::audited &&
+        !facman::transaction::terminal(plan.journal.state) &&
+        !facman::transaction::can_transition(plan.journal.state, facman::transaction::State::audited)) {
+        if (!facman::transaction::advance(context.workspace(), plan.journal, "recovery_required",
+                "confirmed_no_provider_effect_before_closure", detail)) return uninstall_recovery_failure(
+            "installs.recovery.apply", {"recovery_write_refused",
+                "No-provider-effect recovery closure could not be recorded", detail});
+    }
     if (plan.journal.state == facman::transaction::State::audited) {
         if (!facman::transaction::advance(
                 context.workspace(), plan.journal, "complete", "journal_closed", detail)) {
@@ -2023,8 +2486,26 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
     if (plan.install_record_text.empty()) return uninstall_recovery_failure("installs.recovery.apply", {
         "workspace_record_read_failed", "Completed uninstall recovery reference could not be read",
         facman::platform::path_to_utf8(plan.install.source_path)});
+    auto released = release_completed();
+    if (!released) return uninstall_recovery_failure("installs.recovery.apply", released.error());
     ApplicationResult result;
     result.output = uninstall_recovery_document(plan, "completed", request.plan_digest);
+    return result;
+    };
+    auto result = apply_under_lease();
+    // A terminal coordinator takes only read-only early-return paths above.
+    // If its valid preflight became stale before the new shared cell was taken,
+    // release that new cell only with the unchanged durably closed journal.
+    // Adopted orphan cells and every nonterminal owner remain retained.
+    if (operation_lease.value()->newly_created() && operation_lease.value()->held() &&
+        (recovery_journal.state == facman::transaction::State::complete ||
+         recovery_journal.state == facman::transaction::State::refused)) {
+        auto current = context.transactions().load_journal(parsed.value());
+        std::string detail;
+        if (!current || current.value() != coordinator_snapshot.value() ||
+            !operation_lease.value()->release_after_closure(detail)) return recovery_failure({
+                "recovery_write_refused", "Read-only terminal recovery could not release its new shared cell", detail});
+    }
     return result;
 #else
     (void)request;
@@ -2150,6 +2631,8 @@ ApplicationResult apply_install(ApplicationContext& context, const ServiceOperat
     journal.sources = {apply.plan_request.archive};
     journal.commit_strategy = "provider_install_then_durable_install_reference_create";
     journal.operation_context = coordinator.serialize();
+    auto lease = ManagedInstallRecoveryLease::acquire(context.workspace(), request.transaction_id, false);
+    if (!lease) return install_recovery_failure("installs.install.apply", lease.error());
     auto started = facman::transaction::TransactionSession::begin(
         context.workspace(), std::move(journal));
     if (!started) return refused(safety_refusal("installs.install.apply", "recovery_write_refused",
@@ -2157,10 +2640,36 @@ ApplicationResult apply_install(ApplicationContext& context, const ServiceOperat
         "recovery_write_refused", started.error().message,
         facman::core::OutcomeKind::recovery_required);
     auto session = started.take_value();
-    auto lease = ManagedInstallRecoveryLease::acquire(context.workspace(), request.transaction_id, false);
-    if (!lease) return refused(safety_refusal("installs.install.apply", lease.error().code,
-        "Managed install coordinator is already in use", lease.error().message, true),
-        lease.error().code, lease.error().message, facman::core::OutcomeKind::recovery_required);
+    auto operation_lease = ManagedInstallOperationLease::acquire(context, session.record(), false);
+    if (!operation_lease) {
+        if (!session.refused("No provider entry: " + operation_lease.error().message))
+            return install_recovery_failure("installs.install.apply", {"recovery_write_refused",
+                "Contending install coordinator could not durably close its no-entry refusal", session.detail()});
+        return install_recovery_failure("installs.install.apply", operation_lease.error());
+    }
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+    const char* lease_fault = std::getenv("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE");
+    if (lease_fault != nullptr && std::string(lease_fault) == "1") return install_recovery_failure(
+        "installs.install.apply", {"transaction_recovery_required",
+            "Injected interruption after managed installation lease metadata", request.transaction_id});
+    path_error.clear();
+    const auto bound_record = fs::symlink_status(record_path.value(), path_error);
+    const bool record_absent = (!path_error || path_error == std::errc::no_such_file_or_directory) &&
+        bound_record.type() == fs::file_type::not_found;
+    path_error.clear();
+    const auto bound_legacy = fs::symlink_status(legacy_path.value(), path_error);
+    const bool legacy_absent = (!path_error || path_error == std::errc::no_such_file_or_directory) &&
+        bound_legacy.type() == fs::file_type::not_found;
+    auto current_plan = context.setup().plan_install(apply.plan_request);
+    if (!record_absent || !legacy_absent || !current_plan ||
+        current_plan.value().plan_id != request.plan_id || current_plan.value().plan_digest != request.plan_digest) {
+        std::string detail;
+        if (!session.refused("No provider entry: reviewed install preimage changed under lease") ||
+            !operation_lease.value()->release_after_closure(detail)) return install_recovery_failure(
+                "installs.install.apply", {"recovery_write_refused", "Install refusal could not release its lease", detail});
+        return install_recovery_failure("installs.install.apply", {
+            "stale_plan", "Reviewed install preimage changed under the installation lease", request.install_id});
+    }
     facman::transaction::Record current_journal;
     std::string current_detail;
     if (!facman::transaction::read_record(context.workspace(), request.transaction_id,
@@ -2177,6 +2686,9 @@ ApplicationResult apply_install(ApplicationContext& context, const ServiceOperat
             "installs.install.apply", "recovery_write_refused",
             "Install coordinator journal could not enter provider phase", session.detail(), true),
         "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
+    std::string lease_detail;
+    if (!operation_lease.value()->revalidate(lease_detail)) return install_recovery_failure(
+        "installs.install.apply", {"recovery_write_refused", "Install installation lease changed before provider entry", lease_detail});
     if (!session.committing("provider_entry_started")) return refused(safety_refusal(
         "installs.install.apply", "recovery_write_refused",
         "Install provider-entry intent could not be recorded", session.detail(), true),
@@ -2195,6 +2707,9 @@ ApplicationResult apply_install(ApplicationContext& context, const ServiceOperat
             "transaction_recovery_required", report.error().message,
             facman::core::OutcomeKind::recovery_required);
     }
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_PAUSE_BEFORE_PROJECTION");
+    if (!operation_lease.value()->revalidate(lease_detail)) return install_recovery_failure(
+        "installs.install.apply", {"recovery_write_refused", "Install installation lease changed after provider effects", lease_detail});
     const std::string record_text = managed_install_record(apply, report.value());
     if (record_text.empty()) {
         session.failed("Installed Factorio entrypoint could not be projected");
@@ -2235,6 +2750,9 @@ ApplicationResult apply_install(ApplicationContext& context, const ServiceOperat
             session.detail(), false), "transaction_recovery_required", session.detail(),
             facman::core::OutcomeKind::recovery_required);
     }
+    std::string release_detail;
+    if (!operation_lease.value()->release_after_closure(release_detail)) return install_recovery_failure(
+        "installs.install.apply", {"recovery_write_refused", "Completed install lease could not be released", release_detail});
     ApplicationResult result;
     result.output = record_text;
     return result;

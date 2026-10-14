@@ -4,6 +4,7 @@
 #include "setup_gateway.h"
 
 #include "fl_json.h"
+#include "fl_identity.h"
 #include "fl_file_io.h"
 #include "fl_sha256.h"
 #include "fl_path_safety.h"
@@ -3399,6 +3400,53 @@ bool decode_managed_uninstall_coordinator(
                 ? !output.provider_journal_snapshot_sha256.empty()
                 : !sha256_field(output.provider_journal_snapshot_sha256)))) {
         detail = "managed uninstall terminal projection checkpoint is invalid";
+        return false;
+    }
+    return true;
+}
+
+std::string encode_managed_install_operation_lock(const ManagedInstallOperationLock& metadata)
+{
+    facman::core::json::ObjectBuilder document;
+    document.add_string("schema", "facman.managed_install_operation_lock.v1");
+    document.add_string("install_id", metadata.install_id);
+    document.add_string("state_root", metadata.state_root);
+    document.add_string("workspace", metadata.workspace);
+    document.add_string("command_id", metadata.command_id);
+    document.add_string("transaction_id", metadata.transaction_id);
+    document.add_string("identity", metadata.identity);
+    return document.serialize() + "\n";
+}
+
+bool decode_managed_install_operation_lock(const std::string& text,
+    ManagedInstallOperationLock& metadata, std::string& detail)
+{
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 8192U;
+    limits.maximum_depth = 4;
+    limits.maximum_nodes = 16;
+    limits.maximum_string_bytes = 8192U;
+    auto document = facman::core::json::parse(text, limits);
+    if (!document || !exact_members(document.value(), {
+            "schema", "install_id", "state_root", "workspace", "command_id", "transaction_id", "identity"}) ||
+        string_field(document.value(), "schema") != "facman.managed_install_operation_lock.v1") {
+        detail = "managed installation lease metadata shape is invalid";
+        return false;
+    }
+    metadata.install_id = string_field(document.value(), "install_id");
+    metadata.state_root = string_field(document.value(), "state_root");
+    metadata.workspace = string_field(document.value(), "workspace");
+    metadata.command_id = string_field(document.value(), "command_id");
+    metadata.transaction_id = string_field(document.value(), "transaction_id");
+    metadata.identity = string_field(document.value(), "identity");
+    if (!facman::core::InstallId::parse_legacy(metadata.install_id) ||
+        !facman::core::TransactionId::parse(metadata.transaction_id) ||
+        !normalized_absolute_path(metadata.state_root, facman::platform::path_from_utf8(metadata.state_root)) ||
+        !normalized_absolute_path(metadata.workspace, facman::platform::path_from_utf8(metadata.workspace)) ||
+        (metadata.command_id != "installs.install.apply" && metadata.command_id != "installs.repair.apply" &&
+         metadata.command_id != "installs.uninstall.apply") || metadata.identity.empty() ||
+        metadata.identity.size() > 41U || encode_managed_install_operation_lock(metadata) != text) {
+        detail = "managed installation lease bytes are not a deterministic bound v1 owner document";
         return false;
     }
     return true;
