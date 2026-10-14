@@ -104,7 +104,10 @@ partial diagnostic frame. Cleanup failures retain their separate exception and
 cannot produce a PASS result.
 The GUI starts hidden, then only its verified main form is shown offscreen with
 `SWP_NOACTIVATE`; ordinary button dispatch requires visible, enabled owned
-ancestors. Custody records the passive show's foreground observations without
+ancestors. One queued `WM_COMMAND/BN_CLICKED` notification binds the exact button,
+direct parent, root and actual control ID to its registered UI handler. Dialogs
+and backend validation still determine the outcome, with the original deadlines.
+Custody records the passive show's foreground observations without
 treating concurrent user focus activity as a product failure. Owned edit contents
 use bounded `WM_GETTEXT`, since cross-process `GetWindowText` can retain a stale
 caption after the actual control text changes.

@@ -7,6 +7,7 @@
 #include "application_context.h"
 #include "command_admission.h"
 #include "fl_json.h"
+#include "fl_file_io.h"
 #include "fl_local_operation_lock.h"
 #include "fl_sha256.h"
 #include "fl_transaction.h"
@@ -24,6 +25,9 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <future>
+#include <chrono>
+#include <thread>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -43,6 +47,20 @@ std::string json_string(const facman::core::json::Value& object, const char* key
     if (value == nullptr || !value->is_string()) return {};
     auto text = value->string_value();
     return text ? text.take_value() : std::string();
+}
+
+fs::path managed_operation_lock_path(const proof::Fixture& fixture, const std::string& install_id)
+{
+    facman::platform::StableDirectoryObject parent;
+    if (!parent.open_no_follow(fixture.root.parent_path()).ok()) {
+        throw std::runtime_error("managed lease oracle parent could not be retained");
+    }
+    const auto& identity = parent.identity();
+    std::string key = std::to_string(identity.device) + ":" + std::to_string(identity.object) +
+        "\n" + fixture.root.filename().generic_string() + "\n" + install_id;
+    for (char& character : key) if (character >= 'A' && character <= 'Z') character += 'a' - 'A';
+    return fixture.root.parent_path() / (".facman-managed-install-" +
+        facman::base::sha256_hex_bytes(reinterpret_cast<const unsigned char*>(key.data()), key.size()) + ".lock");
 }
 
 std::string recovery_provider_response(
@@ -999,6 +1017,132 @@ void prove_repair_interruption_recovery(
         throw std::runtime_error("provable no-effect provider repair refusal did not close safely");
     }
 
+    // A requested coordinator locates the shared lease even if no provider-entry
+    // checkpoint was reached. A second workspace must observe the same guard.
+    apply.transaction_id = "tx-m1-facman-repair-lease-window";
+    set_environment("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE", "1");
+    const auto lease_window = application::handlers::apply_repair_install(context, apply);
+    clear_environment("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE");
+    if (lease_window.status == ULK_STATUS_OK || lease_window.error_code != "transaction_recovery_required" ||
+        tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before) {
+        throw std::runtime_error("shared lease creation window did not retain a no-entry operation");
+    }
+    const auto shared_lock = managed_operation_lock_path(fixture, launcher.install_id);
+    const std::string shared_lock_before = read_text(shared_lock);
+    if (shared_lock_before.empty()) throw std::runtime_error("shared lease locator omitted its owned sibling");
+    application::ApplicationContext competing(fixture.root / "facman-competing-workspace");
+    if (!competing.workspace_repository().ensure() ||
+        !competing.installs().create(record, record_before)) {
+        throw std::runtime_error("cross-workspace coordination fixture could not be created");
+    }
+    auto competing_repair = apply;
+    competing_repair.transaction_id = "tx-m1-facman-competing-repair";
+    const auto repair_contended = application::handlers::apply_repair_install(competing, competing_repair);
+    application::ServiceOperationRequest competing_uninstall;
+    competing_uninstall.install_id = launcher.install_id;
+    const auto competing_uninstall_plan = application::handlers::plan_uninstall_install(competing, competing_uninstall);
+    const auto competing_plan = std::holds_alternative<std::string>(competing_uninstall_plan.output)
+        ? facman::core::json::parse(std::get<std::string>(competing_uninstall_plan.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (!competing_plan || competing_uninstall_plan.status != ULK_STATUS_OK) {
+        throw std::runtime_error("cross-workspace read-only uninstall planning was blocked by the lease");
+    }
+    competing_uninstall.plan_id = json_string(competing_plan.value(), "plan_id");
+    competing_uninstall.plan_digest = json_string(competing_plan.value(), "plan_digest");
+    competing_uninstall.plan_created_at = json_string(competing_plan.value(), "created_at");
+    competing_uninstall.transaction_id = "tx-m1-facman-competing-uninstall";
+    competing_uninstall.applied_at = "2099-01-01T01:10:03Z";
+    competing_uninstall.confirmation = "APPLY";
+    const auto uninstall_contended = application::handlers::apply_uninstall_install(competing, competing_uninstall);
+    for (const auto* result : {&repair_contended, &uninstall_contended}) {
+        if (result->status == ULK_STATUS_OK || result->error_code != "recovery_lock_contended") {
+            throw std::runtime_error("different FacMan operation/workspace bypassed the shared installation lease");
+        }
+    }
+    if (tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before || read_text(shared_lock) != shared_lock_before) {
+        throw std::runtime_error("cross-operation contention entered provider or changed the FacMan preimage");
+    }
+    for (const auto& id : {competing_repair.transaction_id, competing_uninstall.transaction_id}) {
+        const auto parsed = facman::core::TransactionId::parse(id);
+        const auto journal = competing.transactions().load_journal(parsed.value());
+        if (!journal || journal.value().find("\"state\":\"refused\"") == std::string::npos ||
+            journal.value().find("provider_entry_started") != std::string::npos ||
+            fs::exists(fixture.setup_roots.state_root / "transactions" / (id + ".journal.json"))) {
+            throw std::runtime_error("contending operation did not close its no-entry coordinator exactly");
+        }
+    }
+    application::ServiceOperationRequest lease_recovery;
+    lease_recovery.transaction_id = apply.transaction_id;
+    const auto lease_inspection = application::handlers::inspect_install_recovery(context, lease_recovery);
+    const auto lease_plan = std::holds_alternative<std::string>(lease_inspection.output)
+        ? facman::core::json::parse(std::get<std::string>(lease_inspection.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (!lease_plan || lease_inspection.status != ULK_STATUS_OK ||
+        json_string(lease_plan.value(), "classification") != "no_provider_effect") {
+        throw std::runtime_error("shared lease before revalidation was not recoverable through ordinary inspection");
+    }
+    lease_recovery.plan_id = json_string(lease_plan.value(), "plan_id");
+    lease_recovery.plan_digest = json_string(lease_plan.value(), "plan_digest");
+    lease_recovery.confirmation = "APPLY";
+    const auto lease_closed = application::handlers::apply_install_recovery(context, lease_recovery);
+    if (lease_closed.status != ULK_STATUS_OK || tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before || fs::exists(shared_lock)) {
+        throw std::runtime_error("exact owner could not close and release the no-entry shared lease");
+    }
+    lease_recovery.plan_digest = std::string(64, '0');
+    const auto stale_terminal = application::handlers::apply_install_recovery(context, lease_recovery);
+    if (stale_terminal.status == ULK_STATUS_OK || stale_terminal.error_code != "stale_plan" || fs::exists(shared_lock)) {
+        throw std::runtime_error("invalid terminal recovery poisoned a previously released installation lease");
+    }
+
+#ifndef _WIN32
+    // POSIX advisory locking cannot prevent an uncooperative same-inode edit.
+    // It must refuse before provider entry and preserve those foreign bytes.
+    apply.transaction_id = "tx-m1-facman-repair-altered-held-metadata";
+    set_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE", "1");
+    auto held_operation = std::async(std::launch::async, [&]() {
+        return application::handlers::apply_repair_install(context, apply);
+    });
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    std::string held_metadata;
+    while (std::chrono::steady_clock::now() < deadline &&
+        held_operation.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
+        held_metadata = read_text(shared_lock);
+        if (!held_metadata.empty()) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    if (held_metadata.empty()) throw std::runtime_error("held metadata edit window was not observed");
+    const std::string foreign_metadata = held_metadata + "foreign same-inode edit\n";
+    proof::write_text(shared_lock, foreign_metadata);
+    const auto altered = held_operation.get();
+    clear_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+    if (altered.status == ULK_STATUS_OK || altered.error_code != "recovery_write_refused" ||
+        read_text(shared_lock) != foreign_metadata ||
+        tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect) {
+        throw std::runtime_error("held metadata edit was deleted or entered the provider");
+    }
+    proof::write_text(shared_lock, held_metadata); // Restore only the exact owned test preimage.
+    application::ServiceOperationRequest altered_recovery;
+    altered_recovery.transaction_id = apply.transaction_id;
+    const auto altered_inspect = application::handlers::inspect_install_recovery(context, altered_recovery);
+    const auto altered_plan = std::holds_alternative<std::string>(altered_inspect.output)
+        ? facman::core::json::parse(std::get<std::string>(altered_inspect.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (!altered_plan || altered_inspect.status != ULK_STATUS_OK)
+        throw std::runtime_error("no-entry altered metadata operation was not inspectable");
+    altered_recovery.plan_id = json_string(altered_plan.value(), "plan_id");
+    altered_recovery.plan_digest = json_string(altered_plan.value(), "plan_digest");
+    altered_recovery.confirmation = "APPLY";
+    if (application::handlers::apply_install_recovery(context, altered_recovery).status != ULK_STATUS_OK ||
+        fs::exists(shared_lock)) throw std::runtime_error("restored exact owner metadata could not recover no entry");
+#endif
+
     apply.transaction_id = "tx-m1-facman-repair-pre-provider";
     set_environment("FACMAN_TEST_REPAIR_INTERRUPT_BEFORE_PROVIDER", "1");
     const auto pre_provider = application::handlers::apply_repair_install(context, apply);
@@ -1692,6 +1836,31 @@ void prove_no_effect_uninstall_recovery(
         journal.value().find("\"state\":\"complete\"") == std::string::npos ||
         !fs::is_directory(target)) {
         throw std::runtime_error("no-provider-effect uninstall recovery did not close safely");
+    }
+    const std::string target_before_lease = tree_signature(target);
+    const std::string provider_before_lease = tree_signature(fixture.setup_roots.state_root);
+    apply_request.transaction_id = "tx-m1-uninstall-requested-lease-window";
+    set_environment("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE", "1");
+    const auto lease_window = application::handlers::apply_uninstall_install(context, apply_request);
+    clear_environment("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE");
+    inspect_request.transaction_id = apply_request.transaction_id;
+    const auto lease_inspected = application::handlers::inspect_install_recovery(context, inspect_request);
+    const auto lease_plan = std::holds_alternative<std::string>(lease_inspected.output)
+        ? facman::core::json::parse(std::get<std::string>(lease_inspected.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (lease_window.status == ULK_STATUS_OK || lease_inspected.status != ULK_STATUS_OK ||
+        !lease_plan || json_string(lease_plan.value(), "classification") != "no_provider_effect") {
+        throw std::runtime_error("requested uninstall shared lease window was not inspectable without provider entry");
+    }
+    recover_request.transaction_id = apply_request.transaction_id;
+    recover_request.plan_id = json_string(lease_plan.value(), "plan_id");
+    recover_request.plan_digest = json_string(lease_plan.value(), "plan_digest");
+    if (application::handlers::apply_install_recovery(context, recover_request).status != ULK_STATUS_OK ||
+        tree_signature(target) != target_before_lease ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_lease ||
+        read_text(before.value().source_path) != record_before ||
+        fs::exists(managed_operation_lock_path(fixture, launcher_reference.install_id))) {
+        throw std::runtime_error("requested uninstall shared lease recovery changed effects or retained ownership after closure");
     }
 }
 

@@ -369,6 +369,17 @@ bool validate_managed_install_recovery_lock(
     const std::string& transaction_id,
     const std::string& identity,
     std::string& detail);
+struct ManagedInstallOperationLock {
+    std::string install_id;
+    std::string state_root;
+    std::string workspace;
+    std::string command_id;
+    std::string transaction_id;
+    std::string identity;
+};
+std::string encode_managed_install_operation_lock(const ManagedInstallOperationLock& metadata);
+bool decode_managed_install_operation_lock(const std::string& text,
+    ManagedInstallOperationLock& metadata, std::string& detail);
 facman::core::Result<std::string> canonicalize_managed_uninstall_recovery_plan(
     const std::string& text);
 
