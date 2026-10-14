@@ -2,13 +2,21 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_json.h"
+#include "fl_file_io.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_install_model.h"
 
 #include <chrono>
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <vector>
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
 
 namespace {
 namespace fs = std::filesystem;
@@ -259,6 +267,101 @@ int main()
     auto implicit_same_root = json::parse(implicit_same_root_text.value());
     if (!implicit_same_root || !array_contains(
             implicit_same_root.value(), "blockers", "in_place_authority_conversion_refused")) return 18;
+
+    auto external = steam;
+    std::vector<std::string> same_targets {
+        facman::platform::path_to_utf8(external.root / "."),
+        facman::platform::path_to_utf8(external.root / "data" / ".."),
+    };
+#ifdef _WIN32
+    std::string case_alias = facman::platform::path_to_utf8(external.root);
+    std::transform(case_alias.begin(), case_alias.end(), case_alias.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::toupper(ch));
+    });
+    std::error_code case_error;
+    if (fs::equivalent(external.root, facman::platform::path_from_utf8(case_alias), case_error) && !case_error)
+        same_targets.push_back(case_alias);
+    const DWORD short_size = GetShortPathNameW(external.root.c_str(), nullptr, 0);
+    if (short_size != 0) {
+        std::wstring short_path(short_size, L'\0');
+        const DWORD written = GetShortPathNameW(external.root.c_str(), short_path.data(), short_size);
+        if (written != 0 && written < short_size) {
+            short_path.resize(written);
+            same_targets.push_back(facman::platform::path_to_utf8(fs::path(short_path)));
+        }
+    }
+#endif
+    const fs::path alias_link = fixture.path / "root-alias";
+    std::error_code link_error;
+    fs::create_directory_symlink(external.root, alias_link, link_error);
+    if (!link_error) same_targets.push_back(facman::platform::path_to_utf8(alias_link));
+    for (const auto& target : same_targets) {
+        auto alias_desired = preserve;
+        alias_desired.management_mode = "managed";
+        alias_desired.target_root = target;
+        alias_desired.source_ref = "fixture-source:2.0.77";
+        auto text = installation::reconciliation_plan_json(external, alias_desired);
+        auto plan = text ? json::parse(text.value()) : json::parse("null");
+        if (!text || !plan ||
+            !array_contains(plan.value(), "blockers", "external_root_requires_distinct_managed_target") ||
+            !array_contains(plan.value(), "blockers", "in_place_authority_conversion_refused") ||
+            !string_is(member(plan.value(), "desired_state", "target_root"), target)) return 22;
+        alias_desired.management_mode = "preserve";
+        alias_desired.source_ref.clear();
+        auto noop_text = installation::reconciliation_plan_json(external, alias_desired);
+        auto noop = noop_text ? json::parse(noop_text.value()) : json::parse("null");
+        if (!noop_text || !noop ||
+            !string_is(member(noop.value(), "summary", "status"), "already_reconciled")) return 23;
+    }
+    auto separate_desired = preserve;
+    separate_desired.management_mode = "managed";
+    separate_desired.target_root = facman::platform::path_to_utf8(fixture.path / "separate-target");
+    auto separate_text = installation::reconciliation_plan_json(external, separate_desired);
+    auto separate = separate_text ? json::parse(separate_text.value()) : json::parse("null");
+    if (!separate_text || !separate ||
+        array_contains(separate.value(), "blockers", "external_root_requires_distinct_managed_target") ||
+        array_contains(separate.value(), "blockers", "in_place_authority_conversion_refused")) return 24;
+
+    separate_desired.target_root = facman::platform::path_to_utf8(fixture.path);
+    auto existing_separate_text = installation::reconciliation_plan_json(external, separate_desired);
+    auto existing_separate = existing_separate_text ? json::parse(existing_separate_text.value()) : json::parse("null");
+    if (!existing_separate_text || !existing_separate ||
+        array_contains(existing_separate.value(), "blockers", "in_place_authority_conversion_refused")) return 25;
+
+    // Resolve links before '..': lexical reduction here would incorrectly
+    // identify this physically different existing target as the source root.
+    if (!link_error) {
+        fs::create_directories(fixture.path / "elsewhere" / "child");
+        const fs::path link_out = external.root / "link-out";
+        fs::create_directory_symlink(fixture.path / "elsewhere" / "child", link_out, link_error);
+        if (link_error) return 26;
+        separate_desired.target_root = facman::platform::path_to_utf8(link_out / "..");
+        auto link_parent_text = installation::reconciliation_plan_json(external, separate_desired);
+        auto link_parent = link_parent_text ? json::parse(link_parent_text.value()) : json::parse("null");
+        // Windows resolves '..' before traversing a directory link; POSIX
+        // traverses the link first. The filesystem oracle defines the result.
+        std::error_code parent_error;
+        const bool same_parent = fs::equivalent(external.root, link_out / "..", parent_error);
+        if (!link_parent_text || !link_parent ||
+            parent_error || array_contains(link_parent.value(), "blockers", "in_place_authority_conversion_refused") != same_parent) return 27;
+    }
+
+    auto missing_current = external;
+    missing_current.root = fixture.path / "missing-original";
+    separate_desired.target_root = facman::platform::path_to_utf8(fixture.path / "missing-target");
+    auto unresolved_text = installation::reconciliation_plan_json(missing_current, separate_desired);
+    auto unresolved = unresolved_text ? json::parse(unresolved_text.value()) : json::parse("null");
+    if (!unresolved_text || !unresolved ||
+        !array_contains(unresolved.value(), "blockers", "target_identity_unresolved") ||
+        !array_contains(unresolved.value(), "blockers", "external_root_requires_distinct_managed_target") ||
+        !array_contains(unresolved.value(), "blockers", "in_place_authority_conversion_refused")) return 28;
+
+    separate_desired.target_root = facman::platform::path_to_utf8(external.root / "data" / "base" / "info.json" / "child");
+    auto file_ancestor_text = installation::reconciliation_plan_json(external, separate_desired);
+    auto file_ancestor = file_ancestor_text ? json::parse(file_ancestor_text.value()) : json::parse("null");
+    if (!file_ancestor_text || !file_ancestor ||
+        !array_contains(file_ancestor.value(), "blockers", "target_identity_unresolved") ||
+        !array_contains(file_ancestor.value(), "blockers", "in_place_authority_conversion_refused")) return 29;
 
     installation::DesiredInstallationState reference_only;
     reference_only.install_id = "fixture";
