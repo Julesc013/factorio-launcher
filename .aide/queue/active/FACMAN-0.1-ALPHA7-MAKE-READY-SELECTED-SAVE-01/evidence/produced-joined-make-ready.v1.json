@@ -1,0 +1,286 @@
+{
+  "schema": "facman.joined_make_ready_accepted_slice.v1",
+  "reviewed_source": "002824ea9f2ac4d3844ec5141b455d5733a8008b",
+  "integration": "3b12f8e36786ef8cdb5c3bb897440d1566b91c51",
+  "pr": 417,
+  "compiled_mac_source": "1a1928eb53311af9573021482c5fe53c3754496f",
+  "compiled_mac_tree": "7644850be49584e2c43dd2a680c9667b67b2ddfc",
+  "compiled_mac_parents": [
+    "dff35d6bbc38a1b3f05e1bc1d79b6a5c6b5b91bc",
+    "002824ea9f2ac4d3844ec5141b455d5733a8008b"
+  ],
+  "mac_run": 38475883308,
+  "mac_job": 115566332295,
+  "actual_mac_package_methods_passed": 11,
+  "actual_mac_method_skips": 0,
+  "actual_mac_native_tests": 57,
+  "retained_mac_owner_methods": 41,
+  "actual_mac_joined_source_methods": 12,
+  "completed_joined_two_owner_requests": 3,
+  "joined_package_results": [
+    {
+      "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_joined_make_ready_routing_and_exact_selected_context",
+      "calls": 22,
+      "completed_two_owner_requests": 2,
+      "ordinary_tui_requests": 0,
+      "calls_sha256": "19efcc47d7cede6df9d0fba520cf25fbd90e74e36d48e524395db603bd94f824",
+      "custody_canonical_json_sha256": "8b06630e429223bc5c095546a346d2ea0689aa4003d0a6fd8e73f0b0d82fd90e",
+      "decoded_bytes": 1120589
+    },
+    {
+      "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_joined_make_ready_ordinary_linear_tui",
+      "calls": 8,
+      "completed_two_owner_requests": 1,
+      "ordinary_tui_requests": 1,
+      "calls_sha256": "6c2d595d00a6f1a154adeccdfa04f416c88440fddbf8d11dd4e8fcd033a7ca8f",
+      "custody_canonical_json_sha256": "e0c4a05616409b5448a626699d40e65b3e3f5c8a2541583e71fc811c097d8814",
+      "decoded_bytes": 231899
+    }
+  ],
+  "retained_package_results": {
+    "method_count": 9,
+    "method_skips": 0,
+    "retained_tui": {
+      "method_count": 2,
+      "method_skips": 0,
+      "results": [
+        {
+          "mode": "linear",
+          "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_linear_selected_save_make_ready",
+          "result": "pass",
+          "package_source": "1a1928eb53311af9573021482c5fe53c3754496f",
+          "backend_sha256": "f0f737abead724b45e2786e7ce993f945ad3c7ec5ab587e5f31469bbfb1d7c70",
+          "build_identity": "facman=1a1928eb53311af9573021482c5fe53c3754496f;universal_launcher=5479939ca5cbc9ee0f901608a92012778b4752ae;universal_setup=2749a15b835a6c1c9968598a2b434d85809691ad;provider_mode=source;provider_source_linkage=static;provider_lock_kind=tracked;provider_conformance_only=false;provider_sdk_consumption_candidate=false;provider_candidate_differs_from_tracked=false;provider_consumption_classification=tracked_source;provider_release_identity_coherent=true;ulk_session_consumer_canary=false;msvc_runtime=not_applicable;source_dirty=false",
+          "manifest_sha256": "1c4d12ccc7d7b5ff6dc8d263780dfed3d300ecea569ff74f64c3bc6ab56f376e",
+          "closure_sha256": "62628591a9a73c2d8ad127976df508e3e9a6db63fc76e5aed5fdf9704b218884",
+          "effects": 2,
+          "terminal_log_sha256": "dc3548f7dd09b74e861e7a0c178a3fe464b37cb0b68737ae9bd3ec894fc24f69",
+          "effects_sha256": "717c4114666dcb53eade38ef5e14eb52b6838d01610126c1927a4a9a08cc0d86",
+          "terminal_state_sha256": "bf77504cce394cfbe67c7751ec312eda799e25421332efb4ac91ca780b15e1c6",
+          "terminal_sessions": 0,
+          "control_pending_bytes_preserved": true,
+          "custody_canonical_json_sha256": "7faabd0ec38fe33a3be7194c32b7dc0302bfbc269ab398e114954961d0c6951f",
+          "decoded_bytes": 160489
+        },
+        {
+          "mode": "fullscreen",
+          "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_fullscreen_selected_save_make_ready_restores_terminal",
+          "result": "pass",
+          "package_source": "1a1928eb53311af9573021482c5fe53c3754496f",
+          "backend_sha256": "f0f737abead724b45e2786e7ce993f945ad3c7ec5ab587e5f31469bbfb1d7c70",
+          "build_identity": "facman=1a1928eb53311af9573021482c5fe53c3754496f;universal_launcher=5479939ca5cbc9ee0f901608a92012778b4752ae;universal_setup=2749a15b835a6c1c9968598a2b434d85809691ad;provider_mode=source;provider_source_linkage=static;provider_lock_kind=tracked;provider_conformance_only=false;provider_sdk_consumption_candidate=false;provider_candidate_differs_from_tracked=false;provider_consumption_classification=tracked_source;provider_release_identity_coherent=true;ulk_session_consumer_canary=false;msvc_runtime=not_applicable;source_dirty=false",
+          "manifest_sha256": "1c4d12ccc7d7b5ff6dc8d263780dfed3d300ecea569ff74f64c3bc6ab56f376e",
+          "closure_sha256": "62628591a9a73c2d8ad127976df508e3e9a6db63fc76e5aed5fdf9704b218884",
+          "effects": 2,
+          "terminal_log_sha256": "48e5c68ed6f48634eac27d48dc7dc66a4a53ae9dfa53d4c2960b3462861eb4a8",
+          "effects_sha256": "f2e46ae3b97c97f20c3ccf2d923c2837c0860eb62509e2cde2f8557044793fe5",
+          "terminal_state_sha256": "c1c05322c3e2171405d14ee75d8b25b4ac144bab3e88b045d4927f70560af98f",
+          "terminal_sessions": 3,
+          "control_pending_bytes_preserved": true,
+          "custody_canonical_json_sha256": "4ab760585999882635262be4611ceebdda5f1c702c45142f4a82b641b7e6f645",
+          "decoded_bytes": 213736
+        }
+      ],
+      "decoded_evidence_directory": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\macos-delivered-tui-actual-job-115566332295",
+      "full_make_ready": false,
+      "beta": false,
+      "rc": false
+    },
+    "new_pack_methods": [
+      {
+        "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_pack_exact_offline_reconstruction",
+        "source_test_id": "test_portable_modpack_import.PortableModpackImportTests.test_exported_pack_reconstructs_offline_exact_bytes_and_rebound_local_lock",
+        "mode": "pack-exported_pack_reconstructs_offline_exact_bytes_and_rebound_local_lock",
+        "calls": 30,
+        "reconstructions": 3,
+        "sigkill_cases": 0,
+        "preserved_unsafe_refusals": 0,
+        "calls_sha256": "6c1f44432fbf471be82ae35db16e9bca9baa175c02dc4df4012471282b4eb959",
+        "custody_canonical_json_sha256": "251e2950ba12863285c204f23781496b3bc63b0062bff6c078939aef7d2f09c2",
+        "decoded_bytes": 359347
+      },
+      {
+        "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_pack_process_loss_before_staging",
+        "source_test_id": "test_portable_modpack_import.PortableModpackImportTests.test_process_loss_before_staging_reconstructs_from_the_original_durable_source_binding",
+        "mode": "pack-process_loss_before_staging_reconstructs_from_the_original_durable_source_binding",
+        "calls": 12,
+        "reconstructions": 1,
+        "sigkill_cases": 1,
+        "preserved_unsafe_refusals": 0,
+        "calls_sha256": "919ee11f1915c27d19758602d6f8dade0b3ae5e342b22d564839347c70a7cac0",
+        "custody_canonical_json_sha256": "e30b9e1bbac84e98d83f52d5d7238d4ad62cc93484d54e5bee1ae4d331ac1e01",
+        "decoded_bytes": 136940
+      },
+      {
+        "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_pack_process_loss_partial_raw_and_generated",
+        "source_test_id": "test_portable_modpack_import.PortableModpackImportTests.test_process_loss_adopts_original_lock_and_recovers_partial_raw_and_generated_states",
+        "mode": "pack-process_loss_adopts_original_lock_and_recovers_partial_raw_and_generated_states",
+        "calls": 24,
+        "reconstructions": 2,
+        "sigkill_cases": 2,
+        "preserved_unsafe_refusals": 0,
+        "calls_sha256": "dfe1ad5759b5cdd2369271bc3ead4f3dd69624371149633546657e730d762b6b",
+        "custody_canonical_json_sha256": "d41487c29234cc8a156e47488dedf27ae2504b9531ed03297a49c40123080191",
+        "decoded_bytes": 279370
+      },
+      {
+        "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_pack_recovery_itself_interrupted",
+        "source_test_id": "test_portable_modpack_import.PortableModpackImportTests.test_recovery_before_staging_can_itself_be_interrupted_after_a_complete_entry",
+        "mode": "pack-recovery_before_staging_can_itself_be_interrupted_after_a_complete_entry",
+        "calls": 13,
+        "reconstructions": 1,
+        "sigkill_cases": 1,
+        "preserved_unsafe_refusals": 1,
+        "calls_sha256": "ef84a77dd5669c161d1eb7c9277672a94a581255e53628415d176989f881dae1",
+        "custody_canonical_json_sha256": "1ea68a815f2c5c3fc8ac486d461e337a9efa5d9bdfea2935cf633401ebdad48d",
+        "decoded_bytes": 149953
+      },
+      {
+        "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_pack_changed_and_torn_objects_preserved",
+        "source_test_id": "test_portable_modpack_import.PortableModpackImportTests.test_partial_recovery_refuses_changed_source_context_inventory_and_markers_without_effects",
+        "mode": "pack-partial_recovery_refuses_changed_source_context_inventory_and_markers_without_effects",
+        "calls": 127,
+        "reconstructions": 0,
+        "sigkill_cases": 0,
+        "preserved_unsafe_refusals": 18,
+        "calls_sha256": "2d38f075ca29d84e240bbbdd9b36007073495f0cf8fe1f67782148a3db5bf3e9",
+        "custody_canonical_json_sha256": "f789427fabfa370342d683c1a01b9684e971d33e5e236bc759c87b77c04ca0b4",
+        "decoded_bytes": 1223775
+      },
+      {
+        "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_pack_foreign_partial_objects_preserved",
+        "source_test_id": "test_portable_modpack_import.PortableModpackImportTests.test_incomplete_extraction_is_retained_and_recovery_does_not_delete_it",
+        "mode": "pack-incomplete_extraction_is_retained_and_recovery_does_not_delete_it",
+        "calls": 8,
+        "reconstructions": 0,
+        "sigkill_cases": 0,
+        "preserved_unsafe_refusals": 1,
+        "calls_sha256": "637af59134f6d277ae041db182c0c8e368024e1abec877d1e9a9ba035c04c643",
+        "custody_canonical_json_sha256": "4e3bed2a989e79b43b1e4c30d4a8b9755beef292697aa412ea728c57bfc90ea3",
+        "decoded_bytes": 83688
+      },
+      {
+        "test_id": "tests.test_macos_delivered_tui.MacosDeliveredTuiTests.test_delivered_pack_ordinary_semantic_recovery",
+        "source_test_id": "test_presentation_pack_import.PresentationPackImportTests.test_process_loss_recovers_through_ordinary_recovery_action",
+        "mode": "pack-process_loss_recovers_through_ordinary_recovery_action",
+        "calls": 42,
+        "reconstructions": 3,
+        "sigkill_cases": 3,
+        "preserved_unsafe_refusals": 0,
+        "calls_sha256": "7a1b7bd180951c72f7f6deae0f453a16a61db31f0135954fea3754f98d43088a",
+        "custody_canonical_json_sha256": "87a4a1587ef992f2495b9f72f5991b3459868c74d6602a8f3b51840f4e34bfaf",
+        "decoded_bytes": 433036
+      }
+    ],
+    "actual_cli_calls": 256,
+    "independently_verified_reconstructions": 10,
+    "actual_sigkill_cases": 7,
+    "decoded_pack_evidence_directory": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\macos-delivered-pack-job-115566332295",
+    "torn_refusal_not_repair": true,
+    "full_make_ready": false,
+    "beta": false,
+    "rc": false
+  },
+  "windows_run": 38475883308,
+  "windows_job": 115566332601,
+  "actual_windows_native_builds_passed": 4,
+  "actual_windows_native_tests_per_build": 55,
+  "windows_python_tests": 2102,
+  "windows_expected_skips": 96,
+  "windows_job_conclusion": "success",
+  "windows_log_sha256": "6bffe4f49562a38001de5fe944558534f66a9b160f26360f2ef0924971ecedef",
+  "required_checks": [
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/runs/115566439573",
+      "name": "task-to-dev-promotion-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883687/job/115566334366",
+      "name": "development-only-cross-provider-fixture",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883308/job/115566332616",
+      "name": "macos-archive-core",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883308/job/115566332666",
+      "name": "appkit-compile",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883308/job/115566332295",
+      "name": "macos-native-cli",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883308/job/115566332742",
+      "name": "linux-coverage",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883420/job/115566333573",
+      "name": "python",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883308/job/115566332601",
+      "name": "windows-native-package",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883420/job/115566332862",
+      "name": "csharp",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883387/job/115566333099",
+      "name": "policy-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883420/job/115566333370",
+      "name": "c-cpp",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38475883308/job/115566332916",
+      "name": "linux-native",
+      "state": "SUCCESS"
+    }
+  ],
+  "required_checks_all_pass": true,
+  "observer_sha256": "7416dfb18db08865e10c673fa1758df73eca758c9bc01fdf91e4ce154cd560a4",
+  "custody": "produced-joined-make-ready-custody.v1.zip",
+  "custody_sha256": "e9c5aaf3cabf39a41afe2d8feac7e1c8cce045a7daf55faa54ee2a36a9d3d73f",
+  "custody_files": 643,
+  "single_mac_package_factory": true,
+  "original_partial_v1_preserved": true,
+  "accepted_receipt_v2_preserved": true,
+  "runtime_fix_for_windows_test": false,
+  "torn_file_refusal_not_repair": true,
+  "live_windows_button_to_packaged_backend_pending": true,
+  "canonical_installed_desktop": false,
+  "minimum_mac13_physical_host": false,
+  "named_physical_host": false,
+  "real_game": false,
+  "human": false,
+  "whole_workunit": false,
+  "full_make_ready": false,
+  "beta": false,
+  "rc": false
+}
