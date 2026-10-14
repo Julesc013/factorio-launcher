@@ -37,6 +37,17 @@
 #include <string>
 
 namespace facman::factorio::application::handlers {
+namespace testing {
+namespace {
+thread_local ManagedInstallPauseObserver managed_install_pause_observer;
+}
+ManagedInstallPauseObserver exchange_managed_install_pause_observer(
+    ManagedInstallPauseObserver observer) noexcept
+{
+    observer.swap(managed_install_pause_observer);
+    return observer;
+}
+}
 #if FACMAN_WITH_SETUP
 namespace fs = std::filesystem;
 
@@ -538,8 +549,11 @@ private:
 void managed_install_test_pause(const char* variable, unsigned seconds = 2U)
 {
     const char* pause = std::getenv(variable);
-    if (pause != nullptr && std::string(pause) == "1")
+    if (pause != nullptr && std::string(pause) == "1") {
+        if (testing::managed_install_pause_observer)
+            testing::managed_install_pause_observer(variable);
         std::this_thread::sleep_for(std::chrono::seconds(seconds));
+    }
 }
 
 std::string read_text(const fs::path& path)

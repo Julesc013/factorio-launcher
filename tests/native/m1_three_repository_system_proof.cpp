@@ -23,6 +23,7 @@
 #include "usk_transaction_session.h"
 
 #include <algorithm>
+#include <atomic>
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -32,6 +33,7 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
+#include <utility>
 
 namespace fs = std::filesystem;
 namespace application = facman::factorio::application;
@@ -1104,30 +1106,92 @@ void prove_repair_interruption_recovery(
     // POSIX advisory locking cannot prevent an uncooperative same-inode edit.
     // It must refuse before provider entry and preserve those foreign bytes.
     apply.transaction_id = "tx-m1-facman-repair-altered-held-metadata";
-    set_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE", "1");
+    struct ScopedPauseEnvironment {
+        ScopedPauseEnvironment() { set_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE", "1"); }
+        ~ScopedPauseEnvironment() { clear_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE"); }
+    } pause_environment;
+    std::promise<void> entered_pause;
+    auto entered = entered_pause.get_future();
+    std::promise<void> release_pause;
+    auto release = release_pause.get_future().share();
+    std::atomic<bool> abort_proof {false};
     auto held_operation = std::async(std::launch::async, [&]() {
+        struct ScopedObserver {
+            application::handlers::testing::ManagedInstallPauseObserver previous;
+            explicit ScopedObserver(application::handlers::testing::ManagedInstallPauseObserver observer)
+                : previous(application::handlers::testing::exchange_managed_install_pause_observer(std::move(observer))) {}
+            ~ScopedObserver() { application::handlers::testing::exchange_managed_install_pause_observer(std::move(previous)); }
+            ScopedObserver(const ScopedObserver&) = delete;
+            ScopedObserver& operator=(const ScopedObserver&) = delete;
+        } observer([&](const char* hook) {
+            if (std::string(hook) != "FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE")
+                throw std::runtime_error("held-metadata proof observed another pause hook");
+            entered_pause.set_value();
+            if (release.wait_for(std::chrono::seconds(5)) != std::future_status::ready || abort_proof.load())
+                throw std::runtime_error("held-metadata proof handshake aborted before provider entry");
+            release.get();
+        });
         return application::handlers::apply_repair_install(context, apply);
     });
-    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
-    std::string held_metadata;
-    while (std::chrono::steady_clock::now() < deadline &&
-        held_operation.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
-        held_metadata = read_text(shared_lock);
-        if (!held_metadata.empty()) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    bool released = false;
+    const auto release_worker = [&]() {
+        if (!released) { release_pause.set_value(); released = true; }
+    };
+    const auto journal_diagnostic = [&]() {
+        facman::transaction::Record retained;
+        std::string detail;
+        if (!facman::transaction::read_record(context.workspace(), apply.transaction_id, retained, detail))
+            return std::string("journal_error=") + detail;
+        std::string summary = std::string("journal_state=") + facman::transaction::state_name(retained.state) + " steps=";
+        for (const auto& step : retained.completed_steps) summary += step + ",";
+        return summary;
+    };
+    try {
+        if (entered.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
+            throw std::runtime_error("post-acquisition held-metadata pause was not observed: " + journal_diagnostic());
+        entered.get();
+        facman::transaction::Record checkpoint;
+        std::string checkpoint_detail;
+        if (!facman::transaction::read_record(context.workspace(), apply.transaction_id, checkpoint, checkpoint_detail) ||
+            checkpoint.transaction_id != apply.transaction_id || checkpoint.command_id != "installs.repair.apply" ||
+            checkpoint.state != facman::transaction::State::requested ||
+            std::find(checkpoint.completed_steps.begin(), checkpoint.completed_steps.end(), "provider_entry_started") !=
+                checkpoint.completed_steps.end())
+            throw std::runtime_error("held-metadata checkpoint did not bind requested/no-entry ownership: " + journal_diagnostic());
+        const std::string held_metadata = read_text(shared_lock);
+        if (held_metadata.empty()) throw std::runtime_error("post-acquisition held metadata was absent");
+        facman::platform::PathIdentity held_identity;
+        if (!facman::platform::inspect_path_no_follow(shared_lock, held_identity).ok() ||
+            !held_identity.exists || held_identity.reparse_or_link ||
+            held_identity.kind != facman::platform::PathObjectKind::regular_file)
+            throw std::runtime_error("post-acquisition held metadata identity was invalid");
+        std::cout << "held-metadata post-acquisition checkpoint: " << journal_diagnostic() << '\n';
+        const std::string foreign_metadata = held_metadata + "foreign same-inode edit\n";
+        proof::write_text(shared_lock, foreign_metadata);
+        facman::platform::PathIdentity altered_identity;
+        if (!facman::platform::inspect_path_no_follow(shared_lock, altered_identity).ok() ||
+            altered_identity.reparse_or_link || !held_identity.same_object(altered_identity))
+            throw std::runtime_error("held metadata edit did not retain the exact original inode");
+        release_worker();
+        const auto altered = held_operation.get();
+        clear_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+        std::cout << "held-metadata apply error=" << altered.error_code << " " << journal_diagnostic() << '\n';
+        if (altered.status == ULK_STATUS_OK || altered.error_code != "recovery_write_refused" ||
+            read_text(shared_lock) != foreign_metadata ||
+            tree_signature(target) != target_before_no_effect ||
+            tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect) {
+            throw std::runtime_error("held metadata edit was deleted or entered the provider");
+        }
+        proof::write_text(shared_lock, held_metadata); // Restore only the exact owned test preimage.
+    } catch (...) {
+        abort_proof.store(true);
+        release_worker();
+        if (held_operation.valid()) {
+            try { (void)held_operation.get(); } catch (...) {}
+        }
+        clear_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+        throw;
     }
-    if (held_metadata.empty()) throw std::runtime_error("held metadata edit window was not observed");
-    const std::string foreign_metadata = held_metadata + "foreign same-inode edit\n";
-    proof::write_text(shared_lock, foreign_metadata);
-    const auto altered = held_operation.get();
-    clear_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
-    if (altered.status == ULK_STATUS_OK || altered.error_code != "recovery_write_refused" ||
-        read_text(shared_lock) != foreign_metadata ||
-        tree_signature(target) != target_before_no_effect ||
-        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect) {
-        throw std::runtime_error("held metadata edit was deleted or entered the provider");
-    }
-    proof::write_text(shared_lock, held_metadata); // Restore only the exact owned test preimage.
     application::ServiceOperationRequest altered_recovery;
     altered_recovery.transaction_id = apply.transaction_id;
     const auto altered_inspect = application::handlers::inspect_install_recovery(context, altered_recovery);
@@ -1135,7 +1199,10 @@ void prove_repair_interruption_recovery(
         ? facman::core::json::parse(std::get<std::string>(altered_inspect.output))
         : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
     if (!altered_plan || altered_inspect.status != ULK_STATUS_OK)
-        throw std::runtime_error("no-entry altered metadata operation was not inspectable");
+        throw std::runtime_error("no-entry altered metadata operation was not inspectable: inspector_status=" +
+            std::to_string(altered_inspect.status) + " inspector_error=" + altered_inspect.error_code +
+            ":" + altered_inspect.error_message + " " + journal_diagnostic());
+    std::cout << "held-metadata recovery inspection error=" << altered_inspect.error_code << " " << journal_diagnostic() << '\n';
     altered_recovery.plan_id = json_string(altered_plan.value(), "plan_id");
     altered_recovery.plan_digest = json_string(altered_plan.value(), "plan_digest");
     altered_recovery.confirmation = "APPLY";

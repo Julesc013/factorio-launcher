@@ -177,6 +177,120 @@ class CliTests(unittest.TestCase):
             self.assertIn("no install references registered yet", stdout)
             self.assertEqual(list(Path(tmp).iterdir()), [])
 
+    def test_reconciliation_target_aliases_preserve_external_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install = root / "Factorio External"
+            workspace = root / "workspace"
+            shutil.copytree(FIXTURE_INSTALL, install)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "import", str(install),
+                "--id", "fixture", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            # Synthetic external-manager metadata is fixture setup, never
+            # adoption authority. Snapshot after this explicit setup write.
+            record_path = workspace / "installs" / "refs" / "fixture.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            record.update(source="steam", distribution_origin="steam", platform_integration="steam",
+                          strict_isolation_eligibility="", external_state_domains=[])
+            record_path.write_text(json.dumps(record, ensure_ascii=False) + "\n", encoding="utf-8")
+            separate = root / "separate"
+            separate.mkdir()
+            aliases = [str(install) + os.sep + ".", str(install / "data") + os.sep + ".."]
+            availability = {"windows_case_alias": False, "distinct_short_name_alias": False,
+                            "directory_link_alias": False, "directory_link_error": None}
+            if os.name == "nt":
+                import ctypes
+                uppercase = str(install).upper()
+                if Path(uppercase).exists() and os.path.samefile(install, uppercase):
+                    aliases.append(uppercase)
+                    availability["windows_case_alias"] = True
+                kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+                short_name = kernel.GetShortPathNameW
+                short_name.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32]
+                short_name.restype = ctypes.c_uint32
+                size = short_name(str(install), None, 0)
+                if size:
+                    buffer = ctypes.create_unicode_buffer(size)
+                    written = short_name(str(install), buffer, size)
+                    if 0 < written < size and buffer.value != str(install):
+                        self.assertTrue(os.path.samefile(install, buffer.value))
+                        aliases.append(buffer.value)
+                        availability["distinct_short_name_alias"] = True
+            alias_link = root / "root-alias"
+            try:
+                alias_link.symlink_to(install, target_is_directory=True)
+            except OSError as error:
+                availability["directory_link_error"] = error.winerror if os.name == "nt" else error.errno
+            else:
+                self.assertTrue(os.path.samefile(install, alias_link))
+                aliases.append(str(alias_link))
+                availability["directory_link_alias"] = True
+
+            def inventory() -> dict[str, str]:
+                entries = {}
+                for path in sorted(root.rglob("*")):
+                    value = ("link:" + os.readlink(path) if path.is_symlink() else
+                             "directory" if path.is_dir() else hashlib.sha256(path.read_bytes()).hexdigest())
+                    entries[path.relative_to(root).as_posix()] = value
+                return entries
+
+            before = inventory()
+            self.target_alias_observations = {"availability": availability, "same_targets": aliases,
+                                              "before_inventory": before, "cases": []}
+            required = {"external_root_requires_distinct_managed_target", "in_place_authority_conversion_refused"}
+            for target in aliases:
+                with self.subTest(target=target):
+                    args = ["--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                            "--management", "managed", "--source-ref", "synthetic-source:2.0.77",
+                            "--target", target, "--json"]
+                    code, stdout, stderr = invoke(args)
+                    self.assertEqual(0, code, stderr or stdout)
+                    plan = json.loads(stdout)
+                    self.assertTrue(required <= set(plan["blockers"]))
+                    self.assertEqual(target, plan["desired_state"]["target_root"])
+                    self.assertEqual("selected_unverified", plan["desired_state"]["source"]["trust_status"])
+                    self.assertFalse(plan["mutation_executed"])
+                    self.assertFalse(plan["apply_available"])
+                    self.assertTrue(all(value is False for value in plan["no_write_guarantees"].values()))
+                    self.assertEqual(before, inventory())
+                    self.target_alias_observations["cases"].append({"target": target, "kind": "same",
+                                                                    "plan": plan, "after_inventory": inventory()})
+                    code, stdout, stderr = invoke([
+                        "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                        "--target", target, "--json",
+                    ])
+                    self.assertEqual(0, code, stderr or stdout)
+                    self.assertEqual("already_reconciled", json.loads(stdout)["summary"]["status"])
+                    self.assertEqual(before, inventory())
+            for target in (separate, root / "absent-target"):
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                    "--management", "managed", "--target", str(target), "--json",
+                ])
+                self.assertEqual(0, code, stderr or stdout)
+                plan = json.loads(stdout)
+                self.assertFalse(required & set(plan["blockers"]))
+                self.assertIn("source_candidate_required_for_materialisation", plan["blockers"])
+                self.assertFalse(plan["apply_available"])
+                self.assertEqual(before, inventory())
+                self.target_alias_observations["cases"].append({"target": str(target), "kind": "distinct",
+                                                                "plan": plan, "after_inventory": inventory()})
+            invalid_target = str(install / "data" / "base" / "info.json" / "child")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                "--management", "managed", "--target", invalid_target, "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            invalid_plan = json.loads(stdout)
+            self.assertIn("target_identity_unresolved", invalid_plan["blockers"])
+            self.assertTrue(required <= set(invalid_plan["blockers"]))
+            self.assertFalse(invalid_plan["apply_available"])
+            self.assertEqual(before, inventory())
+            self.target_alias_observations["cases"].append({"target": invalid_target, "kind": "unresolved",
+                                                            "plan": invalid_plan, "after_inventory": inventory()})
+
     def test_install_model_and_reconciliation_are_read_only_and_conservative(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
