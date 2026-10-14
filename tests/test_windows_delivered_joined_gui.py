@@ -228,7 +228,8 @@ class OwnedControls:
             "GetWindowTextW": [wt.HWND, wt.LPWSTR, ctypes.c_int],
             "GetClassNameW": [wt.HWND, wt.LPWSTR, ctypes.c_int],
             "GetParent": [wt.HWND], "GetDlgCtrlID": [wt.HWND],
-            "IsWindowEnabled": [wt.HWND],
+            "IsWindowEnabled": [wt.HWND], "IsWindowVisible": [wt.HWND],
+            "GetAncestor": [wt.HWND, wt.UINT],
             "PostMessageW": [wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM],
             "SetWindowPos": [wt.HWND, wt.HWND, ctypes.c_int, ctypes.c_int,
                              ctypes.c_int, ctypes.c_int, wt.UINT],
@@ -237,6 +238,7 @@ class OwnedControls:
         }.items():
             getattr(self.api, name).argtypes = args
         self.api.GetParent.restype = wt.HWND
+        self.api.GetAncestor.restype = wt.HWND
         self.api.SendMessageTimeoutW.restype = ctypes.c_size_t
         startup = subprocess.STARTUPINFO()
         startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -307,11 +309,32 @@ class OwnedControls:
         return result
 
     def frame(self, hwnd, stage):
-        result = dict(stage=stage, pid=self.process.pid, hwnd=hwnd,
-            title=self.text(hwnd), controls=[dict(hwnd=h, text=self.text(h),
-                class_name=self.text(h, True)) for h in self.enumerate(hwnd)])
+        controls = []
+        result = dict(stage=stage, pid=self.process.pid, hwnd=hwnd, controls=controls)
+        try:
+            result["title"] = self.text(hwnd)
+            children = self.enumerate(hwnd)
+        except ControlGone:
+            result["control_gone"] = True
+            self.events.append(result)
+            return result
+        for child in children:
+            try:
+                controls.append(dict(hwnd=child, text=self.text(child),
+                    class_name=self.text(child, True), **self.control_state(child)))
+            except ControlGone:
+                controls.append(dict(hwnd=child, control_gone=True))
         self.events.append(result)
         return result
+
+    def control_state(self, hwnd):
+        self.require_owned(hwnd)
+        return dict(parent_hwnd=self.api.GetParent(hwnd),
+            root_hwnd=self.api.GetAncestor(hwnd, 2),
+            control_id=self.api.GetDlgCtrlID(hwnd),
+            enabled=bool(self.api.IsWindowEnabled(hwnd)),
+            visible=bool(self.api.IsWindowVisible(hwnd)),
+            observed_at=time.monotonic())
 
     def wait(self, predicate, description, seconds=35):
         deadline = min(time.monotonic() + seconds, self.deadline)
@@ -324,7 +347,20 @@ class OwnedControls:
                 return value
             time.sleep(.025)
         for hwnd in self.enumerate(observe=False):
-            self.frame(hwnd, "timeout: " + description)
+            try:
+                self.frame(hwnd, "timeout: " + description)
+            except ControlGone:
+                self.events.append(dict(stage="timeout: " + description,
+                    pid=self.process.pid, hwnd=hwnd, control_gone=True))
+        for event in reversed(self.events):
+            if event["stage"] == "BM_CLICK":
+                try:
+                    state = self.control_state(event["hwnd"])
+                except ControlGone:
+                    state = dict(control_gone=True)
+                self.events.append(dict(stage="timeout: last click target",
+                    pid=self.process.pid, hwnd=event["hwnd"], **state))
+                break
         raise AssertionError("Owned GUI did not reach " + description)
 
     def window(self, title, control_text=None):
@@ -343,10 +379,13 @@ class OwnedControls:
         self.require_owned(hwnd)
         if "BUTTON" not in self.text(hwnd, True).upper():
             raise AssertionError("BM_CLICK target is not a native button")
-        self.events.append(dict(stage="BM_CLICK", pid=self.process.pid, hwnd=hwnd,
-                                text=self.text(hwnd)))
+        event = dict(stage="BM_CLICK", pid=self.process.pid, hwnd=hwnd,
+                     text=self.text(hwnd), **self.control_state(hwnd))
+        self.events.append(event)
         if not self.api.PostMessageW(hwnd, 0xF5, 0, 0):
+            event["post_succeeded"] = False
             raise ctypes.WinError(ctypes.get_last_error())
+        event.update(post_succeeded=True, posted_at=time.monotonic())
 
     def send(self, hwnd, message, wparam=0, lparam=0):
         self.require_owned(hwnd)
@@ -630,8 +669,15 @@ class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
         finally:
             try:
                 if active is not None:
-                    active.finish()
-                    sessions[-1]["terminal"] = active.terminal
+                    try:
+                        active.finish()
+                    except Exception:
+                        result.update(result="FAIL", cleanup_exception=traceback.format_exc())
+                        raise
+                    finally:
+                        sessions[-1]["terminal"] = active.terminal
+                        sessions[-1]["observed_backend_processes"] = active.job.records
+                        sessions[-1]["launch"] = active.job.launch
             finally:
                 objects = custody / "objects"
                 objects.mkdir(exist_ok=True)
@@ -642,7 +688,7 @@ class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
                 self.assertLess(len(record), 4 * 1024 * 1024)
                 self.assertFalse((custody / "result.json").exists(), "Evidence cannot overwrite an earlier run")
                 (custody / "result.json").write_bytes(record)
-                if result["result"] == "PASS":
+                if result["result"] in ("PASS", "FAIL"):
                     raw = {"result.json": record, **{"objects/" + k: v for k, v in files.items()}}
                     manifest = {name: dict(size_bytes=len(data), sha256=hashlib.sha256(data).hexdigest(),
                         bytes_base64=base64.b64encode(data).decode("ascii")) for name, data in raw.items()}
@@ -656,7 +702,7 @@ class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
                         canonical_sha256=hashlib.sha256(canonical).hexdigest(),
                         compressed_sha256=hashlib.sha256(compressed).hexdigest(),
                         payload_base64=encoded), sort_keys=True))
-                    print("delivered-windows-gui-result " + json.dumps(dict(result="PASS",
+                    print("delivered-windows-gui-result " + json.dumps(dict(result=result["result"],
                         qualification=qualification, source=build_info["source_commit"],
                         gui_sha256=result["gui_sha256"], backend_sha256=result["backend_sha256"],
                         result_sha256=hashlib.sha256(record).hexdigest(),

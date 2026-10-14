@@ -97,6 +97,11 @@ product and Release WinForms shell to the ordinary package factory. Missing
 local candidates are explicitly `required_blocked`; an incoherent supplied
 candidate fails. Exact control frames, fixture command streams, inventories and
 file bytes are retained in bounded hashed custody records before runner cleanup.
+Both PASS and FAIL export that custody to the job log with their actual outcome.
+Timeout frames retain owned control IDs, parent/root HWNDs, enabled/visible
+state and the last queued click target; normal control disposal preserves a
+partial diagnostic frame. Cleanup failures retain their separate exception and
+cannot produce a PASS result.
 A local proof using the original portable file closure reconstructed from a
 produced self-setup payload is labeled separately: it preserves every original
 manifest and file byte and restores only the original GUI pathname. This proves

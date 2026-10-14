@@ -571,3 +571,11 @@ All133owned processes run as UID/GID65534 without groups, retain actual pre-poll
 This closes the admitted structural Linux CLI reconstruction and ordinary delivered TUI preparation/terminal slice on Ubuntu24.04 WSL/tmpfs. It grants no physical ext4/named-host, real game/human, canonical installed Desktop, full Make Ready/Play, whole WorkUnit, Beta or RC acceptance. Source fixtures, package behavior and external gates remain distinct. Continue the next admitted maintained-application or playable-instance clause from synchronized dev.
 
 Evidence: evidence/produced-linux-environment-tui.v1.json and hash-closed custody; actual Windows/Mac reconstruction is retained at evidence/produced-environment-reconstruction.v1.json.
+
+### Hosted Windows GUI failure: retain diagnostic custody
+
+PR420 source68ab5665 failed its required Windows job115705425989 at the first Make Ready input dialog. The original35-second dialog bound remains unchanged. Original runner log is preserved; because the previous test exported custody only on PASS, it cannot establish the hosted cause. Focused actual GUI probes reach the first dialog under the original hidden-main and queued BM_CLICK conditions. The original two-session GUI oracle also passes on the retained produced002824 package; neither result proves a runtime correction or fresh-head package acceptance.
+
+The bounded diagnostic correction records owned control IDs, parent/root handles, visibility/enabled state and queued click timing, retains partial frames through normal disposal, and exports hash-closed custody with the actual PASS or FAIL outcome. A real controlled timeout remains a failing unittest, preserves its original exception and exports24 verified files while normally draining the GUI/job. The unchanged PASS decoder independently verifies two real sessions, cancellation, stale refusal, joined owner receipts, exact inputs and normal process lifetime. No click retry, focus manipulation, timeout increase, runtime/provider edit or additional factory was introduced. Required exact-head hosted qualification remains pending; a repeated failure must be diagnosed from its retained evidence. Existing Linux and Windows/Mac reconstruction acceptance stays preserved.
+
+Evidence: evidence/windows-delivered-gui-diagnostic.v1.json and its hash-closed custody.
