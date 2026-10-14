@@ -413,7 +413,7 @@ class OwnedControls:
                 self.events.append(dict(stage="timeout: " + description,
                     pid=self.process.pid, hwnd=hwnd, control_gone=True))
         for event in reversed(self.events):
-            if event["stage"] == "BM_CLICK":
+            if event["stage"] in ("BM_CLICK", "WM_COMMAND/BN_CLICKED"):
                 try:
                     state = self.control_state(event["hwnd"])
                 except ControlGone:
@@ -439,14 +439,31 @@ class OwnedControls:
     def click(self, hwnd):
         self.require_owned(hwnd)
         if "BUTTON" not in self.text(hwnd, True).upper():
-            raise AssertionError("BM_CLICK target is not a native button")
+            raise AssertionError("Button notification target is not a native button")
         ancestors = self.ancestors(hwnd)
         if not all(state["visible"] and state["enabled"] for state in ancestors):
-            raise AssertionError("BM_CLICK requires visible and enabled owned control ancestors")
-        event = dict(stage="BM_CLICK", pid=self.process.pid, hwnd=hwnd,
-                     text=self.text(hwnd), ancestors=ancestors, **self.control_state(hwnd))
+            raise AssertionError("Button notification requires visible and enabled owned control ancestors")
+        parent = self.api.GetParent(hwnd)
+        self.require_owned(parent)
+        identifier = self.api.GetDlgCtrlID(hwnd)
+        state = self.control_state(hwnd)
+        root = state["root_hwnd"]
+        self.require_owned(root)
+        if (len(ancestors) < 2 or ancestors[0]["hwnd"] != hwnd
+                or ancestors[1]["hwnd"] != parent or state["parent_hwnd"] != parent
+                or state["control_id"] != identifier or not state["visible"] or not state["enabled"]
+                or ancestors[-1]["hwnd"] != root
+                or any(item["root_hwnd"] != root for item in ancestors)):
+            raise AssertionError("Button notification identity differs from observed owned ancestors")
+        event = dict(stage="WM_COMMAND/BN_CLICKED", pid=self.process.pid, hwnd=hwnd,
+            text=self.text(hwnd), notification_parent=parent, notification_control_id=identifier,
+            notification_wparam=identifier & 0xFFFF, notification_lparam=hwnd,
+            ancestors=ancestors, **state)
         self.events.append(event)
-        if not self.api.PostMessageW(hwnd, 0xF5, 0, 0):
+        # Queue the ordinary button notification to its exact parent. This invokes
+        # the registered UI handler without inactive-window click synthesis or
+        # activation; dialogs and backend validation remain the outcome oracle.
+        if not self.api.PostMessageW(parent, 0x111, identifier & 0xFFFF, hwnd):
             event["post_succeeded"] = False
             raise ctypes.WinError(ctypes.get_last_error())
         event.update(post_succeeded=True, posted_at=time.monotonic())
