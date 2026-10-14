@@ -79,11 +79,32 @@ save preparation controls remain available.
 This component preserves stored launch overrides, custom routing INI bytes
 and identity where admitted, selected content/settings and save archives.
 Installation/content/profile reconstruction beyond this existing-instance
-path and full readiness/Play qualification remain open. The compiled gallery harness establishes button
-wiring and interpretation of separately supplied actual receipts; live
-click-to-backend dispatch, real game and human experience remain separate
-acceptance. Windows source fixtures do not establish other-host or Beta
-qualification.
+path and full readiness/Play qualification remain open. The compiled gallery
+harness establishes button wiring and interpretation of separately supplied
+actual receipts. `tests/test_windows_delivered_joined_gui.py` separately drives
+the ordinary WinForms window, typed selected-save form, native confirmation,
+live store and production packaged backend. It checks both cancellation routes,
+stale confirmation refusal before effects and one fresh two-owner request using
+independent durable receipts, journals, file identities and exact preserved
+inputs. Owned kernel jobs retain observed backend process identities and require
+normal GUI exit with zero live descendants. The consumer runs outside the
+checkout with an empty PATH and backend/source overrides removed; its admitted
+package files are read-only and their complete hash closure is checked before
+and after execution.
+
+The existing Windows Python CI stage can supply its already built shared native
+product and Release WinForms shell to the ordinary package factory. Missing
+local candidates are explicitly `required_blocked`; an incoherent supplied
+candidate fails. Exact control frames, fixture command streams, inventories and
+file bytes are retained in bounded hashed custody records before runner cleanup.
+A local proof using the original portable file closure reconstructed from a
+produced self-setup payload is labeled separately: it preserves every original
+manifest and file byte and restores only the original GUI pathname. This proves
+the ordinary legacy portable GUI route, not the original portable ZIP or an
+installed generation. The produced generation's relocated-GUI closure mismatch
+remains the separately reviewed setup dependency. Canonical installed Desktop,
+real Factorio, human experience, other hosts, complete readiness and Beta remain
+separate acceptance.
 
 Linux missing-INI and new selected-save-reference publication retain the inode
 bound before the first write. Publication links the opened staging descriptor
