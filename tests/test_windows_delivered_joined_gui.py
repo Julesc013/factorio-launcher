@@ -30,6 +30,10 @@ class ControlGone(AssertionError):
     """A read-only enumeration raced normal modal-window disposal."""
 
 
+class ControlReadFailed(AssertionError):
+    """A bounded owned EDIT read failed; frames can retain partial diagnostics."""
+
+
 class OwnedProcessJob:
     """Retain a kernel-owned descendant set and prove zero live descendants."""
 
@@ -230,6 +234,8 @@ class OwnedControls:
             "GetParent": [wt.HWND], "GetDlgCtrlID": [wt.HWND],
             "IsWindowEnabled": [wt.HWND], "IsWindowVisible": [wt.HWND],
             "GetAncestor": [wt.HWND, wt.UINT],
+            "GetForegroundWindow": [],
+            "GetWindowRect": [wt.HWND, ctypes.POINTER(wt.RECT)],
             "PostMessageW": [wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM],
             "SetWindowPos": [wt.HWND, wt.HWND, ctypes.c_int, ctypes.c_int,
                              ctypes.c_int, ctypes.c_int, wt.UINT],
@@ -239,6 +245,7 @@ class OwnedControls:
             getattr(self.api, name).argtypes = args
         self.api.GetParent.restype = wt.HWND
         self.api.GetAncestor.restype = wt.HWND
+        self.api.GetForegroundWindow.restype = wt.HWND
         self.api.SendMessageTimeoutW.restype = ctypes.c_size_t
         startup = subprocess.STARTUPINFO()
         startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -275,6 +282,20 @@ class OwnedControls:
             if length >= len(value):
                 raise AssertionError("Owned combo text exceeds the evidence bound")
             self.send(hwnd, 0x148, index, ctypes.addressof(value))  # CB_GETLBTEXT
+            return value.value
+        if not class_name and "EDIT" in self.text(hwnd, True).upper():
+            # GetWindowText reads another process's cached caption, which can
+            # retain the constructor text after the actual edit contents change.
+            try:
+                length = self.send(hwnd, 0xD, len(value), ctypes.addressof(value))  # WM_GETTEXT
+            except ControlGone:
+                raise
+            except AssertionError as error:
+                self.require_owned(hwnd)  # Disposal must remain ControlGone.
+                raise ControlReadFailed("Bounded owned EDIT text read failed") from error
+            self.require_owned(hwnd)  # Never accept text after HWND disposal/reuse.
+            if length >= len(value) - 1:
+                raise ControlReadFailed("Owned edit text exceeds the evidence bound")
             return value.value
         method = self.api.GetClassNameW if class_name else self.api.GetWindowTextW
         method(hwnd, value, len(value))
@@ -324,6 +345,8 @@ class OwnedControls:
                     class_name=self.text(child, True), **self.control_state(child)))
             except ControlGone:
                 controls.append(dict(hwnd=child, control_gone=True))
+            except ControlReadFailed as error:
+                controls.append(dict(hwnd=child, read_error=str(error)))
         self.events.append(result)
         return result
 
@@ -335,6 +358,43 @@ class OwnedControls:
             enabled=bool(self.api.IsWindowEnabled(hwnd)),
             visible=bool(self.api.IsWindowVisible(hwnd)),
             observed_at=time.monotonic())
+
+    def ancestors(self, hwnd):
+        root = self.api.GetAncestor(hwnd, 2)
+        self.require_owned(root)
+        current, result = hwnd, []
+        for unused in range(16):
+            result.append(dict(hwnd=current, **self.control_state(current)))
+            if current == root:
+                return result
+            current = self.api.GetParent(current)
+            if not current:
+                break
+        raise AssertionError("Owned control ancestors did not terminate at its exact root")
+
+    def show_main_offscreen(self, main):
+        self.require_owned(main)
+        class_name = self.text(main, True)
+        if (self.text(main) != "FacMan" or not class_name.startswith("WindowsForms10.Window.")
+                or self.api.GetAncestor(main, 2) != main):
+            raise AssertionError("Passive show target is not the exact owned FacMan main form")
+        rectangle = wt.RECT()
+        if not self.api.GetWindowRect(main, ctypes.byref(rectangle)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if rectangle.right >= -10000 or rectangle.bottom >= -10000:
+            raise AssertionError("Owned main form must be offscreen before it is shown")
+        foreground = self.api.GetForegroundWindow()
+        # Preserve size/Z order and prohibit activation. Only the verified main
+        # form is shown; other enumerated helper windows keep their show state.
+        if not self.api.SetWindowPos(main, None, -20000, -20000, 0, 0, 0x55):
+            raise ctypes.WinError(ctypes.get_last_error())
+        after = self.api.GetForegroundWindow()
+        self.events.append(dict(stage="owned main shown offscreen", pid=self.process.pid,
+            hwnd=main, class_name=class_name, flags=0x55,
+            offscreen_rectangle=dict(left=rectangle.left, top=rectangle.top,
+                right=rectangle.right, bottom=rectangle.bottom),
+            foreground_before=foreground, foreground_after=after,
+            foreground_unchanged=foreground == after, **self.control_state(main)))
 
     def wait(self, predicate, description, seconds=35):
         deadline = min(time.monotonic() + seconds, self.deadline)
@@ -373,14 +433,18 @@ class OwnedControls:
 
     def control(self, window, label):
         return self.wait(lambda: next((h for h in self.enumerate(window)
-            if self.text(h).replace("&", "") == label and self.api.IsWindowEnabled(h)), None), label)
+            if self.text(h).replace("&", "") == label and all(
+                state["visible"] and state["enabled"] for state in self.ancestors(h))), None), label)
 
     def click(self, hwnd):
         self.require_owned(hwnd)
         if "BUTTON" not in self.text(hwnd, True).upper():
             raise AssertionError("BM_CLICK target is not a native button")
+        ancestors = self.ancestors(hwnd)
+        if not all(state["visible"] and state["enabled"] for state in ancestors):
+            raise AssertionError("BM_CLICK requires visible and enabled owned control ancestors")
         event = dict(stage="BM_CLICK", pid=self.process.pid, hwnd=hwnd,
-                     text=self.text(hwnd), **self.control_state(hwnd))
+                     text=self.text(hwnd), ancestors=ancestors, **self.control_state(hwnd))
         self.events.append(event)
         if not self.api.PostMessageW(hwnd, 0xF5, 0, 0):
             event["post_succeeded"] = False
@@ -427,6 +491,7 @@ class OwnedControls:
                      if self.text(h).startswith("Readiness:")), "")
 
     def selected_observation(self, main):
+        self.show_main_offscreen(main)
         original = self.wait(lambda: self.revision(main) if "revision 0" not in
             self.revision(main) else None, "actual backend revision")
         observation = next(h for h in self.enumerate(main) if
