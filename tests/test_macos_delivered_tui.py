@@ -706,3 +706,18 @@ class MacosDeliveredTuiTests(unittest.TestCase):
 
     def test_delivered_joined_make_ready_ordinary_linear_tui(self) -> None:
         self.exercise_delivered_joined(JOINED_SCENARIOS[1])
+
+    def exercise_delivered_environment(self, index: int) -> None:
+        import delivered_environment_reconstruction as reconstruction
+        reconstruction.exercise(self, reconstruction.SCENARIOS[index],
+            package=self.package, consumer=self.consumer, fixture=self.fixture_install,
+            binding=self.binding, evidence_root=self.evidence_root)
+
+    def test_delivered_environment_clean_reconstruction(self) -> None:
+        self.exercise_delivered_environment(0)
+
+    def test_delivered_environment_interrupted_context_recovery(self) -> None:
+        self.exercise_delivered_environment(1)
+
+    def test_delivered_environment_foreign_and_invalid_inputs(self) -> None:
+        self.exercise_delivered_environment(2)

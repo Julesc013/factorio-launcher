@@ -661,3 +661,14 @@ class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
                         gui_sha256=result["gui_sha256"], backend_sha256=result["backend_sha256"],
                         result_sha256=hashlib.sha256(record).hexdigest(),
                         custody_sha256=hashlib.sha256(canonical).hexdigest()), sort_keys=True))
+        # The completed GUI oracle keeps its original custody and budget. Exercise
+        # the three portable-environment journeys against this same factory output
+        # with separate call, ownership, time and whole-scenario custody bounds.
+        import delivered_environment_reconstruction as reconstruction
+        for scenario in reconstruction.SCENARIOS:
+            reconstruction.exercise(self, scenario, package=package, consumer=consumer,
+                fixture=fixture, evidence_root=custody,
+                binding=dict(schema="facman.windows_delivered_environment_result.v1",
+                    qualification=qualification, build_info=build_info,
+                    backend_sha256=hashes["bin/facman.exe"],
+                    closure_sha256=manifest_digest, package_readonly=True))

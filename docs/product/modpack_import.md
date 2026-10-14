@@ -58,3 +58,28 @@ recovery.
 
 This command reconstructs local content into a new instance. It does not grant
 release, package, real-game, or human-experience qualification.
+
+To reconstruct a declared environment, supply the profile and world separately.
+`profiles inspect` reports portable safe settings; recreate those declared values
+with `profiles create`, review `profiles plan`, then apply its digest to the
+imported instance. A modpack v1 does not contain this profile or a selected world.
+
+`snapshots create <source-instance> <snapshot-id> --save <save.zip>` produces the
+existing portable snapshot. `snapshots inspect` exposes its typed WorldBundle and
+exact selected-save hash closure. Restore it into an absent carrier instance in
+the destination workspace with `snapshots restore`. This owner requires the
+snapshot's declared installation reference to be registered and compatible. If
+pack import selected a different installation ID, register the snapshot's ID
+against the compatible read-only installation as well; the imported instance
+retains its independently selected installation binding.
+
+Create an owned backup of the carrier's restored save, then use `saves clone`
+with `--source-kind owned_backup --to-instance <imported-instance> --as <save.zip>`.
+The backup's workspace provenance is local to the carrier's destination workspace;
+copying an old backup manifest into that workspace does not grant restore authority.
+Apply the declared profile's save selection and use ordinary joined preparation
+to record the current selected-save context. Verify the imported instance, modset,
+and save through their public owners. Context binds the new local content lock and
+profile while preserving the original world bytes. Existing routing can already
+be satisfied by import, so joined preparation may only need its selected-save
+component. Structural fixture success keeps real Play and execution unavailable.
