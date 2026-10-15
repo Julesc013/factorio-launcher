@@ -25,6 +25,7 @@
 #include "handlers/profiles.h"
 #include "handlers/recovery.h"
 #include "handlers/saves.h"
+#include "handlers/snapshots.h"
 
 #include <algorithm>
 #include <atomic>
@@ -461,11 +462,9 @@ std::string json_string(const json::Value& value)
 std::string recovery_json(const std::filesystem::path& workspace)
 {
     const transactions::Outcome outcome = transactions::inspect(workspace);
-    if (std::holds_alternative<transactions::RecoveryResult>(outcome)) {
+    if (std::holds_alternative<transactions::RecoveryResult>(outcome))
         return std::get<transactions::RecoveryResult>(outcome).json;
-    }
-    return transactions::to_json(
-        std::get<transactions::Refusal>(outcome), "workspace.recovery.inspect");
+    return transactions::to_json(std::get<transactions::Refusal>(outcome), "workspace.recovery.inspect");
 }
 
 struct AdvertisedAction {
@@ -713,6 +712,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     }
     auto installs_result = context_.installs().list();
     auto instances_result = context_.instances().list();
+    json::ArrayBuilder problems;
+    if (!instances_result && request.scope == "activity_recovery") {
+        const auto& error = instances_result.error();
+        add_problem(problems, error.code, error.message, error.path + " " + error.detail);
+        instances_result = decltype(instances_result)::success({});
+    }
     if (!installs_result || !instances_result) {
         return service_refusal(
             "presentation.query", "presentation_repository_unavailable",
@@ -1075,13 +1080,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         }
     }
 
-    json::ArrayBuilder problems;
     if (installs.empty()) add_problem(problems, "no_installations", "No installation is registered");
-    if (request.scope == "launch_deck" && request.selected_instance_id.empty()) {
-        add_problem(problems, "no_instance_selected", "Select an instance to compute readiness");
-    } else if (!request.selected_instance_id.empty() && !selected_exists) {
+    if (request.selected_instance_id.empty()) {
+        if (request.scope == "launch_deck") add_problem(problems, "no_instance_selected", "Select an instance to compute readiness");
+    } else if (!selected_exists) {
         add_problem(problems, "selected_instance_missing", "The selected instance is not registered");
-    } else if (!request.selected_instance_id.empty() && readiness.empty()) {
+    } else if (readiness.empty()) {
         add_problem(problems, "readiness_unavailable", "Readiness could not be computed");
     }
     if (last_run.state == LastRunAuthorityState::provider_unavailable) {
@@ -1163,6 +1167,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             default_instance, instance_choices},
         {"save", "Owned backup filename (.zip)", "string", true, {}, {}},
         {"output_path", "New save filename (.zip)", "string", true, {}, {}},
+    };
+    const std::vector<ActionInputField> snapshot_restore_input = {
+        {"source_path", "Instance snapshot archive (.zip)", "path", true, {}, {}},
+        {"new_instance_id", "New instance ID", "identifier", true, "restored-instance", {}},
+        {"installation_id", "Registered installation", "enum", true,
+            install_choices.empty() ? std::string() : install_choices.front(), install_choices},
     };
     const std::vector<ActionInputField> support_export_input = {
         {"selected_instance_id", "Instance", "enum", true,
@@ -1320,6 +1330,11 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "explicit", "facman.semantic_action_input.v1", modset_rollback_input));
     }
     if (request.scope == "saves") {
+        actions.add_object(action_descriptor(
+            "snapshots.restore", "presentation.action", "Restore snapshot into new instance",
+            "manage", "workspace_write", !installs.empty(),
+            installs.empty() ? "no_installations" : nullptr,
+            "explicit", "facman.semantic_action_input.v1", snapshot_restore_input));
         const bool saves_available = selected_exists && !save_choices.empty();
         const char* saves_refusal = !selected_exists
             ? "no_instance_selected" : (save_choices.empty() ? "no_saves" : nullptr);
@@ -1594,6 +1609,7 @@ ApplicationResult PresentationService::action(
             facman::core::OutcomeKind::refused);
     }
 
+    const bool reconstruct_instance = request.action_id == "modsets.import" || request.action_id == "snapshots.restore";
     std::string required_input;
     if (request.action_id == "installation.register_read_only" &&
         (request.scope != "installations" || request.installation_id.empty() ||
@@ -1619,8 +1635,8 @@ ApplicationResult PresentationService::action(
     } else if (request.action_id == "mods.inspect" &&
         (request.scope != "content" || request.mod_identity.empty())) {
         required_input = "mod_identity is required";
-    } else if (request.action_id == "modsets.import" &&
-        (request.scope != "content" || request.source_path.empty() ||
+    } else if (reconstruct_instance &&
+        (request.scope != (request.action_id == "snapshots.restore" ? "saves" : "content") || request.source_path.empty() ||
             request.new_instance_id.empty() || request.installation_id.empty())) {
         required_input = "source_path, new_instance_id, and installation_id are required";
     } else if (request.action_id == "modsets.export" &&
@@ -1868,13 +1884,16 @@ ApplicationResult PresentationService::action(
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
         }
-    } else if (request.action_id == "modsets.import" && request.scope == "content") {
+    } else if (reconstruct_instance) {
         ImportModpackRequest import_request;
         import_request.source_path = facman::platform::path_from_utf8(request.source_path);
         import_request.instance_id = request.new_instance_id;
         import_request.install_id = request.installation_id;
         import_request.display_name = request.display_name;
-        const ApplicationResult imported = handlers::import_modpack(context_, import_request);
+        const ApplicationResult imported = request.action_id == "snapshots.restore"
+            ? handlers::dispatch_snapshots(context_, ApplicationRequest{CommandId::snapshots_restore,
+                RestoreSnapshotRequest{request.source_path, request.new_instance_id, request.installation_id}, false})
+            : handlers::import_modpack(context_, import_request);
         if (imported.status != ULK_STATUS_OK) {
             const char* outcome = imported.outcome_kind == facman::core::OutcomeKind::recovery_required
                 ? "recovery_required" : "refused_before_effects";

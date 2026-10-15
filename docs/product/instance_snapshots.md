@@ -1,5 +1,12 @@
 # Restoring an instance snapshot
 
+In the ordinary Saves page, choose **Restore snapshot**, enter the archive path
+and a new instance ID, select a registered installation, and confirm the reviewed
+values. The action is available before any instance exists. The terminal Saves
+page exposes the same fields and requires a second activation to confirm;
+Cancel leaves the workspace unchanged. Successful restoration selects the new
+instance. The backend checks the installation's exact version against the archive.
+
 Restore a snapshot against its original registered installation identifier:
 
 ```text
@@ -34,6 +41,17 @@ restore. Missing or changed staging, substituted destinations, and changed
 installation/source evidence require correction or review before any cleanup.
 Historical transactions using the original unbound strategy retain their
 existing recovery behavior; they do not acquire the new evidence guarantees.
+
+The ordinary action uses the same restore owner, confirmation, current
+presentation revision and durable action identity. Replaying the same accepted
+request returns its recorded result; changed input with that identity is refused.
+After process loss, Activity exposes ordinary transaction recovery. If retained
+staging prevents instance inventory from being read, Activity reports that
+inventory error while keeping recovery available. Other pages retain their
+repository checks. An uncertain
+original action receipt stays uncertain even when recovery safely rolls back or
+finalizes its transaction. Inspect the resulting instance and recovery report
+before starting a new operation.
 
 Snapshot restoration grants no Factorio execution or managed version-update
 authority. Content reconstruction, profile selection, and Make Ready continue

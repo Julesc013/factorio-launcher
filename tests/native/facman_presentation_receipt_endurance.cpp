@@ -117,6 +117,10 @@ std::string request_fingerprint(const SemanticActionRequest &request) {
   input.add_string("new_instance_id", request.new_instance_id);
   input.add_string("display_name", request.display_name);
   input.add_string("template_id", request.template_id);
+  input.add_string("profile_id", request.profile_id);
+  input.add_string("mod_identity", request.mod_identity);
+  input.add_string("save", request.save);
+  input.add_string("output_path", request.output_path);
   input.add_string("source_data_root", request.source_data_root);
   input.add_string("transaction_id", request.transaction_id);
   json::ArrayBuilder roots;

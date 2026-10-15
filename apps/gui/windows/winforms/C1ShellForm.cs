@@ -385,6 +385,8 @@ namespace FacMan.WinForms
                 "&Back up", "Back up selected local save", "saves", "saves.backup"));
             actions.Controls.Add(ScopedActionButton(
                 "&Restore", "Restore a verified owned backup to a new save", "saves", "saves.restore"));
+            actions.Controls.Add(ScopedActionButton(
+                "Restore &snapshot", "Restore snapshot into new instance", "saves", "snapshots.restore"));
             layout.Controls.Add(actions, 0, 3);
             return page;
         }

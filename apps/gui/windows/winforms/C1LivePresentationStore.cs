@@ -462,7 +462,7 @@ namespace FacMan.WinForms
         {
             if (receipt.ReplacementSnapshot == null) return;
             snapshots[scope] = receipt.ReplacementSnapshot;
-            if (receipt.ActionId == "modsets.import" && receipt.Outcome == "completed" &&
+            if ((receipt.ActionId == "modsets.import" || receipt.ActionId == "snapshots.restore") && receipt.Outcome == "completed" &&
                 !String.IsNullOrWhiteSpace(receipt.ReplacementSnapshot.SelectedContext.InstanceId))
                 SelectedInstanceId = receipt.ReplacementSnapshot.SelectedContext.InstanceId;
         }
