@@ -68,9 +68,9 @@ class LabRegistryTests(unittest.TestCase):
 
     def test_no_game_is_needed_for_first_run_human_observation(self):
         rows = lab.matrix(self.document)
-        row = next(row for row in rows if row["id"] == "windows_x64/human_experience/J01_first_run_workspace")
+        row = next(row for row in rows if row["id"] == "linux_x64/human_experience/J01_first_run_workspace")
         self.assertFalse(any("Factorio input custody" in item for item in row["blockers"]))
-        play = next(row for row in rows if row["id"] == "windows_x64/human_experience/J09_play_session")
+        play = next(row for row in rows if row["id"] == "linux_x64/human_experience/J09_play_session")
         self.assertTrue(any("Factorio input custody" in item for item in play["blockers"]))
 
     def test_invented_authority_missing_coverage_and_host_substitution_refuse(self):
@@ -170,6 +170,23 @@ class RunCustodyTests(unittest.TestCase):
     def snapshot(self):
         return {p.relative_to(self.task_root).as_posix(): p.read_bytes()
                 for p in self.task_root.rglob("*") if p.is_file()}
+
+    def test_registered_game_input_does_not_admit_real_game_execution(self):
+        self.assertEqual(self.document["inputs"]["approved_game"]["windows_x64"]["status"], "registered")
+        rows = lab.matrix(self.document)
+        before = self.snapshot()
+        for scenario in self.document["coverage"]["real_game_journeys"]:
+            cell = next(row for row in rows if row["id"] == f"windows_x64/real_game/{scenario}")
+            self.assertEqual(cell["status"], "blocked_external")
+            self.assertTrue(any("qualify this named host for real_game" in item for item in cell["blockers"]))
+            self.assertFalse(any("Factorio input custody" in item for item in cell["blockers"]))
+            self.assertFalse(cell["execution_authorized"])
+            self.assertFalse(cell["qualified"])
+            record = copy.deepcopy(self.record)
+            record["scenario_id"] = cell["id"]
+            with self.subTest(scenario=scenario), self.assertRaisesRegex(lab.Invalid, "unresolved external custody"):
+                custody.inspect(record, self.document)
+        self.assertEqual(self.snapshot(), before)
 
     def test_concrete_inputs_roots_reset_and_export_bind_without_effects(self):
         before = self.snapshot()
