@@ -73,11 +73,14 @@
     },
     "approved_game": {
       "windows_x64": {
-        "status": "unavailable",
-        "digest": null,
-        "approval_ref": null,
-        "blocker": "Operator: provide approved platform/version-specific Factorio input custody with exact digest; register a fresh route/scenario permit separately. Target: windows_x64.",
-        "owner": "operator"
+        "status": "registered",
+        "digest": "18a6400065167235f085e82902daa5a5828ac65006cfafb1f3cb2dd2fe8f9656",
+        "approval_ref": {
+          "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-custody-approval-2026-10-16.json",
+          "semantic_sha256": "e46cc2ff5b8aafe0aea09e229b049f40cfe0d45c1690898d12e2c0bb3e3576fe"
+        },
+        "blocker": null,
+        "owner": "runtime-maintainer"
       },
       "linux_x64": {
         "status": "unavailable",

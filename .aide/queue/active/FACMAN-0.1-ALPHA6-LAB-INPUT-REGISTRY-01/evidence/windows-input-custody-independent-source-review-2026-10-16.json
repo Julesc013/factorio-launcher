@@ -1,0 +1,88 @@
+{
+  "schema": "facman.independent_windows_input_custody_source_review.v1",
+  "verdict": "PASS_SCOPED_SOURCE_FOR_REQUIRED_CURRENT_CI",
+  "reviewer": "/root",
+  "author": "/root/game_input_custody",
+  "non_authoring": true,
+  "base": "7a3569ceea299e2425b4e82b99df2e1e758e6b01",
+  "branch": "task/facman-windows-input-custody-01",
+  "packet_sha256": "efe09759ed74d0dad566f1e59c5f1ddb9e418f9d78903c8248d313281dc0e7a6",
+  "reviewer_script_sha256": "ad49aad36317ba3ab52a206f786e0f16e0825f32ddd033fdae920bb249443207",
+  "source_files": {
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/ExecPlan.md": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/ExecPlan.md",
+      "sha256": "942eed00c4dba3cc8ff5e62de00d26731b8b6f6bacf496ed25acbf227d7a5d41",
+      "bytes": 7756
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-custody-2026-10-16.json": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-custody-2026-10-16.json",
+      "sha256": "83c0d0b1436b34c8615c16ee8f5ab0ee275da4f801ec68d52d6f4ea94eee93ad",
+      "bytes": 5153
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-custody-approval-2026-10-16.json": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-custody-approval-2026-10-16.json",
+      "sha256": "6240f3ea6fc6b45152c9823c50384103ebfd97933e3ed3bcc26aa6b3fb44895e",
+      "bytes": 256
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-independent-review-2026-10-16.json": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-independent-review-2026-10-16.json",
+      "sha256": "e3e06c1e39bc04593b982953921a7d108878abe24a9f395c80fd6134d0a51d98",
+      "bytes": 1753
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-input-custody-validation-2026-10-16.json": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-input-custody-validation-2026-10-16.json",
+      "sha256": "547f2c9b37a68bf6ac31afcaa00e373f698aa9f422f6a5a446723e892ad5407e",
+      "bytes": 4294
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-input-custody-validation-2026-10-16.zip": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-input-custody-validation-2026-10-16.zip",
+      "sha256": "00d84b6b33aee84eb51aecaaa04fddc2f2f4803b3fc3e3595d7843c3c09537cd",
+      "bytes": 11818
+    },
+    "docs/development/lab-input-registry.md": {
+      "path": "docs/development/lab-input-registry.md",
+      "sha256": "c3994256e03fcdf4500c2c03a74661e01af71ba8357cecde50667e63853f6d43",
+      "bytes": 6716
+    },
+    "release/index/lab_input_registry.v1.json": {
+      "path": "release/index/lab_input_registry.v1.json",
+      "sha256": "09f1a6fcbc1cab891b4a3881eea00b2e1ab301730a3f760bb51a7c2523b1975b",
+      "bytes": 5643
+    },
+    "tests/test_lab_input_registry.py": {
+      "path": "tests/test_lab_input_registry.py",
+      "sha256": "aba4b8a6c80cdbc8b35449ec3ec35c9bdc3a7e580283a700e18eabd442a2bbf6",
+      "bytes": 14275
+    }
+  },
+  "source_archive_verified": true,
+  "current_complete_private_capture_independently_reviewed": true,
+  "exact_manifest_digest_semantics": true,
+  "issuer_is_model_maintainer_not_user": true,
+  "changed_cells": [
+    "windows_x64/real_game/J08_readiness_make_ready",
+    "windows_x64/real_game/J09_play_session",
+    "windows_x64/real_game/J10_recovery",
+    "windows_x64/human_experience/J08_readiness_make_ready",
+    "windows_x64/human_experience/J09_play_session",
+    "windows_x64/human_experience/J10_recovery"
+  ],
+  "matrix_cells": 123,
+  "fixture_preparation_available": 52,
+  "blocked_external": 71,
+  "mapped_tests": 36,
+  "historical_queue_receipts_preserved": 22,
+  "other_platform_inputs_and_host_capabilities_unchanged": true,
+  "fixture_only_inspector_unchanged": true,
+  "execution_authorized": false,
+  "qualification_granted": false,
+  "source_authentication_granted": false,
+  "permit_issued": false,
+  "real_game": false,
+  "human": false,
+  "workunit_closed": false,
+  "beta": false,
+  "rc": false,
+  "current_CI_pending": true,
+  "product_build_or_package_proof_required_for_data_change": false
+}

@@ -1,0 +1,97 @@
+{
+  "schema": "facman.observed-factorio-input-custody.v1",
+  "platform": "windows_x64",
+  "version": "2.0.77",
+  "installation_root": "D:\\Games\\Factorio\\2.0",
+  "status": "independently_reviewed_input_custody_only",
+  "input_identity": {
+    "sha256": "18a6400065167235f085e82902daa5a5828ac65006cfafb1f3cb2dd2fe8f9656",
+    "digest_kind": "sha256_of_exact_retained_manifest_file_bytes",
+    "unit": "Retained private manifest of the complete supplied installation view, whose rows bind every regular file raw content SHA256 plus size, identity and mtime; directories also recorded.",
+    "not_claimed": [
+      "official_archive_sha256",
+      "executable_sha256",
+      "unqualified_canonical_tree_root_digest",
+      "authenticated_wube_source"
+    ]
+  },
+  "capture_started_at_utc": "2026-10-15T14:24:17.676512+00:00",
+  "capture_completed_at_utc": "2026-10-15T14:32:12.341067+00:00",
+  "manifest_captures": [
+    {
+      "bytes": 11209258,
+      "completed_at_utc": "2026-10-15T14:31:56.227219+00:00",
+      "directories": 2212,
+      "files": 19742,
+      "pass_number": 1,
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\real-factorio-current-input-manifest-before-01.json",
+      "sha256": "18a6400065167235f085e82902daa5a5828ac65006cfafb1f3cb2dd2fe8f9656",
+      "started_at_utc": "2026-10-15T14:24:17.678693+00:00",
+      "total_file_bytes": 5052185219
+    },
+    {
+      "bytes": 11209258,
+      "completed_at_utc": "2026-10-15T14:32:12.283773+00:00",
+      "directories": 2212,
+      "files": 19742,
+      "pass_number": 2,
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\real-factorio-current-input-manifest-after-01.json",
+      "sha256": "18a6400065167235f085e82902daa5a5828ac65006cfafb1f3cb2dd2fe8f9656",
+      "started_at_utc": "2026-10-15T14:31:56.229108+00:00",
+      "total_file_bytes": 5052185219
+    }
+  ],
+  "files": 19742,
+  "directories": 2212,
+  "total_file_bytes": 5052185219,
+  "complete_before_after_maps_equal": true,
+  "raw_manifest_bytes_equal": true,
+  "historical_file_content_map_equal": true,
+  "capture_guards": "Streaming file content SHA256 with stable no-follow path/handle identity, size and mtime before and after each read. Non-reparse ancestor and directory handles retained throughout both captures. No filesystem lease remains after capture.",
+  "executable": {
+    "relative_path": "bin/x64/factorio.exe",
+    "bytes": 43530192,
+    "sha256": "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b",
+    "digest_kind": "raw_executable_file_sha256",
+    "pe_version": {
+      "FileVersion": "2.0.77.84539",
+      "ProductVersion": "2.0.77"
+    }
+  },
+  "base_info_version": "2.0.77",
+  "capture_result": {
+    "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\real-factorio-current-input-capture-result-01.json",
+    "sha256": "2629e683f6b672680efa9cc50aa2cc799117fd9632b0a9104c35d63eb44798c1"
+  },
+  "capture_script": {
+    "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\real-factorio-current-input-capture-01.py",
+    "sha256": "f2d2c6b702f0d13fa4485c6dde4d867ac64d4fe5c41b677cd1d14ace1b756c7d"
+  },
+  "capture_packet": {
+    "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\real-factorio-current-input-custody-packet-01.json",
+    "sha256": "62074b024381a6a4457d61c670dc4585712984b9745cda842b57e366fa12151d"
+  },
+  "independent_review": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-independent-review-2026-10-16.json",
+    "sha256": "e3e06c1e39bc04593b982953921a7d108878abe24a9f395c80fd6134d0a51d98",
+    "verdict": "PASS_FOR_INPUT_CUSTODY_ONLY_REGISTRATION",
+    "issuer": "Codex /root; independent input-custody review",
+    "scope": "input_custody_only",
+    "approval_ref": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-custody-approval-2026-10-16.json",
+      "semantic_sha256": "e46cc2ff5b8aafe0aea09e229b049f40cfe0d45c1690898d12e2c0bb3e3576fe"
+    }
+  },
+  "user_authority": "User supplied D:\\Games\\Factorio\\x.x for existing-input acceptance inspection. The measured digest approval is issued by the identified maintainer/model reviewer; no digest approval or signature is attributed to Jules.",
+  "private_retention": "Exact raw manifests and game bytes remain private external inputs. This compact source record publishes no raw file map or game bytes.",
+  "revalidate_before_effects": true,
+  "point_in_time_only": true,
+  "execution_authorized": false,
+  "qualification_granted": false,
+  "source_authenticated": false,
+  "scenario_host_qualified": false,
+  "permit_issued": false,
+  "human_verdict_recorded": false,
+  "whole_workunit_closed": false,
+  "release_authority_granted": false
+}
