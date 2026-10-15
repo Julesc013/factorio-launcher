@@ -11,6 +11,7 @@ import sys
 import tempfile
 import tomllib
 import unittest
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -223,6 +224,76 @@ class TuiProductTests(unittest.TestCase):
             self.assertEqual("local", json.loads((destination / "instances/restored/instance.v1.json").read_bytes())["install_ref"])
             self.assertEqual(FIXTURE_SAVE.read_bytes(), (destination / "instances/restored/saves/starter.zip").read_bytes())
             self.assertEqual(inputs, (snapshot(instance), snapshot(workspace / "installs")))
+
+    def test_ordinary_edited_snapshot_name_requires_fresh_confirmation_before_cancel(self) -> None:
+        from test_presentation_snapshot_create import PresentationSnapshotCreateTests
+        from test_local_modset_solver import snapshot
+
+        owner = PresentationSnapshotCreateTests()
+        with tempfile.TemporaryDirectory(prefix="tui-edited-cancel-") as temporary:
+            workspace, instance = owner.prepare(Path(temporary))
+            projected = owner.query(workspace)
+            index = next(i for i,a in enumerate(projected["available_semantic_actions"])
+                         if a["action_id"] == "snapshots.create")
+            opening = "5\n" + "tab\n" * index + "space\n"
+            opening += "selected_instance_id=main\nsnapshot_id=first\nsave=starter.zip\nspace\n"
+            before = snapshot(workspace)
+            paths_before = sorted(p.relative_to(workspace).as_posix() for p in workspace.rglob("*"))
+            protected = snapshot(instance), snapshot(workspace / "installs")
+            result = self.invoke(["--workspace", str(workspace), "--ordinary", "--plain"],
+                                 stdin=opening + "snapshot_id=second\nspace\n6\nq\n")
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual(2, result.stdout.count("Status: Confirm Create instance snapshot:"), result.stdout)
+            self.assertIn("snapshot_id=second (required)", result.stdout)
+            self.assertNotIn("Snapshot created:", result.stdout)
+            self.assertEqual(before, snapshot(workspace))
+            self.assertEqual(paths_before, sorted(p.relative_to(workspace).as_posix() for p in workspace.rglob("*")))
+            self.assertEqual(protected, (snapshot(instance), snapshot(workspace / "installs")))
+
+    def test_ordinary_edited_snapshot_name_completes_only_after_renewed_confirmation(self) -> None:
+        from test_presentation_snapshot_create import PresentationSnapshotCreateTests
+        from test_local_modset_solver import snapshot
+        from test_instance_snapshots import FIXTURE_SAVE
+
+        owner = PresentationSnapshotCreateTests()
+        with tempfile.TemporaryDirectory(prefix="tui-edited-confirm-") as temporary:
+            workspace, instance = owner.prepare(Path(temporary))
+            projected = owner.query(workspace)
+            index = next(i for i,a in enumerate(projected["available_semantic_actions"])
+                         if a["action_id"] == "snapshots.create")
+            opening = "5\n" + "tab\n" * index + "space\n"
+            opening += "selected_instance_id=main\nsnapshot_id=first\nsave=starter.zip\nspace\n"
+            protected = snapshot(instance), snapshot(workspace / "installs")
+            result = self.invoke(["--workspace", str(workspace), "--ordinary", "--plain"],
+                                 stdin=opening + "snapshot_id=second\nspace\nspace\nq\n")
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual(2, result.stdout.count("Status: Confirm Create instance snapshot:"), result.stdout)
+            receipts = list((workspace / ".facman/action-receipts-v2").glob("*.v2.json"))
+            self.assertEqual(1, len(receipts))
+            recorded = json.loads(receipts[0].read_bytes())
+            request, outcome = json.loads(recorded["request_json"]), json.loads(recorded["result_json"])
+            self.assertEqual(("main", "second", "starter.zip", "explicit"),
+                             tuple(request[k] for k in ("selected_instance_id", "snapshot_id", "save", "confirmation")))
+            self.assertEqual(("snapshots.create", "completed"), (outcome["action_id"], outcome["outcome"]))
+            archive = workspace / "snapshots/main/second.zip"
+            with zipfile.ZipFile(archive) as zipped:
+                manifest = json.loads(zipped.read("manifest/snapshot.v1.json"))
+                self.assertEqual(["starter.zip"], manifest["selected_saves"])
+                self.assertEqual(FIXTURE_SAVE.read_bytes(), zipped.read("saves/starter.zip"))
+                self.assertEqual(set(zipped.namelist()) - {"manifest/snapshot.v1.json"},
+                                 {entry["path"] for entry in manifest["file_hashes"]})
+                self.assertNotIn("mods/mod-settings.dat", zipped.namelist())
+                for entry in manifest["file_hashes"]:
+                    data = zipped.read(entry["path"])
+                    self.assertEqual((entry["size"], entry["sha256"]), (len(data), hashlib.sha256(data).hexdigest()))
+            self.assertEqual(dict(schema="factorio.snapshot_report.v1", command="snapshots.create", status="ok",
+                instance_id="main", snapshot_id="second", path=str(archive), archive_bytes=archive.stat().st_size,
+                file_count=len(manifest["file_hashes"]), selected_saves=["starter.zip"], deterministic=True,
+                portable=True, secret_content_included=False, mutation_executed=True), outcome["action_payload"])
+            self.assertIn("  Operation: Snapshot created: " + str(archive), result.stdout)
+            self.assertFalse((workspace / "snapshots/main/first.zip").exists())
+            self.assertFalse((workspace / "snapshots/main/first.record.json").exists())
+            self.assertEqual(protected, (snapshot(instance), snapshot(workspace / "installs")))
 
     def test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance(self) -> None:
         from test_presentation_snapshot_restore import PresentationSnapshotRestoreTests

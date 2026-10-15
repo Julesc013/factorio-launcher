@@ -276,6 +276,63 @@ int main()
         first_identity.attempt_id != "attempt-" + first_identity.request_id ||
         first_identity.request_id.find("0123456789ab") == std::string::npos) return 17;
 
+    struct ReviewedEdit {
+        const char* field;
+        const char* before;
+        const char* after;
+        bool present;
+        bool invalidates;
+        bool valid;
+    };
+    const ReviewedEdit reviewed_edits[] = {
+        {"snapshot_id", "first", "second", true, true, true},
+        {"snapshot_id", "first", "", true, true, false},
+        {"snapshot_id", "first", "first", true, false, true},
+        {"save", "starter.zip", "", true, true, true},
+        {"save", "", "starter.zip", true, true, true},
+        {"save", "", "", true, false, true},
+        {"save", "", "", false, false, true},
+    };
+    TuiState reviewed;
+    reviewed.form.id = "snapshots.create";
+    reviewed.form.fields = {
+        {"snapshot_id", "Snapshot", FormFieldType::string, true, false, {}, {}, {}, {}},
+        {"save", "Optional save", FormFieldType::string, false, false, {}, {}, {}, {}},
+        {"count", "Count", FormFieldType::integer, false, false, {}, {}, {}, {}},
+    };
+    reviewed.form.values["snapshot_id"] = "first";
+    reviewed.pending_action = "snapshots.create";
+    for (const auto& example : reviewed_edits) {
+        TuiState prior = reviewed;
+        if (example.present) prior.form.values[example.field] = example.before;
+        const auto values_before = prior.form.values;
+        TuiEvent edited;
+        edited.kind = TuiEventKind::edit_field;
+        edited.name = example.field;
+        edited.value = example.after;
+        const TuiState changed = reduce_tui_state(prior, edited);
+        if (changed.pending_action.empty() != example.invalidates ||
+            changed.form.values.at(example.field) != example.after ||
+            changed.form.problems.empty() != example.valid ||
+            prior.pending_action != "snapshots.create" ||
+            prior.form.values != values_before) return 54;
+    }
+    TuiEvent corrected;
+    corrected.kind = TuiEventKind::edit_field;
+    corrected.name = "count";
+    corrected.value = "many";
+    reviewed = reduce_tui_state(reviewed, corrected);
+    if (!reviewed.pending_action.empty() || reviewed.form.problems.empty()) return 55;
+    corrected.value = "2";
+    reviewed = reduce_tui_state(reviewed, corrected);
+    if (!reviewed.pending_action.empty() || !reviewed.form.problems.empty()) return 56;
+    TuiEvent reviewed_again;
+    reviewed_again.kind = TuiEventKind::activate_action;
+    reviewed_again.name = "snapshots.create";
+    reviewed = reduce_tui_state(reviewed, reviewed_again);
+    reviewed = reduce_tui_state(reviewed, corrected);
+    if (reviewed.pending_action != "snapshots.create") return 57;
+
     state.form.fields = {
         {"name", "Name", FormFieldType::string, true, false, {}, {}, {}, {}},
         {"count", "Count", FormFieldType::integer, true, false, {}, {}, {}, {}},
