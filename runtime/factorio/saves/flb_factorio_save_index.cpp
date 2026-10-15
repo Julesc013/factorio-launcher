@@ -627,10 +627,13 @@ std::vector<std::string> backup_history(const Instance& instance, const SaveReco
     return output;
 }
 
-std::string sidecar_json(const Instance& instance, const SaveRecord& save, const Request& request)
+std::string sidecar_json(const Instance& instance, const SaveRecord& save, const Request& request,
+    const std::string& created = {}, const std::string& verified = {}, const json::Value* history = nullptr)
 {
     json::ArrayBuilder backups;
-    for (const std::string& value : backup_history(instance, save)) backups.add_string(value);
+    if (history) {
+        for (std::size_t i = 0; i < history->size(); ++i) backups.add_value(*history->at(i));
+    } else for (const std::string& value : backup_history(instance, save)) backups.add_string(value);
     const std::string now = utc_now();
     const auto classified = facman::factorio::version::classify(instance.record.factorio_version);
     json::ObjectBuilder output;
@@ -647,8 +650,8 @@ std::string sidecar_json(const Instance& instance, const SaveRecord& save, const
     output.add_string("profile_id", request.profile_id.empty() ? instance.record.profile : request.profile_id);
     output.add_string("source_operation", request.source_operation.empty() ? "saves.associate" : request.source_operation);
     output.add_array("backup_history", backups);
-    output.add_string("created_utc", now);
-    output.add_string("last_verified_utc", now);
+    output.add_string("created_utc", created.empty() ? now : created);
+    output.add_string("last_verified_utc", verified.empty() ? now : verified);
     return output.serialize() + "\n";
 }
 
@@ -865,6 +868,43 @@ facman::core::Result<SelectedAssociation> prepare_exact_association(const fs::pa
         return failure<SelectedAssociation>("save_association_exists", "Existing selected context must be preserved", target);
     return facman::core::Result<SelectedAssociation>::success({instance.value().record.root,
         value.value().path, target, value.value().sha256, sidecar_json(instance.value(), value.value(), request)});
+}
+
+facman::core::Result<SelectedAssociation> prepare_refreshed_association(
+    const fs::path& workspace, const Request& request, const std::string& original,
+    const std::string& verified_utc)
+{
+    auto instance = load_instance(workspace, request.instance_id);
+    if (!instance) return failure<SelectedAssociation>(instance.error().code, instance.error().message);
+    if (const auto lock = save_write_lock(instance.value())) return failure<SelectedAssociation>(
+        "save_locked", "Selected context conflicts with an active instance", *lock);
+    auto save = exact_record(workspace, request);
+    auto old = json::parse(original);
+    const auto* history = old ? old.value().find("backup_history") : nullptr;
+    if (!save || !save.value().archive_structurally_valid || !save.value().factorio_save_recognized ||
+        request.profile_id != instance.value().record.profile || !old || !history || !history->is_array() ||
+        history->size() > 1024U || original.size() > kMaximumSidecarBytes ||
+        object_string(old.value(), "source_operation") != "readiness.prepare_selected_save" ||
+        !facman::core::Sha256Digest::parse(object_string(old.value(), "save_sha256")) ||
+        object_string(old.value(), "created_utc").empty() || object_string(old.value(), "last_verified_utc").empty())
+        return failure<SelectedAssociation>("selected_context_refresh_unavailable", "A canonical owned context and recognized current save are required");
+    for (std::size_t i = 0; i < history->size(); ++i)
+        if (!history->at(i)->is_string()) return failure<SelectedAssociation>(
+            "selected_context_refresh_unavailable", "Original backup history is not canonical");
+    const fs::path target = sidecar_path(instance.value(), save.value().file_name);
+    if (!selected_context_leaf_supported(target.filename()) || !exact_context_version(instance.value().record.factorio_version))
+        return failure<SelectedAssociation>("selected_context_refresh_unavailable", "Selected context filename or exact version is unsupported");
+    const std::string current_sha = save.value().sha256;
+    save.value().sha256 = object_string(old.value(), "save_sha256");
+    if (sidecar_json(instance.value(), save.value(), request, object_string(old.value(), "created_utc"),
+            object_string(old.value(), "last_verified_utc"), history) != original || save.value().sha256 == current_sha)
+        return failure<SelectedAssociation>("selected_context_refresh_unavailable",
+            "Only archive-byte drift with unchanged canonical instance, profile, version and locked content can refresh");
+    save.value().sha256 = current_sha;
+    return facman::core::Result<SelectedAssociation>::success({instance.value().record.root, save.value().path,
+        target, current_sha, sidecar_json(instance.value(), save.value(), request,
+            object_string(old.value(), "created_utc"), verified_utc.empty()
+                ? object_string(old.value(), "last_verified_utc") : verified_utc, history)});
 }
 
 facman::core::Result<std::string> verify(const fs::path& workspace, const Request& request)

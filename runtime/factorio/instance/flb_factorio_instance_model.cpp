@@ -1097,9 +1097,34 @@ facman::core::Result<Projection> project(
     }
     projection.pending_transactions = tx::incomplete_count(workspace);
     const auto recovery = tx::inspect(workspace);
-    if (const auto* report = std::get_if<tx::RecoveryResult>(&recovery))
+    if (const auto* report = std::get_if<tx::RecoveryResult>(&recovery)) {
         projection.recovery_identity = "sha256:" + sha256_text(canonical_json(report->json));
-    else projection.recovery_identity = "sha256:" + sha256_text(
+        // A reachable prefix can still be valid JSON and match the new save.
+        // Public observation must retain the exact pending owner's uncertainty.
+        // The private refresh guard separately requires its retained file and
+        // durable authority; there is no public partial-context override.
+        if (request.launch_intent == "load_save" && !projection.selected_save.empty()) {
+            const fs::path selected_target = projection.instance.root / "metadata/save-refs" /
+                fs::u8path(projection.selected_save + ".save-ref.v1.json");
+            auto inspected = json::parse(report->json);
+            const auto* journals = inspected ? inspected.value().find("transactions") : nullptr;
+            for (std::size_t i = 0; journals && i < journals->size(); ++i) {
+                const auto* item = journals->at(i);
+                auto state = tx::parse_state(object_string(*item, "state"));
+                if (!state || tx::terminal(state.value()) || object_string(*item, "command_id") != "readiness.prepare_selected_save" ||
+                    !same_path(fs::u8path(object_string(*item, "target")), selected_target)) continue;
+                tx::Record pending; std::string detail;
+                if (tx::read_record(workspace, object_string(*item, "transaction_id"), pending, detail) &&
+                    pending.schema_version == 2U && pending.command_id == "readiness.prepare_selected_save" &&
+                    pending.commit_strategy == "selected_context_retained_stream_rewrite_v1" && same_path(pending.target, selected_target)) {
+                    projection.selected_save_state = "blocked";
+                    projection.selected_save_code = "instance_selected_save_context_refresh_pending";
+                    projection.selected_save_detail = "Selected context belongs to a pending retained refresh; inspect its owner recovery";
+                    break;
+                }
+            }
+        }
+    } else projection.recovery_identity = "sha256:" + sha256_text(
         canonical_json(tx::to_json(std::get<tx::Refusal>(recovery), "workspace.recovery.inspect")));
     if (projection.owner_inputs_changed) return fail<Projection>("instance_projection_inputs_changed",
         "Owner planning inputs changed during readiness observation");
@@ -1851,11 +1876,22 @@ struct SelectedContextPlan {
 };
 
 facman::core::Result<std::string> selected_context_inputs(
-    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own)
+    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own,
+    const facman::platform::RetainedStreamRewriteFile* held_context = nullptr)
 {
     auto observed = project(workspace, request);
     if (!observed) return facman::core::Result<std::string>::failure(observed.error());
     const auto& p = observed.value();
+    std::string refresh_evidence;
+    const bool refreshing = own && own->commit_strategy == "selected_context_retained_stream_rewrite_v1";
+    if (refreshing || (!own && p.selected_save_code == "instance_selected_save_context_drifted")) {
+        saves::index::Request selected;
+        selected.instance_id = request.instance_id; selected.save = p.selected_save;
+        selected.profile_id = p.instance.profile; selected.source_operation = "readiness.prepare_selected_save";
+        auto proof = saves::index::selected_context_refresh_evidence(workspace, selected, own, held_context);
+        if (!proof) return facman::core::Result<std::string>::failure(proof.error());
+        refresh_evidence = proof.take_value();
+    }
     bool owned_publication_context = false;
 #if defined(__linux__) || defined(__APPLE__)
     // Ordinary inspection correctly refuses a two-link sidecar. Only this
@@ -1883,7 +1919,7 @@ facman::core::Result<std::string> selected_context_inputs(
         !p.installation_healthy || !p.version_family_eligible || !p.version_matches || !p.content_present ||
         !p.config_valid || !p.config || !p.profile_valid || !p.profile_plan || !p.modset_valid ||
         !p.modset_lock || p.modset_status != "locked_verified" || p.selected_save.empty() ||
-        (p.selected_save_state == "blocked" && !owned_publication_context) || p.selected_archive_identity.rfind("file:", 0) != 0)
+        (p.selected_save_state == "blocked" && !owned_publication_context && refresh_evidence.empty()) || p.selected_archive_identity.rfind("file:", 0) != 0)
         return fail<std::string>("selected_context_prerequisites_unavailable",
             "Selected context requires a valid current profile, installation, configuration, locked content and recognized selected save");
     const auto recovery = tx::inspect(workspace);
@@ -1923,7 +1959,8 @@ facman::core::Result<std::string> selected_context_inputs(
             return fail<std::string>("selected_context_journal_inputs_mismatch", "Immutable selected context bytes do not describe the current selected inputs");
     }
     json::ObjectBuilder inputs;
-    inputs.add_string("schema", "factorio.selected_context_inputs.v1");
+    inputs.add_string("schema", refresh_evidence.empty() ? "factorio.selected_context_inputs.v1" : "factorio.selected_context_refresh_inputs.v1");
+    if (!refresh_evidence.empty()) inputs.add_string("refresh_owner_evidence", refresh_evidence);
     inputs.add_string("instance_id", p.instance.id.str());
     inputs.add_string("instance_record", p.instance_record.identity);
     inputs.add_string("installation_record", p.install_record->identity);
@@ -1959,6 +1996,15 @@ facman::core::Result<SelectedContextPlan> selected_context_plan(const fs::path& 
     selected.profile_id = p.value().instance.profile;
     selected.source_operation = "readiness.prepare_selected_save";
     auto exact = saves::index::prepare_exact_association(workspace, selected);
+    std::string refresh_evidence;
+    if (!exact && p.value().selected_save_code == "instance_selected_save_context_drifted") {
+        auto proof = saves::index::selected_context_refresh_evidence(workspace, selected);
+        if (!proof) return facman::core::Result<SelectedContextPlan>::failure(proof.error());
+        refresh_evidence = proof.take_value();
+        auto parsed = json::parse(refresh_evidence);
+        exact = saves::index::prepare_refreshed_association(workspace, selected,
+            object_string(parsed.value(), "original_sidecar_text"), {});
+    }
     if (!exact) return facman::core::Result<SelectedContextPlan>::failure(exact.error());
     auto parents = saves::index::selected_association_parent_identity(p.value().instance.root);
     if (!parents) return facman::core::Result<SelectedContextPlan>::failure(parents.error());
@@ -1975,6 +2021,17 @@ facman::core::Result<SelectedContextPlan> selected_context_plan(const fs::path& 
     plan.add_string("inputs_sha256", inputs.value());
     plan.add_string("parent_before_identity", parents.value());
     plan.add_string("target", path_string(exact.value().target));
+    if (!refresh_evidence.empty()) {
+        auto proof = json::parse(refresh_evidence);
+        json::ObjectBuilder refresh;
+        for (const char* key : {"source_transaction_id", "source_journal_sha256", "source_journal_file_identity"})
+            refresh.add_string(key, object_string(proof.value(), key));
+        refresh.add_string("sidecar_identity", object_string(proof.value(), "original_device") + ":" + object_string(proof.value(), "original_object"));
+        refresh.add_string("sidecar_before_sha256", object_string(proof.value(), "original_sidecar_sha256"));
+        refresh.add_string("sidecar_metadata_sha256", sha256_text(object_string(proof.value(), "original_metadata_identity")));
+        refresh.add_string("selected_save_sha256", object_string(proof.value(), "selected_save_sha256"));
+        plan.add_object("refresh", refresh);
+    }
     plan.add_bool("preparation_available", true);
     plan.add_bool("mutation_executed", false);
     plan.add_bool("execution_started", false);
@@ -1994,9 +2051,10 @@ facman::core::Result<std::string> selected_save_preparation_plan(const fs::path&
 }
 
 facman::core::Result<std::string> observe_selected_save_preparation_inputs(
-    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own)
+    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own,
+    const facman::platform::RetainedStreamRewriteFile* held_context)
 {
-    return selected_context_inputs(workspace, request, own);
+    return selected_context_inputs(workspace, request, own, held_context);
 }
 
 namespace {

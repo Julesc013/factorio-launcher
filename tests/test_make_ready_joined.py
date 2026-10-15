@@ -571,6 +571,35 @@ class JoinedMakeReadyTests(unittest.TestCase):
                 self.assertEqual(changed_inputs, self.preserved_inputs(instance))
                 self.assertEqual(installation, snapshot(workspace / "fixture-install"))
 
+                # Keep the new world. Refresh is a separate confirmed ordinary
+                # owner action; Make Ready never silently adopts the stale sidecar.
+                from test_selected_save_preparation import SelectedSavePreparationTests
+                receipts = {path: path.read_bytes() for path in
+                            (workspace / ".facman/action-receipts-v2").glob("*.v2.json")}
+                current = self.query(workspace, "instances", "load_save")
+                self.assertIsNone(current["dependency_identities"]["joined_preparation"]["plan"])
+                refresh_args = SelectedSavePreparationTests.arguments(self, workspace, current["revision"], "refresh-kept-world")
+                refreshed, output, error = invoke_machine(refresh_args)
+                self.assertEqual((0, ""), (refreshed, error), output)
+                refresh = json.loads(output)["payload"]
+                self.assertEqual("completed", refresh["outcome"])
+                self.assertEqual("satisfied", refresh["replacement_snapshot"]["readiness"]["selected_save"]["state"])
+                self.assertEqual(retained_effects[effects[0]], (effects[0].read_bytes(), file_identity(effects[0])))
+                self.assertEqual(retained_effects[effects[1]][1], file_identity(effects[1]))
+                sidecar = json.loads(effects[1].read_bytes())
+                self.assertEqual(hashlib.sha256((instance / "saves/selected.zip").read_bytes()).hexdigest(), sidecar["save_sha256"])
+                current = self.query(workspace, "instances", "load_save")
+                completed = self.result(invoke_machine(self.arguments(workspace, current, "joined-kept-world")))
+                self.assertEqual("completed", completed["outcome"])
+                self.assertEqual([], completed["action_payload"]["completed_components"])
+                self.assertEqual("satisfied", completed["action_payload"]["readiness_observation"]["selected_save"]["state"])
+                for path, data in journals.items(): self.assertEqual(data, path.read_bytes())
+                for path, data in receipts.items(): self.assertEqual(data, path.read_bytes())
+                frozen = snapshot(workspace)
+                replay = self.result(invoke_machine(args), 1 if already_prepared else 3)
+                self.assertEqual(result, replay)
+                self.assertEqual(frozen, snapshot(workspace))
+
     def test_ordinary_tui_dispatches_one_confirmed_request_for_both_components(self) -> None:
         executable = tui.tui_executable()
         self.assertIsNotNone(executable, "joined ordinary workflow requires the matching native TUI")
