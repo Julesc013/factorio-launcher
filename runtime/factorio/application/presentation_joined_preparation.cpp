@@ -122,12 +122,6 @@ JoinedPreparationOutcome prepare_joined(const fs::path& workspace,
                 decode_json_string_field(selected.value(), "plan_sha256")});
         }
     }
-    if (problem.empty()) {
-        auto final = lifecycle::verify_joined_preparation(workspace, projection, joined_plan,
-            configuration_transaction, selected_transaction, request.durable_operation_id, request.attempt_id);
-        if (!final) { problem = final.error().code; detail = final.error().message; }
-        else readiness = final.take_value();
-    }
     pause("FACMAN_TEST_MAKE_READY_PAUSE_BEFORE_FINAL_RECEIPT",
         ".facman-test-make-ready-before-final-receipt", ".facman-test-make-ready-final-receipt-release");
     const bool effects_verified = !uncertain && lifecycle::joined_completed_effects_current(workspace,
@@ -137,6 +131,12 @@ JoinedPreparationOutcome prepare_joined(const fs::path& workspace,
         detail = "Applied preparation can no longer be verified; inspect recovery before continuing";
         readiness.clear();
         uncertain = true;
+    }
+    if (problem.empty()) {
+        auto final = lifecycle::verify_joined_preparation(workspace, projection, joined_plan,
+            configuration_transaction, selected_transaction, request.durable_operation_id, request.attempt_id);
+        if (!final) { problem = final.error().code; detail = final.error().message; readiness.clear(); }
+        else readiness = final.take_value();
     }
     const char* outcome = problem.empty() ? "completed" :
         (!components.empty() || uncertain ? "recovery_required" : "refused_before_effects");

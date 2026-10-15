@@ -744,3 +744,23 @@ workspace files/nodes, and renewed confirmation creates only the edited name.
 Qualified evidence and retained controller failures are hash-closed in
 evidence/tui-edited-confirmation.v1.json. Current required CI and delivered
 package regression remain open; no broader product or release gate closes.
+
+
+The final selected-save continuation reproduces two false completions at the
+existing ordinary final-receipt pause: a changed valid save retained stale
+readiness after two owner effects and when no new component was needed. The
+retained baseline is runtime-source-equivalent to devd93794d7, not a fresh
+current-head delivered package. Both original failures remain in external CAS.
+
+The existing full final joined verification now runs after that pause and the
+completed-effect identity guard. A failed verification clears readiness; prior
+owner uncertainty and replaced-effect unknown retain their existing precedence.
+The regression preserves completed owner receipt bytes and effect identities, refuses
+the changed save through existing continuations, and covers both component
+cases. Nine focused ordinary methods and three native smokes pass on the normal
+same-cache clean-first two-worker build. Static checks pass; initial admission,
+incorrect-target and evidence-controller failures remain separately retained.
+See evidence/joined-final-input-revalidation.v1.json and its external author
+packet for source, commands and raw custody. Independent review, current-head CI
+and delivered-package qualification remain pending; this does not close F11 or
+qualify real Play, human experience, provider, Beta or release acceptance.

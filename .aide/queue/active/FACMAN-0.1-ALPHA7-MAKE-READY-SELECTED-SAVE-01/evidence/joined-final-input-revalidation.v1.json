@@ -1,0 +1,70 @@
+{
+  "schema": "facman.joined_final_input_revalidation.author_source.v1",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base_head": "d93794d72147c150066e36e12af479eec62257c9",
+  "branch": "task/facman-joined-final-input-revalidation-01",
+  "classification": "AUTHOR_SOURCE_QUALIFIED_INDEPENDENT_REVIEW_PENDING",
+  "problem": "Changing a valid selected-save archive during the existing final-receipt pause returned completed with stale readiness, both after two completed owner effects and when no new component was needed.",
+  "correction": "Move the existing final full joined verification after the final pause and completed-effect identity check. Run it only while problem is empty; clear cached readiness on a failed final verification. No duplicate full traversal, owner/schema/codec/route/permit change.",
+  "precedence": "Replaced-effect unknown and earlier owner uncertainty retain precedence. Existing component receipt bytes and owner effect identities remain preserved; changed inputs retain the existing continuation.",
+  "baseline": {
+    "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-baseline-result-01.json",
+    "sha256": "e93514e2cdc73a5cb8761f1976ffe3719c2a1ed7ae48ffe91d1761639daf7e64",
+    "bytes": 2205
+  },
+  "baseline_qualification": "Retained cached runtime source-equivalent to the base (runtime diff empty), not a fresh current-head delivered package. Both subcases returned exit 0/completed/stale readiness; regression expected exits 3 and 1.",
+  "qualification": {
+    "ordinary_methods": 9,
+    "new_selected_save_subcases": 2,
+    "native_smokes": 3,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "unchanged_positive_and_stale_configuration_controls": true,
+    "completed_owner_receipts_preserved": true,
+    "prior_owner_uncertainty_and_replaced_effect_controls": true,
+    "failed_receipt_persistence_control": true,
+    "ordinary": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-fixed-qualification-01.json",
+      "sha256": "5c37afe5827c990829e0ea2f6206356b669c8eb7d94206c1cee988003808ff64",
+      "bytes": 44283
+    },
+    "commands": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-fixed-validation-01.json",
+      "sha256": "2267cf88c5a78d746feff1e2cade362aa88250f5497c945cb56d87903cd19629",
+      "bytes": 1366
+    },
+    "normal_clean_first_two_worker_native_build": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-native-build-result-02.json",
+      "sha256": "eceeb2a6d55f2aba71e1ad05b980b94aa12d48d3ef381110dff5efcd7c7390dc",
+      "bytes": 1756
+    },
+    "initial_static_checks": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-static-checks-01.json",
+      "sha256": "16d9fd2a2d67f479152f770526e31ddab84a337cd65e5552c07fd41d5741d113",
+      "bytes": 2438
+    }
+  },
+  "source_hashes": {
+    "runtime/factorio/application/presentation_joined_preparation.cpp": "f3c21b0d2f28de2d0bf0d2edfd456e8390e90c73190e046bb5bfa877979215e6",
+    "tests/test_make_ready_joined.py": "f12285df255091807f1bae496bd1e0a2ab7615086fd36f89eda1911e47c751b1"
+  },
+  "retained_failures": [
+    "Initial measured foreign I/O admission refusal; no build dispatched.",
+    "Initial native target facman was incorrect (MSB1009 before compilation); configure succeeded. Corrected target facman_cli used once with the normal clean-first helper.",
+    "An evidence-only controller treated idle MSBuild presence as busy; its samples and own verified controller stop are retained. Corrected measured CPU/I/O guard left foreign nodes untouched."
+  ],
+  "raw_custody": "External joined-final-input author packet, exact raw manifests/CAS, owned-command receipts, resource samples and scripts; no game input bytes are published.",
+  "limits": {
+    "independent_review_pending": true,
+    "required_ci_pending": true,
+    "produced_package_qualified": false,
+    "real_game_qualified": false,
+    "human_qualified": false,
+    "workunit_closed": false,
+    "execution_authority_added": false,
+    "new_roots": 0,
+    "new_worktrees": 0,
+    "new_clones": 0
+  }
+}
