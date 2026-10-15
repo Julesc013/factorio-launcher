@@ -609,3 +609,72 @@ referencing/rpds are absent; required hosted current-head execution must pass.
 Qualification is recorded in evidence/snapshot-local-install.v1.json and its
 hash-closed custody. Delivered-package proof and required checks remain open;
 F11, real-game execution and release gates remain open.
+
+### Accepted PR423 required and delivered snapshot reconstruction
+
+PR423 integrated source45ed488d/tree12aa2a8d as dev6c6efc8a after all twelve
+required checks passed. Actual Windows, Linux and macOS method logs include the
+eight new snapshot methods, five existing snapshot methods and all three full
+environment cases. Windows explicitly leaves the POSIX same-inode edit method
+unqualified; both hosted POSIX platforms execute it. The current-head Windows
+factory also passes two GUI sessions with68 observed packaged backends.
+
+One download of artifact11944532126/run38662740795 supplies the verified original
+599-file portable closure. Its delivered executable passes285 ordinary calls
+through the existing process adapter: fifteen applicable methods plus the
+explicit Windows POSIX skip, mapped local metadata/provenance, default refusal,
+before/after publication deaths, exact recovery and foreign-binding refusals.
+All290 owned process receipts close with empty jobs; package and input inventories
+are unchanged. Independent review consumes2025 external raw artifact hashes.
+
+Compact acceptance metadata is durable in evidence/snapshot-local-install-accepted.v1.json,
+its required/delivered companion JSON records and snapshot-local-install-accepted.sha256.
+Only three metadata JSON projections and hash custody are imported; raw logs and
+the product ZIP remain external. The earlier pending source receipt and its
+qualification text remain historical. This accepts the bounded reconstruction
+slice; whole F11, real Play, canonical installed Desktop and release gates remain open.
+
+### Ordinary Saves snapshot reconstruction entry: source under review
+
+The retained G45 baseline has a compatible local registration and zero instances;
+Saves advertises no snapshot restore action and rejects it as semantic_action_unknown.
+The admitted change adds one scoped WinForms button and the backend descriptor,
+requires the existing source/new-instance/installation fields, and delegates to
+the existing typed snapshot restore handler. TUI forms and confirmation reuse
+their current descriptor transport. Request schemas, fingerprints and durable
+receipt encoding are unchanged. Tests cover exact owner output and routing,
+no-clobber, admission, replay and real process death with ordinary recovery.
+Source is being frozen for independent prebuild review; no new qualification,
+build, game execution or release acceptance is claimed here.
+
+
+### Ordinary Saves snapshot reconstruction: bounded Windows source result
+
+Independent review admitted the additional live-store selection predicate and
+Activity-only degraded instance inventory projection, preserving installation
+and ordinary-scope gates. Existing typed recovery results/refusals now retain
+their canonical owner payload. Four product files changed; schemas, request
+fingerprints, durable receipt codecs, snapshot owner and transaction recovery
+remain unchanged. The native endurance fixture alone gained four existing
+canonical request fields after its original68 failures were preserved.
+
+Corrected qualification passes24 semantic/control methods and three native
+smokes. Endurance records64 durable operations/64 files,4 replays,4 conflicts and
+4 restarts with zero failures; this does not satisfy the long-duration gate.
+Three environment reconstruction methods passed separately against the earlier
+CLI with unchanged owners. The original semantic failures and runner assertions
+remain external and explicitly classified; no failed campaign is rewritten as
+passed. Final static checks and source/raw hash custody are being frozen for
+independent review. Hosted CI and delivered-package checks remain required; no
+whole-F11, physical UI, real Play or release acceptance is claimed.
+
+Independent source and raw evidence review passes the ordinary snapshot
+restore slice:24 focused Windows methods,3 native tests, and bounded64
+durable operations with4 replay/conflict/restart controls each. All37
+recorded jobs closed; original fixture/runtime/admission failures remain
+in hash custody. Three unchanged-owner environment cases are retained from
+their earlier completed command rather than relabelling its failed outer
+source assertion. Required exact-head platform checks and delivered-package
+qualification remain open. The WinForms harness proves structural controls
+and production modal fields, not backend-through-UI or human acceptance.
+Evidence: evidence/snapshot-presentation.v1.json and hash-closed custody.

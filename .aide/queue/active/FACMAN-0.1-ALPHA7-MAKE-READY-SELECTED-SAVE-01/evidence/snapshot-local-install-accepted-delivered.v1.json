@@ -1,0 +1,111 @@
+{
+  "schema": "facman.snapshot_local_install.accepted_delivered.v1",
+  "source": "45ed488d04c14c7243b881b120a2b389c450cd27",
+  "source_packet_sha256": "a414a57e7b15027eaf47ccce36763f921f6fd5134786f003d77f526ec4211605",
+  "independent_review_record_sha256": "6bcbdbf346a5dc3a6df5e0ea2085da52c2b57b2c141f95fb67bbade8570206f1",
+  "independent_review": {
+    "schema": "facman.independent_delivered_snapshot_local_install_review.v1",
+    "verdict": "PASS_SCOPED_EXACT_DELIVERED_SNAPSHOT_AND_ENVIRONMENT_RECONSTRUCTION",
+    "source": "45ed488d04c14c7243b881b120a2b389c450cd27",
+    "tree": "12aa2a8da1be551ec2804aca0777bf3836092de2",
+    "packet_sha256": "a414a57e7b15027eaf47ccce36763f921f6fd5134786f003d77f526ec4211605",
+    "reviewer_script_sha256": "b00d7e692fefedfad7a071ba46dddc01dfe10bdbe70a4e4694d31e1763e9f795",
+    "non_authoring": true,
+    "run": 38662740795,
+    "artifact": 11944532126,
+    "download_count": 1,
+    "original_package_files": 599,
+    "manifest_hashes": 598,
+    "actual_cli_commands": 285,
+    "closed_owned_process_receipts": 290,
+    "hashed_artifacts_verified": 2025,
+    "methods_run": 16,
+    "applicable_methods_passed": 15,
+    "windows_POSIX_method_explicitly_unqualified": true,
+    "mapped_publications": 17,
+    "default_negative": 4,
+    "before_publication_deaths": 7,
+    "after_publication_deaths": 12,
+    "ordinary_recovery": 9,
+    "changed_binding_refusals": 17,
+    "joined_preparation_results": 4,
+    "source_archive_installation_fixture_and_package_preserved": true,
+    "original_package_integration_coherent": false,
+    "release_eligible": false,
+    "workunit_closed": false,
+    "real_game": false,
+    "beta": false,
+    "rc": false
+  },
+  "package": {
+    "run": 38662740795,
+    "artifact": 11944532126,
+    "archive_sha256": "3686d959b5138a9f4f7ed164e9d413c087351e6537eafe58d5e036c2a53c698c",
+    "payload_sha256": "1029146017e45b323b83f0a2a1685264b5ba58c8969064009953a1f73030b27d",
+    "backend_sha256": "3dab63df1b26c27c92efdeb7f6c2cdcfd082c6fabbb3859a488115a8ca8be5bd",
+    "original_portable_files": 599,
+    "original_manifest_hashes_verified": 598,
+    "download_count": 1,
+    "extraction_count": 1,
+    "package_599_closure_unchanged": true
+  },
+  "actual_test_suites": [
+    {
+      "module": "test_snapshot_local_install",
+      "tests_run": 8,
+      "successful": true,
+      "failures": 0,
+      "errors": 0,
+      "skips": 1
+    },
+    {
+      "module": "test_instance_snapshots",
+      "tests_run": 5,
+      "successful": true,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    {
+      "module": "test_environment_reconstruction",
+      "tests_run": 3,
+      "successful": true,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    }
+  ],
+  "actual_test_methods": [
+    "test_snapshot_local_install.SnapshotLocalInstallTests.test_explicit_selection_binds_local_manifest_configuration_and_preserves_source",
+    "test_snapshot_local_install.SnapshotLocalInstallTests.test_historical_unbound_default_journal_keeps_legacy_rollback_behavior",
+    "test_snapshot_local_install.SnapshotLocalInstallTests.test_interrupted_publication_recovers_exact_selected_identity",
+    "test_snapshot_local_install.SnapshotLocalInstallTests.test_missing_incompatible_invalid_and_default_compatible_installations",
+    "test_snapshot_local_install.SnapshotLocalInstallTests.test_prepublication_install_record_drift_preserves_staging_and_blocks_recovery",
+    "test_snapshot_local_install.SnapshotLocalInstallTests.test_recovery_rechecks_journal_target_and_stage_after_acquiring_shared_lease",
+    "test_snapshot_local_install.SnapshotLocalInstallTests.test_recovery_refuses_source_record_context_and_target_substitution_without_cleanup",
+    "test_snapshot_local_install.SnapshotLocalInstallTests.test_same_inode_foreign_lock_metadata_survives_live_writer_and_recovery",
+    "test_instance_snapshots.InstanceSnapshotTests.test_diff_integrity_refusal_and_retention_move_to_trash",
+    "test_instance_snapshots.InstanceSnapshotTests.test_reproducible_portable_snapshot_and_cross_workspace_restore",
+    "test_instance_snapshots.InstanceSnapshotTests.test_snapshot_create_refuses_run_locks_before_and_at_publication",
+    "test_instance_snapshots.InstanceSnapshotTests.test_snapshot_create_rejects_malformed_staged_save",
+    "test_instance_snapshots.InstanceSnapshotTests.test_snapshot_create_rejects_same_bytes_source_replacement",
+    "test_environment_reconstruction.EnvironmentReconstructionTests.test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context",
+    "test_environment_reconstruction.EnvironmentReconstructionTests.test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning",
+    "test_environment_reconstruction.EnvironmentReconstructionTests.test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs"
+  ],
+  "skips": [
+    {
+      "test": "test_snapshot_local_install.SnapshotLocalInstallTests.test_same_inode_foreign_lock_metadata_survives_live_writer_and_recovery",
+      "reason": "unsupported: Same-inode concurrent lock-byte edits require POSIX; Windows denied-sharing behavior does not qualify this case"
+    }
+  ],
+  "actual_cli_commands": 285,
+  "closed_owned_process_receipts": 290,
+  "all_jobs_empty": true,
+  "source_and_branch_unchanged": true,
+  "source_fixture_inputs_unchanged": true,
+  "fixture_and_external_cwd_empty": true,
+  "runtime_provider_overrides": false,
+  "real_game": false,
+  "release_eligible": false
+}

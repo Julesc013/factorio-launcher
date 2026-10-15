@@ -172,6 +172,42 @@ class TuiProductTests(unittest.TestCase):
             self.assertNotIn("observation did not match", result.stderr)
             self.assertFalse(workspace.exists())
 
+    def test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance(self) -> None:
+        from test_presentation_snapshot_restore import PresentationSnapshotRestoreTests
+        from test_local_modset_solver import snapshot
+
+        owner = PresentationSnapshotRestoreTests()
+        with tempfile.TemporaryDirectory(prefix="tui-snapshot-") as temporary:
+            archive, workspace, local = owner.prepare(Path(temporary))
+            projected = owner.query(workspace)
+            self.assertIsNone(projected["selected_context"]["instance_id"])
+            index = next(i for i, action in enumerate(projected["available_semantic_actions"])
+                         if action["action_id"] == "snapshots.restore")
+            form = "5\n" + "tab\n" * index + "space\n"
+            form += "source_path=" + str(archive) + "\nnew_instance_id=restored\ninstallation_id=local\nspace\n"
+            before, inputs = snapshot(workspace), (snapshot(archive.parents[2]), snapshot(local))
+            cancelled = self.invoke(["--workspace", str(workspace), "--ordinary", "--plain"],
+                                    stdin=form + "6\nq\n")
+            self.assertEqual(0, cancelled.returncode, cancelled.stderr)
+            self.assertIn("Confirm Restore snapshot into new instance", cancelled.stdout)
+            self.assertEqual(before, snapshot(workspace))
+            confirmed = self.invoke(["--workspace", str(workspace), "--ordinary", "--plain"],
+                                    stdin=form + "space\nq\n")
+            self.assertEqual(0, confirmed.returncode, confirmed.stderr)
+            self.assertIn("Confirm Restore snapshot into new instance", confirmed.stdout)
+            receipt = json.loads(owner.semantic_receipt(workspace).read_bytes())
+            request = json.loads(receipt["request_json"])
+            semantic = json.loads(receipt["result_json"])
+            self.assertEqual((str(archive), "restored", "local", "explicit"),
+                             (request["source_path"], request["new_instance_id"], request["installation_id"], request["confirmation"]))
+            self.assertEqual("completed", semantic["outcome"])
+            self.assertEqual("restored", semantic["replacement_snapshot"]["selected_context"]["instance_id"])
+            target = workspace / "instances/restored"
+            self.assertEqual("local", json.loads((target / "instance.v1.json").read_bytes())["install_ref"])
+            self.assertEqual((archive.parents[2] / "instances/main/saves/starter.zip").read_bytes(),
+                             (target / "saves/starter.zip").read_bytes())
+            self.assertEqual(inputs, (snapshot(archive.parents[2]), snapshot(local)))
+
     @unittest.skipUnless(sys.platform == "linux", "unsupported: ordinary POSIX publication is Linux only")
     def test_ordinary_selected_save_missing_configuration_then_context_linux(self) -> None:
         self.exercise_ordinary_selected_save_missing_configuration_then_context()

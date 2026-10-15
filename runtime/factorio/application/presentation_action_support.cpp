@@ -452,6 +452,7 @@ bool effectful_semantic_action(const std::string& action_id)
         action_id == "saves.associate" ||
         action_id == "saves.backup" ||
         action_id == "saves.restore" ||
+        action_id == "snapshots.restore" ||
         action_id == "support.export_redacted_bundle" ||
         action_id == "recovery.apply_supported" ||
         action_id == "launch.play" ||
@@ -476,6 +477,12 @@ std::string result_string(const ApplicationResult& result)
 {
     if (std::holds_alternative<std::string>(result.output)) {
         return std::get<std::string>(result.output);
+    }
+    if (std::holds_alternative<transactions::RecoveryResult>(result.output)) {
+        return std::get<transactions::RecoveryResult>(result.output).json;
+    }
+    if (std::holds_alternative<transactions::Refusal>(result.output)) {
+        return transactions::to_json(std::get<transactions::Refusal>(result.output), "workspace.recovery.apply");
     }
     if (std::holds_alternative<modsets::VerifyResult>(result.output)) {
         return modsets::to_json(std::get<modsets::VerifyResult>(result.output));
