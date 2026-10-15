@@ -80,11 +80,9 @@ class EnvironmentReconstructionTests(unittest.TestCase):
         missing = call(destination, "snapshots", "restore", str(world), "carrier", success=False)
         self.assertEqual("snapshot_install_incompatible", missing["refusal"]["code"])
         self.assertEqual(preserved, snapshot(destination))
-        # Snapshot restoration retains its declared installation reference. It
-        # needs that compatible registration too; pack import independently binds
-        # the reconstructed instance to the explicitly selected local install.
-        call(destination, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture")
-        call(destination, "snapshots", "restore", str(world), "carrier")
+        # The archive keeps its original provenance while reconstruction binds
+        # the explicitly selected compatible installation already registered here.
+        call(destination, "snapshots", "restore", str(world), "carrier", "--install", "local")
         backup = call(destination, "saves", "backup", "world", "--instance", "carrier")
         cloned = call(destination, "saves", "clone", "world.backup.zip", "--instance", "carrier",
                       "--to-instance", "main", "--source-kind", "owned_backup", "--as", "world.zip")
@@ -95,7 +93,9 @@ class EnvironmentReconstructionTests(unittest.TestCase):
         self.assertEqual(sha256(Path(backup["destination_path"])), cloned["sha256"])
         carrier_manifest = json.loads((destination / "instances/carrier/instance.v1.json").read_bytes())
         self.assertEqual("world", carrier_manifest["restored_from_snapshot"])
-        self.assertEqual("fixture", carrier_manifest["install_ref"])
+        self.assertEqual("local", carrier_manifest["install_ref"])
+        self.assertEqual("fixture", carrier_manifest["restored_from_install_ref"])
+        self.assertEqual(["local"], [item["install_id"] for item in call(destination, "installs", "list")["install_refs"]])
         self.assertEqual(sha256(destination / "instances/carrier/saves/world.zip"), cloned["sha256"])
         return destination / "instances/main"
 
@@ -223,8 +223,8 @@ class EnvironmentReconstructionTests(unittest.TestCase):
                     corrupted.writestr(item, b"corrupt save" if item.filename == "saves/world.zip" else original.read(item))
             cases = [
                 (("modsets", "import", str(pack), "--instance", "foreign", "--install", "local"), "persistent_target_exists"),
-                (("snapshots", "restore", str(world), "foreign"), "snapshot_restore_target_exists"),
-                (("snapshots", "restore", str(corrupt_world), "invalid"), "snapshot_hash_closure_mismatch"),
+                (("snapshots", "restore", str(world), "foreign", "--install", "local"), "snapshot_restore_target_exists"),
+                (("snapshots", "restore", str(corrupt_world), "invalid", "--install", "local"), "snapshot_hash_closure_mismatch"),
                 (("saves", "clone", "world.backup.zip", "--instance", "carrier", "--to-instance", "main",
                   "--source-kind", "owned_backup", "--as", "foreign.zip"), "save_clone_target_exists"),
                 (("saves", "clone", "missing.backup.zip", "--instance", "carrier", "--to-instance", "main",

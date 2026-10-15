@@ -16,6 +16,7 @@
 #include <vector>
 
 namespace facman::platform { struct FileIdentity; class StableDirectoryObject; }
+namespace facman::workspace { struct InstallRecord; }
 
 namespace facman::transaction {
 
@@ -118,6 +119,9 @@ public:
     bool complete();
     void failed(const std::string& error);
     void require_recovery(const std::string& error);
+    // A controller that lost its lease cannot rewrite its cached journal during
+    // destruction. Leave the last durable checkpoint for an authorized recovery.
+    void leave_durable_state_unchanged() noexcept { active_ = false; }
     Record& record() noexcept { return record_; }
     const Record& record() const noexcept { return record_; }
     const std::string& detail() const noexcept { return detail_; }
@@ -195,6 +199,26 @@ bool publish_save_backup_file(
 // Complete or verify the sidecar bound to a committed saves.backup target.
 // The immutable manifest bytes are journaled before ZIP publication.
 bool finalize_save_backup_sidecar(const Record& record, std::string& detail);
+// New snapshot restores bind their selected local installation and source before
+// effects. Historical unbound snapshot journals retain their legacy strategy.
+bool bind_snapshot_restore(const std::filesystem::path& workspace, Record& record,
+    const std::string& install_id, const std::string& version,
+    const std::string& archive_sha256, facman::workspace::InstallRecord& captured_install, std::string& detail);
+bool verify_snapshot_restore_inputs(const std::filesystem::path& workspace,
+    const Record& record, std::string& detail);
+bool bind_snapshot_restore_target(Record& record, const std::filesystem::path& staging,
+    std::string& detail);
+bool verify_snapshot_restore_target(const Record& record, const std::filesystem::path& target,
+    std::string& detail);
+std::string snapshot_restore_lock_text(const Record& record, const facman::base::StableLocalLock& lock);
+bool snapshot_restore_lock_matches(const Record& record, const facman::base::StableLocalLock& lock,
+    const facman::platform::StableDirectoryObject& parent, std::string& detail, bool expect_empty = false);
+bool initialize_snapshot_restore_lock(const Record& record, facman::base::StableLocalLock& lock,
+    const facman::platform::StableDirectoryObject& parent, bool newly_created, std::string& detail);
+bool release_snapshot_restore_lock(const Record& record, facman::base::StableLocalLock& lock,
+    const facman::platform::StableDirectoryObject& parent, std::string& detail);
+bool snapshot_restore_recovery_precheck(const std::filesystem::path& workspace,
+    const Record& record, bool& published, std::string& detail);
 bool read_record(
     const std::filesystem::path& workspace,
     const std::string& transaction_id,

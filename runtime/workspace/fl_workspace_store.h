@@ -66,6 +66,9 @@ struct InstallRecord {
     bool legacy_path = false;
     std::filesystem::path source_path;
 };
+// Decode the same bounded bytes captured by an operation's stable reader.
+Result<InstallRecord> decode_install_record(const InstallId& id,
+    const std::filesystem::path& path, const std::string& bytes, bool legacy_path = false);
 
 struct InstanceRecord {
     InstanceId id;

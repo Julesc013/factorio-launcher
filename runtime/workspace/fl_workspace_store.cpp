@@ -173,8 +173,23 @@ Result<InstallRecord> InstallRepository::load(const InstallId& id) const
         path = fallback.value();
         legacy = true;
     }
-    auto document = parse_record(path);
+    auto bytes = read_bounded(path);
+    if (!bytes) return failure<InstallRecord>(bytes.error().code, bytes.error().message, path);
+    return decode_install_record(id, path, bytes.value(), legacy);
+}
+
+Result<InstallRecord> decode_install_record(const InstallId& id, const fs::path& path,
+    const std::string& bytes, bool legacy)
+{
+    json::Limits limits;
+    limits.maximum_bytes = 1024U * 1024U;
+    limits.maximum_depth = 24U;
+    limits.maximum_nodes = 20000U;
+    limits.maximum_string_bytes = 256U * 1024U;
+    auto document = json::parse(bytes, limits);
     if (!document) return failure<InstallRecord>(document.error().code, document.error().message, path);
+    if (!document.value().is_object()) return failure<InstallRecord>(
+        "workspace_record_type", "persistent record must be a JSON object", path);
     auto schema = required_string(document.value(), "schema", path);
     auto stored_id = required_string(document.value(), "install_id", path);
     auto root = required_string(document.value(), "root", path);

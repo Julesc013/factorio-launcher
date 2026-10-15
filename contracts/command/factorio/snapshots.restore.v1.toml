@@ -1,5 +1,5 @@
 command_id = "snapshots.restore"
-cli = "facman snapshots restore <snapshot-path> <target-instance-id> --json"
+cli = "facman snapshots restore <snapshot-path> <target-instance-id> [--install <registered-id>] --json"
 effects = ["workspace_read", "workspace_write"]
 request_schema = "contracts/schema/command/snapshots.restore.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_snapshot_report.v1.schema.json"
