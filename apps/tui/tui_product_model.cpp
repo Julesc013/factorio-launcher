@@ -319,6 +319,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.status = event.name.empty() ? "No action available" : "Action selected: " + event.name;
         break;
     case TuiEventKind::edit_field:
+        if (next.form.values[event.name] != event.value) next.pending_action.clear();
         next.form.values[event.name] = event.value;
         next.form.problems = validate_form(next.form);
         break;

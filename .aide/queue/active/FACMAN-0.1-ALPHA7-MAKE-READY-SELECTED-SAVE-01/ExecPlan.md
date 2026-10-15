@@ -719,3 +719,28 @@ source evidence and preserved failed attempts are hash-closed in
 evidence/snapshot-producer.v1.json and its custody. Required current-head CI
 and delivered CLI/TUI/Windows GUI acceptance remain open; no WorkUnit, game,
 provider, human, Beta or release gate is closed.
+
+PR425 is now integrated as devc51726567dd3bc4becd9afb80546b5a3ef2250bd.
+Its required CI and accepted Windows/Linux delivered projections are retained
+as metadata with exact custody in this WorkUnit's evidence directory; the
+historical source pending receipt is unchanged. Linux remains a separate
+stdlib/private-tmpfs delivered proof with its documented limits.
+
+The next reproduced ordinary failure is editing a terminal form after its
+confirmation prompt: the prior action remains armed and dispatches changed
+values on one activation. The narrow reducer correction invalidates that
+confirmation only when a value changes, retaining no-op behavior. Native and
+ordinary negative/renewed-confirmation positive regressions pass on the normal
+same-cache Windows rebuild, alongside both native TUI checks and the immutable
+legacy receipt control. The full TUI module passes ten methods with its one
+explicit Linux-only skip. Static gates pass; controller failures remain
+retained. Current-head CI and delivered acceptance remain pending. See
+tui-edited-confirmation.md for the baseline, qualification and bounded scope.
+
+Independent source review accepts the one-line TUI confirmation invalidation.
+Changed form values require a new prompt before dispatch; repeated identical
+values retain confirmation. Actual ordinary cancellation preserves complete
+workspace files/nodes, and renewed confirmation creates only the edited name.
+Qualified evidence and retained controller failures are hash-closed in
+evidence/tui-edited-confirmation.v1.json. Current required CI and delivered
+package regression remain open; no broader product or release gate closes.

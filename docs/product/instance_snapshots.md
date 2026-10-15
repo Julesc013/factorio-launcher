@@ -5,6 +5,8 @@ optionally enter one local save filename. Review the values and confirm. The
 terminal Saves page uses the same form and a second activation to confirm;
 Cancel leaves the workspace unchanged. Creation keeps the current instance
 selected and reports the archive path for **Restore snapshot**.
+Changing a terminal form value after its confirmation prompt requires a fresh
+confirmation. Re-entering the same value keeps the pending confirmation.
 
 ```text
 facman snapshots create main world --save starter.zip --json
