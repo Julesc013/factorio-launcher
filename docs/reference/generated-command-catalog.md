@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `bdc43f47d4676f60931a4ce7a139985c44e69fa68f371c17b5d92015f30d4739`.
+Source digest: `26b6e9ba61218982b1aaa40a918cdffc1cb253aa8b3a631d53cb44566622118a`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -118,7 +118,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `snapshots.diff` | `snapshots.diff` | `snapshots_diff` | no | - | available | workspace_read | `facman snapshots diff <instance-id> <left-id> <right-id> --json` |
 | `snapshots.inspect` | `snapshots.inspect` | `snapshots_inspect` | no | - | available | workspace_read | `facman snapshots inspect <instance-id> <snapshot-id> --json` |
 | `snapshots.list` | `snapshots.list` | `snapshots_list` | no | - | available | workspace_read | `facman snapshots list <instance-id> --json` |
-| `snapshots.restore` | `snapshots.restore` | `snapshots_restore` | yes | - | available | workspace_read, workspace_write | `facman snapshots restore <snapshot-path> <target-instance-id> --json` |
+| `snapshots.restore` | `snapshots.restore` | `snapshots_restore` | yes | - | available | workspace_read, workspace_write | `facman snapshots restore <snapshot-path> <target-instance-id> [--install <registered-id>] --json` |
 | `snapshots.retention.apply` | `snapshots.retention.apply` | `snapshots_retention_apply` | yes | - | available | workspace_read, workspace_write | `facman snapshots retention apply <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json` |
 | `snapshots.retention.plan` | `snapshots.retention.plan` | `snapshots_retention_plan` | no | - | available | workspace_read | `facman snapshots retention plan <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json` |
 | `snapshots.verify` | `snapshots.verify` | `snapshots_verify` | no | - | available | workspace_read | `facman snapshots verify <instance-id> <snapshot-id> --json` |

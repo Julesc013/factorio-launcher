@@ -1875,6 +1875,11 @@
         "kind": "identifier",
         "name": "target_instance_id",
         "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": false
       }
     ],
     "snapshots.retention.apply": [

@@ -589,3 +589,23 @@ The minimal test correction shows only the exact verified FacMan main form, alre
 The exact final source independently passes the original two-session GUI owner oracle through the retained produced002824 package:68 actual backends,8fixture CLI calls, both owner effects, cancellations/stale refusal, original inputs, readonly closure and normal zero-job exits. A controlled real timeout still fails and exports24 independently decoded files with normal shutdown. Twelve focused regressions reject hidden/disabled controls and cover bounded reads, disposal/reuse and original-timeout preservation. Both hosted failures and prior hook/input/partial-render comparisons remain durable. Fresh exact-head factory and all required checks remain pending; this structural proof grants no canonical installed Desktop, real game/human, full Make Ready, Beta or RC acceptance.
 
 Evidence: evidence/windows-delivered-gui-visible-controls.v1.json and its hash-closed custody.
+
+### Selected local installation during snapshot reconstruction
+
+The restore owner now accepts an explicit compatible registered installation,
+regenerates local configuration against the exact captured record, and retains
+the archive installation identifier as provenance. The ordinary environment
+reconstruction no longer registers a duplicate original installation ID.
+
+New transactions bind the selected installation, inspected archive and final
+inventory. Writer and recovery share a checked lease; foreign or torn evidence
+is retained. Verified unpublished staging rolls back; exact publication can
+finalize. Historical unbound journals keep their recorded legacy behavior.
+
+Windows focused reconstruction and native tests pass. Linux private tmpfs
+passes the affected native and snapshot suites, including both live same-inode
+foreign metadata cases. Local Linux environment cases did not execute because
+referencing/rpds are absent; required hosted current-head execution must pass.
+Qualification is recorded in evidence/snapshot-local-install.v1.json and its
+hash-closed custody. Delivered-package proof and required checks remain open;
+F11, real-game execution and release gates remain open.

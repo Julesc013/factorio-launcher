@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/facman_snapshot_restore_binding.v1.schema.json",
+  "title": "Snapshot restore selected installation and source binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "install_id", "factorio_version", "installation", "archive", "original_install_id", "closure_sha256"],
+  "properties": {
+    "schema": {"const": "facman.snapshot_restore_binding.v1"},
+    "install_id": {"type": "string", "minLength": 1},
+    "factorio_version": {"type": "string", "minLength": 1},
+    "installation": {"type": "string", "minLength": 1, "description": "Deterministic JSON observations of exact registered record, root object, executable and optional Setup state."},
+    "archive": {"type": "string", "minLength": 1, "description": "Deterministic JSON observation of source path, native object, exact size and SHA-256."},
+    "original_install_id": {"type": "string", "minLength": 1},
+    "closure_sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"}
+  }
+}

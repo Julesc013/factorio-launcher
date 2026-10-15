@@ -825,10 +825,11 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         request.payload = std::move(typed); return true;
     }
     case CommandId::snapshots_restore: {
-        if (!validate_fields(payload, {"snapshot_ref", "target_instance_id"}, detail)) return false;
+        if (!validate_fields(payload, {"snapshot_ref", "target_instance_id", "install_id"}, detail)) return false;
         RestoreSnapshotRequest typed; std::string path;
         if (!required_string(payload, "snapshot_ref", path, detail) ||
-            !required_string(payload, "target_instance_id", typed.target_instance_id, detail)) return false;
+            !required_string(payload, "target_instance_id", typed.target_instance_id, detail) ||
+            !optional_string(payload, "install_id", typed.install_id, detail)) return false;
         typed.snapshot_ref = path;
         request.payload = std::move(typed); return true;
     }

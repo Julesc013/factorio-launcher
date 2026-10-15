@@ -8399,7 +8399,7 @@
             "required": true
           }
         ],
-        "usage": "facman snapshots restore <snapshot-path> <target-instance-id> --json"
+        "usage": "facman snapshots restore <snapshot-path> <target-instance-id> [--install <registered-id>] --json"
       },
       "command_id": "snapshots.restore",
       "deprecation": "active",
@@ -8427,6 +8427,15 @@
           "repeatable": false,
           "request_field": "target_instance_id",
           "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": false,
           "type": "identifier"
         }
       ],
@@ -9788,5 +9797,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "bdc43f47d4676f60931a4ce7a139985c44e69fa68f371c17b5d92015f30d4739"
+  "source_digest": "26b6e9ba61218982b1aaa40a918cdffc1cb253aa8b3a631d53cb44566622118a"
 }

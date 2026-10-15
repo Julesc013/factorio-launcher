@@ -838,20 +838,21 @@ int command_snapshots(const Options& options)
         payload.add_array("saves", saves);
         return emit_basic(call(options, "snapshots.create", payload.serialize(), false), as_json, "Snapshot created");
     }
-    if (action == "list") return emit_basic(call(options, "snapshots.list", exact_fields_payload(
-        {{"instance_id", options.args[2]}})), as_json, "Snapshots listed");
-    if ((action == "inspect" || action == "verify") && options.args.size() >= 4) {
+    if (action == "list") return emit_basic(call(options, "snapshots.list", exact_fields_payload({{"instance_id", options.args[2]}})), as_json, "Snapshots listed");
+    if ((action == "inspect" || action == "verify") && options.args.size() >= 4)
         return emit_basic(call(options, "snapshots." + action, exact_fields_payload(
             {{"instance_id", options.args[2]}, {"snapshot_id", options.args[3]}})), as_json, "Snapshot " + action + " completed");
-    }
-    if (action == "diff" && options.args.size() >= 5) {
+    if (action == "diff" && options.args.size() >= 5)
         return emit_basic(call(options, "snapshots.diff", exact_fields_payload({
             {"instance_id", options.args[2]}, {"left_snapshot_id", options.args[3]},
             {"right_snapshot_id", options.args[4]}})), as_json, "Snapshot diff completed");
-    }
     if (action == "restore" && options.args.size() >= 4) {
-        return emit_basic(call(options, "snapshots.restore", exact_fields_payload({
-            {"snapshot_ref", options.args[2]}, {"target_instance_id", options.args[3]}}), false), as_json, "Snapshot restored");
+        std::vector<std::pair<std::string, std::string>> fields = {
+            {"snapshot_ref", options.args[2]}, {"target_instance_id", options.args[3]}};
+        const auto install_id = option(options.args, "--install");
+        if (flag(options.args, "--install") && install_id.empty()) return 2;
+        if (!install_id.empty()) fields.push_back({"install_id", install_id});
+        return emit_basic(call(options, "snapshots.restore", exact_fields_payload(fields), false), as_json, "Snapshot restored");
     }
     if (action == "retention" && options.args.size() >= 4 &&
         (options.args[2] == "plan" || options.args[2] == "apply")) {
