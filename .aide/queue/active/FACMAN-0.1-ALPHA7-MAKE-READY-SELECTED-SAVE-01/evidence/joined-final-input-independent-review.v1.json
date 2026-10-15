@@ -1,0 +1,74 @@
+{
+  "schema": "facman.independent_joined_final_input_review.v1",
+  "verdict": "PASS_SCOPED_SOURCE_FOR_REQUIRED_CURRENT_CI",
+  "reviewer": "/root",
+  "author": "/root/game_input_custody",
+  "non_authoring": true,
+  "base": "d93794d72147c150066e36e12af479eec62257c9",
+  "branch": "task/facman-joined-final-input-revalidation-01",
+  "packet_sha256": "6e4c978253b990cf24589b52e4ca0ca3bdde04055cef799bb44015e18576dfed",
+  "reviewer_script_sha256": "20a3d152f97ef863f177460a0f4c9cffb0029af73891cbf82d762d3ce4cfffbd",
+  "source_files": 4,
+  "raw_files": 192,
+  "baseline_false_completions": 2,
+  "fixed_refusals": 2,
+  "ordinary_methods": 9,
+  "native_smokes": 3,
+  "full_check_moved_without_duplicate_traversal": true,
+  "prior_uncertainty_precedence_preserved": true,
+  "exact_owner_effects_and_receipts_asserted_preserved": true,
+  "raw_terminal_and_durable_payloads_decoded": true,
+  "final_empty_job_receipts": [
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-baseline-owned-01\\receipt.json",
+      "exit_code": 1,
+      "active_at_primary_exit": 1,
+      "waited_for_empty": false,
+      "job_terminated": true
+    },
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-build-owned-01\\receipt.json",
+      "exit_code": 1,
+      "active_at_primary_exit": 1,
+      "waited_for_empty": false,
+      "job_terminated": true
+    },
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-build-owned-02\\receipt.json",
+      "exit_code": 0,
+      "active_at_primary_exit": 2,
+      "waited_for_empty": false,
+      "job_terminated": true
+    },
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-configure-owned-01\\receipt.json",
+      "exit_code": 0,
+      "active_at_primary_exit": 1,
+      "waited_for_empty": false,
+      "job_terminated": true
+    },
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-native-owned-fixed-01\\receipt.json",
+      "exit_code": 0,
+      "active_at_primary_exit": 1,
+      "waited_for_empty": false,
+      "job_terminated": true
+    },
+    {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-final-input-ordinary-owned-fixed-01\\receipt.json",
+      "exit_code": 0,
+      "active_at_primary_exit": 1,
+      "waited_for_empty": false,
+      "job_terminated": true
+    }
+  ],
+  "all_children_natural_exit_claim": false,
+  "resource_refusal_and_controller_failures_retained": true,
+  "required_ci_pending": true,
+  "delivered_package_pending": true,
+  "real_game": false,
+  "human": false,
+  "workunit_closed": false,
+  "beta": false,
+  "rc": false
+}

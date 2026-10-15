@@ -24,6 +24,7 @@ import test_tui_product as tui
 from native_cli import ROOT, facman_executable, invoke_machine
 from test_local_modset_solver import snapshot
 from test_presentation_profile_preparation import factorio_validator
+from test_save_index_retention import write_save
 from tools.winforms_build import msbuild_executable
 
 
@@ -533,6 +534,42 @@ class JoinedMakeReadyTests(unittest.TestCase):
             self.assertEqual(expected, target.read_bytes())
             self.assertEqual(expected, retained.read_bytes())
             self.assertEqual(foreign_identity, target.stat().st_ino)
+
+    def test_changed_selected_save_at_final_receipt_does_not_reuse_readiness(self) -> None:
+        for already_prepared in (False, True):
+            with self.subTest(already_prepared=already_prepared), tempfile.TemporaryDirectory(prefix="joined-final-save-") as value:
+                workspace = Path(value)
+                instance, _, _ = existing.ExistingConfigurationTests.prepare(self, workspace, "load_save")
+                if already_prepared:
+                    initial = self.query(workspace, "instances", "load_save")
+                    self.result(invoke_machine(self.arguments(workspace, initial, "joined-before-final-save")))
+                initial = self.query(workspace, "instances", "load_save")
+                args = self.arguments(workspace, initial, "joined-final-save")
+                installation = snapshot(workspace / "fixture-install")
+                with self.owned_pause(workspace, args, final=True) as worker:
+                    self.wait_marker(workspace, worker, final=True)
+                    effects = [instance / "config/config.ini", instance / "metadata/save-refs/selected.zip.save-ref.v1.json"]
+                    retained_effects = {path: (path.read_bytes(), file_identity(path)) for path in effects}
+                    journals = {path: path.read_bytes() for path in (workspace / "transactions").glob("*.transaction.v1.json")}
+                    write_save(instance / "saves/selected.zip", b"changed world at final receipt")
+                    changed_inputs = self.preserved_inputs(instance)
+                result = self.result(worker.response, 1 if already_prepared else 3)
+                self.assertEqual("refused_before_effects" if already_prepared else "recovery_required", result["outcome"])
+                self.assertEqual("make_ready_inputs_changed", result["problems"][0]["code"])
+                payload = result["action_payload"]
+                self.assertIsNone(payload["readiness_observation"])
+                self.assertFalse(payload["preparation_complete"])
+                self.assertTrue(payload["fresh_revision_required"])
+                self.assertFalse(payload["execution_started"])
+                self.assertFalse(payload["permit_issued"])
+                self.assertEqual(not already_prepared, payload["completed_effects_verified"])
+                self.assertEqual(0 if already_prepared else 2, len(payload["completed_components"]))
+                self.assertEqual("inspect_domain_recovery" if already_prepared else
+                                 "fresh_request_after_input_correction", payload["continuation"])
+                self.assertEqual(retained_effects, {path: (path.read_bytes(), file_identity(path)) for path in effects})
+                self.assertEqual(journals, {path: path.read_bytes() for path in (workspace / "transactions").glob("*.transaction.v1.json")})
+                self.assertEqual(changed_inputs, self.preserved_inputs(instance))
+                self.assertEqual(installation, snapshot(workspace / "fixture-install"))
 
     def test_ordinary_tui_dispatches_one_confirmed_request_for_both_components(self) -> None:
         executable = tui.tui_executable()
