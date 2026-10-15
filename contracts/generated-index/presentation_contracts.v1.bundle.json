@@ -101,6 +101,10 @@
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
             "type": "string"
           },
+          "snapshot_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
           "source_data_root": {
             "type": "string"
           },
@@ -127,7 +131,7 @@
       },
       "schema_id": "https://facman.invalid/schema/command/presentation.action.request.v1.schema.json",
       "source_path": "contracts/schema/command/presentation.action.request.v1.schema.json",
-      "source_sha256": "c73a226d29135275c9f21c337cc56ff7418fda9bd3b88b6b8f32022ad92f4f55"
+      "source_sha256": "c53d3d01328f0993249e78cd89566e8163ec7b24367da55e01de04afb3c0653b"
     },
     {
       "behavior": "effect_input",
@@ -1242,5 +1246,5 @@
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "a3ae9172078ae27cf84dff2da172833aa1a18a8d9de2d460f5502acb609db24b"
+  "source_digest": "c58b6eec72fdf467e27e18b4432d2ed3c606d32c8760225fb336e384442f7aa5"
 }

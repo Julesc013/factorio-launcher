@@ -1,4 +1,32 @@
-# Restoring an instance snapshot
+# Creating and restoring an instance snapshot
+
+In the ordinary Saves page, choose **Create snapshot**, name the snapshot, and
+optionally enter one local save filename. Review the values and confirm. The
+terminal Saves page uses the same form and a second activation to confirm;
+Cancel leaves the workspace unchanged. Creation keeps the current instance
+selected and reports the archive path for **Restore snapshot**.
+
+```text
+facman snapshots create main world --save starter.zip --json
+```
+
+The ordinary action invokes the existing snapshot owner. It captures portable
+instance metadata, routing configuration, an available modset lock and the
+explicitly selected save. Leaving the save field blank includes **no saves**.
+It excludes opaque mod settings, volatile logs/cache and private data under the
+existing snapshot policy. Offline modpacks continue to own mod/settings payload
+reconstruction. An existing snapshot archive or record is preserved.
+`snapshots inspect main world --json` exposes the WorldBundle projection and
+selected-save hash closure. Use the returned archive path in another workspace's
+ordinary Restore snapshot form with a compatible local installation.
+
+Creation uses explicit confirmation, a current presentation revision and a
+durable action identity. Replays return the original result; changed snapshot ID
+or other input with that identity is refused. If the process stops at the existing
+publication boundary, Activity can run the existing archive transaction recovery.
+A rolled-back archive is not a successful export, and the original uncertain
+semantic receipt remains uncertain. Creation retains its existing owner and
+recovery guarantees; the installation/source bindings below describe restoration.
 
 In the ordinary Saves page, choose **Restore snapshot**, enter the archive path
 and a new instance ID, select a registered installation, and confirm the reviewed

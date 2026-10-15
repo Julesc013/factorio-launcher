@@ -1224,6 +1224,11 @@
         "kind": "enum",
         "name": "launch_intent",
         "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "snapshot_id",
+        "required": false
       }
     ],
     "presentation.query": [

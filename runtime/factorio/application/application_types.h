@@ -126,6 +126,7 @@ struct SemanticActionRequest {
     std::vector<std::string> roots;
     std::string launch_intent = "menu";
     std::string source_path;
+    std::string snapshot_id;
 };
 
 using ImportModRequest = modsets::ImportRequest;

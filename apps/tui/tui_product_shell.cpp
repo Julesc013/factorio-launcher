@@ -203,6 +203,16 @@ std::string operation_feedback(const facman::client::CommandResponse& response)
         ? response.payload_string("outcome")
         : facman::client::operation_outcome_name(response.operation.outcome);
     const auto* preparation = response.parsed_payload ? response.parsed_payload->find("action_payload") : nullptr;
+    if (semantic_action && response.ok() && outcome == "completed" &&
+        response.payload_string("action_id") == "snapshots.create" && preparation && preparation->is_object()) {
+        const auto text = [preparation](const char* key) {
+            const auto* field = preparation->find(key);
+            auto value = field ? field->string_value() : facman::core::Result<std::string>::success({});
+            return value ? value.value() : std::string();
+        };
+        if (text("schema") == "factorio.snapshot_report.v1" && text("command") == "snapshots.create" &&
+            text("status") == "ok" && !text("path").empty()) return "Snapshot created: " + text("path");
+    }
     if (preparation && preparation->is_object() && response.payload_string("action_id") == "readiness.prepare_joined") {
         const auto text = [preparation](const char* key) {
             const auto* field = preparation->find(key);
@@ -853,7 +863,7 @@ std::string action_response_status(
         ? response.payload_string("outcome")
         : facman::client::operation_outcome_name(response.operation.outcome);
     if (action_outcome != "completed") return semantic;
-    if (action.id == "readiness.prepare_joined") return semantic;
+    if (action.id == "readiness.prepare_joined" || action.id == "snapshots.create") return semantic;
     return action.label + " completed";
 }
 

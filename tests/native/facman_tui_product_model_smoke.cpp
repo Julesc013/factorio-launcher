@@ -4,8 +4,10 @@
 #include "tui_product_model.hpp"
 #include "tui_product_renderer.hpp"
 #include "tui_product_shell.hpp"
+#include "fl_json.h"
 
 #include <chrono>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -366,6 +368,34 @@ int main()
     completed.status = 0;
     completed.operation.outcome = facman::client::OperationOutcome::completed;
     if (action_response_status(launch_action, completed) != "Start fake session completed") return 26;
+
+    const auto snapshot_reply = [](const char* outcome, const char* schema = "factorio.snapshot_report.v1",
+        const char* status = "ok", const char* path = "/synthetic/world.zip") {
+        facman::client::CommandResponse reply;
+        reply.status = 0;
+        auto payload = facman::core::json::parse(std::string(
+            "{\"schema\":\"facman.semantic_action_result.v1\",\"action_id\":\"snapshots.create\",\"outcome\":") +
+            facman::core::json::quote_string(outcome) + ",\"action_payload\":{\"command\":\"snapshots.create\",\"schema\":" +
+            facman::core::json::quote_string(schema) + ",\"status\":" + facman::core::json::quote_string(status) +
+            ",\"path\":" + facman::core::json::quote_string(path) + "}}");
+        if (payload) reply.parsed_payload = std::make_shared<facman::core::json::Value>(payload.take_value());
+        return reply;
+    };
+    TuiAction snapshot_action;
+    snapshot_action.id = "snapshots.create";
+    snapshot_action.label = "Create instance snapshot";
+    if (action_response_status(snapshot_action, snapshot_reply("completed")) !=
+        "Snapshot created: /synthetic/world.zip") return 50;
+    if (action_response_status(snapshot_action, snapshot_reply("completed", "common.refusal.v1")).find("Snapshot created:") != std::string::npos ||
+        action_response_status(snapshot_action, snapshot_reply("completed", "factorio.snapshot_report.v1", "failed")).find("Snapshot created:") != std::string::npos ||
+        action_response_status(snapshot_action, snapshot_reply("completed", "factorio.snapshot_report.v1", "ok", "")).find("Snapshot created:") != std::string::npos) return 51;
+    if (action_response_status(snapshot_action, snapshot_reply("outcome_unknown")).find("Outcome unknown") == std::string::npos ||
+        action_response_status(snapshot_action, snapshot_reply("recovery_required")).find("Recovery required") == std::string::npos ||
+        action_response_status(snapshot_action, snapshot_reply("refused_before_effects")) != "Refused before effects") return 52;
+    auto transport_failure = snapshot_reply("completed");
+    transport_failure.status = 1;
+    transport_failure.error_code = "transport_error";
+    if (action_response_status(snapshot_action, transport_failure).find("Snapshot created:") != std::string::npos) return 53;
 
     TuiState long_state;
     long_state.page = TuiPage::instances;

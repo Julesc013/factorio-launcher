@@ -17,6 +17,7 @@ internal static class PackImportHarness
     {
         try
         {
+            if (args.Length == 4 && args[3] == "producer") return Producer(args);
             bool snapshot = args.Length == 4 && args[3] == "snapshot";
             Require(args.Length == 3 || snapshot, "gallery, receipt, source path and optional snapshot mode required");
             string scope = snapshot ? "saves" : "content";
@@ -96,6 +97,64 @@ internal static class PackImportHarness
         catch (Exception error) { Console.Error.WriteLine(error); return 1; }
     }
 
+    private static int Producer(string[] args)
+    {
+        var gallery = C1GallerySession.Parse(File.ReadAllText(args[0]));
+        using (var form = new C1ShellForm(gallery))
+        {
+            form.CreateControl();
+            var entry = FindEntry(form, "Create instance snapshot");
+            Require(entry != null && entry.Enabled &&
+                entry.AccessibleDescription.Contains("saves semantic action snapshots.create"),
+                "ordinary snapshot producer entry is absent or bypasses the semantic owner");
+            typeof(Button).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(entry, new object[] { EventArgs.Empty });
+            Require(gallery.Actions.Count == 1 && gallery.Actions[0] == "snapshots.create",
+                "producer entry changed intent");
+        }
+        var receipt = (SemanticActionReceipt)typeof(SemanticActionReceipt).GetMethod(
+            "ParseEnvelope", BindingFlags.Static | BindingFlags.NonPublic).Invoke(
+                null, new object[] { File.ReadAllText(args[1]) });
+        Require(receipt.Outcome == "completed" && receipt.ReplacementSnapshot != null,
+            "producer owner did not complete");
+        var store = new C1LivePresentationStore();
+        typeof(C1LivePresentationStore).GetProperty("SelectedInstanceId").GetSetMethod(true)
+            .Invoke(store, new object[] { "main" });
+        typeof(C1LivePresentationStore).GetMethod("AcceptReplacementSnapshot",
+            BindingFlags.Instance | BindingFlags.NonPublic).Invoke(store, new object[] { "saves", receipt });
+        Require(store.SelectedInstanceId == "main", "producer changed instance selection");
+        var descriptor = store.ActionDescriptor("saves", "snapshots.create");
+        Require(descriptor != null && descriptor.Available && descriptor.Effectful &&
+            descriptor.Confirmation == "explicit", "producer confirmation was lost");
+        var fields = new Dictionary<string, PresentationActionInputField>();
+        foreach (var field in descriptor.InputFields) fields.Add(field.FieldId, field);
+        Require(fields.Count == 3 && fields["selected_instance_id"].Required &&
+            fields["snapshot_id"].Required && fields["snapshot_id"].Type == "identifier" &&
+            !fields["save"].Required && fields["save"].Label.Contains("blank includes no saves"),
+            "producer descriptor fields changed");
+        using (var form = new C1ShellForm(gallery))
+        {
+            form.CreateControl();
+            Require(Prompt(form, descriptor, args[2], true, true) == null, "Cancel retained producer input");
+            var confirmed = Prompt(form, descriptor, args[2], false, true);
+            Require(confirmed != null && (string)confirmed["snapshot_id"] == args[2] &&
+                (string)confirmed["selected_instance_id"] == "main" &&
+                (string)confirmed["save"] == "starter.zip", "producer dialog changed input");
+        }
+        var payload = new Dictionary<string, object> { { "snapshot_id", args[2] }, { "save", "starter.zip" } };
+        var pendingType = typeof(C1LivePresentationStore).GetNestedType("PendingSemanticAction", BindingFlags.NonPublic);
+        var identityType = typeof(C1LivePresentationStore).Assembly.GetType("FacMan.WinForms.TransportIdentity");
+        var identity = identityType.GetMethod("Create", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+        var pending = Activator.CreateInstance(pendingType, BindingFlags.Instance | BindingFlags.NonPublic,
+            null, new object[] { "saves", "snapshots.create", payload, identity, false }, null);
+        payload["snapshot_id"] = "changed";
+        var retained = (IDictionary<string, object>)pendingType.GetProperty("Payload",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(pending, null);
+        Require((string)retained["snapshot_id"] == args[2], "uncertain producer input was rewritten");
+        Console.WriteLine("PASS snapshots.create ordinary entry, optional save, dialog and immutable pending fields");
+        return 0;
+    }
+
     private static Button FindEntry(Control parent, string accessibleName)
     {
         foreach (Control child in parent.Controls)
@@ -109,7 +168,7 @@ internal static class PackImportHarness
     }
 
     private static IDictionary<string, object> Prompt(C1ShellForm owner,
-        PresentationActionDescriptor descriptor, string source, bool cancel)
+        PresentationActionDescriptor descriptor, string source, bool cancel, bool producer = false)
     {
         bool visited = false;
         using (var timer = new Timer { Interval = 25 })
@@ -132,6 +191,18 @@ internal static class PackImportHarness
                     int populated = 0;
                     foreach (Control editor in layout.Controls)
                     {
+                        if (producer)
+                        {
+                            if (editor.AccessibleName == "New snapshot ID") { editor.Text = source; ++populated; }
+                            if (editor.AccessibleName == "Optional save filename (.zip); blank includes no saves")
+                                { editor.Text = "starter.zip"; ++populated; }
+                            if (editor is ComboBox)
+                            {
+                                ((ComboBox)editor).SelectedItem = "main";
+                                if ((string)((ComboBox)editor).SelectedItem == "main") ++populated;
+                            }
+                            continue;
+                        }
                         if (editor.AccessibleName == "Instance snapshot archive (.zip)") { editor.Text = source; ++populated; }
                         if (editor.AccessibleName == "New instance ID") { editor.Text = "restored"; ++populated; }
                         if (editor is ComboBox)

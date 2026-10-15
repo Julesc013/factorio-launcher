@@ -678,3 +678,44 @@ source assertion. Required exact-head platform checks and delivered-package
 qualification remain open. The WinForms harness proves structural controls
 and production modal fields, not backend-through-UI or human acceptance.
 Evidence: evidence/snapshot-presentation.v1.json and hash-closed custody.
+# Ordinary snapshot producer continuation
+
+PR424's ordinary snapshot restoration is integrated as dev45387703, with all12
+required checks and independently reviewed Windows CLI/TUI/production offscreen
+GUI and Linux CLI/TUI delivered qualification. The accepted metadata projections
+and hash custody are retained in this WorkUnit's evidence directory; historical
+pending receipts remain unchanged. Linux local stdlib/tmpfs qualification is
+distinct from hosted source/schema suites and grants no physical-ext4 claim.
+
+The next bounded gap is the ordinary producer: actual packaged Saves query has
+no snapshots.create action, and save backup/modpack export cannot supply the
+snapshot archive consumed by Restore snapshot. This continuation connects the
+existing create owner to ordinary Saves with optional honest snapshot_id wire
+extension and one optional save. Existing absent-field request bytes remain exact.
+See snapshot-presentation-producer.md for scope, retained baseline and pending
+prebuild qualification. No new archive/recovery/provider/game subsystem is added.
+
+The producer continuation now passes final Windows build/native/endurance and
+20 current-source producer/TUI/shared presentation/intent methods in run07.
+Twenty unchanged-owner restore/pack/snapshot/control methods are retained from
+runs05/06. The actual TUI cancellation failure required an empty default for the
+new required snapshot name, preserving the generic TUI state machine. Earlier
+guard, compile and RPC fixture failures remain distinct. See the current producer
+note and external snapshot-producer author packet for exact source hashes,
+qualification limits and final strict/AIDE receipts. No new hosted CI or delivered
+producer qualification is claimed by this source result.
+
+The final scoped TUI completion now displays the exact successful owner's archive
+path. Run08 passes the same-cache build and two affected native TUI tests; run10
+passes both ordinary methods on those unchanged binaries, obtaining the visible
+Unicode/space path from the Launch Deck Operation line and feeding it into
+Restore. Runs08/09 retain incorrect display-location test assertions. Earlier
+unchanged-owner method/native/endurance results remain separately hash-bound.
+
+Independent source review passes ordinary snapshot creation using the existing
+archive owner, required user-entered name, exact legacy receipt compatibility
+and displayed terminal archive-path handoff to ordinary restoration. Qualified
+source evidence and preserved failed attempts are hash-closed in
+evidence/snapshot-producer.v1.json and its custody. Required current-head CI
+and delivered CLI/TUI/Windows GUI acceptance remain open; no WorkUnit, game,
+provider, human, Beta or release gate is closed.
