@@ -1,0 +1,128 @@
+{
+  "schema": "facman.accepted-qualification-projection.v1",
+  "pr": 424,
+  "reviewed_source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+  "source_tree": "faa6f8882caee6eb0cfa4e901d278a3fb8eb5f98",
+  "metadata_only": true,
+  "raw_logs_or_product_archive_embedded": false,
+  "historical_pending_receipt_rewritten": false,
+  "scope": "delivered Linux CLI/TUI private tmpfs stdlib raw oracle",
+  "independent_review": {
+    "schema": "facman.independent_linux_delivered_snapshot_review.v1",
+    "verdict": "PASS_SCOPED_EXACT_DELIVERED_LINUX_SNAPSHOT_CLI_TUI",
+    "non_authoring": true,
+    "packet_sha256": "9b97f1c0b68e07433e52f045f09672b1a1cecf71e63fa58f95eb0fa56a80b291",
+    "reviewer_script_sha256": "19a63448d727dc6b0fcc8d6dc9aae3eabcc05729623647791d91616fe49fd52c",
+    "producer": "349b953e1be2dd4a455f0df93b47895e3f5a57d6",
+    "producer_parents": [
+      "6c6efc8a679404147a56a24803bd8c4618bafefa",
+      "dfd15f90950075e0654aa6393d417fc22b9ccff1"
+    ],
+    "reviewed_source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+    "source_tree": "faa6f8882caee6eb0cfa4e901d278a3fb8eb5f98",
+    "integrated_dev": "45387703b4d84a7d9a90c8ef07729777cb4ffe93",
+    "artifact": 11949081014,
+    "run": 38679232261,
+    "download_count": 1,
+    "CLI_files": 598,
+    "TUI_files": 596,
+    "raw_artifacts_verified": 385,
+    "retained_product_calls": 85,
+    "owned_outer_jobs": 11,
+    "scenarios_passed": 7,
+    "uid": 65534,
+    "gid": 65534,
+    "groups": [],
+    "emptyPATH": true,
+    "actual_before_after_publication_recovery": true,
+    "unknown_receipts_and_replays_preserved": true,
+    "changed_source_foreign_target_preserved": true,
+    "TUI_both_cancellations_and_new_selection": true,
+    "package_and_source_inputs_preserved": true,
+    "mounts_absent_parent_empty": true,
+    "observed_tmpfs_used_bytes": 188166144,
+    "source_schema_unittest_suite_run": false,
+    "physical_ext4": false,
+    "real_game": false,
+    "mac_execution": false,
+    "human": false,
+    "workunit_closed": false,
+    "beta": false,
+    "rc": false
+  },
+  "producer": "349b953e1be2dd4a455f0df93b47895e3f5a57d6",
+  "producer_parents": [
+    "6c6efc8a679404147a56a24803bd8c4618bafefa",
+    "dfd15f90950075e0654aa6393d417fc22b9ccff1"
+  ],
+  "workflow": {
+    "id": 38679232261,
+    "event": "pull_request",
+    "head": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+    "attempt": 1,
+    "path": ".github/workflows/ci.yml",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "provider_pins": {
+    "ULK": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "USK": "2749a15b835a6c1c9968598a2b434d85809691ad"
+  },
+  "scenarios": [
+    {
+      "name": "direct-local",
+      "status": "PASS"
+    },
+    {
+      "name": "semantic-replay",
+      "status": "PASS"
+    },
+    {
+      "name": "death-verified",
+      "status": "PASS"
+    },
+    {
+      "name": "death-publication",
+      "status": "PASS"
+    },
+    {
+      "name": "changed-source",
+      "status": "PASS"
+    },
+    {
+      "name": "foreign-target",
+      "status": "PASS"
+    },
+    {
+      "name": "ordinary-tui",
+      "status": "PASS"
+    }
+  ],
+  "author_packet": {
+    "path": "snapshot-linux-delivered-author-packet-01.json",
+    "sha256": "9b97f1c0b68e07433e52f045f09672b1a1cecf71e63fa58f95eb0fa56a80b291",
+    "bytes": 12570
+  },
+  "independent_receipt": {
+    "path": "snapshot-linux-delivered-independent-review-01.json",
+    "sha256": "fdfc68ae185999bb75f6b1bff6b730836c03b12f39974fc1e3f60abd3c12f0b2",
+    "bytes": 1588
+  },
+  "raw_hash_custody": {
+    "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\snapshot-linux-delivered-raw-custody-01.json",
+    "bytes": 77441,
+    "sha256": "f072416242a9ef43fbc3af037a982eb2d3a5e072296eda41820250ff69f7af80"
+  },
+  "limits": {
+    "source_schema_unittest_suite_run": false,
+    "reason": "Existing WSL lacks referencing/rpds; this is a separate stdlib raw oracle qualification, with no installation or weakened schema check.",
+    "physical_ext4": false,
+    "real_game": false,
+    "human": false,
+    "mac_execution": false,
+    "named_minimum_host_claim": false,
+    "stream_limit": "Per-stream limit checked after capture; no streaming hard-cap claim.",
+    "private_alpha": true,
+    "release_eligibility_claim": false
+  }
+}

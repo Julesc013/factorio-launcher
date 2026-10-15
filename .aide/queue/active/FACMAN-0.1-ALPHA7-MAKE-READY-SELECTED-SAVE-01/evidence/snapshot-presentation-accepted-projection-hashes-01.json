@@ -1,0 +1,22 @@
+{
+  "schema": "facman.metadata-projection-custody.v1",
+  "files": [
+    {
+      "path": "snapshot-presentation-accepted-ci-projection-01.json",
+      "sha256": "5432b19768d13c1277e3977b0cfb8500de25e76562d5432316c4431c6388257d",
+      "bytes": 10730
+    },
+    {
+      "path": "snapshot-presentation-accepted-windows-projection-01.json",
+      "sha256": "9b4b660431b39df750ca1d4b794ae8c7d14e7cb5780fcf1af4177e9609b33a71",
+      "bytes": 4378
+    },
+    {
+      "path": "snapshot-presentation-accepted-linux-projection-01.json",
+      "sha256": "cdd64559bde5876d1004ebbceaf5647b6b64fcf86e9783df20e3114b0d84fd92",
+      "bytes": 4453
+    }
+  ],
+  "total_projection_bytes": 19561,
+  "placement": "Prepared externally for the next admitted current F11 source commit; no tracked destination or historical receipt changed."
+}

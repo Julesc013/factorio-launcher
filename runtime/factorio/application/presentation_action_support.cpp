@@ -5,11 +5,16 @@
 #include "flb_factorio_instance_model.h"
 
 #include "command_result.h"
+#include "application_context.h"
 #include "fl_json.h"
+#include "fl_path_safety.h"
+#include "fl_transaction.h"
 #include "flb_factorio_profiles.h"
+#include "handlers/snapshots.h"
 
 #include <algorithm>
 #include <iterator>
+#include <utility>
 #include <variant>
 
 namespace facman::factorio::application {
@@ -105,7 +110,32 @@ std::string action_request_json(const SemanticActionRequest& request)
     if (request.launch_intent == "load_save") input.add_string("launch_intent", request.launch_intent);
     // Preserve the immutable legacy fingerprint when the new input is absent.
     if (!request.source_path.empty()) input.add_string("source_path", request.source_path);
+    if (!request.snapshot_id.empty()) input.add_string("snapshot_id", request.snapshot_id);
     return input.serialize();
+}
+
+std::string snapshot_create_input_problem(const SemanticActionRequest& request)
+{
+    if (request.action_id != "snapshots.create") return {};
+    std::string detail;
+    if (request.scope != "saves" || request.selected_instance_id.empty() ||
+        !facman::base::validate_identifier(request.snapshot_id, detail)) {
+        return "selected_instance_id and a valid snapshot_id are required; save is optional";
+    }
+    return {};
+}
+
+ApplicationResult dispatch_snapshot_create(ApplicationContext& context, const SemanticActionRequest& request)
+{
+    CreateSnapshotRequest create {request.selected_instance_id, request.snapshot_id, {}};
+    if (!request.save.empty()) create.saves.push_back(request.save);
+    ApplicationResult result = handlers::dispatch_snapshots(
+        context, ApplicationRequest{CommandId::snapshots_create, std::move(create), false});
+    // This is a conservative workspace recovery signal, not attribution of
+    // another controller's pending transaction to this create. Owner bytes stay exact.
+    if (result.status != ULK_STATUS_OK && facman::transaction::incomplete_count(context.workspace()) != 0U)
+        result.outcome_kind = facman::core::OutcomeKind::recovery_required;
+    return result;
 }
 
 bool recorded_action_request_shape(const json::Value& request)
@@ -126,6 +156,17 @@ bool recorded_action_request_shape(const json::Value& request)
     if (request.find("source_path") != nullptr) {
         if (string_field(request, "source_path").empty()) return false;
         expected.emplace_back("source_path");
+    }
+    if (request.find("snapshot_id") != nullptr) {
+        const std::string id = string_field(request, "snapshot_id");
+        const auto alphanumeric = [](unsigned char c) {
+            return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+        };
+        if (id.empty() || id.size() > 128U || !alphanumeric(static_cast<unsigned char>(id.front())) ||
+            !std::all_of(id.begin() + 1, id.end(), [&](unsigned char c) {
+                return alphanumeric(c) || c == '.' || c == '_' || c == '-';
+            })) return false;
+        expected.emplace_back("snapshot_id");
     }
     auto actual = request.object_keys();
     std::sort(actual.begin(), actual.end());
@@ -452,6 +493,7 @@ bool effectful_semantic_action(const std::string& action_id)
         action_id == "saves.associate" ||
         action_id == "saves.backup" ||
         action_id == "saves.restore" ||
+        action_id == "snapshots.create" ||
         action_id == "snapshots.restore" ||
         action_id == "support.export_redacted_bundle" ||
         action_id == "recovery.apply_supported" ||

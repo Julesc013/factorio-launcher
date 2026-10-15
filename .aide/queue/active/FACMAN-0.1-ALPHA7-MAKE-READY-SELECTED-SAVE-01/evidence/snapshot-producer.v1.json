@@ -1,0 +1,282 @@
+{
+  "schema": "facman.snapshot_producer.qualified_source.v1",
+  "base_head": "45387703b4d84a7d9a90c8ef07729777cb4ffe93",
+  "base_tree": "faa6f8882caee6eb0cfa4e901d278a3fb8eb5f98",
+  "author_packet_sha256": "7978083a83cab8090b73559176a090cafce59fdae9b959313f93615a86166987",
+  "independent_review_sha256": "def1a99d7c6242b2ac75dd694d827fad68e5224f4bb3b99726af6c0671af3abd",
+  "authored_files": {
+    ".aide/memory/project-state.md": {
+      "sha256": "63ec8b45f79b1ed2c9786919aee66d083b678fc788e95fa4ec355c3aa4b6320f",
+      "bytes": 10535,
+      "tracked": true
+    },
+    ".aide/memory/project-state.v2.json": {
+      "sha256": "572473f536ff884ecc526b4124303e957721a9343c6e8c772b18b6689dafe81e",
+      "bytes": 192572,
+      "tracked": true
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": {
+      "sha256": "7e1a46b43f4212a365c3f37b88da9c8af7038b1fe90991ce784954c77f0ac5b4",
+      "bytes": 90058,
+      "tracked": true
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/snapshot-presentation-accepted-ci-projection-01.json": {
+      "sha256": "5432b19768d13c1277e3977b0cfb8500de25e76562d5432316c4431c6388257d",
+      "bytes": 10730,
+      "tracked": false
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/snapshot-presentation-accepted-linux-projection-01.json": {
+      "sha256": "cdd64559bde5876d1004ebbceaf5647b6b64fcf86e9783df20e3114b0d84fd92",
+      "bytes": 4453,
+      "tracked": false
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/snapshot-presentation-accepted-projection-hashes-01.json": {
+      "sha256": "eb435e8a8fdfe0303c8df1bdb379ec32b09c7c61dab87e12372e187aacd426e7",
+      "bytes": 841,
+      "tracked": false
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/snapshot-presentation-accepted-windows-projection-01.json": {
+      "sha256": "9b4b660431b39df750ca1d4b794ae8c7d14e7cb5780fcf1af4177e9609b33a71",
+      "bytes": 4378,
+      "tracked": false
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/snapshot-presentation-producer.md": {
+      "sha256": "6c688bd3d540a74024becd6d7a12937f6343f25bf86dc844bed9553c61f86236",
+      "bytes": 6361,
+      "tracked": false
+    },
+    "apps/cli/command_dispatch.cpp": {
+      "sha256": "e0be19df15ce113bda13c66711fea9582d320ff134e8cfe6ea4ff790ca27bf20",
+      "bytes": 70393,
+      "tracked": true
+    },
+    "apps/cli/completions/FacMan.ps1": {
+      "sha256": "b101afac0d174df8e9845b973812842b0161f5760cc3d3bc97fecd14dfbe8218",
+      "bytes": 3439,
+      "tracked": true
+    },
+    "apps/cli/completions/_facman": {
+      "sha256": "311b326060ef2957fb3ee265700df11697495f2239e557ecceb4f1471c887afc",
+      "bytes": 3552,
+      "tracked": true
+    },
+    "apps/cli/completions/facman.bash": {
+      "sha256": "d901558990febc20392016e428cbffb122107426f0fa94ec12cdd64c6cc068f8",
+      "bytes": 3305,
+      "tracked": true
+    },
+    "apps/cli/completions/facman.fish": {
+      "sha256": "c4c234ba6abb5ac3fe780cc87c44d0b01092a137772efe40197dc5a8d5fff928",
+      "bytes": 6253,
+      "tracked": true
+    },
+    "apps/cli/generated/command_help.inc": {
+      "sha256": "0e92d642c89f533bc0bbd53ee46edc62c325fa2a4529c5c0b8d14af561595241",
+      "bytes": 12569,
+      "tracked": true
+    },
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h": {
+      "sha256": "ae58423f19eefd398a37fc7b35f74d92d6d1437a819e50e1f554283f3fbc3ca2",
+      "bytes": 678,
+      "tracked": true
+    },
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m": {
+      "sha256": "c999b41db574882ddef91d1f45f4410e75ee8c6b842c15a2d2fe2cd1ba8b200d",
+      "bytes": 185008,
+      "tracked": true
+    },
+    "apps/gui/windows/winforms/C1ShellForm.cs": {
+      "sha256": "11ce795da4c7aa424ba601097353faf77f7640b2d0c9c67a6307d994739b3432",
+      "bytes": 70330,
+      "tracked": true
+    },
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": {
+      "sha256": "9903cb3ffdcfc5c92ec64524c604ed258efe686b207050c99737e46cf4c0da6c",
+      "bytes": 149014,
+      "tracked": true
+    },
+    "apps/gui/windows/winforms/GeneratedPresentationContracts.cs": {
+      "sha256": "3a322fceb0c81458dce4d61b089235774532266ede7cae83420649b2cd7be798",
+      "bytes": 7920,
+      "tracked": true
+    },
+    "apps/tui/generated_command_catalog.hpp": {
+      "sha256": "86a0d4b2876f9ce361ecea5b96948fbd51b8cd800ff425b49ede907f324f6e57",
+      "bytes": 113223,
+      "tracked": true
+    },
+    "apps/tui/tui_product_shell.cpp": {
+      "sha256": "44e488f3bfdf7239e7793f059f770f2be00d6c2b8d83670f0a2f14b7e77b2d99",
+      "bytes": 34199,
+      "tracked": true
+    },
+    "contracts/command/factorio/presentation.action.v1.toml": {
+      "sha256": "17a460c8dec042e4a9dcf6d84942531b53ab5d4546095890ece1eb75a4b367fe",
+      "bytes": 1275,
+      "tracked": true
+    },
+    "contracts/command/request_fields.v1.json": {
+      "sha256": "39b34013abbe5a925301b826889d65985eb1fcef90d4e23be057ffccfdd663c7",
+      "bytes": 47168,
+      "tracked": true
+    },
+    "contracts/generated-index/command_catalog.v2.json": {
+      "sha256": "ab98d8f3415d0bf7568a3015ae29b3b2a86b3015a96d0310ff4717d2e75926cb",
+      "bytes": 408189,
+      "tracked": true
+    },
+    "contracts/generated-index/command_cli_grammar.v2.json": {
+      "sha256": "c8a20c4b991dfb98fd46baea2ea8a7d39f545a74a3c18cbb8347de8f7b18395b",
+      "bytes": 266265,
+      "tracked": true
+    },
+    "contracts/generated-index/frontend_command_catalog.v1.json": {
+      "sha256": "fb1374ce1300cc48049097802fe01593a591c06575647fbb5502c2b8af34e7be",
+      "bytes": 396720,
+      "tracked": true
+    },
+    "contracts/generated-index/presentation_contracts.v1.bundle.json": {
+      "sha256": "5a932f99c1ce80fed0bcdf713480de9bab4db061178400d60e4f00ecbe4fc593",
+      "bytes": 37862,
+      "tracked": true
+    },
+    "contracts/schema/command/presentation.action.request.v1.schema.json": {
+      "sha256": "7c33edaa3d92a0ba8c040c426188094e0cfd4c0f51aab7c72425e3b68984a6d3",
+      "bytes": 2880,
+      "tracked": true
+    },
+    "docs/generated/contracts/presentation-foundation.md": {
+      "sha256": "9dadbff3d54af4307e7bce16bfbbe18b8d05a67dc996cdf5eb4227109123f953",
+      "bytes": 1903,
+      "tracked": true
+    },
+    "docs/product/instance_snapshots.md": {
+      "sha256": "94a9870b0bb203b40eb864b46ef611ef037945de812a56107a1039740ab139b8",
+      "bytes": 4957,
+      "tracked": true
+    },
+    "docs/reference/generated-command-catalog.md": {
+      "sha256": "f0d12d59a0988ad86889aadba692eb61a4137cfa0c6947c9b648bbdd9b3faf9a",
+      "bytes": 25094,
+      "tracked": true
+    },
+    "runtime/core/generated/command_catalog.h": {
+      "sha256": "8310ddd22c824ca79daf596d2e29ac36e0fd0e4b59804c2d5c808d7f6b070b9e",
+      "bytes": 211681,
+      "tracked": true
+    },
+    "runtime/core/generated/presentation_contracts.v1.h": {
+      "sha256": "a54f2f7aaf6dfb2689f03dee748a4f4eb036feba0da5b0a57cd79647f690464b",
+      "bytes": 147899,
+      "tracked": true
+    },
+    "runtime/core/generated/version.h": {
+      "sha256": "8ed1ddb2b63c9589782de11d02d75f54970c3a3b7b0525aa86324f033e360ef7",
+      "bytes": 636,
+      "tracked": true
+    },
+    "runtime/factorio/application/application_types.h": {
+      "sha256": "5cfaff960493e00cc5745088e0c4cb1b57fb38a24e66dbb8159bffe43d836810",
+      "bytes": 8427,
+      "tracked": true
+    },
+    "runtime/factorio/application/command_dispatch.cpp": {
+      "sha256": "559eed26878dedee403996aa3c561564d1dc91d8827320dd917cc485ffa80289",
+      "bytes": 58745,
+      "tracked": true
+    },
+    "runtime/factorio/application/generated/command_ids.inc": {
+      "sha256": "ab0c03ffeb3a5329397750b28e15919235be31f1d592fc869192c10634308141",
+      "bytes": 3119,
+      "tracked": true
+    },
+    "runtime/factorio/application/generated/command_lookup.inc": {
+      "sha256": "40b243338811872db7044a80110ba01a4890c639d3f48c932732679dca28bd3d",
+      "bytes": 10352,
+      "tracked": true
+    },
+    "runtime/factorio/application/generated/command_names.inc": {
+      "sha256": "50d7edc490d2e378253c65ace7deb5a25e162786a4a8d785f111b40e0ddd6a24",
+      "bytes": 8830,
+      "tracked": true
+    },
+    "runtime/factorio/application/generated/command_writes.inc": {
+      "sha256": "0e9d5e2e53722edb75cad69aa3c2d349cfdbd2386a66716985048660f3955301",
+      "bytes": 2391,
+      "tracked": true
+    },
+    "runtime/factorio/application/generated/request_contracts.inc": {
+      "sha256": "f26acb030a7c24ccae56128eecd18c1982dbe06735d3ebdf3201399e5ea9c9e1",
+      "bytes": 68339,
+      "tracked": true
+    },
+    "runtime/factorio/application/presentation_action_support.cpp": {
+      "sha256": "29d239c559bacca606cd02f05d985f87d7f17c1252f95539ec6088b2b3359055",
+      "bytes": 36218,
+      "tracked": true
+    },
+    "runtime/factorio/application/presentation_action_support.h": {
+      "sha256": "bba2f2c7dfdfff99442405496e5b1688daac7609258c8ba75fc0bba84b3289b3",
+      "bytes": 5136,
+      "tracked": true
+    },
+    "runtime/factorio/application/presentation_service.cpp": {
+      "sha256": "93d09011dcc5720172221f780b702ef2e1e668385860473dc628336debe536f6",
+      "bytes": 134604,
+      "tracked": true
+    },
+    "tests/generated/presentation_contracts.py": {
+      "sha256": "c66f207eede6e9ecf3dd68256af8bcd9b4828adf4d8ebcc2d20aefa7d03931ec",
+      "bytes": 4614,
+      "tracked": true
+    },
+    "tests/native/facman_tui_product_model_smoke.cpp": {
+      "sha256": "c5825ea8838ab2259d0f1a03546981d6e94d6fe3550d16bddb7153d500b664ec",
+      "bytes": 24841,
+      "tracked": true
+    },
+    "tests/test_presentation_snapshot_create.py": {
+      "sha256": "81f1ceed62c70a82d61e857abb0539f0933122f6ad10746d7cc24ae55f114ca6",
+      "bytes": 24822,
+      "tracked": false
+    },
+    "tests/test_tui_product.py": {
+      "sha256": "d29d38c886d152e3c8da6c7f66bb7baac2242cb5d224d49a84e4dfb8b74bba06",
+      "bytes": 39938,
+      "tracked": true
+    },
+    "tests/winforms_control_gallery/PackImportHarness.cs": {
+      "sha256": "28908375401212dfb75475728fd55c4810f44cd75633f586f7a7cc8d14ef5d35",
+      "bytes": 13795,
+      "tracked": true
+    }
+  },
+  "focused_unique_methods": 40,
+  "all_methods_run_on_final_binary": false,
+  "retained_unchanged_owner_results": true,
+  "final_native_tui_tests": 2,
+  "prior_native_tests": 3,
+  "bounded_endurance_operations": 64,
+  "bounded_endurance_seconds": 4.188,
+  "existing_snapshot_owner": true,
+  "required_name_without_default": true,
+  "blank_save_includes_none": true,
+  "legacy_canonical_bytes_preserved": true,
+  "ordinary_TUI_displayed_path_consumed_by_restore": true,
+  "source_package_mode": "source_checkout",
+  "all_failures_retained": true,
+  "closed_owned_jobs": 68,
+  "custody": "snapshot-producer-custody.v1.zip",
+  "custody_sha256": "14e8c3fa4c2a186243b5a5faf1dc7a0ed8cf5dc1db257f9ba1b8d7885834aa9a",
+  "custody_files": 349,
+  "required_checks_pending": true,
+  "produced_package_qualified": false,
+  "workunit_closed": false,
+  "real_game_qualified": false,
+  "human_qualified": false,
+  "beta": false,
+  "rc": false,
+  "new_roots": 0,
+  "new_clones": 0,
+  "new_worktrees": 0
+}

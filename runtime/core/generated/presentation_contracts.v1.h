@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace facman::contracts::presentation_v1 {
-inline constexpr const char* kSourceDigest = "a3ae9172078ae27cf84dff2da172833aa1a18a8d9de2d460f5502acb609db24b";
+inline constexpr const char* kSourceDigest = "c58b6eec72fdf467e27e18b4432d2ed3c606d32c8760225fb336e384442f7aa5";
 
 struct SemanticActionRequest {
     std::string action_id;
@@ -36,6 +36,7 @@ struct SemanticActionRequest {
     std::optional<std::vector<std::string>> roots;
     std::optional<std::string> save;
     std::optional<std::string> selected_instance_id;
+    std::optional<std::string> snapshot_id;
     std::optional<std::string> source_data_root;
     std::optional<std::string> source_path;
     std::optional<std::string> template_id;
@@ -272,6 +273,9 @@ inline std::string encode_json(const SemanticActionRequest& value)
     if (value.selected_instance_id) {
         output.add_string("selected_instance_id", *value.selected_instance_id);
     }
+    if (value.snapshot_id) {
+        output.add_string("snapshot_id", *value.snapshot_id);
+    }
     if (value.source_data_root) {
         output.add_string("source_data_root", *value.source_data_root);
     }
@@ -292,7 +296,7 @@ inline facman::core::Result<SemanticActionRequest> decode_semantic_action_reques
     auto document = facman::core::json::parse(raw);
     if (!document || !document.value().is_object())
         return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("contract is not an object"));
-    if (!detail::keys_allowed(document.value(), {"action_id", "expected_snapshot_revision", "request_id", "scope", "attempt_id", "confirmation", "display_name", "durable_operation_id", "idempotency_key", "installation_id", "installation_path", "launch_intent", "mod_identity", "new_instance_id", "output_path", "profile_id", "roots", "save", "selected_instance_id", "source_data_root", "source_path", "template_id", "transaction_id"}, false))
+    if (!detail::keys_allowed(document.value(), {"action_id", "expected_snapshot_revision", "request_id", "scope", "attempt_id", "confirmation", "display_name", "durable_operation_id", "idempotency_key", "installation_id", "installation_path", "launch_intent", "mod_identity", "new_instance_id", "output_path", "profile_id", "roots", "save", "selected_instance_id", "snapshot_id", "source_data_root", "source_path", "template_id", "transaction_id"}, false))
         return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("contract contains an unknown field"));
     SemanticActionRequest value;
     const auto* field_action_id = document.value().find("action_id");
@@ -474,6 +478,15 @@ inline facman::core::Result<SemanticActionRequest> decode_semantic_action_reques
         std::string decoded_selected_instance_id = decoded_selected_instance_id_result.take_value();
         if (!detail::portable_identifier(decoded_selected_instance_id)) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("selected_instance_id has an invalid type or value"));
         value.selected_instance_id = std::move(decoded_selected_instance_id);
+    }
+    const auto* field_snapshot_id = document.value().find("snapshot_id");
+    if (field_snapshot_id != nullptr) {
+        if (!field_snapshot_id->is_string()) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("snapshot_id has an invalid type or value"));
+        auto decoded_snapshot_id_result = field_snapshot_id->string_value();
+        if (!decoded_snapshot_id_result) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("snapshot_id has an invalid type or value"));
+        std::string decoded_snapshot_id = decoded_snapshot_id_result.take_value();
+        if (!detail::portable_identifier(decoded_snapshot_id)) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("snapshot_id has an invalid type or value"));
+        value.snapshot_id = std::move(decoded_snapshot_id);
     }
     const auto* field_source_data_root = document.value().find("source_data_root");
     if (field_source_data_root != nullptr) {

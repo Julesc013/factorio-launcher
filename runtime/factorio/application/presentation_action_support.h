@@ -13,6 +13,8 @@ namespace facman::core::json { class Value; class ObjectBuilder; class ArrayBuil
 
 namespace facman::factorio::application {
 
+class ApplicationContext;
+
 struct ActionInputField {
     std::string id;
     std::string label;
@@ -37,6 +39,8 @@ facman::core::json::ObjectBuilder action_descriptor(
 std::string action_request_json(const SemanticActionRequest& request);
 bool recorded_action_request_shape(const facman::core::json::Value& request);
 bool effectful_semantic_action(const std::string& action_id);
+std::string snapshot_create_input_problem(const SemanticActionRequest& request);
+ApplicationResult dispatch_snapshot_create(ApplicationContext& context, const SemanticActionRequest& request);
 bool terminal_session_state(const std::string& state);
 std::string result_string(const ApplicationResult& result);
 void add_json(facman::core::json::ObjectBuilder& output, const char* key, const std::string& source);

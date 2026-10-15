@@ -1,0 +1,231 @@
+{
+  "schema": "facman.accepted-qualification-projection.v1",
+  "pr": 424,
+  "reviewed_source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+  "source_tree": "faa6f8882caee6eb0cfa4e901d278a3fb8eb5f98",
+  "metadata_only": true,
+  "raw_logs_or_product_archive_embedded": false,
+  "historical_pending_receipt_rewritten": false,
+  "scope": "required CI and independently decoded native jobs",
+  "required_checks_unique": 12,
+  "required_checks_all_pass": true,
+  "observed_checks": [
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/runs/116239813649",
+      "name": "task-to-dev-promotion-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232261/job/116239726145",
+      "name": "macos-native-cli",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232261/job/116239725908",
+      "name": "macos-archive-core",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232220/job/116239725826",
+      "name": "development-only-cross-provider-fixture",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232261/job/116239725839",
+      "name": "appkit-compile",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232367/job/116239727036",
+      "name": "task-to-dev-promotion-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232261/job/116239725995",
+      "name": "linux-coverage",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232340/job/116239725856",
+      "name": "python",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232261/job/116239726199",
+      "name": "windows-native-package",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232340/job/116239726550",
+      "name": "csharp",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232261/job/116239726044",
+      "name": "linux-native",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232354/job/116239725943",
+      "name": "policy-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38679232340/job/116239726122",
+      "name": "c-cpp",
+      "state": "SUCCESS"
+    }
+  ],
+  "native_jobs": [
+    {
+      "source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+      "run_id": 38679232261,
+      "job_id": 116239726044,
+      "name": "linux-native",
+      "runner_name": "GitHub Actions 1000099807",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_presentation_service_smoke": 3,
+        "facman_tui_product_model_smoke": 3,
+        "facman_tui_smoke": 3
+      },
+      "actual_python": {
+        "test_presentation_snapshot_restore": {
+          "test_before_and_after_publication_death_recover_without_rewriting_unknown_semantic_receipt": "passed",
+          "test_compiled_scoped_button_fields_returned_selection_and_uncertain_input": "explicit_Windows_only_unqualified",
+          "test_exact_owner_report_local_selection_provenance_and_new_process_replay": "passed",
+          "test_existing_destination_and_non_snapshot_source_preserve_inputs": "passed",
+          "test_live_installation_drift_is_recovery_required_and_replays_without_redispatch": "passed",
+          "test_missing_inputs_confirmation_stale_revision_and_wrong_scope_have_no_effects": "passed",
+          "test_recovery_refuses_changed_archive_target_registration_and_orphan_lock": "passed",
+          "test_saves_advertises_reconstruction_without_an_instance_and_refuses_without_installations": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        },
+        "test_tui_product": {
+          "test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance": "passed"
+        }
+      },
+      "log_sha256": "c477df7d9773e63dd3c52958b5ee66b2882e1ae08bd7f46859cd6d2e4771ede9"
+    },
+    {
+      "source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+      "run_id": 38679232261,
+      "job_id": 116239726199,
+      "name": "windows-native-package",
+      "runner_name": "GitHub Actions 1000099803",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_presentation_service_smoke": 4,
+        "facman_tui_product_model_smoke": 4,
+        "facman_tui_smoke": 4
+      },
+      "actual_python": {
+        "test_presentation_snapshot_restore": {
+          "test_before_and_after_publication_death_recover_without_rewriting_unknown_semantic_receipt": "passed",
+          "test_compiled_scoped_button_fields_returned_selection_and_uncertain_input": "passed",
+          "test_exact_owner_report_local_selection_provenance_and_new_process_replay": "passed",
+          "test_existing_destination_and_non_snapshot_source_preserve_inputs": "passed",
+          "test_live_installation_drift_is_recovery_required_and_replays_without_redispatch": "passed",
+          "test_missing_inputs_confirmation_stale_revision_and_wrong_scope_have_no_effects": "passed",
+          "test_recovery_refuses_changed_archive_target_registration_and_orphan_lock": "passed",
+          "test_saves_advertises_reconstruction_without_an_instance_and_refuses_without_installations": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        },
+        "test_tui_product": {
+          "test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance": "passed"
+        }
+      },
+      "log_sha256": "0bc314578fcd6f1ccf50cfb90adbd6af37fa3c377f1de50008efa793db4fca55"
+    },
+    {
+      "source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+      "run_id": 38679232261,
+      "job_id": 116239726145,
+      "name": "macos-native-cli",
+      "runner_name": "GitHub Actions 1000099810",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_presentation_service_smoke": 1,
+        "facman_tui_product_model_smoke": 1,
+        "facman_tui_smoke": 1
+      },
+      "actual_python": {
+        "test_presentation_snapshot_restore": {
+          "test_before_and_after_publication_death_recover_without_rewriting_unknown_semantic_receipt": "passed",
+          "test_compiled_scoped_button_fields_returned_selection_and_uncertain_input": "explicit_Windows_only_unqualified",
+          "test_exact_owner_report_local_selection_provenance_and_new_process_replay": "passed",
+          "test_existing_destination_and_non_snapshot_source_preserve_inputs": "passed",
+          "test_live_installation_drift_is_recovery_required_and_replays_without_redispatch": "passed",
+          "test_missing_inputs_confirmation_stale_revision_and_wrong_scope_have_no_effects": "passed",
+          "test_recovery_refuses_changed_archive_target_registration_and_orphan_lock": "passed",
+          "test_saves_advertises_reconstruction_without_an_instance_and_refuses_without_installations": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        },
+        "test_tui_product": {
+          "test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance": "passed"
+        }
+      },
+      "log_sha256": "f017e291f6ee93da6e039905e07e24c11ce4938363240a9a6608a598d8cd2e6d"
+    }
+  ],
+  "actual_windows_GUI": {
+    "status": "PASS_INDEPENDENT_ACTUAL_GUI_CUSTODY",
+    "source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+    "qualification": "factory-produced Windows legacy WinForms portable file closure",
+    "profile": "windows_legacy_winforms_x64",
+    "result_sha256": "6b09a79158d0d6ddaebd485e60206eb5c512f1f43e6b7b59ce60c5a04accf3a8",
+    "custody_canonical_sha256": "864930e76c6f705a4a1689d39d05fde7eb04047215ba95f06dcba7cdd38d0812",
+    "actual_GUI_sessions": 2,
+    "observed_packaged_backend_processes": 68,
+    "complete_owner_effects": 2,
+    "fixture_CLI_calls": 8,
+    "decoded_files": 31,
+    "decoded_bytes": 759083,
+    "GUI_sha256": "6f3938c0688a4dc204b4643b9e0ef2f0186505118b8a2d34dc4daf4e78061081",
+    "backend_sha256": "fe661038c7d7861a03894461da8f7b3f17b665fedd5267baa1e614753046c295",
+    "package_file_count": 599,
+    "all_owned_jobs_empty": true,
+    "ordinary_cancellations_and_stale_refusal": true,
+    "whole_workspace_inputs_preserved": true,
+    "canonical_installed_desktop": false,
+    "real_game": false,
+    "human": false,
+    "full_make_ready": false,
+    "beta": false,
+    "rc": false
+  },
+  "source_receipt": {
+    "path": "snapshot-presentation-checked-integration-result-01.json",
+    "sha256": "c17c0c0e80402efa4ea50746188a59074089d15bc67485c95e7b43544f03442f",
+    "bytes": 50017
+  },
+  "limits": [
+    "Only actual hosted native jobs are claimed on their reported platforms.",
+    "Compiled WinForms methods explicitly unqualified on Linux/macOS."
+  ]
+}

@@ -377,6 +377,7 @@ namespace FacMan.WinForms
             layout.Controls.Add(savesList, 0, 2);
             FlowLayoutPanel actions = ActionRow();
             actions.AccessibleName = "Save inspection and backup actions";
+            actions.Controls.Add(ScopedActionButton("Create s&napshot", "Create instance snapshot", "saves", "snapshots.create"));
             actions.Controls.Add(ScopedActionButton(
                 "&Inspect", "Inspect selected local save", "saves", "saves.inspect"));
             actions.Controls.Add(ScopedActionButton(

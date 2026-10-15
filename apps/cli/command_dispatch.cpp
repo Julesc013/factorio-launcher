@@ -24,6 +24,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -1199,40 +1200,33 @@ int command_presentation(const Options& options)
         payload.add_string("scope", scope);
         payload.add_string("expected_snapshot_revision", expected);
         payload.add_string("request_id", request_id);
-        const std::string instance = option(options.args, "--instance");
-        const std::string key = option(options.args, "--idempotency-key");
+        const std::string confirmation = option(options.args, "--confirmation");
         const std::string operation = option(options.args, "--operation-id");
         const std::string attempt = option(options.args, "--attempt-id");
-        const std::string confirmation = option(options.args, "--confirmation");
-        const std::string installation = option(options.args, "--installation");
-        const std::string installation_path = option(options.args, "--installation-path");
-        const std::string new_instance = option(options.args, "--new-instance");
-        const std::string display_name = option(options.args, "--display-name");
-        const std::string template_id = option(options.args, "--template");
-        const std::string profile_id = option(options.args, "--profile");
-        const std::string mod_identity = option(options.args, "--mod");
-        const std::string save = option(options.args, "--save");
-        const std::string output_path = option(options.args, "--output");
-        const std::string source_data_root = option(options.args, "--source-data-root");
-        const std::string source_path = option(options.args, "--source-path");
-        const std::string transaction = option(options.args, "--transaction");
-        if (!instance.empty()) payload.add_string("selected_instance_id", instance);
-        if (!key.empty()) payload.add_string("idempotency_key", key);
-        if (!operation.empty()) payload.add_string("durable_operation_id", operation);
-        if (!attempt.empty()) payload.add_string("attempt_id", attempt);
-        if (!confirmation.empty()) payload.add_string("confirmation", confirmation);
-        if (!installation.empty()) payload.add_string("installation_id", installation);
-        if (!installation_path.empty()) payload.add_string("installation_path", installation_path);
-        if (!new_instance.empty()) payload.add_string("new_instance_id", new_instance);
-        if (!display_name.empty()) payload.add_string("display_name", display_name);
-        if (!template_id.empty()) payload.add_string("template_id", template_id);
-        if (!profile_id.empty()) payload.add_string("profile_id", profile_id);
-        if (!mod_identity.empty()) payload.add_string("mod_identity", mod_identity);
-        if (!save.empty()) payload.add_string("save", save);
-        if (!output_path.empty()) payload.add_string("output_path", output_path);
-        if (!source_data_root.empty()) payload.add_string("source_data_root", source_data_root);
-        if (!source_path.empty()) payload.add_string("source_path", source_path);
-        if (!transaction.empty()) payload.add_string("transaction_id", transaction);
+        for (const auto& field : std::vector<std::pair<const char*, const char*>>{
+                {"selected_instance_id", "--instance"},
+                {"idempotency_key", "--idempotency-key"},
+                {"durable_operation_id", "--operation-id"},
+                {"attempt_id", "--attempt-id"},
+                {"confirmation", "--confirmation"},
+                {"installation_id", "--installation"},
+                {"installation_path", "--installation-path"},
+                {"new_instance_id", "--new-instance"},
+                {"display_name", "--display-name"},
+                {"template_id", "--template"},
+                {"profile_id", "--profile"},
+                {"mod_identity", "--mod"},
+                {"save", "--save"},
+                {"output_path", "--output"},
+                {"source_data_root", "--source-data-root"},
+                {"source_path", "--source-path"},
+                {"snapshot_id", "--snapshot-id"},
+                {"transaction_id", "--transaction"},
+            }) {
+            const std::string value = option(options.args, field.second);
+            if (std::string(field.first) == "snapshot_id" && flag(options.args, field.second) && value.empty()) return 2;
+            if (!value.empty()) payload.add_string(field.first, value);
+        }
         const auto root_values = option_values(options.args, "--root");
         if (!root_values.empty()) {
             json::ArrayBuilder roots;

@@ -172,6 +172,58 @@ class TuiProductTests(unittest.TestCase):
             self.assertNotIn("observation did not match", result.stderr)
             self.assertFalse(workspace.exists())
 
+    def test_ordinary_snapshot_producer_cancels_then_roundtrips_through_restore(self) -> None:
+        from test_presentation_snapshot_create import PresentationSnapshotCreateTests
+        from test_presentation_snapshot_restore import PresentationSnapshotRestoreTests
+        from test_instance_snapshots import FIXTURE_INSTALL, FIXTURE_SAVE, call
+        from test_local_modset_solver import snapshot
+
+        owner = PresentationSnapshotCreateTests()
+        with tempfile.TemporaryDirectory(prefix="tui producer \u03a9 ") as temporary:
+            root = Path(temporary)
+            workspace, instance = owner.prepare(root)
+            projected = owner.query(workspace)
+            index = next(i for i,a in enumerate(projected["available_semantic_actions"])
+                         if a["action_id"] == "snapshots.create")
+            fields = "selected_instance_id=main\nsnapshot_id=world\nsave=starter.zip\n"
+            opening = "5\n" + "tab\n" * index + "space\n" + fields
+            before, inputs = snapshot(workspace), (snapshot(instance), snapshot(workspace / "installs"))
+            for suffix, marker in (("6\nq\n", "Action input: Create instance snapshot"),
+                                   ("space\n6\nq\n", "Confirm Create instance snapshot")):
+                cancelled = self.invoke(["--workspace", str(workspace), "--ordinary", "--plain"], stdin=opening+suffix)
+                self.assertEqual(0, cancelled.returncode, cancelled.stderr)
+                self.assertIn(marker, cancelled.stdout)
+                self.assertEqual(before, snapshot(workspace))
+            created = self.invoke(["--workspace", str(workspace), "--ordinary", "--plain"], stdin=opening+"space\nspace\nq\n")
+            self.assertEqual(0, created.returncode, created.stderr)
+            saved = json.loads(owner.receipt(workspace).read_bytes())
+            request, outcome = json.loads(saved["request_json"]), json.loads(saved["result_json"])
+            self.assertEqual(("world", "starter.zip", "explicit"),
+                             (request["snapshot_id"], request["save"], request["confirmation"]))
+            self.assertEqual("completed", outcome["outcome"])
+            prefix = "  Operation: Snapshot created: "
+            paths = [line[len(prefix):] for line in created.stdout.splitlines() if line.startswith(prefix)]
+            self.assertTrue(paths, created.stdout)
+            self.assertEqual(outcome["action_payload"]["path"], paths[-1])
+            archive = Path(paths[-1])
+            self.assertEqual(workspace / "snapshots/main/world.zip", archive)
+            destination = root / "destination"
+            call(destination, "installs", "import", str(FIXTURE_INSTALL), "--id", "local")
+            restore = PresentationSnapshotRestoreTests()
+            projected = restore.query(destination)
+            self.assertIsNone(projected["selected_context"]["instance_id"])
+            index = next(i for i,a in enumerate(projected["available_semantic_actions"])
+                         if a["action_id"] == "snapshots.restore")
+            text = "5\n" + "tab\n" * index + "space\nsource_path=" + str(archive)
+            text += "\nnew_instance_id=restored\ninstallation_id=local\nspace\nspace\nq\n"
+            restored = self.invoke(["--workspace", str(destination), "--ordinary", "--plain"], stdin=text)
+            self.assertEqual(0, restored.returncode, restored.stderr)
+            result = json.loads(json.loads(restore.semantic_receipt(destination).read_bytes())["result_json"])
+            self.assertEqual("restored", result["replacement_snapshot"]["selected_context"]["instance_id"])
+            self.assertEqual("local", json.loads((destination / "instances/restored/instance.v1.json").read_bytes())["install_ref"])
+            self.assertEqual(FIXTURE_SAVE.read_bytes(), (destination / "instances/restored/saves/starter.zip").read_bytes())
+            self.assertEqual(inputs, (snapshot(instance), snapshot(workspace / "installs")))
+
     def test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance(self) -> None:
         from test_presentation_snapshot_restore import PresentationSnapshotRestoreTests
         from test_local_modset_solver import snapshot

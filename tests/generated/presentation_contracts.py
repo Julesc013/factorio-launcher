@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-SOURCE_DIGEST = "a3ae9172078ae27cf84dff2da172833aa1a18a8d9de2d460f5502acb609db24b"
+SOURCE_DIGEST = "c58b6eec72fdf467e27e18b4432d2ed3c606d32c8760225fb336e384442f7aa5"
 
 @dataclass
 class SemanticActionRequest:
@@ -29,6 +29,7 @@ class SemanticActionRequest:
     roots: Optional[list[str]] = None
     save: Optional[str] = None
     selected_instance_id: Optional[str] = None
+    snapshot_id: Optional[str] = None
     source_data_root: Optional[str] = None
     source_path: Optional[str] = None
     template_id: Optional[str] = None
