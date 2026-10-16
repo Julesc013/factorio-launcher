@@ -1,0 +1,158 @@
+{
+  "schema": "facman.delivered_gui_pack_recovery_accepted_slice.v1",
+  "verdict": "INDEPENDENTLY_ACCEPTED_SCOPED_ORDINARY_GUI_RECOVERY_ONLY",
+  "recorded_at_utc": "2026-10-16T09:54:48Z",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "scope": "One new ordinary packaged Windows GUI Activity recovery from the honestly failed retained05 verified import; original import/fault/lifetime journey remains unqualified.",
+  "execution": {
+    "head": "c46534db3d0f83cf87776136800d866cd744b374",
+    "tree": "f8d2f65989eccc0c710355af79f8a8f16f74e9d6",
+    "branch_at_execution": "dev",
+    "artifact_source": "3ba5e00f9c1b95f9431bf1d4acf009e3ab174aad",
+    "producer_run": 38847748259,
+    "artifact": 12027606187,
+    "package_files": 599,
+    "backend_sha256": "57135d3e3c656d8a6da216eaf4b1c7058b62e9bb7f454a7ad2330dd65118bd8f",
+    "gui_sha256": "a0cf948ddceea8add878c8e9a69aa2f4b989e5473f32a000ce0084ee5e69962c",
+    "provider_pins": {
+      "ULK": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "USK": "2749a15b835a6c1c9968598a2b434d85809691ad"
+    },
+    "result_sha256": "b061ed624dbcbf850716642ea8571a500e085b8f112f5368a27a74092bd0e863",
+    "plan_sha256": "709e7a2f62c0d478fd3d976cee91b951dcdf7b60e46be4bd6e3737ba04c291b7",
+    "scripts": {
+      "pack-gui-recovery-probe-06.py": {
+        "sha256": "f50d8c1bddc56ad203c122dd9e4fe9500eec0765e1ea55649e4e8b039e5f633f",
+        "ast_sha256": "daa04edb998785145667df98b9259512487254c55470bd202533324dee2883b3",
+        "bytes": 5551
+      },
+      "pack-gui-recovery-worker-06.py": {
+        "sha256": "67778bcc3c29abf836d0c102caece162e8aa08b9fe6cec98559f4512f72fbb9e",
+        "ast_sha256": "720a25b626ea7d7a23f5e5f1726d02ab641a33f24787c7eeeca526cab507b6e4",
+        "bytes": 16552
+      },
+      "pack-gui-recovery-launch-06.py": {
+        "sha256": "4332a3cc642dc3159ca28b58f9bf7ae7e049d52dff934a024c276cbbd0a64935",
+        "ast_sha256": "be77327dd21e71a048912ffe9d8336404e072f219f48d4e4c469c9b969effd65",
+        "bytes": 7141
+      }
+    }
+  },
+  "ordinary_recovery": {
+    "transaction_id": "tx-a89ce3f7dda36f508a4ea7a1a0bd6821",
+    "action_id": "recovery.apply_supported",
+    "scope": "activity_recovery",
+    "explicit_confirmation": true,
+    "owner_state": "complete",
+    "selected_instance": "reconstructed",
+    "expected_staged_files": 9,
+    "before_entries": 106,
+    "after_entries": 104,
+    "elapsed_seconds": 19.131259799934924,
+    "exact_archive_settings_provenance_and_rebound_lock": true,
+    "unrelated_bytes_and_native_identities_preserved": true,
+    "original_semantic_state": "accepted_outcome_unknown",
+    "original_semantic_sha256": "5cb1c0cd168a8b6fd1103a915b6f0e839f4c6bfefa447a087b9e839389aec689",
+    "original_request_replayed": false,
+    "import_replayed": false,
+    "setup_replayed": false,
+    "release_marker_created": false,
+    "intentional_fault_applied": false,
+    "terminal_inspection_read_only": true
+  },
+  "process_lifetime": {
+    "gui_pid": 52832,
+    "gui_exit_code": 0,
+    "original_strict_helper": true,
+    "created_suspended": true,
+    "exact_job_before_resume": true,
+    "packaged_backends": 33,
+    "conhosts": 33,
+    "all_observed_child_exits": 0,
+    "gui_safety_termination": false,
+    "normal_empty_gui_jobs": 1,
+    "read_only_cli_commands": 5,
+    "all_cli_normal_empty_jobs": true
+  },
+  "independent_review": {
+    "verdict": "PASS_SCOPED_ORDINARY_GUI_RECOVERY_ONLY",
+    "reviewer": "/root/tui_feedback_review; non-author of recovery06 controllers",
+    "file_in_custody": "evidence/pack-gui-recovery-independent-review-06.json",
+    "sha256": "03de91b50e379160a27d59420c8e83827bed16292a05bd66c454be0b84850168",
+    "exact_bytes_copied": true,
+    "findings": []
+  },
+  "earlier_failures": [
+    {
+      "attempt": "03",
+      "launch_result_sha256": "04414976fad6d33567e56f637392f4fa001081145d9c72b793e7934cd43237e5",
+      "worker_receipt_sha256": "354eda55f2a87176ab6d9f4ecb036e41a4571b418c0713141a6274dcaf4566f7",
+      "worker_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "worker_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classification": "Helper failed before fixture/product dispatch; original exception swallowed. Missing-proof read masked failure. Read-only directory diagnosis retained; no original exception invented.",
+      "raw_result_existed": false
+    },
+    {
+      "attempt": "04",
+      "launch_result_sha256": "4de1fedbd73c8865fa22a986114696a314b000b6c7fa0370e2247f3684d3bce7",
+      "worker_receipt_sha256": "3df1e111ba7f1a98b898e5be051c58af7931cb80d2dd22030213dfab5e93ae51",
+      "worker_stdout_sha256": "b0d1193baced79e589411d81664fa09a9d3924da4b7f09171d1d383ad2b773d4",
+      "worker_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_sha256": "c8e1df5906c5615da6ad2703dc32741b6fba58fc512ce2a66cd5274a1f8b47c2",
+      "status": "FAIL_RETAINED",
+      "error": "",
+      "cleanup_errors": null,
+      "classification": "Owned tab class selector rejected WinForms family before import; seven setup/query CLI calls and normal GUI retained. No import/fault/stage/target."
+    },
+    {
+      "attempt": "05",
+      "launch_result_sha256": "b8b3e220fb81a03bc88882d92ee794e42a688b0cb42d1b77248e796ee204785b",
+      "worker_receipt_sha256": "87fb4104808c25d66e6db2bd5fa17b69da5106405516a37b96c0911db3a10d7f",
+      "worker_stdout_sha256": "fbb2d712d4b023f22ad96a53cc607a2427aa79f3686f3e9ab2b6b31413a15383",
+      "worker_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_sha256": "28ec574433a1d6f6e69189b0cf208c037170cb3f832c327a741e5a3769ae19d0",
+      "status": "FAIL_RETAINED_CLEANUP",
+      "error": "AssertionError()",
+      "cleanup_errors": [
+        "AssertionError('Observed owned backend did not exit')"
+      ],
+      "classification": "Legitimate template_id vanilla rejected by probe after verified import. No intentional fault. GUI primary exit0; original child drain unqualified and cleanup failed. Retained owner effect recovered only by06."
+    }
+  ],
+  "retained_boundaries": {
+    "prior05_child_drain_qualified": false,
+    "planned_intentional_fault_journey_qualified": false,
+    "original_failed_attempt_relabelled": false,
+    "torn_file_repair": false,
+    "full_F09": false,
+    "full_F11": false,
+    "workunit_closed": false,
+    "real_game": false,
+    "human": false,
+    "named_or_minimum_host": false,
+    "canonical_installed_desktop": false,
+    "PR404_owner_gate_changed": false,
+    "Beta": false,
+    "RC": false,
+    "release": false,
+    "historical_pack_partial_gui_interrupted_import_qualified_flag_edited": false
+  },
+  "custody": {
+    "file": "ordinary-gui-pack-recovery-custody.v1.zip",
+    "sha256": "c3ff95c7c7af3fbb9648db40044d80961c22b7a9c16d399714297de645276c70",
+    "size_bytes": 341377,
+    "entries": 177,
+    "uncompressed_bytes": 1245034,
+    "manifest_sha256": "201b79d9e9b95e9b4ae555c9a479c685d1a2f764b86c60217d43a43a751aca9b",
+    "includes_exact_independent_review": true,
+    "all_entries_reopened_and_hash_checked": true
+  },
+  "integration": {
+    "status": "pending_normal_checked_documentation_integration",
+    "branch": "task/facman-gui-pack-recovery-proof-01",
+    "branch_plan_sha256": "e77043656631af84288070174255f2ed8646890854b6b5972a16e502c547ca38",
+    "runtime_or_product_source_changed": false,
+    "new_build_or_download": false,
+    "new_fixture_or_task_root": false
+  }
+}

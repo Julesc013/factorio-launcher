@@ -826,3 +826,25 @@ before normal integration. Compact source, delivered and limitation custody is
 in evidence/tui-action-feedback.v1.json. FullF11, real Play, human and named or
 minimum hosts, canonical installed Desktop, provider, Beta and release gates
 remain open. The prior pending-candidate paragraphs remain historical evidence.
+
+
+2026-10-16: Existing artifact 12027606187 from source 3ba5e00f (the same tree as
+execution HEAD c46534db on dev) qualified one new ordinary packaged Windows GUI
+Activity recovery from retained failed attempt 05. Explicit confirmation named the
+exact transaction; the original native owner completed publication of nine verified
+files and selected the reconstructed instance. Exact
+settings/archive/provenance/rebound-lock bytes and native identities, unrelated inputs
+and original accepted_outcome_unknown receipt bytes remain preserved. One GUI session
+using the original strict helper exited 0, with 33 backend and 33 conhost processes
+exiting 0, natural empty-job proof and five normal read-only CLI jobs; terminal
+inspect/plan caused no mutation. Independent exact-byte review accepts this recovery
+slice only. Earlier directory-helper failure 03 and navigation failure 04 remain
+retained. The attempt 05 probe rejected legitimate template_id vanilla after staging;
+no intentional fault occurred, and its child-drain failure remains unqualified. No
+import/setup/release/fault replay, new fixture, product build or source fix occurred.
+The planned intentional-fault/lifetime journey remains unqualified; historical
+pack-partial-produced acceptance is unchanged. Full F09/F11, canonical installed
+Desktop/PR404 owner control, real game, human/named-host and Beta/RC gates remain
+open. Receipt and compact hash-closed custody:
+evidence/ordinary-gui-pack-recovery.v1.json and
+evidence/ordinary-gui-pack-recovery-custody.v1.zip.
