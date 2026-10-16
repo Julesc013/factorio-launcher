@@ -954,10 +954,18 @@ proof::LauncherReference prove_move_and_repair(
 
     // This historical repair fixture explicitly uses the private provider repair
     // to establish verified state. FacMan must never inflate a pending move to active.
+    const auto retained_before_fixture_repair = tree_signature(moved.retained_old_root);
+    proof::write_text(moved_target / "data/base/info.json", "deliberate drift for private repair fixture");
     const auto verified_plan = usk::lifecycle::plan_repair(fixture.setup_roots, current.install_id,
         "plan.m1.repair.fixture", "2026-07-14T01:00:05Z", archive.payload);
     const auto verified_fixture = usk::lifecycle::apply_repair(verified_plan, verified_plan.plan_digest,
         "tx.m1.repair.fixture", "2026-07-14T01:00:06Z");
+    if (verified_fixture.before.status != "fail" || verified_fixture.after.status != "pass" ||
+        verified_fixture.repaired_files != std::vector<std::string>{"data/base/info.json"} ||
+        verified_fixture.installed_state.lifecycle_status != "verified" ||
+        tree_signature(moved.retained_old_root) != retained_before_fixture_repair) {
+        throw std::runtime_error("private repair fixture failed verification or changed the retained old root");
+    }
     auto verified_state = project_state(verified_fixture.installed_state, fixture);
     current = proof::project_completed(ULK_SETUP_OPERATION_REPAIR, verified_plan.plan_id,
         verified_plan.plan_digest, verified_plan.installed_state_digest,
@@ -2530,7 +2538,9 @@ void prove_facman_managed_move_apply(const std::string& fault)
         recover.transaction_id = request.transaction_id;
         auto inspected = application::handlers::inspect_install_recovery(fresh, recover);
         if (inspected.status != ULK_STATUS_OK || !std::holds_alternative<std::string>(inspected.output))
-            throw std::runtime_error("move recovery inspection failed: " + inspected.error_code);
+            throw std::runtime_error("move recovery inspection [" + fault + "] failed: " +
+                inspected.error_code + ": " + inspected.error_message + "; output=" +
+                (std::holds_alternative<std::string>(inspected.output) ? std::get<std::string>(inspected.output) : "<none>"));
         auto recovery = facman::core::json::parse(std::get<std::string>(inspected.output));
         const std::string expected = fault == "early" ? "no_provider_effect" :
             (fault == "ambiguous" || fault == "entry") ? "indeterminate" : "provider_move_completed";
@@ -2578,7 +2588,9 @@ void prove_facman_managed_move_apply(const std::string& fault)
         }
         if (recovered.status != ULK_STATUS_OK || tree_signature(fixture.setup_roots.state_root) != provider_before ||
             tree_signature(fixture.setup_roots.audit_root) != audit_before || tree_signature(target) != source_before)
-            throw std::runtime_error("move recovery changed provider/source or failed exact projection: " + recovered.error_code);
+            throw std::runtime_error("move recovery [" + fault + "] changed provider/source or failed exact projection: " +
+                recovered.error_code + ": " + recovered.error_message + "; output=" +
+                (std::holds_alternative<std::string>(recovered.output) ? std::get<std::string>(recovered.output) : "<none>"));
         const auto before_retry = tree_signature(fixture.root);
         if (application::handlers::apply_install_recovery(fresh, recover).status != ULK_STATUS_OK ||
             tree_signature(fixture.root) != before_retry) throw std::runtime_error("move recovery retry was not read-only/idempotent");

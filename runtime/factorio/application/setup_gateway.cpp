@@ -4388,7 +4388,8 @@ bool decode_managed_install_operation_lock(const std::string& text,
         !normalized_absolute_path(metadata.state_root, facman::platform::path_from_utf8(metadata.state_root)) ||
         !normalized_absolute_path(metadata.workspace, facman::platform::path_from_utf8(metadata.workspace)) ||
         (metadata.command_id != "installs.install.apply" && metadata.command_id != "installs.repair.apply" &&
-         metadata.command_id != "installs.uninstall.apply") || metadata.identity.empty() ||
+         metadata.command_id != "installs.uninstall.apply" &&
+         metadata.command_id != "installs.move.apply") || metadata.identity.empty() ||
         metadata.identity.size() > 41U || encode_managed_install_operation_lock(metadata) != text) {
         detail = "managed installation lease bytes are not a deterministic bound v1 owner document";
         return false;
