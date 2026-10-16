@@ -175,6 +175,9 @@ int open_selected_item(TuiState& state)
 
 std::string doctor_feedback(const facman::client::CommandResponse& response)
 {
+    if (!response.ok() || response.payload_string("schema") != "facman.semantic_action_result.v1" ||
+        response.payload_string("action_id") != "doctor.run" ||
+        response.payload_string("outcome") != "completed") return {};
     if (!response.parsed_payload) return {};
     const auto* action_payload = response.parsed_payload->find("action_payload");
     if (action_payload == nullptr || !action_payload->is_object()) return {};

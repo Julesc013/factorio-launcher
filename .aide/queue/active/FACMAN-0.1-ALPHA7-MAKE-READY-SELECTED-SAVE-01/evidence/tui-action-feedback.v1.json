@@ -1,0 +1,71 @@
+{
+  "schema": "facman.tui_action_feedback.v1",
+  "status": "CANDIDATE_REQUIRES_CURRENT_HEAD_HOSTED_REBUILD_AND_TESTS",
+  "base_commit": "cde863c8567ee82d7c6f2f330aeff8b45d6f15d8",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "problem": "Unconditional Doctor feedback replaced ordinary selected-context refresh and snapshot success messages.",
+  "change": "Only a successful completed doctor.run semantic result may provide Doctor feedback; other actions and unsuccessful outcomes keep their own status.",
+  "source_files": {
+    "apps/tui/tui_product_shell.cpp": "62d03e15b249d4fd914da0a09e7392c430373bb4eeb2ca3e1759e11acc73832a",
+    "tests/test_tui_product.py": "1b494b5ac68973e19893ed3b886f7053175e3eb3fb8278a5be8bbd64dd60e014"
+  },
+  "independent_source_review": {
+    "path": "tui-action-feedback-independent-source-review.v1.json",
+    "sha256": "6cff7029af522d1e2670bf8b14c38d67157d3011bbef7ea6bdbb8a4874694469"
+  },
+  "accepted_prior_source": "841072d550585c6b20337a29d055f3a0c8595b92",
+  "prior_source_tree": "22e6ae60a296d3927a1d86f1b778a29dd6514a9e",
+  "required_prior_ci_run": 38826149882,
+  "prior_ci": {
+    "path": "selected-save-refresh-checked-integration-result-02.json",
+    "sha256": "a247835ed0fe6862d2377f2b3ea79108960840e646dc52849bb26d7795b77b10",
+    "all12required_pass": true,
+    "all7refresh_methods_passed_on_windows_linux_intel_macos": true
+  },
+  "windows_frontends": {
+    "review_sha256": "7aa3e5c7f4144f95d8ce71886163da5c37396dae61c16f8b16b6f39adda64191",
+    "artifact": 12017998679,
+    "actual_gui_cancellations_refresh_and_fresh_make_ready": true,
+    "ordinary_plain_tui_cancellations_refresh_and_fresh_make_ready": true,
+    "preserved_world_settings_native_sidecar_and_prior_journals": true,
+    "known_label_defect_retained": true,
+    "fully_accepted_ux": false
+  },
+  "linux_delivered": {
+    "review": "selected-save-refresh-linux-delivered-independent-review.v1.json",
+    "review_sha256": "86da0478989660e5d04d0148c17761ee2b78025061141aec53360f435c61f3e4",
+    "artifact": 12015803248,
+    "producer": "4827484828dc82b27e4d8dabd00799277cb392f4",
+    "source_tree": "22e6ae60a296d3927a1d86f1b778a29dd6514a9e",
+    "original8methods_passed": true,
+    "ordinary_commands": 386,
+    "held_children": 14,
+    "all400_normal_waits": true,
+    "schemas_from_canonical_git_blobs": 448,
+    "validators_reused": true,
+    "private_tmpfs_uid65534": true,
+    "physical_host_qualification": false,
+    "cas_recorded_files": 1623,
+    "cas_actual_files": 1626,
+    "cas_recorded_bytes": 14183432,
+    "cas_actual_bytes": 14285618,
+    "cas_delta": "Three named final-save objects: package_after79478 + fixtures_after22706 + shared empty object2; raw recorded counters unchanged."
+  },
+  "validation": {
+    "source_review_approved": true,
+    "ordinary_tui_refresh_and_snapshot_status_regressions_added": true,
+    "current_native_build_run_locally": false,
+    "current_hosted_tests_pending": true
+  },
+  "external_evidence_root": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence",
+  "authority_delta": "none",
+  "new_roots": 0,
+  "new_worktrees": 0,
+  "new_clones": 0,
+  "new_local_native_builds": 0,
+  "workunit_closed": false,
+  "real_game": false,
+  "human": false,
+  "beta": false,
+  "rc": false
+}

@@ -794,3 +794,35 @@ The final static retry includes those exact generated changes and the accepted
 unsupported skip-reason prefix. Passing developer behavior retains its original
 source/helper and old contract identity; the final generated identity requires
 the normal hosted rebuild. No local compile or passing method was repeated.
+
+
+PR429 is now checked and integrated at devcde863c. All12 required checks
+passed, including the seven refresh methods on Windows, Linux and Intel macOS.
+The original Windows distribution passed the eight delivered CLI methods;
+the original Linux distribution separately passed the same eight methods with
+386 ordinary commands and14 held children, all400 normally waited. The Linux
+synthetic producer48274848 has the exact reviewed22e6ae60 tree and recorded
+parents; it is not relabelled as the source or dev commit. The existing pinned
+validators were reused. Three final-save CAS objects explain the explicit
+recorded-versus-actual counter difference; no method was replayed to alter it.
+
+Actual delivered Windows GUI controls passed input/confirmation cancellation,
+explicit Refresh and fresh Make Ready. Ordinary process-transport TUI passed
+the same cancellation/effect path and fresh Make Ready. Kept worlds, settings,
+native sidecar identity and prior journals remained preserved. The initial
+probe selected Installations instead of Instances and failed before dispatch;
+its exact evidence remains retained. The next run completed refresh but exposed
+a real TUI feedback defect: every action payload status could replace the
+ordinary action message with Doctor completed. Successful effects do not make
+that misleading status fully accepted experience.
+
+This bounded successor restricts Doctor feedback to an actual successful,
+completed doctor.run semantic result. A new ordinary TUI refresh regression
+checks visible status and authoritative effects; the existing edited snapshot
+journey now checks its visible status too. Independent source review approves
+the exact runtime/test changes. No local native build or new optional candidate
+was run; current-head required hosted rebuild/tests must qualify these changes
+before normal integration. Compact source, delivered and limitation custody is
+in evidence/tui-action-feedback.v1.json. FullF11, real Play, human and named or
+minimum hosts, canonical installed Desktop, provider, Beta and release gates
+remain open. The prior pending-candidate paragraphs remain historical evidence.
