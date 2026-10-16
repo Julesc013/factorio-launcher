@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `300478fada177e7cd877ba2dcf3071ff1e764c5bb2675874459f087e19d18b40`.
+Source digest: `b6e6cb656eb3307ad953539eb4fa2dcfa529c29876b9f564b412d451ba5dff82`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -24,7 +24,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs install apply <plan-id> --version <version> --archive <path> --target <path> --id <install-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
 | `installs.install.plan` | `installs.install.plan` | `installs_install_plan` | no | - | implemented | setup_preview | `facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json` |
 | `installs.install_version` | `installs.install_version` | `installs_install_version` | no | installs.install-version | unavailable_until_gateway | setup_preview | `facman installs install-version <version> --archive <path> --json` |
-| `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs move apply <install-id> <plan-id> --target <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
 | `installs.move.plan` | `installs.move.plan` | `installs_move_plan` | no | - | implemented | setup_preview | `facman installs move plan <install-id> --target <path> --json` |
 | `installs.reconcile.plan` | `installs.reconcile.plan` | `installs_reconcile_plan` | no | - | implemented | workspace_read | `facman installs reconcile plan <install-id> [--version <v>] [--source-ref <ref>] [--target <path>] [--management <mode>] [--deployment-style <style>] [--data-policy <policy>] [--integration <mode>] [--update-policy <policy>] --json` |
 | `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | implemented | workspace_read, workspace_write, setup_preview, setup_mutation | `facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json` |

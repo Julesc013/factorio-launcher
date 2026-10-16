@@ -13,7 +13,7 @@ facman installs verify <install-id>
 facman installs repair plan <install-id> [--archive <path>]
 facman installs repair apply <plan-id> --digest <sha256> --confirm APPLY
 facman installs move plan <install-id> --target <path>
-facman installs move apply <plan-id> --digest <sha256> --confirm APPLY
+facman installs move apply <install-id> <plan-id> --target <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm APPLY
 facman installs uninstall plan <install-id>
 facman installs uninstall apply <plan-id> --digest <sha256> --confirm APPLY
 facman installs recovery inspect <transaction-id>
@@ -47,8 +47,9 @@ Managed install and move planning, repair plan/apply, uninstall plan/apply, and
 operation-specific recovery inspect/apply are implemented through the accepted
 Universal Setup gateway. They remain unavailable unless the process has an
 absolute owned setup root, an accepted parent root, and the explicit setup
-policy activation. Move apply remains `unavailable_until_gateway` pending its recorded
-acceptance work. Install apply uses its explicit bounded configuration gate.
+policy activation. Bounded move apply uses that existing configuration gate and
+requires the original explicit reviewed request, including destination and record
+SHA. Install apply retains its own explicit bounded configuration gate.
 
 `installs.move.plan` binds an active/nonterminal registered Universal Setup
 managed record and its exact bytes to read-only installed inspection and public
@@ -69,7 +70,49 @@ copy count, plan identity and these same limitations. FacMan preserves the raw p
 it does not adopt foreign files or authorize their removal. Empty-directory
 preservation is not promised by this file-based provider plan. The provider's
 `pre_target_digest` describes the absent destination, not the source tree. Move
-apply stays closed, and no genuine Factorio/host/human or release claim follows.
+apply is limited to verified destination creation and exact FacMan reference
+projection with the old source retained pending acceptance. No genuine
+Factorio/host/human or release claim follows.
+
+`installs.move.apply` rebuilds the original request and digest without a plan
+cache. The preview's `install_record_sha256`, original plan ID/time, destination,
+transaction ID, advancing apply time and exact `APPLY` confirmation form its
+separate-process handoff. The existing shared installation lease is keyed by
+provider state identity and installation ID, and remains stable across the move.
+The durable coordinator retains original record bytes and the pinned private plan
+payload before any provider entry. Exact completed provider journal, audit,
+current/latest installed state, immutable new snapshot, unchanged owned membership
+and complete source/destination file hashes must agree before record CAS.
+The original archive/source references and foreign ownership remain unchanged.
+
+The resulting FacMan record explicitly has `move_pending_acceptance`; launch and
+safe maintenance actions remain ineligible. The raw provider report still says
+its own reference update is deferred. FacMan reports only its exact reference
+projection and old-source retention. No old root is deleted or automatically
+retired. The move coordinator closes only its journal, bypassing the generic
+transaction completion routine that can remove a marker under its target.
+Both existing `root` and `app_dir` fields project to the destination; their
+original relationship and the executable's safe relative path must agree.
+
+This pinned materializing alpha path limits the **complete** closure, including
+foreign files, to256MiB,4096 files and16384 observed entries. Before each provider
+move-plan/apply dispatch, available RAM must cover twice the complete bytes plus
+128MiB metadata and512MiB reserve; destination free space must cover twice the
+complete bytes plus64MiB metadata and512MiB reserve. Missing observations refuse.
+The complete closure is freshly enumerated before every dispatch, including
+repeated planning after the observation checkpoint. This remains a bounded
+observation, without an atomic snapshot or hard memory cap on concurrent provider reads.
+These conservative bounds account for provider double materialization and staged
+publication while retaining existing source storage. They do not qualify large
+real Factorio installations or close the cross-provider lifecycle follow-up.
+
+Move recovery closes only a durably pre-entry, exactly unchanged no-effect
+operation, or projects the exact completed provider move. A fault immediately
+after destination commit can leave provider state incomplete: all evidence and
+roots are preserved and recovery refuses. The pinned public API has no move
+finalizer, rollback or replay mechanism. A fully completed provider move followed
+by interrupted FacMan projection can reconcile the exact prepared record by CAS;
+retries accept only the exact known preimage/postimage and bound provider evidence.
 
 `installs.verify` now calls the public read-only USK `installed.verify` route
 for registered Universal Setup managed records under the existing explicit
@@ -97,7 +140,7 @@ entry. A known pre-effect refusal can close safely; any ambiguous or post-effect
 failure keeps the coordinator recovery-required. Generic workspace recovery
 does not interpret these operation journals.
 
-`installs.recovery.inspect` derives a deterministic repair or uninstall recovery
+`installs.recovery.inspect` derives a deterministic operation-specific recovery
 plan from the retained coordinator. `installs.recovery.apply` accepts only that
 exact plan and digest, then either closes a proved no-provider-effect operation
 or projects an exact terminal provider state with a compare-and-swap on the

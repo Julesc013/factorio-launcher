@@ -48,6 +48,7 @@
     "lifecycle_status": {
       "enum": [
         "active",
+        "move_pending_acceptance",
         "verification_failed",
         "recovery_required",
         "retired",

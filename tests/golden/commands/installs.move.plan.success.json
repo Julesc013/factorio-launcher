@@ -93,6 +93,8 @@
   "copy_scope": "complete_source_files_including_foreign",
   "grants_ownership": false,
   "empty_directory_preservation": "not_promised",
-  "apply_available": false,
-  "observation_atomic": false
+  "apply_available": true,
+  "observation_atomic": false,
+  "apply_scope": "verified_new_root_old_retained_pending_acceptance",
+  "install_record_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 }

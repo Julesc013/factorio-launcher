@@ -156,6 +156,7 @@ ulk_install_ownership_v1 reference_ownership(const std::string& ownership)
 bool recognized_lifecycle(const std::string& lifecycle)
 {
     return lifecycle == "active" ||
+        lifecycle == "move_pending_acceptance" ||
         lifecycle == "verification_failed" ||
         lifecycle == "recovery_required" ||
         lifecycle == "retired" ||

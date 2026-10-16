@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -115,6 +116,7 @@ struct UninstallPlan {
 struct MovePlanRequest {
     UninstallPlanRequest installed;
     std::filesystem::path destination;
+    std::string install_record_sha256;
 };
 
 struct MovePlan {
@@ -122,13 +124,65 @@ struct MovePlan {
     std::string plan_digest;
     std::string provider_response;
     std::string public_response;
+    // Exact pinned private digest payload retained in the durable coordinator.
+    std::string private_plan;
 };
+
+struct MoveApplyRequest {
+    MovePlanRequest plan_request;
+    std::string acceptance_root;
+    std::string reviewed_plan_digest;
+    std::string transaction_id;
+    std::string applied_at;
+    std::string confirmation;
+    std::string private_plan;
+};
+
+struct MoveInspection {
+    std::string classification;
+    std::string provider_observed_state;
+    std::string provider_journal_digest;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_audit_chain_digest;
+    std::string installed_state_digest;
+    std::string ownership_manifest_digest;
+    std::string setup_state_ref;
+    std::string last_verification_identity;
+    std::string state_revision;
+    std::string verification_status;
+    std::string provider_report;
+    bool provider_journal_present = false;
+};
+
+struct ManagedMoveCoordinator {
+    MoveApplyRequest apply;
+    std::string pre_record;
+    std::string phase;
+    std::string projected_record_sha256;
+    std::string recovery_plan_id;
+    std::string recovery_plan_digest;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_installed_state_sha256;
+    std::string provider_audit_chain_digest;
+};
+
+std::string encode_managed_move_context(const ManagedMoveCoordinator& value);
+bool decode_managed_move_context(const std::string& text,
+    ManagedMoveCoordinator& output, std::string& detail);
+std::string project_moved_install_record(const std::string& pre_record,
+    const MoveApplyRequest& request, const MoveInspection& terminal);
+std::string managed_move_result(const MoveApplyRequest& request,
+    const MoveInspection& terminal);
 
 facman::core::Result<MovePlan> decode_move_provider_plan(
     const std::string& response, const MovePlanRequest& request,
     const std::string& installed_response, const SetupConfiguration& configuration);
 
 namespace testing {
+// Shared admission policy consumes typed observations; missing observations refuse.
+bool move_resource_observations_admit(std::uint64_t complete_bytes,
+    std::optional<std::uint64_t> available_memory,
+    std::optional<std::uint64_t> destination_free_bytes) noexcept;
 // Internal proof checkpoint; no environment/command surface and no observer by default.
 using MovePlanRevalidationObserver = std::function<void()>;
 MovePlanRevalidationObserver exchange_move_plan_revalidation_observer(
@@ -449,6 +503,8 @@ public:
     virtual facman::core::Result<UninstallPlan> plan_uninstall(
         const UninstallPlanRequest& request) = 0;
     virtual facman::core::Result<MovePlan> plan_move(const MovePlanRequest& request) = 0;
+    virtual facman::core::Result<MoveInspection> apply_move(const MoveApplyRequest& request) = 0;
+    virtual facman::core::Result<MoveInspection> inspect_move_recovery(const MoveApplyRequest& request) = 0;
     virtual facman::core::Result<RepairPlan> plan_repair(
         const RepairPlanRequest& request) = 0;
     virtual facman::core::Result<RepairReport> apply_repair(

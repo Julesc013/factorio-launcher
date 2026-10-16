@@ -250,9 +250,26 @@ std::optional<std::string> local_content_text(const json::Value& report)
     return output.str();
 }
 
+std::optional<std::string> managed_move_apply_text(const json::Value& report)
+{
+    if (guidance_field(report, "schema") != "facman.managed_move_apply_result.v1" ||
+        guidance_field(report, "status") != "reference_projected_old_retained_pending_acceptance" ||
+        guidance_field(report, "lifecycle_status") != "move_pending_acceptance" ||
+        guidance_field(report, "old_root_status") != "retained") return std::nullopt;
+    std::ostringstream output;
+    output << "Managed move: new root verified; FacMan reference projected\nInstall: "
+        << guidance_field(report, "install_id") << "\nOld source (retained): " << guidance_field(report, "old_root")
+        << "\nNew root: " << guidance_field(report, "new_root")
+        << "\nStatus: move_pending_acceptance; launch remains ineligible.\n"
+        << "Foreign copied content remains foreign. No old-root removal or acceptance was performed.\n"
+        << "Empty-directory preservation is not promised; observations are not atomic.\n";
+    return output.str();
+}
+
 std::optional<std::string> managed_move_plan_text(const json::Value& report)
 {
     const auto* plan = report.find("provider_plan");
+    const auto* available = report.find("apply_available");
     const auto false_field = [&](const char* key) {
         const auto* value = report.find(key);
         return value && value->is_bool() && !value->bool_value().value();
@@ -260,7 +277,9 @@ std::optional<std::string> managed_move_plan_text(const json::Value& report)
     if (guidance_field(report, "schema") != "facman.managed_move_plan.v1" ||
         guidance_field(report, "copy_scope") != "complete_source_files_including_foreign" ||
         guidance_field(report, "empty_directory_preservation") != "not_promised" ||
-        !false_field("grants_ownership") || !false_field("apply_available") || !false_field("observation_atomic") ||
+        !available || !available->is_bool() || !available->bool_value().value() ||
+        !false_field("grants_ownership") || !false_field("observation_atomic") ||
+        guidance_field(report, "apply_scope") != "verified_new_root_old_retained_pending_acceptance" ||
         !plan || guidance_field(*plan, "operation") != "move" || guidance_field(*plan, "status") != "planned") return std::nullopt;
     const auto* roots = plan->find("roots");
     const auto* effects = plan->find("effects");
@@ -285,7 +304,9 @@ std::optional<std::string> managed_move_plan_text(const json::Value& report)
         << "\nProposed file copies: " << copies << "\nPlan: " << guidance_field(*plan, "plan_id")
         << "\nDigest: " << guidance_field(*plan, "plan_digest")
         << "\nCopies include foreign files; provider copy labels grant no ownership.\n"
-        << "Empty-directory preservation is not promised. Move apply is unavailable.\n"
+        << "Empty-directory preservation is not promised. Bounded apply verifies the new root, projects the FacMan reference, and retains the old source pending acceptance.\n"
+        << "This pinned alpha path admits at most256MiB/4096files including foreign content.\n"
+        << "Record digest: " << guidance_field(report, "install_record_sha256") << "\n"
         << "No move was executed. Observations are not an atomic snapshot.\n";
     return output.str();
 }
