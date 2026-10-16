@@ -764,3 +764,33 @@ See evidence/joined-final-input-revalidation.v1.json and its external author
 packet for source, commands and raw custody. Independent review, current-head CI
 and delivered-package qualification remain pending; this does not close F11 or
 qualify real Play, human experience, provider, Beta or release acceptance.
+
+
+The ordinary selected-context owner now offers an explicitly confirmed Refresh
+for an exact stale context bound to its complete owner journal and retained
+native file/parents/metadata. A fresh Make Ready follows that separate action.
+Generic association stays create-only. Foreign objects, changed source/input
+proof, missing durable authority and terminal recreation remain refused. The
+public selected-save dimension stays blocked for that exact pending refresh,
+even when a genuine partial prefix parses and matches the current world.
+
+The original kept-world refusal and the genuine valid-JSON prefix defect remain
+retained. Developer behavior evidence covers 25 distinct methods across three
+explicit source/helper cohorts (6 + 1 + 18), plus three retained native smokes;
+it is not one all-final-source suite. Marker-sharing, live-lock observation,
+profile-recovery refusal and receipt-size controller failures remain preserved.
+The normal build-02 command produced all four outputs with CMake exit zero but
+failed its 900-second job lifetime: two unidentified members required forced
+owned cleanup. This is behavior evidence from those exact binaries, not a
+passing build-lifetime claim. Required hosted current-head rebuild/tests,
+independent review and delivered refresh acceptance remain pending. See
+evidence/selected-save-context-refresh.v1.json and its external author packet
+for exact source, output, cohort and raw custody. F11, real Play, human,
+provider, Beta and release gates remain open.
+
+The changed optional plan schema also requires the two generated contract-set
+digest constants (native version metadata and WinForms catalog) to refresh.
+The final static retry includes those exact generated changes and the accepted
+unsupported skip-reason prefix. Passing developer behavior retains its original
+source/helper and old contract identity; the final generated identity requires
+the normal hosted rebuild. No local compile or passing method was repeated.

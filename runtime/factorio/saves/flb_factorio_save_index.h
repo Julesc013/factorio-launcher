@@ -12,6 +12,7 @@
 #include <string>
 
 namespace facman::transaction { struct Record; }
+namespace facman::platform { class RetainedStreamRewriteFile; }
 
 namespace facman::factorio::saves::index {
 
@@ -50,10 +51,23 @@ struct AssociationGuard {
     std::string operation_id;
     std::string attempt_id;
     std::function<facman::core::Result<std::string>(const facman::transaction::Record*)> observe_inputs;
+    // Present only for the separately confirmed refresh of one proven old effect.
+    std::string refresh_context;
+    std::function<facman::core::Result<std::string>(const facman::transaction::Record*,
+        const facman::platform::RetainedStreamRewriteFile*)> observe_refresh_inputs;
+    std::function<facman::core::Result<std::string>(const facman::transaction::Record&)> validate_owner;
 };
 
 facman::core::Result<SelectedAssociation> prepare_exact_association(
     const std::filesystem::path& workspace, const Request& request);
+// Builds canonical bytes only; authority comes from the selected-context owner journal.
+facman::core::Result<SelectedAssociation> prepare_refreshed_association(
+    const std::filesystem::path& workspace, const Request& request,
+    const std::string& original, const std::string& verified_utc);
+facman::core::Result<std::string> selected_context_refresh_evidence(
+    const std::filesystem::path& workspace, const Request& request,
+    const facman::transaction::Record* own = nullptr,
+    const facman::platform::RetainedStreamRewriteFile* held = nullptr);
 bool selected_association_publication_available() noexcept;
 facman::core::Result<std::string> selected_association_parent_identity(
     const std::filesystem::path& instance_root);

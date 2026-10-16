@@ -5,6 +5,8 @@
 #include "flb_factorio_save_index.h"
 #include "fl_json.h"
 #include "fl_transaction.h"
+#include "fl_file_io.h"
+#include "fl_workspace_store.h"
 
 namespace facman::factorio::instance {
 namespace {
@@ -21,8 +23,25 @@ saves::index::AssociationGuard make_guard(const std::filesystem::path& workspace
     saves::index::AssociationGuard guard;
     guard.inputs_sha256 = field(context, "inputs_sha256");
     guard.parent_before_identity = field(context, "parent_before_identity");
+    guard.operation_id = field(context, "operation_id");
+    guard.attempt_id = field(context, "attempt_id");
     guard.observe_inputs = [workspace, request](const transaction::Record* own) {
         return observe_selected_save_preparation_inputs(workspace, request, own);
+    };
+    guard.observe_refresh_inputs = [workspace, request](const transaction::Record* own,
+        const facman::platform::RetainedStreamRewriteFile* held) {
+        return observe_selected_save_preparation_inputs(workspace, request, own, held);
+    };
+    guard.validate_owner = [workspace, request](const transaction::Record& own) {
+        using Result = facman::core::Result<std::string>;
+        auto id = facman::core::InstanceId::parse_legacy(request.instance_id);
+        if (!id) return Result::failure(id.error());
+        auto registered = facman::workspace::InstanceRepository(facman::workspace::WorkspaceLayout(workspace)).load(id.value());
+        auto context = facman::core::json::parse(own.operation_context);
+        if (!registered || !context || field(context.value(), "instance_id") != request.instance_id ||
+            std::filesystem::u8path(field(context.value(), "instance_root")) != registered.value().root)
+            return Result::failure({"selected_context_owner_changed", "Selected context root is not the current registered instance", {}});
+        return Result::success(facman::platform::path_to_utf8(registered.value().root));
     };
     return guard;
 }
@@ -46,6 +65,11 @@ facman::core::Result<std::string> prepare_selected_save(const std::filesystem::p
     auto guard = make_guard(workspace, request, parsed.value());
     guard.operation_id = operation_id;
     guard.attempt_id = attempt_id;
+    if (parsed.value().find("refresh")) {
+        auto proof = saves::index::selected_context_refresh_evidence(workspace, selected);
+        if (!proof) return proof;
+        guard.refresh_context = proof.take_value();
+    }
     return saves::index::associate_selected_context(workspace, selected, guard);
 }
 

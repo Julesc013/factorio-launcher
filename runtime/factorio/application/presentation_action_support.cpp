@@ -293,7 +293,10 @@ json::ObjectBuilder selected_save_action_descriptor(const std::string& preparati
     const std::string code = refusal ? string_field(*refusal, "code") : "selected_context_plan_invalid";
     const std::vector<ActionInputField> fields {{"selected_instance_id", "Selected instance", "enum", true,
         instance_id, instance_id.empty() ? std::vector<std::string>() : std::vector<std::string> {instance_id}}};
-    return action_descriptor("readiness.prepare_selected_save", "presentation.action", "Record selected save context",
+    const auto* plan = document ? document.value().find("plan") : nullptr;
+    const bool refresh = plan && plan->find("refresh");
+    return action_descriptor("readiness.prepare_selected_save", "presentation.action",
+        refresh ? "Refresh selected save context" : "Record selected save context",
         "manage", "workspace_write", available, available ? nullptr : code.c_str(), "explicit",
         "facman.semantic_action_input.v1", fields);
 }

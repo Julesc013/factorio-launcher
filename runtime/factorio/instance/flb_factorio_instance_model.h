@@ -10,6 +10,7 @@
 #include <string>
 
 namespace facman::transaction { struct Record; }
+namespace facman::platform { class RetainedStreamRewriteFile; }
 
 namespace facman::factorio::instance {
 
@@ -31,7 +32,8 @@ facman::core::Result<std::string> selected_save_preparation_plan(
 // Read-only context guard, excluding only this validated owner's permitted effects.
 facman::core::Result<std::string> observe_selected_save_preparation_inputs(
     const std::filesystem::path& workspace, const ProjectionRequest& request,
-    const facman::transaction::Record* own);
+    const facman::transaction::Record* own,
+    const facman::platform::RetainedStreamRewriteFile* held_context = nullptr);
 facman::core::Result<std::string> prepare_selected_save(
     const std::filesystem::path& workspace, const ProjectionRequest& request,
     const std::string& expected_plan_sha256, const std::string& operation_id,
