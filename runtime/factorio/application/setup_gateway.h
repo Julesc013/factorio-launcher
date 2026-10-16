@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -108,6 +109,31 @@ struct UninstallPlan {
     std::string plan_digest;
     std::string provider_response;
 };
+
+// Move planning retains the complete current closure, including foreign files.
+// The provider's copy_owned_file label does not grant ownership of those files.
+struct MovePlanRequest {
+    UninstallPlanRequest installed;
+    std::filesystem::path destination;
+};
+
+struct MovePlan {
+    std::string plan_id;
+    std::string plan_digest;
+    std::string provider_response;
+    std::string public_response;
+};
+
+facman::core::Result<MovePlan> decode_move_provider_plan(
+    const std::string& response, const MovePlanRequest& request,
+    const std::string& installed_response, const SetupConfiguration& configuration);
+
+namespace testing {
+// Internal proof checkpoint; no environment/command surface and no observer by default.
+using MovePlanRevalidationObserver = std::function<void()>;
+MovePlanRevalidationObserver exchange_move_plan_revalidation_observer(
+    MovePlanRevalidationObserver observer) noexcept;
+}
 
 struct RepairFile {
     std::string relative_path;
@@ -422,6 +448,7 @@ public:
         const std::string& transaction_id) = 0;
     virtual facman::core::Result<UninstallPlan> plan_uninstall(
         const UninstallPlanRequest& request) = 0;
+    virtual facman::core::Result<MovePlan> plan_move(const MovePlanRequest& request) = 0;
     virtual facman::core::Result<RepairPlan> plan_repair(
         const RepairPlanRequest& request) = 0;
     virtual facman::core::Result<RepairReport> apply_repair(

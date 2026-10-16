@@ -13,6 +13,7 @@
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+#include <exception>
 #include <initializer_list>
 #include <map>
 #include <set>
@@ -29,6 +30,15 @@
 #endif
 
 namespace facman::factorio::application {
+namespace testing {
+namespace { thread_local MovePlanRevalidationObserver move_plan_revalidation_observer; }
+MovePlanRevalidationObserver exchange_move_plan_revalidation_observer(
+    MovePlanRevalidationObserver observer) noexcept
+{
+    observer.swap(move_plan_revalidation_observer);
+    return observer;
+}
+}
 namespace {
 
 facman::core::Error unavailable_error()
@@ -77,6 +87,10 @@ public:
     facman::core::Result<UninstallPlan> plan_uninstall(const UninstallPlanRequest&) override
     {
         return facman::core::Result<UninstallPlan>::failure(unavailable_error());
+    }
+    facman::core::Result<MovePlan> plan_move(const MovePlanRequest&) override
+    {
+        return facman::core::Result<MovePlan>::failure(unavailable_error());
     }
     facman::core::Result<RepairPlan> plan_repair(const RepairPlanRequest&) override
     {
@@ -771,6 +785,228 @@ facman::core::Result<UninstallPlan> decode_uninstall_plan(
     result.plan_digest = string_field(*payload, "plan_digest");
     result.provider_response = payload->serialize();
     return facman::core::Result<UninstallPlan>::success(std::move(result));
+}
+
+facman::core::Result<MovePlan> decode_move_plan(
+    const std::string& response,
+    const MovePlanRequest& move,
+    const InspectedInstallState& installed,
+    const SetupConfiguration& configuration)
+{
+    const auto& request = move.installed;
+    const auto invalid = [](const char* detail) {
+        return facman::core::Result<MovePlan>::failure({
+            "setup_move_plan_response_invalid",
+            "Universal Setup returned an invalid managed move plan",
+            detail});
+    };
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 64U * 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 1000000;
+    limits.maximum_string_bytes = 32768;
+    auto document = facman::core::json::parse(response, limits);
+    const facman::core::json::Value* payload = nullptr;
+    if (!document || !response_envelope(document.value(), payload) ||
+        !exact_members(*payload, {"created_at", "effects", "input_identity", "install_id", "operation",
+            "plan_digest", "plan_id", "revalidation", "roots", "schema", "status", "target_snapshots",
+            "unknown_file_policy"}) ||
+        string_field(*payload, "schema") != "usk.operation_plan.v1" ||
+        string_field(*payload, "operation") != "move" || string_field(*payload, "status") != "planned" ||
+        string_field(*payload, "unknown_file_policy") != "retain_and_report" ||
+        string_field(*payload, "install_id") != request.install_id || string_field(*payload, "plan_id") != request.plan_id ||
+        string_field(*payload, "created_at") != request.created_at || !bounded_string(*payload, "plan_id", 256) ||
+        !bounded_string(*payload, "created_at", 64) || !sha256_field(string_field(*payload, "plan_digest"))) return invalid("envelope");
+
+    const auto* input_identity = payload->find("input_identity");
+    const auto* roots = payload->find("roots");
+    const auto* effects = payload->find("effects");
+    const auto* target_snapshots = payload->find("target_snapshots");
+    const auto* revalidation = payload->find("revalidation");
+    if (input_identity == nullptr || !exact_members(*input_identity, {"installed_state_digest", "ownership_manifest_digest",
+            "policy_digest", "provider_revision", "recipe_digest", "source_digest"}) ||
+        string_field(*input_identity, "installed_state_digest") != installed.installed_state_digest ||
+        string_field(*input_identity, "ownership_manifest_digest") != installed.ownership_manifest_digest ||
+        string_field(*input_identity, "recipe_digest") != installed.recipe_digest ||
+        string_field(*input_identity, "source_digest") != installed.source_digest ||
+        string_field(*input_identity, "provider_revision") != installed.provider_revision ||
+        !sha256_field(string_field(*input_identity, "policy_digest")) || !bounded_string(*input_identity, "provider_revision", 256) ||
+        roots == nullptr || !roots->is_array() || roots->size() != 5 || effects == nullptr || !effects->is_array() ||
+        effects->size() < 4 || target_snapshots == nullptr || !exact_members(*target_snapshots, {"pre_target_digest"}) ||
+        !sha256_field(string_field(*target_snapshots, "pre_target_digest")) || revalidation == nullptr ||
+        !exact_members(*revalidation, {"immediately_before_apply", "invalidate_on"})) return invalid("required evidence");
+
+    auto setup_root = absolute_normalized(facman::platform::path_from_utf8(configuration.state_root), "setup state root");
+    if (!setup_root) return invalid("setup root");
+    const std::array<std::tuple<const char*, const char*, std::filesystem::path>, 5> expected_roots {{
+        {"current", "managed_install", installed.target},
+        {"staging", "setup_owned", move.destination.parent_path()},
+        {"setup_state", "setup_owned", setup_root.value() / "state"},
+        {"audit", "audit_owned", setup_root.value() / "audit"},
+        {"destination", "operator_selected_owned_target", move.destination},
+    }};
+    std::set<std::string> root_roles;
+    for (std::size_t index = 0; index < roots->size(); ++index) {
+        const auto* root = roots->at(index);
+        if (root == nullptr || !(string_field(*root, "role") == "destination"
+                ? exact_members(*root, {"classification", "must_not_exist", "role", "root"}) &&
+                    root->find("must_not_exist")->is_bool() && root->find("must_not_exist")->bool_value().value()
+                : exact_members(*root, {"classification", "role", "root"})) ||
+            !bounded_string(*root, "role", 32) || !bounded_string(*root, "classification", 64)) return invalid("root entry");
+        const std::string role = string_field(*root, "role");
+        const auto expected = std::find_if(expected_roots.begin(), expected_roots.end(), [&](const auto& value) {
+            return role == std::get<0>(value);
+        });
+        if (expected == expected_roots.end() || !root_roles.insert(role).second ||
+            string_field(*root, "classification") != std::get<1>(*expected) ||
+            !normalized_absolute_path(string_field(*root, "root"), std::get<2>(*expected))) return invalid("root binding");
+    }
+
+    std::error_code destination_error;
+    std::string unsafe_destination;
+    const auto destination_status = std::filesystem::symlink_status(move.destination, destination_error);
+    if (!move.destination.is_absolute() || move.destination != move.destination.lexically_normal() ||
+        facman::base::path_crosses_link_or_reparse_point(move.destination, unsafe_destination) ||
+        destination_status.type() != std::filesystem::file_type::not_found ||
+        (destination_error && destination_error != std::errc::no_such_file_or_directory)) return invalid("destination absence");
+
+    std::set<std::string> effect_ids;
+    std::set<std::string> write_kinds;
+    std::map<std::string, std::string> copied_paths;
+    for (std::size_t index = 0; index < effects->size(); ++index) {
+        const auto* effect = effects->at(index);
+        if (effect == nullptr || !effect->is_object() || !bounded_string(*effect, "effect_id", 256) ||
+            !bounded_string(*effect, "kind", 32) || !bounded_string(*effect, "root_role", 32) ||
+            !safe_relative_path(string_field(*effect, "relative_path")) || !effect_ids.insert(string_field(*effect, "effect_id")).second) {
+            return invalid("effect entry");
+        }
+        const auto* ownership = effect->find("ownership_required");
+        if (ownership == nullptr || !ownership->is_bool() || !ownership->bool_value().value()) return invalid("effect ownership");
+        const std::string kind = string_field(*effect, "kind");
+        const std::string root_role = string_field(*effect, "root_role");
+        const auto* digest = effect->find("expected_sha256");
+        const bool has_digest = digest != nullptr;
+        if (has_digest && (!digest->is_string() || !sha256_field(string_field(*effect, "expected_sha256")))) return invalid("effect digest");
+        if (kind == "copy_owned_file") {
+            if (!has_digest || root_role != "destination" ||
+                !exact_members(*effect, {"effect_id", "expected_sha256", "kind", "ownership_required", "relative_path", "root_role"}) ||
+                !copied_paths.emplace(string_field(*effect, "relative_path"), string_field(*effect, "expected_sha256")).second) return invalid("copy effect");
+        } else if (kind == "write_journal" || kind == "write_state" || kind == "write_audit") {
+            const char* expected_role = kind == "write_audit" ? "audit" : "setup_state";
+            const char* expected_path = kind == "write_journal" ? "transactions" : kind == "write_state" ? "installed" : "chains";
+            if (has_digest || root_role != expected_role || string_field(*effect, "relative_path") != expected_path ||
+                !exact_members(*effect, {"effect_id", "kind", "ownership_required", "relative_path", "root_role"}) ||
+                !write_kinds.insert(kind).second) return invalid("state effect");
+        } else return invalid("effect kind");
+    }
+    if (write_kinds.size() != 3) return invalid("required state effects");
+
+    const auto* immediate = revalidation->find("immediately_before_apply");
+    const auto* invalidators = revalidation->find("invalidate_on");
+    if (immediate == nullptr || !immediate->is_bool() || !immediate->bool_value().value() || invalidators == nullptr ||
+        !invalidators->is_array() || invalidators->size() != 5) return invalid("revalidation");
+    const std::set<std::string> expected_invalidators {"target", "installed_state", "ownership_manifest", "policy", "provider_revision"};
+    std::set<std::string> actual_invalidators;
+    for (std::size_t index = 0; index < invalidators->size(); ++index) {
+        const auto* value = invalidators->at(index);
+        if (value == nullptr || !bounded_value_string(*value, 32)) return invalid("revalidation item");
+        auto text = value->string_value();
+        if (!text) return invalid("revalidation item");
+        actual_invalidators.insert(text.value());
+    }
+    if (actual_invalidators != expected_invalidators) return invalid("revalidation set");
+
+    // Independently bind complete source coverage and the pinned provider's
+    // private digest payload. Copy labels include foreign files; ownership is
+    // never inferred from the effect label. Enumerate without following links.
+    facman::core::json::ArrayBuilder complete_files;
+    std::map<std::string, std::pair<std::string, std::uint64_t>> observed;
+    std::vector<std::filesystem::path> pending {installed.target};
+    std::uint64_t total = 0;
+    std::size_t entries_seen = 0;
+    try {
+        while (!pending.empty()) {
+            const auto directory = pending.back(); pending.pop_back();
+            std::string unsafe;
+            if (facman::base::path_crosses_link_or_reparse_point(directory, unsafe)) return invalid("linked closure");
+            for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+                if (++entries_seen > 1000000 || facman::base::path_crosses_link_or_reparse_point(entry.path(), unsafe))
+                    return invalid("unsafe closure");
+                const auto status = entry.symlink_status();
+                if (std::filesystem::is_directory(status)) { pending.push_back(entry.path()); continue; }
+                if (!std::filesystem::is_regular_file(status) || observed.size() >= 100000) return invalid("closure type or budget");
+                const std::string relative = entry.path().lexically_relative(installed.target).generic_u8string();
+                if (!safe_relative_path(relative)) return invalid("closure path");
+                facman::platform::StableInputFile file;
+                if (!file.open_no_follow(entry.path()).ok() || !file.identity().regular_file ||
+                    file.size() > (1ull << 32) || total > (1ull << 34) - file.size()) return invalid("closure file or budget");
+                total += file.size();
+                facman::base::Sha256Hasher hasher;
+                std::array<unsigned char, 65536> buffer;
+                std::uint64_t offset = 0;
+                while (offset < file.size()) {
+                    const auto count = file.read_at(offset, buffer.data(), static_cast<std::size_t>(
+                        std::min<std::uint64_t>(buffer.size(), file.size() - offset)));
+                    if (count == 0) return invalid("closure read");
+                    hasher.update(buffer.data(), count); offset += count;
+                }
+                const std::string digest = hasher.finish();
+                if (!file.revalidate().ok() || !file.revalidate_path().ok()) return invalid("closure changed");
+                const auto expected = copied_paths.find(relative);
+                if (expected == copied_paths.end() || expected->second != digest ||
+                    !observed.emplace(relative, std::make_pair(digest, file.size())).second) return invalid("copy coverage or digest");
+            }
+        }
+    } catch (const std::exception&) { return invalid("closure unavailable"); }
+    if (observed.size() != copied_paths.size()) return invalid("copy coverage");
+    for (const auto& file : observed) {
+        facman::core::json::ObjectBuilder item;
+        item.add_string("relative_path", file.first);
+        item.add_string("sha256", file.second.first);
+        item.add_unsigned_integer("size_bytes", file.second.second);
+        complete_files.add_object(item);
+    }
+    facman::core::json::ObjectBuilder digest_input;
+    digest_input.add_string("audit_root", (setup_root.value() / "audit").generic_u8string());
+    digest_input.add_array("complete_files", complete_files);
+    digest_input.add_string("created_at", request.created_at);
+    digest_input.add_string("install_id", request.install_id);
+    digest_input.add_string("installed_state_digest", installed.installed_state_digest);
+    digest_input.add_string("old_root", installed.target.generic_u8string());
+    digest_input.add_string("operation", "move");
+    digest_input.add_string("ownership_manifest_digest", installed.ownership_manifest_digest);
+    digest_input.add_string("policy_digest", string_field(*input_identity, "policy_digest"));
+    digest_input.add_string("plan_id", request.plan_id);
+    digest_input.add_string("new_root", move.destination.generic_u8string());
+    digest_input.add_string("staging_parent", move.destination.parent_path().generic_u8string());
+    digest_input.add_string("state_root", (setup_root.value() / "state").generic_u8string());
+    auto digest_document = facman::core::json::parse(digest_input.serialize(), limits);
+    auto canonical = digest_document ? facman::core::json::canonical_integer_json(digest_document.value()) :
+        facman::core::Result<std::string>::failure({"invalid_json", "Invalid move digest", ""});
+    if (!canonical || facman::base::sha256_hex_bytes(reinterpret_cast<const unsigned char*>(canonical.value().data()),
+        canonical.value().size()) != string_field(*payload, "plan_digest")) return invalid("plan digest");
+    facman::core::json::ArrayBuilder absent_entries;
+    facman::core::json::ObjectBuilder absent_snapshot_document;
+    absent_snapshot_document.add_array("entries", absent_entries);
+    absent_snapshot_document.add_string("state", "nonexistent");
+    const std::string absent_snapshot = absent_snapshot_document.serialize();
+    if (string_field(*target_snapshots, "pre_target_digest") != facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(absent_snapshot.data()), absent_snapshot.size())) return invalid("destination snapshot");
+
+    MovePlan result;
+    result.plan_id = string_field(*payload, "plan_id");
+    result.plan_digest = string_field(*payload, "plan_digest");
+    result.provider_response = payload->serialize();
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "facman.managed_move_plan.v1");
+    output.add_value("provider_plan", *payload);
+    output.add_string("copy_scope", "complete_source_files_including_foreign");
+    output.add_bool("grants_ownership", false);
+    output.add_string("empty_directory_preservation", "not_promised");
+    output.add_bool("apply_available", false);
+    output.add_bool("observation_atomic", false);
+    result.public_response = output.serialize();
+    return facman::core::Result<MovePlan>::success(std::move(result));
 }
 
 UninstallPlanRequest repair_install_binding(const RepairPlanRequest& request)
@@ -2231,6 +2467,93 @@ public:
         return decode_uninstall_plan(response.value(), request, inspected.value(), configuration_);
     }
 
+    facman::core::Result<MovePlan> plan_move(const MovePlanRequest& move) override
+    {
+        const auto fail = [](const std::string& code, const std::string& detail) {
+            return facman::core::Result<MovePlan>::failure({code, "Managed move planning refused", detail});
+        };
+        if (!configuration_.configured()) return fail("live_target_acceptance_required", "Setup policy is not configured");
+        const auto& request = move.installed;
+        if (request.request_id.empty() || request.request_id != request.plan_id || request.install_id.empty() ||
+            !valid_utc_seconds(request.created_at) || request.target.empty() || request.setup_state_ref.empty() ||
+            request.last_verification_identity.empty() || request.state_revision.empty() || request.lifecycle_status.empty())
+            return fail("invalid_argument", "Move requires exact plan and installed-record identities");
+        auto target = absolute_normalized(request.target, "current target");
+        auto destination = absolute_normalized(move.destination, "destination");
+        auto acceptance = absolute_normalized(facman::platform::path_from_utf8(configuration_.acceptance_root), "acceptance root");
+        auto setup_root = absolute_normalized(facman::platform::path_from_utf8(configuration_.state_root), "setup root");
+        std::string unsafe;
+        if (!target || !destination || !acceptance || !setup_root || !move.destination.is_absolute() ||
+            move.destination != destination.value() || target.value() == destination.value() ||
+            !safe_relative_path(destination.value().lexically_relative(acceptance.value()).generic_string()) ||
+            !safe_relative_path(target.value().lexically_relative(acceptance.value()).generic_string()) ||
+            facman::base::path_crosses_link_or_reparse_point(target.value(), unsafe) ||
+            facman::base::path_crosses_link_or_reparse_point(destination.value(), unsafe) ||
+            facman::base::path_crosses_link_or_reparse_point(setup_root.value(), unsafe) ||
+            facman::base::path_crosses_link_or_reparse_point(facman::platform::path_from_utf8(request.setup_state_ref), unsafe))
+            return fail("ownership_denied", "Unsafe or foreign current, destination, or state path");
+        std::error_code error;
+        const auto destination_status = std::filesystem::symlink_status(destination.value(), error);
+        if (destination_status.type() != std::filesystem::file_type::not_found)
+            return fail("invalid_argument", "Move destination must be absent");
+        if (error && error != std::errc::no_such_file_or_directory)
+            return fail("ownership_denied", "Move destination cannot be inspected");
+        // Refuse every observed link/junction before the provider reads the complete closure.
+        std::vector<std::filesystem::path> pending {target.value()};
+        std::size_t entries_seen = 0;
+        try {
+            while (!pending.empty()) {
+                const auto directory = pending.back(); pending.pop_back();
+                std::filesystem::directory_iterator entries(directory, error);
+                if (error) return fail("ownership_denied", "Current closure cannot be enumerated safely");
+                for (const auto& entry : entries) {
+                    if (++entries_seen > 1000000 || facman::base::path_crosses_link_or_reparse_point(entry.path(), unsafe))
+                        return fail("ownership_denied", "Current closure contains a link or exceeds the observation budget");
+                    const auto status = entry.symlink_status(error);
+                    if (error || (!std::filesystem::is_directory(status) && !std::filesystem::is_regular_file(status)))
+                        return fail("ownership_denied", "Current closure has an unsafe entry");
+                    if (std::filesystem::is_directory(status)) pending.push_back(entry.path());
+                }
+            }
+        } catch (const std::exception&) {
+            return fail("ownership_denied", "Current closure changed or cannot be enumerated safely");
+        }
+        facman::core::json::ObjectBuilder inspect;
+        inspect.add_string("schema", "usk.installed_inspect_request.v1");
+        inspect.add_string("request_id", request.request_id + ".inspect");
+        inspect.add_string("install_id", request.install_id);
+        auto before_response = execute_setup("installed.inspect", inspect.serialize(), configuration_);
+        if (!before_response) return facman::core::Result<MovePlan>::failure(before_response.error());
+        auto before = decode_installed_state(before_response.value(), request, configuration_);
+        if (!before) return facman::core::Result<MovePlan>::failure(before.error());
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.move_plan_request.v1");
+        payload.add_string("request_id", request.request_id);
+        payload.add_string("plan_id", request.plan_id);
+        payload.add_string("install_id", request.install_id);
+        payload.add_string("created_at", request.created_at);
+        facman::core::json::ObjectBuilder new_target;
+        new_target.add_string("root", destination.value().generic_u8string());
+        new_target.add_string("class", "operator_acceptance");
+        payload.add_object("new_target", new_target);
+        auto response = execute_setup("move.plan", payload.serialize(), configuration_);
+        if (!response) return facman::core::Result<MovePlan>::failure(provider_error(response.error(),
+            "setup_move_plan_refused", "Universal Setup refused the managed move plan"));
+        auto plan = decode_move_plan(response.value(), move, before.value(), configuration_);
+        if (!plan) return plan;
+        if (testing::move_plan_revalidation_observer) testing::move_plan_revalidation_observer();
+        // Rebuild the same read-only plan: its digest binds the complete current
+        // closure and both live policy decisions, which the public shape omits.
+        auto repeated = execute_setup("move.plan", payload.serialize(), configuration_);
+        if (!repeated) return fail("stale_plan", "Move inputs changed during planning");
+        auto revalidated = decode_move_plan(repeated.value(), move, before.value(), configuration_);
+        auto after_response = execute_setup("installed.inspect", inspect.serialize(), configuration_);
+        if (!revalidated || revalidated.value().provider_response != plan.value().provider_response ||
+            !after_response || after_response.value() != before_response.value())
+            return fail("stale_plan", "Provider state, closure, policy, or destination changed during planning");
+        return plan;
+    }
+
     facman::core::Result<RepairPlan> plan_repair(
         const RepairPlanRequest& request) override
     {
@@ -3626,6 +3949,20 @@ facman::core::Result<std::string> decode_install_verification_report(
 #else
     (void)response; (void)request; (void)state_digest; (void)ownership_digest;
     return facman::core::Result<std::string>::failure(unavailable_error());
+#endif
+}
+
+facman::core::Result<MovePlan> decode_move_provider_plan(
+    const std::string& response, const MovePlanRequest& request,
+    const std::string& installed_response, const SetupConfiguration& configuration)
+{
+#if FACMAN_WITH_SETUP
+    auto installed = decode_installed_state(installed_response, request.installed, configuration);
+    if (!installed) return facman::core::Result<MovePlan>::failure(installed.error());
+    return decode_move_plan(response, request, installed.value(), configuration);
+#else
+    (void)response; (void)request; (void)installed_response; (void)configuration;
+    return facman::core::Result<MovePlan>::failure(unavailable_error());
 #endif
 }
 

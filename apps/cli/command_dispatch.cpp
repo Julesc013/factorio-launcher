@@ -659,6 +659,7 @@ int command_installs(const Options& options)
         const std::string phase = options.args[2];
         if (phase == "plan") {
             if (action == "repair" && !repair_plan_arguments_valid(options.args)) return 2;
+            if (action == "move" && !facman::cli::move_plan_arguments_valid(options.args)) return 2;
             std::vector<std::pair<std::string, std::string>> fields = {{"install_id", options.args[3]}};
             if (action == "repair") fields.push_back({"archive", option(options.args, "--archive")});
             if (action == "move") {
@@ -666,6 +667,9 @@ int command_installs(const Options& options)
                 if (target.empty()) return 2;
                 fields.push_back({"target_root", target});
             }
+            if (action == "move") return emit_report(
+                call(options, "installs.move.plan", exact_fields_payload(fields)), flag(options.args, "--json"),
+                facman::cli::managed_move_plan_text, "Managed move plan is missing", "Managed move plan is invalid");
             return emit_basic(
                 call(options, "installs." + action + ".plan", exact_fields_payload(fields)),
                 flag(options.args, "--json"),

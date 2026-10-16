@@ -534,6 +534,218 @@ discovery::InstallRef managed_facman_reference(
     return install;
 }
 
+void prove_facman_move_preview(
+    proof::Fixture& fixture, application::ApplicationContext& context,
+    const proof::LauncherReference& reference, const fs::path& target,
+    const fs::path& record_path)
+{
+    // The oracle covers every fixture file, directory and provider audit/state,
+    // including source archive and foreign bytes, independently of plan content.
+    const fs::path destination = fixture.root / "move-preview-destination";
+    const fs::path foreign = target / "foreign-move-preview.txt";
+    proof::write_text(foreign, "foreign bytes remain foreign\n");
+    const fs::path empty_directory = target / "empty-move-preview";
+    fs::create_directory(empty_directory);
+    const std::string record_before = read_text(record_path);
+    application::ServiceOperationRequest request;
+    request.install_id = reference.install_id;
+    request.target_root = destination.generic_string();
+    const auto invoke = [&]() {
+        const std::string all_before = tree_signature(fixture.root);
+        const std::string workspace_before = tree_signature(fixture.workspace);
+        const std::string source_before = tree_signature(target);
+        const auto result = application::handlers::plan_move_install(context, request);
+        if (tree_signature(fixture.root) != all_before || tree_signature(fixture.workspace) != workspace_before ||
+            tree_signature(target) != source_before || fs::exists(destination))
+            throw std::runtime_error("managed move preview changed fixture bytes or created destination");
+        return result;
+    };
+    const auto planned = invoke();
+    if (planned.status != ULK_STATUS_OK || !std::holds_alternative<std::string>(planned.output))
+        throw std::runtime_error("actual pinned-provider move preview failed: " + planned.error_code + ": " + planned.error_message);
+    auto document = facman::core::json::parse(std::get<std::string>(planned.output));
+    const auto* provider = document ? document.value().find("provider_plan") : nullptr;
+    if (!document || !provider || json_string(document.value(), "schema") != "facman.managed_move_plan.v1" ||
+        json_string(document.value(), "copy_scope") != "complete_source_files_including_foreign" ||
+        json_string(document.value(), "empty_directory_preservation") != "not_promised" ||
+        document.value().find("grants_ownership")->bool_value().value() ||
+        document.value().find("apply_available")->bool_value().value() ||
+        document.value().find("observation_atomic")->bool_value().value() ||
+        json_string(*provider, "operation") != "move" || json_string(*provider, "status") != "planned" ||
+        provider->serialize().find("foreign-move-preview.txt") == std::string::npos)
+        throw std::runtime_error("managed move preview lost provider or limitation truth");
+    const auto* roots = provider->find("roots");
+    std::size_t staging_roots = 0;
+    for (std::size_t index = 0; roots && index < roots->size(); ++index) {
+        const auto* root = roots->at(index);
+        if (root && json_string(*root, "role") == "staging") {
+            ++staging_roots;
+            if (fs::path(json_string(*root, "root")) != destination.parent_path() ||
+                json_string(*root, "classification") != "setup_owned")
+                throw std::runtime_error("pinned move provider staging root is not the destination parent");
+        }
+    }
+    if (staging_roots != 1) throw std::runtime_error("pinned move provider staging root is missing or repeated");
+    application::MovePlanRequest typed;
+    typed.installed.request_id = typed.installed.plan_id = json_string(*provider, "plan_id");
+    typed.installed.install_id = reference.install_id;
+    typed.installed.created_at = json_string(*provider, "created_at");
+    typed.installed.target = target;
+    typed.installed.setup_state_ref = reference.setup_state_ref;
+    typed.installed.last_verification_identity = reference.verification_identity;
+    typed.installed.state_revision = reference.state_revision;
+    typed.installed.lifecycle_status = "active";
+    typed.destination = destination;
+    const auto envelope = [](const std::string& payload) {
+        return "{\"schema\":\"usk.command_response.v1\",\"status\":\"ok\",\"error\":null,\"payload\":" + payload + "}";
+    };
+    const std::string installed_response = envelope(read_text(fs::path(reference.setup_state_ref)));
+    const std::string raw = provider->serialize();
+    auto decoded = application::decode_move_provider_plan(envelope(raw), typed, installed_response, context.configuration().setup());
+    if (!decoded || decoded.value().provider_response != raw ||
+        decoded.value().public_response != std::get<std::string>(planned.output) ||
+        decoded.value().plan_digest != json_string(*provider, "plan_digest"))
+        throw std::runtime_error("managed move decoder did not preserve exact provider plan/digest");
+    const auto replace_first = [](std::string text, const std::string& from, const std::string& to) {
+        const auto offset = text.find(from);
+        if (offset == std::string::npos) throw std::runtime_error("move codec mutation is absent");
+        text.replace(offset, from.size(), to); return text;
+    };
+    std::vector<std::string> malformed {
+        "{}", raw + " trailing",
+        replace_json_string_field(raw, "operation", "uninstall"),
+        replace_json_string_field(raw, "plan_id", "drifted-plan"),
+        replace_json_string_field(raw, "plan_digest", std::string(64, '0')),
+        replace_json_string_field(raw, "provider_revision", "provider-drift"),
+        replace_json_string_field(raw, "installed_state_digest", std::string(64, '0')),
+        replace_json_string_field(raw, "ownership_manifest_digest", std::string(64, '0')),
+        replace_json_string_field(raw, "policy_digest", std::string(64, '0')),
+        replace_json_string_field(raw, "pre_target_digest", std::string(64, '0')),
+        replace_first(raw, "\"must_not_exist\":true", "\"must_not_exist\":false"),
+        replace_first(raw, "\"kind\":\"copy_owned_file\"", "\"kind\":\"delete_owned_file\""),
+        replace_first(raw, "\"ownership_required\":true", "\"ownership_required\":false"),
+        replace_first(raw, "\"kind\":\"write_state\"", "\"kind\":\"write_journal\""),
+        replace_first(raw, "\"relative_path\":\"", "\"relative_path\":\"../"),
+        replace_first(raw, "\"role\":\"destination\"", "\"role\":\"current\""),
+        replace_first(raw, "\"invalidate_on\":[", "\"invalidate_on\":[\"target\","),
+        replace_first(raw, "{", "{\"unexpected\":true,")
+    };
+    const auto* effects = provider->find("effects");
+    const auto edit_effects = [&](const char* omit_path, bool duplicate_foreign, bool change_foreign_hash, bool add_foreign) {
+        facman::core::json::ObjectBuilder result;
+        for (const auto& key : provider->object_keys()) {
+            if (key != "effects") { result.add_value(key, *provider->find(key)); continue; }
+            facman::core::json::ArrayBuilder rows;
+            for (std::size_t index = 0; index < effects->size(); ++index) {
+                const auto* effect = effects->at(index);
+                if (json_string(*effect, "relative_path") == omit_path) continue;
+                std::string text = effect->serialize();
+                if (change_foreign_hash && json_string(*effect, "relative_path") == "foreign-move-preview.txt")
+                    text = replace_json_string_field(text, "expected_sha256", std::string(64, '0'));
+                auto row = facman::core::json::parse(text);
+                rows.add_value(row.value());
+                if (duplicate_foreign && json_string(*effect, "relative_path") == "foreign-move-preview.txt") rows.add_value(row.value());
+                if (add_foreign && json_string(*effect, "relative_path") == "foreign-move-preview.txt") {
+                    text = replace_json_string_field(text, "relative_path", "invented-foreign.txt");
+                    text = replace_json_string_field(text, "effect_id", "effect.invented");
+                    auto added = facman::core::json::parse(text); rows.add_value(added.value());
+                }
+            }
+            result.add_array(key, rows);
+        }
+        return result.serialize();
+    };
+    facman::core::json::ObjectBuilder wrong_staging_plan;
+    for (const auto& key : provider->object_keys()) {
+        if (key != "roots") { wrong_staging_plan.add_value(key, *provider->find(key)); continue; }
+        facman::core::json::ArrayBuilder wrong_roots;
+        for (std::size_t index = 0; index < roots->size(); ++index) {
+            const auto* root = roots->at(index);
+            if (json_string(*root, "role") == "staging") {
+                auto wrong = facman::core::json::parse(replace_json_string_field(root->serialize(), "root",
+                    (fixture.root / "staging").generic_string()));
+                wrong_roots.add_value(wrong.value());
+            } else wrong_roots.add_value(*root);
+        }
+        wrong_staging_plan.add_array(key, wrong_roots);
+    }
+    malformed.push_back(wrong_staging_plan.serialize());
+    malformed.push_back(edit_effects("foreign-move-preview.txt", false, false, false));
+    malformed.push_back(edit_effects("", true, false, false));
+    malformed.push_back(edit_effects("", false, true, false));
+    malformed.push_back(edit_effects("", false, false, true));
+    malformed.push_back(replace_first(raw, "operator_selected_owned_target", "managed_install"));
+    for (const auto& bad : malformed) {
+        const std::string before = tree_signature(fixture.root);
+        const auto refused = application::decode_move_provider_plan(envelope(bad), typed, installed_response, context.configuration().setup());
+        if (refused || refused.error().code != "setup_move_plan_response_invalid" || tree_signature(fixture.root) != before)
+            throw std::runtime_error("malformed/drifted move provider response was admitted or changed bytes");
+    }
+    const auto expect_refusal = [&]() {
+        if (invoke().status == ULK_STATUS_OK) throw std::runtime_error("unsafe or stale managed move preview was admitted");
+    };
+    for (const fs::path& bad : {target, fixture.workspace, fs::path("relative-destination"),
+            fixture.root / ".." / "escaped-move", fixture.root.parent_path().parent_path() / "outside-move"}) {
+        request.target_root = bad.generic_string(); expect_refusal();
+    }
+    request.target_root = destination.generic_string();
+    for (const auto& bad : std::vector<std::pair<std::string, std::string>> {
+            {"last_verification_identity", std::string(64, '0')},
+            {"state_revision", "stale:" + std::string(64, '0')},
+            {"setup_state_ref", (fixture.setup_roots.state_root / "installed/stale.json").generic_string()},
+            {"root", (fixture.root / "wrong-current-root").generic_string()},
+            {"provider_id", "foreign-provider"}, {"source", "foreign-source"},
+            {"ownership", "reference"}, {"lifecycle_status", "verification_failed"},
+            {"lifecycle_status", "removed"}}) {
+        write_text_exact(record_path, replace_json_string_field(record_before, bad.first.c_str(), bad.second));
+        expect_refusal(); write_text_exact(record_path, record_before);
+    }
+    const fs::path executable(reference.entrypoint);
+    const std::string healthy = read_text(executable);
+    write_text_exact(executable, "damaged closure"); expect_refusal();
+    write_text_exact(executable, healthy);
+    const std::string state_before = read_text(fs::path(reference.setup_state_ref));
+    write_text_exact(fs::path(reference.setup_state_ref), "{}"); expect_refusal();
+    write_text_exact(fs::path(reference.setup_state_ref), state_before);
+    // Deterministic current-observation races; expected signatures include only
+    // the test actor's deliberate effect, and never any effect by the planner.
+    for (const std::string change : {"destination", "record", "provider", "foreign"}) {
+        bool observed = false;
+        std::string expected_root, expected_workspace;
+        auto previous = application::testing::exchange_move_plan_revalidation_observer([&]() {
+            observed = true;
+            if (change == "destination") fs::create_directory(destination);
+            if (change == "record") write_text_exact(record_path, record_before + "\n");
+            if (change == "provider") write_text_exact(fs::path(reference.setup_state_ref), "{}");
+            if (change == "foreign") write_text_exact(foreign, "changed foreign closure\n");
+            expected_root = tree_signature(fixture.root);
+            expected_workspace = tree_signature(fixture.workspace);
+        });
+        application::ApplicationResult result;
+        try { result = application::handlers::plan_move_install(context, request); }
+        catch (...) {
+            application::testing::exchange_move_plan_revalidation_observer(std::move(previous)); throw;
+        }
+        application::testing::exchange_move_plan_revalidation_observer(std::move(previous));
+        if (!observed || result.status == ULK_STATUS_OK || tree_signature(fixture.root) != expected_root ||
+            tree_signature(fixture.workspace) != expected_workspace)
+            throw std::runtime_error("detected move input race was admitted or changed extra bytes");
+        if (change == "destination") fs::remove(destination);
+        if (change == "record") write_text_exact(record_path, record_before);
+        if (change == "provider") write_text_exact(fs::path(reference.setup_state_ref), state_before);
+        if (change == "foreign") write_text_exact(foreign, "foreign bytes remain foreign\n");
+    }
+    // A successful fresh preview remains possible after all independent refusals.
+    if (invoke().status != ULK_STATUS_OK) throw std::runtime_error("move refusals poisoned later read-only planning");
+    const std::string all_before = tree_signature(fixture.root);
+    const auto apply = application::handlers::apply_move_install(context, request);
+    if (apply.status == ULK_STATUS_OK || apply.error_code != "live_target_acceptance_required" ||
+        tree_signature(fixture.root) != all_before || fs::exists(destination))
+        throw std::runtime_error("move apply escaped its unchanged live-target gate");
+    fs::remove(foreign);
+    fs::remove(empty_directory);
+}
+
 void prove_facman_consumption(
     proof::Fixture& fixture,
     const proof::LauncherReference& reference,
@@ -630,6 +842,8 @@ void prove_facman_consumption(
         tree_signature(fixture.root) != public_setup_before) {
         throw std::runtime_error("stale managed evidence fixture did not restore its workspace record");
     }
+
+    prove_facman_move_preview(fixture, context, reference, target, record_path);
 
     application::CreateInstanceRequest create;
     create.display_name = "M1 synthetic managed instance";

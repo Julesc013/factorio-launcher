@@ -2376,3 +2376,24 @@ severity = "blocked"
 effect = "none"
 retryable = false
 message = "Installed bytes no longer reproduce verified managed ownership."
+
+[[code]]
+id = "move_lifecycle_ineligible"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Move planning requires an active, verification_failed, or recovery_required managed install."
+
+[[code]]
+id = "setup_move_plan_response_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup returned an invalid managed move plan."
+
+[[code]]
+id = "setup_move_plan_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup refused the managed move plan."

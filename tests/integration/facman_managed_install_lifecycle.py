@@ -271,6 +271,142 @@ class PublicInstallProof:
         self.record(case).write_bytes(original)
         check("warn", unknown=("user-data.txt",))
 
+    def move_preview(self) -> None:
+        case = self.case("move-preview")
+        self.run(case, self.apply_args(case, self.plan(case)))
+        self.verify(case)
+        destination = case/"move-destination"
+        foreign = case/"target/foreign.txt"
+        foreign.write_bytes(b"foreign bytes remain foreign")
+        (case/"target/empty-directory").mkdir()
+
+        def snapshot() -> dict:
+            # Walk without following junctions; include types, empty directories,
+            # all source/provider/workspace bytes and any sibling shared guards.
+            rows = {}
+            pending = [case]
+            while pending:
+                directory = pending.pop()
+                for path in sorted(directory.iterdir()):
+                    status = path.lstat()
+                    key = str(path.relative_to(case))
+                    if getattr(status, "st_file_attributes", 0) & 0x400 or path.is_symlink():
+                        rows[key] = ("redirect", getattr(status, "st_reparse_tag", 0))
+                    elif path.is_dir():
+                        rows[key] = "directory"
+                        pending.append(path)
+                    else:
+                        rows[key] = digest(path)
+            rows["sibling-guards"] = {p.name: digest(p) for p in case.parent.glob(".facman-managed-install-*.lock")}
+            return rows
+
+        def check(target=destination, code="", configured=True) -> dict:
+            before = snapshot()
+            payload = self.run(case, ["installs", "move", "plan", "managed-test", "--target", str(target)],
+                               outcome=("unavailable" if not configured else "refused" if code else "ok"),
+                               code=code, configured=configured)
+            assert snapshot() == before and not destination.exists(), "move preview changed fixture bytes/paths"
+            response = self.steps[-1]["response"]
+            assert response["effects"] == [] and not response["operation"]["effects_may_have_occurred"]
+            assert not response["operation"]["recovery"]["required"]
+            if code:
+                return payload
+            assert payload["schema"] == "facman.managed_move_plan.v1"
+            assert payload["copy_scope"] == "complete_source_files_including_foreign"
+            assert payload["grants_ownership"] is False and payload["apply_available"] is False
+            assert payload["observation_atomic"] is False
+            assert payload["empty_directory_preservation"] == "not_promised"
+            plan = payload["provider_plan"]
+            assert plan["schema"] == "usk.operation_plan.v1" and plan["operation"] == "move"
+            assert plan["status"] == "planned" and plan["install_id"] == "managed-test"
+            copies = {r["relative_path"]: r for r in plan["effects"] if r["kind"] == "copy_owned_file"}
+            actual = {p.relative_to(case/"target").as_posix(): digest(p)
+                      for p in (case/"target").rglob("*") if p.is_file()}
+            assert set(copies) == set(actual)
+            assert all(copies[path]["expected_sha256"] == value for path, value in actual.items())
+            assert "foreign.txt" in copies and "empty-directory" not in copies
+            assert {r["role"] for r in plan["roots"]} == {"current", "destination", "staging", "setup_state", "audit"}
+            staging = next(r for r in plan["roots"] if r["role"] == "staging")
+            assert staging["root"] == destination.parent.as_posix()
+            assert staging["classification"] == "setup_owned"
+            selected = next(r for r in plan["roots"] if r["role"] == "destination")
+            assert selected["root"] == destination.as_posix() and selected["must_not_exist"] is True
+            assert selected["classification"] == "operator_selected_owned_target"
+            return payload
+
+        check(code="live_target_acceptance_required", configured=False)
+        planned = check()
+        before = snapshot()
+        human_args = ["installs", "move", "plan", "managed-test", "--target", str(destination)]
+        human = subprocess.run([str(self.executable), "--workspace", str(case/"workspace"), *human_args],
+                               env=self.environment(case), capture_output=True, text=True, timeout=40)
+        self.steps.append({"case": case.name, "command": human_args, "format": "human", "exit": human.returncode,
+                           "stdout": human.stdout, "stderr": human.stderr})
+        self.receipt("running")
+        assert human.returncode == 0 and not human.stderr, human.stderr
+        for text in ("Read-only managed move preview: planned", "Source:", "Destination (must be absent):",
+                     "Copies include foreign files", "grant no ownership", "preservation is not promised",
+                     "Move apply is unavailable", "not an atomic snapshot"):
+            assert text in human.stdout, text
+        assert snapshot() == before
+        rpc = {"schema": "facman.transport_request.v2", "protocol_version": 2,
+               "request_id": "req-move-preview", "operation_id": "op-move-preview", "attempt_id": "attempt-move-preview",
+               "command": "installs.move.plan", "workspace": str(case/"workspace"), "dry_run": True,
+               "payload": {"install_id": "managed-test", "target_root": str(destination)}}
+        result = subprocess.run([str(self.executable), "rpc", "--stdio"], input=json.dumps(rpc)+"\n",
+                                env=self.environment(case), capture_output=True, text=True, timeout=40)
+        response = json.loads(result.stdout)
+        self.steps.append({"case": case.name, "command": ["rpc", "--stdio"], "request": rpc,
+                           "response": response, "exit": result.returncode})
+        self.receipt("running")
+        assert result.returncode == 0 and response["outcome"] == "ok", response
+        assert response["payload"]["schema"] == planned["schema"]
+        assert response["payload"]["grants_ownership"] is False and response["effects"] == []
+        assert snapshot() == before
+        for target, code in ((case/"target", "ownership_denied"), (case/"workspace", "invalid_argument"),
+                             (Path("relative-destination"), "ownership_denied"),
+                             (case/".."/"escaped", "ownership_denied"), (case.parent/"outside", "ownership_denied")):
+            check(target, code)
+        original = self.record(case).read_bytes()
+        record = json.loads(original)
+        for field, value, code in (
+            ("provider_id", "foreign", "managed_install_provider_mismatch"),
+            ("state_revision", "stale", "setup_installed_state_response_invalid"),
+            ("last_verification_identity", "0"*64, "setup_installed_state_response_invalid"),
+            ("setup_state_ref", str(case/"stale-state.json"), "setup_installed_state_response_invalid"),
+            ("ownership", "external", "ownership_denied"), ("lifecycle_status", "uninstalled", "move_lifecycle_ineligible")):
+            changed = dict(record, **{field: value})
+            self.record(case).write_text(json.dumps(changed))
+            check(code=code)
+            self.record(case).write_bytes(original)
+        executable = case/"target/bin/x64/factorio.exe"
+        executable.write_bytes(b"damaged owned closure")
+        check(code="lifecycle_refused")
+        executable.write_bytes(BYTES)
+        sentinel = case/"foreign-sentinel"
+        sentinel.mkdir()
+        (sentinel/"untouched.txt").write_bytes(b"foreign sentinel")
+        junction = case/"target/foreign-junction"
+        subprocess.run(["cmd", "/c", "mklink", "/J", str(junction), str(sentinel)],
+                       check=True, capture_output=True, text=True)
+        try:
+            check(code="ownership_denied")
+        finally:
+            os.rmdir(junction)
+        destination_junction = case/"destination-junction"
+        subprocess.run(["cmd", "/c", "mklink", "/J", str(destination_junction), str(sentinel)],
+                       check=True, capture_output=True, text=True)
+        try:
+            check(destination_junction/"absent", "ownership_denied")
+        finally:
+            os.rmdir(destination_junction)
+        before = snapshot()
+        self.run(case, ["installs", "move", "apply", planned["provider_plan"]["plan_id"],
+                        "--digest", planned["provider_plan"]["plan_digest"], "--confirm", "APPLY"],
+                 outcome="unavailable", code="live_target_acceptance_required")
+        assert snapshot() == before and not destination.exists()
+        check()
+
     def interrupt_provider(self, phase="streaming") -> None:
         case = self.case("os-gen" if phase == "genesis" else "os-stream" if phase == "streaming" else "os-stage")
         with zipfile.ZipFile(case/"source.zip", "a", zipfile.ZIP_STORED) as archive:
@@ -951,7 +1087,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--facman", type=Path, required=True)
     parser.add_argument("--root", type=Path, required=True)
-    parser.add_argument("--scenario", choices=["all", "streaming", "genesis", "earliest", "verification", "coordination"], default="all")
+    parser.add_argument("--scenario", choices=["all", "streaming", "genesis", "earliest", "verification", "coordination", "move-preview"], default="all")
     args = parser.parse_args()
     if os.name != "nt":
         parser.error("this proof covers the admitted Windows portable ZIP recipe")
@@ -959,6 +1095,8 @@ def main() -> int:
     try:
         if args.scenario == "coordination":
             proof.coordination()
+        elif args.scenario == "move-preview":
+            proof.move_preview()
         elif args.scenario == "verification":
             proof.verification()
         elif args.scenario != "all":

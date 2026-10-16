@@ -90,6 +90,18 @@ std::optional<std::map<std::string, std::string>> exact_install_apply_options(
 
 } // namespace
 
+bool move_plan_arguments_valid(const std::vector<std::string>& args)
+{
+    if (args.size() < 4 || args[3].empty() || args[3].compare(0, 2, "--") == 0) return false;
+    std::size_t target_count = 0, json_count = 0;
+    for (std::size_t index = 4; index < args.size(); ++index) {
+        if (args[index] == "--json" && ++json_count == 1) continue;
+        if (args[index] != "--target" || ++target_count > 1 || ++index >= args.size() ||
+            args[index].empty() || args[index].compare(0, 2, "--") == 0) return false;
+    }
+    return target_count == 1;
+}
+
 std::optional<SetupApplyCommand> setup_apply_request(
     const std::string& action,
     const std::vector<std::string>& args)

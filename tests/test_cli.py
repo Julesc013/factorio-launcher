@@ -537,6 +537,30 @@ class CliTests(unittest.TestCase):
             self.assertNotEqual(code, 0, stderr)
             self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
 
+    def test_managed_move_cli_requires_exact_destination_grammar_without_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace, destination = root / "workspace", root / "destination"
+            for arguments in ([], ["--target"], ["--target", ""],
+                              ["--target", str(destination), "--target", str(destination)],
+                              ["--target", str(destination), "--json", "--json"],
+                              ["--target", str(destination), "--unknown", "value"],
+                              ["--target", str(destination), "stray"]):
+                code, _stdout, _stderr = invoke([
+                    "--workspace", str(workspace), "installs", "move", "plan", "managed-fixture", *arguments,
+                ])
+                self.assertEqual(code, 2, arguments)
+                self.assertFalse(workspace.exists())
+                self.assertFalse(destination.exists())
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "move", "plan", "unknown-install",
+                "--target", str(destination), "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse(workspace.exists())
+            self.assertFalse(destination.exists())
+
     def test_managed_uninstall_plan_requires_bound_lifecycle_evidence_without_writes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

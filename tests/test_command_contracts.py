@@ -57,6 +57,35 @@ class CommandContractTests(unittest.TestCase):
             with self.subTest(document=document):
                 self.assertTrue(list(validator.iter_errors(document)))
 
+    def test_move_preview_contract_keeps_provider_and_limitations_strict(self) -> None:
+        root = command_contract_check.ROOT
+        schema = json.loads((root / "contracts/schema/factorio/facman_managed_move_plan.v1.schema.json").read_text())
+        provider_schema = json.loads((root / "contracts/schema/factorio/usk_move_plan.v1.schema.json").read_text())
+        self.assertEqual(schema["$defs"]["provider_plan"], provider_schema)
+        golden = json.loads((root / "tests/golden/commands/installs.move.plan.success.json").read_text())
+        validator = jsonschema.Draft202012Validator(schema)
+        validator.validate(golden)
+        for field, value in (("grants_ownership", True), ("apply_available", True),
+                             ("observation_atomic", True), ("copy_scope", "owned_files_only"),
+                             ("empty_directory_preservation", "guaranteed")):
+            bad = copy.deepcopy(golden)
+            bad[field] = value
+            self.assertTrue(list(validator.iter_errors(bad)), field)
+        for path, value in (("relative_path", "../foreign"), ("kind", "delete_owned_file"),
+                            ("root_role", "current"), ("ownership_required", False)):
+            bad = copy.deepcopy(golden)
+            bad["provider_plan"]["effects"][0][path] = value
+            self.assertTrue(list(validator.iter_errors(bad)), path)
+        for kind in ("write_state", "write_journal", "write_audit"):
+            bad = copy.deepcopy(golden)
+            bad["provider_plan"]["effects"] = [row for row in bad["provider_plan"]["effects"] if row["kind"] != kind]
+            self.assertTrue(list(validator.iter_errors(bad)), kind)
+        for field, value in (("must_not_exist", False), ("classification", "managed_install"),
+                             ("root", "relative/destination")):
+            bad = copy.deepcopy(golden)
+            bad["provider_plan"]["roots"][-1][field] = value
+            self.assertTrue(list(validator.iter_errors(bad)), field)
+
     def test_uninstall_report_schema_rejects_runtime_invalid_shapes(self) -> None:
         schema = json.loads(
             (

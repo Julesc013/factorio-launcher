@@ -407,6 +407,15 @@ int main()
     auto uninstall = configured_gateway->plan_uninstall(uninstall_request);
     if (uninstall || fs::exists(setup_state) || fs::exists(plan_request.target)) return 10;
 
+    application::MovePlanRequest move_request;
+    move_request.installed = uninstall_request;
+    move_request.destination = fixture.root / "move-destination";
+    auto move_unconfigured = gateway->plan_move(move_request);
+    auto move_incomplete = configured_gateway->plan_move(move_request);
+    if (move_unconfigured || move_unconfigured.error().code != "live_target_acceptance_required" ||
+        move_incomplete || move_incomplete.error().code != "invalid_argument" ||
+        fs::exists(setup_state) || fs::exists(move_request.destination)) return 11;
+
     const fs::path incomplete = make_archive(fixture.root, "incomplete", false, false);
     request.archive = incomplete;
     auto refused = gateway->inspect_install_archive(request);
