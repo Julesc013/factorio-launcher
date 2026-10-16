@@ -1513,8 +1513,8 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs move plan <install-id> --target <path> --json",
       "cli_aliases": [],
@@ -1556,6 +1556,8 @@
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.move.plan.refusal.json",
+      "golden_success": "tests/golden/commands/installs.move.plan.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.move.plan.title",
         "command.installs.move.plan.description"
@@ -1563,6 +1565,12 @@
       "mutates_workspace": false,
       "native_id": "installs_move_plan",
       "owner": "facman",
+      "refusal_codes": [
+        "ownership_denied",
+        "managed_install_provider_mismatch",
+        "move_lifecycle_ineligible",
+        "managed_install_evidence_incomplete"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_move_plan",
@@ -1590,7 +1598,7 @@
       "required_capabilities": [
         "setup_preview"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/facman_managed_move_plan.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "installs.move.plan",
@@ -12589,6 +12597,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "3742bcfea288c81e9bd53d5e2a8b1dc23996b64f7493ea0c9aa4cd331ccadfc6",
+  "source_digest": "300478fada177e7cd877ba2dcf3071ff1e764c5bb2675874459f087e19d18b40",
   "version": "facman-0.1.0-alpha.6"
 }

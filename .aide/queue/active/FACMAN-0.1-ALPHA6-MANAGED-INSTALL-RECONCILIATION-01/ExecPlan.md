@@ -287,3 +287,84 @@ Starting from dev361da48,the unchanged delivered CLI reproduced a root/. plan th
 Source8486's required Linux coverage job116098627804 failed the same-inode metadata test after0.25s. The exact log lacks the original durable journal state; acquisition/flush versus cell-observation timing is a source-supported inference. The test now uses an internal worker-local observer at the existing enabled post-acquisition pause and a bounded ready/release handshake. It binds REQUESTED/no-entry and the retained inode before editing; abort/release/join and callback restoration cover failed assertions. Unset observer behavior and the two-second pause remain unchanged. Refused recovery is still excluded.
 
 Independent review verifies affected Linux Debug and Windows Release native tests, actual REQUESTED then recovery_required diagnostics, exact foreign-byte/provider/target preservation and ordinary recovery. Strict/AIDE pass. The existing Linux cache required six modular provider archives; exact provider sources, pins and profile stay unchanged. Three admission stops and the original required failure remain preserved; no new cache, root or clone was created. Fresh current-head checks and delivered proof remain pending. No genuine game, human, whole maintenance, WorkUnit, Beta or release gate closes. Evidence: evidence/reconciliation-held-metadata.v1.json and its hash-closed custody.
+
+### Read-only provider-backed managed move planning
+
+This bounded successor implements only `installs.move.plan` over the unchanged
+pinned USK public read-only route. Admission retains managed-record/provider and
+exact preimage evidence. Strict decoding binds five roots, absent destination,
+current installed state, ownership/recipe/source/provider/policy identities,
+complete source-file coverage and the reconstructed pinned private plan digest.
+Repeated provider planning/inspection and the final record-byte check refuse
+observed drift. All runtime provider calls remain dry-run; move apply stays
+unavailable and no plan, coordinator, journal, target, reference or audit is written.
+
+The public `facman.managed_move_plan.v1` wrapper preserves the unchanged nested
+provider plan/digest and makes five limitations explicit: complete file copies
+include foreign content, labels grant no ownership, empty-directory preservation
+is not promised, apply remains unavailable, and observations are not atomic.
+Ordinary CLI text renders source/destination/status, identity and these limits.
+Source tests cover the pinned synthetic M1 fixture, malformed/drifted provider
+responses, stale records/state, damaged closure, destination and revalidation
+races with independent tree signatures. The existing public owned-fixture harness
+adds the `move-preview` scenario for human CLI, JSON and v2 stdio RPC, junction
+refusals and byte preservation. Native build/product execution and independent
+postimage review remain pending at this author checkpoint; no acceptance or
+release gate is closed. No genuine Factorio input is read or used.
+
+### Strict-boundary remediation after retained source02 behavior checks
+
+Source02's exact retained executables passed binary identity, both selected native
+CTest proofs, the owned public human/JSON/v2-RPC move-preview scenario and both CLI
+regressions with normal primary exits and empty Jobs. The original local build
+lifetime still failed after primary exit0; those passing behavior cohorts do not
+relabel it. The first full strict suite then failed normally on stale generated
+project truth, a hand-built absent-snapshot JSON literal, CLI composition budgets
+and raw JSON parsing in the typed handler. Original receipts remain immutable.
+
+The bounded source03 correction keeps public/provider contracts and policy limits
+unchanged. The gateway decoder now constructs the public wrapper directly from its
+validated provider value and returns it as typed `MovePlan.public_response`; the
+handler consumes that output without decoding raw JSON. The absent snapshot uses
+the existing typed JSON builders. Exact move CLI grammar validation moves into
+the existing setup-command helper, reducing composition size and complexity
+without changing budgets or allowlists. The native decoder assertion binds its
+public response to the real handler output, and project-state surfaces are
+regenerated from canonical sources. Source03 still requires independent review
+and fresh native qualification; source02's binaries remain historical evidence.
+No queue status, release gate, provider pin or genuine Factorio authority changes.
+
+### Scoped managed move preview qualification
+
+Source03's exact 47-file postimage and complete 5,181-member source byte cohort
+passed independent source review. Fresh source/shared pinned-provider outputs
+qualified binary identity, both selected native CTest proofs, the public synthetic
+move-preview scenario (22 actual calls including fixture setup, ordinary human
+CLI, JSON and v2 stdio RPC), both CLI regressions, AIDE and diff checks. Exact
+source03 strict/generated metadata/census and 11 focused static PASS receipts
+were consumed from the identical unchanged full source cohort.
+
+The compiler primary exited 0 in 457.69s, with 2 active Job members observed at
+primary exit. The existing exact-owned Job cleanup completed and emptied that
+Job. This admits compiler outputs for source behavior evidence only; natural
+compiler-descendant lifetime remains false/NOT_QUALIFIED and no canary is claimed.
+The original full-build members were not individually identified; later tiny
+compile observations do not identify them. Every product, native, CLI, AIDE and
+diff command retains normal primary/empty-Job/no-termination acceptance. The failed
+source01 staging-root review, source02 build lifetime and strict checks, and
+tiny03/04 lifetime experiments remain preserved alongside source02's historical
+passing behavior cohorts.
+
+The nested provider plan and digest remain unchanged. Provider copy-owned labels
+can include foreign files; the public wrapper grants no ownership or mutation
+authority. Empty-directory preservation is not promised, observations are not
+atomic, default unconfigured behavior stays unavailable and move apply stays
+closed. Independent actual qualification review and bounded hash-closed custody
+are recorded in evidence/managed-move-plan-native.v1.json and
+evidence/managed-move-plan-native.custody.zip.
+
+This accepts only synthetic source behavior with compiler-owned cleanup. No
+genuine Factorio input was read or used. Complete F07/F11, remaining lifecycle
+transitions, canonical installed owner gate, genuine game/human/physical-host and
+other-platform acceptance, produced packages, Beta and release remain open. The
+WorkUnit stays active; no queue status or release gate changes.

@@ -1392,6 +1392,90 @@ ApplicationResult managed_uninstall_plan(
 #endif
 }
 
+ApplicationResult managed_move_plan(
+    ApplicationContext& context,
+    const ServiceOperationRequest& request)
+{
+#if FACMAN_WITH_SETUP
+    const std::string& install_id = request.install_id.empty() ? request.id : request.install_id;
+    auto parsed_id = facman::core::InstallId::parse_legacy(install_id);
+    if (!parsed_id) return refused(
+        safety_refusal("installs.move.plan", parsed_id.error().code, "Install id is invalid", parsed_id.error().message, false),
+        parsed_id.error().code, parsed_id.error().message, parsed_id.error().kind);
+    auto install = context.installs().load(parsed_id.value());
+    if (!install) return refused(
+        safety_refusal("installs.move.plan", "unknown_install", "Install reference is not registered", install_id, true),
+        "unknown_install", "Install reference is not registered");
+    const auto& record = install.value();
+    if (record.ownership != "managed") return refused(
+        safety_refusal("installs.move.plan", "ownership_denied", "Move planning is available only for registered managed installs", record.ownership, true),
+        "ownership_denied", "Move planning is available only for registered managed installs");
+    if (!context.configuration().setup().configured()) return unavailable(context, "installs.move.plan",
+        "live_target_acceptance_required", "Managed move planning requires the bounded live-target policy gate");
+    if (record.provider_id != "universal-setup" || record.source != "universal-setup") return refused(
+        safety_refusal("installs.move.plan", "managed_install_provider_mismatch", "Managed move planning requires a Universal Setup managed record", record.provider_id + ":" + record.source, true),
+        "managed_install_provider_mismatch", "Managed move planning requires a Universal Setup managed record");
+    if (!managed_plan_lifecycle_eligible(record.lifecycle_status)) {
+        const std::string lifecycle = record.lifecycle_status.empty()
+            ? "unknown"
+            : record.lifecycle_status;
+        constexpr const char* message =
+            "Move planning requires an active, verification_failed, or "
+            "recovery_required managed install";
+        return refused(
+            safety_refusal(
+                "installs.move.plan",
+                "move_lifecycle_ineligible",
+                message,
+                lifecycle,
+                true),
+            "move_lifecycle_ineligible",
+            message);
+    }
+    if (record.root.empty() || record.setup_state_ref.empty() ||
+        record.last_verification_identity.empty() || record.state_revision.empty()) return refused(
+        safety_refusal("installs.move.plan", "managed_install_evidence_incomplete", "Managed move planning requires target, setup, verification, and revision evidence", install_id, true),
+        "managed_install_evidence_incomplete", "Managed move planning requires target, setup, verification, and revision evidence");
+    const std::string preimage = read_text(record.source_path);
+    auto bound = context.installs().load(parsed_id.value());
+    if (preimage.empty() || !bound || bound.value().source_path != record.source_path ||
+        read_text(record.source_path) != preimage || bound.value().root != record.root ||
+        bound.value().setup_state_ref != record.setup_state_ref ||
+        bound.value().last_verification_identity != record.last_verification_identity ||
+        bound.value().state_revision != record.state_revision || bound.value().lifecycle_status != record.lifecycle_status ||
+        bound.value().ownership != record.ownership || bound.value().provider_id != record.provider_id ||
+        bound.value().source != record.source) return refused(
+            safety_refusal("installs.move.plan", "stale_plan", "Managed record changed before move planning", install_id, true),
+            "stale_plan", "Managed record changed before move planning");
+    MovePlanRequest move;
+    move.destination = facman::platform::path_from_utf8(request.target_root);
+    auto& plan_request = move.installed;
+    plan_request.plan_id = context.ids().next("move-plan");
+    plan_request.request_id = plan_request.plan_id;
+    plan_request.install_id = record.id.str();
+    plan_request.created_at = context.clock().now_utc();
+    plan_request.target = record.root;
+    plan_request.setup_state_ref = record.setup_state_ref;
+    plan_request.last_verification_identity = record.last_verification_identity;
+    plan_request.state_revision = record.state_revision;
+    plan_request.lifecycle_status = record.lifecycle_status;
+    auto plan = context.setup().plan_move(move);
+    if (!plan) return refused(
+        safety_refusal("installs.move.plan", plan.error().code, plan.error().message, plan.error().detail, true),
+        plan.error().code, plan.error().message, facman::core::OutcomeKind::refused);
+    auto retained = context.installs().load(parsed_id.value());
+    if (!retained || retained.value().source_path != record.source_path || read_text(record.source_path) != preimage)
+        return refused(safety_refusal("installs.move.plan", "stale_plan", "Managed record changed during move planning", install_id, true),
+            "stale_plan", "Managed record changed during move planning");
+    ApplicationResult result;
+    result.output = plan.value().public_response;
+    return result;
+#else
+    (void)request;
+    return unavailable(context, "installs.move.plan", "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
+}
+
 ApplicationResult managed_install_policy(
     ApplicationContext& context,
     const ServiceOperationRequest& request,
@@ -1790,7 +1874,7 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
 
 ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    return managed_install_policy(context, request, "installs.move.plan");
+    return managed_move_plan(context, request);
 }
 
 ApplicationResult apply_move_install(ApplicationContext& context, const ServiceOperationRequest&)

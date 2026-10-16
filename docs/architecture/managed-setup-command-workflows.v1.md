@@ -43,12 +43,33 @@ policy or Factorio archive logic.
 
 ## Authority state
 
-Managed install planning, repair plan/apply, uninstall plan/apply, and
+Managed install and move planning, repair plan/apply, uninstall plan/apply, and
 operation-specific recovery inspect/apply are implemented through the accepted
 Universal Setup gateway. They remain unavailable unless the process has an
 absolute owned setup root, an accepted parent root, and the explicit setup
-policy activation. Move plan/apply remain `unavailable_until_gateway` pending their recorded
+policy activation. Move apply remains `unavailable_until_gateway` pending its recorded
 acceptance work. Install apply uses its explicit bounded configuration gate.
+
+`installs.move.plan` binds an active/nonterminal registered Universal Setup
+managed record and its exact bytes to read-only installed inspection and public
+USK `move.plan`. The destination must be a normalized absolute absent path under
+the configured acceptance root. Same/existing roots, unsafe ancestry and links
+refuse. The strict response binds current/destination/setup roots, installed state,
+ownership, recipe/source, provider and policy identities. FacMan independently
+hashes complete source-file coverage and the pinned private plan digest, then
+repeats the provider plan and installed inspection and rechecks the record.
+These observations create no target, journal, reference, provider state or audit.
+Concurrent changes after observation remain possible; this is no apply authority.
+
+The pinned provider includes foreign files in its complete move closure and calls
+every proposed copy `copy_owned_file`. The public `facman.managed_move_plan.v1` response nests the unchanged raw plan in
+`provider_plan`, with explicit copy scope, ownership, empty-directory, apply and
+observation limitations. Ordinary CLI output renders the source, destination,
+copy count, plan identity and these same limitations. FacMan preserves the raw provider label;
+it does not adopt foreign files or authorize their removal. Empty-directory
+preservation is not promised by this file-based provider plan. The provider's
+`pre_target_digest` describes the absent destination, not the source tree. Move
+apply stays closed, and no genuine Factorio/host/human or release claim follows.
 
 `installs.verify` now calls the public read-only USK `installed.verify` route
 for registered Universal Setup managed records under the existing explicit

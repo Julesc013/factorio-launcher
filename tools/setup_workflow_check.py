@@ -54,6 +54,7 @@ def validate() -> list[str]:
                 "installs.repair.plan",
                 "installs.repair.apply",
                 "installs.uninstall.plan",
+                "installs.move.plan",
                 "installs.uninstall.apply",
                 "installs.recovery.inspect",
                 "installs.recovery.apply",

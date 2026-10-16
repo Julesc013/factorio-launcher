@@ -250,6 +250,46 @@ std::optional<std::string> local_content_text(const json::Value& report)
     return output.str();
 }
 
+std::optional<std::string> managed_move_plan_text(const json::Value& report)
+{
+    const auto* plan = report.find("provider_plan");
+    const auto false_field = [&](const char* key) {
+        const auto* value = report.find(key);
+        return value && value->is_bool() && !value->bool_value().value();
+    };
+    if (guidance_field(report, "schema") != "facman.managed_move_plan.v1" ||
+        guidance_field(report, "copy_scope") != "complete_source_files_including_foreign" ||
+        guidance_field(report, "empty_directory_preservation") != "not_promised" ||
+        !false_field("grants_ownership") || !false_field("apply_available") || !false_field("observation_atomic") ||
+        !plan || guidance_field(*plan, "operation") != "move" || guidance_field(*plan, "status") != "planned") return std::nullopt;
+    const auto* roots = plan->find("roots");
+    const auto* effects = plan->find("effects");
+    if (!roots || !roots->is_array() || !effects || !effects->is_array()) return std::nullopt;
+    std::string source, destination;
+    std::size_t copies = 0;
+    for (std::size_t index = 0; index < roots->size(); ++index) {
+        const auto* root = roots->at(index);
+        if (!root) return std::nullopt;
+        if (guidance_field(*root, "role") == "current") source = guidance_field(*root, "root");
+        if (guidance_field(*root, "role") == "destination") destination = guidance_field(*root, "root");
+    }
+    for (std::size_t index = 0; index < effects->size(); ++index) {
+        const auto* effect = effects->at(index);
+        if (!effect) return std::nullopt;
+        if (guidance_field(*effect, "kind") == "copy_owned_file") ++copies;
+    }
+    if (source.empty() || destination.empty() || copies == 0) return std::nullopt;
+    std::ostringstream output;
+    output << "Read-only managed move preview: planned\nInstall: " << guidance_field(*plan, "install_id")
+        << "\nSource: " << source << "\nDestination (must be absent): " << destination
+        << "\nProposed file copies: " << copies << "\nPlan: " << guidance_field(*plan, "plan_id")
+        << "\nDigest: " << guidance_field(*plan, "plan_digest")
+        << "\nCopies include foreign files; provider copy labels grant no ownership.\n"
+        << "Empty-directory preservation is not promised. Move apply is unavailable.\n"
+        << "No move was executed. Observations are not an atomic snapshot.\n";
+    return output.str();
+}
+
 std::optional<std::string> managed_install_verification_text(const json::Value& report)
 {
     const std::string status = guidance_field(report, "status");
