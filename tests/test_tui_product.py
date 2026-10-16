@@ -250,6 +250,35 @@ class TuiProductTests(unittest.TestCase):
             self.assertEqual(paths_before, sorted(p.relative_to(workspace).as_posix() for p in workspace.rglob("*")))
             self.assertEqual(protected, (snapshot(instance), snapshot(workspace / "installs")))
 
+    @unittest.skipUnless(os.name == "nt" or sys.platform in ("linux", "darwin"),
+                         "unsupported: selected-context publication requires Windows, Linux or macOS")
+    def test_ordinary_selected_context_refresh_keeps_its_action_feedback(self) -> None:
+        from test_selected_context_refresh import SelectedContextRefreshTests
+
+        owner = SelectedContextRefreshTests()
+        cli = cli_executable()
+        self.assertIsNotNone(cli)
+        with tempfile.TemporaryDirectory(prefix="tui-refresh-feedback-") as temporary:
+            workspace = Path(temporary)
+            instance, _, _ = owner.owned(workspace)
+            owner.drift(instance)
+            world = (instance / "saves/selected.zip").read_bytes()
+            projected = owner.query(workspace)
+            actions = projected["available_semantic_actions"]
+            index = next(i for i, action in enumerate(actions)
+                         if action["action_id"] == "readiness.prepare_selected_save")
+            self.assertEqual("Refresh selected save context", actions[index]["label"])
+            result = self.invoke(
+                ["--workspace", str(workspace), "--ordinary", "--plain",
+                 "--transport", "process", "--cli-path", str(cli)],
+                stdin="s\n2\n" + "tab\n" * index + "space\nspace\nq\n",
+            )
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertIn("Status: Refresh selected save context completed", result.stdout)
+            self.assertNotIn("Doctor completed:", result.stdout)
+            self.assertEqual(world, (instance / "saves/selected.zip").read_bytes())
+            self.assertEqual("satisfied", owner.query(workspace)["readiness"]["selected_save"]["state"])
+
     def test_ordinary_edited_snapshot_name_completes_only_after_renewed_confirmation(self) -> None:
         from test_presentation_snapshot_create import PresentationSnapshotCreateTests
         from test_local_modset_solver import snapshot
@@ -291,6 +320,8 @@ class TuiProductTests(unittest.TestCase):
                 file_count=len(manifest["file_hashes"]), selected_saves=["starter.zip"], deterministic=True,
                 portable=True, secret_content_included=False, mutation_executed=True), outcome["action_payload"])
             self.assertIn("  Operation: Snapshot created: " + str(archive), result.stdout)
+            self.assertIn("Status: Snapshot created: " + str(archive), result.stdout)
+            self.assertNotIn("Doctor completed:", result.stdout)
             self.assertFalse((workspace / "snapshots/main/first.zip").exists())
             self.assertFalse((workspace / "snapshots/main/first.record.json").exists())
             self.assertEqual(protected, (snapshot(instance), snapshot(workspace / "installs")))
