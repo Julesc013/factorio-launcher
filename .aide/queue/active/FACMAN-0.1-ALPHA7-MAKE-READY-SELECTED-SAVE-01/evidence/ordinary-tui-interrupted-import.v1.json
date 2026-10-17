@@ -1,0 +1,695 @@
+{
+  "schema": "facman.delivered_tui_interrupted_import_accepted_slice.v1",
+  "verdict": "INDEPENDENTLY_ACCEPTED_SCOPED_PACKAGED_LINEAR_TUI_INTERRUPTION_AND_RECOVERY",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "execution": {
+    "head": "2b1e20e916162157145cbd40228f08a43b7e33f8",
+    "tree": "1c9a5757f32866f0024d7f56b62323fcf1ed8df8",
+    "artifact_source": "031812f843f18ff58878490b1251d48fb3240d69",
+    "artifact": 12107996258,
+    "producer_run": 39043421452,
+    "backend_identity": {
+      "compiled_source_revision": "031812f843f18ff58878490b1251d48fb3240d69",
+      "compiled_source_dirty": false,
+      "contract_set_sha256": "bc05f361c976ad4f3d0965bf689b972c0ba0a7ccfd14835e05a643312df1353f",
+      "backend_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+      "package_verified": true
+    },
+    "package_files": 604,
+    "manifest_rows": 603,
+    "plan_file": "pack-tui-interrupted-plan-03.json",
+    "plan_sha256": "51d48ea3a2aa91364617b281c24e870fcab71eb3dc57e1f0fcb8aebc0b2fdc94",
+    "result_sha256": "abeb8d2061fa20a7a52b7c7438f6f969150ffa680c709eb831d7119b1b05e503"
+  },
+  "ordinary_journey": {
+    "import_scope": "content",
+    "import_action": "modsets.import",
+    "import_confirmation": "explicit",
+    "intentional_fault_state": "verified",
+    "transaction_id": "tx-d89ca6c673948343f0c81401036150a9",
+    "uncertainty_receipt_preserved_sha256": "7b61fef79b668194f733fbaca679d1024e33e2f3896531dfdbfc8fd0b689e1dc",
+    "recovery_scope": "activity_recovery",
+    "recovery_action": "recovery.apply_supported",
+    "recovery_confirmation_cancel_preserves_all_tree_bytes_and_native_identities": true,
+    "recovery_confirmation": "explicit",
+    "ordinary_home_navigation_selects_reconstructed_instance": true,
+    "selected_instance": "reconstructed",
+    "exact_selected_content_settings_provenance_rebound_lock": true,
+    "producer_installation_sentinel_preserved": true,
+    "verified_stage_object_and_file_identities_preserved_through_publication": true,
+    "original_import_replayed": false,
+    "final_inspect_plan_readonly": true
+  },
+  "process_lifetime": {
+    "actual_cli_jobs": 13,
+    "actual_tui_jobs": 3,
+    "all_primaries_exit_zero": true,
+    "all_jobs_empty": true,
+    "safety_termination": false,
+    "intentional_backend_exit_code": 4198694913,
+    "intentional_backend_identity": {
+      "pid": 54228,
+      "process_identity": "54228:134367306933484865",
+      "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+      "exact_job_membership": true
+    },
+    "observed_descendants": 25,
+    "all_other_observed_descendants_exit_zero": true,
+    "unobserved_descendant_exit_codes_not_claimed": true,
+    "sessions": [
+      {
+        "pid": 37368,
+        "safety_termination": false,
+        "frontend": "linear_process_tui",
+        "launch": {
+          "created_suspended": true,
+          "pid": 37368,
+          "primary_thread_id": 66188,
+          "exact_job_membership_before_resume": true,
+          "resume_previous_suspend_count": 1
+        },
+        "primary_identity": {
+          "pid": 37368,
+          "process_identity": "37368:134367306930811460",
+          "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+          "exact_job_membership": true
+        },
+        "exit_code": 0,
+        "job_empty": true,
+        "observed_descendants": [
+          {
+            "pid": 65004,
+            "gui_pid": 37368,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "65004:134367306931352911",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 76852,
+            "gui_pid": 37368,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "76852:134367306931609140",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 77460,
+            "gui_pid": 37368,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "77460:134367306931654246",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 76008,
+            "gui_pid": 37368,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "76008:134367306931994919",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 73108,
+            "gui_pid": 37368,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "73108:134367306932019687",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 54228,
+            "gui_pid": 37368,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "54228:134367306933484865",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 4198694913
+          },
+          {
+            "pid": 78996,
+            "gui_pid": 37368,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "78996:134367306933512219",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          }
+        ],
+        "intentional_loss": {
+          "binding": {
+            "request": {
+              "bytes": 2641,
+              "sha256": "7b61fef79b668194f733fbaca679d1024e33e2f3896531dfdbfc8fd0b689e1dc",
+              "identity": "460189795:1970324836989674"
+            },
+            "journal": {
+              "bytes": 3700,
+              "sha256": "f9a5b4edd61970f571a5cb0afee1ec4293f5b8582ee7ca4db2351085cfa07961",
+              "identity": "460189795:2251799813700345"
+            },
+            "transaction_id": "tx-d89ca6c673948343f0c81401036150a9",
+            "stage_identity": "460189795:2533274790410989",
+            "parent_identity": "460189795:2251799813700304",
+            "stage": {
+              ".facman-archive-staging.v1": {
+                "bytes": 33,
+                "sha256": "ac0d3566350405b093788ed01948f668735da9ed9d2216ae5443f2ed68f04def",
+                "identity": "460189795:1970324836989681"
+              },
+              ".facman-transaction-staging.v2.json": {
+                "bytes": 260,
+                "sha256": "f7466113fca27bf280578943ede91f839506615cd0b2c4a74369fa9f2015fb2d",
+                "identity": "460189795:1970324836989682"
+              },
+              "cache": {
+                "directory": true,
+                "identity": "460189795:2251799813700352"
+              },
+              "config": {
+                "directory": true,
+                "identity": "460189795:2251799813700339"
+              },
+              "crash": {
+                "directory": true,
+                "identity": "460189795:2251799813700350"
+              },
+              "exports": {
+                "directory": true,
+                "identity": "460189795:2251799813700351"
+              },
+              "instance.v1.json": {
+                "bytes": 533,
+                "sha256": "782c8b68e5532f9f10fbcfcb25152e713048a48c2ae7aa57c22184a4c65eedaf",
+                "identity": "460189795:1970324836989699"
+              },
+              "locks": {
+                "directory": true,
+                "identity": "460189795:1970324836989697"
+              },
+              "logs": {
+                "directory": true,
+                "identity": "460189795:2251799813700349"
+              },
+              "modpack-import.v1.json": {
+                "bytes": 804,
+                "sha256": "3d6aa985363dbc33e9bf0f7553f6234a35f5a16f91e4c82d675d6c1ac3a3fac9",
+                "identity": "460189795:1970324836989701"
+              },
+              "modpack-manifest.v1.json": {
+                "bytes": 1983,
+                "sha256": "fe704b0d39081a372b3f9a64b03b02ffd9e7a9aa611d5ba351cd72d0e65f8fe8",
+                "identity": "460189795:2533274790410987"
+              },
+              "mods": {
+                "directory": true,
+                "identity": "460189795:2251799813700340"
+              },
+              "modset-lock.v1.json": {
+                "bytes": 1012,
+                "sha256": "257be3bab64022dc60c4bed17bfe5781dc48fa5ed7c8da6f7c79126ab6176c32",
+                "identity": "460189795:2251799813700344"
+              },
+              "saves": {
+                "directory": true,
+                "identity": "460189795:1970324836989690"
+              },
+              "scenarios": {
+                "directory": true,
+                "identity": "460189795:1970324836989691"
+              },
+              "script-output": {
+                "directory": true,
+                "identity": "460189795:1970324836989692"
+              },
+              "config/config.ini": {
+                "bytes": 333,
+                "sha256": "3b040542a8b53fad8b451dd4df553f73b625e34e79bade86f89eb5b053748db9",
+                "identity": "460189795:2251799813700356"
+              },
+              "mods/mod-list.json": {
+                "bytes": 75,
+                "sha256": "ede2ba8d2988f07d730ecf1e84ffaa451f7f6322a08d81fe0ea1c6173705c8da",
+                "identity": "460189795:1970324836989685"
+              },
+              "mods/mod-settings.dat": {
+                "bytes": 24,
+                "sha256": "e4ae0077df2e0d6c1f9f600abaf91686693b80c658e41031fe013182dc52cffb",
+                "identity": "460189795:1970324836989686"
+              },
+              "mods/modset-lock.v1.json": {
+                "bytes": 1019,
+                "sha256": "28ac8074e3bbc28ced20693571443362adfea7835430a5105f779a88dd9a2219",
+                "identity": "460189795:1970324836989698"
+              },
+              "mods/simple_1.0.0.zip": {
+                "bytes": 260,
+                "sha256": "cd2b6aeda4ab4f1f75998ef0ab31f87b2467eb88e4ba578ad5d0bc46552e7dc4",
+                "identity": "460189795:1970324836989687"
+              }
+            },
+            "expected_files": {
+              "modpack-manifest.v1.json": {
+                "bytes": 1983,
+                "sha256": "fe704b0d39081a372b3f9a64b03b02ffd9e7a9aa611d5ba351cd72d0e65f8fe8"
+              },
+              "mods/mod-list.json": {
+                "bytes": 75,
+                "sha256": "ede2ba8d2988f07d730ecf1e84ffaa451f7f6322a08d81fe0ea1c6173705c8da"
+              },
+              "mods/mod-settings.dat": {
+                "bytes": 24,
+                "sha256": "e4ae0077df2e0d6c1f9f600abaf91686693b80c658e41031fe013182dc52cffb"
+              },
+              "mods/simple_1.0.0.zip": {
+                "bytes": 260,
+                "sha256": "cd2b6aeda4ab4f1f75998ef0ab31f87b2467eb88e4ba578ad5d0bc46552e7dc4"
+              },
+              "modset-lock.v1.json": {
+                "bytes": 1012,
+                "sha256": "257be3bab64022dc60c4bed17bfe5781dc48fa5ed7c8da6f7c79126ab6176c32"
+              },
+              "mods/modset-lock.v1.json": {
+                "bytes": 1019,
+                "sha256": "28ac8074e3bbc28ced20693571443362adfea7835430a5105f779a88dd9a2219"
+              },
+              "instance.v1.json": {
+                "bytes": 533,
+                "sha256": "782c8b68e5532f9f10fbcfcb25152e713048a48c2ae7aa57c22184a4c65eedaf"
+              },
+              "config/config.ini": {
+                "bytes": 333,
+                "sha256": "3b040542a8b53fad8b451dd4df553f73b625e34e79bade86f89eb5b053748db9"
+              },
+              "modpack-import.v1.json": {
+                "bytes": 804,
+                "sha256": "3d6aa985363dbc33e9bf0f7553f6234a35f5a16f91e4c82d675d6c1ac3a3fac9"
+              }
+            },
+            "source": {
+              "bytes": 2121,
+              "sha256": "321ebb6d93679a5be605e64d9942a543c51d1a532430c95df0d23f20a4ba0d25",
+              "identity": "460189795:2814749767121604"
+            },
+            "installation": {
+              "bin": {
+                "directory": true,
+                "identity": "460189795:2251799813700207"
+              },
+              "data": {
+                "directory": true,
+                "identity": "460189795:2251799813700210"
+              },
+              "bin/x64": {
+                "directory": true,
+                "identity": "460189795:2533274790410864"
+              },
+              "data/base": {
+                "directory": true,
+                "identity": "460189795:2251799813700211"
+              },
+              "data/base/info.json": {
+                "bytes": 64,
+                "sha256": "81047e2339a42dfa9ca3c463b14c482a980585b46be8085bbdae48a29f83e414",
+                "identity": "460189795:2251799813700212"
+              },
+              "bin/x64/factorio.exe.stub": {
+                "bytes": 48,
+                "sha256": "3a8661bf6684f1f0a63491387334a0adcd821a96a8627df79302a2287820ca63",
+                "identity": "460189795:2251799813700209"
+              }
+            },
+            "signal": {
+              "bytes": 7,
+              "sha256": "2a50d50dd27cd58bf12142769911aecb93d0433b4998c915dc8d0182d2ab3cf7",
+              "identity": "460189795:2251799813700358"
+            }
+          },
+          "identity": {
+            "pid": 54228,
+            "process_identity": "54228:134367306933484865",
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "exact_job_membership": true
+          },
+          "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+          "requested_exit_code": 4198694913,
+          "intentional_loss": true,
+          "termination_succeeded": true,
+          "observed_exit_code": 4198694913
+        },
+        "captured_stream_bytes": {
+          "stdout": 18634,
+          "stderr": 0
+        },
+        "stdout_sha256": "d2d6ae579a4680b82b297833b298a022ff4463ddb7c59a324a201ba515055ebb",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "pid": 77844,
+        "safety_termination": false,
+        "frontend": "linear_process_tui",
+        "launch": {
+          "created_suspended": true,
+          "pid": 77844,
+          "primary_thread_id": 76528,
+          "exact_job_membership_before_resume": true,
+          "resume_previous_suspend_count": 1
+        },
+        "primary_identity": {
+          "pid": 77844,
+          "process_identity": "77844:134367306964094415",
+          "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+          "exact_job_membership": true
+        },
+        "exit_code": 0,
+        "job_empty": true,
+        "observed_descendants": [
+          {
+            "pid": 68376,
+            "gui_pid": 77844,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "68376:134367306964653969",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 36984,
+            "gui_pid": 77844,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "36984:134367306965948851",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 74780,
+            "gui_pid": 77844,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "74780:134367306965996905",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 43900,
+            "gui_pid": 77844,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "43900:134367306967430984",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 79636,
+            "gui_pid": 77844,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "79636:134367306967454788",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 37724,
+            "gui_pid": 77844,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "37724:134367306968814057",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 77380,
+            "gui_pid": 77844,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "77380:134367306968847902",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          }
+        ],
+        "intentional_loss": null,
+        "captured_stream_bytes": {
+          "stdout": 7348,
+          "stderr": 0
+        },
+        "stdout_sha256": "d8429abba7bc4b72d30d4209789226fec61107a1fe3d5ec5b55cad20a0895f4c",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "pid": 79588,
+        "safety_termination": false,
+        "frontend": "linear_process_tui",
+        "launch": {
+          "created_suspended": true,
+          "pid": 79588,
+          "primary_thread_id": 76672,
+          "exact_job_membership_before_resume": true,
+          "resume_previous_suspend_count": 1
+        },
+        "primary_identity": {
+          "pid": 79588,
+          "process_identity": "79588:134367306972332846",
+          "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+          "exact_job_membership": true
+        },
+        "exit_code": 0,
+        "job_empty": true,
+        "observed_descendants": [
+          {
+            "pid": 77784,
+            "gui_pid": 79588,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "77784:134367306972899636",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 77584,
+            "gui_pid": 79588,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "77584:134367306974165363",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 77328,
+            "gui_pid": 79588,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "77328:134367306974211668",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 72696,
+            "gui_pid": 79588,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "72696:134367306975648801",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 78068,
+            "gui_pid": 79588,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "78068:134367306975675211",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 76732,
+            "gui_pid": 79588,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "76732:134367306977036282",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 70372,
+            "gui_pid": 79588,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "70372:134367306977060254",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 76128,
+            "gui_pid": 79588,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "76128:134367306984291702",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 74472,
+            "gui_pid": 79588,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "74472:134367306984316850",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          },
+          {
+            "pid": 71164,
+            "gui_pid": 79588,
+            "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g6\\bin\\facman.exe",
+            "process_identity": "71164:134367306984678885",
+            "exact_job_membership": true,
+            "role": "packaged_backend",
+            "image_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+            "exit_code": 0
+          },
+          {
+            "pid": 75160,
+            "gui_pid": 79588,
+            "image": "C:\\Windows\\System32\\conhost.exe",
+            "process_identity": "75160:134367306984705624",
+            "exact_job_membership": true,
+            "role": "windows_console_host",
+            "image_sha256": "64b367c43d9204766a60836be1599fe3c48987d4412c26da3a96df034a8d970c",
+            "exit_code": 0
+          }
+        ],
+        "intentional_loss": null,
+        "captured_stream_bytes": {
+          "stdout": 7682,
+          "stderr": 0
+        },
+        "stdout_sha256": "1761b8e664f0a887f81c854e46ffe3b734ce9895159ec2b82e2f565718cc53c6",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "pre_fault_custody": {
+    "full_journal_preimage_in_CAS": true,
+    "journal": {
+      "bytes": 3700,
+      "sha256": "f9a5b4edd61970f571a5cb0afee1ec4293f5b8582ee7ca4db2351085cfa07961",
+      "identity": "460189795:2251799813700345"
+    },
+    "request": {
+      "bytes": 2641,
+      "sha256": "7b61fef79b668194f733fbaca679d1024e33e2f3896531dfdbfc8fd0b689e1dc",
+      "identity": "460189795:1970324836989674"
+    },
+    "stage_marker_preimages_in_CAS": true,
+    "expected_files": {
+      "modpack-manifest.v1.json": {
+        "bytes": 1983,
+        "sha256": "fe704b0d39081a372b3f9a64b03b02ffd9e7a9aa611d5ba351cd72d0e65f8fe8"
+      },
+      "mods/mod-list.json": {
+        "bytes": 75,
+        "sha256": "ede2ba8d2988f07d730ecf1e84ffaa451f7f6322a08d81fe0ea1c6173705c8da"
+      },
+      "mods/mod-settings.dat": {
+        "bytes": 24,
+        "sha256": "e4ae0077df2e0d6c1f9f600abaf91686693b80c658e41031fe013182dc52cffb"
+      },
+      "mods/simple_1.0.0.zip": {
+        "bytes": 260,
+        "sha256": "cd2b6aeda4ab4f1f75998ef0ab31f87b2467eb88e4ba578ad5d0bc46552e7dc4"
+      },
+      "modset-lock.v1.json": {
+        "bytes": 1012,
+        "sha256": "257be3bab64022dc60c4bed17bfe5781dc48fa5ed7c8da6f7c79126ab6176c32"
+      },
+      "mods/modset-lock.v1.json": {
+        "bytes": 1019,
+        "sha256": "28ac8074e3bbc28ced20693571443362adfea7835430a5105f779a88dd9a2219"
+      },
+      "instance.v1.json": {
+        "bytes": 533,
+        "sha256": "782c8b68e5532f9f10fbcfcb25152e713048a48c2ae7aa57c22184a4c65eedaf"
+      },
+      "config/config.ini": {
+        "bytes": 333,
+        "sha256": "3b040542a8b53fad8b451dd4df553f73b625e34e79bade86f89eb5b053748db9"
+      },
+      "modpack-import.v1.json": {
+        "bytes": 804,
+        "sha256": "3d6aa985363dbc33e9bf0f7553f6234a35f5a16f91e4c82d675d6c1ac3a3fac9"
+      }
+    }
+  },
+  "prior_import_integration": {
+    "pr": 435,
+    "merge": "2b1e20e916162157145cbd40228f08a43b7e33f8",
+    "source": "031812f843f18ff58878490b1251d48fb3240d69",
+    "all12required_contexts_pass": true,
+    "normal_packaged_tui_import_accepted": true,
+    "receipt": "tui-pack-import-delivered-accepted-01.json",
+    "receipt_sha256": "2dc78eef7522abd2ff466ce06a6633ebbcc3f07971c0d2591d377d3697253d00",
+    "durable_comment": "https://github.com/Julesc013/factorio-launcher/pull/435#issuecomment-6237150700"
+  },
+  "independent_actual_review": {
+    "reviewer": "/root/tui_content_selection_review; non-author",
+    "file_in_custody": "evidence/pack-tui-interrupted-actual-review-01.json",
+    "sha256": "78a85f11164f0473f14c278ac568dffc3f518db31001b96a280d8a166191519d",
+    "verdict": "PASS_SCOPED_PACKAGED_TUI_INTERRUPTED_IMPORT_CANCEL_AND_ORDINARY_RECOVERY",
+    "findings": []
+  },
+  "custody": {
+    "file": "ordinary-tui-interrupted-import-custody.v1.zip",
+    "sha256": "4714acce2bd31d94f21c04521c053000dd9b130f695e4b7a5228986456a12025",
+    "bytes": 485455,
+    "entries": 133
+  },
+  "resources": {
+    "task_roots": 8,
+    "task_root_bytes_at_admission": 15281682115,
+    "new_builds": 0,
+    "new_downloads": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "new_clones": 0,
+    "vm_changes": false,
+    "original_package_unchanged": true,
+    "existing_lifetime_helper_reused_without_GUI_execution": true
+  },
+  "authority_delta": "none",
+  "workunit_closed": false,
+  "fullscreen": false,
+  "real_game": false,
+  "human": false,
+  "canonical_installed_desktop": false,
+  "beta": false,
+  "rc": false,
+  "release": false
+}

@@ -907,3 +907,29 @@ binary without another build. Independent test-diff review passes. Required
 new-head CI and original produced-package TUI acceptance remain pending.
 The goal stays active; the failed attempt and all evidence remain retained.
 Scoped correction custody: evidence/tui-pack-import-ci-oracle-custody.v1.zip.
+
+
+2026-10-18: PR435 normally integrated the TUI selected-instance correction at
+dev2b1e20e9. All12 required exact-head contexts passed on031812f8; original
+Windows artifact12107996258 passed ordinary Content input/confirmation
+cancellation and exact offline reconstruction. The prior source-record pending
+statements describe that earlier checkpoint; the delivered closeout and
+source-bound PR435 comment6237150700 resolve this bounded slice.
+The same unchanged original package now passes a fresh ordinary linear
+process-transport TUI interruption/recovery journey: explicit import reaches
+verified staging, one exact held-identity backend is deliberately interrupted,
+fresh Activity recovery confirmation cancellation preserves all tree bytes and
+native identities, and a new explicitly confirmed Activity request completes
+the same journal. Ordinary Home navigation then selects the reconstructed
+instance. Exact content, binary settings, provenance, rebound lock, source
+installation, foreign sentinel and original uncertainty receipt are preserved.
+Full pre-fault journal/request/marker bytes are retained in CAS. Three TUI
+parents and13 CLI Jobs exit normally and drain empty;25 observed descendants
+include exactly the declared backend fault, with all other observed exits0.
+Unobserved child exit codes are not asserted. Independent actual review passes.
+Preflights01/02 made no product effects;03 resolves directory observation,
+ordinary Home selection and final retention-budget checks before execution.
+No build, download, provider/VM change, clone or new task root occurred. Full
+F09/F11, canonical Desktop/PR404, real-game/human/host and Beta/RC gates remain
+open. Scoped receipt and compact custody: evidence/ordinary-tui-interrupted-import.v1.json
+and evidence/ordinary-tui-interrupted-import-custody.v1.zip.
