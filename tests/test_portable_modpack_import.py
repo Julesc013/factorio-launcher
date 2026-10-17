@@ -69,7 +69,8 @@ class PortableModpackImportTests(unittest.TestCase):
         self.assertEqual("Restored pack", manifest["display_name"])
         self.assertEqual(install, manifest["install_ref"])
         self.assertEqual(str(target), manifest["local_data_root"])
-        self.assertIn(str(target).replace("\\", "/"), (target / "config/config.ini").read_text().replace("\\", "/"))
+        self.assertIn(str(target).replace("\\", "/"),
+                      (target / "config/config.ini").read_text(encoding="utf-8").replace("\\", "/"))
         self.assertFalse((target / "mods/unselected_1.0.0.zip").exists())
         self.assertFalse((workspace / "modsets/reconstructed.modset-lock.v1.json").exists())
         self.assertFalse((workspace / ".facman-pack-import-reconstructed").exists())

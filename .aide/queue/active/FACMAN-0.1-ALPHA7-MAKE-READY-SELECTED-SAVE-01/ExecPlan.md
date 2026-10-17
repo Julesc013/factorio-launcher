@@ -890,3 +890,20 @@ the source build is not a delivered-package proof. No provider pin, authority,
 VM, checkout, task root or full F09/F11/Beta gate changed. Receipt and compact
 custody: evidence/tui-pack-import-context.v1.json and
 evidence/tui-pack-import-context-custody.v1.zip.
+
+
+2026-10-18: Required Windows CI on78c45dd6 rejected the candidate with one
+Unicode-path oracle failure and two existing late-recovery test sharing errors.
+Full API job logs retain the original2156-test failure; the shortened gh failed
+step view omitted its final tracebacks. The confirmed import had completed, but
+the config oracle decoded UTF-8 through CP1252. Explicit UTF-8 preserves the
+exact path assertion. The recovery test now freezes every workspace byte while
+the owner is still paused before its lease, adds only the exact test-owned go
+release-file expectation, then releases/joins before comparing all bytes.
+No exclusion, skip, refusal or content assertion was weakened. Both exact
+methods and all target/stage/journal cases pass on installed Python3.11.9 with
+UTF-8 mode disabled and CP1252 default, using the unchanged reviewed native
+binary without another build. Independent test-diff review passes. Required
+new-head CI and original produced-package TUI acceptance remain pending.
+The goal stays active; the failed attempt and all evidence remain retained.
+Scoped correction custody: evidence/tui-pack-import-ci-oracle-custody.v1.zip.

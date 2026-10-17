@@ -73,5 +73,46 @@
   "human": false,
   "beta": false,
   "rc": false,
-  "release": false
+  "release": false,
+  "ci_followup": {
+    "source": "78c45dd61a8a42a333c14be171dcfd17673294e8",
+    "run": 39035949753,
+    "failed_job": 117405624782,
+    "original_failed_suite": {
+      "tests": 2156,
+      "failures": 1,
+      "errors": 2,
+      "skips": 100
+    },
+    "causes": [
+      "UTF-8 config oracle decoded with CP1252 on Python3.11 Windows",
+      "Existing late-recovery preservation snapshot raced the exclusive lease after releasing its owner"
+    ],
+    "test_only_corrections": [
+      "Explicit UTF-8 config decoding retains exact Unicode path assertion",
+      "Snapshot all bytes before releasing owner; include exact own b'go' release file and compare all retained bytes after join"
+    ],
+    "new_runtime_changes": false,
+    "new_native_builds": 0,
+    "focused_tests": 2,
+    "late_recovery_subcases": [
+      "target",
+      "stage",
+      "journal"
+    ],
+    "focused_skips": 0,
+    "python": "3.11.9",
+    "utf8_mode": 0,
+    "default_text_encoding": "cp1252",
+    "focused_actual_result_sha256": "735ca11bd5b04a2942831cbab7f31305998e7ad7e4aaeb35dc1f1f76c4310dc4",
+    "independent_source_review_sha256": "030c6f98843a47eeade89f6f7425e59566dc1a8ff558a5b14a5862046c2ff811",
+    "custody": {
+      "file": "tui-pack-import-ci-oracle-custody.v1.zip",
+      "sha256": "2f7b2ca46d875694ec4a0c0f00bb98423b99d2b48d354da1bf1a52fa5ad43b40",
+      "bytes": 1852248
+    },
+    "full_workspace_and_refusal_assertions_retained": true,
+    "required_new_head_ci_pending": true,
+    "produced_windows_proof_pending": true
+  }
 }
