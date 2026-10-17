@@ -848,3 +848,25 @@ Desktop/PR404 owner control, real game, human/named-host and Beta/RC gates remai
 open. Receipt and compact hash-closed custody:
 evidence/ordinary-gui-pack-recovery.v1.json and
 evidence/ordinary-gui-pack-recovery-custody.v1.zip.
+
+
+2026-10-17: The planned delivered GUI interruption journey now passes on a new
+small synthetic fixture using original artifact12081497785/source da5b50a4,
+with equal-tree execution dev75248a59. Ordinary Content import received explicit
+confirmation, reached verified staging, and exactly one held-identity owned
+backend was deliberately interrupted. A fresh GUI Activity confirmation recovered
+the same transaction and selected the reconstructed instance. Twelve packaged CLI
+calls verify exact selected content, binary settings, provenance and rebound lock;
+source installation, producer, foreign sentinel and original uncertainty bytes
+remain preserved. Both GUI primaries exit0 and Jobs drain empty; the one declared
+backend fault is distinct from all other normal exits. Independent actual review
+accepts this bounded journey. The verified pre-fault journal has a retained hash
+and structured binding, without a full preimage CAS blob; the outer launcher has
+no separate owned-supervisor receipt. Earlier03/04/05 failures and failed05 child
+drain remain unchanged; preflight07 stopped before product execution on17 newline
+fingerprints, and08 binds current exact source bytes without content changes.
+No build/download, provider change, VM operation or new task root occurred.
+Full F09/F11, canonical installed Desktop/PR404, real game, human/named-host and
+Beta/RC/release gates remain open. Exact scoped receipt and compact custody:
+evidence/ordinary-gui-interrupted-import.v1.json and
+evidence/ordinary-gui-interrupted-import-custody.v1.zip.

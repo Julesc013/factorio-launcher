@@ -1,0 +1,179 @@
+{
+  "schema": "facman.delivered_gui_interrupted_import_accepted_slice.v1",
+  "verdict": "INDEPENDENTLY_ACCEPTED_SCOPED_GUI_INTENTIONAL_IMPORT_INTERRUPTION_AND_ORDINARY_RECOVERY",
+  "recorded_at_utc": "2026-10-17T06:24:14.448419+00:00",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "scope": "One fresh synthetic exported pack imported through actual delivered WinForms Content controls, one deliberately interrupted exact owned verified-import backend, ordinary fresh-GUI Activity recovery, exact offline reconstruction and process custody.",
+  "execution": {
+    "head": "75248a59af3303946eab691c6fe68ea6d15615e0",
+    "tree": "7276660bc4f1d43ebcb40536b36e9468376564ea",
+    "branch_at_execution": "dev",
+    "artifact_source": "da5b50a40290c1a749c2cbc36a92e2e3c79a61ac",
+    "producer_run": 38973103056,
+    "artifact": 12081497785,
+    "package_files": 604,
+    "manifest_files_verified": 603,
+    "original_archive_sha256": "f95249dbe2fe75300fe341e0bf88b842ca6b92e3f04acf6b69c75286386a488d",
+    "backend_sha256": "51640b9118fccfa9b65846c86049fe163138f35c88e8575baba6324efda3a198",
+    "gui_sha256": "ca17d88544e4ecfe95f2b48d5b4f69274eb4a96e3b3c35f64d656e915be200d3",
+    "provider_pins": {
+      "ULK": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "USK": "2749a15b835a6c1c9968598a2b434d85809691ad"
+    },
+    "plan_sha256": "47ae3cf96a8927d1f51a86897ea96237e0e300b4eb76a5d04a59594b2ac7d46f",
+    "result_sha256": "6623e568ce1983363ccdee386f13bdfd1182ec114c30f321db5eb1a0a1dd18be",
+    "launcher_result_sha256": "c111f63415f1e3256662a343caad6b097a7254f1864879c62d07103ae17b0850",
+    "source_cohort_sha256": "0eef0f4bf315b0c39880506de6b4e1db4691f475a130cf5fbdcc7ac2a15c3703",
+    "physical_source_files": 5189,
+    "scripts": {
+      "pack-gui-interrupted-fault-01.py": {
+        "sha256": "da5e41c4671120941232b390bf957acdecd14c48a84181edf88fa25df6cf61f0",
+        "ast_sha256": "21f9cc27c22843851fb7ff491bc436c1f4285d231eb73ae24c7b13af64a3b055",
+        "bytes": 6163
+      },
+      "pack-gui-interrupted-worker-08.py": {
+        "sha256": "83872419b43fdccc15919f55ae92c5f2c74c9cbade66f582d8c250c3974a9930",
+        "ast_sha256": "57390fb262e137f8d4a34a5fb35b9c802ba9efb36f7aa3b6305ee704e1810b11",
+        "bytes": 36733
+      },
+      "pack-gui-interrupted-probe-08.py": {
+        "sha256": "19cf2d9dc984eab121f10ff67d5eec3fe8b3472e7ca2301196f5361f4de028ef",
+        "ast_sha256": "c4a5ded38ec0a5b2e0aba8cd2ca91b9f37050e9e3f11a0e1cfecde3e06d73dad",
+        "bytes": 6321
+      },
+      "pack-gui-interrupted-launch-08.py": {
+        "sha256": "8d12400e8ee89f6616faec32f67e4dd5177a5996316da17b6caac076a7fd6c72",
+        "ast_sha256": "226170e83e0ffad5ee927f4fa5dc5f5f206a3a42fcd764ad766b5000d3118c3c",
+        "bytes": 6996
+      }
+    }
+  },
+  "ordinary_workflow": {
+    "import_action": "modsets.import",
+    "import_scope": "content",
+    "import_confirmation": "explicit",
+    "ordinary_template_id": "vanilla",
+    "recovery_action": "recovery.apply_supported",
+    "recovery_scope": "activity_recovery",
+    "recovery_confirmation": "explicit",
+    "transaction_id": "tx-e5cbe055e349874deb086ae594fafc12",
+    "interruption_journal_state": "verified",
+    "final_journal_state": "complete",
+    "selected_instance_id": "reconstructed",
+    "selected_display_name": "Restored pack",
+    "verified_published_files": 9,
+    "exact_archive_settings_provenance_rebound_lock": true,
+    "source_installation_and_foreign_sentinel_bytes_and_native_identities_preserved": true,
+    "original_uncertainty_receipt_state": "accepted_outcome_unknown",
+    "original_uncertainty_receipt_sha256": "10ef67ae087ee0a8b3a8d3e91dd8a5de21686bc033ed92ee757a64582ddc1cb7",
+    "original_uncertainty_bytes_unchanged": true,
+    "original_request_replayed": false,
+    "terminal_apply_dispatched": false,
+    "terminal_inspection_read_only": true,
+    "actual_cli_calls": 12
+  },
+  "process_lifetime": {
+    "intentional_faults": 1,
+    "intentional_fault_identity": {
+      "pid": 69868,
+      "process_identity": "69868:134366915601963253",
+      "image": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\g5\\bin\\facman.exe",
+      "exact_job_membership": true
+    },
+    "intentional_exit_code": 4198694913,
+    "fault_record_in_custody": "evidence/pack-gui-interrupted-raw-08/intentional-loss.json",
+    "sessions": [
+      {
+        "gui_pid": 31096,
+        "gui_exit_code": 0,
+        "gui_safety_termination": false,
+        "job_active_processes": 0,
+        "created_suspended": true,
+        "job_assigned_before_resume": true,
+        "packaged_backends": 33,
+        "windows_console_hosts": 33,
+        "descendant_exit_codes": {
+          "0": 65,
+          "4198694913": 1
+        }
+      },
+      {
+        "gui_pid": 75296,
+        "gui_exit_code": 0,
+        "gui_safety_termination": false,
+        "job_active_processes": 0,
+        "created_suspended": true,
+        "job_assigned_before_resume": true,
+        "packaged_backends": 33,
+        "windows_console_hosts": 33,
+        "descendant_exit_codes": {
+          "0": 66
+        }
+      }
+    ],
+    "all_other_observed_descendants_exited_zero": true,
+    "both_gui_jobs_empty": true,
+    "all_twelve_cli_and_finite_worker_strict_natural_empty_job": true,
+    "outer_launcher_started_directly_by_persistent_tool": true,
+    "outer_launcher_owned_supervisor_receipt": false
+  },
+  "independent_review": {
+    "reviewer": "/root/gui_import_review; non-author",
+    "verdict": "PASS_SCOPED_PACKAGED_GUI_INTERRUPTED_IMPORT_RECOVERY",
+    "file_in_custody": "evidence/pack-gui-interrupted-actual-review-08.json",
+    "sha256": "4ff4132017bffcfd14a84ceda75273f04c51297ecd316dd92dec8f9b9b8d1936",
+    "findings": []
+  },
+  "resources": {
+    "task_roots": 8,
+    "task_root_bytes_at_admission": 15287533004,
+    "known_unchanged_advisory": [
+      "unmanaged_secondary_worktrees_present"
+    ],
+    "fixture_bytes": 39020,
+    "raw_scenario_bytes": 367797,
+    "actual_scenario_seconds": 38.16121479985304,
+    "product_builds": 0,
+    "downloads": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "new_clones": 0,
+    "vm_changes": false,
+    "foreign_process_control": false,
+    "healthy_waiting_model_poll_calls": 0
+  },
+  "prior_evidence": {
+    "previous_ordinary_recovery_receipt": "ordinary-gui-pack-recovery.v1.json",
+    "previous_receipt_sha256": "5b8c9c9537736d220e1e4c214f59aa086bd03de335d78c1f335544a4107e330f",
+    "original03_04_05_failures_relabelled": false,
+    "prior05_child_drain_qualified": false,
+    "preflight07_newline_mismatch": {
+      "review_sha256": "ab57215de617c0b67c147e01aa3d80bfbb0267f9af071357503efc4da1c8abba",
+      "product_dispatched": false,
+      "source_content_changed": false,
+      "physical_line_endings_rebound_only": true
+    }
+  },
+  "limitations": [
+    "Verified pre-fault journal SHA and structured binding retained; its full original pre-fault journal bytes are not a CAS blob. Complete final journal bytes are retained.",
+    "No separate outer-launcher owned supervisor receipt; measured finite worker, all CLI jobs and both GUI jobs have retained strict lifetime evidence.",
+    "Synthetic fixture, offscreen owned controls and one verified-stage interruption only; no real game, genuine human observation, named/minimum host, all-phase interruption or torn-file repair acceptance.",
+    "Full F09/F11, canonical installed Desktop and PR404 owner control, WorkUnit close-after, Beta/RC/release gates remain open."
+  ],
+  "custody": {
+    "file": "ordinary-gui-interrupted-import-custody.v1.zip",
+    "sha256": "892b7de0c2bc7ee77fdece0c00b436b7de156d436eb70c5fbe6ecd147c6b8447",
+    "size_bytes": 1258723,
+    "entries": 161,
+    "uncompressed_bytes": 4742526,
+    "manifest_sha256": "2b0aa636c00529cca29190823b4e2bfff1e5cb9be5b3ff7aba504f79d8517378",
+    "all_entries_reopened_hash_checked": true
+  },
+  "integration": {
+    "branch": "task/facman-gui-pack-interruption-proof-01",
+    "target": "dev",
+    "branch_plan_sha256": "4e666c1de0b1b3e511ec52afaf3562fa8dbcb2328318b7a92cc67d945b92097b",
+    "runtime_or_product_source_changed": false,
+    "normal_required_checks_and_exact_head_integration_required": true
+  }
+}
