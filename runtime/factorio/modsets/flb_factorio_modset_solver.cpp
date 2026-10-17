@@ -10,6 +10,7 @@
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 #include "flb_factorio_modsets.h"
+#include "flb_factorio_content_records.h"
 
 #include <algorithm>
 #include <cctype>
@@ -1176,6 +1177,47 @@ facman::core::Result<std::string> apply(const fs::path& workspace, const Request
     auto resolved = resolve_plan(workspace, request);
     if (!resolved) return failure<std::string>(resolved.error().code, resolved.error().message, fs::u8path(resolved.error().path));
     return apply_plan(workspace, resolved.take_value());
+}
+
+facman::core::Result<std::string> verify_activation(const fs::path& mods_root,
+    const std::string& verified_lock)
+{
+    const fs::path path = mods_root / "mod-list.json";
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return failure<std::string>("modset_activation_unsafe", detail, path);
+    auto text = stable_text(path);
+    if (!text) return text;
+    json::Limits limits;
+    limits.maximum_bytes = kMaximumStateFileBytes;
+    limits.maximum_depth = 24U;
+    limits.maximum_nodes = 100000U;
+    auto document = json::parse(text.value(), limits);
+    const auto* mods = document ? document.value().find("mods") : nullptr;
+    if (!document || !document.value().is_object() || !mods || !mods->is_array())
+        return failure<std::string>("modset_activation_invalid", "Mod list must contain a mods array", path);
+    std::set<std::string> names, enabled;
+    for (std::size_t index = 0; index < mods->size(); ++index) {
+        const auto* item = mods->at(index);
+        const auto name = item ? field_string(*item, "name") : std::string();
+        const auto* flag = item ? item->find("enabled") : nullptr;
+        auto active = flag ? flag->bool_value() : facman::core::Result<bool>::success(false);
+        if (!item || !item->is_object() || !facman::base::validate_identifier(name, detail) ||
+            !flag || !active || !names.insert(name).second)
+            return failure<std::string>("modset_activation_invalid", "Mod list entries require unique names and boolean enabled flags", path);
+        if (active.value()) enabled.insert(name);
+    }
+    // Apply always writes base as enabled, even for legacy locks that omit it.
+    std::set<std::string> expected {"base"};
+    auto lock = facman::factorio::content::content_lock_from_modset_lock_json(verified_lock);
+    if (!lock) return failure<std::string>(lock.error().code, lock.error().message, path);
+    for (const auto& entry : lock.value().entries)
+        if (entry.enabled) expected.insert(entry.name);
+    if (enabled != expected) return failure<std::string>("modset_activation_drift",
+        "Enabled mod list differs from the verified lock; review and apply the instance modset", path);
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return failure<std::string>("modset_activation_unsafe", detail, path);
+    return facman::core::Result<std::string>::success(text.take_value());
 }
 
 facman::core::Result<std::string> rollback(const fs::path& workspace, const Request& request)

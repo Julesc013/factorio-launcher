@@ -44,6 +44,11 @@ facman::core::Result<std::string> explain(
 facman::core::Result<std::string> apply(
     const std::filesystem::path& workspace,
     const Request& request);
+// Readiness observes activation separately from archive/lock verification.
+// This never resolves a new selection or writes managed state.
+facman::core::Result<std::string> verify_activation(
+    const std::filesystem::path& mods_root,
+    const std::string& verified_lock);
 facman::core::Result<std::string> rollback(
     const std::filesystem::path& workspace,
     const Request& request);

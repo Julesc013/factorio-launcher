@@ -42,6 +42,18 @@ lock metadata cannot grant built-in provenance. Unselected local versions do not
 invalidate a solver selection. Human inventory and solver commands show the
 owner's package identities, selection, changes, explanation and rollback ID.
 
+Readiness additionally asks the content owner to verify activation: the bounded,
+unlinked `mods/mod-list.json` must enable exactly the verified lock's selected
+packages and `base`. Missing, malformed, duplicate, unsafe or mismatched entries
+block joined preparation. Disabled unselected entries and unrelated metadata are
+preserved; entry order and JSON formatting do not affect activation semantics.
+The exact file identity and bytes still participate in readiness revisions.
+The local and shared locks must agree when both are used for readiness.
+Review and explicitly confirm **Apply instance modset** on Content to repair
+activation, then refresh and confirm joined preparation for configuration and
+the selected save. Joined preparation does not yet reconcile pending content in
+that same request. Package-only `modsets verify` retains its existing meaning.
+
 `modsets export` packages the exact verified `modset-lock.v1.json`, a typed
 `modpack-manifest.v1.json`, and only the selected physical archives under `mods/`.
 The manifest projects the canonical content lock, binds the SHA-256 and size of

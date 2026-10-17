@@ -965,3 +965,28 @@ linear process TUI. Separate foreign-lock refusal, physical ext4/named-host/full
 human/game/canonical Desktop/PR404, full F09/F11 and Beta/RC/release gates remain open.
 Scoped receipt and compact custody: evidence/ordinary-linux-tui-pack-import.v1.json
 and evidence/ordinary-linux-tui-pack-import-custody.v1.zip.
+
+
+2026-10-18: A bounded activation-truth correction now makes readiness refuse
+missing, disabled, unexpected, malformed or unsafe mod-list activation against
+the same verified local/shared lock. The content owner parses activation; exact
+bytes and native file identity join readiness freshness and coherent rechecks.
+Package-only modsets.verify and joined v1 component contracts stay compatible.
+An explicitly confirmed ordinary Content Apply retains the locked version even
+with a newer local version available, preserves protected inputs, and permits
+joined configuration plus exact selected-save preparation. Original G6 proves
+the earlier false locked_verified/completed case without content repair.
+Final native focused6 (one file-symlink privilege skip), profile10, late-drift1,
+native smoke, strict and AIDE controls finish normally with empty owned Jobs.
+The mixed72-test run passes its assertions with2 classified skips; its shared
+C# compiler persists until the declared900s owned cleanup. That run is semantic
+evidence only and does not qualify natural compiler-descendant lifetime.
+Earlier failed oracle attempts and diagnostic prior-binary passes remain
+retained. Local qualification is source-bound synthetic Windows fixture proof.
+Fresh exact-head CI and independently reviewed original newly produced Windows
+package proof remain pending here; the later exact-source PR receipt must
+resolve that historical pending field before integration. Same-request content
+reconciliation, full Make Ready/F09/F11, real-game/human/canonical Desktop and
+Beta/RC/release gates remain open. The WorkUnit and programme stay active.
+Scoped receipt and compact custody: evidence/local-content-activation-readiness.v1.json
+and evidence/local-content-activation-readiness-custody.v1.zip.

@@ -17,6 +17,7 @@
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_mods.h"
 #include "flb_factorio_modset_operations.h"
+#include "flb_factorio_modset_solver.h"
 #include "flb_factorio_profiles.h"
 #include "flb_factorio_save_index.h"
 #include "flb_factorio_version_family.h"
@@ -722,6 +723,17 @@ std::string lock_input_identity(const fs::path& path)
     return "present:" + optional_evidence_identity(path);
 }
 
+facman::core::Result<FileObservation> activation_observation(const fs::path& path)
+{
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return fail<FileObservation>("instance_evidence_unsafe", detail, path);
+    auto observed = observe_file(path, 16U * 1024U * 1024U);
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return fail<FileObservation>("instance_evidence_unsafe", detail, path);
+    return observed;
+}
+
 void inspect_modset(Projection& projection, const fs::path& workspace)
 {
     workspace_store::WorkspaceLayout layout(workspace);
@@ -761,6 +773,11 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         return;
     }
 
+    const auto activation_file = activation_observation(mods_root / "mod-list.json");
+    const auto activation_identity = activation_file ? activation_file.value().identity :
+        "unavailable:" + activation_file.error().code;
+    projection.modset_artifacts.emplace_back("mod-list.json", activation_identity);
+
     std::string lock_detail;
     if (facman::base::path_crosses_link_or_reparse_point(lock_path, lock_detail)) {
         projection.modset_status = "invalid";
@@ -799,6 +816,18 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         return;
     }
     projection.mod_count = mods->size();
+    // Archive verification consumes the local owner lock. Activation and the
+    // readiness binding must describe that same selection, including when the
+    // projection found the shared copy first.
+    if (lock_path == shared) {
+        auto local_lock = observe_file(local);
+        if (!local_lock || local_lock.value().text != projection.modset_lock->text) {
+            projection.modset_status = "verification_failed";
+            projection.modset_detail = "Instance and shared modset locks disagree";
+            projection.modset_valid = false;
+            return;
+        }
+    }
     if (!projection.instance.factorio_version.empty() &&
         version != projection.instance.factorio_version) {
         projection.modset_status = "incompatible";
@@ -902,8 +931,23 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         projection.modset_valid = false;
         return;
     }
+    const auto activation = facman::factorio::modsets::solver::verify_activation(
+        mods_root, projection.modset_lock->text);
+    const auto activation_after = activation_observation(mods_root / "mod-list.json");
+    if (activation_file && (!activation_after || activation_file.value().identity != activation_after.value().identity))
+        projection.owner_inputs_changed = true;
+    // Bind the bytes whose enabled set the owner actually parsed, as well as
+    // the surrounding path observations; a restored edit must not mix them.
+    if (activation && activation_file && sha256_text(activation.value()) != activation_file.value().digest)
+        projection.owner_inputs_changed = true;
+    if (!activation || !activation_file) {
+        projection.modset_status = "verification_failed";
+        projection.modset_detail = activation ? "Mod list identity is unavailable" : activation.error().message;
+        projection.modset_valid = false;
+        return;
+    }
     projection.modset_status = "locked_verified";
-    projection.modset_detail = "The exact modset lock, artifacts, hashes, metadata, and compatibility verify";
+    projection.modset_detail = "The exact modset lock, activation, artifacts, hashes, metadata, and compatibility verify";
 }
 
 std::string optional_evidence_identity(const fs::path& path)
