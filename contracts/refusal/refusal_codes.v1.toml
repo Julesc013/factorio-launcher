@@ -1,6 +1,15 @@
 schema = "facman.refusal_codes.v1"
 
 required_codes = [
+  "lifecycle_refused",
+  "setup_move_apply_input_invalid",
+  "setup_move_apply_refused",
+  "setup_move_evidence_invalid",
+  "setup_move_closure_invalid",
+  "move_resource_admission_refused",
+  "move_recovery_indeterminate",
+  "move_recovery_projection_conflict",
+
   "invalid_identifier",
   "unsafe_managed_path",
   "persistent_target_exists",
@@ -2397,3 +2406,59 @@ severity = "blocked"
 effect = "setup_preview"
 retryable = true
 message = "Universal Setup refused the managed move plan."
+
+[[code]]
+id = "lifecycle_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup refused the lifecycle request because its current managed closure is not eligible."
+
+[[code]]
+id = "setup_move_apply_input_invalid"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Managed move apply requires the exact reviewed handoff and stable replay identities."
+
+[[code]]
+id = "setup_move_apply_refused"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Provider move entry did not prove an exact completed projection; retain evidence for recovery."
+
+[[code]]
+id = "setup_move_evidence_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Managed move evidence failed exact source, destination, provider or ownership binding."
+
+[[code]]
+id = "setup_move_closure_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "The complete move closure is unsafe, changed or exceeds the bounded materializing path."
+
+[[code]]
+id = "move_resource_admission_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Complete foreign-inclusive closure, available RAM or destination capacity exceeds bounded alpha move admission."
+
+[[code]]
+id = "move_recovery_indeterminate"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Move recovery preserves incomplete or ambiguous provider effects; no move finalizer is available."
+
+[[code]]
+id = "move_recovery_projection_conflict"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Managed move reference differs from the exact retained preimage or prepared postimage."

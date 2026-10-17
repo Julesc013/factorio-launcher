@@ -15,6 +15,8 @@ struct SetupApplyCommand {
     std::string success_message;
 };
 
+bool repair_plan_arguments_valid(const std::vector<std::string>& args);
+
 bool move_plan_arguments_valid(const std::vector<std::string>& args);
 
 std::optional<SetupApplyCommand> setup_apply_request(

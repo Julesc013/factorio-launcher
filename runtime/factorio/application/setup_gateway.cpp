@@ -8,6 +8,7 @@
 #include "fl_file_io.h"
 #include "fl_sha256.h"
 #include "fl_path_safety.h"
+#include "fl_system_services.h"
 
 #include <algorithm>
 #include <array>
@@ -31,6 +32,15 @@
 
 namespace facman::factorio::application {
 namespace testing {
+bool move_resource_observations_admit(std::uint64_t complete_bytes,
+    std::optional<std::uint64_t> available_memory,
+    std::optional<std::uint64_t> destination_free_bytes) noexcept
+{
+    // Bound first: multiplication cannot overflow even for hostile observations.
+    if (complete_bytes > (256ull << 20) || !available_memory || !destination_free_bytes) return false;
+    return *available_memory >= 2U * complete_bytes + (128ull << 20) + (512ull << 20) &&
+        *destination_free_bytes >= 2U * complete_bytes + (64ull << 20) + (512ull << 20);
+}
 namespace { thread_local MovePlanRevalidationObserver move_plan_revalidation_observer; }
 MovePlanRevalidationObserver exchange_move_plan_revalidation_observer(
     MovePlanRevalidationObserver observer) noexcept
@@ -91,6 +101,14 @@ public:
     facman::core::Result<MovePlan> plan_move(const MovePlanRequest&) override
     {
         return facman::core::Result<MovePlan>::failure(unavailable_error());
+    }
+    facman::core::Result<MoveInspection> apply_move(const MoveApplyRequest&) override
+    {
+        return facman::core::Result<MoveInspection>::failure(unavailable_error());
+    }
+    facman::core::Result<MoveInspection> inspect_move_recovery(const MoveApplyRequest&) override
+    {
+        return facman::core::Result<MoveInspection>::failure(unavailable_error());
     }
     facman::core::Result<RepairPlan> plan_repair(const RepairPlanRequest&) override
     {
@@ -383,12 +401,12 @@ facman::core::Result<std::string> uninstall_report_digest(
 bool lifecycle_matches(const std::string& facman_lifecycle, const std::string& usk_lifecycle)
 {
     if (facman_lifecycle == "active") {
-        return usk_lifecycle == "installed" || usk_lifecycle == "verified" ||
-            usk_lifecycle == "move_pending_acceptance";
+        return usk_lifecycle == "installed" || usk_lifecycle == "verified";
     }
     if (facman_lifecycle == "verification_failed") {
         return usk_lifecycle == "repair_required" || usk_lifecycle == "uninstall_blocked";
     }
+    if (facman_lifecycle == "move_pending_acceptance") return usk_lifecycle == "move_pending_acceptance";
     return facman_lifecycle == "recovery_required" && usk_lifecycle == "recovery_required";
 }
 
@@ -787,6 +805,102 @@ facman::core::Result<UninstallPlan> decode_uninstall_plan(
     return facman::core::Result<UninstallPlan>::success(std::move(result));
 }
 
+using MoveFiles = std::map<std::string, std::pair<std::string, std::uint64_t>>;
+facman::core::Result<MoveFiles> read_move_files(const std::filesystem::path& root)
+{
+    const auto fail = [](const char* detail) { return facman::core::Result<MoveFiles>::failure({
+        "setup_move_closure_invalid", "Complete move closure is unsafe or exceeds the bounded alpha limit", detail}); };
+    std::map<std::string, std::pair<std::string, std::uint64_t>> observed;
+    std::vector<std::filesystem::path> pending {root};
+    std::uint64_t total = 0;
+    std::size_t entries_seen = 0;
+    try {
+        while (!pending.empty()) {
+            const auto directory = pending.back(); pending.pop_back();
+            std::string unsafe;
+            if (facman::base::path_crosses_link_or_reparse_point(directory, unsafe)) return fail("linked closure");
+            for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+                if (++entries_seen > 16384 || facman::base::path_crosses_link_or_reparse_point(entry.path(), unsafe))
+                    return fail("unsafe closure");
+                const auto status = entry.symlink_status();
+                if (std::filesystem::is_directory(status)) { pending.push_back(entry.path()); continue; }
+                if (!std::filesystem::is_regular_file(status) || observed.size() >= 4096) return fail("closure type or budget");
+                const std::string relative = entry.path().lexically_relative(root).generic_u8string();
+                if (!safe_relative_path(relative)) return fail("closure path");
+                facman::platform::StableInputFile file;
+                if (!file.open_no_follow(entry.path()).ok() || !file.identity().regular_file ||
+                    file.size() > (256ull << 20) || total > (256ull << 20) - file.size()) return fail("closure file or budget");
+                total += file.size();
+                facman::base::Sha256Hasher hasher;
+                std::array<unsigned char, 65536> buffer;
+                std::uint64_t offset = 0;
+                while (offset < file.size()) {
+                    const auto count = file.read_at(offset, buffer.data(), static_cast<std::size_t>(
+                        std::min<std::uint64_t>(buffer.size(), file.size() - offset)));
+                    if (count == 0) return fail("closure read");
+                    hasher.update(buffer.data(), count); offset += count;
+                }
+                const std::string digest = hasher.finish();
+                if (!file.revalidate().ok() || !file.revalidate_path().ok()) return fail("closure changed");
+                if (!observed.emplace(relative, std::make_pair(digest, file.size())).second) return fail("duplicate closure path");
+            }
+        }
+    } catch (const std::exception&) { return fail("closure unavailable"); }
+    return facman::core::Result<MoveFiles>::success(std::move(observed));
+}
+
+facman::core::Result<bool> admit_move_capacity(std::uint64_t bytes, const std::filesystem::path& parent)
+{
+    std::error_code error;
+    const auto space = std::filesystem::space(parent, error);
+    auto memory = facman::platform::available_physical_memory_bytes();
+    if (!testing::move_resource_observations_admit(bytes,
+            memory ? std::optional<std::uint64_t>(memory.value()) : std::nullopt,
+            error ? std::nullopt : std::optional<std::uint64_t>(space.available)))
+        return facman::core::Result<bool>::failure({"move_resource_admission_refused",
+            "Complete closure, destination space or available RAM exceeds bounded move admission",
+            "256MiB complete closure; conservative double materialization/staging plus reserves"});
+    return facman::core::Result<bool>::success(true);
+}
+
+facman::core::Result<bool> admit_move_closure_capacity(
+    const std::filesystem::path& root, const std::filesystem::path& parent)
+{
+    using Result = facman::core::Result<bool>;
+    const auto fail = [](const char* code, const char* detail) {
+        return Result::failure({code, "Complete move closure resource admission refused", detail});
+    };
+    std::vector<std::filesystem::path> pending {root};
+    std::size_t entries_seen = 0, files_seen = 0;
+    std::uint64_t bytes = 0;
+    try {
+        while (!pending.empty()) {
+            const auto directory = pending.back(); pending.pop_back();
+            std::string unsafe;
+            if (facman::base::path_crosses_link_or_reparse_point(directory, unsafe))
+                return fail("ownership_denied", "Linked closure directory");
+            for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+                if (++entries_seen > 16384)
+                    return fail("move_resource_admission_refused", "Complete closure exceeds16384entries");
+                if (facman::base::path_crosses_link_or_reparse_point(entry.path(), unsafe))
+                    return fail("ownership_denied", "Linked closure entry");
+                const auto status = entry.symlink_status();
+                if (std::filesystem::is_directory(status)) { pending.push_back(entry.path()); continue; }
+                if (!std::filesystem::is_regular_file(status)) return fail("ownership_denied", "Unsupported closure entry");
+                facman::platform::StableInputFile file;
+                if (!file.open_no_follow(entry.path()).ok() || !file.identity().regular_file)
+                    return fail("ownership_denied", "Unobservable closure file");
+                if (++files_seen > 4096 || file.size() > (256ull << 20) || bytes > (256ull << 20) - file.size())
+                    return fail("move_resource_admission_refused", "Complete closure exceeds256MiB/4096files");
+                bytes += file.size();
+                if (!file.revalidate().ok() || !file.revalidate_path().ok())
+                    return fail("stale_plan", "Complete closure changed during resource admission");
+            }
+        }
+    } catch (const std::exception&) { return fail("ownership_denied", "Complete closure unavailable"); }
+    return admit_move_capacity(bytes, parent);
+}
+
 facman::core::Result<MovePlan> decode_move_plan(
     const std::string& response,
     const MovePlanRequest& move,
@@ -920,44 +1034,14 @@ facman::core::Result<MovePlan> decode_move_plan(
     // private digest payload. Copy labels include foreign files; ownership is
     // never inferred from the effect label. Enumerate without following links.
     facman::core::json::ArrayBuilder complete_files;
-    std::map<std::string, std::pair<std::string, std::uint64_t>> observed;
-    std::vector<std::filesystem::path> pending {installed.target};
-    std::uint64_t total = 0;
-    std::size_t entries_seen = 0;
-    try {
-        while (!pending.empty()) {
-            const auto directory = pending.back(); pending.pop_back();
-            std::string unsafe;
-            if (facman::base::path_crosses_link_or_reparse_point(directory, unsafe)) return invalid("linked closure");
-            for (const auto& entry : std::filesystem::directory_iterator(directory)) {
-                if (++entries_seen > 1000000 || facman::base::path_crosses_link_or_reparse_point(entry.path(), unsafe))
-                    return invalid("unsafe closure");
-                const auto status = entry.symlink_status();
-                if (std::filesystem::is_directory(status)) { pending.push_back(entry.path()); continue; }
-                if (!std::filesystem::is_regular_file(status) || observed.size() >= 100000) return invalid("closure type or budget");
-                const std::string relative = entry.path().lexically_relative(installed.target).generic_u8string();
-                if (!safe_relative_path(relative)) return invalid("closure path");
-                facman::platform::StableInputFile file;
-                if (!file.open_no_follow(entry.path()).ok() || !file.identity().regular_file ||
-                    file.size() > (1ull << 32) || total > (1ull << 34) - file.size()) return invalid("closure file or budget");
-                total += file.size();
-                facman::base::Sha256Hasher hasher;
-                std::array<unsigned char, 65536> buffer;
-                std::uint64_t offset = 0;
-                while (offset < file.size()) {
-                    const auto count = file.read_at(offset, buffer.data(), static_cast<std::size_t>(
-                        std::min<std::uint64_t>(buffer.size(), file.size() - offset)));
-                    if (count == 0) return invalid("closure read");
-                    hasher.update(buffer.data(), count); offset += count;
-                }
-                const std::string digest = hasher.finish();
-                if (!file.revalidate().ok() || !file.revalidate_path().ok()) return invalid("closure changed");
-                const auto expected = copied_paths.find(relative);
-                if (expected == copied_paths.end() || expected->second != digest ||
-                    !observed.emplace(relative, std::make_pair(digest, file.size())).second) return invalid("copy coverage or digest");
-            }
-        }
-    } catch (const std::exception&) { return invalid("closure unavailable"); }
+    auto files = read_move_files(installed.target);
+    if (!files) return invalid("closure unavailable or exceeds bounded alpha limit");
+    const auto& observed = files.value();
+    for (const auto& file : observed) {
+        const auto expected = copied_paths.find(file.first);
+        if (expected == copied_paths.end() || expected->second != file.second.first)
+            return invalid("copy coverage or digest");
+    }
     if (observed.size() != copied_paths.size()) return invalid("copy coverage");
     for (const auto& file : observed) {
         facman::core::json::ObjectBuilder item;
@@ -997,13 +1081,16 @@ facman::core::Result<MovePlan> decode_move_plan(
     result.plan_id = string_field(*payload, "plan_id");
     result.plan_digest = string_field(*payload, "plan_digest");
     result.provider_response = payload->serialize();
+    result.private_plan = canonical.value();
     facman::core::json::ObjectBuilder output;
     output.add_string("schema", "facman.managed_move_plan.v1");
     output.add_value("provider_plan", *payload);
     output.add_string("copy_scope", "complete_source_files_including_foreign");
     output.add_bool("grants_ownership", false);
     output.add_string("empty_directory_preservation", "not_promised");
-    output.add_bool("apply_available", false);
+    output.add_bool("apply_available", true);
+    output.add_string("apply_scope", "verified_new_root_old_retained_pending_acceptance");
+    output.add_string("install_record_sha256", move.install_record_sha256);
     output.add_bool("observation_atomic", false);
     result.public_response = output.serialize();
     return facman::core::Result<MovePlan>::success(std::move(result));
@@ -1824,6 +1911,198 @@ facman::core::Result<facman::factorio::setup::ArchiveInspection> decode_archive_
         std::move(inspection));
 }
 
+namespace json = facman::core::json;
+
+std::string move_digest(const std::string& text)
+{
+    return facman::base::sha256_hex_bytes(reinterpret_cast<const unsigned char*>(text.data()), text.size());
+}
+
+facman::core::Error move_invalid(const std::string& detail)
+{
+    return {"setup_move_evidence_invalid", "Managed move evidence is not an exact retained identity", detail};
+}
+
+facman::core::Result<MoveFiles> decode_move_private_plan(
+    const MoveApplyRequest& request, const InspectedInstallState& prior,
+    const SetupConfiguration& configuration)
+{
+    using Result = facman::core::Result<MoveFiles>;
+    json::Limits limits;
+    limits.maximum_bytes = 1024U * 1024U;
+    limits.maximum_string_bytes = 32768;
+    limits.maximum_nodes = 100000;
+    auto parsed = json::parse(request.private_plan, limits);
+    if (!parsed || !exact_members(parsed.value(), {"audit_root", "complete_files", "created_at",
+            "install_id", "installed_state_digest", "old_root", "operation", "ownership_manifest_digest",
+            "policy_digest", "plan_id", "new_root", "staging_parent", "state_root"}))
+        return Result::failure(move_invalid("private plan shape or bound"));
+    const auto& value = parsed.value();
+    auto canonical = json::canonical_integer_json(value);
+    const auto setup = facman::platform::path_from_utf8(configuration.state_root).lexically_normal();
+    const auto& plan = request.plan_request;
+    if (!canonical || canonical.value() != request.private_plan ||
+        move_digest(canonical.value()) != request.reviewed_plan_digest ||
+        string_field(value, "created_at") != plan.installed.created_at ||
+        string_field(value, "install_id") != plan.installed.install_id ||
+        string_field(value, "plan_id") != plan.installed.plan_id ||
+        string_field(value, "operation") != "move" ||
+        string_field(value, "installed_state_digest") != prior.installed_state_digest ||
+        string_field(value, "ownership_manifest_digest") != prior.ownership_manifest_digest ||
+        !sha256_field(string_field(value, "policy_digest")) ||
+        !normalized_absolute_path(string_field(value, "old_root"), prior.target) ||
+        !normalized_absolute_path(string_field(value, "new_root"), plan.destination) ||
+        !normalized_absolute_path(string_field(value, "staging_parent"), plan.destination.parent_path()) ||
+        !normalized_absolute_path(string_field(value, "state_root"), setup / "state") ||
+        !normalized_absolute_path(string_field(value, "audit_root"), setup / "audit") ||
+        request.acceptance_root != configuration.acceptance_root)
+        return Result::failure(move_invalid("private plan/root/state/policy configuration binding"));
+    const auto* files = value.find("complete_files");
+    if (!files || !files->is_array() || files->size() == 0 || files->size() > 4096)
+        return Result::failure(move_invalid("complete file count"));
+    MoveFiles result;
+    std::uint64_t bytes = 0;
+    for (std::size_t index = 0; index < files->size(); ++index) {
+        const auto* file = files->at(index);
+        const auto* size = file ? file->find("size_bytes") : nullptr;
+        if (!file || !exact_members(*file, {"relative_path", "sha256", "size_bytes"}) ||
+            !safe_relative_path(string_field(*file, "relative_path")) ||
+            !sha256_field(string_field(*file, "sha256")) || !size || !size->unsigned_integer_value())
+            return Result::failure(move_invalid("complete file entry"));
+        const auto count = size->unsigned_integer_value().value();
+        if (count > (256ull << 20) || bytes > (256ull << 20) - count ||
+            !result.emplace(string_field(*file, "relative_path"),
+                std::make_pair(string_field(*file, "sha256"), count)).second)
+            return Result::failure(move_invalid("complete file bytes or duplicate"));
+        bytes += count;
+    }
+    return Result::success(std::move(result));
+}
+
+facman::core::Result<json::Value> read_move_ownership(
+    const std::filesystem::path& path, const InspectedInstallState& installed)
+{
+    using Result = facman::core::Result<json::Value>;
+    auto text = read_provider_snapshot(path);
+    auto parsed = text ? json::parse(text.value()) : Result::failure(move_invalid("ownership unavailable"));
+    if (!parsed || !exact_members(parsed.value(), {"schema", "manifest_id", "manifest_digest", "install_id",
+            "target_root", "created_by_transaction_id", "files", "directories"}) ||
+        string_field(parsed.value(), "schema") != "usk.ownership_manifest.v1" ||
+        string_field(parsed.value(), "manifest_digest") != installed.ownership_manifest_digest ||
+        !normalized_absolute_path(string_field(parsed.value(), "target_root"), installed.target))
+        return Result::failure(move_invalid("ownership identity"));
+    auto canonical = json::canonical_integer_object_without(parsed.value(), "manifest_digest");
+    if (!canonical || move_digest(canonical.value()) != installed.ownership_manifest_digest)
+        return Result::failure(move_invalid("ownership digest"));
+    return parsed;
+}
+
+facman::core::Result<MoveInspection> bind_move_terminal(
+    const std::string& response, const MoveApplyRequest& request,
+    const InspectedInstallState& prior, const SetupConfiguration& configuration,
+    const UninstallProviderRecoveryReport& recovery)
+{
+    using Result = facman::core::Result<MoveInspection>;
+    auto parsed = json::parse(response);
+    const json::Value* state = nullptr;
+    if (!parsed || !response_envelope(parsed.value(), state))
+        return Result::failure(move_invalid("terminal state envelope"));
+    const auto* verification = state->find("last_verification");
+    const auto* abi = state->find("setup_abi");
+    const auto* components = state->find("component_selection");
+    const auto* entrypoints = state->find("entrypoints");
+    if (!verification || !exact_members(*verification, {"report_digest", "report_id", "status", "verified_at"}) ||
+        string_field(*verification, "report_id") != "verify." + request.transaction_id + ".new" ||
+        string_field(*verification, "verified_at") != request.applied_at ||
+        (string_field(*verification, "status") != "pass" && string_field(*verification, "status") != "warn") ||
+        !sha256_field(string_field(*verification, "report_digest")) ||
+        !abi || !exact_members(*abi, {"major", "minor", "provider_revision"}) ||
+        !abi->find("major")->unsigned_integer_value() || !abi->find("minor")->unsigned_integer_value() ||
+        abi->find("major")->unsigned_integer_value().value() != prior.setup_abi_major ||
+        abi->find("minor")->unsigned_integer_value().value() != prior.setup_abi_minor ||
+        string_field(*abi, "provider_revision") != prior.provider_revision ||
+        !components || components->serialize() != prior.component_selection ||
+        !entrypoints || entrypoints->serialize() != prior.entrypoints ||
+        string_field(*state, "product_id") != prior.product_id ||
+        string_field(*state, "product_version") != prior.product_version ||
+        string_field(*state, "recipe_digest") != prior.recipe_digest ||
+        string_field(*state, "source_archive_digest") != prior.source_digest ||
+        string_field(*state, "audit_chain_id") != prior.audit_chain_id ||
+        string_field(*state, "transaction_id") != request.transaction_id ||
+        string_field(*state, "created_at") != request.applied_at ||
+        string_field(*state, "lifecycle_status") != "move_pending_acceptance" ||
+        string_field(*state, "ownership_manifest_ref") != "ownership/ownership." +
+            request.plan_request.installed.install_id + "." + request.transaction_id + ".json")
+        return Result::failure(move_invalid("terminal immutable identity and pending-acceptance lifecycle"));
+    UninstallPlanRequest binding = request.plan_request.installed;
+    binding.target = request.plan_request.destination;
+    const auto setup = facman::platform::path_from_utf8(configuration.state_root).lexically_normal();
+    binding.setup_state_ref = facman::platform::path_to_utf8(setup / "state" / "installed" /
+        (binding.install_id + "." + request.transaction_id + ".json"));
+    binding.last_verification_identity = string_field(*verification, "report_digest");
+    binding.state_revision = request.transaction_id + ":" + string_field(*state, "ownership_manifest_digest");
+    binding.lifecycle_status = "move_pending_acceptance";
+    auto terminal = decode_installed_state(response, binding, configuration);
+    auto immutable = decode_prior_installed_snapshot(binding, configuration);
+    if (!terminal || !immutable || terminal.value().installed_state_digest != immutable.value().installed_state_digest)
+        return Result::failure(move_invalid("latest pointer and exact immutable new state"));
+    if (!safe_relative_path(prior.ownership_manifest_ref) ||
+        prior.ownership_manifest_ref.rfind("ownership/", 0) != 0 ||
+        prior.ownership_manifest_ref.find('/', 10) != std::string::npos)
+        return Result::failure(move_invalid("unsafe prior ownership reference"));
+    auto old_ownership = read_move_ownership(setup / "state" / facman::platform::path_from_utf8(prior.ownership_manifest_ref), prior);
+    auto new_ownership = read_move_ownership(setup / "state" / facman::platform::path_from_utf8(terminal.value().ownership_manifest_ref), terminal.value());
+    if (!old_ownership || !new_ownership ||
+        string_field(new_ownership.value(), "install_id") != binding.install_id ||
+        string_field(new_ownership.value(), "manifest_id") != "ownership." + binding.install_id + "." + request.transaction_id ||
+        string_field(new_ownership.value(), "created_by_transaction_id") != request.transaction_id ||
+        !old_ownership.value().find("files") || !new_ownership.value().find("files") ||
+        !old_ownership.value().find("directories") || !new_ownership.value().find("directories") ||
+        old_ownership.value().find("files")->serialize() != new_ownership.value().find("files")->serialize() ||
+        old_ownership.value().find("directories")->serialize() != new_ownership.value().find("directories")->serialize())
+        return Result::failure(move_invalid("owned membership changed; foreign copies confer no ownership"));
+    bool audit_bound = false;
+    std::size_t event_count = 0;
+    const auto chain = setup / "audit" / "chains" / prior.audit_chain_id;
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(chain)) {
+            if (++event_count > 4096) return Result::failure(move_invalid("audit observation budget"));
+            auto text = read_provider_snapshot(entry.path());
+            auto event = text ? json::parse(text.value()) : facman::core::Result<json::Value>::failure(move_invalid("audit event"));
+            if (!event) return Result::failure(move_invalid("audit event unavailable"));
+            if (string_field(event.value(), "event_digest") != recovery.audit_chain_digest) continue;
+            const auto* subject = event.value().find("subject");
+            if (audit_bound || string_field(event.value(), "operation") != "move" ||
+                string_field(event.value(), "phase") != "completed" ||
+                string_field(event.value(), "status") != string_field(*verification, "status") ||
+                string_field(event.value(), "transaction_id") != request.transaction_id ||
+                string_field(event.value(), "plan_id") != binding.plan_id ||
+                string_field(event.value(), "created_at") != request.applied_at ||
+                string_field(event.value(), "details_digest") != binding.last_verification_identity ||
+                !subject || string_field(*subject, "subject_type") != "installation" ||
+                string_field(*subject, "subject_id") != binding.install_id)
+                return Result::failure(move_invalid("completed move audit binding"));
+            audit_bound = true;
+        }
+    } catch (const std::exception&) { return Result::failure(move_invalid("audit path unavailable")); }
+    if (!audit_bound || recovery.audit_chain_id != prior.audit_chain_id)
+        return Result::failure(move_invalid("completed move audit absent"));
+    MoveInspection result;
+    result.classification = "provider_move_completed";
+    result.provider_observed_state = recovery.observed_state;
+    result.provider_journal_present = true;
+    result.provider_journal_digest = recovery.journal_digest;
+    result.provider_journal_snapshot_sha256 = recovery.snapshot_sha256;
+    result.provider_audit_chain_digest = recovery.audit_chain_digest;
+    result.installed_state_digest = terminal.value().installed_state_digest;
+    result.ownership_manifest_digest = terminal.value().ownership_manifest_digest;
+    result.setup_state_ref = binding.setup_state_ref;
+    result.last_verification_identity = binding.last_verification_identity;
+    result.state_revision = binding.state_revision;
+    result.verification_status = string_field(*verification, "status");
+    return Result::success(std::move(result));
+}
+
 class UskSetupGateway final : public SetupGateway {
 public:
     explicit UskSetupGateway(SetupConfiguration configuration)
@@ -2476,7 +2755,8 @@ public:
         const auto& request = move.installed;
         if (request.request_id.empty() || request.request_id != request.plan_id || request.install_id.empty() ||
             !valid_utc_seconds(request.created_at) || request.target.empty() || request.setup_state_ref.empty() ||
-            request.last_verification_identity.empty() || request.state_revision.empty() || request.lifecycle_status.empty())
+            request.last_verification_identity.empty() || request.state_revision.empty() || request.lifecycle_status.empty() ||
+            !sha256_field(move.install_record_sha256))
             return fail("invalid_argument", "Move requires exact plan and installed-record identities");
         auto target = absolute_normalized(request.target, "current target");
         auto destination = absolute_normalized(move.destination, "destination");
@@ -2498,26 +2778,6 @@ public:
             return fail("invalid_argument", "Move destination must be absent");
         if (error && error != std::errc::no_such_file_or_directory)
             return fail("ownership_denied", "Move destination cannot be inspected");
-        // Refuse every observed link/junction before the provider reads the complete closure.
-        std::vector<std::filesystem::path> pending {target.value()};
-        std::size_t entries_seen = 0;
-        try {
-            while (!pending.empty()) {
-                const auto directory = pending.back(); pending.pop_back();
-                std::filesystem::directory_iterator entries(directory, error);
-                if (error) return fail("ownership_denied", "Current closure cannot be enumerated safely");
-                for (const auto& entry : entries) {
-                    if (++entries_seen > 1000000 || facman::base::path_crosses_link_or_reparse_point(entry.path(), unsafe))
-                        return fail("ownership_denied", "Current closure contains a link or exceeds the observation budget");
-                    const auto status = entry.symlink_status(error);
-                    if (error || (!std::filesystem::is_directory(status) && !std::filesystem::is_regular_file(status)))
-                        return fail("ownership_denied", "Current closure has an unsafe entry");
-                    if (std::filesystem::is_directory(status)) pending.push_back(entry.path());
-                }
-            }
-        } catch (const std::exception&) {
-            return fail("ownership_denied", "Current closure changed or cannot be enumerated safely");
-        }
         facman::core::json::ObjectBuilder inspect;
         inspect.add_string("schema", "usk.installed_inspect_request.v1");
         inspect.add_string("request_id", request.request_id + ".inspect");
@@ -2536,6 +2796,8 @@ public:
         new_target.add_string("root", destination.value().generic_u8string());
         new_target.add_string("class", "operator_acceptance");
         payload.add_object("new_target", new_target);
+        auto capacity = admit_move_closure_capacity(target.value(), destination.value().parent_path());
+        if (!capacity) return fail(capacity.error().code, capacity.error().message);
         auto response = execute_setup("move.plan", payload.serialize(), configuration_);
         if (!response) return facman::core::Result<MovePlan>::failure(provider_error(response.error(),
             "setup_move_plan_refused", "Universal Setup refused the managed move plan"));
@@ -2544,6 +2806,8 @@ public:
         if (testing::move_plan_revalidation_observer) testing::move_plan_revalidation_observer();
         // Rebuild the same read-only plan: its digest binds the complete current
         // closure and both live policy decisions, which the public shape omits.
+        capacity = admit_move_closure_capacity(target.value(), destination.value().parent_path());
+        if (!capacity) return fail(capacity.error().code, capacity.error().message);
         auto repeated = execute_setup("move.plan", payload.serialize(), configuration_);
         if (!repeated) return fail("stale_plan", "Move inputs changed during planning");
         auto revalidated = decode_move_plan(repeated.value(), move, before.value(), configuration_);
@@ -2552,6 +2816,191 @@ public:
             !after_response || after_response.value() != before_response.value())
             return fail("stale_plan", "Provider state, closure, policy, or destination changed during planning");
         return plan;
+    }
+
+    facman::core::Result<MoveInspection> inspect_move_recovery(const MoveApplyRequest& request) override
+    {
+        using Result = facman::core::Result<MoveInspection>;
+        const auto& plan = request.plan_request.installed;
+        if (!configuration_.mutation_configured() || !valid_utc_seconds(plan.created_at) ||
+            !valid_utc_seconds(request.applied_at) || request.applied_at <= plan.created_at ||
+            !facman::core::TransactionId::parse(request.transaction_id) ||
+            !facman::core::InstallId::parse_legacy(plan.install_id) ||
+            plan.request_id != plan.plan_id || !sha256_field(request.reviewed_plan_digest) ||
+            !sha256_field(request.plan_request.install_record_sha256))
+            return Result::failure(move_invalid("request or configured authority"));
+        const auto setup = facman::platform::path_from_utf8(configuration_.state_root).lexically_normal();
+        const auto destination = request.plan_request.destination;
+        const auto journal = setup / "state" / "transactions" / (request.transaction_id + ".journal.json");
+        const auto staging = destination.parent_path() / (".usk-stage-" + request.transaction_id);
+        const auto presence = [](const std::filesystem::path& path) -> int {
+            std::string unsafe;
+            std::error_code error;
+            const auto status = std::filesystem::symlink_status(path, error);
+            if ((error && error != std::errc::no_such_file_or_directory) ||
+                facman::base::path_crosses_link_or_reparse_point(path, unsafe)) return -1;
+            return std::filesystem::exists(status) ? 1 : 0;
+        };
+        if (!destination.is_absolute() || destination != destination.lexically_normal() ||
+            !plan.target.is_absolute() || plan.target != plan.target.lexically_normal() ||
+            presence(destination) < 0 || presence(journal) < 0 || presence(staging) < 0)
+            return Result::failure(move_invalid("redirected or invalid move roots"));
+        auto prior = decode_prior_installed_snapshot(plan, configuration_);
+        if (!prior) return Result::failure(prior.error());
+        auto expected = decode_move_private_plan(request, prior.value(), configuration_);
+        auto source = read_move_files(plan.target);
+        if (!expected || !source || source.value() != expected.value())
+            return Result::failure(move_invalid("retained complete source changed"));
+        const auto inspect_current = [&]() {
+            json::ObjectBuilder payload;
+            payload.add_string("schema", "usk.installed_inspect_request.v1");
+            payload.add_string("request_id", plan.plan_id + ".move.terminal.inspect");
+            payload.add_string("install_id", plan.install_id);
+            return execute_setup("installed.inspect", payload.serialize(), configuration_);
+        };
+        auto current = inspect_current();
+        if (!current) return Result::failure(current.error());
+        if (presence(journal) == 0) {
+            auto unchanged = decode_installed_state(current.value(), plan, configuration_);
+            MoveInspection result;
+            result.classification = "indeterminate";
+            auto repeated = inspect_current();
+            auto retained = read_move_files(plan.target);
+            if (unchanged && unchanged.value().installed_state_digest == prior.value().installed_state_digest &&
+                repeated && repeated.value() == current.value() && retained && retained.value() == expected.value() &&
+                presence(journal) == 0 && presence(destination) == 0 && presence(staging) == 0) {
+                // The handler additionally requires its durable PRE-entry phase.
+                result.classification = "no_provider_effect";
+                result.installed_state_digest = prior.value().installed_state_digest;
+            }
+            return Result::success(std::move(result));
+        }
+        json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.recovery_inspect_request.v1");
+        payload.add_string("request_id", plan.plan_id + ".facman.recovery.inspect");
+        payload.add_string("install_id", plan.install_id);
+        payload.add_string("transaction_id", request.transaction_id);
+        payload.add_string("plan_id", plan.plan_id);
+        payload.add_string("plan_digest", request.reviewed_plan_digest);
+        payload.add_string("operation", "move");
+        payload.add_string("target_root", facman::platform::path_to_utf8(destination));
+        auto response = execute_setup("recovery.inspect", payload.serialize(), configuration_);
+        if (!response) return Result::failure(response.error());
+        // This existing decoder validates the shared public recovery-report contract.
+        UninstallRecoveryRequest shared;
+        shared.plan_request = plan;
+        shared.transaction_id = request.transaction_id;
+        auto provider = decode_uninstall_provider_recovery_report(response.value(), shared);
+        if (!provider) return Result::failure(provider.error());
+        MoveInspection incomplete;
+        incomplete.classification = "indeterminate";
+        incomplete.provider_journal_present = true;
+        incomplete.provider_observed_state = provider.value().observed_state;
+        incomplete.provider_journal_digest = provider.value().journal_digest;
+        incomplete.provider_journal_snapshot_sha256 = provider.value().snapshot_sha256;
+        incomplete.provider_audit_chain_digest = provider.value().audit_chain_digest;
+        if (provider.value().observed_state != "completed" || !sha256_field(provider.value().audit_chain_digest))
+            return Result::success(std::move(incomplete));
+        auto terminal = bind_move_terminal(current.value(), request, prior.value(), configuration_, provider.value());
+        if (!terminal) return terminal;
+        auto copied = read_move_files(destination);
+        auto retained = read_move_files(plan.target);
+        auto repeated = execute_setup("recovery.inspect", payload.serialize(), configuration_);
+        auto latest = inspect_current();
+        if (!copied || !retained || copied.value() != expected.value() || retained.value() != expected.value() ||
+            !repeated || repeated.value() != response.value() || !latest || latest.value() != current.value() ||
+            presence(staging) != 0)
+            return Result::failure(move_invalid("terminal files/latest state/journal/audit changed during observation"));
+        return terminal;
+    }
+
+    facman::core::Result<MoveInspection> apply_move(const MoveApplyRequest& request) override
+    {
+        using Result = facman::core::Result<MoveInspection>;
+        if (request.confirmation != "APPLY" || !valid_utc_seconds(request.applied_at) ||
+            request.applied_at <= request.plan_request.installed.created_at ||
+            !facman::core::TransactionId::parse(request.transaction_id))
+            return Result::failure({"setup_move_apply_input_invalid", "Move apply handoff is invalid", ""});
+        auto reviewed = plan_move(request.plan_request);
+        if (!reviewed) return Result::failure(reviewed.error());
+        if (reviewed.value().plan_digest != request.reviewed_plan_digest ||
+            reviewed.value().private_plan != request.private_plan || request.private_plan.size() > 1024U * 1024U)
+            return Result::failure({"stale_plan", "Reviewed move plan differs from immediate revalidation", ""});
+        json::ObjectBuilder plan;
+        plan.add_string("schema", "usk.move_plan_request.v1");
+        plan.add_string("request_id", request.plan_request.installed.request_id);
+        plan.add_string("plan_id", request.plan_request.installed.plan_id);
+        plan.add_string("install_id", request.plan_request.installed.install_id);
+        plan.add_string("created_at", request.plan_request.installed.created_at);
+        json::ObjectBuilder destination;
+        destination.add_string("root", request.plan_request.destination.generic_u8string());
+        destination.add_string("class", "operator_acceptance");
+        plan.add_object("new_target", destination);
+        json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.move_apply_request.v1");
+        payload.add_object("plan_request", plan);
+        payload.add_string("reviewed_plan_id", reviewed.value().plan_id);
+        payload.add_string("reviewed_plan_digest", request.reviewed_plan_digest);
+        payload.add_string("transaction_id", request.transaction_id);
+        payload.add_string("applied_at", request.applied_at);
+        payload.add_string("confirmation", request.confirmation);
+        auto files = read_move_files(request.plan_request.installed.target);
+        if (!files) return Result::failure(files.error());
+        auto capacity = admit_move_closure_capacity(request.plan_request.installed.target,
+            request.plan_request.destination.parent_path());
+        if (!capacity) return Result::failure(capacity.error());
+        auto response = execute_setup("move.apply", payload.serialize(), configuration_, false);
+        const auto uncertain = [](facman::core::Error error) {
+            error.kind = facman::core::OutcomeKind::recovery_required;
+            return Result::failure(std::move(error));
+        };
+        if (!response) return uncertain(provider_error(response.error(), "setup_move_apply_refused",
+            "Provider move entry returned without a proven terminal projection"));
+        auto report = json::parse(response.value());
+        const json::Value* body = nullptr;
+        if (!report || !response_envelope(report.value(), body) ||
+            !exact_members(*body, {"completed_at", "install_id", "new_root", "new_verification_ref", "old_root",
+                "old_root_status", "phases", "plan_id", "reference_update_status", "report_digest", "report_id",
+                "schema", "status", "transaction_id"}) ||
+            string_field(*body, "schema") != "usk.move_report.v1" ||
+            string_field(*body, "status") != "new_committed_old_retained" ||
+            string_field(*body, "transaction_id") != request.transaction_id ||
+            string_field(*body, "report_id") != "move." + request.transaction_id ||
+            string_field(*body, "install_id") != request.plan_request.installed.install_id ||
+            string_field(*body, "plan_id") != reviewed.value().plan_id ||
+            string_field(*body, "completed_at") != request.applied_at ||
+            string_field(*body, "old_root_status") != "retired_retained" ||
+            string_field(*body, "reference_update_status") != "not_started" ||
+            !normalized_absolute_path(string_field(*body, "old_root"), request.plan_request.installed.target) ||
+            !normalized_absolute_path(string_field(*body, "new_root"), request.plan_request.destination))
+            return uncertain(move_invalid("provider move report identity"));
+        auto digest = json::canonical_integer_object_without(*body, "report_digest");
+        if (!digest || move_digest(digest.value()) != string_field(*body, "report_digest"))
+            return uncertain(move_invalid("provider move report digest"));
+        auto terminal = inspect_move_recovery(request);
+        if (!terminal || terminal.value().classification != "provider_move_completed")
+            return uncertain(terminal ? move_invalid("provider move outcome remains indeterminate") : terminal.error());
+        const auto* verification = body->find("new_verification_ref");
+        if (!verification || !exact_members(*verification, {"report_digest", "report_id", "status"}) ||
+            string_field(*verification, "report_id") != "verify." + request.transaction_id + ".new" ||
+            string_field(*verification, "report_digest") != terminal.value().last_verification_identity ||
+            string_field(*verification, "status") != terminal.value().verification_status)
+            return uncertain(move_invalid("provider new verification reference"));
+        const auto* phases = body->find("phases");
+        const std::array<std::pair<const char*, const char*>, 7> expected {{{"copy_to_staging", "completed"},
+            {"verify_closure", "completed"}, {"commit_new", "completed"}, {"update_references", "deferred"},
+            {"retire_old", "completed"}, {"accept_old_removal", "deferred"}, {"remove_old_owned_state", "deferred"}}};
+        if (!phases || !phases->is_array() || phases->size() != expected.size())
+            return uncertain(move_invalid("provider move phases"));
+        for (std::size_t index = 0; index < expected.size(); ++index) {
+            const auto* phase = phases->at(index);
+            if (!phase || !exact_members(*phase, {"phase", "status"}) ||
+                string_field(*phase, "phase") != expected[index].first ||
+                string_field(*phase, "status") != expected[index].second)
+                return uncertain(move_invalid("provider deferred reference/removal phases"));
+        }
+        terminal.value().provider_report = body->serialize();
+        return terminal;
     }
 
     facman::core::Result<RepairPlan> plan_repair(
@@ -3299,6 +3748,178 @@ private:
 
 } // namespace
 
+
+#if FACMAN_WITH_SETUP
+std::string encode_managed_move_context(const ManagedMoveCoordinator& value)
+{
+    const auto& request = value.apply;
+    const auto& plan = request.plan_request.installed;
+    json::ObjectBuilder output;
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+        {"schema", "facman.managed_move_coordinator.v1"}, {"install_id", plan.install_id},
+        {"plan_id", plan.plan_id}, {"created_at", plan.created_at},
+        {"old_root", facman::platform::path_to_utf8(plan.target)},
+        {"new_root", facman::platform::path_to_utf8(request.plan_request.destination)},
+        {"acceptance_root", request.acceptance_root}, {"setup_state_ref", plan.setup_state_ref},
+        {"last_verification_identity", plan.last_verification_identity}, {"state_revision", plan.state_revision},
+        {"lifecycle_status", plan.lifecycle_status}, {"install_record_sha256", request.plan_request.install_record_sha256},
+        {"reviewed_plan_digest", request.reviewed_plan_digest}, {"transaction_id", request.transaction_id},
+        {"applied_at", request.applied_at}, {"private_plan", request.private_plan}, {"pre_record", value.pre_record},
+        {"phase", value.phase}, {"projected_record_sha256", value.projected_record_sha256},
+        {"recovery_plan_id", value.recovery_plan_id}, {"recovery_plan_digest", value.recovery_plan_digest},
+        {"provider_journal_snapshot_sha256", value.provider_journal_snapshot_sha256},
+        {"provider_installed_state_sha256", value.provider_installed_state_sha256},
+        {"provider_audit_chain_digest", value.provider_audit_chain_digest}}) output.add_string(field.first, field.second);
+    return output.serialize();
+}
+
+bool decode_managed_move_context(const std::string& text,
+    ManagedMoveCoordinator& output, std::string& detail)
+{
+    json::Limits limits;
+    limits.maximum_bytes = 4U * 1024U * 1024U;
+    limits.maximum_string_bytes = 1024U * 1024U;
+    limits.maximum_nodes = 100000;
+    auto parsed = json::parse(text, limits);
+    if (!parsed || !exact_members(parsed.value(), {"schema", "install_id", "plan_id", "created_at",
+            "old_root", "new_root", "acceptance_root", "setup_state_ref", "last_verification_identity",
+            "state_revision", "lifecycle_status", "install_record_sha256", "reviewed_plan_digest",
+            "transaction_id", "applied_at", "private_plan", "pre_record", "phase", "projected_record_sha256",
+            "recovery_plan_id", "recovery_plan_digest", "provider_journal_snapshot_sha256",
+            "provider_installed_state_sha256", "provider_audit_chain_digest"}) ||
+        string_field(parsed.value(), "schema") != "facman.managed_move_coordinator.v1") {
+        detail = "Move coordinator shape is invalid"; return false;
+    }
+    const auto& value = parsed.value();
+    auto& request = output.apply;
+    auto& plan = request.plan_request.installed;
+    plan.install_id = string_field(value, "install_id");
+    plan.plan_id = string_field(value, "plan_id"); plan.request_id = plan.plan_id;
+    plan.created_at = string_field(value, "created_at");
+    plan.target = facman::platform::path_from_utf8(string_field(value, "old_root"));
+    request.plan_request.destination = facman::platform::path_from_utf8(string_field(value, "new_root"));
+    request.acceptance_root = string_field(value, "acceptance_root");
+    plan.setup_state_ref = string_field(value, "setup_state_ref");
+    plan.last_verification_identity = string_field(value, "last_verification_identity");
+    plan.state_revision = string_field(value, "state_revision");
+    plan.lifecycle_status = string_field(value, "lifecycle_status");
+    request.plan_request.install_record_sha256 = string_field(value, "install_record_sha256");
+    request.reviewed_plan_digest = string_field(value, "reviewed_plan_digest");
+    request.transaction_id = string_field(value, "transaction_id");
+    request.applied_at = string_field(value, "applied_at"); request.confirmation = "APPLY";
+    request.private_plan = string_field(value, "private_plan");
+    output.pre_record = string_field(value, "pre_record"); output.phase = string_field(value, "phase");
+    output.projected_record_sha256 = string_field(value, "projected_record_sha256");
+    output.recovery_plan_id = string_field(value, "recovery_plan_id");
+    output.recovery_plan_digest = string_field(value, "recovery_plan_digest");
+    output.provider_journal_snapshot_sha256 = string_field(value, "provider_journal_snapshot_sha256");
+    output.provider_installed_state_sha256 = string_field(value, "provider_installed_state_sha256");
+    output.provider_audit_chain_digest = string_field(value, "provider_audit_chain_digest");
+    auto original = json::parse(output.pre_record);
+    const auto app_dir = original ? facman::platform::path_from_utf8(string_field(original.value(), "app_dir")) : std::filesystem::path();
+    const auto root = original && original.value().find("root")
+        ? facman::platform::path_from_utf8(string_field(original.value(), "root")) : app_dir;
+    std::string identifier;
+    if (!original || !original.value().is_object() || root != plan.target || app_dir != root ||
+        !facman::core::InstallId::parse_legacy(plan.install_id) ||
+        !facman::base::validate_identifier(plan.plan_id, identifier) ||
+        !facman::core::TransactionId::parse(request.transaction_id) ||
+        !valid_utc_seconds(plan.created_at) || !valid_utc_seconds(request.applied_at) ||
+        request.applied_at <= plan.created_at || !plan.target.is_absolute() ||
+        plan.target != plan.target.lexically_normal() || !request.plan_request.destination.is_absolute() ||
+        request.plan_request.destination != request.plan_request.destination.lexically_normal() ||
+        !sha256_field(request.plan_request.install_record_sha256) ||
+        move_digest(output.pre_record) != request.plan_request.install_record_sha256 ||
+        !sha256_field(request.reviewed_plan_digest) || move_digest(request.private_plan) != request.reviewed_plan_digest ||
+        request.private_plan.size() > 1024U * 1024U || output.pre_record.size() > 32768 ||
+        (output.phase != "provider_entry_pending" && output.phase != "provider_entry_started" &&
+            output.phase != "terminal_projection_prepared") ||
+        (!output.projected_record_sha256.empty() && !sha256_field(output.projected_record_sha256)) ||
+        (!output.recovery_plan_digest.empty() && !sha256_field(output.recovery_plan_digest)) ||
+        (output.recovery_plan_id.empty() != output.recovery_plan_digest.empty())) {
+        detail = "Move coordinator replay/preimage identities are invalid"; return false;
+    }
+    return true;
+}
+
+std::string project_moved_install_record(const std::string& pre_record,
+    const MoveApplyRequest& request, const MoveInspection& terminal)
+{
+    auto parsed = json::parse(pre_record);
+    if (!parsed || !parsed.value().is_object() || terminal.classification != "provider_move_completed" ||
+        move_digest(pre_record) != request.plan_request.install_record_sha256) return {};
+    const auto& original = parsed.value();
+    const auto app_dir = facman::platform::path_from_utf8(string_field(original, "app_dir"));
+    const auto* root_field = original.find("root");
+    const auto old_root = root_field ? facman::platform::path_from_utf8(string_field(original, "root")) : app_dir;
+    const auto executable = facman::platform::path_from_utf8(string_field(original, "executable"));
+    const auto relative = executable.lexically_relative(old_root);
+    if (old_root != request.plan_request.installed.target || app_dir != old_root ||
+        !old_root.is_absolute() || old_root != old_root.lexically_normal() || !executable.is_absolute() ||
+        executable != executable.lexically_normal() || !safe_relative_path(relative.generic_u8string())) return {};
+    json::ObjectBuilder output;
+    for (const auto& key : original.object_keys()) {
+        const auto* value = original.find(key);
+        if (!value) return {};
+        if (key == "root" || key == "app_dir") output.add_string(key, facman::platform::path_to_utf8(request.plan_request.destination));
+        else if (key == "executable") output.add_string(key, facman::platform::path_to_utf8(request.plan_request.destination / relative));
+        else if (key == "setup_state_ref") output.add_string(key, terminal.setup_state_ref);
+        else if (key == "lifecycle_status") output.add_string(key, "move_pending_acceptance");
+        else if (key == "last_verification_identity") output.add_string(key, terminal.last_verification_identity);
+        else if (key == "state_revision") output.add_string(key, terminal.state_revision);
+        else if (key == "safe_actions") {
+            json::ObjectBuilder actions;
+            actions.add_bool("repair", false); actions.add_bool("uninstall", false);
+            output.add_object(key, actions);
+        } else if (key == "verification") {
+            if (!value->is_object()) return {};
+            json::ObjectBuilder verification;
+            for (const auto& field : value->object_keys()) {
+                if (field == "status") verification.add_string(field, terminal.verification_status);
+                else verification.add_value(field, *value->find(field));
+            }
+            output.add_object(key, verification);
+        } else output.add_value(key, *value);
+    }
+    return output.serialize();
+}
+
+std::string managed_move_result(const MoveApplyRequest& request, const MoveInspection& terminal)
+{
+    json::ObjectBuilder output;
+    output.add_string("schema", "facman.managed_move_apply_result.v1");
+    output.add_string("status", "reference_projected_old_retained_pending_acceptance");
+    output.add_string("install_id", request.plan_request.installed.install_id);
+    output.add_string("plan_id", request.plan_request.installed.plan_id);
+    output.add_string("plan_digest", request.reviewed_plan_digest);
+    output.add_string("transaction_id", request.transaction_id);
+    output.add_string("old_root", facman::platform::path_to_utf8(request.plan_request.installed.target));
+    output.add_string("new_root", facman::platform::path_to_utf8(request.plan_request.destination));
+    output.add_string("facman_reference_status", "projected");
+    output.add_string("provider_status", "new_committed_old_retained");
+    output.add_string("lifecycle_status", "move_pending_acceptance");
+    output.add_string("old_root_status", "retained");
+    output.add_string("setup_state_ref", terminal.setup_state_ref);
+    output.add_string("state_revision", terminal.state_revision);
+    output.add_string("installed_state_digest", terminal.installed_state_digest);
+    output.add_string("last_verification_identity", terminal.last_verification_identity);
+    output.add_string("verification_status", terminal.verification_status);
+    output.add_string("copy_scope", "complete_source_files_including_foreign");
+    output.add_bool("grants_ownership", false);
+    output.add_string("empty_directory_preservation", "not_promised");
+    output.add_bool("observation_atomic", false);
+    output.add_bool("old_root_removal_available", false);
+    if (terminal.provider_report.empty()) output.add_null("provider_report");
+    else {
+        auto report = json::parse(terminal.provider_report);
+        if (!report) return {};
+        output.add_value("provider_report", report.value());
+    }
+    return output.serialize();
+}
+
+#endif
+
 #if FACMAN_WITH_SETUP
 facman::core::Result<ManagedRepairEnvelope> encode_managed_repair_envelope(
     const RepairPlan& plan,
@@ -3767,7 +4388,8 @@ bool decode_managed_install_operation_lock(const std::string& text,
         !normalized_absolute_path(metadata.state_root, facman::platform::path_from_utf8(metadata.state_root)) ||
         !normalized_absolute_path(metadata.workspace, facman::platform::path_from_utf8(metadata.workspace)) ||
         (metadata.command_id != "installs.install.apply" && metadata.command_id != "installs.repair.apply" &&
-         metadata.command_id != "installs.uninstall.apply") || metadata.identity.empty() ||
+         metadata.command_id != "installs.uninstall.apply" &&
+         metadata.command_id != "installs.move.apply") || metadata.identity.empty() ||
         metadata.identity.size() > 41U || encode_managed_install_operation_lock(metadata) != text) {
         detail = "managed installation lease bytes are not a deterministic bound v1 owner document";
         return false;

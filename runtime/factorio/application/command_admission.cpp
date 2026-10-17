@@ -47,6 +47,10 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
         policy.effects.push_back("setup_mutation");
         policy.capabilities.push_back("install.managed.uninstall.apply");
         break;
+    case CommandId::installs_move_apply:
+        policy.effects.push_back("setup_mutation");
+        policy.capabilities.push_back("install.managed.move.apply");
+        break;
     case CommandId::installs_repair_apply:
         policy.effects.push_back("setup_mutation");
         policy.capabilities.push_back("install.managed.repair.apply");
@@ -116,6 +120,10 @@ CommandAdmissionDecision admit_command(
         !configuration.setup().mutation_configured()) {
         return {false, "setup_repair_plan_authority_required",
             "managed repair planning requires complete accepted Universal Setup configuration"};
+    }
+    if (command == CommandId::installs_move_apply && !configuration.setup().mutation_configured()) {
+        return {false, configuration.setup().configured() ? "setup_authority_required" : "live_target_acceptance_required",
+            "managed move apply requires the existing complete accepted Setup configuration"};
     }
     if ((command == CommandId::installs_install_apply ||
          command == CommandId::installs_uninstall_apply ||

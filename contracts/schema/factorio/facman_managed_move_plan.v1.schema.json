@@ -11,7 +11,9 @@
     "grants_ownership",
     "empty_directory_preservation",
     "apply_available",
-    "observation_atomic"
+    "observation_atomic",
+    "apply_scope",
+    "install_record_sha256"
   ],
   "properties": {
     "schema": {
@@ -30,10 +32,17 @@
       "const": "not_promised"
     },
     "apply_available": {
-      "const": false
+      "const": true
     },
     "observation_atomic": {
       "const": false
+    },
+    "apply_scope": {
+      "const": "verified_new_root_old_retained_pending_acceptance"
+    },
+    "install_record_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
     }
   },
   "$defs": {

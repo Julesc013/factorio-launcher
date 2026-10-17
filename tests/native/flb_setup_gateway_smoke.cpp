@@ -318,10 +318,76 @@ bool verification_report_cases()
     return true;
 }
 
+bool operation_lock_codec_cases(const fs::path& root)
+{
+    application::ManagedInstallOperationLock owner{
+        "codec-test", (root / "setup-state").generic_string(),
+        (root / "workspace").generic_string(), "installs.install.apply",
+        "tx-codec", "0000000000000001:0000000000000002"};
+    for (const char* command : {"installs.install.apply", "installs.repair.apply",
+             "installs.uninstall.apply", "installs.move.apply"}) {
+        owner.command_id = command;
+        const auto encoded = application::encode_managed_install_operation_lock(owner);
+        application::ManagedInstallOperationLock decoded;
+        std::string detail;
+        if (!application::decode_managed_install_operation_lock(encoded, decoded, detail) ||
+            decoded.install_id != owner.install_id || decoded.state_root != owner.state_root ||
+            decoded.workspace != owner.workspace || decoded.command_id != command ||
+            decoded.transaction_id != owner.transaction_id || decoded.identity != owner.identity ||
+            application::encode_managed_install_operation_lock(decoded) != encoded) {
+            std::fprintf(stderr, "operation-lock round trip failed for %s: %s\n", command, detail.c_str());
+            return false;
+        }
+    }
+    const auto rejects = [](const std::string& bytes) {
+        application::ManagedInstallOperationLock decoded;
+        std::string detail;
+        return !application::decode_managed_install_operation_lock(bytes, decoded, detail) && !detail.empty();
+    };
+    for (const char* command : {"installs.unknown.apply", "installs.move.plan", "installs.recovery.apply"}) {
+        auto invalid = owner;
+        invalid.command_id = command;
+        if (!rejects(application::encode_managed_install_operation_lock(invalid))) {
+            std::fprintf(stderr, "operation-lock codec accepted disallowed command %s\n", command);
+            return false;
+        }
+    }
+    for (const char* field : {"install_id", "transaction_id", "state_root", "workspace", "identity"}) {
+        auto invalid = owner;
+        if (std::string(field) == "install_id") invalid.install_id.clear();
+        else if (std::string(field) == "transaction_id") invalid.transaction_id = "../foreign";
+        else if (std::string(field) == "state_root") invalid.state_root = "relative-state";
+        else if (std::string(field) == "workspace") invalid.workspace = "relative-workspace";
+        else invalid.identity.clear();
+        if (!rejects(application::encode_managed_install_operation_lock(invalid))) {
+            std::fprintf(stderr, "operation-lock codec accepted invalid %s\n", field);
+            return false;
+        }
+    }
+    auto oversized = owner;
+    oversized.identity.assign(42, 'a');
+    const auto encoded = application::encode_managed_install_operation_lock(owner);
+    const auto with_member = [&encoded](const std::string& member) {
+        return encoded.substr(0, encoded.size() - 2) + "," + member + "}\n";
+    };
+    if (!rejects(application::encode_managed_install_operation_lock(oversized)) ||
+        !rejects("{") || !rejects("{}\n") || !rejects("[]\n") ||
+        !rejects(" " + encoded) || !rejects(encoded + "\n") ||
+        !rejects(encoded.substr(0, encoded.size() - 1)) ||
+        !rejects(with_member("\"unexpected\":true")) ||
+        !rejects(with_member("\"command_id\":\"installs.move.apply\"")) ||
+        !rejects(encoded + std::string(8193, ' '))) {
+        std::fprintf(stderr, "operation-lock codec accepted malformed or noncanonical bytes\n");
+        return false;
+    }
+    return true;
+}
+
 int main()
 {
     if (!verification_report_cases()) return 20;
     Fixture fixture;
+    if (!operation_lock_codec_cases(fixture.root)) return 21;
     const fs::path valid = make_archive(fixture.root, "valid", true, true);
     auto gateway = application::make_setup_gateway();
     application::FactorioArchiveInspectRequest request;

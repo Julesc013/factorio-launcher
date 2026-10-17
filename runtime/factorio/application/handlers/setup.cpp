@@ -513,6 +513,14 @@ private:
             install_id = coordinator.install_id;
             transaction_id = coordinator.transaction_id;
             target = coordinator.target_root;
+        } else if (journal.command_id == "installs.move.apply") {
+            if (journal.commit_strategy != "provider_move_then_durable_install_reference_replacement" ||
+                journal.sources.size() != 1U) { detail = "Move coordinator authority changed"; return false; }
+            ManagedMoveCoordinator coordinator;
+            if (!decode_managed_move_context(journal.operation_context, coordinator, detail)) return false;
+            install_id = coordinator.apply.plan_request.installed.install_id;
+            transaction_id = coordinator.apply.transaction_id;
+            target = facman::platform::path_to_utf8(coordinator.apply.plan_request.installed.target);
         } else if (journal.command_id == "installs.uninstall.apply") {
             if (journal.commit_strategy != "provider_uninstall_then_durable_install_reference_replacement" ||
                 journal.sources.size() != 1U) { detail = "Uninstall coordinator authority changed"; return false; }
@@ -568,6 +576,223 @@ std::string read_text(const fs::path& path)
         offset += count;
     }
     return input.revalidate().ok() ? text : std::string();
+}
+
+ApplicationResult move_failure(const char* command, const facman::core::Error& error)
+{
+    auto kind = error.kind == facman::core::OutcomeKind::internal_error
+        ? facman::core::OutcomeKind::refused : error.kind;
+    if (error.code == "move_recovery_projection_conflict") kind = facman::core::OutcomeKind::conflict;
+    if (error.code == "transaction_recovery_required" || error.code == "recovery_write_refused" ||
+        error.code == "move_recovery_indeterminate") kind = facman::core::OutcomeKind::recovery_required;
+    return refused(safety_refusal(command, error.code, error.message, error.detail,
+        kind != facman::core::OutcomeKind::recovery_required), error.code, error.message, kind);
+}
+
+struct ManagedMoveRecoveryPlan {
+    facman::transaction::Record journal;
+    ManagedMoveCoordinator coordinator;
+    facman::workspace::InstallRecord install;
+    MoveInspection inspection;
+    std::string record_text;
+    std::string journal_sha256;
+    std::string projected_record;
+    std::string projected_sha256;
+    std::string action;
+    std::string plan_id;
+    std::string plan_digest;
+    std::string output;
+};
+
+std::string move_recovery_document(const ManagedMoveRecoveryPlan& plan,
+    const std::string& status, const std::string& digest)
+{
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "facman.managed_move_recovery.v1");
+    output.add_string("status", status);
+    output.add_string("operation", "move");
+    output.add_string("transaction_id", plan.coordinator.apply.transaction_id);
+    output.add_string("install_id", plan.coordinator.apply.plan_request.installed.install_id);
+    output.add_string("plan_id", plan.plan_id);
+    if (!digest.empty()) output.add_string("plan_digest", digest);
+    output.add_string("classification", plan.inspection.classification);
+    output.add_string("action", plan.action);
+    output.add_string("facman_journal_sha256", plan.journal_sha256);
+    output.add_string("pre_record_sha256", plan.coordinator.apply.plan_request.install_record_sha256);
+    output.add_string("current_record_sha256", digest_text(plan.record_text));
+    output.add_string("projected_record_sha256", plan.projected_sha256);
+    output.add_string("provider_observed_state", plan.inspection.provider_observed_state);
+    output.add_string("provider_journal_snapshot_sha256", plan.inspection.provider_journal_snapshot_sha256);
+    output.add_string("provider_installed_state_sha256", plan.inspection.installed_state_digest);
+    output.add_string("provider_audit_chain_digest", plan.inspection.provider_audit_chain_digest);
+    output.add_string("old_root", facman::platform::path_to_utf8(plan.coordinator.apply.plan_request.installed.target));
+    output.add_string("new_root", facman::platform::path_to_utf8(plan.coordinator.apply.plan_request.destination));
+    output.add_string("old_root_status", "retained");
+    output.add_bool("old_root_removal_available", false);
+    output.add_bool("grants_ownership", false);
+    output.add_string("empty_directory_preservation", "not_promised");
+    output.add_bool("observation_atomic", false);
+    return output.serialize();
+}
+
+facman::core::Result<ManagedMoveRecoveryPlan> build_move_recovery_plan(
+    ApplicationContext& context, const std::string& transaction_id)
+{
+    using Result = facman::core::Result<ManagedMoveRecoveryPlan>;
+    ManagedMoveRecoveryPlan result;
+    std::string detail;
+    if (!facman::transaction::read_record(context.workspace(), transaction_id, result.journal, detail) ||
+        result.journal.schema_version != 2U || result.journal.command_id != "installs.move.apply" ||
+        result.journal.commit_strategy != "provider_move_then_durable_install_reference_replacement" ||
+        result.journal.transaction_id != transaction_id || result.journal.sources.size() != 1U ||
+        !decode_managed_move_context(result.journal.operation_context, result.coordinator, detail) ||
+        result.coordinator.apply.transaction_id != transaction_id ||
+        result.journal.target != result.coordinator.apply.plan_request.installed.target)
+        return Result::failure({"recovery_journal_invalid", "Move coordinator identity is invalid", detail});
+    auto workspace = context.workspace_repository().load();
+    if (!workspace || result.journal.workspace_id != workspace.value().id.str())
+        return Result::failure({"recovery_journal_invalid", "Move coordinator workspace changed", ""});
+    auto id = facman::core::InstallId::parse_legacy(result.coordinator.apply.plan_request.installed.install_id);
+    auto loaded = id ? context.installs().load(id.value()) : facman::core::Result<facman::workspace::InstallRecord>::failure(id.error());
+    if (!loaded) return Result::failure({"move_recovery_projection_conflict", "Move reference is unavailable", loaded.error().message});
+    result.install = loaded.take_value();
+    result.record_text = read_text(result.install.source_path);
+    if (result.journal.sources.front() != result.install.source_path || result.record_text.empty())
+        return Result::failure({"move_recovery_projection_conflict", "Move reference path changed", ""});
+    const auto current = digest_text(result.record_text);
+    const auto& coordinator = result.coordinator;
+    const auto& request = coordinator.apply;
+    if (current != request.plan_request.install_record_sha256 &&
+        (coordinator.phase != "terminal_projection_prepared" || current != coordinator.projected_record_sha256))
+        return Result::failure({"move_recovery_projection_conflict", "Move reference is neither exact preimage nor prepared postimage", current});
+    auto inspected = context.setup().inspect_move_recovery(request);
+    if (!inspected) return Result::failure(inspected.error());
+    result.inspection = inspected.take_value();
+    const bool pre_entry = coordinator.phase == "provider_entry_pending" &&
+        (result.journal.state == facman::transaction::State::requested ||
+         result.journal.state == facman::transaction::State::validated ||
+         result.journal.state == facman::transaction::State::planned ||
+         result.journal.state == facman::transaction::State::staged ||
+         result.journal.state == facman::transaction::State::verified ||
+         result.journal.state == facman::transaction::State::failed_before_commit ||
+         result.journal.state == facman::transaction::State::recovery_required ||
+         (result.journal.state == facman::transaction::State::complete &&
+            std::find(result.journal.recovery_actions.begin(), result.journal.recovery_actions.end(),
+                "confirmed_no_provider_effect") != result.journal.recovery_actions.end()));
+    if (result.inspection.classification == "no_provider_effect" && !pre_entry)
+        result.inspection.classification = "indeterminate";
+    result.action = result.inspection.classification == "provider_move_completed" ? "project_terminal" :
+        result.inspection.classification == "no_provider_effect" ? "close_no_provider_effect" : "none";
+    if (result.action == "project_terminal") {
+        result.projected_record = project_moved_install_record(coordinator.pre_record, request, result.inspection);
+        if (result.projected_record.empty()) return Result::failure({"move_recovery_projection_conflict", "Exact move reference projection failed", ""});
+    } else result.projected_record = coordinator.pre_record;
+    result.projected_sha256 = digest_text(result.projected_record);
+    if (coordinator.phase == "terminal_projection_prepared" &&
+        (result.action != "project_terminal" || coordinator.projected_record_sha256 != result.projected_sha256 ||
+         coordinator.provider_journal_snapshot_sha256 != result.inspection.provider_journal_snapshot_sha256 ||
+         coordinator.provider_installed_state_sha256 != result.inspection.installed_state_digest ||
+         coordinator.provider_audit_chain_digest != result.inspection.provider_audit_chain_digest))
+        return Result::failure({"stale_plan", "Prepared move terminal identity changed", ""});
+    auto journal = context.transactions().load_journal(facman::core::TransactionId::parse(transaction_id).value());
+    if (!journal) return Result::failure(journal.error());
+    result.journal_sha256 = digest_text(journal.value());
+    result.plan_id = "move-recovery." + transaction_id;
+    auto canonical = canonicalize_managed_uninstall_recovery_plan(move_recovery_document(result,
+        result.action == "none" ? "blocked" : "planned", ""));
+    if (!canonical) return Result::failure(canonical.error());
+    result.plan_digest = digest_text(canonical.value());
+    result.output = move_recovery_document(result, result.action == "none" ? "blocked" : "planned", result.plan_digest);
+    return Result::success(std::move(result));
+}
+
+bool move_recovery_review_matches(const ServiceOperationRequest& request, const ManagedMoveRecoveryPlan& plan)
+{
+    return request.confirmation == "APPLY" && request.plan_id == plan.plan_id &&
+        (request.plan_digest == plan.plan_digest ||
+         (!plan.coordinator.recovery_plan_id.empty() && request.plan_id == plan.coordinator.recovery_plan_id &&
+            request.plan_digest == plan.coordinator.recovery_plan_digest));
+}
+
+bool close_move_coordinator(ApplicationContext& context, facman::transaction::Record& journal,
+    std::string& detail)
+{
+    // The generic complete() may retire a staging marker under journal.target.
+    // A move retains its original target byte-for-byte, so close only the journal.
+    if (facman::transaction::terminal(journal.state)) return journal.state == facman::transaction::State::complete;
+    if (journal.state != facman::transaction::State::audited) {
+        if (!facman::transaction::can_transition(journal.state, facman::transaction::State::audited) &&
+            !facman::transaction::advance(context.workspace(), journal, "recovery_required", "move_projection_reconciled", detail)) return false;
+        if (!facman::transaction::advance(context.workspace(), journal, "audited", "move_reference_audited", detail)) return false;
+    }
+    return facman::transaction::advance(context.workspace(), journal, "complete", "journal_closed", detail);
+}
+
+ApplicationResult apply_move_recovery_under_lease(ApplicationContext& context,
+    const ServiceOperationRequest& request, ManagedInstallOperationLease& lease)
+{
+    auto planned = build_move_recovery_plan(context, request.transaction_id);
+    if (!planned) return move_failure("installs.recovery.apply", planned.error());
+    auto plan = planned.take_value();
+    if (!move_recovery_review_matches(request, plan)) return move_failure("installs.recovery.apply",
+        {"stale_plan", "Reviewed move recovery identity changed", request.plan_id});
+    if (plan.action == "none") return move_failure("installs.recovery.apply",
+        {"move_recovery_indeterminate", "Move has no proved no-effect or exact completed projection", plan.inspection.provider_observed_state});
+    std::string detail;
+    if (!lease.revalidate(detail)) return move_failure("installs.recovery.apply",
+        {"recovery_write_refused", "Move recovery installation lease changed", detail});
+    if (!facman::transaction::terminal(plan.journal.state)) {
+        auto current_journal = context.transactions().load_journal(facman::core::TransactionId::parse(request.transaction_id).value());
+        if (!current_journal || digest_text(current_journal.value()) != plan.journal_sha256)
+            return move_failure("installs.recovery.apply", {"stale_plan", "Move coordinator changed before recovery checkpoint", ""});
+        plan.coordinator.recovery_plan_id = request.plan_id;
+        plan.coordinator.recovery_plan_digest = request.plan_digest;
+        if (plan.action == "project_terminal") {
+            plan.coordinator.phase = "terminal_projection_prepared";
+            plan.coordinator.projected_record_sha256 = plan.projected_sha256;
+            plan.coordinator.provider_installed_state_sha256 = plan.inspection.installed_state_digest;
+            plan.coordinator.provider_journal_snapshot_sha256 = plan.inspection.provider_journal_snapshot_sha256;
+            plan.coordinator.provider_audit_chain_digest = plan.inspection.provider_audit_chain_digest;
+        }
+        plan.journal.operation_context = encode_managed_move_context(plan.coordinator);
+        if (!facman::transaction::checkpoint(context.workspace(), plan.journal, "move_recovery_projection_prepared", detail))
+            return move_failure("installs.recovery.apply", {"recovery_write_refused", "Move recovery intent could not be checkpointed", detail});
+        if (plan.action == "project_terminal" && digest_text(plan.record_text) != plan.projected_sha256) {
+            if (!lease.revalidate(detail)) return move_failure("installs.recovery.apply",
+                {"recovery_write_refused", "Move lease changed before recovered CAS", detail});
+            auto replaced = context.installs().replace(plan.install,
+                plan.coordinator.apply.plan_request.install_record_sha256, plan.projected_record);
+            if (!replaced) return move_failure("installs.recovery.apply",
+                {"move_recovery_projection_conflict", "Recovered move exact reference CAS failed", replaced.error().message});
+        }
+        const char* interrupted = std::getenv("FACMAN_TEST_MOVE_RECOVERY_INTERRUPT_AFTER_PROJECTION");
+        if (interrupted && std::string(interrupted) == "1") return move_failure("installs.recovery.apply",
+            {"transaction_recovery_required", "Injected interruption after recovered move projection", request.transaction_id,
+                facman::core::OutcomeKind::recovery_required});
+        plan.journal.recovery_actions.push_back(plan.action == "project_terminal" ?
+            "projected_terminal_install_reference" : "confirmed_no_provider_effect");
+        if (plan.journal.state == facman::transaction::State::committing &&
+            !facman::transaction::advance(context.workspace(), plan.journal,
+                plan.action == "project_terminal" ? "committed" : "recovery_required", "move_recovered", detail))
+            return move_failure("installs.recovery.apply", {"recovery_write_refused", "Move recovery transition failed", detail});
+        if (plan.action == "close_no_provider_effect" &&
+            !facman::transaction::can_transition(plan.journal.state, facman::transaction::State::audited) &&
+            !facman::transaction::advance(context.workspace(), plan.journal, "recovery_required", "no_provider_entry_proved", detail))
+            return move_failure("installs.recovery.apply", {"recovery_write_refused", "Move no-effect closure failed", detail});
+        if (!close_move_coordinator(context, plan.journal, detail))
+            return move_failure("installs.recovery.apply", {"recovery_write_refused", "Move recovery journal could not close", detail});
+    }
+    if (!lease.release_after_closure(detail)) return move_failure("installs.recovery.apply",
+        {"recovery_write_refused", "Move recovery lease could not release", detail});
+    auto closed = context.transactions().load_journal(facman::core::TransactionId::parse(request.transaction_id).value());
+    plan.record_text = read_text(plan.install.source_path);
+    if (!closed || digest_text(plan.record_text) != plan.projected_sha256)
+        return move_failure("installs.recovery.apply", {"move_recovery_projection_conflict",
+            "Completed move recovery reference or journal could not be observed exactly", ""});
+    plan.journal_sha256 = digest_text(closed.value());
+    ApplicationResult result;
+    result.output = move_recovery_document(plan, "completed", request.plan_digest);
+    return result;
 }
 
 struct NewInstallRecoveryPlan {
@@ -1449,6 +1674,7 @@ ApplicationResult managed_move_plan(
             "stale_plan", "Managed record changed before move planning");
     MovePlanRequest move;
     move.destination = facman::platform::path_from_utf8(request.target_root);
+    move.install_record_sha256 = digest_text(preimage);
     auto& plan_request = move.installed;
     plan_request.plan_id = context.ids().next("move-plan");
     plan_request.request_id = plan_request.plan_id;
@@ -1877,9 +2103,193 @@ ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOp
     return managed_move_plan(context, request);
 }
 
-ApplicationResult apply_move_install(ApplicationContext& context, const ServiceOperationRequest&)
+ApplicationResult apply_move_install(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    return live_target_acceptance_required(context, "installs.move.apply");
+#if FACMAN_WITH_SETUP
+    if (!context.configuration().setup().configured())
+        return live_target_acceptance_required(context, "installs.move.apply");
+    if (!valid_utc_seconds(request.plan_created_at) || !valid_utc_seconds(request.applied_at) ||
+        request.applied_at <= request.plan_created_at || request.confirmation != "APPLY" ||
+        !facman::core::Sha256Digest::parse(request.plan_digest) ||
+        !facman::core::Sha256Digest::parse(request.install_record_sha256))
+        return move_failure("installs.move.apply", {"setup_move_apply_input_invalid",
+            "Move apply requires exact reviewed handoff and advancing UTC timestamps", ""});
+    auto transaction = facman::core::TransactionId::parse(request.transaction_id);
+    auto id = facman::core::InstallId::parse_legacy(request.install_id);
+    if (!transaction || !id) return move_failure("installs.move.apply",
+        {"setup_move_apply_input_invalid", "Move apply transaction/install identity is invalid", ""});
+    auto existing = context.transactions().load_journal(transaction.value());
+    if (existing) {
+        auto retry = build_move_recovery_plan(context, request.transaction_id);
+        if (!retry) return move_failure("installs.move.apply", retry.error());
+        const auto& original = retry.value().coordinator.apply;
+        if (original.plan_request.installed.install_id != request.install_id ||
+            original.plan_request.installed.plan_id != request.plan_id ||
+            original.plan_request.installed.created_at != request.plan_created_at ||
+            original.plan_request.destination != facman::platform::path_from_utf8(request.target_root) ||
+            original.plan_request.install_record_sha256 != request.install_record_sha256 ||
+            original.reviewed_plan_digest != request.plan_digest || original.applied_at != request.applied_at)
+            return move_failure("installs.move.apply", {"stale_plan", "Existing move transaction belongs to another exact handoff", ""});
+        if (retry.value().journal.state == facman::transaction::State::complete &&
+            retry.value().action == "project_terminal" &&
+            digest_text(retry.value().record_text) == retry.value().projected_sha256) {
+            ApplicationResult result;
+            result.output = managed_move_result(original, retry.value().inspection);
+            return result;
+        }
+        return move_failure("installs.move.apply", {"operation_specific_recovery_required",
+            "Existing move transaction requires explicit operation-specific recovery", request.transaction_id,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    auto loaded = context.installs().load(id.value());
+    if (!loaded) return move_failure("installs.move.apply", {"unknown_install", "Move reference is not registered", request.install_id});
+    const auto& record = loaded.value();
+    if (record.ownership != "managed" || record.provider_id != "universal-setup" ||
+        record.source != "universal-setup" || !managed_plan_lifecycle_eligible(record.lifecycle_status) ||
+        record.root.empty() || record.setup_state_ref.empty() || record.state_revision.empty() ||
+        record.last_verification_identity.empty()) return move_failure("installs.move.apply",
+        {"managed_install_evidence_incomplete", "Move apply requires an eligible provider-backed managed record", ""});
+    const std::string preimage = read_text(record.source_path);
+    if (preimage.empty() || preimage.size() > 32768 || digest_text(preimage) != request.install_record_sha256)
+        return move_failure("installs.move.apply", {"stale_plan", "Reviewed move record preimage changed or exceeds coordinator bound", ""});
+    MoveApplyRequest apply;
+    auto& plan = apply.plan_request.installed;
+    plan.request_id = request.plan_id; plan.plan_id = request.plan_id;
+    plan.install_id = request.install_id; plan.created_at = request.plan_created_at;
+    plan.target = record.root; plan.setup_state_ref = record.setup_state_ref;
+    plan.last_verification_identity = record.last_verification_identity;
+    plan.state_revision = record.state_revision; plan.lifecycle_status = record.lifecycle_status;
+    apply.plan_request.destination = facman::platform::path_from_utf8(request.target_root);
+    apply.plan_request.install_record_sha256 = request.install_record_sha256;
+    apply.acceptance_root = context.configuration().setup().acceptance_root;
+    apply.transaction_id = request.transaction_id; apply.applied_at = request.applied_at;
+    apply.confirmation = request.confirmation; apply.reviewed_plan_digest = request.plan_digest;
+    auto reviewed = context.setup().plan_move(apply.plan_request);
+    if (!reviewed) return move_failure("installs.move.apply", reviewed.error());
+    if (reviewed.value().plan_digest != request.plan_digest)
+        return move_failure("installs.move.apply", {"stale_plan", "Move source, destination, state, ownership or policy changed after review", ""});
+    apply.private_plan = reviewed.value().private_plan;
+    ManagedMoveCoordinator coordinator;
+    coordinator.apply = apply; coordinator.pre_record = preimage; coordinator.phase = "provider_entry_pending";
+    facman::transaction::Record journal;
+    journal.command_id = "installs.move.apply"; journal.transaction_id = request.transaction_id;
+    journal.sources = {record.source_path}; journal.target = record.root;
+    journal.commit_strategy = "provider_move_then_durable_install_reference_replacement";
+    journal.operation_context = encode_managed_move_context(coordinator);
+    if (journal.operation_context.size() > 384U * 1024U)
+        return move_failure("installs.move.apply", {"move_resource_admission_refused", "Move coordinator exceeds bounded durable handoff capacity", "384KiB context"});
+    auto transaction_lease = ManagedInstallRecoveryLease::acquire(context.workspace(), request.transaction_id, false);
+    if (!transaction_lease) return move_failure("installs.move.apply", transaction_lease.error());
+    auto started = facman::transaction::TransactionSession::begin(context.workspace(), std::move(journal));
+    if (!started) return move_failure("installs.move.apply", started.error());
+    auto session = started.take_value();
+    auto lease = ManagedInstallOperationLease::acquire(context, session.record(), false);
+    if (!lease) {
+        if (!session.refused("No provider entry: " + lease.error().message))
+            return move_failure("installs.move.apply", {"recovery_write_refused", "Contended move coordinator could not close", session.detail()});
+        return move_failure("installs.move.apply", lease.error());
+    }
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+    std::string detail;
+    auto held = context.installs().load(id.value());
+    if (!held || held.value().source_path != record.source_path || read_text(record.source_path) != preimage) {
+        if (!session.refused("No provider entry: exact move record preimage changed") ||
+            !lease.value()->release_after_closure(detail)) return move_failure("installs.move.apply",
+                {"recovery_write_refused", "Stale move refusal could not close/release", detail});
+        return move_failure("installs.move.apply", {"stale_plan", "Move record changed under the shared installation lease", ""});
+    }
+    const char* early = std::getenv("FACMAN_TEST_MOVE_INTERRUPT_AFTER_LEASE");
+    if (early && std::string(early) == "1") {
+        session.failed("Injected pre-entry move interruption");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Move stopped before durable provider-entry intent", request.transaction_id,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    coordinator.phase = "provider_entry_started";
+    session.record().operation_context = encode_managed_move_context(coordinator);
+    if (!lease.value()->revalidate(detail) || !session.validated("reviewed_move_handoff_bound") ||
+        !session.planned("exact_move_private_plan_persisted") || !session.staged("provider_entry_prepared") ||
+        !session.verified("exact_record_bound") || !session.committing("provider_entry_started"))
+        return move_failure("installs.move.apply", {"recovery_write_refused", "Move provider-entry intent could not be durably bound", detail});
+    const char* before = std::getenv("FACMAN_TEST_MOVE_INTERRUPT_BEFORE_PROVIDER");
+    if (before && std::string(before) == "1") {
+        session.failed("Injected interruption after provider-entry intent");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Move provider-entry outcome is not proved", request.transaction_id,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    auto terminal = context.setup().apply_move(apply);
+    if (!terminal) {
+        if (terminal.error().kind != facman::core::OutcomeKind::recovery_required) {
+            if (!session.refused("Gateway proved no move.apply dispatch: " + terminal.error().message) ||
+                !lease.value()->release_after_closure(detail)) return move_failure("installs.move.apply",
+                    {"recovery_write_refused", "Pre-dispatch move refusal could not close/release", detail});
+        } else session.failed(terminal.error().message);
+        return move_failure("installs.move.apply", terminal.error());
+    }
+    managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_PAUSE_BEFORE_PROJECTION");
+    auto evidence = context.setup().inspect_move_recovery(apply);
+    if (!evidence || evidence.value().classification != "provider_move_completed" ||
+        evidence.value().installed_state_digest != terminal.value().installed_state_digest ||
+        evidence.value().provider_journal_snapshot_sha256 != terminal.value().provider_journal_snapshot_sha256 ||
+        evidence.value().provider_audit_chain_digest != terminal.value().provider_audit_chain_digest) {
+        session.failed("Completed move evidence changed before reference projection");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Move terminal evidence needs explicit recovery", request.transaction_id,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    const std::string projected = project_moved_install_record(preimage, apply, evidence.value());
+    if (projected.empty()) {
+        session.failed("Move reference projection could not preserve original record");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Move projection is unavailable", request.transaction_id,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    coordinator.phase = "terminal_projection_prepared";
+    coordinator.projected_record_sha256 = digest_text(projected);
+    coordinator.provider_journal_snapshot_sha256 = evidence.value().provider_journal_snapshot_sha256;
+    coordinator.provider_installed_state_sha256 = evidence.value().installed_state_digest;
+    coordinator.provider_audit_chain_digest = evidence.value().provider_audit_chain_digest;
+    session.record().operation_context = encode_managed_move_context(coordinator);
+    if (!session.checkpoint("terminal_move_projection_prepared")) {
+        session.failed("Move terminal checkpoint failed");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Move terminal checkpoint could not persist", session.detail(),
+            facman::core::OutcomeKind::recovery_required});
+    }
+    const char* interrupted = std::getenv("FACMAN_TEST_MOVE_INTERRUPT_AFTER_PROVIDER");
+    if (interrupted && std::string(interrupted) == "1") {
+        session.failed("Injected interruption after completed provider move");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Completed provider move awaits exact FacMan projection", request.transaction_id,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    if (!lease.value()->revalidate(detail)) {
+        session.failed("Move lease changed before exact record CAS");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Move lease identity changed", detail,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    auto replaced = context.installs().replace(record, request.install_record_sha256, projected);
+    if (!replaced) {
+        session.failed("Exact moved record CAS failed");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Move completed but exact record CAS requires recovery", replaced.error().message,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    interrupted = std::getenv("FACMAN_TEST_MOVE_INTERRUPT_AFTER_PROJECTION");
+    if (interrupted && std::string(interrupted) == "1") {
+        session.failed("Injected interruption after move reference CAS");
+        return move_failure("installs.move.apply", {"transaction_recovery_required", "Exact move projection awaits coordinator closure", request.transaction_id,
+            facman::core::OutcomeKind::recovery_required});
+    }
+    if (!session.committed("moved_reference_projected_pending_acceptance") ||
+        !close_move_coordinator(context, session.record(), detail)) return move_failure("installs.move.apply",
+            {"transaction_recovery_required", "Move coordinator could not close", detail,
+                facman::core::OutcomeKind::recovery_required});
+    session.leave_durable_state_unchanged();
+    if (!lease.value()->release_after_closure(detail)) return move_failure("installs.move.apply",
+            {"transaction_recovery_required", "Move reference projected but coordinator closure needs recovery", detail,
+                facman::core::OutcomeKind::recovery_required});
+    ApplicationResult result;
+    result.output = managed_move_result(apply, terminal.value());
+    return result;
+#else
+    (void)request;
+    return unavailable(context, "installs.move.apply", "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
 }
 
 ApplicationResult uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request)
@@ -2132,6 +2542,13 @@ ApplicationResult inspect_install_recovery(ApplicationContext& context, const Se
         return uninstall_recovery_failure("installs.recovery.inspect", {
             "recovery_journal_invalid", "Managed install recovery journal is invalid", detail});
     }
+    if (journal.command_id == "installs.move.apply") {
+        auto plan = build_move_recovery_plan(context, parsed.value().str());
+        if (!plan) return move_failure("installs.recovery.inspect", plan.error());
+        ApplicationResult result;
+        result.output = plan.value().output;
+        return result;
+    }
     if (journal.command_id == "installs.install.apply") {
         auto planned = build_new_install_recovery_plan(context, parsed.value().str());
         if (!planned) return install_recovery_failure("installs.recovery.inspect", planned.error());
@@ -2176,6 +2593,8 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
     if (!coordinator_snapshot) return uninstall_recovery_failure("installs.recovery.apply", {
         "recovery_journal_invalid", "Managed install recovery journal cannot be retained", coordinator_snapshot.error().message});
     const auto recovery_failure = [&](const facman::core::Error& error) {
+        if (recovery_journal.command_id == "installs.move.apply")
+            return move_failure("installs.recovery.apply", error);
         if (recovery_journal.command_id == "installs.install.apply")
             return install_recovery_failure("installs.recovery.apply", error);
         if (recovery_journal.command_id == "installs.repair.apply")
@@ -2186,7 +2605,14 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
     // The same read-only plan is rebuilt below while the shared lease is held.
     const auto preflight = [&]() -> facman::core::Result<bool> {
         using Result = facman::core::Result<bool>;
-        if (recovery_journal.command_id == "installs.install.apply") {
+        if (recovery_journal.command_id == "installs.move.apply") {
+            auto move = build_move_recovery_plan(context, parsed.value().str());
+            if (!move) return Result::failure(move.error());
+            if (!move_recovery_review_matches(request, move.value())) return Result::failure({
+                "stale_plan", "Reviewed move recovery identity changed", request.plan_id});
+            if (move.value().action == "none") return Result::failure({
+                "move_recovery_indeterminate", "Move is not safely projectable or proved pre-entry", ""});
+        } else if (recovery_journal.command_id == "installs.install.apply") {
             auto planned = build_new_install_recovery_plan(context, parsed.value().str());
             if (!planned) return Result::failure(planned.error());
             if (request.confirmation != "APPLY" || request.plan_id != planned.value().plan_id ||
@@ -2228,6 +2654,8 @@ ApplicationResult apply_install_recovery(ApplicationContext& context, const Serv
     };
     const auto apply_under_lease = [&]() -> ApplicationResult {
     managed_install_test_pause("FACMAN_TEST_MANAGED_INSTALL_RECOVERY_PAUSE_AFTER_LEASE");
+    if (recovery_journal.command_id == "installs.move.apply")
+        return apply_move_recovery_under_lease(context, request, *operation_lease.value());
     if (recovery_journal.command_id == "installs.install.apply") {
         auto planned = build_new_install_recovery_plan(context, parsed.value().str());
         if (!planned) return install_recovery_failure("installs.recovery.apply", planned.error());

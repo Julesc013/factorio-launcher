@@ -561,6 +561,37 @@ class CliTests(unittest.TestCase):
             self.assertFalse(workspace.exists())
             self.assertFalse(destination.exists())
 
+    def test_managed_move_apply_requires_complete_exact_handoff_without_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace, destination = root / "workspace", root / "destination"
+            valid = ["installs", "move", "apply", "managed-fixture", "move-plan-fixture",
+                     "--target", str(destination), "--digest", "1" * 64,
+                     "--plan-created-at", "2099-01-01T00:00:00Z", "--record-digest", "2" * 64,
+                     "--transaction-id", "tx-move-fixture", "--applied-at", "2099-01-01T00:00:01Z",
+                     "--confirm", "APPLY"]
+            invalid = [valid[:4], ["installs", "move", "apply", "old-plan", "--digest", "1" * 64, "--confirm", "APPLY"]]
+            for option in ("--target", "--record-digest", "--plan-created-at", "--transaction-id", "--applied-at"):
+                changed = valid.copy()
+                offset = changed.index(option)
+                del changed[offset:offset + 2]
+                invalid.append(changed)
+            invalid.extend([valid + ["--target", str(destination)], valid + ["--json", "--json"],
+                            valid + ["--unknown", "value"]])
+            for arguments in invalid:
+                code, _stdout, _stderr = invoke(["--workspace", str(workspace), *arguments])
+                self.assertEqual(code, 2, arguments)
+                self.assertFalse(workspace.exists())
+                self.assertFalse(destination.exists())
+            environment = {"FACMAN_SETUP_STATE_ROOT": "", "FACMAN_SETUP_ACCEPTANCE_ROOT": "",
+                           "FACMAN_SETUP_POLICY_ACTIVATION": ""}
+            with mock.patch.dict(os.environ, environment, clear=False):
+                code, stdout, stderr = invoke(["--workspace", str(workspace), *valid, "--json"])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "live_target_acceptance_required")
+            self.assertFalse(workspace.exists())
+            self.assertFalse(destination.exists())
+
     def test_managed_uninstall_plan_requires_bound_lifecycle_evidence_without_writes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

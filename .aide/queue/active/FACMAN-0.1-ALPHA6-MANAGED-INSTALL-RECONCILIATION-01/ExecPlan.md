@@ -368,3 +368,49 @@ genuine Factorio input was read or used. Complete F07/F11, remaining lifecycle
 transitions, canonical installed owner gate, genuine game/human/physical-host and
 other-platform acceptance, produced packages, Beta and release remain open. The
 WorkUnit stays active; no queue status or release gate changes.
+
+### Bounded managed move apply and exact projection recovery successor
+
+Starting at synchronized dev a4a74cf, this source successor extends the existing
+read-only preview with explicit separate-process apply handoff. It retains the
+original record SHA, private provider plan, stable installation lease and durable
+coordinator. Only a verified new destination and exact FacMan record projection
+are in scope; old source/archive/foreign bytes remain retained. The record is
+explicitly move_pending_acceptance, with launch and safe maintenance actions
+ineligible. Provider reference-update/removal phases remain honestly deferred.
+
+Recovery distinguishes a durably pre-entry no-effect abort, a fully completed
+provider move awaiting exact reference CAS, and ambiguous destination-visible
+provider state. The latter is preserved/refused because pinned public USK has no
+move finalizer. Journal-only closure avoids any generic target-marker cleanup.
+The original archive/source reference and owned manifest membership stay bound;
+foreign copies do not gain ownership and empty-directory preservation is not
+promised. Complete closure limits for this pinned materializing alpha path are
+256MiB/4096 files/16384 entries, including foreign content, with conservative RAM
+and destination-space checks before provider planning/apply. Large real Factorio
+acceptance remains a separate lifecycle follow-up.
+
+Independent source review, fresh native/public qualification and current-head CI
+for this apply successor remain pending. PR432's separate delivered Windows move
+preview observation is historical preview evidence only, not qualification of
+these new apply sources. Its root result c65ded9a and independent review 36af5d01
+are retained in [managed-move-preview-delivered.v1.json](evidence/managed-move-preview-delivered.v1.json)
+with selected hash-closed custody (228466 bytes, 109 members); original executables,
+ZIP, extracted payload, caches and provider copies are excluded. The receipt binds
+the original 601 files/600 manifest rows and 22 public dispatches, including the
+historically closed move.apply, without qualifying this successor's new behavior.
+No task status, canonical Desktop owner gate, complete F07/F11, genuine game,
+human, host, Beta or release gate is closed. No genuine Factorio input is used.
+
+Source02 corrects all four findings from failed independent source01 review
+5b2adb316021b6f83caede63234e524a2cf1809e5ac30acf5c004d15d9147298:
+project both authoritative root and app_dir with a consistent original root and
+safe relative executable; freshly admit foreign-inclusive closure/capacity before
+every materializing provider plan/apply call; require explicit pending lifecycle
+rather than active compatibility; expose absent-path observations as indeterminate
+unless the durable coordinator proves pre-entry. Authored raw/reloaded reference,
+foreign-growth checkpoint and schema-valid blocked recovery regressions await
+hosted native/public qualification. Source01 review and all prior failures remain
+preserved. Local native admission does not fit the unchanged storage reserve;
+required hosted CI followed by one exact produced Windows artifact public oracle
+remains the qualification route, with no native pass inferred from static checks.

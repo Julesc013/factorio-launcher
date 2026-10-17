@@ -111,6 +111,7 @@ class StructurePolicyTests(unittest.TestCase):
         self.assertEqual(
             {
                 "active",
+                "move_pending_acceptance",
                 "verification_failed",
                 "recovery_required",
                 "retired",

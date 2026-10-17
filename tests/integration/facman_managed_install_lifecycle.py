@@ -313,7 +313,7 @@ class PublicInstallProof:
                 return payload
             assert payload["schema"] == "facman.managed_move_plan.v1"
             assert payload["copy_scope"] == "complete_source_files_including_foreign"
-            assert payload["grants_ownership"] is False and payload["apply_available"] is False
+            assert payload["grants_ownership"] is False and payload["apply_available"] is True
             assert payload["observation_atomic"] is False
             assert payload["empty_directory_preservation"] == "not_promised"
             plan = payload["provider_plan"]
@@ -346,7 +346,7 @@ class PublicInstallProof:
         assert human.returncode == 0 and not human.stderr, human.stderr
         for text in ("Read-only managed move preview: planned", "Source:", "Destination (must be absent):",
                      "Copies include foreign files", "grant no ownership", "preservation is not promised",
-                     "Move apply is unavailable", "not an atomic snapshot"):
+                     "Bounded apply verifies the new root", "not an atomic snapshot"):
             assert text in human.stdout, text
         assert snapshot() == before
         rpc = {"schema": "facman.transport_request.v2", "protocol_version": 2,
@@ -401,9 +401,14 @@ class PublicInstallProof:
         finally:
             os.rmdir(destination_junction)
         before = snapshot()
-        self.run(case, ["installs", "move", "apply", planned["provider_plan"]["plan_id"],
-                        "--digest", planned["provider_plan"]["plan_digest"], "--confirm", "APPLY"],
-                 outcome="unavailable", code="live_target_acceptance_required")
+        provider = planned["provider_plan"]
+        applied = (datetime.datetime.fromisoformat(provider["created_at"].replace("Z", "+00:00")) +
+                   datetime.timedelta(seconds=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.run(case, ["installs", "move", "apply", "managed-test", provider["plan_id"],
+                        "--target", str(destination), "--digest", provider["plan_digest"],
+                        "--plan-created-at", provider["created_at"], "--record-digest", planned["install_record_sha256"],
+                        "--transaction-id", "tx-default-move", "--applied-at", applied, "--confirm", "APPLY"],
+                 outcome="unavailable", code="live_target_acceptance_required", configured=False)
         assert snapshot() == before and not destination.exists()
         check()
 
@@ -1083,17 +1088,268 @@ class OwnedCoordinationProof(PublicInstallProof):
         self.receipt("running")
 
 
+class OwnedMoveProof(OwnedCoordinationProof):
+    """Separate CLI/RPC handoff, exact reference CAS and bounded move recovery."""
+
+    def dispatch(self, case, args, *, environment=None, workspace=None, timeout=40):
+        from tools import provider_canary_process as owned
+        import uuid
+        result = owned.command([str(self.executable), "--workspace", str(workspace or case/"workspace"),
+                                *args, "--json"], cwd=ROOT,
+                               environment=environment or self.environment(case), timeout=timeout,
+                               directory=self.root/("execution-move-"+uuid.uuid4().hex),
+                               wait_for_job_empty_after_primary=True)
+        if result.receipt["termination"] == "completed":
+            assert result.receipt["primary_stopped"] and result.receipt["job_empty_observed"]
+            assert not result.receipt["job_terminated"] and result.receipt["waited_for_job_empty_after_primary"]
+        return result
+
+    def inventory(self, case):
+        entries = {}
+        pending = [case]
+        while pending:
+            directory = pending.pop()
+            for path in sorted(directory.iterdir()):
+                status = path.lstat()
+                key = path.relative_to(case).as_posix()
+                assert not path.is_symlink() and not getattr(status, "st_file_attributes", 0) & 0x400
+                if path.is_dir():
+                    entries[key] = ["directory"]
+                    pending.append(path)
+                else:
+                    entries[key] = ["file", status.st_size, digest(path)]
+        return entries
+
+    def prepare_move(self, name):
+        case = self.case(name)
+        self.run(case, self.apply_args(case, self.plan(case)))
+        self.verify(case)
+        (case/"target/foreign-user.txt").write_bytes(b"foreign bytes remain foreign")
+        (case/"target/.facman-transaction-staging.v2.json").write_bytes(b"foreign marker-shaped sentinel")
+        (case/"target/empty-user-directory").mkdir()
+        destination = case/"destination"
+        preview = self.run(case, ["installs", "move", "plan", "managed-test", "--target", str(destination)])
+        provider = preview["provider_plan"]
+        assert preview["install_record_sha256"] == digest(self.record(case))
+        args = ["installs", "move", "apply", "managed-test", provider["plan_id"], "--target", str(destination),
+                "--digest", provider["plan_digest"], "--plan-created-at", provider["created_at"],
+                "--record-digest", preview["install_record_sha256"], "--transaction-id", "tx-public-move",
+                "--applied-at", "2099-01-01T00:00:01Z", "--confirm", "APPLY"]
+        return case, destination, preview, args
+
+    def retained_source(self, case):
+        return self.inventory(case/"target"), digest(case/"source.zip")
+
+    def assert_projection(self, case, destination, original):
+        record = json.loads(self.record(case).read_bytes())
+        prior = json.loads(original)
+        assert Path(record["root"]) == Path(record["app_dir"]) == destination
+        assert Path(record["executable"]) == destination/"bin/x64/factorio.exe"
+        assert record["lifecycle_status"] == "move_pending_acceptance"
+        assert record["safe_actions"] == {"repair": False, "uninstall": False}
+        for key in ("source_ref", "source", "ownership", "provider_id", "version", "platform_integration",
+                    "strict_isolation_eligibility", "distribution_origin"):
+            if key in prior:
+                assert record[key] == prior[key], key
+        state = json.loads(Path(record["setup_state_ref"]).read_bytes())
+        old_state = json.loads(Path(prior["setup_state_ref"]).read_bytes())
+        assert Path(state["target_root"]) == destination
+        assert state["transaction_id"] == "tx-public-move" and state["lifecycle_status"] == "move_pending_acceptance"
+        assert record["state_revision"] == state["transaction_id"]+":"+state["ownership_manifest_digest"]
+        assert record["last_verification_identity"] == state["last_verification"]["report_digest"]
+        old_owned = json.loads((case/"setup-state/state"/old_state["ownership_manifest_ref"]).read_bytes())
+        new_owned = json.loads((case/"setup-state/state"/state["ownership_manifest_ref"]).read_bytes())
+        assert old_owned["files"] == new_owned["files"] and old_owned["directories"] == new_owned["directories"]
+        assert "foreign-user.txt" not in {row["relative_path"] for row in new_owned["files"]}
+        assert (destination/"foreign-user.txt").read_bytes() == b"foreign bytes remain foreign"
+        assert (destination/".facman-transaction-staging.v2.json").read_bytes() == b"foreign marker-shaped sentinel"
+        assert self.guards(case) == {}
+        before_reload = self.inventory(case)
+        reloaded = self.run(case, ["installs", "list"])["install_refs"]
+        selected = next(row for row in reloaded if row["install_id"] == "managed-test")
+        assert Path(selected["root"]) == Path(selected["app_dir"]) == destination
+        assert Path(selected["executable"]) == destination/"bin/x64/factorio.exe"
+        assert selected["setup_state_ref"] == record["setup_state_ref"]
+        assert self.inventory(case) == before_reload
+        return record
+
+    def move_retry_rpc(self, case, args):
+        from tools import provider_canary_process as owned
+        import uuid
+        values = dict(zip(args[5::2], args[6::2]))
+        request = {"schema": "facman.transport_request.v2", "protocol_version": 2,
+                   "request_id": "req-move-retry", "operation_id": "op-move-retry", "attempt_id": "attempt-move-retry",
+                   "command": "installs.move.apply", "workspace": str(case/"workspace"), "dry_run": False,
+                   "payload": {"install_id": args[3], "plan_id": args[4], "target_root": values["--target"],
+                               "plan_digest": values["--digest"], "plan_created_at": values["--plan-created-at"],
+                               "install_record_sha256": values["--record-digest"], "transaction_id": values["--transaction-id"],
+                               "applied_at": values["--applied-at"], "confirmation": "APPLY"}}
+        before = self.inventory(case)
+        result = owned.command([str(self.executable), "rpc", "--stdio"], cwd=ROOT,
+                               environment=self.environment(case), input_bytes=(json.dumps(request)+"\n").encode(),
+                               timeout=40, directory=self.root/("execution-rpc-"+uuid.uuid4().hex),
+                               wait_for_job_empty_after_primary=True)
+        response = json.loads(result.stdout)
+        assert result.ok and result.receipt["job_empty_observed"] and not result.receipt["job_terminated"]
+        assert response["outcome"] == "ok" and response["payload"]["lifecycle_status"] == "move_pending_acceptance"
+        assert self.inventory(case) == before
+        self.steps.append({"case": case.name, "command": ["rpc", "--stdio"], "request": request,
+                           "response": response, "execution_receipt": str(result.directory/"receipt.json"),
+                           "oracle": "identical completed handoff; complete tree unchanged"})
+        self.receipt("running")
+
+    def moves(self):
+        case, destination, preview, args = self.prepare_move("move-positive")
+        original = self.record(case).read_bytes()
+        source_before = self.retained_source(case)
+        for change in ("record", "source", "destination", "owned"):
+            if change == "record": self.record(case).write_bytes(original+b" ")
+            if change == "source": (case/"target/foreign-user.txt").write_bytes(b"drift")
+            if change == "destination": destination.mkdir()
+            if change == "owned": (case/"target/bin/x64/factorio.exe").write_bytes(b"damaged owned file")
+            before = self.inventory(case)
+            self.run(case, args, outcome="refused", code={"record": "stale_plan", "source": "stale_plan",
+                     "destination": "invalid_argument", "owned": "lifecycle_refused"}[change])
+            assert self.inventory(case) == before
+            if change == "record": self.record(case).write_bytes(original)
+            if change == "source": (case/"target/foreign-user.txt").write_bytes(b"foreign bytes remain foreign")
+            if change == "destination": destination.rmdir()
+            if change == "owned": (case/"target/bin/x64/factorio.exe").write_bytes(BYTES)
+        from tools import provider_canary_process as owned
+        import uuid
+        human = owned.command([str(self.executable), "--workspace", str(case/"workspace"), *args], cwd=ROOT,
+                              environment=self.environment(case), timeout=40,
+                              directory=self.root/("execution-human-"+uuid.uuid4().hex),
+                              wait_for_job_empty_after_primary=True)
+        text = human.stdout.decode()
+        assert human.ok and human.receipt["job_empty_observed"] and not human.receipt["job_terminated"]
+        assert all(part in text for part in ("new root verified", "Old source (retained):", "New root:",
+                   "move_pending_acceptance", "launch remains ineligible", "Foreign copied content remains foreign"))
+        self.steps.append({"case": case.name, "command": args, "format": "human", "stdout": text,
+                           "execution_receipt": str(human.directory/"receipt.json")})
+        assert self.retained_source(case) == source_before
+        self.assert_projection(case, destination, original)
+        before_retry = self.inventory(case)
+        self.run(case, args)
+        assert self.inventory(case) == before_retry
+        self.move_retry_rpc(case, args)
+        self.assert_projection(case, destination, original)
+
+        # Durable entry intent without a provider dispatch is still unproved, even with absent paths.
+        case, destination, preview, args = self.prepare_move("move-entry-unproved")
+        self.run(case, args, outcome="recovery_required", code="transaction_recovery_required",
+                 fault="FACMAN_TEST_MOVE_INTERRUPT_BEFORE_PROVIDER")
+        before = self.inventory(case)
+        recovery = self.run(case, ["installs", "recovery", "inspect", "tx-public-move"])
+        assert (recovery["classification"], recovery["action"], recovery["status"]) == ("indeterminate", "none", "blocked")
+        import jsonschema
+        move_schema = json.loads((ROOT/"contracts/schema/factorio/facman_managed_move_recovery.v1.schema.json").read_bytes())
+        shared_schema = json.loads((ROOT/"contracts/schema/factorio/facman_managed_install_recovery.v1.schema.json").read_bytes())
+        jsonschema.Draft202012Validator(move_schema).validate(recovery)
+        jsonschema.Draft202012Validator(shared_schema).validate(recovery)
+        assert not destination.exists()
+        assert not (case/"setup-state/state/transactions/tx-public-move.journal.json").exists()
+        self.run(case, ["installs", "recovery", "apply", "tx-public-move", recovery["plan_id"],
+                       "--digest", recovery["plan_digest"], "--confirm", "APPLY"],
+                 outcome="recovery_required", code="move_recovery_indeterminate")
+        assert self.inventory(case) == before
+
+        # Both post-provider windows: exact preimage and exact already-projected postimage.
+        for fault in ("FACMAN_TEST_MOVE_INTERRUPT_AFTER_PROVIDER", "FACMAN_TEST_MOVE_INTERRUPT_AFTER_PROJECTION"):
+            case, destination, preview, args = self.prepare_move("move-"+fault.rsplit("_", 1)[1].lower())
+            original = self.record(case).read_bytes()
+            source_before = self.retained_source(case)
+            self.run(case, args, outcome="recovery_required", code="transaction_recovery_required", fault=fault)
+            assert self.retained_source(case) == source_before
+            provider_before = self.inventory(case/"setup-state")
+            recovery = self.run(case, ["installs", "recovery", "inspect", "tx-public-move"])
+            assert recovery["classification"] == "provider_move_completed" and recovery["action"] == "project_terminal"
+            recovery_args = ["installs", "recovery", "apply", "tx-public-move", recovery["plan_id"],
+                             "--digest", recovery["plan_digest"], "--confirm", "APPLY"]
+            stale = recovery_args.copy(); stale[stale.index("--digest")+1] = "0"*64
+            before = self.inventory(case)
+            self.run(case, stale, outcome="refused", code="stale_plan")
+            assert self.inventory(case) == before
+            current = self.record(case).read_bytes()
+            self.record(case).write_bytes(current+b" ")
+            before = self.inventory(case)
+            self.run(case, ["installs", "recovery", "inspect", "tx-public-move"],
+                     outcome="conflict", code="move_recovery_projection_conflict")
+            assert self.inventory(case) == before
+            self.record(case).write_bytes(current)
+            foreign = destination/"foreign-user.txt"; foreign.write_bytes(b"destination drift")
+            before = self.inventory(case)
+            self.run(case, ["installs", "recovery", "inspect", "tx-public-move"],
+                     outcome="refused", code="setup_move_evidence_invalid")
+            assert self.inventory(case) == before
+            foreign.write_bytes(b"foreign bytes remain foreign")
+            self.run(case, recovery_args)
+            assert self.inventory(case/"setup-state") == provider_before and self.retained_source(case) == source_before
+            self.assert_projection(case, destination, original)
+            before = self.inventory(case)
+            self.run(case, recovery_args)
+            self.run(case, args)
+            assert self.inventory(case) == before
+            self.assert_projection(case, destination, original)
+
+        # Real process loss at observed REQUESTED before provider entry; shared cross-workspace contention.
+        case, destination, preview, args = self.prepare_move("move-requested")
+        original = self.record(case).read_bytes()
+        imported = self.dispatch(case, ["installs", "import", str(case/"target"), "--id", "managed-test"],
+                                 workspace=case/"other-workspace")
+        assert imported.ok
+        other_record = case/"other-workspace/installs/refs/managed-test.json"
+        other_record.write_bytes(original)
+        provider_before = self.inventory(case/"setup-state")
+        source_before = self.retained_source(case)
+        environment = self.environment(case, fault="FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE")
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            owner = pool.submit(self.dispatch, case, args, environment=environment, timeout=1.2)
+            guard, metadata = self.wait_guard(case, "tx-public-move", owner)
+            journal = case/"workspace/transactions/tx-public-move.transaction.v1.json"
+            requested = shared_journal(journal)
+            assert requested["state"] == "requested" and "provider_entry_started" not in json.dumps(requested)
+            assert not (case/"setup-state/state/transactions/tx-public-move.journal.json").exists()
+            contender_args = args.copy(); contender_args[contender_args.index("--transaction-id")+1] = "tx-other-move"
+            contender = self.dispatch(case, contender_args, workspace=case/"other-workspace")
+            response = json.loads(contender.stdout)
+            assert response["outcome"] == "refused" and response["payload"]["refusal"]["code"] == "recovery_lock_contended"
+            self.steps.append({"case": case.name, "command": contender_args, "response": response,
+                               "execution_receipt": str(contender.directory/"receipt.json"),
+                               "oracle": "same provider-state/install key contends across distinct FacMan workspaces"})
+            killed = owner.result()
+            assert killed.receipt["termination"] == "command_timeout" and killed.receipt["job_empty_observed"]
+            self.steps.append({"case": case.name, "command": args, "intentional_interruption": "observed REQUESTED owner process loss",
+                               "execution_receipt": str(killed.directory/"receipt.json"), "requested": requested,
+                               "orphan_guard_sha256": digest(guard), "member_metadata": metadata})
+        assert self.inventory(case/"setup-state") == provider_before and self.retained_source(case) == source_before
+        assert not destination.exists() and self.record(case).read_bytes() == original
+        recovery = self.run(case, ["installs", "recovery", "inspect", "tx-public-move"])
+        assert recovery["classification"] == "no_provider_effect" and recovery["action"] == "close_no_provider_effect"
+        recovery_args = ["installs", "recovery", "apply", "tx-public-move", recovery["plan_id"],
+                         "--digest", recovery["plan_digest"], "--confirm", "APPLY"]
+        self.run(case, recovery_args)
+        assert self.guards(case) == {} and self.record(case).read_bytes() == original and not destination.exists()
+        assert self.inventory(case/"setup-state") == provider_before and self.retained_source(case) == source_before
+        before = self.inventory(case)
+        self.run(case, recovery_args)
+        assert self.inventory(case) == before
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--facman", type=Path, required=True)
     parser.add_argument("--root", type=Path, required=True)
-    parser.add_argument("--scenario", choices=["all", "streaming", "genesis", "earliest", "verification", "coordination", "move-preview"], default="all")
+    parser.add_argument("--scenario", choices=["all", "streaming", "genesis", "earliest", "verification", "coordination", "move-preview", "move-apply"], default="all")
     args = parser.parse_args()
     if os.name != "nt":
         parser.error("this proof covers the admitted Windows portable ZIP recipe")
-    proof = (OwnedCoordinationProof if args.scenario == "coordination" else PublicInstallProof)(args.facman, args.root)
+    proof_type = OwnedMoveProof if args.scenario == "move-apply" else OwnedCoordinationProof if args.scenario == "coordination" else PublicInstallProof
+    proof = proof_type(args.facman, args.root)
     try:
-        if args.scenario == "coordination":
+        if args.scenario == "move-apply":
+            proof.moves()
+        elif args.scenario == "coordination":
             proof.coordination()
         elif args.scenario == "move-preview":
             proof.move_preview()

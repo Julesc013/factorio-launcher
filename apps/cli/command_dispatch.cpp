@@ -113,17 +113,6 @@ std::vector<std::string> option_values(const std::vector<std::string>& args, con
     for (std::size_t index = 0; index + 1 < args.size(); ++index) if (args[index] == name) output.push_back(args[++index]);
     return output;
 }
-bool repair_plan_arguments_valid(const std::vector<std::string>& args)
-{
-    if (args.size() < 4) return false;
-    std::size_t archive_count = 0, json_count = 0;
-    for (std::size_t index = 4; index < args.size(); ++index) {
-        if (args[index] == "--json" && ++json_count == 1) continue;
-        if (args[index] != "--archive" || ++archive_count > 1 || ++index >= args.size() ||
-            args[index].compare(0, 2, "--") == 0) return false;
-    }
-    return archive_count == 1;
-}
 CliResponse call(
     const Options& options,
     const std::string& command,
@@ -658,7 +647,7 @@ int command_installs(const Options& options)
         (options.args[2] == "plan" || options.args[2] == "apply")) {
         const std::string phase = options.args[2];
         if (phase == "plan") {
-            if (action == "repair" && !repair_plan_arguments_valid(options.args)) return 2;
+            if (action == "repair" && !facman::cli::repair_plan_arguments_valid(options.args)) return 2;
             if (action == "move" && !facman::cli::move_plan_arguments_valid(options.args)) return 2;
             std::vector<std::pair<std::string, std::string>> fields = {{"install_id", options.args[3]}};
             if (action == "repair") fields.push_back({"archive", option(options.args, "--archive")});
@@ -679,6 +668,9 @@ int command_installs(const Options& options)
         if (phase == "apply") {
             auto apply = facman::cli::setup_apply_request(action, options.args);
             if (!apply) return 2;
+            if (action == "move") return emit_report(call(options, apply->command, apply->payload, false),
+                flag(options.args, "--json"), facman::cli::managed_move_apply_text,
+                "Managed move result is missing", "Managed move result is invalid");
             return emit_basic(call(options, apply->command, apply->payload, false),
                 flag(options.args, "--json"), apply->success_message);
         }

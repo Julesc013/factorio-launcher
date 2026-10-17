@@ -1,0 +1,53 @@
+{
+  "schema": "facman.managed_move_preview_delivered_evidence.v1",
+  "status": "PASS_SCOPED_PR432_DELIVERED_MOVE_PREVIEW",
+  "source_commit": "e78cdde242e026ac8fd796e783830ca38337c27f",
+  "source_tree": "e6faea07c3c03fde8c28f5a2869f32a190177ab7",
+  "integrated_dev_base": "a4a74cf91aa488569bcc4ab0a03548cb2a1a16c6",
+  "pull_request": 432,
+  "ci_run": 38916822491,
+  "artifact_id": 12058985124,
+  "github_zip_sha256": "72101d4ec389204ca4a91ca767c3bf7a063fe8692b44d919519c52bd276ae3e1",
+  "result_sha256": "c65ded9acbb84f2e150aae86a94eb5ed32d11fc4df90368fab3c8db1162e18bc",
+  "independent_review_sha256": "36af5d012e2fb43c372a5c58427e43c0a73f001da63501ed5fee6f54ce3e9fbd",
+  "independent_review_verdict": "PASS_SCOPED_PR432_DELIVERED_MOVE_PREVIEW",
+  "product_dispatches": 22,
+  "formats": {
+    "json": 20,
+    "human_cli": 1,
+    "v2_stdio_rpc": 1
+  },
+  "move_plan": {
+    "success": 4,
+    "refusal": 14,
+    "default_unavailable": 1
+  },
+  "setup_dispatches": 2,
+  "closed_move_apply_dispatches": 1,
+  "strict_normal_owned_receipts": 32,
+  "original_files_unchanged": 601,
+  "manifest_entries_verified": 600,
+  "custody": {
+    "path": "managed-move-preview-delivered.custody.zip",
+    "sha256": "339445fa8a214f2ceffe5e329bd132cc5f268037990dee0a077a22ee5c34337f",
+    "bytes": 228466,
+    "member_count": 109,
+    "selected_uncompressed_bytes": 662655,
+    "manifest_sha256": "4a03d81a7331782d90a9e7db0b9e1b3cf5e27e5301fd571f6f101b5049b832c1"
+  },
+  "limitations": [
+    "Historical PR432 delivered preview source only; this successor move apply source has not been built or product tested.",
+    "Unsigned artifact hash closure does not prove release signing or authenticity.",
+    "No canonical installed Desktop, genuine game, human experience, host, whole F07/F11, Beta or release qualification.",
+    "No original ZIP, executable, full extracted payload, cache, provider copy or fixture file bytes included."
+  ],
+  "resource_admissions": {
+    "utc": "2026-10-16T16:37:19.931693+00:00",
+    "task_roots": 8,
+    "measured_root_bytes": 15171770229,
+    "additional_peak_bytes": 671088640,
+    "projected_root_bytes": 15842858869,
+    "free_bytes": 15870361600,
+    "free_after_peak_bytes": 15199272960
+  }
+}

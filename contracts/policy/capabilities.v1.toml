@@ -171,3 +171,11 @@ status = "unavailable"
 required_effects = ["release_publish"]
 commands = []
 description = "Publish a signed, provenance-bound release through an explicitly authorised channel."
+
+[[capability]]
+id = "install.managed.move.apply"
+domain = "installs"
+status = "conditional"
+required_effects = ["workspace_read", "workspace_write", "setup_mutation"]
+commands = ["installs.move.apply"]
+description = "Apply a resource-bounded reviewed move through pinned Setup, verify and project the new root, and retain the old source pending acceptance under existing explicit Setup authority."

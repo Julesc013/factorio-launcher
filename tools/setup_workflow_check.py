@@ -55,6 +55,7 @@ def validate() -> list[str]:
                 "installs.repair.apply",
                 "installs.uninstall.plan",
                 "installs.move.plan",
+                "installs.move.apply",
                 "installs.uninstall.apply",
                 "installs.recovery.inspect",
                 "installs.recovery.apply",
@@ -80,7 +81,7 @@ def validate() -> list[str]:
         command = commands[command_id]
         expected_risk = (
             "setup_mutation"
-            if command_id in {"installs.install.apply", "installs.repair.apply", "installs.uninstall.apply", "installs.recovery.apply"}
+            if command_id in {"installs.install.apply", "installs.repair.apply", "installs.move.apply", "installs.uninstall.apply", "installs.recovery.apply"}
             else "persistent_local_write"
         )
         if command.get("risk_tier") != expected_risk:

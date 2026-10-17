@@ -32,11 +32,11 @@ std::string payload(const std::vector<std::pair<std::string, std::string>>& fiel
     return output.serialize();
 }
 
-std::optional<std::map<std::string, std::string>> exact_repair_apply_options(
-    const std::vector<std::string>& args)
+std::optional<std::map<std::string, std::string>> exact_maintenance_apply_options(
+    const std::vector<std::string>& args, const std::string& source_option)
 {
-    static const std::set<std::string> value_options {
-        "--archive", "--digest", "--plan-created-at", "--record-digest",
+    const std::set<std::string> value_options {
+        source_option, "--digest", "--plan-created-at", "--record-digest",
         "--transaction-id", "--applied-at", "--confirm"};
     if (!positional(args, 3) || !positional(args, 4)) return std::nullopt;
     std::map<std::string, std::string> values;
@@ -90,6 +90,19 @@ std::optional<std::map<std::string, std::string>> exact_install_apply_options(
 
 } // namespace
 
+bool repair_plan_arguments_valid(const std::vector<std::string>& args)
+{
+    if (args.size() < 4) return false;
+    std::size_t archive_count = 0, json_count = 0;
+    for (std::size_t index = 4; index < args.size(); ++index) {
+        if (args[index] == "--json" && ++json_count == 1) continue;
+        if (args[index] != "--archive" || ++archive_count > 1 || ++index >= args.size() ||
+            args[index].compare(0, 2, "--") == 0) return false;
+    }
+    return archive_count == 1;
+}
+
+
 bool move_plan_arguments_valid(const std::vector<std::string>& args)
 {
     if (args.size() < 4 || args[3].empty() || args[3].compare(0, 2, "--") == 0) return false;
@@ -119,18 +132,20 @@ std::optional<SetupApplyCommand> setup_apply_request(
             {"confirmation", values->at("--confirm")}}),
             "Managed install apply dispatched."};
     }
-    if (action == "repair") {
-        auto values = exact_repair_apply_options(args);
+    if (action == "repair" || action == "move") {
+        const std::string source_option = action == "move" ? "--target" : "--archive";
+        auto values = exact_maintenance_apply_options(args, source_option);
         if (!values) return std::nullopt;
-        return SetupApplyCommand {"installs.repair.apply", payload({
-            {"install_id", args[3]}, {"archive", values->at("--archive")},
+        return SetupApplyCommand {"installs." + action + ".apply", payload({
+            {"install_id", args[3]}, {action == "move" ? "target_root" : "archive", values->at(source_option)},
             {"plan_id", args[4]}, {"plan_digest", values->at("--digest")},
             {"plan_created_at", values->at("--plan-created-at")},
             {"install_record_sha256", values->at("--record-digest")},
             {"transaction_id", values->at("--transaction-id")},
             {"applied_at", values->at("--applied-at")},
             {"confirmation", values->at("--confirm")}}),
-            "Managed repair apply dispatched."};
+            action == "move" ? "Managed move reference projected; old source retained pending acceptance."
+                : "Managed repair apply dispatched."};
     }
     const std::string digest = option(args, "--digest");
     const std::string confirmation = option(args, "--confirm");

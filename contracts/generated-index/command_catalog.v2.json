@@ -1408,18 +1408,43 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
+      "cli": "facman installs move apply <install-id> <plan-id> --target <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json",
       "cli_aliases": [],
       "cli_grammar": {
         "internal": false,
         "options": [
           {
+            "name": "--target",
+            "repeatable": false,
+            "value": "path"
+          },
+          {
             "name": "--digest",
             "repeatable": false,
             "value": "sha256"
+          },
+          {
+            "name": "--plan-created-at",
+            "repeatable": false,
+            "value": "utc"
+          },
+          {
+            "name": "--record-digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--transaction-id",
+            "repeatable": false,
+            "value": "id"
+          },
+          {
+            "name": "--applied-at",
+            "repeatable": false,
+            "value": "utc"
           },
           {
             "name": "--confirm",
@@ -1439,11 +1464,15 @@
         ],
         "positionals": [
           {
+            "name": "install-id",
+            "required": true
+          },
+          {
             "name": "plan-id",
             "required": true
           }
         ],
-        "usage": "facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+        "usage": "facman installs move apply <install-id> <plan-id> --target <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json"
       },
       "command_id": "installs.move.apply",
       "contract_path": "contracts/command/factorio/installs.move.apply.v1.toml",
@@ -1451,12 +1480,15 @@
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "dry_run_default": false,
       "effects": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.move.apply.refusal.json",
+      "golden_success": "tests/golden/commands/installs.move.apply.success.json",
+      "golden_success_shape": "response",
       "localization_keys": [
         "command.installs.move.apply.title",
         "command.installs.move.apply.description"
@@ -1464,10 +1496,51 @@
       "mutates_workspace": true,
       "native_id": "installs_move_apply",
       "owner": "facman",
+      "refusal_codes": [
+        "setup_move_apply_input_invalid",
+        "setup_move_apply_refused",
+        "setup_move_evidence_invalid",
+        "setup_move_closure_invalid",
+        "move_resource_admission_refused",
+        "move_recovery_indeterminate",
+        "move_recovery_projection_conflict",
+        "live_target_acceptance_required",
+        "setup_authority_required",
+        "unknown_install",
+        "managed_install_evidence_incomplete",
+        "stale_plan",
+        "invalid_argument",
+        "ownership_denied",
+        "lifecycle_refused",
+        "setup_installed_state_response_invalid",
+        "recovery_lock_contended",
+        "recovery_write_refused",
+        "transaction_recovery_required",
+        "operation_specific_recovery_required",
+        "setup_unavailable"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "installs_move_apply",
       "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "target_root",
+          "repeatable": false,
+          "request_field": "target_root",
+          "required": true,
+          "type": "path"
+        },
         {
           "choices": [],
           "default": null,
@@ -1487,6 +1560,42 @@
           "type": "sha256"
         },
         {
+          "choices": [],
+          "default": null,
+          "name": "plan_created_at",
+          "repeatable": false,
+          "request_field": "plan_created_at",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_record_sha256",
+          "repeatable": false,
+          "request_field": "install_record_sha256",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "applied_at",
+          "repeatable": false,
+          "request_field": "applied_at",
+          "required": true,
+          "type": "string"
+        },
+        {
           "choices": [
             "APPLY"
           ],
@@ -1500,12 +1609,13 @@
       ],
       "request_schema": "contracts/schema/command/installs.move.apply.request.v1.schema.json",
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
-      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/facman_managed_move_apply_result.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
-      "risk_tier": "persistent_local_write",
+      "risk_tier": "setup_mutation",
       "runtime_id": "installs.move.apply",
       "schema": "facman.command.v2",
       "visibility": "public",
@@ -12597,6 +12707,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "300478fada177e7cd877ba2dcf3071ff1e764c5bb2675874459f087e19d18b40",
+  "source_digest": "b6e6cb656eb3307ad953539eb4fa2dcfa529c29876b9f564b412d451ba5dff82",
   "version": "facman-0.1.0-alpha.6"
 }
