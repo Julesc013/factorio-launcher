@@ -528,6 +528,9 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
     const json::Value* selected = root.find("selected_context");
     if (selected != nullptr && selected->is_object()) {
         snapshot.selected_instance_id = string_member(*selected, "instance_id");
+        snapshot.selected_instance_name = string_member(*selected, "display_name");
+        snapshot.factorio_version = string_member(*selected, "factorio_version");
+        snapshot.profile = string_member(*selected, "profile");
         snapshot.launch_intent = string_member(*selected, "launch_intent");
     }
     const json::Value* page = root.find("page");
@@ -563,11 +566,11 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
                         }
                     }
                 }
-                if (item.selected) {
-                    snapshot.selected_instance_id = item.id;
-                    snapshot.selected_instance_name = item.title;
-                    snapshot.factorio_version = string_member(*value, "factorio_version");
-                    snapshot.profile = string_member(*value, "profile");
+                if (item.selected && !snapshot.selected_instance_id.empty() &&
+                    string_member(*value, "instance_id") == snapshot.selected_instance_id) {
+                    if (snapshot.selected_instance_name.empty()) snapshot.selected_instance_name = item.title;
+                    if (snapshot.factorio_version.empty()) snapshot.factorio_version = string_member(*value, "factorio_version");
+                    if (snapshot.profile.empty()) snapshot.profile = string_member(*value, "profile");
                 }
                 snapshot.items.push_back(std::move(item));
             }

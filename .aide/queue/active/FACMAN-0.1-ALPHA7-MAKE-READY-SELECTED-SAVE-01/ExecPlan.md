@@ -870,3 +870,40 @@ Full F09/F11, canonical installed Desktop/PR404, real game, human/named-host and
 Beta/RC/release gates remain open. Exact scoped receipt and compact custody:
 evidence/ordinary-gui-interrupted-import.v1.json and
 evidence/ordinary-gui-interrupted-import-custody.v1.zip.
+
+
+2026-10-18: An actual ordinary linear process-transport TUI pack import on
+original Windows artifact12081497785 exposed invalid_identifier: the Content
+page selected builtin mod was incorrectly used as an instance. The original
+failure and both successful cancellation paths remain retained. The bounded
+fix keeps selected_context authoritative and permits metadata enrichment only
+from a matching explicit instance_id row. Native model and TUI smokes pass;
+the rebuilt reviewed three-file source delta passes ordinary input cancellation,
+confirmation cancellation and explicit offline reconstruction with exact selected
+content, binary settings, provenance, rebound lock and protected data preserved.
+Thirteen actual commands (ten CLI, three TUI) exit normally with empty Jobs.
+The one normal clean-first compiler command exits zero but uses admitted owned
+compiler cleanup; natural compiler descendant lifetime remains NOT_QUALIFIED.
+Independent source and actual-evidence reviews support this source-only slice.
+Current-head required CI and the produced Windows TUI regression remain pending;
+the source build is not a delivered-package proof. No provider pin, authority,
+VM, checkout, task root or full F09/F11/Beta gate changed. Receipt and compact
+custody: evidence/tui-pack-import-context.v1.json and
+evidence/tui-pack-import-context-custody.v1.zip.
+
+
+2026-10-18: Required Windows CI on78c45dd6 rejected the candidate with one
+Unicode-path oracle failure and two existing late-recovery test sharing errors.
+Full API job logs retain the original2156-test failure; the shortened gh failed
+step view omitted its final tracebacks. The confirmed import had completed, but
+the config oracle decoded UTF-8 through CP1252. Explicit UTF-8 preserves the
+exact path assertion. The recovery test now freezes every workspace byte while
+the owner is still paused before its lease, adds only the exact test-owned go
+release-file expectation, then releases/joins before comparing all bytes.
+No exclusion, skip, refusal or content assertion was weakened. Both exact
+methods and all target/stage/journal cases pass on installed Python3.11.9 with
+UTF-8 mode disabled and CP1252 default, using the unchanged reviewed native
+binary without another build. Independent test-diff review passes. Required
+new-head CI and original produced-package TUI acceptance remain pending.
+The goal stays active; the failed attempt and all evidence remain retained.
+Scoped correction custody: evidence/tui-pack-import-ci-oracle-custody.v1.zip.

@@ -173,6 +173,58 @@ class TuiProductTests(unittest.TestCase):
             self.assertNotIn("observation did not match", result.stderr)
             self.assertFalse(workspace.exists())
 
+    def test_ordinary_offline_pack_import_cancels_then_reconstructs_without_selected_instance(self) -> None:
+        from test_presentation_pack_import import PresentationPackImportTests, FIXTURE_INSTALL
+        from test_portable_modpack_import import PortableModpackImportTests
+        from test_local_modset_solver import snapshot
+        from test_make_ready_joined import file_identity
+
+        owner = PresentationPackImportTests()
+        backend = cli_executable()
+        self.assertIsNotNone(backend, "Ordinary process transport requires its paired CLI")
+        with tempfile.TemporaryDirectory(prefix="tui offline pack \u03a9 ") as temporary:
+            producer, consumer, archive = owner.prepare(Path(temporary), b"\x00binary settings\xff")
+            sentinel = consumer / "user-owned/sentinel.bin"
+            sentinel.parent.mkdir()
+            sentinel.write_bytes(b"foreign player bytes\x00\xff")
+            sentinel_before = sentinel.read_bytes(), file_identity(sentinel)
+            projected = owner.query(consumer)
+            self.assertIsNone(projected["selected_context"]["instance_id"])
+            index = next(i for i, action in enumerate(projected["available_semantic_actions"])
+                         if action["action_id"] == "modsets.import")
+            label = "Import offline pack into new instance"
+            form = "4\n" + "tab\n" * index + "space\n"
+            form += "source_path=" + str(archive) + "\nnew_instance_id=reconstructed\n"
+            form += "installation_id=fixture\ndisplay_name=Restored pack\n"
+            args = ["--workspace", str(consumer), "--ordinary", "--plain",
+                    "--transport", "process", "--cli-path", str(backend)]
+            before = snapshot(consumer)
+            protected = snapshot(producer), snapshot(FIXTURE_INSTALL)
+            for suffix, marker in (("6\nq\n", "Action input: " + label),
+                                   ("space\n6\nq\n", "Confirm " + label)):
+                with self.subTest(cancel=marker):
+                    cancelled = self.invoke(args, stdin=form + suffix)
+                    self.assertEqual(0, cancelled.returncode, cancelled.stderr)
+                    self.assertIn(marker, cancelled.stdout)
+                    self.assertEqual(before, snapshot(consumer))
+                    self.assertEqual(sentinel_before, (sentinel.read_bytes(), file_identity(sentinel)))
+            confirmed = self.invoke(args, stdin=form + "space\nspace\nq\n")
+            self.assertEqual(0, confirmed.returncode, confirmed.stderr)
+            self.assertIn("Confirm " + label, confirmed.stdout)
+            self.assertIn("Instance: Restored pack", confirmed.stdout)
+            receipts = list((consumer / ".facman/action-receipts-v2").glob("*.v2.json"))
+            self.assertEqual(1, len(receipts))
+            recorded = json.loads(receipts[0].read_bytes())
+            request, outcome = json.loads(recorded["request_json"]), json.loads(recorded["result_json"])
+            self.assertEqual(("modsets.import", "content", "explicit", str(archive), "reconstructed", "fixture"),
+                             tuple(request[k] for k in ("action_id", "scope", "confirmation", "source_path",
+                                                        "new_instance_id", "installation_id")))
+            self.assertEqual("completed", outcome["outcome"])
+            self.assertEqual("reconstructed", outcome["replacement_snapshot"]["selected_context"]["instance_id"])
+            PortableModpackImportTests().assert_reconstruction(consumer, archive)
+            self.assertEqual(protected, (snapshot(producer), snapshot(FIXTURE_INSTALL)))
+            self.assertEqual(sentinel_before, (sentinel.read_bytes(), file_identity(sentinel)))
+
     def test_ordinary_snapshot_producer_cancels_then_roundtrips_through_restore(self) -> None:
         from test_presentation_snapshot_create import PresentationSnapshotCreateTests
         from test_presentation_snapshot_restore import PresentationSnapshotRestoreTests

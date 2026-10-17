@@ -187,6 +187,7 @@ class SnapshotLocalInstallTests(unittest.TestCase):
                     "--workspace", str(workspace), "workspace", "recovery", "apply", journal["transaction_id"], "--json"],
                     env=dict(os.environ, FACMAN_TEST_SNAPSHOT_RECOVERY_BEFORE_LOCK_PAUSE="1"))))
                 worker.start()
+                release = workspace / ".facman-test-snapshot-recovery-lock-release"
                 try:
                     marker = workspace / ".facman-test-snapshot-recovery-before-lock"
                     for _ in range(100):
@@ -198,9 +199,12 @@ class SnapshotLocalInstallTests(unittest.TestCase):
                     elif kind == "stage": (Path(journal["owned_staging_roots"][0]) / "config/config.ini").write_bytes(b"foreign")
                     else:
                         journal["operation_context"] = "{}"; journal_path.write_text(json.dumps(journal))
-                    (workspace / ".facman-test-snapshot-recovery-lock-release").write_text("go")
+                    # Freeze every retained byte before the owner can acquire
+                    # its Windows exclusive lease; the release file is ours.
                     retained = snapshot(workspace)
+                    retained[release.relative_to(workspace).as_posix()] = b"go"
                 finally:
+                    release.write_bytes(b"go")
                     worker.join(10)
                 self.assertFalse(worker.is_alive())
                 self.assertEqual("recovery_snapshot_binding_changed", json.loads(result[0][1])["refusal"]["code"])
