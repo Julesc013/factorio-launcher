@@ -870,3 +870,23 @@ Full F09/F11, canonical installed Desktop/PR404, real game, human/named-host and
 Beta/RC/release gates remain open. Exact scoped receipt and compact custody:
 evidence/ordinary-gui-interrupted-import.v1.json and
 evidence/ordinary-gui-interrupted-import-custody.v1.zip.
+
+
+2026-10-18: An actual ordinary linear process-transport TUI pack import on
+original Windows artifact12081497785 exposed invalid_identifier: the Content
+page selected builtin mod was incorrectly used as an instance. The original
+failure and both successful cancellation paths remain retained. The bounded
+fix keeps selected_context authoritative and permits metadata enrichment only
+from a matching explicit instance_id row. Native model and TUI smokes pass;
+the rebuilt reviewed three-file source delta passes ordinary input cancellation,
+confirmation cancellation and explicit offline reconstruction with exact selected
+content, binary settings, provenance, rebound lock and protected data preserved.
+Thirteen actual commands (ten CLI, three TUI) exit normally with empty Jobs.
+The one normal clean-first compiler command exits zero but uses admitted owned
+compiler cleanup; natural compiler descendant lifetime remains NOT_QUALIFIED.
+Independent source and actual-evidence reviews support this source-only slice.
+Current-head required CI and the produced Windows TUI regression remain pending;
+the source build is not a delivered-package proof. No provider pin, authority,
+VM, checkout, task root or full F09/F11/Beta gate changed. Receipt and compact
+custody: evidence/tui-pack-import-context.v1.json and
+evidence/tui-pack-import-context-custody.v1.zip.

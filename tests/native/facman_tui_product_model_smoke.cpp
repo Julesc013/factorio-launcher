@@ -7,6 +7,7 @@
 #include "fl_json.h"
 
 #include <chrono>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -58,6 +59,43 @@ int main()
         snapshot.workspace_path != "C:/FacMan" ||
         snapshot.workspace_id != "workspace-main" ||
         snapshot.active_operation != "running") return 2;
+    if (snapshot.selected_instance_name != "Main world" ||
+        snapshot.factorio_version != "2.0.77" || snapshot.profile != "default") {
+        std::cerr << "Matching selected instance row must enrich legacy context metadata\n";
+        return 60;
+    }
+
+    for (const std::string context : {
+             R"({"instance_id":null,"display_name":null,"factorio_version":null,"profile":null})",
+             R"({"instance_id":"main","display_name":"Chosen world","factorio_version":"2.0.77","profile":"gui"})"}) {
+        const TuiSnapshot content_selection = parse_presentation_snapshot(
+            std::string(R"({"selected_context":)") + context + R"(,
+              "page":{"scope":"content","items":[
+                {"id":"mod:base@2.0.77","kind":"builtin_mod","name":"Base",
+                 "selected":true,"factorio_version":"2.0","profile":"foreign"}
+              ]}})");
+        const bool none = context.find("null") != std::string::npos;
+        if (content_selection.selected_instance_id != (none ? "" : "main") ||
+            content_selection.selected_instance_name != (none ? "" : "Chosen world") ||
+            content_selection.factorio_version != (none ? "" : "2.0.77") ||
+            content_selection.profile != (none ? "" : "gui") ||
+            content_selection.items.size() != 1U || !content_selection.items[0U].selected) {
+            std::cerr << "Content selection must preserve authoritative instance context: " << context << '\n';
+            return 61;
+        }
+    }
+
+    const TuiSnapshot conflicting_instance = parse_presentation_snapshot(R"({
+      "selected_context":{"instance_id":"main","display_name":"Chosen world"},
+      "page":{"scope":"instances","items":[
+        {"instance_id":"other","display_name":"Other world","selected":true}
+      ]}
+    })");
+    if (conflicting_instance.selected_instance_id != "main" ||
+        conflicting_instance.selected_instance_name != "Chosen world") {
+        std::cerr << "A conflicting instance row must not replace selected_context\n";
+        return 62;
+    }
 
     const TuiSnapshot installation_snapshot = parse_presentation_snapshot(R"({
       "schema":"facman.presentation_snapshot.v1",
