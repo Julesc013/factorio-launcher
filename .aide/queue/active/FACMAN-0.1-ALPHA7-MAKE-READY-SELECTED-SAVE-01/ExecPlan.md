@@ -933,3 +933,35 @@ No build, download, provider/VM change, clone or new task root occurred. Full
 F09/F11, canonical Desktop/PR404, real-game/human/host and Beta/RC gates remain
 open. Scoped receipt and compact custody: evidence/ordinary-tui-interrupted-import.v1.json
 and evidence/ordinary-tui-interrupted-import-custody.v1.zip.
+
+
+2026-10-18: Original Linux CLI/TUI artifact12109725963 from successful run39053131459
+now passes ordinary linear process-TUI Content input and confirmation cancellations,
+explicit exact offline reconstruction, and one supported verified-stage import loss.
+The actual compiled synthetic merge08d91a32 retains its identity and expected parents;
+its tree equals admitted sourcec30d9f72 and execution dev8bae82fb. Server archive digest,
+both original tar hashes, full closures and compiled/backend/provider/contract identities
+are bound. A fresh Activity confirmation cancellation preserves the complete consumer
+file bytes and directory/file identities; explicit Activity recovery completes the same
+journal, and ordinary Home navigation selects the reconstructed instance. Exact selected
+content, binary settings, provenance, rebound lock, source installation, foreign data,
+verified stage identity and original uncertainty remain preserved without replay.
+The14 reused02 primaries exit zero and support the normal functional assertions;
+their backend descendant custody was not observed. Separately,17 new03 primaries
+exit zero,6 held backend pidfds stop, all recorded owned groups and the private
+namespace drain empty. These statements do not qualify uniform whole-process
+lifetime across31 primaries. Descendant exit codes are not inferred. Independent
+actual review passes. Rejected attempt01 is retained separately: the observer queried
+root-owned PID1 before filtering groups, reached only product inspect, and required
+owned primary safety cleanup; no import/fault ran. It is not natural qualification.
+Attempt02 corrects that observation order and passes the normal subjourney, but its
+interruption observer wrongly assumes a shared backend group and sends no deliberate
+fault before the pause expires. That failed interruption and safety cleanup remain
+rejected. Attempt03 follows source-supervisor ancestry and actual child groups; it
+reuses only02 natural normal observations without claiming their descendant custody. Source, original packages and existing pinned validators remain
+unchanged. One original artifact download, no build/cache/root/checkout/VM/provider
+change. Qualification is limited to Ubuntu24.04 WSL private namespaces/tmpfs and the
+linear process TUI. Separate foreign-lock refusal, physical ext4/named-host/fullscreen,
+human/game/canonical Desktop/PR404, full F09/F11 and Beta/RC/release gates remain open.
+Scoped receipt and compact custody: evidence/ordinary-linux-tui-pack-import.v1.json
+and evidence/ordinary-linux-tui-pack-import-custody.v1.zip.
