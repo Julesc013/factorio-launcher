@@ -355,7 +355,9 @@ class PresentationProfilePreparationTests(unittest.TestCase):
             invoke_json(workspace, "modsets", "lock", "main")
             old = invoke_json(workspace, "instances", "readiness", "main")
             mods = old["preparation_preview"]["modset"]
-            self.assertEqual("observation_only", mods["disposition"])
+            # Locking available archives does not activate them in mod-list.
+            self.assertEqual("plan_unavailable", mods["disposition"])
+            self.assertEqual("verification_failed", mods["status"])
             self.assertEqual(invoke_json(workspace, "modsets", "verify", "main"), mods["verification"])
             self.assertTrue(mods["artifact_identities"])
             artifact = instance / "mods/simple_mod_1.0.0.zip"
@@ -383,7 +385,11 @@ class PresentationProfilePreparationTests(unittest.TestCase):
                 self.assertNotEqual(previous["preparation_preview"]["plan_digest"], locked["preparation_preview"]["plan_digest"])
                 self.assertIn(hashlib.sha256(lock_path.read_bytes()).hexdigest(),
                               locked["preparation_preview"]["modset"][identity_key])
-                self.assertEqual(previous["preparation_preview"]["modset"]["verification"],
+                locks_agree = (instance / "mods/modset-lock.v1.json").read_bytes() == (
+                    workspace / "modsets/main.modset-lock.v1.json").read_bytes()
+                # Contradictory raw locks refuse before archive verification;
+                # once equal, the original damaged-archive report is observable.
+                self.assertEqual(changed["preparation_preview"]["modset"]["verification"] if locks_agree else None,
                                  locked["preparation_preview"]["modset"]["verification"])
                 self.assertEqual(before, workspace_bytes(workspace))
             # This target stays inside the owned temporary tree but outside the
@@ -417,7 +423,7 @@ class PresentationProfilePreparationTests(unittest.TestCase):
                 unsafe_menu = invoke_json(workspace, "instances", "readiness", "main")
                 unsafe_mods = unsafe_menu["preparation_preview"]["modset"]
                 self.assertEqual("plan_unavailable", unsafe_mods["disposition"])
-                self.assertTrue(any("unavailable:unsafe_artifact" in identity
+                self.assertTrue(any("mod-list.json:unavailable:instance_evidence_unsafe" in identity
                                     for identity in unsafe_mods["artifact_identities"]))
                 self.assertNotIn(external_sha, json.dumps(unsafe_menu))
                 refused_load = invoke_json(workspace, "instances", "readiness", "main",

@@ -334,12 +334,12 @@ class JoinedMakeReadyTests(unittest.TestCase):
         return self.result(worker.response, 3), frozen
 
     def test_unrelated_drift_and_foreign_targets_after_configuration_stop_with_visible_partial_effects(self) -> None:
-        for changed in ("settings", "archive", "sidecar", "configuration"):
+        for changed in ("settings", "mod-list", "archive", "sidecar", "configuration"):
             with self.subTest(changed=changed), tempfile.TemporaryDirectory(prefix="joined-late-") as value:
                 workspace = Path(value)
                 instance, _, expected = existing.ExistingConfigurationTests.prepare(self, workspace, "load_save")
                 args = self.arguments(workspace, self.query(workspace, "instances", "load_save"), "joined-late")
-                paths = {"settings": "mods/mod-settings.dat", "archive": "saves/selected.zip",
+                paths = {"settings": "mods/mod-settings.dat", "mod-list": "mods/mod-list.json", "archive": "saves/selected.zip",
                          "sidecar": "metadata/save-refs/selected.zip.save-ref.v1.json", "configuration": "config/config.ini"}
                 def mutate(root: Path) -> None:
                     target = root / paths[changed]
