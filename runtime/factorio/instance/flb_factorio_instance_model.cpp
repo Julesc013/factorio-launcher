@@ -108,6 +108,7 @@ struct Projection {
     std::string selected_save_evidence;
     std::string selected_save_identity = "not_observed";
     std::string selected_context_identity = "not_observed";
+    std::string selected_association_identity = "not_observed";
     std::string selected_archive_identity = "not_observed";
     std::string selected_save_state = "blocked";
     std::string selected_save_code = "instance_selected_save_not_selected";
@@ -149,6 +150,7 @@ struct Projection {
     bool config_valid = false;
     bool profile_valid = false;
     bool modset_valid = true;
+    bool modset_archives_verified = false;
 };
 
 struct EncodedComponent {
@@ -931,6 +933,7 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         projection.modset_valid = false;
         return;
     }
+    projection.modset_archives_verified = true;
     const auto activation = facman::factorio::modsets::solver::verify_activation(
         mods_root, projection.modset_lock->text);
     const auto activation_after = activation_observation(mods_root / "mod-list.json");
@@ -994,6 +997,7 @@ void inspect_selected_save(Projection& projection, const fs::path& workspace)
     }
     const std::string local_before = optional_evidence_identity(local_lock);
     const std::string association_before = simple_name ? optional_evidence_identity(association_path) : "unsafe";
+    projection.selected_association_identity = association_before;
     projection.selected_context_identity = "lock:" + local_before + ":association:" + association_before;
     if (simple_name) projection.selected_archive_identity = artifact_identity(
         projection.instance.root / "saves" / fs::u8path(projection.selected_save));
@@ -1123,11 +1127,13 @@ facman::core::Result<Projection> project(
         current.profile_digest = "not_observed";
         current.modset_lock.reset();
         current.modset_valid = true;
+        current.modset_archives_verified = false;
         inspect_profile(current, workspace);
         inspect_modset(current, workspace);
         if (!unchanged(projection.instance.source_path, projection.instance_record) ||
             current.profile_valid != projection.profile_valid || current.profile_digest != projection.profile_digest ||
             current.modset_valid != projection.modset_valid || current.modset_status != projection.modset_status ||
+            current.modset_archives_verified != projection.modset_archives_verified ||
             current.modset_artifacts != projection.modset_artifacts ||
             current.modset_lock.has_value() != projection.modset_lock.has_value() ||
             (projection.modset_lock && current.modset_lock->identity != projection.modset_lock->identity) ||
@@ -2492,15 +2498,16 @@ bool joined_recovery_current(const fs::path& workspace)
 }
 
 facman::core::Result<std::string> joined_inputs(const fs::path& workspace,
-    const ProjectionRequest& request, Projection* snapshot = nullptr)
+    const ProjectionRequest& request, Projection* snapshot = nullptr, bool content_effect = false)
 {
     auto observed = project(workspace, request);
     if (!observed) return facman::core::Result<std::string>::failure(observed.error());
     const auto& p = observed.value();
     if (!p.root_safe || !p.install_present || !p.install_record || !p.install || !p.install_ref ||
         !p.installation_healthy || !p.version_family_eligible || !p.version_matches || !p.content_present ||
-        !p.profile_valid || !p.profile_plan || !p.modset_valid || !p.modset_lock ||
-        p.modset_status != "locked_verified" || p.profile_launch_intent != request.launch_intent ||
+        !p.profile_valid || !p.profile_plan || !p.modset_lock ||
+        ((!p.modset_valid || p.modset_status != "locked_verified") && !(content_effect && p.modset_archives_verified)) ||
+        p.profile_launch_intent != request.launch_intent ||
         (request.launch_intent == "load_save" && (p.selected_save.empty() ||
             p.selected_save_state == "blocked" || p.selected_archive_identity.rfind("file:", 0) != 0)))
         return fail<std::string>("make_ready_prerequisites_unavailable",
@@ -2522,7 +2529,7 @@ facman::core::Result<std::string> joined_inputs(const fs::path& workspace,
         (settings != "absent" && settings.rfind("present:file:", 0) != 0))
         return fail<std::string>("make_ready_inputs_unsafe", "Joined input custody is unavailable");
     json::ObjectBuilder inputs;
-    inputs.add_string("schema", "factorio.make_ready_joined_inputs.v1");
+    inputs.add_string("schema", content_effect ? "factorio.make_ready_joined_inputs.v2" : "factorio.make_ready_joined_inputs.v1");
     inputs.add_string("instance", p.instance_record.identity);
     inputs.add_string("root", p.instance_root_identity);
     inputs.add_string("installation", p.install_record->identity);
@@ -2532,15 +2539,32 @@ facman::core::Result<std::string> joined_inputs(const fs::path& workspace,
     inputs.add_string("profile_source", p.profile_source_identity);
     inputs.add_string("profile_request", p.profile_plan->request_json);
     inputs.add_string("overrides", p.overrides_input_identity);
-    inputs.add_string("local_lock", p.modset_local_lock_identity);
-    inputs.add_string("shared_lock", p.modset_shared_lock_identity);
-    inputs.add_array("artifacts", artifact_strings(p.modset_artifacts));
-    inputs.add_string("mod_list", list);
+    inputs.add_string("local_lock", content_effect ? p.modset_lock->digest : p.modset_local_lock_identity);
+    inputs.add_string("shared_lock", content_effect ? p.modset_lock->digest : p.modset_shared_lock_identity);
+    auto bound_artifacts = p.modset_artifacts;
+    if (content_effect) bound_artifacts.erase(std::remove_if(bound_artifacts.begin(), bound_artifacts.end(),
+        [](const auto& artifact) { return artifact.first == "mod-list.json"; }), bound_artifacts.end());
+    inputs.add_array("artifacts", artifact_strings(bound_artifacts));
+    inputs.add_string("mod_list", content_effect ? "separate_verified_content_effect" : list);
     inputs.add_string("mod_settings", settings);
     inputs.add_string("configuration_parents", parents.value());
     inputs.add_string("launch_intent", request.launch_intent);
     inputs.add_string("selected_save", p.selected_save);
     inputs.add_string("selected_archive", p.selected_archive_identity);
+    if (content_effect) {
+        const auto configuration = lock_input_identity(p.instance.root / "config/config.ini");
+        if (configuration != "absent" && configuration.rfind("present:file:", 0) != 0)
+            return fail<std::string>("make_ready_inputs_unsafe", "Configuration custody is unavailable");
+        inputs.add_string("configuration_before", configuration);
+        // Content owns replacement of the lock object. Keep the separately
+        // observed association object pinned; the raw lock digest is bound above.
+        inputs.add_string("selected_context_before", p.selected_association_identity);
+        if (request.launch_intent == "load_save") {
+            auto selected_parents = saves::index::selected_association_parent_identity(p.instance.root);
+            if (!selected_parents) return selected_parents;
+            inputs.add_string("selected_parent_before", selected_parents.value());
+        }
+    }
     if (snapshot) *snapshot = observed.take_value();
     return facman::core::Result<std::string>::success(sha256_text(inputs.serialize()));
 }
@@ -2576,7 +2600,31 @@ facman::core::Result<std::string> joined_preparation_plan(const fs::path& worksp
 {
     Projection p;
     auto binding = joined_inputs(workspace, request, &p);
-    if (!binding) return binding;
+    if (!binding) {
+        auto protected_inputs = joined_inputs(workspace, request, &p, true);
+        if (!protected_inputs) return binding;
+        auto content = facman::factorio::modsets::solver::plan_locked_activation(workspace, request.instance_id);
+        if (!content) return content;
+        json::ObjectBuilder desired;
+        desired.add_string("installation_id", p.instance.install_ref.str());
+        desired.add_string("profile_id", p.instance.profile);
+        desired.add_string("selected_save", request.launch_intent == "load_save" ? p.selected_save : "");
+        desired.add_string("modset_lock_sha256", p.modset_lock->digest);
+        json::ObjectBuilder plan;
+        plan.add_string("schema", "factorio.make_ready_joined_plan.v2");
+        plan.add_string("instance_id", request.instance_id);
+        plan.add_string("launch_intent", request.launch_intent);
+        plan.add_object("desired_state", desired);
+        plan.add_string("inputs_sha256", protected_inputs.value());
+        auto owner = json::parse(content.value());
+        plan.add_value("content_plan", owner.value());
+        auto current = joined_inputs(workspace, request, nullptr, true);
+        auto current_content = facman::factorio::modsets::solver::plan_locked_activation(workspace, request.instance_id);
+        if (!current || current.value() != protected_inputs.value() || !current_content || current_content.value() != content.value())
+            return fail<std::string>("make_ready_inputs_changed", "Locked activation or protected inputs changed during planning");
+        plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+        return facman::core::Result<std::string>::success(plan.serialize());
+    }
     auto configuration = configuration_preparation_plan(workspace, request);
     if (!configuration && configuration.error().code != "configuration_already_current") return configuration;
     const auto configuration_plan = configuration ? json::parse(configuration.value()) : json::parse("null");
@@ -2629,6 +2677,50 @@ facman::core::Result<std::string> joined_preparation_plan(const fs::path& worksp
     plan.add_string("selected_save_sha256", save ? object_string(save.value(), "sha256") : "");
     plan.add_string("plan_sha256", sha256_text(plan.serialize()));
     return facman::core::Result<std::string>::success(plan.serialize());
+}
+
+facman::core::Result<std::string> verify_joined_content_inputs(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& source)
+{
+    auto plan = json::parse(source);
+    if (!plan || object_string(plan.value(), "schema") != "factorio.make_ready_joined_plan.v2" ||
+        object_string(plan.value(), "instance_id") != request.instance_id ||
+        object_string(plan.value(), "launch_intent") != request.launch_intent)
+        return fail<std::string>("make_ready_plan_invalid", "Pending content plan does not match this request");
+    auto current = joined_inputs(workspace, request, nullptr, true);
+    if (!current || current.value() != object_string(plan.value(), "inputs_sha256"))
+        return fail<std::string>("make_ready_inputs_changed", "Protected inputs changed before content activation");
+    return current;
+}
+
+facman::core::Result<std::string> continue_joined_after_content(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& source, const std::string& content_receipt,
+    const std::string& operation, const std::string& attempt)
+{
+    auto plan = json::parse(source);
+    const auto* owner = plan ? plan.value().find("content_plan") : nullptr;
+    if (!plan || !owner || object_string(plan.value(), "schema") != "factorio.make_ready_joined_plan.v2" ||
+        object_string(plan.value(), "instance_id") != request.instance_id ||
+        object_string(plan.value(), "launch_intent") != request.launch_intent)
+        return fail<std::string>("make_ready_plan_invalid", "Pending content plan does not match this request");
+    auto verified = facman::factorio::modsets::solver::verify_locked_activation(workspace,
+        request.instance_id, owner->serialize(), content_receipt, operation, attempt);
+    if (!verified) return verified;
+    auto before = joined_inputs(workspace, request, nullptr, true);
+    if (!before || before.value() != object_string(plan.value(), "inputs_sha256"))
+        return fail<std::string>("make_ready_inputs_changed", "Content activation is retained; protected inputs changed before configuration or save preparation");
+    auto next = joined_preparation_plan(workspace, request);
+    auto nested = next ? json::parse(next.value()) : json::parse("null");
+    const auto* desired = plan.value().find("desired_state");
+    const auto* nested_desired = nested ? nested.value().find("desired_state") : nullptr;
+    if (!next) return next;
+    if (!nested || !desired || !nested_desired || desired->serialize() != nested_desired->serialize() ||
+        object_string(nested.value(), "schema") != "factorio.make_ready_joined_plan.v1")
+        return fail<std::string>("make_ready_desired_state_mismatch", "Content activation is retained; the remaining plan no longer matches the confirmed selection");
+    auto after = joined_inputs(workspace, request, nullptr, true);
+    if (!after || after.value() != before.value())
+        return fail<std::string>("make_ready_inputs_changed", "Protected inputs changed while deriving the remaining owner plan");
+    return next;
 }
 
 bool joined_completed_effects_current(const fs::path& workspace, const std::string& source,

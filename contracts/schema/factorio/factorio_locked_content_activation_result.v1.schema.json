@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_locked_content_activation_result.v1.schema.json",
+  "title": "Verified locked activation owner receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "instance_id",
+    "plan_sha256",
+    "transaction_id",
+    "history_id",
+    "operation_id",
+    "attempt_id",
+    "effect_binding_sha256",
+    "apply_result",
+    "execution_started",
+    "permit_issued"
+  ],
+  "properties": {
+    "schema": {
+      "const": "factorio.locked_content_activation_result.v1"
+    },
+    "command": {
+      "const": "modsets.apply"
+    },
+    "instance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "transaction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "history_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effect_binding_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "apply_result": {
+      "allOf": [
+        {
+          "$ref": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_modset_plan.v1.schema.json"
+        },
+        {
+          "properties": {
+            "schema": {
+              "const": "factorio.modset_apply.v1"
+            },
+            "command": {
+              "const": "modsets.apply"
+            },
+            "mutation_executed": {
+              "const": true
+            }
+          }
+        }
+      ]
+    },
+    "execution_started": {
+      "const": false
+    },
+    "permit_issued": {
+      "const": false
+    }
+  }
+}

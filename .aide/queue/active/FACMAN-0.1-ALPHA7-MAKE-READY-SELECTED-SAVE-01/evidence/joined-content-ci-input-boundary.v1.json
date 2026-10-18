@@ -1,0 +1,60 @@
+{
+  "schema": "facman.joined_content_ci_input_boundary.v1",
+  "status": "INSTRUMENTED_CANDIDATE_PENDING_FRESH_CI_AND_DELIVERED_PROOF",
+  "parent_source": "87a2e4a1d6e15799a1df4d2da61f29bf068539dd",
+  "test": {
+    "path": "tests/test_windows_delivered_joined_gui.py",
+    "sha256": "9bea8994d037d67dab9b0d6514aa8ed2c45862a400566034d957a7d8ae0ba4ba"
+  },
+  "runtime_source_packet_sha256": "e2074842556a281378362240e0fccdf80d538beb7f6ab92a471c5404bf928945",
+  "failed_ci": {
+    "run": 39094153111,
+    "job": 117576954816,
+    "result": "failure",
+    "unit_tests": 2176,
+    "failures": 1,
+    "errors": 0,
+    "classified_skips": 100,
+    "sole_failure": "Existing ordinary WinForms first Make Ready input dialog absent after one native notification;35s assertion unchanged",
+    "log_sha256": "72bb0d53a6841dbbf05a3c7a3d23c6c0f69cef301b05c13f37f2a44efa69f823",
+    "result_sha256": "bf8dfebb19beaf9e1a10c937d2efe05d67ded9a1b9121301840c661ab2c2eb17",
+    "cause": "Undetermined: native notification did not reach managed Click, or unchanged handler saw unavailable/empty descriptor. No action receipt or effect observed."
+  },
+  "local_diagnostic": {
+    "result_sha256": "ad493cb9c4df6ff43f351b22f9abffe52c5dfed8436c482decd377d5f2fcb573",
+    "actual_review_sha256": "360a5d21f5af3735164f6eea1cec3c2056115d918b0d2e669027cc27634c6117",
+    "observation": "Both exact-fixture scopes expose available joined v1 and four typed inputs;8 owned commands normal, all read-only inventories unchanged",
+    "scope": "Existing developer build08 exact23 source-bound files;compiled base/dirty stamp differs. No GUI execution or original delivered qualification."
+  },
+  "instrumentation": {
+    "source_review_sha256": "5e99624fe33e4783e65244dc5d4f5c787b43dfe72397b6a8b6106d10ad4bcfae",
+    "checks_sha256": "f563f13b5e3dfe3b7ad840f41010bd4cc4ce92faedf4fcdd7909d8fca45d77ed",
+    "observations": [
+      "Exact packaged instances and launch_deck before first click and on first dialog failure",
+      "Displayed revision bound to launch_deck first7hex, preserving full caption",
+      "Owned HWND/thread/native-notification parameters,GetGUIThreadInfo and bounded WM_NULL parent/root responsiveness"
+    ],
+    "unchanged": [
+      "Single click",
+      "35s input-dialog assertion",
+      "Cancellation,stale-refusal,owner effects and preservation assertions",
+      "All production runtime and frontend bytes"
+    ]
+  },
+  "limitations": [
+    "Diagnostic queries and WM_NULL can alter timing;future pass is instrumented-candidate evidence,not proof of original race or managed Click acknowledgment",
+    "Original failed CI remains failed",
+    "Prior local native qualification retains its original split-image/forced-lifetime/skip limits",
+    "Fresh exact-head required CI and original newly produced package CLI,TUI and ordinary WinForms proof with independent actual review remain mandatory before merge",
+    "Historical local-joined-locked-content.v1.json delivery-pending field remains unresolved until later source-bound PR receipt",
+    "Whole WorkUnit and programme remain active"
+  ],
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/joined-content-ci-input-boundary-custody.v1.zip",
+    "sha256": "946fb6374e7573c9091a3a6bd57e126a5651af4fdd140e7d82f63656a8cda1c0",
+    "entries": 143,
+    "inventory_sha256": "4112e19fd4b06ba7dc3450bdace69fbc45c82eae798aac9190bc871f0be041ea",
+    "expanded_bytes": 1665038,
+    "scope": "Exact selected negative CI/local diagnostic/static evidence; full original raw remains managed E. This ZIP is committed."
+  }
+}

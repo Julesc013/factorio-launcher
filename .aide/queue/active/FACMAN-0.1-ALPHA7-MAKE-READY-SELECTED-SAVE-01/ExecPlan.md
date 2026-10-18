@@ -990,3 +990,40 @@ reconciliation, full Make Ready/F09/F11, real-game/human/canonical Desktop and
 Beta/RC/release gates remain open. The WorkUnit and programme stay active.
 Scoped receipt and compact custody: evidence/local-content-activation-readiness.v1.json
 and evidence/local-content-activation-readiness-custody.v1.zip.
+
+
+2026-10-18: One explicitly confirmed ordinary Make Ready now reconciles missing
+or safely understood activation drift from the exact already verified local
+lock through the existing content owner, retaining raw lock bytes and its real
+TransactionSession receipt before configuration and exact selected-save owners.
+Healthy content retains joined v1; eligible pending content uses additive v2.
+The shared TUI and WinForms consumers validate completion and verified partial
+continuations, including zero further nested effects, while uncertainty stays
+held. There is no re-resolution, acquisition, installation/profile reconstruction
+or provider/pin change. Narrow16MiB physical artifact observation eligibility and
+external-drift partial-stop limits remain explicit.
+Local feature semantics cover14 methods across their recorded developer images;
+final refreshed metadata has3 CLI/TUI/WinForms boundary methods plus native smoke,
+strict and AIDE controls with normal primaries and empty owned Jobs. Compatibility
+coverage is37 completed methods with semantic-only scope from the declared900s
+forced batch, then3 unfinished methods passing normally;3 file/directory symlink
+privilege subcases remain skipped. This is not a full40-test natural-lifetime
+claim. Compiler primary success uses exact owned cleanup; natural compiler
+descendant lifetime remains unqualified. Failed source, oracle, feedback and
+stale-generated attempts remain retained with their original limits.
+Fresh exact-head CI and independent original newly produced Windows CLI, actual
+ordinary TUI and actual ordinary WinForms proof remain pending in this historical
+local record. A later exact-source PR receipt must resolve that field before
+merge. Whole Make Ready/F09/F11, real-game/human/canonical Desktop/PR404 and
+Beta/RC/release gates remain open; the WorkUnit and programme remain active.
+Scoped receipt and compact custody: evidence/local-joined-locked-content.v1.json
+and evidence/local-joined-locked-content-custody.v1.zip.
+
+
+### Joined locked-content CI input-boundary evidence
+
+The first source87 required Windows campaign failed before the existing healthy-content Make Ready input dialog; no content action was dispatched. Retained custody leaves managed Click delivery versus descriptor availability unresolved. The bounded exact-fixture developer-backend diagnostic exposes both joined-v1 descriptors and preserves all observed files; it does not exercise the GUI or qualify an original package.
+
+The next test-only candidate retains packaged scoped observations, launch-deck display revision and owned native thread responsiveness around the same single click and unchanged dialog/effect assertions. Diagnostic timing can change; a later pass cannot retrospectively establish a control race. Production bytes remain unchanged. Fresh exact-head CI and independently reviewed original-package CLI, ordinary TUI and ordinary WinForms proof remain required; the historical delivery-pending record is not resolved here.
+
+Evidence: `evidence/joined-content-ci-input-boundary.v1.json` and its exact compact custody. WorkUnit remains active.

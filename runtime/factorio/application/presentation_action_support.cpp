@@ -697,11 +697,60 @@ facman::core::Result<std::string> snapshot_joined_plan(const std::string& snapsh
     return Result::success(plan->serialize());
 }
 
+std::string joined_content_preparation_result(const std::string& source,
+    const std::string& content_receipt, const std::string& joined_result,
+    const std::string& continuation, bool content_verified, bool effects_verified)
+{
+    auto plan = json::parse(source);
+    auto content = json::parse(content_receipt);
+    auto nested = json::parse(joined_result);
+    const auto* readiness = nested ? nested.value().find("readiness_observation") : nullptr;
+    const auto* prepared = nested ? nested.value().find("preparation_complete") : nullptr;
+    auto ready = prepared ? prepared->bool_value() : facman::core::Result<bool>::success(false);
+    const bool complete = content_verified && effects_verified && ready && ready.value();
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.make_ready_joined_result.v2");
+    result.add_string("command", "readiness.prepare_joined");
+    add_json(result, "plan", source);
+    result.add_string("plan_sha256", plan ? string_field(plan.value(), "plan_sha256") : "");
+    json::ArrayBuilder completed;
+    if (content && string_field(content.value(), "schema") == "factorio.locked_content_activation_result.v1" &&
+        !string_field(content.value(), "transaction_id").empty()) {
+        json::ObjectBuilder effect;
+        effect.add_string("component", "locked_content_activation");
+        effect.add_string("owner_command", "modsets.apply");
+        effect.add_string("transaction_id", string_field(content.value(), "transaction_id"));
+        effect.add_string("plan_sha256", string_field(content.value(), "plan_sha256"));
+        effect.add_value("owner_result", content.value());
+        completed.add_object(effect);
+    }
+    const auto* nested_effects = nested ? nested.value().find("completed_components") : nullptr;
+    if (nested_effects && nested_effects->is_array())
+        for (std::size_t index = 0; index < nested_effects->size(); ++index) completed.add_value(*nested_effects->at(index));
+    result.add_array("completed_components", completed);
+    add_json(result, "joined_result", joined_result);
+    result.add_bool("content_effect_verified", content_verified);
+    result.add_bool("completed_effects_verified", effects_verified);
+    result.add_string("continuation", continuation);
+    result.add_bool("remaining_effects_blocked_before_effects", continuation == "fresh_request_after_input_correction");
+    if (readiness) result.add_value("readiness_observation", *readiness);
+    else result.add_null("readiness_observation");
+    result.add_bool("preparation_complete", complete);
+    result.add_bool("fresh_revision_required", !complete);
+    result.add_bool("readiness_complete", false);
+    result.add_bool("execution_started", false);
+    result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return result.serialize();
+}
+
 std::string joined_preparation_result(const std::string& source,
     const std::vector<std::string>& components, const std::string& readiness,
     const std::string& continuation, bool effects_verified)
 {
     auto plan = json::parse(source);
+    if (plan && string_field(plan.value(), "schema") == "factorio.make_ready_joined_plan.v2")
+        return joined_content_preparation_result(source, {}, {}, continuation, false, false);
     auto observed = json::parse(readiness);
     const bool complete = observed && string_field(observed.value(), "configuration_state") == "ready" &&
         string_field(observed.value(), "preparation_state") == "already_prepared";

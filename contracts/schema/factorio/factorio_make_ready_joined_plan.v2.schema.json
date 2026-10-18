@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_make_ready_joined_plan.v2.schema.json",
+  "title": "Pending locked activation followed by existing joined preparation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "instance_id",
+    "launch_intent",
+    "desired_state",
+    "inputs_sha256",
+    "content_plan",
+    "plan_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "factorio.make_ready_joined_plan.v2"
+    },
+    "instance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "launch_intent": {
+      "enum": [
+        "menu",
+        "load_save"
+      ]
+    },
+    "desired_state": {
+      "$ref": "factorio_make_ready_joined_plan.v1.schema.json#/properties/desired_state"
+    },
+    "inputs_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "content_plan": {
+      "$ref": "factorio_locked_content_activation_plan.v1.schema.json"
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

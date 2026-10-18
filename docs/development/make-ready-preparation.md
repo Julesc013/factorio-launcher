@@ -7,7 +7,43 @@ The read-only `factorio.make_ready_joined_plan.v1` binds the verified locked
 content and current settings as well as the planned routing and save-context
 effects. Missing installations, invalid profiles/content and conflicting save
 contexts remain explicit prerequisite refusals for their existing owners.
-This path does not acquire an installation or reconstruct a profile or content.
+This path does not acquire an installation, reconstruct a profile or resolve a
+new content selection.
+
+For pending activation of an already verified exact local lock, the additive
+`factorio.make_ready_joined_plan.v2` first delegates to the existing content
+apply owner. It admits a missing mod-list or a safe, strictly understood list
+whose enabled selection differs from that lock. Malformed lists, foreign
+entries (including disabled extras), unknown fields that repair would discard,
+unsafe paths, contradictory locks and unavailable pinned artifacts refuse.
+Already-current content keeps the existing v1 path, including its preservation
+of harmless disabled extras and metadata. Pending inputs, including physical
+archives, have a finite 16 MiB observation bound; other existing owner limits
+also apply. This is a bounded local activation repair, not content acquisition.
+
+The content owner uses the exact instance archive paths and lock versions even
+when newer archives or identical archives in another instance are available.
+Original local/shared lock bytes are preserved. Its versioned receipt binds
+the real domain journal, separate history ID, operation/attempt, staged native
+file identities, retained backups and exact target effects. A verified content
+receipt is checkpointed before deriving the remaining existing v1 configuration
+and selected-save plan. Content-only repair can finish with no downstream
+effects. Protected installation, profile, overrides, settings, selected archive,
+configuration, context and parent observations remain bound to the original
+request; only exact independently verified content effects can replace their
+declared inputs.
+
+Each owner acquires its own existing lease. Protected inputs are rechecked
+before content dispatch and again under its configuration lease before staging
+or a journal begins. External edits during that domain operation can leave a
+verified content effect followed by a protected-input refusal; later owners do
+not run, and the v2 result retains that partial effect. Foreign staged-object
+identity changes preserve staging/history and require domain recovery. Unknown
+owner receipts or interruption before checkpoint never authorize redispatch.
+The TUI and WinForms recognize typed v2 completion and correlated verified
+partial directives. A v2 verified content effect can support a fresh request
+even when the nested v1 result records no further effects; that does not loosen
+standalone v1 uncertainty guards. Completed content-only repair is supported.
 
 One confirmed request can invoke the existing routing configuration owner and
 then the existing selected-save context owner. After each effect, fresh owner

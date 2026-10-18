@@ -229,6 +229,7 @@ class OwnedControls:
             "EnumWindows": [self.callback, wt.LPARAM],
             "EnumChildWindows": [wt.HWND, self.callback, wt.LPARAM],
             "GetWindowThreadProcessId": [wt.HWND, ctypes.POINTER(wt.DWORD)],
+            "GetGUIThreadInfo": [wt.DWORD, ctypes.c_void_p],
             "GetWindowTextW": [wt.HWND, wt.LPWSTR, ctypes.c_int],
             "GetClassNameW": [wt.HWND, wt.LPWSTR, ctypes.c_int],
             "GetParent": [wt.HWND], "GetDlgCtrlID": [wt.HWND],
@@ -246,6 +247,8 @@ class OwnedControls:
         self.api.GetParent.restype = wt.HWND
         self.api.GetAncestor.restype = wt.HWND
         self.api.GetForegroundWindow.restype = wt.HWND
+        self.api.GetWindowThreadProcessId.restype = wt.DWORD
+        self.api.GetGUIThreadInfo.restype = wt.BOOL
         self.api.SendMessageTimeoutW.restype = ctypes.c_size_t
         startup = subprocess.STARTUPINFO()
         startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -468,6 +471,47 @@ class OwnedControls:
             raise ctypes.WinError(ctypes.get_last_error())
         event.update(post_succeeded=True, posted_at=time.monotonic())
 
+    def input_boundary(self, main, stage):
+        """Observe the owned native route; this does not acknowledge managed Click."""
+        button = self.control(main, "Make Ready with current settings")
+        ancestors = self.ancestors(button)
+        event = dict(stage=stage, pid=self.process.pid, hwnd=button,
+            ancestors=ancestors, managed_click_acknowledged=False, probes=[])
+        self.events.append(event)
+        class GuiThreadInfo(ctypes.Structure):
+            _fields_ = [("cbSize", wt.DWORD), ("flags", wt.DWORD),
+                ("hwndActive", wt.HWND), ("hwndFocus", wt.HWND),
+                ("hwndCapture", wt.HWND), ("hwndMenuOwner", wt.HWND),
+                ("hwndMoveSize", wt.HWND), ("hwndCaret", wt.HWND), ("rcCaret", wt.RECT)]
+        for hwnd in dict.fromkeys([ancestors[1]["hwnd"], ancestors[-1]["hwnd"]]):
+            self.require_owned(hwnd)
+            pid = wt.DWORD()
+            thread = self.api.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            self.require_owned(hwnd)
+            if not thread or pid.value != self.process.pid:
+                raise AssertionError("Input-boundary thread is not owned")
+            info = GuiThreadInfo()
+            info.cbSize = ctypes.sizeof(info)
+            observed = bool(self.api.GetGUIThreadInfo(thread, ctypes.byref(info)))
+            probe = dict(hwnd=hwnd, thread_id=thread, pid=pid.value,
+                gui_thread_info_available=observed, gui_thread_info_error=(
+                    0 if observed else ctypes.get_last_error()))
+            event["probes"].append(probe)
+            if observed:
+                # Retain handles only; never inspect another process's windows.
+                probe["gui_thread_info"] = {name: getattr(info, name) for name in
+                    ("flags", "hwndActive", "hwndFocus", "hwndCapture", "hwndMenuOwner",
+                     "hwndMoveSize", "hwndCaret")}
+            reply = ctypes.c_size_t()
+            before = time.monotonic()
+            responsive = self.api.SendMessageTimeoutW(hwnd, 0, 0, 0, 2, 2000,
+                ctypes.byref(reply))  # WM_NULL; no button notification.
+            probe.update(wm_null_responsive=bool(responsive), wm_null_reply=reply.value,
+                wm_null_error=0 if responsive else ctypes.get_last_error(),
+                wm_null_elapsed_seconds=time.monotonic() - before)
+            self.require_owned(hwnd)
+        self.frame(main, stage + " controls")
+
     def send(self, hwnd, message, wparam=0, lparam=0):
         self.require_owned(hwnd)
         result = ctypes.c_size_t()
@@ -659,7 +703,39 @@ class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
                 main = active.window("FacMan")
                 active.selected_observation(main)
                 frozen = inventory(workspace)
-                dialog = active.inputs(main)
+                def input_queries(stage):
+                    entry = dict(stage=stage, scopes={})
+                    result.setdefault("input_boundary_observations", []).append(entry)
+                    before_queries = inventory(workspace)
+                    for scope in ("instances", "launch_deck"):
+                        entry["scopes"][scope] = self.query(workspace, scope, "load_save")
+                    after_queries = inventory(workspace)
+                    entry["inventory_before"] = before_queries
+                    entry["inventory_after"] = after_queries
+                    self.assertEqual(before_queries, after_queries)
+                    return entry
+                boundary = input_queries("immediately before first input click")
+                launch_revision = boundary["scopes"]["launch_deck"]["revision"]
+                expected_revision = int(launch_revision[:7], 16)
+                boundary["expected_display_revision"] = expected_revision
+                active.wait(lambda: active.revision(main).split("\n", 1)[0].strip().endswith(
+                    "(revision " + str(expected_revision) + ")"),
+                    "displayed launch-deck revision before first input click")
+                boundary["displayed_revision"] = active.revision(main)
+                active.input_boundary(main, "before first input click")
+                try:
+                    dialog = active.inputs(main)
+                except Exception:
+                    # Preserve the original failed dialog assertion even if the
+                    # additional read-only diagnostics fail independently.
+                    for observe in (lambda: input_queries("first input failure"),
+                            lambda: active.input_boundary(main, "first input failure")):
+                        try:
+                            observe()
+                        except Exception:
+                            result.setdefault("input_boundary_diagnostic_errors", []).append(
+                                traceback.format_exc())
+                    raise
                 active.click(active.control(dialog, "Cancel"))
                 active.wait(lambda: dialog not in active.enumerate(), "input cancellation")
                 self.assertEqual(frozen, inventory(workspace))

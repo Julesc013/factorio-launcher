@@ -23,13 +23,17 @@ class ContentActivationReadinessTests(unittest.TestCase):
     def prepare(self, workspace: Path) -> Path:
         return joined.missing.ConfigurationPreparationTests.prepare(self, workspace, "load_save", True)[0]
 
-    def assert_blocked(self, workspace: Path) -> dict:
+    def assert_blocked(self, workspace: Path, pending_joined: bool = False) -> dict:
         before = snapshot(workspace)
         observation = self.query(workspace, "instances", "load_save")
         self.assertEqual("verification_failed", observation["readiness"]["preparation_preview"]["modset"]["status"])
         descriptor = next(a for a in observation["available_semantic_actions"] if a["action_id"] == "readiness.prepare_joined")
-        self.assertEqual("refused", descriptor["availability"])
-        self.assertIsNone(observation["dependency_identities"]["joined_preparation"]["plan"])
+        self.assertEqual("available" if pending_joined else "refused", descriptor["availability"])
+        plan = observation["dependency_identities"]["joined_preparation"]["plan"]
+        if pending_joined:
+            self.assertEqual("factorio.make_ready_joined_plan.v2", plan["schema"])
+        else:
+            self.assertIsNone(plan)
         self.assertEqual(before, snapshot(workspace))
         return observation
 
@@ -68,7 +72,7 @@ class ContentActivationReadinessTests(unittest.TestCase):
                 if kind not in ("missing", "invalid-json", "oversized", "hardlink"):
                     path.write_text(json.dumps(document) + "\n", encoding="utf-8")
                 self.assertEqual([], call(workspace, "modsets", "verify", "main")["problems"])
-                self.assert_blocked(workspace)
+                self.assert_blocked(workspace, kind in ("missing", "disabled", "base-disabled", "empty"))
 
     def test_confirmed_content_apply_restores_locked_selection_then_joined_prepares(self) -> None:
         for kind in ("missing", "disabled"):
@@ -86,7 +90,7 @@ class ContentActivationReadinessTests(unittest.TestCase):
                 locks = {p: p.read_bytes() for p in (instance / "mods/modset-lock.v1.json", workspace / "modsets/main.modset-lock.v1.json")}
                 preserved = {p: p.read_bytes() for p in instance.rglob("*") if p.is_file() and
                              (p.suffix == ".zip" or p.name in ("instance-overrides.v1.json", "mod-settings.dat"))}
-                self.assert_blocked(workspace)
+                self.assert_blocked(workspace, True)
                 content = self.query(workspace, "content", "load_save")
                 args = ["--workspace", str(workspace), "presentation", "action", "modsets.apply",
                         "--scope", "content", "--instance", "main", "--intent", "load_save", "--mod", "simple",
@@ -227,7 +231,7 @@ class ContentActivationReadinessTests(unittest.TestCase):
                 observation = self.query(workspace, "instances", "menu")
                 self.assertEqual("verification_failed", observation["readiness"]["preparation_preview"]["modset"]["status"])
                 descriptor = next(a for a in observation["available_semantic_actions"] if a["action_id"] == "readiness.prepare_joined")
-                self.assertEqual("refused", descriptor["availability"])
+                self.assertEqual("refused" if kind == "linked-directory" else "available", descriptor["availability"])
                 self.assertEqual(before, snapshot(workspace))
 
 

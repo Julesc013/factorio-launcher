@@ -101,6 +101,9 @@ facman::core::Result<std::string> snapshot_joined_plan(const std::string& snapsh
 std::string joined_preparation_result(const std::string& plan,
     const std::vector<std::string>& components, const std::string& readiness,
     const std::string& continuation = "inspect_original_request", bool effects_verified = false);
+std::string joined_content_preparation_result(const std::string& plan,
+    const std::string& content_receipt, const std::string& joined_result,
+    const std::string& continuation, bool content_verified, bool effects_verified);
 
 } // namespace facman::factorio::application
 

@@ -19,10 +19,11 @@ internal static class SelectedSaveHarness
             if (args.Length == 2 && args[0] == "make-ready-continuation")
                 return CheckContinuations(File.ReadAllText(args[1]));
             Require(args.Length == 2 || args.Length == 3, "gallery and actual receipt required");
-            Require(args.Length == 2 || args[2] == "configuration" || args[2] == "make-ready" || args[2] == "make-ready-complete", "unknown preparation control mode");
+            Require(args.Length == 2 || args[2] == "configuration" || args[2] == "make-ready" || args[2] == "make-ready-complete" || args[2] == "make-ready-content-complete", "unknown preparation control mode");
             bool configuration = args.Length == 3 && args[2] == "configuration";
             bool makeReady = args.Length == 3 && args[2] == "make-ready";
-            bool makeReadyComplete = args.Length == 3 && args[2] == "make-ready-complete";
+            bool contentComplete = args.Length == 3 && args[2] == "make-ready-content-complete";
+            bool makeReadyComplete = contentComplete || (args.Length == 3 && args[2] == "make-ready-complete");
             string action = makeReadyComplete ? "readiness.prepare_joined" : makeReady ? "readiness.prepare" :
                 configuration ? "readiness.prepare_configuration" : "readiness.prepare_selected_save";
             string label = makeReadyComplete ? "Make Ready with the current profile, content and selected world" : makeReady ? "Prepare this instance" :
@@ -51,12 +52,21 @@ internal static class SelectedSaveHarness
             }
             if (makeReadyComplete)
             {
-                Require((string)receipt.ActionPayload["schema"] == "factorio.make_ready_joined_result.v1" &&
+                Require((string)receipt.ActionPayload["schema"] == (contentComplete ? "factorio.make_ready_joined_result.v2" : "factorio.make_ready_joined_result.v1") &&
                     !(bool)receipt.ActionPayload["readiness_complete"] &&
                     !(bool)receipt.ActionPayload["execution_started"] &&
                     !(bool)receipt.ActionPayload["permit_issued"] &&
-                    ((object[])receipt.ActionPayload["completed_components"]).Length == 2,
+                    (contentComplete ? (((object[])receipt.ActionPayload["completed_components"]).Length == 1 ||
+                        ((object[])receipt.ActionPayload["completed_components"]).Length == 3) :
+                        ((object[])receipt.ActionPayload["completed_components"]).Length == 2),
                     "Make Ready lost applied preparation or claimed execution authority");
+                if (contentComplete)
+                {
+                    var continuation = typeof(C1LivePresentationStore).Assembly.GetType("FacMan.WinForms.MakeReadyContinuation");
+                    string summary = (string)continuation.GetMethod("Summary", BindingFlags.Static | BindingFlags.NonPublic)
+                        .Invoke(null, new object[] { receipt.ActionPayload, false });
+                    Require(summary.Contains("Current settings were prepared"), "valid content completion lost its typed summary");
+                }
             }
             Require(receipt.Outcome == "completed" && receipt.ReplacementSnapshot != null &&
                 receipt.ReplacementSnapshot.SelectedContext.InstanceId == "main" &&
@@ -89,7 +99,7 @@ internal static class SelectedSaveHarness
         var bundle = (Dictionary<string, object>)serializer.DeserializeObject(source);
         var assembly = typeof(C1LivePresentationStore).Assembly;
         var identityType = assembly.GetType("FacMan.WinForms.TransportIdentity");
-        var identity = Activator.CreateInstance(identityType, BindingFlags.Instance | BindingFlags.NonPublic,
+        var defaultIdentity = Activator.CreateInstance(identityType, BindingFlags.Instance | BindingFlags.NonPublic,
             null, new object[] { bundle["operation_id"], bundle["attempt_id"], bundle["request_id"] }, null);
         var pendingType = typeof(C1LivePresentationStore).GetNestedType("PendingSemanticAction", BindingFlags.NonPublic);
         var decoder = assembly.GetType("FacMan.WinForms.TransportResponseDecoder").GetMethod("Decode", BindingFlags.Static | BindingFlags.NonPublic);
@@ -99,6 +109,21 @@ internal static class SelectedSaveHarness
         foreach (object item in (object[])bundle["cases"])
         {
             var test = (Dictionary<string, object>)item;
+            var ids = test.ContainsKey("identity") ? (Dictionary<string, object>)test["identity"] : bundle;
+            var identity = test.ContainsKey("identity") ? Activator.CreateInstance(identityType, BindingFlags.Instance | BindingFlags.NonPublic,
+                null, new object[] { ids["operation_id"], ids["attempt_id"], ids["request_id"] }, null) : defaultIdentity;
+            if (test.ContainsKey("expected_summary"))
+            {
+                var receipt = (SemanticActionReceipt)typeof(SemanticActionReceipt).GetMethod("ParseEnvelope",
+                    BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { (string)test["envelope"] });
+                var continuation = assembly.GetType("FacMan.WinForms.MakeReadyContinuation");
+                string summary = (string)continuation.GetMethod("Summary", BindingFlags.Static | BindingFlags.NonPublic)
+                    .Invoke(null, new object[] { receipt.ActionPayload, false });
+                Require(summary.Contains("Current settings were prepared") == (bool)test["expected_summary"],
+                    "completed summary changed authority: " + test["name"]);
+                checkedCases++;
+                continue;
+            }
             var payload = (Dictionary<string, object>)test["input"];
             var pending = Activator.CreateInstance(pendingType, BindingFlags.Instance | BindingFlags.NonPublic,
                 null, new object[] { "instances", "readiness.prepare_joined", payload, identity, false }, null);
