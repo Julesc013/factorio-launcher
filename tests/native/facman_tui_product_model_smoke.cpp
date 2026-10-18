@@ -8,14 +8,68 @@
 
 #include <chrono>
 #include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
 
-int main()
+int main(int argc, char** argv)
 {
     using namespace facman::tui;
+    if (argc == 2) {
+        // The focused Python owner supplies actual semantic receipts and bounded
+        // mutations to the same feedback function used by both product modes.
+        std::error_code error;
+        const auto size = std::filesystem::file_size(argv[1], error);
+        if (error || size > 8U * 1024U * 1024U) return 60;
+        std::ifstream file(argv[1], std::ios::binary);
+        std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        auto corpus = facman::core::json::parse(bytes);
+        const auto* cases = corpus ? corpus.value().find("cases") : nullptr;
+        if (!cases || !cases->is_array() || cases->size() > 128U) return 61;
+        const auto string = [](const facman::core::json::Value& value, const char* key) {
+            const auto* item = value.find(key);
+            auto text = item ? item->string_value() : facman::core::Result<std::string>::success("");
+            return text ? text.value() : std::string();
+        };
+        for (std::size_t index = 0; index < cases->size(); ++index) {
+            const auto& test = *cases->at(index);
+            auto envelope = facman::core::json::parse(string(test, "envelope"));
+            const auto* semantic = envelope ? envelope.value().find("payload") : nullptr;
+            const auto* expected_field = test.find("expected_clear");
+            auto expected = expected_field ? expected_field->bool_value() : facman::core::Result<bool>::success(false);
+            if (!semantic || !expected) return 62;
+            facman::client::CommandResponse response;
+            const auto* exit_field = test.find("exit_code");
+            auto exit_code = exit_field ? exit_field->signed_integer_value() : facman::core::Result<std::int64_t>::success(3);
+            if (!exit_code || (exit_code.value() != 0 && exit_code.value() != 3)) return 64;
+            response.status = static_cast<int>(exit_code.value());
+            response.command = "presentation.action";
+            const auto* identity = test.find("identity");
+            if (!identity) identity = &corpus.value();
+            response.request_id = string(*identity, "request_id");
+            response.parsed_payload = std::make_shared<facman::core::json::Value>(*semantic);
+            response.operation.operation_id = string(*identity, "operation_id");
+            response.operation.attempt_id = string(*identity, "attempt_id");
+            TuiAction action;
+            action.id = "readiness.prepare_joined";
+            const auto feedback = action_response_status(action, response);
+            const auto* summary_field = test.find("expected_summary");
+            if (summary_field) expected = summary_field->bool_value();
+            if (!expected) return 65;
+            const bool fresh = summary_field ? feedback.find("Current settings were prepared") != std::string::npos :
+                feedback.find("correct changed inputs, refresh and confirm a new request") != std::string::npos;
+            if (fresh != expected.value()) {
+                std::cerr << "Invalid v2 continuation feedback: " << string(test, "name") << ": " << feedback << '\n';
+                return 63;
+            }
+        }
+        std::cout << "PASS " << cases->size() << " actual v2 continuation feedback cases\n";
+        return 0;
+    }
     const std::string source = R"({
       "schema":"facman.presentation_snapshot.v1",
       "revision":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",

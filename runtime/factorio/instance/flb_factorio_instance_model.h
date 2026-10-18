@@ -54,6 +54,13 @@ facman::core::Result<std::string> recover_configuration_preparation(
 // Its stable binding excludes only the separately journaled routing/context effects.
 facman::core::Result<std::string> joined_preparation_plan(
     const std::filesystem::path& workspace, const ProjectionRequest& request);
+facman::core::Result<std::string> verify_joined_content_inputs(
+    const std::filesystem::path& workspace, const ProjectionRequest& request,
+    const std::string& plan);
+facman::core::Result<std::string> continue_joined_after_content(
+    const std::filesystem::path& workspace, const ProjectionRequest& request,
+    const std::string& plan, const std::string& content_receipt,
+    const std::string& operation_id, const std::string& attempt_id);
 facman::core::Result<std::string> verify_joined_preparation(
     const std::filesystem::path& workspace, const ProjectionRequest& request,
     const std::string& plan, const std::string& configuration_transaction,

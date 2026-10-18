@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_locked_content_activation_plan.v1.schema.json",
+  "title": "Exact locked local content activation plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "instance_id",
+    "instance_identity",
+    "root_identity",
+    "lock_sha256",
+    "mod_list_sha256",
+    "owner_plan_id",
+    "desired_mods",
+    "before_targets",
+    "artifact_inputs",
+    "plan_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "factorio.locked_content_activation_plan.v1"
+    },
+    "instance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "instance_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lock_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "mod_list_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "owner_plan_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "desired_mods": {
+      "$ref": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_modset_plan.v1.schema.json#/properties/desired_mods"
+    },
+    "before_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mod-list",
+        "local-lock",
+        "shared-lock"
+      ],
+      "properties": {
+        "mod-list": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "identity",
+            "parent_identity",
+            "present",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "identity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "parent_identity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "present": {
+              "type": "boolean"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^([0-9a-f]{64})?$"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "present": {
+                    "const": false
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "identity": {
+                    "const": "absent"
+                  },
+                  "sha256": {
+                    "const": ""
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "local-lock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "identity",
+            "parent_identity",
+            "present",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "identity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "parent_identity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "present": {
+              "type": "boolean"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^([0-9a-f]{64})?$"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "present": {
+                    "const": false
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "identity": {
+                    "const": "absent"
+                  },
+                  "sha256": {
+                    "const": ""
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "shared-lock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "identity",
+            "parent_identity",
+            "present",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "identity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "parent_identity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "present": {
+              "type": "boolean"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^([0-9a-f]{64})?$"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "present": {
+                    "const": false
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "identity": {
+                    "const": "absent"
+                  },
+                  "sha256": {
+                    "const": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "artifact_inputs": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "identity"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "identity": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

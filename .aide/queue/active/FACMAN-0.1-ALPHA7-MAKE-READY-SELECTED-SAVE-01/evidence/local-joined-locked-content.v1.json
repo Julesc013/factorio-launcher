@@ -1,0 +1,706 @@
+{
+  "schema": "facman.local_joined_locked_content.v1",
+  "status": "LOCAL_NATIVE_FIXTURE_QUALIFIED_DELIVERY_PENDING",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "workunit_closed": false,
+  "base": "e45e5ec6893ebc3b7a004db0664b69f2ee6d9d2c",
+  "branch": "task/facman-joined-locked-content-01",
+  "outcome": "One explicit ordinary Make Ready reconciles only exact verified local locked content through its existing owner, then joins configuration and selected-save owners; healthy content keeps v1.",
+  "predecessor": {
+    "pr": 438,
+    "source": "80f7a3f1aa7644ab7ab09d76fea90fe9f7784952",
+    "integrated": "e45e5ec6893ebc3b7a004db0664b69f2ee6d9d2c",
+    "receipt": "https://github.com/Julesc013/factorio-launcher/pull/438#issuecomment-6243846986",
+    "scope": "Activation truth closed; ordinary explicit Content Apply then joined v1 was proven. Same-request reconciliation deliberately remained open for this bounded successor."
+  },
+  "candidate_paths": [
+    {
+      "path": "runtime/factorio/application/presentation_action_support.cpp",
+      "sha256": "8ed64ac4ca2c09f685647aaec6564c0a8900d4e5c0920fc8189da539fdab72f1"
+    },
+    {
+      "path": "runtime/factorio/application/presentation_action_support.h",
+      "sha256": "a085d8c0edecfad862ca24ef4dd0cf3027bfb287cd1ca9d138453943f7b7153c"
+    },
+    {
+      "path": "runtime/factorio/application/presentation_joined_preparation.cpp",
+      "sha256": "2de3c1c0cf08fc25639e22933423b30acbf9308f70200c4b88de788318d5afa3"
+    },
+    {
+      "path": "runtime/factorio/instance/flb_factorio_instance_model.cpp",
+      "sha256": "d99002a4c128c414bfd0eb4300aad913df2f82be47e948fb42a5d8d1992e3b1f"
+    },
+    {
+      "path": "runtime/factorio/instance/flb_factorio_instance_model.h",
+      "sha256": "f9b25b5bb0eab7511acabbef11798f5edbd1f95630045f560a194fe5752a9e05"
+    },
+    {
+      "path": "runtime/factorio/modsets/flb_factorio_modset_solver.cpp",
+      "sha256": "ba230d1aedc8c5b7d4b95306465bd4ddfaf6f67a371206f1fb29d19cc27f53ab"
+    },
+    {
+      "path": "runtime/factorio/modsets/flb_factorio_modset_solver.h",
+      "sha256": "e83db61f1890654ee3c55d5deed159c2f9ee0471344527666fef2f1b69fc3a95"
+    },
+    {
+      "path": "tests/test_readiness_content_activation.py",
+      "sha256": "b3cf26f47303054964c7975a380c020f14107633416c86df983ec13edfd2232e"
+    },
+    {
+      "path": "tests/test_make_ready_locked_content.py",
+      "sha256": "ad64a63bfb8d0c9c4fb02354070005711c9bf146e2518f27705826496da57d38"
+    },
+    {
+      "path": "docs/development/make-ready-preparation.md",
+      "sha256": "c086a89cde2e745cb20abb161b754e3c76da5be803d31358f9dfffaed5ddbc47"
+    },
+    {
+      "path": "apps/gui/windows/winforms/PresentationModels.cs",
+      "sha256": "c865bb292100cb35bb4f06fd9e2bc92f13bb013768b32be4246d57ab621c5df2"
+    },
+    {
+      "path": "apps/tui/tui_product_shell.cpp",
+      "sha256": "a8bb13583771ed227735fba218fd1077ee65eb386864fb1ab3ab421f9ee569ee"
+    },
+    {
+      "path": "tests/native/facman_tui_product_model_smoke.cpp",
+      "sha256": "7c8df2a7c2eea7eb38daca98b33f8cc846c87f16f80591d444e7ae6de835f4bd"
+    },
+    {
+      "path": "tests/winforms_control_gallery/SelectedSaveHarness.cs",
+      "sha256": "44f318084fffd36dc057123194144948e86dadc4e8e7908e282d3807f78d41e3"
+    },
+    {
+      "path": "contracts/schema/factorio/factorio_locked_content_activation_plan.v1.schema.json",
+      "sha256": "5e85c3c0ab4894378bdde873fee705e1906055f75df6db4fa0d1c131a6479eb9"
+    },
+    {
+      "path": "contracts/schema/factorio/factorio_locked_content_activation_result.v1.schema.json",
+      "sha256": "a5a4a92cb96f3470d94a8b5ffc0a39be8d5b879b9f316b0bdbd95fd9c0da3c66"
+    },
+    {
+      "path": "contracts/schema/factorio/factorio_make_ready_joined_plan.v2.schema.json",
+      "sha256": "faf2aa27bed4be3a31bb0caf0aba854d9c52e041f9ecd9b6736050002dce0bc5"
+    },
+    {
+      "path": "contracts/schema/factorio/factorio_make_ready_joined_result.v2.schema.json",
+      "sha256": "2e61b6c7ce2b42596b4299b1198de982a89ad3b33a005bb393107e93d64f8238"
+    },
+    {
+      "path": ".aide/memory/project-state.md",
+      "sha256": "cdaa409a6aec97c781cd50e14b6896bf8909289993ab2f3392a496954335a533"
+    },
+    {
+      "path": ".aide/memory/project-state.v2.json",
+      "sha256": "d30f3afb8ae3f030bf582ab0b0a1467066f9eeb9d82920e7d570b1c44722613f"
+    },
+    {
+      "path": "README.md",
+      "sha256": "44d3c7054609fe21f14999bffa81d42cee96901d20ad5d35710ef0d80308e8d6"
+    },
+    {
+      "path": "apps/gui/windows/winforms/GeneratedCommandCatalog.cs",
+      "sha256": "c35da6a2872d24c311c9e099d660998e5af10d21447dbd15c0cf63a1238f81d0"
+    },
+    {
+      "path": "runtime/core/generated/version.h",
+      "sha256": "147ca1d9dfa3f59542115ddbc13c390adf58d62b628613a3b07518f65cd1dc8d"
+    }
+  ],
+  "local_native_proof": {
+    "schema": "facman.local_joined_locked_content_native_proof.v1",
+    "status": "LOCAL_NATIVE_FIXTURE_QUALIFIED_DELIVERY_PENDING",
+    "base": "e45e5ec6893ebc3b7a004db0664b69f2ee6d9d2c",
+    "branch": "task/facman-joined-locked-content-01",
+    "workunit_closed": false,
+    "candidate_paths": [
+      {
+        "path": "runtime/factorio/application/presentation_action_support.cpp",
+        "sha256": "8ed64ac4ca2c09f685647aaec6564c0a8900d4e5c0920fc8189da539fdab72f1"
+      },
+      {
+        "path": "runtime/factorio/application/presentation_action_support.h",
+        "sha256": "a085d8c0edecfad862ca24ef4dd0cf3027bfb287cd1ca9d138453943f7b7153c"
+      },
+      {
+        "path": "runtime/factorio/application/presentation_joined_preparation.cpp",
+        "sha256": "2de3c1c0cf08fc25639e22933423b30acbf9308f70200c4b88de788318d5afa3"
+      },
+      {
+        "path": "runtime/factorio/instance/flb_factorio_instance_model.cpp",
+        "sha256": "d99002a4c128c414bfd0eb4300aad913df2f82be47e948fb42a5d8d1992e3b1f"
+      },
+      {
+        "path": "runtime/factorio/instance/flb_factorio_instance_model.h",
+        "sha256": "f9b25b5bb0eab7511acabbef11798f5edbd1f95630045f560a194fe5752a9e05"
+      },
+      {
+        "path": "runtime/factorio/modsets/flb_factorio_modset_solver.cpp",
+        "sha256": "ba230d1aedc8c5b7d4b95306465bd4ddfaf6f67a371206f1fb29d19cc27f53ab"
+      },
+      {
+        "path": "runtime/factorio/modsets/flb_factorio_modset_solver.h",
+        "sha256": "e83db61f1890654ee3c55d5deed159c2f9ee0471344527666fef2f1b69fc3a95"
+      },
+      {
+        "path": "tests/test_readiness_content_activation.py",
+        "sha256": "b3cf26f47303054964c7975a380c020f14107633416c86df983ec13edfd2232e"
+      },
+      {
+        "path": "tests/test_make_ready_locked_content.py",
+        "sha256": "ad64a63bfb8d0c9c4fb02354070005711c9bf146e2518f27705826496da57d38"
+      },
+      {
+        "path": "docs/development/make-ready-preparation.md",
+        "sha256": "c086a89cde2e745cb20abb161b754e3c76da5be803d31358f9dfffaed5ddbc47"
+      },
+      {
+        "path": "apps/gui/windows/winforms/PresentationModels.cs",
+        "sha256": "c865bb292100cb35bb4f06fd9e2bc92f13bb013768b32be4246d57ab621c5df2"
+      },
+      {
+        "path": "apps/tui/tui_product_shell.cpp",
+        "sha256": "a8bb13583771ed227735fba218fd1077ee65eb386864fb1ab3ab421f9ee569ee"
+      },
+      {
+        "path": "tests/native/facman_tui_product_model_smoke.cpp",
+        "sha256": "7c8df2a7c2eea7eb38daca98b33f8cc846c87f16f80591d444e7ae6de835f4bd"
+      },
+      {
+        "path": "tests/winforms_control_gallery/SelectedSaveHarness.cs",
+        "sha256": "44f318084fffd36dc057123194144948e86dadc4e8e7908e282d3807f78d41e3"
+      },
+      {
+        "path": "contracts/schema/factorio/factorio_locked_content_activation_plan.v1.schema.json",
+        "sha256": "5e85c3c0ab4894378bdde873fee705e1906055f75df6db4fa0d1c131a6479eb9"
+      },
+      {
+        "path": "contracts/schema/factorio/factorio_locked_content_activation_result.v1.schema.json",
+        "sha256": "a5a4a92cb96f3470d94a8b5ffc0a39be8d5b879b9f316b0bdbd95fd9c0da3c66"
+      },
+      {
+        "path": "contracts/schema/factorio/factorio_make_ready_joined_plan.v2.schema.json",
+        "sha256": "faf2aa27bed4be3a31bb0caf0aba854d9c52e041f9ecd9b6736050002dce0bc5"
+      },
+      {
+        "path": "contracts/schema/factorio/factorio_make_ready_joined_result.v2.schema.json",
+        "sha256": "2e61b6c7ce2b42596b4299b1198de982a89ad3b33a005bb393107e93d64f8238"
+      },
+      {
+        "path": ".aide/memory/project-state.md",
+        "sha256": "cdaa409a6aec97c781cd50e14b6896bf8909289993ab2f3392a496954335a533"
+      },
+      {
+        "path": ".aide/memory/project-state.v2.json",
+        "sha256": "d30f3afb8ae3f030bf582ab0b0a1467066f9eeb9d82920e7d570b1c44722613f"
+      },
+      {
+        "path": "README.md",
+        "sha256": "44d3c7054609fe21f14999bffa81d42cee96901d20ad5d35710ef0d80308e8d6"
+      },
+      {
+        "path": "apps/gui/windows/winforms/GeneratedCommandCatalog.cs",
+        "sha256": "c35da6a2872d24c311c9e099d660998e5af10d21447dbd15c0cf63a1238f81d0"
+      },
+      {
+        "path": "runtime/core/generated/version.h",
+        "sha256": "147ca1d9dfa3f59542115ddbc13c390adf58d62b628613a3b07518f65cd1dc8d"
+      }
+    ],
+    "source_packet_sha256": "e2074842556a281378362240e0fccdf80d538beb7f6ab92a471c5404bf928945",
+    "image": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman.exe",
+      "sha256": "820187ed31f82874cc62a242d4d5e288e834a2ac708df45f1c61e3a17c05065e",
+      "delivered_package_qualification": false
+    },
+    "build": {
+      "command": [
+        "cmake",
+        "--build",
+        "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer",
+        "--config",
+        "Release",
+        "--parallel",
+        "2",
+        "--target",
+        "facman_cli",
+        "facman_tui_product_model_smoke",
+        "flb_factorio_instance_model_smoke",
+        "--clean-first",
+        "--",
+        "/p:TrackFileAccess=false",
+        "/nr:false"
+      ],
+      "ok": true,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-content-build-owned-08\\receipt.json",
+      "exit_code": 0,
+      "termination": "completed",
+      "primary_stopped": true,
+      "job_empty": true,
+      "job_terminated": true,
+      "compiler_natural_descendant_lifetime_qualified": false,
+      "source_packet_sha256": "e2074842556a281378362240e0fccdf80d538beb7f6ab92a471c5404bf928945",
+      "marker_unchanged": true,
+      "cli_sha256": "820187ed31f82874cc62a242d4d5e288e834a2ac708df45f1c61e3a17c05065e"
+    },
+    "strict_final_image_checks": [
+      {
+        "label": "joined-content-focused-owned-06",
+        "exit_code": 0,
+        "receipt_sha256": "5f3556006b997315b0173b1ec8a68adf79bef34e99ecd2de116e9f3ef485228a",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stderr.raw",
+            "bytes": 770,
+            "sha256": "95154e5f7ca13b4762495809a6564f69b4182b10de7541a349dadacb6d28eed3"
+          },
+          {
+            "name": "stdin.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "forced_cleanup": false
+      },
+      {
+        "label": "joined-content-instance-model-smoke-owned-03",
+        "exit_code": 0,
+        "receipt_sha256": "e1fe84bf36e066e3a08d06108c424800a2f7ef7dc8897604975301346f31e692",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stderr.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stdin.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "forced_cleanup": false
+      },
+      {
+        "label": "joined-content-tui-model-smoke-owned-03",
+        "exit_code": 0,
+        "receipt_sha256": "90daa8cd3fc320f6f02e51c2a37578f2b12994dd1d45826cf1ee5d377a0566ad",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stderr.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stdin.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "forced_cleanup": false
+      },
+      {
+        "label": "joined-content-strict-owned-03",
+        "exit_code": 0,
+        "receipt_sha256": "377cf127456615366a2b198583ea7972769ddecbe715bc93f0aaf085ffc0ed15",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "bytes": 6077,
+            "sha256": "21a2af6b77a856c4343988413a1aebee4d1e5b07078fdcba5e758ae875bf2834"
+          },
+          {
+            "name": "stderr.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stdin.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "forced_cleanup": false
+      },
+      {
+        "label": "joined-content-aide-lite-owned-03",
+        "exit_code": 0,
+        "receipt_sha256": "f5e1d5fc4f55e6b618c7a21d55e7aefcb39739e3b48eeae635ef0eb2abc5385d",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "bytes": 402,
+            "sha256": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1"
+          },
+          {
+            "name": "stderr.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stdin.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "forced_cleanup": false
+      }
+    ],
+    "earlier_normal_checks": [
+      {
+        "label": "joined-content-focused-owned-05",
+        "exit_code": 0,
+        "receipt_sha256": "080e1769f4c9fc62695cc3e487c9e78a85210ddc1935f5b9afc471f133eee020",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stderr.raw",
+            "bytes": 1650,
+            "sha256": "170fdf5fad7b055c4b9a2c92670a8c05d8b01f67c4dd7848ab44d7e43e8b52aa"
+          },
+          {
+            "name": "stdin.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "forced_cleanup": false
+      },
+      {
+        "label": "joined-content-legacy-owned-03",
+        "exit_code": 0,
+        "receipt_sha256": "55505d417ba6c747770aa33b7e21454359577773d7e6e11c1ee15bc2448d0b0a",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stderr.raw",
+            "bytes": 789,
+            "sha256": "cea586153112bc2d2edeeb13867f2a932d0d1a8c3aa8798f9a66cca6544b3321"
+          },
+          {
+            "name": "stdin.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "forced_cleanup": false
+      }
+    ],
+    "metadata_refresh": {
+      "source_packet13_sha256": "e2074842556a281378362240e0fccdf80d538beb7f6ab92a471c5404bf928945",
+      "manual_feature_files_unchanged": true,
+      "contract_digest": "0c295c38ec09b767c93379058703db595014dac5b5761a869aab468a9fa1f45f",
+      "schema_count": 457,
+      "version_command_catalog_pins_authority_unchanged": true
+    },
+    "focused": {
+      "total_semantic_methods": 14,
+      "final_metadata_boundary_methods": [
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_one_confirmed_request_restores_exact_lock_then_configuration_and_selected_save",
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_ordinary_tui_reports_pending_content_and_content_only_completion",
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_compiled_adapters_accept_actual_v2_and_refuse_malformed_continuations"
+      ],
+      "final_metadata_boundary_count": 3,
+      "earlier_post_ui_image_sha256": "a0fa91761769acafb0b909d146e092412d91997215340673c0e0d41455db89c7",
+      "earlier_post_ui_methods": [
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_ordinary_tui_reports_pending_content_and_content_only_completion",
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_compiled_adapters_accept_actual_v2_and_refuse_malformed_continuations",
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_pending_repair_preserves_foreign_metadata_and_unselected_entries",
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_stale_activation_archive_and_lock_identity_refuse_before_effects",
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_owner_unknown_and_declared_interruptions_never_redispatch_content",
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_existing_content_owner_restores_its_declared_fault_without_running_configuration",
+        "test_make_ready_locked_content.LockedContentMakeReadyTests.test_later_unverifiable_owner_result_keeps_content_but_never_claims_all_effects_verified"
+      ],
+      "earlier_post_ui_count": 7,
+      "earlier_pre_ui_image_sha256": "c2cccd8120c17afec74de9f88d3dbd0957037ebdbe42a0d07358859618cbc979",
+      "earlier_pre_ui_count": 7,
+      "earlier_pre_ui_source_packet_sha256": "c45dfd7be0f702c3d7fd373ea67aadc79fc07d1d43e0dfec20ea24c4a18d537e",
+      "prior_methods": [
+        {
+          "report": "joined-content-focused-02.json",
+          "process": {
+            "label": "joined-content-focused-owned-02",
+            "exit_code": 1,
+            "receipt_sha256": "70bc5a7e7dd017e43aa1316bb1a6eb739dcf957b8229fc1d0018fa21551527b9",
+            "streams": [
+              {
+                "name": "stdout.raw",
+                "bytes": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              },
+              {
+                "name": "stderr.raw",
+                "bytes": 1920,
+                "sha256": "bb2abb2d6cee95747a1a9cadd0d4fdc0a699a29ae66e0960f3d38a804925475c"
+              },
+              {
+                "name": "stdin.raw",
+                "bytes": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              }
+            ],
+            "normal_primary": true,
+            "owned_job_empty": true,
+            "forced_cleanup": false
+          },
+          "methods": [
+            "test_changed_protected_inputs_and_unverifiable_content_stop_before_later_owners"
+          ],
+          "scope": "Only the named whole methods passed; aggregate primary1/failure retained, not a passing suite"
+        },
+        {
+          "report": "joined-content-focused-03.json",
+          "process": {
+            "label": "joined-content-focused-owned-03",
+            "exit_code": 1,
+            "receipt_sha256": "e6c44fee40484c55a291bfaec13ceba3b69282851c48f4a4ace871375c4188ef",
+            "streams": [
+              {
+                "name": "stdout.raw",
+                "bytes": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              },
+              {
+                "name": "stderr.raw",
+                "bytes": 2794,
+                "sha256": "502945a8f1eeaf27ef46f917c674d0512644e8a93eef3159f87ebe0e6a442bba"
+              },
+              {
+                "name": "stdin.raw",
+                "bytes": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              }
+            ],
+            "normal_primary": true,
+            "owned_job_empty": true,
+            "forced_cleanup": false
+          },
+          "methods": [
+            "test_one_confirmed_request_restores_exact_lock_then_configuration_and_selected_save",
+            "test_content_only_pending_repair_keeps_current_configuration_save_and_healthy_v1"
+          ],
+          "scope": "Only the named whole methods passed; aggregate primary1/failure retained, not a passing suite"
+        },
+        {
+          "report": "joined-content-focused-04.json",
+          "process": {
+            "label": "joined-content-focused-owned-04",
+            "exit_code": 1,
+            "receipt_sha256": "520c29d10db34e009c20d73ed65818e9ec0b8daa2379f557eb52b9305ddcbcc3",
+            "streams": [
+              {
+                "name": "stdout.raw",
+                "bytes": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              },
+              {
+                "name": "stderr.raw",
+                "bytes": 20645,
+                "sha256": "392fc2dd666730049955541778742d57acc152d57ee6f799ce09de2a6e041a5c"
+              },
+              {
+                "name": "stdin.raw",
+                "bytes": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              }
+            ],
+            "normal_primary": true,
+            "owned_job_empty": true,
+            "forced_cleanup": false
+          },
+          "methods": [
+            "test_content_only_repair_keeps_association_and_archive_native_identity_protected",
+            "test_identical_archive_in_earlier_instance_binds_only_selected_instance",
+            "test_prepublication_same_byte_stage_and_backup_replacement_requires_recovery",
+            "test_protected_drift_before_owner_refuses_and_during_owner_retains_only_content"
+          ],
+          "scope": "Only the named whole methods passed; aggregate primary1/failure retained, not a passing suite"
+        }
+      ],
+      "scope": "All14 feature methods covered across explicitly distinct earlier images; final3 metadata boundary methods additionally pass on current image. Manual feature sources unchanged12to13; no claim all14 ran on final image."
+    },
+    "legacy": {
+      "total_methods": 40,
+      "completed_prior_semantic_only": 37,
+      "strict_remaining_methods": [
+        "test_make_ready_joined.JoinedMakeReadyTests.test_unrelated_drift_and_foreign_targets_after_configuration_stop_with_visible_partial_effects",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_unverifiable_owner_result_retains_uncertainty_and_never_starts_another_effect",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_wrong_desired_inputs_confirmation_and_stale_observation_refuse_before_effects"
+      ],
+      "strict_remaining_count": 3,
+      "timed_out_batch": {
+        "report_sha256": "4e25319fe9110c34ab4c141b934e4e9ff1ddf122137a63826f835e051e80d1b9",
+        "receipt_sha256": "1e4a7667f9a68bde0cb54ab11d030784d3a3c0ac9cc59f7b561a0704835c92c6",
+        "elapsed_seconds": 900.016796,
+        "exit_code": 124,
+        "termination": "command_timeout",
+        "forced_owned_cleanup": true,
+        "natural_lifetime_qualified": false,
+        "suite_completed": false,
+        "completed_methods": [
+          "test_readiness_content_activation.ContentActivationReadinessTests.test_activation_drift_refuses_readiness_but_preserves_package_only_verify",
+          "test_readiness_content_activation.ContentActivationReadinessTests.test_builtin_only_activation_and_linked_ancestor_fail_closed",
+          "test_readiness_content_activation.ContentActivationReadinessTests.test_confirmed_content_apply_restores_locked_selection_then_joined_prepares",
+          "test_readiness_content_activation.ContentActivationReadinessTests.test_large_valid_activation_still_binds_exact_bytes",
+          "test_readiness_content_activation.ContentActivationReadinessTests.test_semantic_equivalence_still_binds_exact_activation_bytes_for_stale_requests",
+          "test_readiness_content_activation.ContentActivationReadinessTests.test_shared_lock_disagreement_and_linked_mod_list_are_observed_without_adoption",
+          "test_local_modset_solver.LocalModsetSolverTests.test_applied_selection_exports_exact_lock_and_only_selected_archives",
+          "test_local_modset_solver.LocalModsetSolverTests.test_applied_selection_verifies_virtual_base_and_only_pinned_archives",
+          "test_local_modset_solver.LocalModsetSolverTests.test_apply_and_rollback_refuse_the_existing_instance_configuration_lock",
+          "test_local_modset_solver.LocalModsetSolverTests.test_apply_and_rollback_restore_exact_state",
+          "test_local_modset_solver.LocalModsetSolverTests.test_apply_preserves_external_managed_state_change_at_publication_boundary",
+          "test_local_modset_solver.LocalModsetSolverTests.test_apply_preserves_unverified_publication_staging_and_history",
+          "test_local_modset_solver.LocalModsetSolverTests.test_apply_refuses_redirected_publication_stage_where_supported",
+          "test_local_modset_solver.LocalModsetSolverTests.test_apply_refuses_selected_archive_change_at_publication_boundary",
+          "test_local_modset_solver.LocalModsetSolverTests.test_dependency_plan_is_byte_deterministic_and_honors_tie_breaks",
+          "test_local_modset_solver.LocalModsetSolverTests.test_export_refuses_valid_changed_selection_after_staging",
+          "test_local_modset_solver.LocalModsetSolverTests.test_failed_apply_retry_preserves_attempts_and_has_its_own_rollback_id",
+          "test_local_modset_solver.LocalModsetSolverTests.test_fault_after_first_commit_restores_original_state",
+          "test_local_modset_solver.LocalModsetSolverTests.test_human_content_reports_show_owner_selection_and_diagnostics",
+          "test_local_modset_solver.LocalModsetSolverTests.test_legacy_restored_recovery_journal_is_preserved_during_retry",
+          "test_local_modset_solver.LocalModsetSolverTests.test_missing_dependencies_and_all_budgets_fail_closed",
+          "test_local_modset_solver.LocalModsetSolverTests.test_required_and_optional_cycles_terminate_and_incompatibilities_refuse",
+          "test_local_modset_solver.LocalModsetSolverTests.test_retry_refuses_tampered_history_stage_and_active_journal",
+          "test_local_modset_solver.LocalModsetSolverTests.test_rollback_fault_restores_applied_state_before_retry",
+          "test_local_modset_solver.LocalModsetSolverTests.test_rollback_history_cannot_redirect_managed_targets",
+          "test_local_modset_solver.LocalModsetSolverTests.test_virtual_only_selection_exports_lock_without_inventing_archive",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_changed_effect_after_final_observation_cannot_manufacture_success",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_changed_selected_save_at_final_receipt_does_not_reuse_readiness",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_compiled_ordinary_gui_control_preserves_actual_preparation_receipt",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_concurrent_exact_request_reads_checkpoint_without_redispatch",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_failed_final_receipt_persistence_preserves_foreign_target_and_exposes_no_clearing_directive",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_known_partial_correction_uses_a_fresh_request_without_changing_prior_receipts",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_menu_and_already_prepared_paths_follow_owner_observation",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_missing_prerequisites_and_foreign_context_are_visible_and_preserved",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_one_ordinary_request_prepares_routing_and_exact_world_with_independent_receipts",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_ordinary_tui_dispatches_one_confirmed_request_for_both_components",
+          "test_make_ready_joined.JoinedMakeReadyTests.test_process_loss_retains_plan_and_completed_effect_without_replaying_or_rollback"
+        ],
+        "scope": "Only37 completed methods support semantic assertions;38th in progress plus2 later methods were not qualified by batch02",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "stderr.raw",
+            "bytes": 8842,
+            "sha256": "6c6a3828de510605fb26542d0c78f8dea57407ce30b74c7f748bb00a31e1c158"
+          },
+          {
+            "name": "stdin.raw",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "skip_lines": [
+        "  test_shared_lock_disagreement_and_linked_mod_list_are_observed_without_adoption (test_readiness_content_activation.ContentActivationReadinessTests.test_shared_lock_disagreement_and_linked_mod_list_are_observed_without_adoption) (kind='linked-file') ... skipped \"unsupported: file symlink unavailable: [WinError 1314] A required privilege is not held by the client: 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.task-builds\\\\\\\\repositories\\\\\\\\factorio-launcher-5db2844e2f29\\\\\\\\tasks\\\\\\\\task-facman-w-bc5cd0812e\\\\\\\\t\\\\\\\\activation-unsafe-s_ah2723\\\\\\\\foreign-activation' -> 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.task-builds\\\\\\\\repositories\\\\\\\\factorio-launcher-5db2844e2f29\\\\\\\\tasks\\\\\\\\task-facman-w-bc5cd0812e\\\\\\\\t\\\\\\\\activation-unsafe-s_ah2723\\\\\\\\instances\\\\\\\\main\\\\\\\\mods\\\\\\\\mod-list.json'\"",
+        "  test_apply_refuses_redirected_publication_stage_where_supported (test_local_modset_solver.LocalModsetSolverTests.test_apply_refuses_redirected_publication_stage_where_supported) (change='staged_symlink') ... skipped 'not_applicable: publication symlink creation unavailable on this host'",
+        "  test_apply_refuses_redirected_publication_stage_where_supported (test_local_modset_solver.LocalModsetSolverTests.test_apply_refuses_redirected_publication_stage_where_supported) (change='stage_redirect') ... skipped 'not_applicable: publication symlink creation unavailable on this host'"
+      ],
+      "scope": "40 method coverage across declared attempts,3 classified symlink privilege subcase skips; no full-suite40 normal-lifetime claim"
+    },
+    "assertions": [
+      "One explicit ordinary request restores only the existing pinned local lock, then configuration and exact selected-save owners",
+      "Original raw lock bytes and unrelated/protected state preserved; real content TransactionSession receipt is distinct from history identity",
+      "Healthy v1 and archive-only modsets.verify remain compatible",
+      "Missing/disabled, newer local archive, current config/save, own-instance duplicate archive and native identity protections",
+      "Prepublication foreign stage/backup objects retained for recovery; late unrelated drift reports verified partial with no later owners",
+      "Unknown owner results and declared Exit90/89/88/fault boundaries stop later owners; exact replay never redispatches",
+      "Actual ordinary linear TUI two completion cases plus source-built WinForms controls and shared TUI/WinForms actual-partial/zero-nested/degraded/negative corpus",
+      "Bounded Windows lexical target normalization preserves strict case/POSIX spelling and rejects foreign/device namespace targets"
+    ],
+    "retained_failures": [
+      "strict02 normalprimary1 stale generated counts/digest only; refreshed existing owners and final metadata-qualified build",
+      "build04 compiler primary1 C4130/C2220 plus separate wrapper absent-CLI summary failure",
+      "focused01 failed runtime binding/schema/journal-key assertions on image6a; diagnostic only",
+      "focused02 absent-settings setup error after one whole method passed",
+      "focused03 unrelated journal JSON parse oracle error after two whole methods passed",
+      "focused04 genuine TUI mixed-separator feedback rejection after four whole methods passed",
+      "source packet11 malformed C++ literal bytes statically rejected and never executed",
+      "legacy02 exact900s timeout/forced owned cleanup during38th method;37 completed semantic-only,3 unfinished resumed separately"
+    ],
+    "diagnostics": [
+      "joined-content-binding-diagnostic-01.json",
+      "joined-content-binding-source-diagnosis-review-01.json",
+      "joined-content-tui-diagnostic-01.json",
+      "joined-content-tui-feedback-source-diagnosis-review-01.json"
+    ],
+    "boundaries": [
+      "Synthetic local Windows fixture proof, not delivered package acceptance",
+      "Compiler primary success plus exact owned cleanup only; natural compiler-descendant lifetime unqualified",
+      "Legacy02 forced900s batch supports only37 completed method semantics, not full process lifetime; remaining3 separately qualified",
+      "Narrow pending eligibility: exact available lock/artifacts;16MiB physical artifact/read limit; no acquisition or re-resolution",
+      "Malformed/foreign/unsafe inputs refuse; sequential existing owner leases; external drift during owner may yield verified partial stop",
+      "Fresh exact-head CI and independently reviewed original newly produced Windows CLI/TUI/ordinary WinForms proof required before merge",
+      "No real Factorio/human/canonical Desktop/PR404/full Make Ready/F09/F11/Beta/RC/release acceptance; WorkUnit and programme active"
+    ],
+    "authority_delta": "none"
+  },
+  "independent_local_review": {
+    "verdict": "PASS_LOCAL_JOINED_LOCKED_CONTENT_SOURCE_AND_SCOPED_NATIVE_PROOF",
+    "receipt": "joined-content-local-actual-review-01.json",
+    "sha256": "206d7d968b8af45f01ab41f06d44ade9211c99a562c2aed1b0fdbf5035512b89"
+  },
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/local-joined-locked-content-custody.v1.zip",
+    "bytes": 378578,
+    "sha256": "0fefa361352cd35fcf4e5f8dc7255d13c03320751a2d05b325eb1ece6ab56b5e",
+    "entries": 313,
+    "inventory_sha256": "641d6fee27456feff44955c4e8b0f70f92cb1103afd438ce4c68f79c96ed5fef",
+    "scope": "Exact retained local receipts/raw/scripts/reviews, including failed attempts and unexecuted drafts; archive membership is not execution or acceptance."
+  },
+  "integration_gate": {
+    "required": "Fresh exact-head required CI and independently reviewed original newly produced Windows CLI, actual ordinary TUI and actual ordinary WinForms locked-content Make Ready proof",
+    "delivered_proof_pending": true,
+    "resolution": "A later exact-source PR receipt must explicitly resolve this historical pending field before normal checked merge."
+  },
+  "authority_delta": "none",
+  "boundaries": [
+    "Synthetic local Windows fixture proof, not delivered package acceptance",
+    "Compiler primary success plus exact owned cleanup only; natural compiler-descendant lifetime unqualified",
+    "Legacy02 forced900s batch supports only37 completed method semantics, not full process lifetime; remaining3 separately qualified",
+    "Narrow pending eligibility: exact available lock/artifacts;16MiB physical artifact/read limit; no acquisition or re-resolution",
+    "Malformed/foreign/unsafe inputs refuse; sequential existing owner leases; external drift during owner may yield verified partial stop",
+    "Fresh exact-head CI and independently reviewed original newly produced Windows CLI/TUI/ordinary WinForms proof required before merge",
+    "No real Factorio/human/canonical Desktop/PR404/full Make Ready/F09/F11/Beta/RC/release acceptance; WorkUnit and programme active"
+  ]
+}
