@@ -1054,3 +1054,21 @@ Whole Make Ready/F09/F11, real-game/human/canonical Desktop/PR404 and Beta/RC/re
 gates remain open. The WorkUnit and programme remain active.
 Scoped receipt and compact custody: evidence/local-content-maintenance.v1.json
 and evidence/local-content-maintenance-custody.v1.zip.
+
+
+2026-10-18: The first Content maintenance candidate source5aced42 required Linux
+campaign39114555698 failed one of2181 tests (128 skips): the new scripted rollback
+cancellation sent an extra confirmation when the requested transaction already
+matched the public descriptor default. That failed campaign remains failed.
+A test-only correction now follows the observed default and checks the actual
+confirmation prompt without weakening full cancellation-preservation assertions.
+The affected ordinary TUI method passes22 normal owned calls on the unchanged
+native runtime, with exact original rollback/protected identities; strict and
+AIDE checks pass. Independent review accepts the source-bound Windows fixture
+branch only, without claiming a Linux pass. No runtime rebuild or package
+execution occurred. Fresh exact-child-source required CI and original Windows
+CLI/TUI/actual WinForms proof remain pending before integration. The old GUI
+harness admission is historical; a corrected payload assertion requires renewed
+exact-source preexecution review. Whole WorkUnit/F09/F11 and release gates stay
+open; WorkUnit and programme remain active.
+Evidence: evidence/local-content-maintenance-ci-oracle.v1.json and its custody ZIP.

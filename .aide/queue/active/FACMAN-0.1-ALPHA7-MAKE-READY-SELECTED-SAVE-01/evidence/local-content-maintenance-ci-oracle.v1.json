@@ -1,0 +1,73 @@
+{
+  "schema": "facman.local_content_maintenance_ci_oracle.v1",
+  "status": "LOCAL_TEST_ONLY_CORRECTION_QUALIFIED_FRESH_CI_AND_DELIVERY_PENDING",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "workunit_closed": false,
+  "parent_source": "5aced42bc7ede239a8d75cb50549592926a76816",
+  "base": "0db719812d39e11879f4a06b6b9f9d717c50238a",
+  "failed_required_campaign": {
+    "run": 39114555698,
+    "job": 117637570574,
+    "platform": "linux-native",
+    "status": "FAILURE",
+    "tests": 2181,
+    "failures": 1,
+    "skips": 128,
+    "logs_sha256": "a22400dbdc37348e28f844b80c38f15876ecc3712af61d813023c50a9644653b",
+    "observer_sha256": "4d37bf1d0834b87c77e5804568548057b8124877a967eddc66943ccb8f2c546d",
+    "not_relabeled": true
+  },
+  "correction": "Read the public rollback descriptor default before scripted field editing; request fresh confirmation only when the selected history transaction changes. Keep full frozen-workspace cancellation assertion and assert actual confirmation prompt. No history enumeration order is assumed.",
+  "source_files": {
+    "runtime/factorio/application/presentation_service.cpp": "821f312540dfe4e335aab6260799d35c495591b3a6ec01705025f45e4f008f25",
+    "runtime/factorio/application/presentation_action_support.cpp": "862656b1db3440db55c9455438513de7fc4446f3688e5ed4fdbd3c8efebda8f3",
+    "runtime/factorio/application/presentation_action_support.h": "1d67e036cc07dcab3350df07496c6f57edb024ef3824ec9401db1f9d7da8c730",
+    "runtime/factorio/modsets/flb_factorio_modset_solver.cpp": "63d046c136b0d98db233dd10f060563f5807408da229943e89fab3604668b5cc",
+    "runtime/factorio/modsets/flb_factorio_modset_solver.h": "3b4317b4cb86b49f2a2b18cd711a86981e6b2d7d56074674f76e14745ba5a2c8",
+    "runtime/factorio/mods/flb_factorio_mods.cpp": "66d1fbb225ece6664fee623b14966312ce0ae5a2951da0e9178113b445dc7b72",
+    "runtime/factorio/mods/flb_factorio_mods.h": "d47bf7b9f84d061ca3c6b558bf67a7a81c6390f4902104298de3a07f2cd8bff2",
+    "apps/tui/tui_product_shell.cpp": "4223bcbb230346969e2cf7bc021afc2b9d58d1c85d6ef748a6043da44bbe3d56",
+    "tests/test_presentation_content_maintenance.py": "1682fdd9e9fd1cd054a74e184318879dd0f147bb3b0e43ce9bc9a9abd4da1426",
+    "tests/test_presentation_service.py": "e4bbe2ac92719149afcb595029554c7ef90634f750cc54798eed72bbf49270c8"
+  },
+  "backend_sha256": "3ecc4ff5887f78cb6657bb8b0417558a7fa53696cd6645e4f4d60d3fd7221b49",
+  "runtime_source9_and_binary_unchanged": true,
+  "new_native_build": false,
+  "local_focused": {
+    "methods": 1,
+    "calls": 22,
+    "normal_primary": true,
+    "empty_jobs": true,
+    "safety_cleanup": false,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "actual_branch": "Requested transaction differs from descriptor default on Windows. Equal-default branch remains source-reviewed, not a Linux execution pass."
+  },
+  "review": {
+    "path": "content-maintenance-ci-oracle-actual-review-01.json",
+    "sha256": "5a4bc89ac377b3813be51cdbdeefeb4b9d0671310f604752cf46c0e412d7ab16",
+    "verdict": "PASS_SOURCE_BOUND_FOCUSED_TUI_CORRECTION"
+  },
+  "strict_and_aide": {
+    "checks": 2,
+    "sha256": "829c25438749cd8d0b57ba34754a82218bcdf49e94fe5bfa893ddc38fa210b47",
+    "normal_primary": true,
+    "empty_jobs": true,
+    "safety_cleanup": false
+  },
+  "custody": {
+    "path": "local-content-maintenance-ci-oracle-custody.v1.zip",
+    "sha256": "8a37a8da33e5e0b400e704bac99cded8a1e02eb84a25e8e849212246fb51d2a4",
+    "bytes": 425016,
+    "members": 176,
+    "total_uncompressed_bytes": 2066610
+  },
+  "future_gui_harness": "Unexecuted old GUI01/review04 remain historical; GUI02 removes unsupported command-key assertion and needs a new exact-child-source preexecution plan.",
+  "limits": [
+    "No current Linux-pass or produced-package acceptance claim",
+    "Prior failed required CI remains failed",
+    "Fresh exact-child-source required CI and independently reviewed original newly produced CLI/TUI/actual WinForms proof required before normal merge",
+    "Whole WorkUnit/F09/F11, real-game/human/canonical Desktop/PR404 and Beta/RC/release gates remain open"
+  ]
+}
