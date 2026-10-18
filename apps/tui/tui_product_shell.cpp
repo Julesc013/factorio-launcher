@@ -425,6 +425,29 @@ std::string operation_feedback(const facman::client::CommandResponse& response)
         : facman::client::operation_outcome_name(response.operation.outcome);
     const auto* preparation = response.parsed_payload ? response.parsed_payload->find("action_payload") : nullptr;
     if (semantic_action && response.ok() && outcome == "completed" &&
+        response.payload_string("action_id") == "modsets.plan" && preparation && preparation->is_object()) {
+        const auto text = [](const facman::core::json::Value& value, const char* key) {
+            const auto* field = value.find(key);
+            auto decoded = field ? field->string_value() : facman::core::Result<std::string>::success({});
+            return decoded ? decoded.value() : std::string();
+        };
+        const auto* changes = preparation->find("changes");
+        if (text(*preparation, "schema") == "factorio.modset_plan.v1" &&
+            text(*preparation, "command") == "modsets.plan" && changes && changes->is_array()) {
+            std::string summary = "Modset preview completed";
+            if (changes->size() == 0U) return summary + ": no changes";
+            for (std::size_t index = 0; index < changes->size(); ++index) {
+                if (index >= 32U || summary.size() >= 2048U) return summary + "; further changes in CLI plan";
+                const auto* change = changes->at(index);
+                if (!change || !change->is_object()) return "Modset preview unavailable: invalid change";
+                const auto before = text(*change, "from_version"), after = text(*change, "to_version");
+                summary += "; " + text(*change, "name") + ": " + (before.empty() ? "disabled" : before) +
+                    " -> " + (after.empty() ? "disabled" : after);
+            }
+            return summary;
+        }
+    }
+    if (semantic_action && response.ok() && outcome == "completed" &&
         response.payload_string("action_id") == "snapshots.create" && preparation && preparation->is_object()) {
         const auto text = [preparation](const char* key) {
             const auto* field = preparation->find(key);
@@ -513,7 +536,7 @@ int activate_selected_action(CommandClient& client, TuiState& state)
                 if (!value.empty()) state.form.values[field.id] = value;
             }
             state.form.problems = validate_form(state.form);
-            if (!state.form.problems.empty()) {
+            if (!state.form.problems.empty() || action.id == "modsets.plan") {
                 state.status = "Review action input; enter field=value, then activate again";
                 return 0;
             }
@@ -640,6 +663,12 @@ int process_line(CommandClient& client, TuiState& state, std::string command)
     if (normalized == "r" || normalized == "refresh") {
         TuiEvent event;
         event.kind = TuiEventKind::refresh;
+        state = reduce_tui_state(state, event);
+        return 0;
+    }
+    if (normalized == "esc" || normalized == "escape" || normalized == "cancel") {
+        TuiEvent event;
+        event.kind = TuiEventKind::cancel;
         state = reduce_tui_state(state, event);
         return 0;
     }

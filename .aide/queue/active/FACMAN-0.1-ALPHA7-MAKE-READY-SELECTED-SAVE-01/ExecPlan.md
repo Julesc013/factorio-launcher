@@ -1027,3 +1027,30 @@ The first source87 required Windows campaign failed before the existing healthy-
 The next test-only candidate retains packaged scoped observations, launch-deck display revision and owned native thread responsiveness around the same single click and unchanged dialog/effect assertions. Diagnostic timing can change; a later pass cannot retrospectively establish a control race. Production bytes remain unchanged. Fresh exact-head CI and independently reviewed original-package CLI, ordinary TUI and ordinary WinForms proof remain required; the historical delivery-pending record is not resolved here.
 
 Evidence: `evidence/joined-content-ci-input-boundary.v1.json` and its exact compact custody. WorkUnit remains active.
+
+
+2026-10-18: One bounded existing-instance Content maintenance journey now offers
+human-readable exact local version choices through the existing semantic action
+and ordinary TUI/WinForms descriptors. Explicit selection binds the selected
+instance artifact name/version/source/file/SHA and preserves other enabled locks;
+legacy name-only/current-lock-first and direct soft --prefer behavior stay intact.
+The terminal Plan form supports editing, diff feedback and cancellation.
+Five focused methods across ten synthetic fixtures pass 157 normal owned calls
+(150 success, seven expected refusals), both native smokes, strict and AIDE checks
+with empty product Jobs and no safety cleanup. Exact original activation, both
+locks, selected save, binary settings and protected bytes/native IDs are preserved
+after ordinary history-selected rollback. Alternate-source/archive, stale input,
+conflict/dependency refusal, cancellation and retained foreign-state rollback
+safety are covered. Independent local actual review accepts this bounded proof.
+The registry-only refusal addition leaves the qualified native runtime/header
+unchanged; final registry and regenerated project-state surfaces pass checks.
+Earlier failed build/static/recorder/oracle attempts remain failed in custody.
+Compiler primary success uses exact owned cleanup; natural compiler descendant
+lifetime remains unqualified. This is source-bound developer image evidence.
+Fresh exact-head CI and independent original newly produced Windows CLI, ordinary
+TUI and actual WinForms proof remain pending in this historical local record;
+a later exact-source PR receipt must resolve that field before integration.
+Whole Make Ready/F09/F11, real-game/human/canonical Desktop/PR404 and Beta/RC/release
+gates remain open. The WorkUnit and programme remain active.
+Scoped receipt and compact custody: evidence/local-content-maintenance.v1.json
+and evidence/local-content-maintenance-custody.v1.zip.

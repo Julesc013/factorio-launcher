@@ -14,6 +14,29 @@ fingerprint, budget usage, and a content-derived plan identifier. Package,
 version, edge, state, backtrack, elapsed-time, and explanation-node budgets all
 fail closed with `solver_budget_exceeded`.
 
+Content's **Plan instance modset** and **Apply instance modset** offer both
+name-only choices and explicit local versions such as `simple@2.0.0`. A name-only
+choice retains the existing solver behavior, including current-lock preference.
+An explicit version performs maintenance of the existing enabled set: the other
+enabled locked packages stay requested, and the selected version must resolve
+with their dependencies. It binds the selected instance's physical archive,
+filename, source and SHA-256 from the reviewed snapshot. Missing, changed or
+incompatible material refuses instead of falling back to another version.
+Identical archives in other instances do not replace that selected-instance
+binding. Invalid archives and installation-derived virtual packages are excluded
+from explicit physical-version choices. The direct CLI's soft `--prefer`
+ordering is unchanged; the public `presentation action` route accepts the same
+explicit identity through `--mod name@version`.
+
+In the ordinary terminal, activate Plan to review its form, set the local version,
+then activate again to see the version diff. Apply requires a separate explicit
+confirmation; editing its form clears an earlier confirmation. Review the
+returned activation transaction in **Roll back instance modset** to restore the
+exact prior activation and both locks. Rollback preserves the displaced state in
+history and never reselects a newer available archive. Binary startup settings,
+configuration overrides, selected saves and unrelated files remain outside these
+activation writes.
+
 `modsets apply` always resolves and verifies a plan before mutation. It preserves
 the current `mod-list.json`, instance lock, and shared lock in managed activation
 history, stages new Factorio-compatible state, revalidates archive identities and
