@@ -1018,3 +1018,12 @@ merge. Whole Make Ready/F09/F11, real-game/human/canonical Desktop/PR404 and
 Beta/RC/release gates remain open; the WorkUnit and programme remain active.
 Scoped receipt and compact custody: evidence/local-joined-locked-content.v1.json
 and evidence/local-joined-locked-content-custody.v1.zip.
+
+
+### Joined locked-content CI input-boundary evidence
+
+The first source87 required Windows campaign failed before the existing healthy-content Make Ready input dialog; no content action was dispatched. Retained custody leaves managed Click delivery versus descriptor availability unresolved. The bounded exact-fixture developer-backend diagnostic exposes both joined-v1 descriptors and preserves all observed files; it does not exercise the GUI or qualify an original package.
+
+The next test-only candidate retains packaged scoped observations, launch-deck display revision and owned native thread responsiveness around the same single click and unchanged dialog/effect assertions. Diagnostic timing can change; a later pass cannot retrospectively establish a control race. Production bytes remain unchanged. Fresh exact-head CI and independently reviewed original-package CLI, ordinary TUI and ordinary WinForms proof remain required; the historical delivery-pending record is not resolved here.
+
+Evidence: `evidence/joined-content-ci-input-boundary.v1.json` and its exact compact custody. WorkUnit remains active.
