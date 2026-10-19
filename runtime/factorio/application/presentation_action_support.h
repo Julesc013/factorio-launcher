@@ -39,6 +39,14 @@ facman::core::json::ObjectBuilder action_descriptor(
 std::string action_request_json(const SemanticActionRequest& request);
 bool recorded_action_request_shape(const facman::core::json::Value& request);
 bool effectful_semantic_action(const std::string& action_id);
+std::vector<std::filesystem::path> local_modset_maintenance_paths(
+    const std::vector<facman::factorio::mods::ModRef>& inventory,
+    const std::vector<facman::workspace::InstanceRecord>& instances,
+    const std::string& instance_id);
+std::string append_modset_maintenance_choice(const facman::factorio::mods::ModRef& mod,
+    const std::vector<std::filesystem::path>& paths, std::vector<std::string>& choices);
+ApplicationResult dispatch_content_modset(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot);
 std::string snapshot_create_input_problem(const SemanticActionRequest& request);
 ApplicationResult dispatch_snapshot_create(ApplicationContext& context, const SemanticActionRequest& request);
 bool terminal_session_state(const std::string& state);

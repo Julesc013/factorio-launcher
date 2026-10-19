@@ -1876,6 +1876,13 @@ retryable = true
 message = "A modset request enables and disables the same package."
 
 [[code]]
+id = "modset_exact_selection_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The reviewed selected-instance content artifact is unavailable or ambiguous."
+
+[[code]]
 id = "modset_archive_changed"
 severity = "blocked"
 effect = "workspace_read"

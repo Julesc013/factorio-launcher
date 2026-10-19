@@ -24,11 +24,21 @@ struct Budgets {
     std::uint32_t maximum_explanation_nodes = 4096;
 };
 
+// Internal presentation constraint, not a soft CLI version preference.
+struct ExactSelection {
+    std::string name;
+    std::string version;
+    std::string file_name;
+    std::string source;
+    std::string sha256;
+};
+
 struct Request {
     std::string instance_id;
     std::vector<std::string> enabled_mods;
     std::vector<std::string> disabled_mods;
     std::vector<std::string> version_preferences;
+    ExactSelection exact_selection;
     std::string transaction_id;
     Budgets budgets;
 };

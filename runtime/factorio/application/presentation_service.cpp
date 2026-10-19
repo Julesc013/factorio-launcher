@@ -831,6 +831,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     json::ArrayBuilder content_items;
     std::vector<std::string> profile_choices;
     std::vector<std::string> mod_identity_choices;
+    std::vector<std::string> mod_version_choices;
     std::vector<std::string> mod_name_choices;
     std::vector<std::string> modset_transaction_choices;
     bool selected_modset_locked = false;
@@ -862,11 +863,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             }
         }
     }
-    auto local_mods = facman::factorio::mods::local_inventory(context_.workspace());
+    auto local_mods = facman::factorio::mods::local_inventory(context_.workspace(), {}, request.selected_instance_id);
     if (!local_mods) {
         if (!content_problem.empty()) content_problem += "; ";
         content_problem += local_mods.error().code + ": " + local_mods.error().message;
     } else {
+        const auto maintenance_paths = local_modset_maintenance_paths(local_mods.value(), instances, request.selected_instance_id);
         for (const auto& mod : local_mods.value()) {
             const std::string identity = mod.name + "@" + mod.version;
             mod_identity_choices.push_back(identity);
@@ -880,6 +882,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                     request.search)) {
                 continue;
             }
+            const std::string maintenance_identity = append_modset_maintenance_choice(mod, maintenance_paths, mod_version_choices);
             json::ObjectBuilder item;
             item.add_string("id", "mod:" + identity);
             item.add_string("name", mod.title.empty() ? identity : mod.title);
@@ -890,6 +893,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             item.add_string("identity", identity);
             item.add_string("sha256", mod.sha256);
             item.add_string("source", mod.source);
+            item.add_string("file_name", mod.file_name);
+            item.add_string("maintenance_identity", maintenance_identity);
             item.add_bool("enabled", mod.enabled);
             item.add_bool("selected", mod.enabled);
             item.add_bool("portal_access", false);
@@ -1134,12 +1139,17 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         "mod_identity", "Local mod", "enum", true,
         mod_identity_choices.empty() ? std::string() : mod_identity_choices.front(),
         mod_identity_choices}};
+    // Keep the name-only default and its lock-first behavior. Version choices
+    // explicitly constrain one selected-instance artifact instead of upgrading
+    // merely because a newer archive happens to be present.
+    std::vector<std::string> modset_choices = mod_name_choices;
+    modset_choices.insert(modset_choices.end(), mod_version_choices.begin(), mod_version_choices.end());
     const std::vector<ActionInputField> modset_plan_input = {
         {"selected_instance_id", "Instance", "enum", true,
             default_instance, instance_choices},
-        {"mod_identity", "Local mod to enable", "enum", true,
+        {"mod_identity", "Local mod or exact version", "enum", true,
             mod_name_choices.empty() ? std::string() : mod_name_choices.front(),
-            mod_name_choices},
+            modset_choices},
     };
     const std::vector<ActionInputField> modset_rollback_input = {
         {"selected_instance_id", "Instance", "enum", true,
@@ -2165,15 +2175,7 @@ ApplicationResult PresentationService::action(
                    request.action_id == "modsets.apply") &&
                request.scope == "content") {
         const bool applying = request.action_id == "modsets.apply";
-        ApplicationRequest domain;
-        domain.command = applying ? CommandId::modsets_apply : CommandId::modsets_plan;
-        ModsetSolverRequest modset;
-        modset.instance_id = request.selected_instance_id;
-        modset.enabled_mods.push_back(request.mod_identity);
-        domain.payload = std::move(modset);
-        domain.dry_run = !applying;
-        const ApplicationResult resolved =
-            handlers::dispatch_modset_solver(context_, domain);
+        const ApplicationResult resolved = dispatch_content_modset(context_, request, current_snapshot);
         if (resolved.status != ULK_STATUS_OK) {
             const char* outcome = resolved.outcome_kind ==
                     facman::core::OutcomeKind::recovery_required

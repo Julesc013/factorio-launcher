@@ -11,9 +11,11 @@
 #include "fl_transaction.h"
 #include "flb_factorio_profiles.h"
 #include "handlers/snapshots.h"
+#include "handlers/modsets.h"
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <utility>
 #include <variant>
 
@@ -30,6 +32,73 @@ std::string string_field(const json::Value& value, const char* key)
 }
 
 } // namespace
+
+std::vector<std::filesystem::path> local_modset_maintenance_paths(
+    const std::vector<facman::factorio::mods::ModRef>& inventory,
+    const std::vector<facman::workspace::InstanceRecord>& instances,
+    const std::string& instance_id)
+{
+    const auto selected = std::find_if(instances.begin(), instances.end(), [&](const auto& value) {
+        return value.id.str() == instance_id;
+    });
+    const auto candidate = [&](const auto& mod) {
+        return selected != instances.end() && !mod.virtual_package && mod.valid &&
+            mod.file_path == selected->root / "mods" / mod.file_name &&
+            facman::factorio::mods::factorio_versions_compatible(mod.factorio_version, selected->factorio_version);
+    };
+    std::map<std::string, std::size_t> counts;
+    for (const auto& mod : inventory) if (candidate(mod)) ++counts[mod.name + "@" + mod.version];
+    std::vector<std::filesystem::path> paths;
+    for (const auto& mod : inventory) if (candidate(mod) && counts[mod.name + "@" + mod.version] == 1U) {
+        paths.push_back(mod.file_path);
+    }
+    return paths;
+}
+
+std::string append_modset_maintenance_choice(const facman::factorio::mods::ModRef& mod,
+    const std::vector<std::filesystem::path>& paths, std::vector<std::string>& choices)
+{
+    if (std::find(paths.begin(), paths.end(), mod.file_path) == paths.end()) return {};
+    const std::string identity = mod.name + "@" + mod.version;
+    choices.push_back(identity);
+    return identity;
+}
+
+ApplicationResult dispatch_content_modset(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot)
+{
+    const bool applying = request.action_id == "modsets.apply";
+    ModsetSolverRequest modset;
+    modset.instance_id = request.selected_instance_id;
+    if (request.mod_identity.find('@') == std::string::npos) {
+        modset.enabled_mods.push_back(request.mod_identity);
+    } else {
+        // Bind the full artifact from the already freshness-checked snapshot,
+        // never from a second unconfirmed inventory observation.
+        auto document = json::parse(snapshot);
+        const auto* page = document ? document.value().find("page") : nullptr;
+        const auto* items = page ? page->find("items") : nullptr;
+        if (items && items->is_array()) for (std::size_t index = 0; index < items->size(); ++index) {
+            const auto* item = items->at(index);
+            if (item && string_field(*item, "maintenance_identity") == request.mod_identity) {
+                modset.exact_selection = {request.mod_identity.substr(0, request.mod_identity.find('@')),
+                    string_field(*item, "version"), string_field(*item, "file_name"),
+                    string_field(*item, "source"), string_field(*item, "sha256")};
+                break;
+            }
+        }
+        if (modset.exact_selection.name.empty()) {
+            const std::string code = "modset_exact_selection_unavailable";
+            const std::string message = "The exact local version is unavailable or ambiguous";
+            return refused(safety_refusal(applying ? "modsets.apply" : "modsets.plan", code, message, {}, true), code, message);
+        }
+    }
+    ApplicationRequest domain;
+    domain.command = applying ? CommandId::modsets_apply : CommandId::modsets_plan;
+    domain.payload = std::move(modset);
+    domain.dry_run = !applying;
+    return handlers::dispatch_modset_solver(context, domain);
+}
 
 json::ObjectBuilder action_descriptor(
     const char* action_id,

@@ -375,7 +375,8 @@ facman::core::Result<ResolvedPlan> resolve_plan(const fs::path& workspace, const
         if (mods == nullptr || !mods->is_array() || mods->size() != 0U) return failure<ResolvedPlan>(
             "modset_external_drift", "Current lock cannot be parsed as trusted local state");
     }
-    auto inventory = facman::factorio::mods::local_inventory(workspace);
+    auto inventory = facman::factorio::mods::local_inventory(workspace, {},
+        request.exact_selection.name.empty() ? std::string() : request.instance_id);
     if (!inventory) return failure<ResolvedPlan>(inventory.error().code, inventory.error().message, fs::u8path(inventory.error().path));
     auto preferred = preferences(request);
     if (!preferred) return failure<ResolvedPlan>(preferred.error().code, preferred.error().message);
@@ -389,11 +390,20 @@ facman::core::Result<ResolvedPlan> resolve_plan(const fs::path& workspace, const
     std::vector<facman::factorio::mods::ModRef> filtered;
     for (const auto& mod : inventory.value()) {
         const bool admitted = mod.virtual_package ? mod.source == install_source : contains(mod.instance_references, request.instance_id);
+        const auto& exact = request.exact_selection;
+        if (!exact.name.empty() && mod.name == exact.name &&
+            (mod.virtual_package || mod.version != exact.version ||
+                mod.file_name != exact.file_name || mod.source != exact.source ||
+                mod.sha256 != exact.sha256 ||
+                mod.file_path != instance.value().record.root / "mods" / exact.file_name)) continue;
         if (admitted && mod.valid && factorio_versions_compatible(mod.factorio_version, instance.value().record.factorio_version)) {
             filtered.push_back(mod);
         }
     }
     for (const auto& mod : filtered) engine.candidates[mod.name].push_back(&mod);
+    if (!request.exact_selection.name.empty() && engine.candidates.count(request.exact_selection.name) == 0) {
+        return failure<ResolvedPlan>("modset_exact_selection_unavailable", "The confirmed selected-instance artifact is unavailable");
+    }
     if (engine.candidates.size() > request.budgets.maximum_packages) {
         return failure<ResolvedPlan>("solver_budget_exceeded", "Local package count exceeds maximum_packages");
     }
@@ -416,12 +426,21 @@ facman::core::Result<ResolvedPlan> resolve_plan(const fs::path& workspace, const
         });
     }
     std::set<std::string> seeds(request.enabled_mods.begin(), request.enabled_mods.end());
+    if (!request.exact_selection.name.empty()) {
+        // Version maintenance retains the other declared enabled packages.
+        // Its exact artifact is a hard constraint; dependency failure refuses.
+        seeds.insert(request.exact_selection.name);
+        for (const auto& entry : current) if (entry.second.enabled) seeds.insert(entry.first);
+    }
     if (seeds.empty()) for (const auto& entry : current) if (entry.second.enabled) seeds.insert(entry.first);
     if (seeds.empty()) for (const auto& mod : filtered) if (!mod.virtual_package) seeds.insert(mod.name);
     for (const std::string& seed : seeds) if (engine.disabled.count(seed) == 0 && !engine.resolve(seed, {}, {}, {})) {
         const std::string code = engine.failure_detail.find("budget") != std::string::npos
             ? "solver_budget_exceeded" : "local_dependency_unavailable";
         return failure<ResolvedPlan>(code, engine.failure_detail);
+    }
+    if (!request.exact_selection.name.empty() && engine.selected.count(request.exact_selection.name) == 0) {
+        return failure<ResolvedPlan>("modset_exact_selection_unavailable", "The confirmed artifact was not selected");
     }
     ResolvedPlan output;
     output.instance = instance.take_value();
