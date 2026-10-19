@@ -466,7 +466,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Ordinary Setup default-payload preview failed" }
           $previewResponse = $preview | ConvertFrom-Json
           if ($previewResponse.status -ne 'ok' -or $previewResponse.phase -ne 'plan') { throw "Ordinary Setup preview did not return a typed plan" }
-          python tests/integration/facman_self_setup_lifecycle.py --setup-exe $setup.FullName --payload $payload.FullName
+          python tests/integration/facman_self_setup_lifecycle.py --setup-exe $setup.FullName --payload $payload.FullName --embedded-default-payload
           if ($LASTEXITCODE -ne 0) { throw "Produced single-file Setup lifecycle proof failed" }
       - name: Preserve private-alpha self-setup candidate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

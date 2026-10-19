@@ -1123,3 +1123,26 @@ harness admission is historical; a corrected payload assertion requires renewed
 exact-source preexecution review. Whole WorkUnit/F09/F11 and release gates stay
 open; WorkUnit and programme remain active.
 Evidence: evidence/local-content-maintenance-ci-oracle.v1.json and its custody ZIP.
+
+### Canonical Desktop and embedded Setup reconciliation (2026-10-19)
+
+Forward-merge current dev 67b1b8e8017115b2923aff496bcc8e66c87a8b84 into the
+existing PR404 branch; preserve published 0da1da9844704ac5ae732d7c9752a5aa4236e62f
+and its original synthetic receipt. Independent source review found no layout
+defect, but identified that the produced lifecycle used an explicit payload
+after the embedded preview. The lifecycle now binds the embedded overlay to
+the independent split-payload oracle before effects, then installs and repairs
+without a package override. Before deliberate damage, ordinary installed
+package smoke checks the compiled backend identity, resource discovery, and
+same-binary terminal from a foreign directory with an empty PATH.
+
+Focused package, recovery, composition, identity and resource tests: 72 run,
+one platform skip, no failures. A bounded non-author review accepted the
+focused correction after removing a function-local import shadow. Source
+fixtures are not actual installed GUI or native-host acceptance. Consume the
+normal exact-source Windows artifact for scoped installed root-GUI and terminal
+qualification; retain receipts outside this checkout and link the reviewed
+result to PR404. No provider pins, product identities, trusted gates or native
+authorities changed. The protected CI path still requires the repository
+owner exact-head authorization before integration. Human, registry/shortcut,
+real-game, full F09/F11 and Beta/RC qualification remain separate.
