@@ -1146,3 +1146,27 @@ result to PR404. No provider pins, product identities, trusted gates or native
 authorities changed. The protected CI path still requires the repository
 owner exact-head authorization before integration. Human, registry/shortcut,
 real-game, full F09/F11 and Beta/RC qualification remain separate.
+
+### Ordinary button invocation boundary (2026-10-19)
+
+The normal Windows campaign for 634f82f4dd5ce049906178257dcfc6703bfb2e81
+(run 39216486781, job 117941565943) failed before canonical artifact creation:
+the native WM_COMMAND post succeeded, but no first input dialog appeared.
+Retain that failed campaign and its custody without a flaky waiver. Native
+notification queueing did not prove delivery of the managed button action.
+
+The actual-control adapter now uses one standard UIA InvokePattern on the
+verified owned button HWND, PID, type and enabled state. A separate bounded
+client permits the normal modal handler to run while the observer controls
+dialogs. The helper has bounded captures and an owned kernel job; all jobs
+close on failure, and successful shutdown requires natural exits and drain.
+The product handler, descriptor eligibility and backend remain unchanged.
+The existing cancellation, stale refusal, one-effect and preserved-state
+assertions remain the outcome oracles. Bounded non-author review accepted
+the final adapter after cleanup and output-bound corrections.
+
+Focused package regressions remain 72 tests, one platform skip. Original
+PR440 package runs diagnose the adapter only; they do not qualify canonical
+Desktop delivery. A new normal exact-source campaign and produced embedded
+installation proof are still required. The owner-only exact-head control
+authorization remains a separate integration gate.

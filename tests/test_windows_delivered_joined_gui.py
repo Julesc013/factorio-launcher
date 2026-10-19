@@ -13,6 +13,7 @@ from pathlib import Path
 import stat
 import subprocess
 import tempfile
+import threading
 import time
 import traceback
 import unittest
@@ -37,7 +38,8 @@ class ControlReadFailed(AssertionError):
 class OwnedProcessJob:
     """Retain a kernel-owned descendant set and prove zero live descendants."""
 
-    def __init__(self, process, backend):
+    def __init__(self, process, backend, require_backend=True):
+        self.require_backend = require_backend
         self.api = ctypes.WinDLL("kernel32", use_last_error=True)
         for name, args, result in (
             ("CreateJobObjectW", [ctypes.c_void_p, wt.LPCWSTR], wt.HANDLE),
@@ -196,7 +198,7 @@ class OwnedProcessJob:
             if live or self.last_counts["assigned"]:
                 self.api.TerminateJobObject(self.job, 1)
                 raise AssertionError("Owned GUI job retained live descendants; safety termination is not PASS")
-            if not any(r["role"] == "packaged_backend" for r in self.records):
+            if self.require_backend and not any(r["role"] == "packaged_backend" for r in self.records):
                 raise AssertionError("No actual production backend process identity was observed")
             for record in self.records:
                 handle = self.handles[record["process_identity"]]
@@ -265,6 +267,8 @@ class OwnedControls:
             raise
         self.events = []
         self.terminal = None
+        self.invocations = []
+        self.cleanup_complete = False
 
     def require_owned(self, hwnd):
         pid = wt.DWORD()
@@ -402,6 +406,7 @@ class OwnedControls:
     def wait(self, predicate, description, seconds=35):
         deadline = min(time.monotonic() + seconds, self.deadline)
         while time.monotonic() < deadline and self.process.poll() is None:
+            self.collect_invocations()
             try:
                 value = predicate()
             except ControlGone:
@@ -416,7 +421,7 @@ class OwnedControls:
                 self.events.append(dict(stage="timeout: " + description,
                     pid=self.process.pid, hwnd=hwnd, control_gone=True))
         for event in reversed(self.events):
-            if event["stage"] in ("BM_CLICK", "WM_COMMAND/BN_CLICKED"):
+            if event["stage"] == "UIA InvokePattern":
                 try:
                     state = self.control_state(event["hwnd"])
                 except ControlGone:
@@ -458,18 +463,76 @@ class OwnedControls:
                 or ancestors[-1]["hwnd"] != root
                 or any(item["root_hwnd"] != root for item in ancestors)):
             raise AssertionError("Button notification identity differs from observed owned ancestors")
-        event = dict(stage="WM_COMMAND/BN_CLICKED", pid=self.process.pid, hwnd=hwnd,
+        event = dict(stage="UIA InvokePattern", pid=self.process.pid, hwnd=hwnd,
             text=self.text(hwnd), notification_parent=parent, notification_control_id=identifier,
-            notification_wparam=identifier & 0xFFFF, notification_lparam=hwnd,
             ancestors=ancestors, **state)
         self.events.append(event)
-        # Queue the ordinary button notification to its exact parent. This invokes
-        # the registered UI handler without inactive-window click synthesis or
-        # activation; dialogs and backend validation remain the outcome oracle.
-        if not self.api.PostMessageW(parent, 0x111, identifier & 0xFFFF, hwnd):
-            event["post_succeeded"] = False
-            raise ctypes.WinError(ctypes.get_last_error())
-        event.update(post_succeeded=True, posted_at=time.monotonic())
+        # Invoke the public accessibility action on the exact control. Keep the
+        # client asynchronous: a modal product handler can hold Invoke until the
+        # dialog closes. The dialog/backend effects remain the outcome oracle.
+        powershell = Path(os.environ["SystemRoot"]) / "System32/WindowsPowerShell/v1.0/powershell.exe"
+        command = [str(powershell), "-NoLogo", "-NoProfile", "-NonInteractive", "-MTA",
+            "-ExecutionPolicy", "Bypass", "-File", str(Path(__file__).with_name("windows_uia_invoke.ps1")),
+            "-Handle", str(hwnd), "-ExpectedPid", str(self.process.pid)]
+        helper = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            creationflags=0x4 | 0x08000000)
+        try:
+            job = OwnedProcessJob(helper, powershell, require_backend=False)
+        except Exception:
+            helper.kill()
+            helper.communicate(timeout=10)
+            raise
+        event.update(helper_pid=helper.pid, argv=command, started_at=time.monotonic())
+        capture = {"stdout": bytearray(), "stderr": bytearray(), "overflow": False, "errors": []}
+        def drain(stream, name):
+            try:
+                while True:
+                    data = stream.read(4096)
+                    if not data:
+                        break
+                    if len(capture[name]) + len(data) > 16384:
+                        capture["overflow"] = True
+                        break
+                    capture[name].extend(data)
+            except Exception as error:
+                capture["errors"].append(repr(error))
+            finally:
+                stream.close()
+        readers = [threading.Thread(target=drain, args=(stream, name), daemon=True)
+            for stream, name in ((helper.stdout, "stdout"), (helper.stderr, "stderr"))]
+        self.invocations.append((helper, job, event, capture, readers))
+        for reader in readers:
+            reader.start()
+
+    def collect_invocations(self):
+        for helper, job, event, capture, readers in self.invocations:
+            if capture["overflow"]:
+                job.api.TerminateJobObject(job.job, 1)
+                event["safety_termination"] = True
+                raise AssertionError("Accessibility helper exceeded capture bound")
+            if "helper_exit_code" in event or helper.poll() is None:
+                continue
+            try:
+                for reader in readers:
+                    if reader.ident is not None:
+                        reader.join(timeout=1)
+                if (any(reader.is_alive() for reader in readers) or capture["errors"]
+                        or capture["overflow"]):
+                    raise AssertionError("Accessibility helper capture did not finish")
+                out, err = bytes(capture["stdout"]), bytes(capture["stderr"])
+            finally:
+                job.finish()
+            event.update(helper_exit_code=helper.returncode,
+                stdout=out.decode("utf-8", errors="strict"),
+                stderr=err.decode("utf-8", errors="strict"))
+            event["owned_job_active_processes"] = 0
+            if helper.returncode or err or len(out) > 16384:
+                raise AssertionError("Owned accessibility invocation failed: " + repr(event))
+            result = json.loads(event["stdout"])
+            if (result["pid"] != self.process.pid or result["hwnd"] != event["hwnd"]
+                    or not result["invoked"]):
+                raise AssertionError("Accessibility invocation identity differs")
+            event["accessibility"] = result
 
     def input_boundary(self, main, stage):
         """Observe the owned native route; this does not acknowledge managed Click."""
@@ -564,8 +627,50 @@ class OwnedControls:
         self.frame(main, "selected-save observation completed")
 
     def finish(self):
-        if self.terminal is not None:
+        if self.cleanup_complete:
             return
+        errors = []
+        try:
+            self._finish_owned()
+        except Exception as error:
+            errors.append(error)
+        finally:
+            # Enumeration, capture and decoding can fail too. Every retained
+            # kernel job must close even when the ordinary shutdown path fails.
+            for helper, job, event, capture, readers in self.invocations:
+                try:
+                    job.finish()
+                except Exception as error:
+                    event["cleanup_error"] = repr(error)
+                    errors.append(error)
+                try:
+                    helper.wait(timeout=5)
+                    for reader in readers:
+                        if reader.ident is not None:
+                            reader.join(timeout=1)
+                except Exception as error:
+                    errors.append(error)
+            try:
+                self.job.finish()
+            except Exception as error:
+                errors.append(error)
+            if self.process.poll() is None:
+                try:
+                    self.process.communicate(timeout=5)
+                except Exception as error:
+                    errors.append(error)
+            self.cleanup_complete = True
+        if errors:
+            raise AssertionError("Owned GUI/accessibility finalization failed: " + repr(errors))
+
+    def _finish_owned(self):
+        # Let the final ordinary invocation close its dialog before asking the
+        # main form to exit. Otherwise a newly started accessibility client can
+        # race destruction of the very HWND it was asked to invoke.
+        invocation_deadline = min(self.deadline, time.monotonic() + 10)
+        while (any(helper.poll() is None for helper, *_ in self.invocations)
+                and time.monotonic() < invocation_deadline):
+            time.sleep(.025)
         # Cleanup must still work if descendant identity observation caused the
         # original failure. Never let that failure retain the owned GUI/job.
         for hwnd in self.enumerate(observe=False):
@@ -585,9 +690,43 @@ class OwnedControls:
         self.terminal = dict(pid=self.process.pid, exit_code=self.process.returncode,
             stdout=out.decode("utf-8", errors="strict"),
             stderr=err.decode("utf-8", errors="strict"), safety_termination=safety)
-        self.job.finish()
-        self.terminal.update(owned_job_active_processes=0, backend_processes=self.job.records,
+        cleanup_errors = []
+        for helper, job, event, capture, readers in self.invocations:
+            try:
+                if helper.poll() is None:
+                    helper.wait(timeout=max(.1, min(10, self.deadline - time.monotonic())))
+            except subprocess.TimeoutExpired as error:
+                cleanup_errors.append(error)
+                try:
+                    job.api.TerminateJobObject(job.job, 1)
+                    helper.wait(timeout=10)
+                    event["safety_termination"] = True
+                except Exception as cleanup_error:
+                    cleanup_errors.append(cleanup_error)
+            finally:
+                try:
+                    job.finish()
+                except Exception as error:
+                    cleanup_errors.append(error)
+                for reader in readers:
+                    if reader.ident is not None:
+                        reader.join(timeout=1)
+        try:
+            self.collect_invocations()
+        except Exception as error:
+            cleanup_errors.append(error)
+        finally:
+            gui_drained = False
+            try:
+                self.job.finish()
+                gui_drained = True
+            except Exception as error:
+                cleanup_errors.append(error)
+        self.terminal.update(owned_job_active_processes=0 if gui_drained else None,
+                             backend_processes=self.job.records,
                              launch=self.job.launch)
+        if cleanup_errors:
+            raise AssertionError("Owned GUI/accessibility cleanup failed: " + repr(cleanup_errors))
         if safety or self.process.returncode != 0 or out or err:
             raise AssertionError("GUI must drain and exit normally: " + repr(self.terminal))
 
