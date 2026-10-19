@@ -399,6 +399,13 @@ jobs:
         run: |
           python tools/package_build.py --profile windows_portable_tui_x64 --out build/tui-packages --build-root build/native-smoke --dist build/tui-dist
           python tools/package_runtime_smoke.py --root build/tui-packages/windows_portable_tui_x64
+      - name: Preserve unsigned Windows Terminal package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-portable-tui-x64-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build/tui-dist/*windows-tui-x64-portable.zip
+          if-no-files-found: error
+          retention-days: 7
       - name: Configure shared Windows WinForms package root
         run: >-
           cmake -S . -B build/winforms-shared

@@ -1,0 +1,145 @@
+{
+  "schema": "facman.historical_terminal_acceptance_copy.v1",
+  "scope": "Historical original c624 artifact acceptance only; not new fullscreen form-editing acceptance",
+  "original_receipt_file": "linux-joined-v2-accepted-handoff-01.json",
+  "original_receipt_sha256": "ad162de213a4070cc6d0999ddee2698a0254ff695f924a262d61c336e3e66ea5",
+  "original_receipt_bytes": 7023,
+  "representation": "Canonical LF repository JSON with parsed original payload; immutable original receipt bytes remain in marker-owned evidence. Do not substitute this representation hash for original raw receipt hash.",
+  "original_payload": {
+    "candidate_head": "c624c256f86b90e8c8edccd7759144120e05145a",
+    "candidate_tree": "cdf4bed169c69d974ebbcec069938ec7731d85d8",
+    "compiled_source": "ae105dc7e0a11798873a4997e9900bb7a6b164f2",
+    "compiled_parents": [
+      "67b1b8e8017115b2923aff496bcc8e66c87a8b84",
+      "c624c256f86b90e8c8edccd7759144120e05145a"
+    ],
+    "compiled_identity_note": "Actual synthetic merge from normal successful CI; never relabelled as candidateHEAD or mergeddev",
+    "run_url": "https://github.com/Julesc013/factorio-launcher/actions/runs/39232987008",
+    "job_url": "https://github.com/Julesc013/factorio-launcher/actions/runs/39232987008/job/117995203918",
+    "artifact_id": 12180205210,
+    "artifact_sha256": "a2a39b6dc1e504c14bdffd20b59c539363a3ee47e7e768dbdeb05417259e7ea3",
+    "package_profiles": [
+      "linux_portable_cli_x64",
+      "linux_portable_tui_x64"
+    ],
+    "backend_sha256": "89b4fb15b53dfbaa3f4282b34fd8a359fe454f309a05dc9dc2647b4081f7f263",
+    "contract_count_each": 457,
+    "contract_set_sha256": "0c295c38ec09b767c93379058703db595014dac5b5761a869aab468a9fa1f45f",
+    "providers": {
+      "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "universal_setup": "2749a15b835a6c1c9968598a2b434d85809691ad"
+    },
+    "schema": "facman.linux_joined_v2_terminal_accepted_handoff.v1",
+    "status": "ACCEPTED_NARROW_ORIGINAL_DELIVERED_LINUX_JOINED_V2_TERMINAL",
+    "whole_work_unit_status": "ACTIVE; no full F09/F19/Beta/RC or provider-adoption claim",
+    "gap": "Prior Linux joined acceptance predates PR439; current PR439 produced acceptance covered Windows only. This adds the missing independent original Linux joined-v2 terminal cells.",
+    "outcome": "Pinned exact locked-content repair followed by configuration and selected-save preparation through ordinary linear process TUI and actual PTY fullscreen; supported content-only completion also succeeds with typed remaining-readiness feedback.",
+    "counts": {
+      "qualified_product_invocations": 70,
+      "cli_calls": 62,
+      "ordinary_linear_tui_sessions": 4,
+      "actual_pty_fullscreen_sessions": 4,
+      "maintained_tests": 2,
+      "three_owner_completions": 2,
+      "content_only_completions": 2,
+      "cancelled_unchanged_sessions": 4,
+      "stale_refusals": 3,
+      "observed_backend_pidfds": 28
+    },
+    "owner_effects": {
+      "modsets.apply": 4,
+      "readiness.prepare_configuration": 2,
+      "readiness.prepare_selected_save": 2
+    },
+    "methods": [
+      "test_ordinary_tui_reports_pending_content_and_content_only_completion",
+      "test_stale_activation_archive_and_lock_identity_refuse_before_effects"
+    ],
+    "preservation": "Exact pinned simple 1.0.0 retained despite local 2.0.0 archive; both lock bytes, protected settings/content/archive/save bytes and native identities, protected directory identities, and full installation snapshot preserved. Actual content/configuration/save journals and effect identities independently checked.",
+    "remaining_checks": "Receipts preserve preparation_complete=false, execution_started=false and permit_issued=false; healthy post-repair observation returns joined-v1. No readiness-complete or game-execution claim.",
+    "cancellation_and_refusal": "Both ordinary terminal modes cancel before effects for each completion kind; stale activation bytes, same-byte archive identity replacement and same-byte lock identity replacement refuse before effects.",
+    "terminal_state": "All four actual PTY sessions restore exact termios immediately and after FIONREAD; queued input count zero.",
+    "environment": "Ubuntu 24.04 WSL private mount/PID/net namespaces, 512 MiB tmpfs, UID/GID 65534 without supplementary groups, read-only separate original CLI and TUI packages/source/validators, empty product PATH, DISPLAY/WAYLAND unset, loopback-only private network; no network acquisition or GUI toolkit requirement observed.",
+    "new_downloads": 0,
+    "new_builds": 0,
+    "new_roots": 0,
+    "new_worktrees": 0,
+    "new_clones": 0,
+    "resource_peak_bytes": 1073741824,
+    "custody": {
+      "raw_cas_export_verified": true,
+      "owned_jobs_empty": true,
+      "private_namespace_empty": true,
+      "private_mounts_absent": true,
+      "package_closures_preserved": true,
+      "source_tree_clean_unchanged": true
+    },
+    "direct_dynamic_dependencies": {
+      "cli": [
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "tui": [
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ]
+    },
+    "limits": [
+      "WSL24.04 private mount/PID/net namespaces andtmpfs; notphysicalext4/namedhost/human/realgame",
+      "unsigned provenance; no release orwholeprogramme acceptance",
+      "only observeddescendants have pidfd/image/start/group custody; no descendant exit-code inference",
+      "fullscreen uses existing valid descriptor defaults; no field-edit feature claim",
+      "4newTUIcancel/apply pairs; no old reconstruction orpackimport replay; no intentional runtimefaults",
+      "ELF DT_NEEDED inspection covers direct dependencies only; runtime dependency paths were not traced"
+    ],
+    "hold": "Source, checkout, branch, refs, integration and CI remain unchanged and held for root PR404 authorization. This acceptance is retained only in existing E evidence.",
+    "files": {
+      "linux-joined-v2-custody-01.json": {
+        "sha256": "801436a1f193d58c605cf4e77c1bf9f2ec08d11730f8613850dcfc99d74ead02",
+        "bytes": 95481
+      },
+      "linux-joined-v2-independent-actual-review-01.json": {
+        "sha256": "70d865fc8345196b80d97bdc614293f3bd3e5fee2fcd81817874c078c0b3664a",
+        "bytes": 2615
+      },
+      "linux-joined-v2-gap-01.json": {
+        "sha256": "6a1db46a775dd77c6640669d64957109cd2bcdda50187c44a6e3e757bcfc52cb",
+        "bytes": 1180
+      },
+      "linux-joined-v2-launch-result-01.json": {
+        "sha256": "226005f4acd179e3097bcaa87f0d43c2c93a616b14441d60a657ec9f5ba0c07f",
+        "bytes": 1897
+      },
+      "linux-joined-v2-worker-result-01.json": {
+        "sha256": "3b6dc19658451805eee1e63512528540b90abb9db1122c6814d319a11a6beb29",
+        "bytes": 1027516
+      },
+      "linux-joined-v2-namespace-result-01.json": {
+        "sha256": "35960d05e576ab3fcdb31e837c7c0c33beaa75ccde2cb4d8923b8a41052dffa8",
+        "bytes": 205725
+      },
+      "linux-joined-v2-custody-preexecution-review-01.json": {
+        "sha256": "323e7e7dff1233e1ce878d99e0b8036344d0ed55b560fe01c6c3f42d37fdd59d",
+        "bytes": 521
+      },
+      "linux-joined-v2-custody-launch-01.py": {
+        "sha256": "ec563aeba02e33acc2a3c499b9139615fbbe5661e16d03b160b8735a1e166428",
+        "bytes": 812
+      },
+      "linux-joined-v2-owned-custody-finalizer-01/receipt.json": {
+        "sha256": "7d16bcf1b23b3f25d43c330a8959edc5040ce575fda2ad2d21e1172d39e99303",
+        "bytes": 1287
+      },
+      "linux-maint-accepted-handoff-01.json": {
+        "sha256": "7e1411e8a96cc8b8e7dab4a33f6ecda342cc6cf59f103e35e9c633aef7e1a06d",
+        "bytes": 9469
+      }
+    }
+  }
+}

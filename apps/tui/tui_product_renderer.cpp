@@ -55,12 +55,12 @@ void ProductRenderer::render_linear(std::ostream& output, const TuiRenderModel& 
 
 void ProductRenderer::enter_full_screen(std::ostream& output)
 {
-    output << "\x1b[?1049h\x1b[?25l" << std::flush;
+    output << "\x1b[?2004h\x1b[?1049h\x1b[?25l" << std::flush;
 }
 
 void ProductRenderer::leave_full_screen(std::ostream& output)
 {
-    output << "\x1b[?25h\x1b[?1049l" << std::flush;
+    output << "\x1b[?2004l\x1b[?25h\x1b[?1049l" << std::flush;
 }
 
 void ProductRenderer::render_full_screen(

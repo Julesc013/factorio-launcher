@@ -49,9 +49,10 @@ def file_identity(path: Path) -> str:
     api.GetFileInformationByHandle.restype = wintypes.BOOL
     api.CloseHandle.argtypes = [wintypes.HANDLE]
     api.CloseHandle.restype = wintypes.BOOL
-    # FILE_READ_ATTRIBUTES, all sharing, OPEN_EXISTING: observe the actual file
+    # FILE_READ_ATTRIBUTES, all sharing, OPEN_EXISTING: observe the actual object
     # through its held handle without changing or adopting its contents.
-    handle = api.CreateFileW(str(path), 0x80, 7, None, 3, 0, None)
+    # FILE_FLAG_BACKUP_SEMANTICS also admits owned directory identity checks.
+    handle = api.CreateFileW(str(path), 0x80, 7, None, 3, 0x02000000, None)
     if handle == ctypes.c_void_p(-1).value:
         raise ctypes.WinError(ctypes.get_last_error())
     try:

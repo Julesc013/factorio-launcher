@@ -488,7 +488,8 @@ int main(int argc, char** argv)
     std::ostringstream lifecycle;
     ProductRenderer::enter_full_screen(lifecycle);
     ProductRenderer::leave_full_screen(lifecycle);
-    if (lifecycle.str() != "\x1b[?1049h\x1b[?25l\x1b[?25h\x1b[?1049l") return 20;
+    if (lifecycle.str() != "\x1b[?2004h\x1b[?1049h\x1b[?25l"
+        "\x1b[?2004l\x1b[?25h\x1b[?1049l") return 20;
 
     TuiEvent disconnected;
     disconnected.kind = TuiEventKind::transport_disconnected;
