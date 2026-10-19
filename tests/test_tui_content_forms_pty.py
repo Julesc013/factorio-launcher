@@ -50,24 +50,74 @@ class FullscreenContentFormTests(unittest.TestCase):
                                      "bounded PTY capture exceeded")
                 output.extend(chunk)
 
-        def until(marker: bytes, start: int = 0):
+        edit_prompt = b"Edit field=value (Enter review; Esc/Ctrl+C cancel): "
+
+        def until(markers: list[bytes], start: int = 0, *, editor: bool = False,
+                  footer: bytes | None = None):
             step_deadline = min(deadline, time.monotonic() + 15)
-            while marker not in output[start:] and time.monotonic() < step_deadline:
+            while time.monotonic() < step_deadline:
+                matched = 0
+                for frame in bytes(output[start:]).split(b"\x1b[H")[1:]:
+                    # The existing renderer emits exactly 60 complete lines.
+                    # Status text persists while each character is rendered, so
+                    # its presence alone cannot acknowledge Enter or a timeout.
+                    lines = frame.replace(b"\r", b"").split(b"\n")
+                    if len(lines) <= 60:
+                        continue
+                    lines = [line.removesuffix(b"\x1b[K") for line in lines[:60]]
+                    complete = b"\n".join(lines)
+                    if markers[matched] not in complete:
+                        continue
+                    if matched + 1 < len(markers):
+                        matched += 1
+                        continue
+                    if lines[-1].startswith(edit_prompt) != editor:
+                        continue
+                    if footer is not None and lines[-1] != footer:
+                        continue
+                    return complete, lines[-3].removeprefix(b"Status: ")
                 drain(0.1)
                 if process.poll() is not None:
                     break
-            self.assertIn(marker, output[start:], bytes(output[-4096:]))
+            self.fail(f"No complete editor={editor} frame for {markers!r}: "
+                      f"{bytes(output[-4096:])!r}")
 
-        def send(keys: bytes, marker: bytes):
+        def send(keys: bytes, markers: list[bytes], *, editor: bool = False,
+                 footer: bytes | None = None):
             start = len(output)
             self.assertLess(time.monotonic(), deadline)
             self.assertEqual(len(keys), os.write(master, keys))
-            until(marker, start)
-            return bytes(output[start:])
+            return until(markers, start, editor=editor, footer=footer)
 
         class Terminal:
+            editing = False
+            status = b""
+
             def send(inner, keys: bytes, marker: bytes):
-                return send(keys, marker)
+                if keys.startswith(b":") and len(keys) > 1:
+                    # A prior closed/rejected repaint must not acknowledge the
+                    # next assignment. First observe this exact empty editor.
+                    inner.send(b":", b"Edit field=value")
+                    keys = keys[1:]
+                editor = inner.editing
+                footer = None
+                markers = [marker]
+                if keys == b":":
+                    editor, footer = True, edit_prompt
+                elif marker.startswith(b"Paste ignored;"):
+                    ready = b"Status: Paste ignored; typed input is ready"
+                    markers = [ready]
+                    if b"[200~" in keys or inner.status == b"Terminal escape awaiting continuation":
+                        markers.insert(0, b"Status: Paste ignored; type the action selector")
+                elif marker == b"Paste escape awaiting continuation":
+                    markers = [b"Status: Paste ignored; type the action selector",
+                               b"Status: Paste escape awaiting continuation"]
+                elif marker != b"Terminal escape awaiting continuation" and keys.endswith(
+                        (b"\r", b"\n", b"\x03", b"\x1b")):
+                    editor = False
+                complete, inner.status = send(keys, markers, editor=editor, footer=footer)
+                inner.editing = editor
+                return complete
 
             def field(inner, value: bytes):
                 # The editor receives real text, including global-shortcut bytes.
@@ -85,11 +135,14 @@ class FullscreenContentFormTests(unittest.TestCase):
                  "--cli-path", str(executable), "--workspace", str(workspace)],
                 cwd=ROOT, env=environment, stdin=slave, stdout=slave, stderr=slave,
                 close_fds=True)
-            until(b"q Quit")
+            until([b"q Quit"])
             self.assertIn(b"\x1b[?1049h", output)
             self.assertIn(b"\x1b[?2004h", output)
-            send(b"s", b"Selected Save")
-            send(b"4" + b"\t" * index, b"Focus: Action:")
+            send(b"s", [b"Selected Save"])
+            labels = {"modsets.plan": b"Plan instance modset",
+                      "modsets.apply": b"Apply instance modset",
+                      "modsets.rollback": b"Roll back instance modset"}
+            send(b"4" + b"\t" * index, [b"Focus: Action: " + labels[action]])
             yield Terminal()
             os.write(master, b"q")
             while process.poll() is None and time.monotonic() < deadline:
