@@ -306,7 +306,11 @@ class FullscreenContentFormTests(unittest.TestCase):
             self.assertEqual(protected, owner.protected(instance))
             self.assertEqual([], call(workspace, "modsets", "verify", "main")["problems"])
             transaction = applied[0]["action_payload"]["transaction_id"]
-            history = snapshot(instance / "mods/.facman-modset-history" / transaction)
+            history_root = instance / "mods/.facman-modset-history" / transaction
+            history = snapshot(history_root)
+            history_identities = {
+                p.relative_to(history_root).as_posix(): maintenance.joined.file_identity(p)
+                for p in [history_root, *history_root.rglob("*")]}
             frozen_applied = snapshot(workspace)
 
             with self.terminal(workspace, "modsets.rollback") as terminal:
@@ -319,7 +323,32 @@ class FullscreenContentFormTests(unittest.TestCase):
                 terminal.send(b" ", b"Roll back instance modset completed")
             self.assertEqual(original, owner.managed(workspace))
             self.assertEqual(protected, owner.protected(instance))
-            self.assertEqual(history, snapshot(instance / "mods/.facman-modset-history" / transaction))
+            # Rollback appends its displaced applied state and receipt while
+            # retaining every earlier history entry's exact bytes and identity.
+            self.assertEqual(history, {name: (history_root / name).read_bytes() for name in history})
+            self.assertEqual(history_identities, {
+                name: maintenance.joined.file_identity(history_root / name)
+                for name in history_identities})
+            for key, target in (
+                    ("mod-list", "instances/main/mods/mod-list.json"),
+                    ("local-lock", "instances/main/mods/modset-lock.v1.json"),
+                    ("shared-lock", "modsets/main.modset-lock.v1.json")):
+                for suffix in (".applied", ".rollback-displaced"):
+                    self.assertEqual(frozen_applied[target], (history_root / (key + suffix)).read_bytes())
+            self.assertEqual({"schema": "factorio.modset_rollback.v1",
+                              "transaction_id": transaction, "instance_id": "main", "status": "rolled_back"},
+                             json.loads((history_root / "rollback.v1.json").read_bytes()))
+            rollback_receipts = [json.loads(p.read_bytes()) for p in
+                                 (workspace / ".facman/action-receipts-v2").glob("*.v2.json")]
+            rolled_back = [json.loads(row["result_json"]) for row in rollback_receipts
+                           if row["action_id"] == "modsets.rollback"]
+            self.assertEqual(1, len(rolled_back))
+            self.assertEqual("completed", rolled_back[0]["outcome"])
+            self.assertEqual(transaction, rolled_back[0]["action_payload"]["transaction_id"])
+            self.assertEqual("rolled_back", rolled_back[0]["action_payload"]["status"])
+            self.assertTrue(rolled_back[0]["action_payload"]["mutation_executed"])
+            self.assertTrue(rolled_back[0]["action_payload"]["local_artifacts_only"])
+            self.assertFalse(rolled_back[0]["action_payload"]["portal_access"])
             self.assertEqual([], call(workspace, "modsets", "verify", "main")["problems"])
 
 
