@@ -1,0 +1,55 @@
+{
+  "schema": "facman.canonical_desktop_uia_adapter.v1",
+  "result": "PASS_FOCUSED_ADAPTER_DIAGNOSTIC",
+  "parent_source": "634f82f4dd5ce049906178257dcfc6703bfb2e81",
+  "failed_campaign": {
+    "run": 39216486781,
+    "job": 117941565943,
+    "conclusion": "failure",
+    "first_input_dialog_missing": true,
+    "artifact_produced": false
+  },
+  "diagnostic_package_source": "afc0eae432d6d451b2fac7846cb65004ee75a24a",
+  "gui_sha256": "0a0f669e56bb6662535326f418be84661107e502256763f7bab057840a1057c9",
+  "backend_sha256": "698ee4f3fa8f0e2c668796c81c4a0e5689b4cc20ee84f9c62ee4aac24387fdb8",
+  "adapter_files": {
+    "tests/test_windows_delivered_joined_gui.py": "170f7019a34a9c661a39838464a44ec9c36fd3ea0d985653ce70efdc518650fe",
+    "tests/windows_uia_invoke.ps1": "0a87df1e6082c2d2e4d5bfb14814781232ce1b9c209319a85c57f4304d7b5031"
+  },
+  "review": {
+    "non_authoring": true,
+    "verdict": "ACCEPTED",
+    "reviewer": "/root/canonical_desktop/canonical_review"
+  },
+  "actual_gui_sessions": 2,
+  "ordinary_uia_invocations": 13,
+  "one_joined_apply": true,
+  "cancellation_and_stale_refusal_preserved": true,
+  "package_closure_unchanged": true,
+  "helper_and_gui_natural_zero_and_jobs_empty": true,
+  "whole_command": {
+    "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\canonical-desktop-uia-baseline-04\\receipt.json",
+    "sha256": "7f7bc8598cbe1336cff7e9359229c5fc0f81aff91d527d6b2cec863b2c724ce1",
+    "seconds": 124.717,
+    "environment_scenarios": 3
+  },
+  "focused_regressions": {
+    "run": 72,
+    "skipped": 1,
+    "failures": 0
+  },
+  "custody": {
+    "path": "canonical-desktop-uia-custody.v1.zip",
+    "sha256": "fa8af854c606c8f4099a2eb4ed1219d07e4e3779027a45efc16c4b9db8389f5c",
+    "result_sha256": "e8d3862ebba2f9694691fffafcf582964945cfd0945dd2f5b85411c303d8987c"
+  },
+  "canonical_product_acceptance": false,
+  "native_registration": false,
+  "human": false,
+  "real_game": false,
+  "remaining": [
+    "normal exact-source CI",
+    "produced canonical Desktop and embedded Setup installed qualification",
+    "exact-head owner control authorization"
+  ]
+}

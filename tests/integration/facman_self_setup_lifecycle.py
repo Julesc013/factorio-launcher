@@ -2650,6 +2650,10 @@ def main() -> int:
         help="Exercise an exact produced self-setup payload instead of the synthetic fixture.",
     )
     parser.add_argument(
+        "--embedded-default-payload", action="store_true",
+        help="Use ordinary embedded-payload discovery; --payload is only the independent identity oracle.",
+    )
+    parser.add_argument(
         "--workspace-lifecycle-evidence",
         type=Path,
         help="Also qualify the exact installed CLI workspace lifecycle and write its receipt.",
@@ -2681,6 +2685,12 @@ def main() -> int:
     parser.add_argument("--real-total-timeout", type=float,
                         help="Finite total deadline shared by every real current-user child.")
     args = parser.parse_args()
+    if args.embedded_default_payload:
+        if (args.payload is None or args.real_current_user_integration or
+                args.real_self_maintenance_transition):
+            parser.error("embedded default-payload proof requires only the produced-payload lifecycle")
+        if setup_overlay_sha256(args.setup_exe) != setup_overlay_sha256(args.payload):
+            parser.error("embedded Setup payload differs from the independent payload oracle")
     if args.real_current_user_integration or args.real_self_maintenance_transition:
         if os.name != "nt":
             parser.error("real current-user qualification is Windows-only")
@@ -2852,6 +2862,7 @@ def main() -> int:
                            zipfile.ZIP_DEFLATED if args.compression == "deflate" else zipfile.ZIP_STORED)
         else:
             package = args.payload.resolve(strict=True)
+        package_arguments = [] if args.embedded_default_payload else ["--package", package]
 
         if args.fixture_root is not None and args.payload is None:
             damaged_archive_controls(root, executable, package)
@@ -2871,7 +2882,7 @@ def main() -> int:
                 )
 
         plan = invoke(
-            executable, "install", "--package", package, "--root", install,
+            executable, "install", *package_arguments, "--root", install,
             "--state-root", state, "--acceptance-root", root,
         )
         if plan.get("phase") != "plan" or install.exists() or state.exists():
@@ -2880,7 +2891,7 @@ def main() -> int:
             )
 
         installed = invoke(
-            executable, "install", "--package", package, "--root", install,
+            executable, "install", *package_arguments, "--root", install,
             "--state-root", state, "--acceptance-root", root, "--yes",
         )
         if installed.get("phase") != "receipt":
@@ -2903,6 +2914,16 @@ def main() -> int:
         )
         if verified["provider"]["payload"]["status"] != "pass":
             raise AssertionError("fresh install did not verify")
+
+        if args.embedded_default_payload:
+            # Exercise the installed package from a foreign directory, including
+            # the compiled backend identity, resource discovery and same-binary
+            # terminal. Provider ownership verification alone cannot prove them.
+            subprocess.run(
+                [sys.executable, str(ROOT / "tools/package_runtime_smoke.py"),
+                 "--root", str(gui.parent)],
+                cwd=ROOT, check=True,
+            )
 
         if epoch_fixture_executable is not None:
             epoch_prehandoff_cli_controls(
@@ -2955,7 +2976,7 @@ def main() -> int:
             raise AssertionError("owned-file damage was not detected")
 
         repaired = invoke(
-            executable, "repair", "--package", package, "--root", install,
+            executable, "repair", *package_arguments, "--root", install,
             "--state-root", state, "--acceptance-root", root, "--yes",
         )
         if repaired["provider"]["payload"]["status"] != "completed":

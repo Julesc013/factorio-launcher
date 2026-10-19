@@ -310,6 +310,57 @@ Unchanged compiled source/build/five smokes remain reusable only under
 new exact frozen review04. Focused/control/historical acceptance remains
 outstanding; no new build, root, clone or candidate.
 
+## Produced GUI package closure correction
+
+An independent read-only review of the accepted PR402 self-setup extraction
+found that the genuine GUI had been renamed from `bin/FacMan.WinForms.exe` to
+`FacMan.exe`, while the portable package, component and hash manifests retained
+the original path. Production backend discovery correctly refuses that closure.
+The earlier produced CLI acceptance is retained; it never qualified GUI discovery.
+
+The bounded prerequisite repair reuses the existing `windows_product_x64`
+profile from the existing shared build and preserves every portable input entry
+byte-for-byte. The self-setup producer refuses legacy layouts before creating
+outputs. The existing Windows job keeps legacy compatibility/composition proofs
+and additionally verifies the product closure/runtime before self-setup.
+No identity validation, provider pin, protected check or release gate changes.
+
+Focused source regressions and independent review precede normal publication.
+Actual checked integration and a separately admitted new produced extraction
+must precede genuine GUI discovery. Control-gallery fixtures, synthetic closure
+tests and previous CLI proof do not qualify that live GUI path. Full Make Ready,
+human experience, playable-instance and Beta acceptance remain open.
+
+The existing Windows CI delivery is a split bootstrap/payload used for explicit
+package CLI qualification. Its raw bootstrap has no default argv0 overlay;
+this does not invalidate its retained CLI evidence. The maintained
+`tools/self_contained_setup.py` already produces the canonical single-file
+Setup for the product-candidate path. Reuse that unchanged builder in the
+same existing Windows job, with the exact product portable and native bootstrap.
+Preserve both split artifacts and independently bind identical payload bytes
+through the existing native-compatible overlay identity reader. Exercise the
+produced single-file Setup default-package preview without --package or --yes,
+then run the existing lifecycle harness against that produced executable.
+Every child has an immediate exit guard; no additional CI job or local build.
+The default preview has shell integration disabled. It proves payload binding,
+not real current-user native effects or whole epoch/maintenance acceptance.
+The additional consumer-oracle test is synthetic and cannot close those gates.
+Preserve the original application02 and reviewed application05 executions.
+Their actual terminal receipts must prove zero branch/source effects before
+the separately reviewed recovery application06 can own this primary checkout.
+If application05 succeeds, consume that qualified result and do not run06.
+The admitted06 recovery handles only the known pre-application refusal caused
+by requiring all three primary checkouts to be clean on dev while the parallel
+Universal Setup worker owns its canary branch. Require PR403 terminal checked
+integration, synchronization of eligible clean dev primaries with explicit
+preservation of the active Universal checkout, and the actual five-method
+produced proof. Retain the false all-three-synchronized fact; neither switch
+the foreign branch nor relabel its preservation as synchronization.
+Bind proposal06 to exact current FacMan dev and pass fresh AIDE/resource gates.
+Unexpected failures or any earlier source effect require diagnosis, not replay.
+Final frozen qualification and independent review precede publication.
+Future artifact admission/probe bindings must follow the actual applied
+proposal; genuine produced-package/default Setup/GUI/native gates remain open.
 
 ### Produced Windows recovery and actual portable GUI acceptance (2026-10-12)
 
@@ -1072,3 +1123,50 @@ harness admission is historical; a corrected payload assertion requires renewed
 exact-source preexecution review. Whole WorkUnit/F09/F11 and release gates stay
 open; WorkUnit and programme remain active.
 Evidence: evidence/local-content-maintenance-ci-oracle.v1.json and its custody ZIP.
+
+### Canonical Desktop and embedded Setup reconciliation (2026-10-19)
+
+Forward-merge current dev 67b1b8e8017115b2923aff496bcc8e66c87a8b84 into the
+existing PR404 branch; preserve published 0da1da9844704ac5ae732d7c9752a5aa4236e62f
+and its original synthetic receipt. Independent source review found no layout
+defect, but identified that the produced lifecycle used an explicit payload
+after the embedded preview. The lifecycle now binds the embedded overlay to
+the independent split-payload oracle before effects, then installs and repairs
+without a package override. Before deliberate damage, ordinary installed
+package smoke checks the compiled backend identity, resource discovery, and
+same-binary terminal from a foreign directory with an empty PATH.
+
+Focused package, recovery, composition, identity and resource tests: 72 run,
+one platform skip, no failures. A bounded non-author review accepted the
+focused correction after removing a function-local import shadow. Source
+fixtures are not actual installed GUI or native-host acceptance. Consume the
+normal exact-source Windows artifact for scoped installed root-GUI and terminal
+qualification; retain receipts outside this checkout and link the reviewed
+result to PR404. No provider pins, product identities, trusted gates or native
+authorities changed. The protected CI path still requires the repository
+owner exact-head authorization before integration. Human, registry/shortcut,
+real-game, full F09/F11 and Beta/RC qualification remain separate.
+
+### Ordinary button invocation boundary (2026-10-19)
+
+The normal Windows campaign for 634f82f4dd5ce049906178257dcfc6703bfb2e81
+(run 39216486781, job 117941565943) failed before canonical artifact creation:
+the native WM_COMMAND post succeeded, but no first input dialog appeared.
+Retain that failed campaign and its custody without a flaky waiver. Native
+notification queueing did not prove delivery of the managed button action.
+
+The actual-control adapter now uses one standard UIA InvokePattern on the
+verified owned button HWND, PID, type and enabled state. A separate bounded
+client permits the normal modal handler to run while the observer controls
+dialogs. The helper has bounded captures and an owned kernel job; all jobs
+close on failure, and successful shutdown requires natural exits and drain.
+The product handler, descriptor eligibility and backend remain unchanged.
+The existing cancellation, stale refusal, one-effect and preserved-state
+assertions remain the outcome oracles. Bounded non-author review accepted
+the final adapter after cleanup and output-bound corrections.
+
+Focused package regressions remain 72 tests, one platform skip. Original
+PR440 package runs diagnose the adapter only; they do not qualify canonical
+Desktop delivery. A new normal exact-source campaign and produced embedded
+installation proof are still required. The owner-only exact-head control
+authorization remains a separate integration gate.

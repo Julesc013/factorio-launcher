@@ -441,14 +441,33 @@ jobs:
       - name: Build and exercise deterministic per-user self-setup package
         shell: pwsh
         run: |
-          $portableMatches = @(Get-ChildItem -LiteralPath build\winforms-dist -Filter 'FacMan-*-windows-x64-portable.zip')
+          python tools/package_build.py --profile windows_product_x64 --out build/packages --build-root build/winforms-shared --dist build/product-dist
+          if ($LASTEXITCODE -ne 0) { throw "Windows product packaging failed" }
+          python tools/package_hash_manifest.py --root build/packages/windows_product_x64 --verify
+          if ($LASTEXITCODE -ne 0) { throw "Windows product manifest closure failed" }
+          python tools/package_runtime_smoke.py --root build/packages/windows_product_x64
+          if ($LASTEXITCODE -ne 0) { throw "Windows product runtime smoke failed" }
+          $portableMatches = @(Get-ChildItem -LiteralPath build\product-dist -Filter 'FacMan-*-windows-x64-portable.zip')
           if ($portableMatches.Count -ne 1) { throw "expected exactly one WinForms portable ZIP; found $($portableMatches.Count)" }
           $portable = $portableMatches[0]
           python tools/self_setup_package.py --portable $portable.FullName --setup-exe build\native-smoke\Release\FacManSetup.exe --out build\self-setup-dist
+          if ($LASTEXITCODE -ne 0) { throw "Windows self-setup packaging failed" }
           $payloadMatches = @(Get-ChildItem -LiteralPath build\self-setup-dist -Filter 'facman-*-windows-x64-self-setup-payload.zip')
           if ($payloadMatches.Count -ne 1) { throw "expected exactly one self-setup payload ZIP; found $($payloadMatches.Count)" }
           $payload = $payloadMatches[0]
-          python tests/integration/facman_self_setup_lifecycle.py --setup-exe build\native-smoke\Release\FacManSetup.exe --payload $payload.FullName
+          python tools/self_contained_setup.py --portable $portable.FullName --bootstrap build\native-smoke\Release\FacManSetup.exe --out build\self-setup-dist
+          if ($LASTEXITCODE -ne 0) { throw "Windows single-file Setup packaging failed" }
+          $setupMatches = @(Get-ChildItem -LiteralPath build\self-setup-dist -Filter 'FacMan-*-windows-x64-setup.exe')
+          if ($setupMatches.Count -ne 1) { throw "expected exactly one single-file Setup; found $($setupMatches.Count)" }
+          $setup = $setupMatches[0]
+          $previewRoot = Join-Path (Resolve-Path build).Path 'self-setup-preview'
+          New-Item -ItemType Directory -Path $previewRoot -Force | Out-Null
+          $preview = & $setup.FullName install --root (Join-Path $previewRoot 'Programs\FacMan') --state-root (Join-Path $previewRoot 'SetupState') --acceptance-root $previewRoot --no-shell-integration --noninteractive --json
+          if ($LASTEXITCODE -ne 0) { throw "Ordinary Setup default-payload preview failed" }
+          $previewResponse = $preview | ConvertFrom-Json
+          if ($previewResponse.status -ne 'ok' -or $previewResponse.phase -ne 'plan') { throw "Ordinary Setup preview did not return a typed plan" }
+          python tests/integration/facman_self_setup_lifecycle.py --setup-exe $setup.FullName --payload $payload.FullName --embedded-default-payload
+          if ($LASTEXITCODE -ne 0) { throw "Produced single-file Setup lifecycle proof failed" }
       - name: Preserve private-alpha self-setup candidate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
