@@ -1,0 +1,93 @@
+{
+  "schema": "facman.accepted-qualification-projection.v1",
+  "pr": 424,
+  "reviewed_source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+  "source_tree": "faa6f8882caee6eb0cfa4e901d278a3fb8eb5f98",
+  "metadata_only": true,
+  "raw_logs_or_product_archive_embedded": false,
+  "historical_pending_receipt_rewritten": false,
+  "scope": "delivered Windows portable CLI/TUI and actual production offscreen GUI controls",
+  "independent_review": {
+    "schema": "facman.independent_delivered_snapshot_presentation_review.v1",
+    "verdict": "PASS_SCOPED_EXACT_DELIVERED_SNAPSHOT_PRESENTATION",
+    "source": "dfd15f90950075e0654aa6393d417fc22b9ccff1",
+    "tree": "faa6f8882caee6eb0cfa4e901d278a3fb8eb5f98",
+    "packet_sha256": "7135e9ced383ba6523060963108df759c7cd4d17642aabcb5168a39190e3dc59",
+    "reviewer_script_sha256": "335dd8e7befe48304c811dffe220d5bcd64c825b10dc501dca5691397eabcb9d",
+    "non_authoring": true,
+    "artifact": 11951465059,
+    "run": 38679232261,
+    "original_package_files": 599,
+    "manifest_hashes": 598,
+    "download_count": 1,
+    "actual_cli_commands": 149,
+    "closed_recorded_jobs": 158,
+    "artifacts_verified": 1083,
+    "semantic_methods_passed": 7,
+    "ordinary_TUI": 1,
+    "actual_GUI_sessions": 1,
+    "GUI_packaged_backends": 34,
+    "GUI_console_hosts": 34,
+    "ordinary_button_notifications": 9,
+    "verified_owned_edits": 6,
+    "input_and_confirmation_cancellations_preserved": true,
+    "actual_new_local_selection_rendered": true,
+    "exact_owner_payload_retained": true,
+    "physical86_rollback_and87_completion": true,
+    "old_unknown_semantic_receipts_preserved": true,
+    "changed_binding_refusals": 4,
+    "source_inputs_and_package_preserved": true,
+    "prior_failed_campaigns_not_relabelled": true,
+    "initial_failed_guard_branch_observed": false,
+    "foreground_changed": true,
+    "foreground_causal_attribution": false,
+    "physical_input": false,
+    "human": false,
+    "original_package_integration_coherent": false,
+    "release_eligible": false,
+    "workunit_closed": false,
+    "real_game": false,
+    "beta": false,
+    "rc": false
+  },
+  "author_packet": {
+    "path": "snapshot-presentation-delivered-author-packet-01.json",
+    "sha256": "7135e9ced383ba6523060963108df759c7cd4d17642aabcb5168a39190e3dc59",
+    "bytes": 354363
+  },
+  "independent_receipt": {
+    "path": "snapshot-presentation-delivered-independent-review-01.json",
+    "sha256": "75741c3bf26ff1afee8182d71b6d51abf67553a54acc27fa94fcae1f18c753c9",
+    "bytes": 1634
+  },
+  "raw_hash_custody": {
+    "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\snapshot-presentation-delivered-author-packet-01.sha256",
+    "sha256": "126fd46a5912c29fc7708a07ef7547d6015eddb212a63655565003a0d4403af8"
+  },
+  "retained_failures": [
+    {
+      "phase": 1,
+      "kind": "external live Popen guard assertion",
+      "exact_guard_branch": "unobserved; no invented cause or product verdict",
+      "other_semantic_methods_passed": 6,
+      "fixture": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\adf"
+    },
+    {
+      "phase": 2,
+      "kind": "decoded transport newline adapter mismatch CRLF versus text-mode LF",
+      "actual_paused_packaged_response": 3,
+      "fixture": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\j3\\adf2"
+    },
+    {
+      "kind": "preexecution foreground assertion removed under explicit root review",
+      "before_probe_sha256": "2bbd40c78a13a6851feb550987806066d0b130b445aa39d77733f60e72078ba0",
+      "executed_probe_sha256": "70f6251e2c17bbdbbdcab4ac097eed539d66b3aaaf3b43ebd7ba6995a927b5ce"
+    }
+  ],
+  "limits": [
+    "Known owned Jobs closed; initial guard branch/possible child PID was not captured. Final exact-package-image census is empty.",
+    "Foreground readings changed; no causal attribution or no-user-focus-movement claim. External probe invokes no global input/activation APIs.",
+    "Actual production offscreen control/transport proof; no physical input/human acceptance.",
+    "No canonical installed Desktop, real Play, whole F11 or release claim."
+  ]
+}

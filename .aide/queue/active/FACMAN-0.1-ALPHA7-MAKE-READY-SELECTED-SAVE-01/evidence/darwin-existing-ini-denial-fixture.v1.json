@@ -1,0 +1,68 @@
+{
+  "schema": "facman.darwin_existing_ini_denial_fixture_candidate.v1",
+  "original_failed_candidate": "9b53b5bfa1c84f29a44bbd878a73a2a7612e43e8",
+  "prior_source_mac_methods_passed": 13,
+  "production_source_unchanged": true,
+  "fresh_native_tests": 0,
+  "fresh_compiler_commands": 0,
+  "original_mac_job": 115150309851,
+  "root_diagnosis_sha256": "9e59c14225d085bc31fc50cd00a12c9beb754c89c61a12fe8e033ede10b15ddc",
+  "fresh_full_tu_comparisons": 0,
+  "unchanged_full_tu_comparisons_retained": 4,
+  "base_head": "9b53b5bfa1c84f29a44bbd878a73a2a7612e43e8",
+  "files_sha256": {
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "3dcb6e74ef76f4883eb1ea5c42bff42fe4cec0bd79149888a73a511fc4cec6af",
+    "runtime/factorio/instance/flb_factorio_configuration_preparation.cpp": "283a32a123ecc66ecb0a59f13e30989d2145c5a975a53a71070936ca0fd3ba83",
+    "tests/test_posix_retained_rewrite_admission.py": "d4e8e469116149faf8f1c246712653e13d822a53f74a85f3f013f1e1e8abba16",
+    "tests/test_macos_configuration_reconciliation.py": "17f9649e15be17004f687dfd1e380c153882cd95bd42272102d5aa414eebf7e7",
+    "docs/development/existing-configuration-reconciliation.md": "96e5e2560086159ee341d44fbe59f65622d2e20533fd1f5834f72307b8313c06"
+  },
+  "independent_review_sha256": "7f787f85a9fd88aceee6290eb7a7f6344012c4f8575d1c05023911d80883693b",
+  "nonmac_qualification_sha256": "5686c6ac54a95c48a12c7dc32e0b8114a2a9d73b6d7b7de3c581c094d2200ba0",
+  "actual_full_tu_proofs": [
+    {
+      "platform": "linux",
+      "path": "runtime/factorio/instance/flb_factorio_instance_model.cpp",
+      "token_sha256": "72f0f91e0aa3dd230bb4fa30b213d8af09924a13f7b33ba1cbcc94a475cbecbe",
+      "token_count": 412821
+    },
+    {
+      "platform": "windows",
+      "path": "runtime/factorio/instance/flb_factorio_instance_model.cpp",
+      "token_sha256": "b7742464bd11d486764edf8625ca08c360325d7ee658077588b08a2fb3409bf6",
+      "token_count": 653132
+    },
+    {
+      "platform": "linux",
+      "path": "runtime/factorio/instance/flb_factorio_configuration_preparation.cpp",
+      "token_sha256": "cda32a05c399f004a6a05149d983e8e9303ae9a74cb3c0a581bb07921a843976",
+      "token_count": 379665
+    },
+    {
+      "platform": "windows",
+      "path": "runtime/factorio/instance/flb_factorio_configuration_preparation.cpp",
+      "token_sha256": "3379dd768c2546876ee55fed35fa1ae4f41a148d7107c6f966afd5adf2276e0a",
+      "token_count": 646250
+    }
+  ],
+  "actual_linux_boundary_passed": 1,
+  "nonmac_images_unchanged": true,
+  "no_rebuild": true,
+  "actual_mac_methods_run": 0,
+  "mandatory_mac_methods_pending": 14,
+  "actual_mac_runtime_qualified": false,
+  "required_new_source_ci_pending": true,
+  "admission_merge_requires_actual_mac_pass": true,
+  "custody": "darwin-existing-ini-denial-fixture-custody.v1.zip",
+  "custody_sha256": "1acb42f1aebabd47192967e802d9ccabef0aa27816481529387413aa2bef9a86",
+  "custody_members": 14,
+  "authority_delta": "Darwin confirmed existing-INI reconciliation and journal recovery candidate via existing owner guards",
+  "darwin_missing_file_publication_admitted": false,
+  "physical_apfs": false,
+  "power_loss": false,
+  "game": false,
+  "human": false,
+  "full_make_ready": false,
+  "beta": false,
+  "rc": false
+}

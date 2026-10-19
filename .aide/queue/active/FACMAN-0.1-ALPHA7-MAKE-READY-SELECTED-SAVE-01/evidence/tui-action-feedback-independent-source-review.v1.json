@@ -1,0 +1,31 @@
+{
+  "schema": "facman.independent_source_review.v1",
+  "reviewer": "independent tui_feedback_review agent",
+  "review_kind": "bounded source review only",
+  "base_commit": "cde863c8567ee82d7c6f2f330aeff8b45d6f15d8",
+  "reviewed_files": [
+    {
+      "path": "apps/tui/tui_product_shell.cpp",
+      "sha256": "62d03e15b249d4fd914da0a09e7392c430373bb4eeb2ca3e1759e11acc73832a"
+    },
+    {
+      "path": "tests/test_tui_product.py",
+      "sha256": "1b494b5ac68973e19893ed3b886f7053175e3eb3fb8278a5be8bbd64dd60e014"
+    }
+  ],
+  "verdict": "approve_source_with_required_runtime_validation",
+  "actionable_findings": [],
+  "observations": [
+    "Exact diff limits production change to doctor_feedback classification. Successful completed semantic doctor.run is the only response allowed to override action_response_status; selected-context and snapshot feedback retain their existing action-specific meaning.",
+    "payload_string safely handles absent or non-object parsed_payload. Existing doctor semantic service constructs matching schema/action_id/completed response on success; existing ordinary and process Doctor assertions remain applicable.",
+    "Transport Result failure and nonzero response status already return before doctor_feedback. Semantic refused_before_effects, outcome_unknown, recovery_required, cancellation and other non-completed outcomes cannot acquire Doctor completed text through the new guard.",
+    "The selected-context regression uses the real ordinary process transport, drifted owned fixture, available action index, selected-save intent, and two activations through the confirmation gate. It asserts visible completed action status, absence of Doctor label, unchanged world bytes, and authoritative satisfied selected-save state. These assertions prevent a confirmation-only or no-effect success.",
+    "Snapshot regression additionally asserts visible Status text and absence of Doctor label, alongside existing operation/effect assertions.",
+    "No authority, command, provider, schema, transport, or execution behavior change is present in the reviewed diff."
+  ],
+  "limitations": [
+    "No product execution, build, download, or Git mutation performed. This is not a local native green claim.",
+    "TuiProductTests has an executable-availability class skip, and native_cli fixture discovery can raise SkipTest. Required current-head hosted rebuild/tests must confirm real execution with explicit current build executable configuration and account for skips; source review does not certify CI.",
+    "Review bound to the listed two file hashes and base; later source changes require renewed qualification."
+  ]
+}

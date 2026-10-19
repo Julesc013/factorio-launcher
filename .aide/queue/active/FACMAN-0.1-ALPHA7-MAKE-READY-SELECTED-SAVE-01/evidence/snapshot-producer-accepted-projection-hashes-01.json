@@ -1,0 +1,17 @@
+{
+  "schema": "facman.accepted_projection_custody.v1",
+  "files": {
+    "snapshot-producer-accepted-ci-projection-01.json": {
+      "sha256": "af465d955f50679dc943e3d8a638b708d394403d6bf8efbb7d5d2e18363537db",
+      "bytes": 14567
+    },
+    "snapshot-producer-accepted-windows-projection-01.json": {
+      "sha256": "443528188cf788f31261cd18f32b9bbf1c74542920098df92c4adba83ffa1822",
+      "bytes": 4061
+    },
+    "snapshot-producer-accepted-linux-projection-01.json": {
+      "sha256": "38eda652b9e0be3d2986ae92091bddde45d929accbfdd076a4e46ebe25830ce3",
+      "bytes": 3275
+    }
+  }
+}

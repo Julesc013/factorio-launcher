@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/facman_managed_move_recovery.v1.schema.json",
+  "title": "Operation-specific move projection or proved pre-entry abort",
+  "type": "object",
+  "properties": {
+    "transaction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "install_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "plan_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "old_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "new_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "plan_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "facman_journal_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "pre_record_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "current_record_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "projected_record_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "provider_journal_snapshot_sha256": {
+      "type": "string",
+      "pattern": "^(|[0-9a-f]{64})$"
+    },
+    "provider_installed_state_sha256": {
+      "type": "string",
+      "pattern": "^(|[0-9a-f]{64})$"
+    },
+    "provider_audit_chain_digest": {
+      "type": "string",
+      "pattern": "^(|[0-9a-f]{64})$"
+    },
+    "schema": {
+      "const": "facman.managed_move_recovery.v1"
+    },
+    "operation": {
+      "const": "move"
+    },
+    "old_root_status": {
+      "const": "retained"
+    },
+    "old_root_removal_available": {
+      "const": false
+    },
+    "grants_ownership": {
+      "const": false
+    },
+    "empty_directory_preservation": {
+      "const": "not_promised"
+    },
+    "observation_atomic": {
+      "const": false
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "blocked",
+        "completed"
+      ]
+    },
+    "classification": {
+      "enum": [
+        "no_provider_effect",
+        "provider_move_completed",
+        "indeterminate"
+      ]
+    },
+    "action": {
+      "enum": [
+        "close_no_provider_effect",
+        "project_terminal",
+        "none"
+      ]
+    },
+    "provider_observed_state": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "transaction_id",
+    "install_id",
+    "plan_id",
+    "old_root",
+    "new_root",
+    "plan_digest",
+    "facman_journal_sha256",
+    "pre_record_sha256",
+    "current_record_sha256",
+    "projected_record_sha256",
+    "provider_journal_snapshot_sha256",
+    "provider_installed_state_sha256",
+    "provider_audit_chain_digest",
+    "schema",
+    "operation",
+    "old_root_status",
+    "old_root_removal_available",
+    "grants_ownership",
+    "empty_directory_preservation",
+    "observation_atomic",
+    "status",
+    "classification",
+    "action",
+    "provider_observed_state"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "classification": {
+            "const": "provider_move_completed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "action": {
+            "const": "project_terminal"
+          },
+          "provider_observed_state": {
+            "const": "completed"
+          },
+          "provider_journal_snapshot_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "provider_installed_state_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "provider_audit_chain_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "classification": {
+            "const": "no_provider_effect"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "action": {
+            "const": "close_no_provider_effect"
+          },
+          "provider_observed_state": {
+            "const": ""
+          },
+          "provider_journal_snapshot_sha256": {
+            "const": ""
+          },
+          "provider_installed_state_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "classification": {
+            "const": "indeterminate"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "action": {
+            "const": "none"
+          },
+          "status": {
+            "const": "blocked"
+          }
+        }
+      }
+    }
+  ]
+}

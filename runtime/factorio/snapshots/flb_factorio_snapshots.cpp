@@ -615,7 +615,8 @@ std::string snapshot_result(
 std::string local_manifest(
     const SnapshotData& snapshot,
     const facman::core::InstanceId& target,
-    const fs::path& root)
+    const fs::path& root,
+    const std::string& install_id)
 {
     json::ObjectBuilder concurrency;
     concurrency.add_bool("single_writer", true);
@@ -623,12 +624,13 @@ std::string local_manifest(
     output.add_string("schema", "factorio.instance.v1");
     output.add_string("instance_id", target.str());
     output.add_string("display_name", snapshot.display_name);
-    output.add_string("install_ref", snapshot.install_ref);
+    output.add_string("install_ref", install_id);
     output.add_string("factorio_version", snapshot.factorio_version);
     output.add_string("local_data_root", facman::platform::path_to_utf8(root));
     output.add_string("profile", snapshot.profile);
     output.add_string("template", snapshot.template_id);
     output.add_string("restored_from_snapshot", snapshot.snapshot_id);
+    if (install_id != snapshot.install_ref) output.add_string("restored_from_install_ref", snapshot.install_ref);
     output.add_object("concurrency", concurrency);
     return output.serialize();
 }
@@ -1061,7 +1063,10 @@ facman::core::Result<std::string> restore(const fs::path& workspace, const Resto
     if (!facman::base::validate_identifier(snapshot.value().profile, detail) ||
         !facman::base::validate_identifier(snapshot.value().template_id, detail)) return fail(
         "snapshot_profile_template_invalid", detail, source, facman::core::OutcomeKind::refused, false);
-    auto install = load_install(workspace, snapshot.value().install_ref);
+    const std::string selected_install = request.install_id.empty() ? snapshot.value().install_ref : request.install_id;
+    auto selected_id = facman::core::InstallId::parse_legacy(selected_install);
+    if (!selected_id) return fail(selected_id.error().code, selected_id.error().message);
+    auto install = load_install(workspace, selected_install);
     if (!install || install.value().version != snapshot.value().factorio_version) return fail(
         "snapshot_install_incompatible", "Destination install reference is missing or version-incompatible", workspace);
     auto target = facman::base::managed_directory(workspace, "instances", target_id.value().str());
@@ -1080,11 +1085,44 @@ facman::core::Result<std::string> restore(const fs::path& workspace, const Resto
         if (!path || !digest) return fail("snapshot_manifest_invalid", "Snapshot expectation is invalid", source, facman::core::OutcomeKind::refused, false);
         transaction.expected_files.push_back({path.take_value(), digest.take_value(), value.second.first});
     }
-    transaction.commit_strategy = "verified_snapshot_extract_regenerate_atomic_no_replace";
+    transaction.operation_context = snapshot.value().install_ref;
+    std::string inspected_archive_sha256;
+    const auto inspected_source = facman::archive::archive_sha256(snapshot.value().plan,
+        facman::archive::InstanceSnapshotPolicy::limits(), inspected_archive_sha256);
+    if (!inspected_source.ok()) return fail("snapshot_restore_binding_refused", inspected_source.detail, source);
+    if (!tx::bind_snapshot_restore(workspace, transaction, selected_install, snapshot.value().factorio_version,
+            inspected_archive_sha256, install.value(), detail))
+        return fail("snapshot_restore_binding_refused", detail, install.value().source_path);
+    if (!tx::verify_snapshot_restore_inputs(workspace, transaction, detail))
+        return fail("snapshot_restore_binding_changed", detail, workspace);
+    transaction.transaction_id = random.next("tx");
+    transaction.marker_nonce = random.next("nonce");
+    struct RecoveryLease {
+        facman::base::StableLocalLock lock;
+        facman::platform::StableDirectoryObject parent;
+        tx::Record identity;
+        bool matches(std::string& detail) const { return tx::snapshot_restore_lock_matches(identity, lock, parent, detail); }
+        bool release(std::string& detail) { return tx::release_snapshot_restore_lock(identity, lock, parent, detail); }
+        ~RecoveryLease() { if (lock.open()) { std::string ignored; (void)release(ignored); } }
+    } lease;
+    lease.identity.transaction_id = transaction.transaction_id;
+    lease.identity.marker_nonce = transaction.marker_nonce;
+    if (!lease.parent.open_no_follow(workspace / "transactions").ok())
+        return fail("snapshot_restore_lock_refused", "Restore transaction parent is unavailable", workspace);
+    const auto acquired = lease.lock.create(tx::recovery_lock_path(workspace, transaction.transaction_id));
+    if (!acquired.acquired() || !tx::initialize_snapshot_restore_lock(transaction, lease.lock, lease.parent, true, detail))
+        return fail("snapshot_restore_lock_refused", acquired.acquired() ? detail : acquired.detail, workspace);
     auto started = tx::TransactionSession::begin(workspace, std::move(transaction));
     if (!started) return fail("snapshot_transaction_failed", started.error().message, workspace);
     tx::TransactionSession session = started.take_value();
+    const auto lost_lease = [&]() {
+        session.leave_durable_state_unchanged();
+        lease.lock.close();
+        return fail("snapshot_restore_lock_changed", "Restore lease ownership changed; durable state and all data are retained", staging,
+            facman::core::OutcomeKind::recovery_required, false);
+    };
     const auto abort_staging = [&](const std::string& reason) {
+        if (!lease.matches(detail)) return lost_lease();
         std::error_code probe_error;
         const auto staging_status = fs::symlink_status(staging, probe_error);
         if (staging_status.type() == fs::file_type::not_found &&
@@ -1094,19 +1132,21 @@ facman::core::Result<std::string> restore(const fs::path& workspace, const Resto
         }
         const auto cleanup = facman::archive::cleanup_owned_staging_root(staging);
         if (!cleanup.ok()) {
-            const std::string detail = reason + "; staging cleanup: " + cleanup.detail;
-            session.require_recovery(detail);
-            return fail("snapshot_transaction_recovery_required", detail, staging,
+            const std::string cleanup_detail = reason + "; staging cleanup: " + cleanup.detail;
+            session.require_recovery(cleanup_detail);
+            return fail("snapshot_transaction_recovery_required", cleanup_detail, staging,
                 facman::core::OutcomeKind::recovery_required, false);
         }
         session.failed(reason);
         return fail("snapshot_restore_staging_failed", reason, staging);
     };
+    if (!lease.matches(detail)) return lost_lease();
     if (!session.validated("snapshot_schema_hashes_install_profile_template_validated") ||
         !session.planned("restore_target_and_archive_plan_validated") ||
         !session.staging("owned_restore_staging_selected")) return fail("snapshot_transaction_failed", session.detail(), workspace);
     auto status = facman::archive::extract_to_new_owned_staging(
         snapshot.value().plan, staging, facman::archive::InstanceSnapshotPolicy::limits());
+    if (!lease.matches(detail)) return lost_lease();
     if (!status.ok() || !session.staged("snapshot_archive_extracted")) {
         return abort_staging(status.ok() ? session.detail() : status.code + ": " + status.detail);
     }
@@ -1118,24 +1158,61 @@ facman::core::Result<std::string> restore(const fs::path& workspace, const Resto
     if (error) return abort_staging(error.message());
     std::string write_detail;
     if (!facman::base::write_text_new_atomic(
-            staging / "instance.v1.json", local_manifest(snapshot.value(), target_id.value(), target.path), write_detail) ||
+            staging / "instance.v1.json", local_manifest(snapshot.value(), target_id.value(), target.path, selected_install), write_detail) ||
         !facman::base::write_text_new_atomic(
             staging / "config" / "config.ini", effective_config(snapshot.value(), install.value(), target_id.value(), target.path), write_detail) ||
-        !session.verified("snapshot_hashes_verified_and_local_metadata_regenerated") ||
-        !session.committing("snapshot_restore_commit_started")) {
+        !tx::bind_snapshot_restore_target(session.record(), staging, write_detail) ||
+        !session.verified("snapshot_hashes_verified_and_local_metadata_regenerated")) {
         const std::string failure_detail = write_detail.empty() ? session.detail() : write_detail;
         return abort_staging(failure_detail);
     }
-    if (!tx::StagedDirectoryCommit::commit(staging, target.path, write_detail)) {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
-        session.failed(write_detail);
-        return fail("snapshot_restore_commit_failed", write_detail, target.path);
+    if (std::getenv("FACMAN_TEST_SNAPSHOT_RESTORE_EXIT_AFTER_VERIFIED") != nullptr) std::_Exit(86);
+    if (std::getenv("FACMAN_TEST_SNAPSHOT_RESTORE_BEFORE_PUBLICATION_PAUSE") != nullptr) {
+        const auto marker = workspace / ".facman-test-snapshot-restore-before-publication";
+        const auto release = workspace / ".facman-test-snapshot-restore-publication-release";
+        bool released = false;
+        if (facman::base::write_text_new_atomic(marker, "ready\n", write_detail)) {
+            for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+                std::error_code probe;
+                if (fs::exists(release, probe) && !probe) { released = true; break; }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        }
+        if (!released) {
+            if (!lease.matches(write_detail)) return lost_lease();
+            session.require_recovery("Snapshot restore publication pause did not complete");
+            return fail("snapshot_transaction_recovery_required", "Restore staging is retained", staging,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
     }
+    if (!lease.matches(write_detail)) return lost_lease();
+    const bool restoration_current = tx::verify_snapshot_restore_inputs(workspace, session.record(), write_detail) &&
+        tx::verify_snapshot_restore_target(session.record(), staging, write_detail);
+    if (!lease.matches(detail)) return lost_lease();
+    if (!restoration_current) {
+        session.require_recovery(write_detail);
+        return fail("snapshot_restore_binding_changed", write_detail, staging,
+            facman::core::OutcomeKind::recovery_required, false);
+    }
+    if (!session.committing("snapshot_restore_commit_started")) return fail(
+        "snapshot_transaction_recovery_required", session.detail(), staging,
+        facman::core::OutcomeKind::recovery_required, false);
+    if (!tx::StagedDirectoryCommit::commit(staging, target.path, write_detail)) {
+        session.require_recovery(write_detail);
+        return fail("snapshot_restore_commit_failed", write_detail, target.path,
+            facman::core::OutcomeKind::recovery_required, false);
+    }
+    if (std::getenv("FACMAN_TEST_SNAPSHOT_RESTORE_EXIT_AFTER_PUBLICATION") != nullptr) std::_Exit(87);
+    if (!lease.matches(write_detail)) return lost_lease();
     if (!session.committed("snapshot_restored_instance_committed")) return fail(
         "snapshot_transaction_recovery_required", session.detail(), target.path, facman::core::OutcomeKind::recovery_required, false);
+    if (!lease.matches(write_detail)) return lost_lease();
     fs::remove(target.path / facman::archive::owned_staging_marker_name(), error);
+    if (!lease.matches(write_detail)) return lost_lease();
     if (error || !session.complete()) return fail(
         "snapshot_transaction_recovery_required", error ? error.message() : session.detail(), target.path,
+        facman::core::OutcomeKind::recovery_required, false);
+    if (!lease.release(write_detail)) return fail("snapshot_restore_lock_changed", write_detail, target.path,
         facman::core::OutcomeKind::recovery_required, false);
     SnapshotData restored = snapshot.value();
     restored.instance_id = target_id.value().str();

@@ -250,4 +250,113 @@ std::optional<std::string> local_content_text(const json::Value& report)
     return output.str();
 }
 
+std::optional<std::string> managed_move_apply_text(const json::Value& report)
+{
+    if (guidance_field(report, "schema") != "facman.managed_move_apply_result.v1" ||
+        guidance_field(report, "status") != "reference_projected_old_retained_pending_acceptance" ||
+        guidance_field(report, "lifecycle_status") != "move_pending_acceptance" ||
+        guidance_field(report, "old_root_status") != "retained") return std::nullopt;
+    std::ostringstream output;
+    output << "Managed move: new root verified; FacMan reference projected\nInstall: "
+        << guidance_field(report, "install_id") << "\nOld source (retained): " << guidance_field(report, "old_root")
+        << "\nNew root: " << guidance_field(report, "new_root")
+        << "\nStatus: move_pending_acceptance; launch remains ineligible.\n"
+        << "Foreign copied content remains foreign. No old-root removal or acceptance was performed.\n"
+        << "Empty-directory preservation is not promised; observations are not atomic.\n";
+    return output.str();
+}
+
+std::optional<std::string> managed_move_plan_text(const json::Value& report)
+{
+    const auto* plan = report.find("provider_plan");
+    const auto* available = report.find("apply_available");
+    const auto false_field = [&](const char* key) {
+        const auto* value = report.find(key);
+        return value && value->is_bool() && !value->bool_value().value();
+    };
+    if (guidance_field(report, "schema") != "facman.managed_move_plan.v1" ||
+        guidance_field(report, "copy_scope") != "complete_source_files_including_foreign" ||
+        guidance_field(report, "empty_directory_preservation") != "not_promised" ||
+        !available || !available->is_bool() || !available->bool_value().value() ||
+        !false_field("grants_ownership") || !false_field("observation_atomic") ||
+        guidance_field(report, "apply_scope") != "verified_new_root_old_retained_pending_acceptance" ||
+        !plan || guidance_field(*plan, "operation") != "move" || guidance_field(*plan, "status") != "planned") return std::nullopt;
+    const auto* roots = plan->find("roots");
+    const auto* effects = plan->find("effects");
+    if (!roots || !roots->is_array() || !effects || !effects->is_array()) return std::nullopt;
+    std::string source, destination;
+    std::size_t copies = 0;
+    for (std::size_t index = 0; index < roots->size(); ++index) {
+        const auto* root = roots->at(index);
+        if (!root) return std::nullopt;
+        if (guidance_field(*root, "role") == "current") source = guidance_field(*root, "root");
+        if (guidance_field(*root, "role") == "destination") destination = guidance_field(*root, "root");
+    }
+    for (std::size_t index = 0; index < effects->size(); ++index) {
+        const auto* effect = effects->at(index);
+        if (!effect) return std::nullopt;
+        if (guidance_field(*effect, "kind") == "copy_owned_file") ++copies;
+    }
+    if (source.empty() || destination.empty() || copies == 0) return std::nullopt;
+    std::ostringstream output;
+    output << "Read-only managed move preview: planned\nInstall: " << guidance_field(*plan, "install_id")
+        << "\nSource: " << source << "\nDestination (must be absent): " << destination
+        << "\nProposed file copies: " << copies << "\nPlan: " << guidance_field(*plan, "plan_id")
+        << "\nDigest: " << guidance_field(*plan, "plan_digest")
+        << "\nCopies include foreign files; provider copy labels grant no ownership.\n"
+        << "Empty-directory preservation is not promised. Bounded apply verifies the new root, projects the FacMan reference, and retains the old source pending acceptance.\n"
+        << "This pinned alpha path admits at most256MiB/4096files including foreign content.\n"
+        << "Record digest: " << guidance_field(report, "install_record_sha256") << "\n"
+        << "No move was executed. Observations are not an atomic snapshot.\n";
+    return output.str();
+}
+
+std::optional<std::string> managed_install_verification_text(const json::Value& report)
+{
+    const std::string status = guidance_field(report, "status");
+    const std::string install_id = guidance_field(report, "install_id");
+    const auto* summary = report.find("summary");
+    const auto* files = report.find("files");
+    const auto* directories = report.find("directories");
+    const auto* unknown = report.find("unknown_paths");
+    if (guidance_field(report, "schema") != "usk.verification_report.v1" || install_id.empty() ||
+        (status != "pass" && status != "warn" && status != "fail") ||
+        !summary || !summary->is_object() || !files || !files->is_array() ||
+        !directories || !directories->is_array() || !unknown || !unknown->is_array()) return std::nullopt;
+    for (const auto* key : {"owned_files", "missing_files", "modified_files", "unknown_paths"}) {
+        const auto* value = summary->find(key);
+        if (!value || !value->unsigned_integer_value()) return std::nullopt;
+    }
+    std::ostringstream damaged;
+    std::size_t damaged_count = 0;
+    for (const auto* rows : {files, directories}) {
+        for (std::size_t index = 0; index < rows->size(); ++index) {
+            const auto* row = rows->at(index);
+            if (!row || !row->is_object()) return std::nullopt;
+            const auto path = guidance_field(*row, "relative_path");
+            const auto observed = guidance_field(*row, "status");
+            if (path.empty() || (observed != "present" && observed != "missing" && observed != "modified" &&
+                observed != "wrong_type" && observed != "unreadable")) return std::nullopt;
+            if (observed != "present") {
+                ++damaged_count;
+                damaged << "  - " << path << ": " << observed << '\n';
+            }
+        }
+    }
+    std::ostringstream output;
+    output << "Verification: " << status << "\nInstall: " << install_id << "\nOwned files: "
+           << text_field(*summary, "owned_files") << "; missing: " << text_field(*summary, "missing_files")
+           << "; changed: " << text_field(*summary, "modified_files") << '\n';
+    output << "Damaged owned paths: " << (damaged_count == 0 ? "none\n" : "\n") << damaged.str();
+    output << "Preserved unknown paths (" << text_field(*summary, "unknown_paths") << "):"
+           << (unknown->size() == 0 ? " none\n" : "\n");
+    for (std::size_t index = 0; index < unknown->size(); ++index) {
+        const auto* path = unknown->at(index);
+        if (!path || !path->is_string()) return std::nullopt;
+        output << "  - " << path->string_value().value() << '\n';
+    }
+    output << "Read-only verification; no files or installed state changed.\n";
+    return output.str();
+}
+
 } // namespace facman::cli

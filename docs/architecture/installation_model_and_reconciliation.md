@@ -109,6 +109,14 @@ The current command is deliberately plan-only:
 - original roots are retained until reviewed acceptance;
 - source deletion is never part of the generated plan.
 
+Target comparison observes filesystem identity before comparing spellings.
+Existing case, short-name and directory-link aliases retain the same-root
+conversion blockers; directory links and `..` follow the host filesystem's
+semantics. An absent target is resolved through its existing ancestors. An
+unresolvable identity blocks the plan rather than proving a distinct target.
+The desired-state output retains the caller's original target text. These
+read-only observations grant no ownership, apply or link-mutation authority.
+
 ## Source trust boundary
 
 A source requirement, a caller-selected candidate, and authenticated source

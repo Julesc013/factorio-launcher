@@ -5,11 +5,18 @@
 #include "flb_factorio_instance_model.h"
 
 #include "command_result.h"
+#include "application_context.h"
 #include "fl_json.h"
+#include "fl_path_safety.h"
+#include "fl_transaction.h"
 #include "flb_factorio_profiles.h"
+#include "handlers/snapshots.h"
+#include "handlers/modsets.h"
 
 #include <algorithm>
 #include <iterator>
+#include <map>
+#include <utility>
 #include <variant>
 
 namespace facman::factorio::application {
@@ -25,6 +32,73 @@ std::string string_field(const json::Value& value, const char* key)
 }
 
 } // namespace
+
+std::vector<std::filesystem::path> local_modset_maintenance_paths(
+    const std::vector<facman::factorio::mods::ModRef>& inventory,
+    const std::vector<facman::workspace::InstanceRecord>& instances,
+    const std::string& instance_id)
+{
+    const auto selected = std::find_if(instances.begin(), instances.end(), [&](const auto& value) {
+        return value.id.str() == instance_id;
+    });
+    const auto candidate = [&](const auto& mod) {
+        return selected != instances.end() && !mod.virtual_package && mod.valid &&
+            mod.file_path == selected->root / "mods" / mod.file_name &&
+            facman::factorio::mods::factorio_versions_compatible(mod.factorio_version, selected->factorio_version);
+    };
+    std::map<std::string, std::size_t> counts;
+    for (const auto& mod : inventory) if (candidate(mod)) ++counts[mod.name + "@" + mod.version];
+    std::vector<std::filesystem::path> paths;
+    for (const auto& mod : inventory) if (candidate(mod) && counts[mod.name + "@" + mod.version] == 1U) {
+        paths.push_back(mod.file_path);
+    }
+    return paths;
+}
+
+std::string append_modset_maintenance_choice(const facman::factorio::mods::ModRef& mod,
+    const std::vector<std::filesystem::path>& paths, std::vector<std::string>& choices)
+{
+    if (std::find(paths.begin(), paths.end(), mod.file_path) == paths.end()) return {};
+    const std::string identity = mod.name + "@" + mod.version;
+    choices.push_back(identity);
+    return identity;
+}
+
+ApplicationResult dispatch_content_modset(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot)
+{
+    const bool applying = request.action_id == "modsets.apply";
+    ModsetSolverRequest modset;
+    modset.instance_id = request.selected_instance_id;
+    if (request.mod_identity.find('@') == std::string::npos) {
+        modset.enabled_mods.push_back(request.mod_identity);
+    } else {
+        // Bind the full artifact from the already freshness-checked snapshot,
+        // never from a second unconfirmed inventory observation.
+        auto document = json::parse(snapshot);
+        const auto* page = document ? document.value().find("page") : nullptr;
+        const auto* items = page ? page->find("items") : nullptr;
+        if (items && items->is_array()) for (std::size_t index = 0; index < items->size(); ++index) {
+            const auto* item = items->at(index);
+            if (item && string_field(*item, "maintenance_identity") == request.mod_identity) {
+                modset.exact_selection = {request.mod_identity.substr(0, request.mod_identity.find('@')),
+                    string_field(*item, "version"), string_field(*item, "file_name"),
+                    string_field(*item, "source"), string_field(*item, "sha256")};
+                break;
+            }
+        }
+        if (modset.exact_selection.name.empty()) {
+            const std::string code = "modset_exact_selection_unavailable";
+            const std::string message = "The exact local version is unavailable or ambiguous";
+            return refused(safety_refusal(applying ? "modsets.apply" : "modsets.plan", code, message, {}, true), code, message);
+        }
+    }
+    ApplicationRequest domain;
+    domain.command = applying ? CommandId::modsets_apply : CommandId::modsets_plan;
+    domain.payload = std::move(modset);
+    domain.dry_run = !applying;
+    return handlers::dispatch_modset_solver(context, domain);
+}
 
 json::ObjectBuilder action_descriptor(
     const char* action_id,
@@ -105,7 +179,32 @@ std::string action_request_json(const SemanticActionRequest& request)
     if (request.launch_intent == "load_save") input.add_string("launch_intent", request.launch_intent);
     // Preserve the immutable legacy fingerprint when the new input is absent.
     if (!request.source_path.empty()) input.add_string("source_path", request.source_path);
+    if (!request.snapshot_id.empty()) input.add_string("snapshot_id", request.snapshot_id);
     return input.serialize();
+}
+
+std::string snapshot_create_input_problem(const SemanticActionRequest& request)
+{
+    if (request.action_id != "snapshots.create") return {};
+    std::string detail;
+    if (request.scope != "saves" || request.selected_instance_id.empty() ||
+        !facman::base::validate_identifier(request.snapshot_id, detail)) {
+        return "selected_instance_id and a valid snapshot_id are required; save is optional";
+    }
+    return {};
+}
+
+ApplicationResult dispatch_snapshot_create(ApplicationContext& context, const SemanticActionRequest& request)
+{
+    CreateSnapshotRequest create {request.selected_instance_id, request.snapshot_id, {}};
+    if (!request.save.empty()) create.saves.push_back(request.save);
+    ApplicationResult result = handlers::dispatch_snapshots(
+        context, ApplicationRequest{CommandId::snapshots_create, std::move(create), false});
+    // This is a conservative workspace recovery signal, not attribution of
+    // another controller's pending transaction to this create. Owner bytes stay exact.
+    if (result.status != ULK_STATUS_OK && facman::transaction::incomplete_count(context.workspace()) != 0U)
+        result.outcome_kind = facman::core::OutcomeKind::recovery_required;
+    return result;
 }
 
 bool recorded_action_request_shape(const json::Value& request)
@@ -126,6 +225,17 @@ bool recorded_action_request_shape(const json::Value& request)
     if (request.find("source_path") != nullptr) {
         if (string_field(request, "source_path").empty()) return false;
         expected.emplace_back("source_path");
+    }
+    if (request.find("snapshot_id") != nullptr) {
+        const std::string id = string_field(request, "snapshot_id");
+        const auto alphanumeric = [](unsigned char c) {
+            return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+        };
+        if (id.empty() || id.size() > 128U || !alphanumeric(static_cast<unsigned char>(id.front())) ||
+            !std::all_of(id.begin() + 1, id.end(), [&](unsigned char c) {
+                return alphanumeric(c) || c == '.' || c == '_' || c == '-';
+            })) return false;
+        expected.emplace_back("snapshot_id");
     }
     auto actual = request.object_keys();
     std::sort(actual.begin(), actual.end());
@@ -252,7 +362,10 @@ json::ObjectBuilder selected_save_action_descriptor(const std::string& preparati
     const std::string code = refusal ? string_field(*refusal, "code") : "selected_context_plan_invalid";
     const std::vector<ActionInputField> fields {{"selected_instance_id", "Selected instance", "enum", true,
         instance_id, instance_id.empty() ? std::vector<std::string>() : std::vector<std::string> {instance_id}}};
-    return action_descriptor("readiness.prepare_selected_save", "presentation.action", "Record selected save context",
+    const auto* plan = document ? document.value().find("plan") : nullptr;
+    const bool refresh = plan && plan->find("refresh");
+    return action_descriptor("readiness.prepare_selected_save", "presentation.action",
+        refresh ? "Refresh selected save context" : "Record selected save context",
         "manage", "workspace_write", available, available ? nullptr : code.c_str(), "explicit",
         "facman.semantic_action_input.v1", fields);
 }
@@ -417,7 +530,7 @@ facman::core::Result<std::string> make_ready_stage_result(const MakeReadyStage& 
 
 bool has_preparation_plan(const std::string& action_id)
 {
-    return action_id == "profile.select" || action_id == "readiness.prepare_selected_save" ||
+    return action_id == "readiness.prepare_joined" || action_id == "profile.select" || action_id == "readiness.prepare_selected_save" ||
         action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare";
 }
 
@@ -425,6 +538,7 @@ facman::core::Result<std::string> snapshot_action_preparation_plan(const std::st
     const SemanticActionRequest& request, MakeReadyStage& make_ready_stage)
 {
     using Result = facman::core::Result<std::string>;
+    if (request.action_id == "readiness.prepare_joined") return snapshot_joined_plan(snapshot, request);
     if (request.action_id != "readiness.prepare")
         return request.action_id == "profile.select"
             ? snapshot_profile_plan(snapshot, request.selected_instance_id, request.profile_id)
@@ -439,7 +553,7 @@ facman::core::Result<std::string> snapshot_action_preparation_plan(const std::st
 
 bool effectful_semantic_action(const std::string& action_id)
 {
-    return action_id == "readiness.prepare" || action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
+    return action_id == "readiness.prepare_joined" || action_id == "readiness.prepare" || action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
         action_id == "installation.register_read_only" ||
         action_id == "instance.create_isolated" ||
         action_id == "profile.create" ||
@@ -451,6 +565,8 @@ bool effectful_semantic_action(const std::string& action_id)
         action_id == "saves.associate" ||
         action_id == "saves.backup" ||
         action_id == "saves.restore" ||
+        action_id == "snapshots.create" ||
+        action_id == "snapshots.restore" ||
         action_id == "support.export_redacted_bundle" ||
         action_id == "recovery.apply_supported" ||
         action_id == "launch.play" ||
@@ -475,6 +591,12 @@ std::string result_string(const ApplicationResult& result)
 {
     if (std::holds_alternative<std::string>(result.output)) {
         return std::get<std::string>(result.output);
+    }
+    if (std::holds_alternative<transactions::RecoveryResult>(result.output)) {
+        return std::get<transactions::RecoveryResult>(result.output).json;
+    }
+    if (std::holds_alternative<transactions::Refusal>(result.output)) {
+        return transactions::to_json(std::get<transactions::Refusal>(result.output), "workspace.recovery.apply");
     }
     if (std::holds_alternative<modsets::VerifyResult>(result.output)) {
         return modsets::to_json(std::get<modsets::VerifyResult>(result.output));
@@ -580,6 +702,150 @@ std::string action_result_json(
         output.add_object("invalidation", invalidation);
     }
     return output.serialize();
+}
+
+std::string joined_preparation_json(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    auto planned = instance::joined_preparation_plan(workspace, {instance_id, launch_intent});
+    json::ObjectBuilder report;
+    if (planned) {
+        add_json(report, "plan", planned.value());
+        report.add_null("refusal");
+    } else {
+        report.add_null("plan");
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", planned.error().code);
+        refusal.add_string("detail", planned.error().message);
+        report.add_object("refusal", refusal);
+    }
+    return report.serialize();
+}
+
+json::ObjectBuilder joined_preparation_descriptor(const std::string& preparation)
+{
+    auto report = json::parse(preparation);
+    const auto* plan = report ? report.value().find("plan") : nullptr;
+    const auto* refusal = report ? report.value().find("refusal") : nullptr;
+    const auto* desired = plan ? plan->find("desired_state") : nullptr;
+    const bool available = plan && plan->is_object() && desired && refusal && refusal->is_null();
+    std::vector<ActionInputField> fields;
+    if (available) {
+        const auto add = [&](const char* id, const char* label, const std::string& value) {
+            fields.push_back({id, label, "enum", true, value, {value}});
+        };
+        add("selected_instance_id", "Instance", string_field(*plan, "instance_id"));
+        add("installation_id", "Registered installation", string_field(*desired, "installation_id"));
+        add("profile_id", "Current profile", string_field(*desired, "profile_id"));
+        if (string_field(*plan, "launch_intent") == "load_save")
+            add("save", "Exact selected save", string_field(*desired, "selected_save"));
+    }
+    const auto code = refusal ? string_field(*refusal, "code") : "make_ready_plan_invalid";
+    return action_descriptor("readiness.prepare_joined", "presentation.action", "Make Ready with current settings",
+        "primary", "workspace_write", available, available ? nullptr : code.c_str(),
+        "explicit", "facman.semantic_action_input.v1", fields);
+}
+
+facman::core::Result<std::string> snapshot_joined_plan(const std::string& snapshot,
+    const SemanticActionRequest& request)
+{
+    using Result = facman::core::Result<std::string>;
+    auto document = json::parse(snapshot);
+    const auto* dependencies = document ? document.value().find("dependency_identities") : nullptr;
+    const auto* report = dependencies ? dependencies->find("joined_preparation") : nullptr;
+    const auto* plan = report ? report->find("plan") : nullptr;
+    const auto* desired = plan ? plan->find("desired_state") : nullptr;
+    if (!desired || !request.new_instance_id.empty() || string_field(*plan, "instance_id") != request.selected_instance_id ||
+        string_field(*plan, "launch_intent") != request.launch_intent ||
+        string_field(*desired, "installation_id") != request.installation_id ||
+        string_field(*desired, "profile_id") != request.profile_id ||
+        string_field(*desired, "selected_save") != request.save ||
+        !lower_hex_digest(string_field(*plan, "plan_sha256")))
+        return Result::failure({"make_ready_desired_state_mismatch",
+            "Desired installation, current profile and selected save must match the reviewed plan and its locked content", {}, facman::core::OutcomeKind::refused});
+    return Result::success(plan->serialize());
+}
+
+std::string joined_content_preparation_result(const std::string& source,
+    const std::string& content_receipt, const std::string& joined_result,
+    const std::string& continuation, bool content_verified, bool effects_verified)
+{
+    auto plan = json::parse(source);
+    auto content = json::parse(content_receipt);
+    auto nested = json::parse(joined_result);
+    const auto* readiness = nested ? nested.value().find("readiness_observation") : nullptr;
+    const auto* prepared = nested ? nested.value().find("preparation_complete") : nullptr;
+    auto ready = prepared ? prepared->bool_value() : facman::core::Result<bool>::success(false);
+    const bool complete = content_verified && effects_verified && ready && ready.value();
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.make_ready_joined_result.v2");
+    result.add_string("command", "readiness.prepare_joined");
+    add_json(result, "plan", source);
+    result.add_string("plan_sha256", plan ? string_field(plan.value(), "plan_sha256") : "");
+    json::ArrayBuilder completed;
+    if (content && string_field(content.value(), "schema") == "factorio.locked_content_activation_result.v1" &&
+        !string_field(content.value(), "transaction_id").empty()) {
+        json::ObjectBuilder effect;
+        effect.add_string("component", "locked_content_activation");
+        effect.add_string("owner_command", "modsets.apply");
+        effect.add_string("transaction_id", string_field(content.value(), "transaction_id"));
+        effect.add_string("plan_sha256", string_field(content.value(), "plan_sha256"));
+        effect.add_value("owner_result", content.value());
+        completed.add_object(effect);
+    }
+    const auto* nested_effects = nested ? nested.value().find("completed_components") : nullptr;
+    if (nested_effects && nested_effects->is_array())
+        for (std::size_t index = 0; index < nested_effects->size(); ++index) completed.add_value(*nested_effects->at(index));
+    result.add_array("completed_components", completed);
+    add_json(result, "joined_result", joined_result);
+    result.add_bool("content_effect_verified", content_verified);
+    result.add_bool("completed_effects_verified", effects_verified);
+    result.add_string("continuation", continuation);
+    result.add_bool("remaining_effects_blocked_before_effects", continuation == "fresh_request_after_input_correction");
+    if (readiness) result.add_value("readiness_observation", *readiness);
+    else result.add_null("readiness_observation");
+    result.add_bool("preparation_complete", complete);
+    result.add_bool("fresh_revision_required", !complete);
+    result.add_bool("readiness_complete", false);
+    result.add_bool("execution_started", false);
+    result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return result.serialize();
+}
+
+std::string joined_preparation_result(const std::string& source,
+    const std::vector<std::string>& components, const std::string& readiness,
+    const std::string& continuation, bool effects_verified)
+{
+    auto plan = json::parse(source);
+    if (plan && string_field(plan.value(), "schema") == "factorio.make_ready_joined_plan.v2")
+        return joined_content_preparation_result(source, {}, {}, continuation, false, false);
+    auto observed = json::parse(readiness);
+    const bool complete = observed && string_field(observed.value(), "configuration_state") == "ready" &&
+        string_field(observed.value(), "preparation_state") == "already_prepared";
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.make_ready_joined_result.v1");
+    result.add_string("command", "readiness.prepare_joined");
+    add_json(result, "plan", source);
+    result.add_string("plan_sha256", plan ? string_field(plan.value(), "plan_sha256") : "");
+    json::ArrayBuilder completed;
+    for (const auto& component : components) {
+        auto receipt = json::parse(component);
+        const auto* effects = receipt ? receipt.value().find("completed_components") : nullptr;
+        if (effects && effects->size() == 1U) completed.add_value(*effects->at(0));
+    }
+    result.add_array("completed_components", completed);
+    result.add_string("continuation", continuation);
+    result.add_bool("completed_effects_verified", effects_verified);
+    result.add_bool("remaining_effects_blocked_before_effects", continuation == "fresh_request_after_input_correction");
+    add_json(result, "readiness_observation", readiness);
+    result.add_bool("preparation_complete", complete);
+    result.add_bool("fresh_revision_required", !complete);
+    result.add_bool("readiness_complete", false);
+    result.add_bool("execution_started", false);
+    result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return result.serialize();
 }
 
 } // namespace facman::factorio::application

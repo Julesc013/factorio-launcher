@@ -1,0 +1,237 @@
+{
+  "schema": "facman.snapshot_local_install.accepted_required.v1",
+  "source": "45ed488d04c14c7243b881b120a2b389c450cd27",
+  "pr": 423,
+  "source_record_sha256": "868d007837e13eead162d43d85efe5afff246311489d689057a879f368eab241",
+  "required_checks_all_pass": true,
+  "final_required_checks": {
+    "at": "2026-10-15T02:34:01.259309+00:00",
+    "checks": [
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/runs/116187634924",
+        "name": "task-to-dev-promotion-check",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740795/job/116187569632",
+        "name": "appkit-compile",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740795/job/116187569661",
+        "name": "macos-native-cli",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740795/job/116187569459",
+        "name": "macos-archive-core",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740791/job/116187569549",
+        "name": "python",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740795/job/116187570171",
+        "name": "linux-coverage",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740835/job/116187569361",
+        "name": "policy-check",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740795/job/116187569551",
+        "name": "windows-native-package",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740791/job/116187569357",
+        "name": "csharp",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740785/job/116187569127",
+        "name": "development-only-cross-provider-fixture",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740791/job/116187569139",
+        "name": "c-cpp",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38662740795/job/116187570098",
+        "name": "linux-native",
+        "state": "SUCCESS"
+      }
+    ]
+  },
+  "actual_windows_GUI": {
+    "status": "PASS_INDEPENDENT_ACTUAL_GUI_CUSTODY",
+    "source": "45ed488d04c14c7243b881b120a2b389c450cd27",
+    "qualification": "factory-produced Windows legacy WinForms portable file closure",
+    "profile": "windows_legacy_winforms_x64",
+    "result_sha256": "c169ea5da5c4ef080523b1d71906ca13a39e54bd749f440d593efb3d156b79ea",
+    "custody_canonical_sha256": "746a7dcc0386c1b858e7eac6a8f31f22ad874d2828a9f24f2f1213c1a9c9df62",
+    "actual_GUI_sessions": 2,
+    "observed_packaged_backend_processes": 68,
+    "complete_owner_effects": 2,
+    "fixture_CLI_calls": 8,
+    "decoded_files": 31,
+    "decoded_bytes": 759046,
+    "GUI_sha256": "2d6d750ae35befa968d4c63720720a453afcfe2d1cc6d36ef38ac40ed1743ddc",
+    "backend_sha256": "3dab63df1b26c27c92efdeb7f6c2cdcfd082c6fabbb3859a488115a8ca8be5bd",
+    "package_file_count": 599,
+    "all_owned_jobs_empty": true,
+    "ordinary_cancellations_and_stale_refusal": true,
+    "whole_workspace_inputs_preserved": true,
+    "canonical_installed_desktop": false,
+    "real_game": false,
+    "human": false,
+    "full_make_ready": false,
+    "beta": false,
+    "rc": false
+  },
+  "actual_native_qualification": [
+    {
+      "source": "45ed488d04c14c7243b881b120a2b389c450cd27",
+      "run_id": 38662740795,
+      "job_id": 116187570098,
+      "name": "linux-native",
+      "runner_name": "GitHub Actions 1000099763",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_application_types_smoke": 3,
+        "facman_snapshot_policy_smoke": 3,
+        "fl_workspace_store_smoke": 3,
+        "fl_transaction_session_smoke": 3,
+        "fl_workspace_root_authority_smoke": 3
+      },
+      "actual_python": {
+        "test_snapshot_local_install": {
+          "test_explicit_selection_binds_local_manifest_configuration_and_preserves_source": "passed",
+          "test_historical_unbound_default_journal_keeps_legacy_rollback_behavior": "passed",
+          "test_interrupted_publication_recovers_exact_selected_identity": "passed",
+          "test_missing_incompatible_invalid_and_default_compatible_installations": "passed",
+          "test_prepublication_install_record_drift_preserves_staging_and_blocks_recovery": "passed",
+          "test_recovery_rechecks_journal_target_and_stage_after_acquiring_shared_lease": "passed",
+          "test_recovery_refuses_source_record_context_and_target_substitution_without_cleanup": "passed",
+          "test_same_inode_foreign_lock_metadata_survives_live_writer_and_recovery": "passed"
+        },
+        "test_instance_snapshots": {
+          "test_diff_integrity_refusal_and_retention_move_to_trash": "passed",
+          "test_reproducible_portable_snapshot_and_cross_workspace_restore": "passed",
+          "test_snapshot_create_refuses_run_locks_before_and_at_publication": "passed",
+          "test_snapshot_create_rejects_malformed_staged_save": "passed",
+          "test_snapshot_create_rejects_same_bytes_source_replacement": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        }
+      },
+      "log_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\snapshot-local-install-linux-native-job-116187570098.log",
+      "log_sha256": "fc0fffc9e0611e3b9017c01bbd4eda8edf60a03b6efa52b118d61e735cfe4912"
+    },
+    {
+      "source": "45ed488d04c14c7243b881b120a2b389c450cd27",
+      "run_id": 38662740795,
+      "job_id": 116187569551,
+      "name": "windows-native-package",
+      "runner_name": "GitHub Actions 1000099761",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_application_types_smoke": 4,
+        "facman_snapshot_policy_smoke": 4,
+        "fl_workspace_store_smoke": 4,
+        "fl_transaction_session_smoke": 4,
+        "fl_workspace_root_authority_smoke": 4
+      },
+      "actual_python": {
+        "test_snapshot_local_install": {
+          "test_explicit_selection_binds_local_manifest_configuration_and_preserves_source": "passed",
+          "test_historical_unbound_default_journal_keeps_legacy_rollback_behavior": "passed",
+          "test_interrupted_publication_recovers_exact_selected_identity": "passed",
+          "test_missing_incompatible_invalid_and_default_compatible_installations": "passed",
+          "test_prepublication_install_record_drift_preserves_staging_and_blocks_recovery": "passed",
+          "test_recovery_rechecks_journal_target_and_stage_after_acquiring_shared_lease": "passed",
+          "test_recovery_refuses_source_record_context_and_target_substitution_without_cleanup": "passed",
+          "test_same_inode_foreign_lock_metadata_survives_live_writer_and_recovery": "explicit_POSIX_only_unqualified"
+        },
+        "test_instance_snapshots": {
+          "test_diff_integrity_refusal_and_retention_move_to_trash": "passed",
+          "test_reproducible_portable_snapshot_and_cross_workspace_restore": "passed",
+          "test_snapshot_create_refuses_run_locks_before_and_at_publication": "passed",
+          "test_snapshot_create_rejects_malformed_staged_save": "passed",
+          "test_snapshot_create_rejects_same_bytes_source_replacement": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        }
+      },
+      "log_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\snapshot-local-install-windows-native-package-job-116187569551.log",
+      "log_sha256": "fffae63f61be3015427f2a1cad3c24dcd7257c26af0281849d18aff306aa1626"
+    },
+    {
+      "source": "45ed488d04c14c7243b881b120a2b389c450cd27",
+      "run_id": 38662740795,
+      "job_id": 116187569661,
+      "name": "macos-native-cli",
+      "runner_name": "GitHub Actions 1000099759",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_application_types_smoke": 1,
+        "facman_snapshot_policy_smoke": 1,
+        "fl_workspace_store_smoke": 1,
+        "fl_transaction_session_smoke": 1,
+        "fl_workspace_root_authority_smoke": 1
+      },
+      "actual_python": {
+        "test_snapshot_local_install": {
+          "test_explicit_selection_binds_local_manifest_configuration_and_preserves_source": "passed",
+          "test_historical_unbound_default_journal_keeps_legacy_rollback_behavior": "passed",
+          "test_interrupted_publication_recovers_exact_selected_identity": "passed",
+          "test_missing_incompatible_invalid_and_default_compatible_installations": "passed",
+          "test_prepublication_install_record_drift_preserves_staging_and_blocks_recovery": "passed",
+          "test_recovery_rechecks_journal_target_and_stage_after_acquiring_shared_lease": "passed",
+          "test_recovery_refuses_source_record_context_and_target_substitution_without_cleanup": "passed",
+          "test_same_inode_foreign_lock_metadata_survives_live_writer_and_recovery": "passed"
+        },
+        "test_instance_snapshots": {
+          "test_diff_integrity_refusal_and_retention_move_to_trash": "passed",
+          "test_reproducible_portable_snapshot_and_cross_workspace_restore": "passed",
+          "test_snapshot_create_refuses_run_locks_before_and_at_publication": "passed",
+          "test_snapshot_create_rejects_malformed_staged_save": "passed",
+          "test_snapshot_create_rejects_same_bytes_source_replacement": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        }
+      },
+      "log_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\snapshot-local-install-macos-native-cli-job-116187569661.log",
+      "log_sha256": "0c5907845987502476bfc89393ac8313ac30243140fcf476129a28229df91d5d"
+    }
+  ],
+  "new_ci_jobs": 0,
+  "new_candidates": 0
+}

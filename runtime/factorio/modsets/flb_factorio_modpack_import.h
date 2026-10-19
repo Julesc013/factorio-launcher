@@ -14,6 +14,9 @@ struct PackImportRequest {
 };
 facman::core::Result<std::string> import_modpack(
     const std::filesystem::path& workspace, const PackImportRequest& request);
+bool has_incomplete_pack_source_binding(const std::filesystem::path& workspace, const std::string& transaction_id);
+facman::core::Result<std::string> recover_modpack_import(
+    const std::filesystem::path& workspace, const std::string& transaction_id);
 namespace pack_import {
 struct Source {
     facman::archive::Plan plan;

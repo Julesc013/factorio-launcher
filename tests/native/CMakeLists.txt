@@ -38,13 +38,15 @@ if(TARGET facman_cli)
     LABELS "integration;filesystem;transaction;recovery;package-runtime"
     TIMEOUT 120)
   add_test(NAME facman_modpack_import_product
-    COMMAND ${Python3_EXECUTABLE} -m unittest discover
+    COMMAND ${Python3_EXECUTABLE} -m unittest discover -v
       -s ${PROJECT_SOURCE_DIR}/tests -p test_portable_modpack_import.py)
   set_tests_properties(facman_modpack_import_product PROPERTIES
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     ENVIRONMENT "FACMAN_CLI_EXE=$<TARGET_FILE:facman_cli>"
     LABELS "integration;filesystem;transaction;recovery;package-runtime"
-    TIMEOUT 180)
+    # The expanded loss/recovery matrix exceeds three minutes on Windows.
+    # Keep all product cases required under a bounded ten-minute allowance.
+    TIMEOUT 600)
 endif()
 
 if(WIN32 AND TARGET facman_setup)
@@ -531,6 +533,11 @@ endif()
 facman_native_test(fl_platform_io_smoke fl_platform_io_smoke.cpp "filesystem;platform")
 target_compile_features(fl_platform_io_smoke PRIVATE cxx_std_17)
 target_link_libraries(fl_platform_io_smoke PRIVATE facman_platform_static)
+if(UNIX)
+  facman_native_test(fl_retained_rewrite_smoke fl_retained_rewrite_smoke.cpp "filesystem;platform")
+  target_compile_features(fl_retained_rewrite_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_retained_rewrite_smoke PRIVATE facman_platform_static)
+endif()
 facman_native_test(facman_preferences_smoke facman_preferences_smoke.cpp "filesystem;transaction;integration")
 target_compile_features(facman_preferences_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_preferences_smoke PRIVATE facman_preferences_static)

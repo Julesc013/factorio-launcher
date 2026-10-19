@@ -14,6 +14,29 @@ fingerprint, budget usage, and a content-derived plan identifier. Package,
 version, edge, state, backtrack, elapsed-time, and explanation-node budgets all
 fail closed with `solver_budget_exceeded`.
 
+Content's **Plan instance modset** and **Apply instance modset** offer both
+name-only choices and explicit local versions such as `simple@2.0.0`. A name-only
+choice retains the existing solver behavior, including current-lock preference.
+An explicit version performs maintenance of the existing enabled set: the other
+enabled locked packages stay requested, and the selected version must resolve
+with their dependencies. It binds the selected instance's physical archive,
+filename, source and SHA-256 from the reviewed snapshot. Missing, changed or
+incompatible material refuses instead of falling back to another version.
+Identical archives in other instances do not replace that selected-instance
+binding. Invalid archives and installation-derived virtual packages are excluded
+from explicit physical-version choices. The direct CLI's soft `--prefer`
+ordering is unchanged; the public `presentation action` route accepts the same
+explicit identity through `--mod name@version`.
+
+In the ordinary terminal, activate Plan to review its form, set the local version,
+then activate again to see the version diff. Apply requires a separate explicit
+confirmation; editing its form clears an earlier confirmation. Review the
+returned activation transaction in **Roll back instance modset** to restore the
+exact prior activation and both locks. Rollback preserves the displaced state in
+history and never reselects a newer available archive. Binary startup settings,
+configuration overrides, selected saves and unrelated files remain outside these
+activation writes.
+
 `modsets apply` always resolves and verifies a plan before mutation. It preserves
 the current `mod-list.json`, instance lock, and shared lock in managed activation
 history, stages new Factorio-compatible state, revalidates archive identities and
@@ -41,6 +64,18 @@ archives and derives built-in packages from the instance's registered install;
 lock metadata cannot grant built-in provenance. Unselected local versions do not
 invalidate a solver selection. Human inventory and solver commands show the
 owner's package identities, selection, changes, explanation and rollback ID.
+
+Readiness additionally asks the content owner to verify activation: the bounded,
+unlinked `mods/mod-list.json` must enable exactly the verified lock's selected
+packages and `base`. Missing, malformed, duplicate, unsafe or mismatched entries
+block joined preparation. Disabled unselected entries and unrelated metadata are
+preserved; entry order and JSON formatting do not affect activation semantics.
+The exact file identity and bytes still participate in readiness revisions.
+The local and shared locks must agree when both are used for readiness.
+Review and explicitly confirm **Apply instance modset** on Content to repair
+activation, then refresh and confirm joined preparation for configuration and
+the selected save. Joined preparation does not yet reconcile pending content in
+that same request. Package-only `modsets verify` retains its existing meaning.
 
 `modsets export` packages the exact verified `modset-lock.v1.json`, a typed
 `modpack-manifest.v1.json`, and only the selected physical archives under `mods/`.

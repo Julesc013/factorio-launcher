@@ -27,6 +27,15 @@ int main()
     using namespace facman::factorio::application;
     ApplicationRequest request;
     std::string detail;
+    if (!decode_request(CommandId::snapshots_restore,
+            "{\"snapshot_ref\":\"world.zip\",\"target_instance_id\":\"restored\",\"install_id\":\"local\"}",
+            false, request, detail) || std::get<RestoreSnapshotRequest>(request.payload).install_id != "local") return 24;
+    if (!decode_request(CommandId::snapshots_restore,
+            "{\"snapshot_ref\":\"world.zip\",\"target_instance_id\":\"restored\"}",
+            false, request, detail) || !std::get<RestoreSnapshotRequest>(request.payload).install_id.empty()) return 25;
+    if (decode_request(CommandId::snapshots_restore,
+            "{\"snapshot_ref\":\"world.zip\",\"target_instance_id\":\"restored\",\"install_id\":\"../local\"}",
+            false, request, detail)) return 26;
     if (!decode_request(
             CommandId::run_execute,
             "{\"instance_id\":\"space-age-main\"}",

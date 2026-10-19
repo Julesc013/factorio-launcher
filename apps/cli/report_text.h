@@ -16,6 +16,9 @@ std::optional<std::string> effective_profile_text(const facman::core::json::Valu
 std::optional<std::string> instance_readiness_text(const facman::core::json::Value& report);
 std::optional<std::string> save_intelligence_text(const facman::core::json::Value& report);
 std::optional<std::string> local_content_text(const facman::core::json::Value& report);
+std::optional<std::string> managed_move_apply_text(const facman::core::json::Value& report);
+std::optional<std::string> managed_move_plan_text(const facman::core::json::Value& report);
+std::optional<std::string> managed_install_verification_text(const facman::core::json::Value& report);
 
 } // namespace facman::cli
 

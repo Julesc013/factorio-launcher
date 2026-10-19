@@ -13,6 +13,64 @@
 #include <string>
 #include <utility>
 
+#if defined(__linux__) || defined(__APPLE__)
+namespace {
+bool publication_staging_substituted = false;
+void substitute_publication_staging(const std::filesystem::path& path)
+{
+    std::error_code error;
+    std::filesystem::rename(path, path.parent_path() / "preserved-staging.tmp", error);
+    if (error) return;
+    std::ofstream(path, std::ios::binary) << "foreign staging bytes";
+    publication_staging_substituted = true;
+}
+}
+#endif
+
+#ifdef __APPLE__
+namespace {
+std::string observed_hook_mode;
+bool observed_hook_applied = false;
+void interfere_observed_staging(const std::filesystem::path& path)
+{
+    namespace fs = std::filesystem;
+    std::ifstream input(path, std::ios::binary);
+    const std::string bytes{std::istreambuf_iterator<char>(input), {}};
+    input.close();
+    std::error_code error;
+    if (observed_hook_mode == "write") {
+        if (bytes.empty()) return;
+        std::string changed = bytes; changed.back() = '!';
+        std::ofstream(path, std::ios::binary) << changed;
+    } else if (observed_hook_mode == "parent") {
+        fs::rename(path.parent_path(), path.parent_path().parent_path() /
+            (path.parent_path().filename().string() + "-preserved"), error);
+        if (error || !fs::create_directory(path.parent_path(), error) || error) return;
+        std::ofstream(path, std::ios::binary) << bytes;
+    } else if (observed_hook_mode == "extra_link") {
+        fs::create_hard_link(path, path.parent_path() / "foreign-alias.tmp", error);
+        if (error) return;
+    } else {
+        fs::rename(path, path.parent_path() / "preserved-staging.tmp", error);
+        if (error) return;
+        if (observed_hook_mode == "foreign") std::ofstream(path, std::ios::binary) << bytes;
+        else if (observed_hook_mode == "symlink") {
+            fs::create_symlink("preserved-staging.tmp", path, error);
+            if (error) return;
+        }
+    }
+    observed_hook_applied = true;
+}
+void deny_observed_staging_cleanup(const std::filesystem::path& path)
+{
+    std::error_code error;
+    std::filesystem::permissions(path.parent_path(),
+        std::filesystem::perms::owner_read | std::filesystem::perms::owner_exec, error);
+    observed_hook_applied = !error;
+}
+}
+#endif
+
 int main()
 {
     namespace fs = std::filesystem;
@@ -133,6 +191,211 @@ int main()
         std::ifstream private_input(other_parent.path() / "private-published.txt", std::ios::binary);
         const std::string private_bytes{std::istreambuf_iterator<char>(private_input), {}};
         if (private_bytes != bounded_payload) return 62;
+#endif
+        // Actual POSIX owner link-pair recovery and interference. Pinned input
+        // admission stays single-link; only a journal-bound owner reads pairs.
+#if defined(__linux__) || defined(__APPLE__)
+        for (const std::string variant : {"complete", "post_link_fault", "foreign_stage", "foreign_target",
+                "third_link", "missing_stage", "linked_stage", "changed_bytes", "cleanup_substitution"}) {
+            facman::platform::StableDirectoryObject owner;
+            if (!root_authority.create_child_directory_exclusive("owner-" + variant, owner).ok()) return 63;
+            facman::platform::DurableOutputFile owned;
+            if (!owner.create_child_file_exclusive("staging.tmp", 1024, owned).ok()) return 63;
+            const auto journal_identity = owned.identity();
+            if (owned.write_at(0, bounded_payload.data(), bounded_payload.size()) != bounded_payload.size()) return 63;
+#ifdef __APPLE__
+            if (!owned.flush_file_and_parent().ok()) return 63;
+            facman::platform::StableInputFile staging_reader;
+            if (!owner.open_child_file_no_follow_pinned("staging.tmp", staging_reader).ok()) return 63;
+            const auto staged_identity = staging_reader.identity(); staging_reader = {};
+            if (!owner.reopen_child_file_no_follow_for_relative_publish("staging.tmp", staged_identity, 1024, owned).ok()) return 63;
+#endif
+            facman::platform::testing::set_relative_publish_post_rename_fault(variant == "post_link_fault");
+#ifdef __APPLE__
+            const auto linked = owned.publish_observed_sibling_no_replace(owner, "target.txt", bounded_payload);
+#else
+            const auto linked = owned.publish_in_directory_no_replace(owner, "target.txt");
+#endif
+            facman::platform::testing::set_relative_publish_post_rename_fault(false);
+            if (variant == "post_link_fault" ? linked.code != "output_published_unverified" : !linked.ok()) return 63;
+            facman::platform::StableInputFile ordinary;
+            if (owner.open_child_file_no_follow_pinned("target.txt", ordinary).ok()) return 64;
+            const fs::path stage = owner.path() / "staging.tmp", target = owner.path() / "target.txt";
+            error.clear();
+            if (variant == "foreign_stage" || variant == "linked_stage") {
+                fs::rename(stage, owner.path() / "preserved.tmp", error);
+                if (error) return 65;
+                if (variant == "foreign_stage") std::ofstream(stage, std::ios::binary) << bounded_payload;
+                else { fs::create_symlink("target.txt", stage, error); if (error) return 65; }
+            } else if (variant == "foreign_target") {
+                fs::rename(target, owner.path() / "preserved.txt", error);
+                if (error) return 65;
+                std::ofstream(target, std::ios::binary) << bounded_payload;
+            } else if (variant == "third_link" || variant == "missing_stage") {
+                fs::create_hard_link(target, owner.path() / "third.txt", error);
+                if (error) return 65;
+                if (variant == "missing_stage") { fs::remove(stage, error); if (error) return 65; }
+            } else if (variant == "changed_bytes") std::ofstream(target, std::ios::binary) << "changed bytes";
+            facman::platform::StableInputFile recovery;
+            const auto adopted = owner.open_child_file_no_follow_for_publication_recovery("staging.tmp", "target.txt",
+                [&](const facman::platform::FileIdentity& value) { return journal_identity.same_object(value); },
+                bounded_payload, recovery);
+            const bool valid_pair = variant == "complete" || variant == "post_link_fault" || variant == "cleanup_substitution";
+            if (adopted.ok() != valid_pair) return 66;
+            if (!valid_pair) {
+                if (!fs::exists(target) || (variant != "missing_stage" && !fs::exists(stage))) return 67;
+                continue;
+            }
+            if (variant == "cleanup_substitution") {
+                publication_staging_substituted = false;
+                facman::platform::testing::set_publication_before_staging_remove_hook(substitute_publication_staging);
+            }
+            const auto cleaned = owner.finish_child_file_publication("staging.tmp", bounded_payload, recovery);
+            facman::platform::testing::set_publication_before_staging_remove_hook(nullptr);
+            if (variant == "cleanup_substitution") {
+                if (!publication_staging_substituted || cleaned.ok() || !fs::exists(stage) ||
+                    !fs::exists(owner.path() / "preserved-staging.tmp")) return 68;
+                std::ifstream foreign_stream(stage, std::ios::binary);
+                if (std::string(std::istreambuf_iterator<char>(foreign_stream), {}) != "foreign staging bytes") return 68;
+                continue;
+            }
+            if (!cleaned.ok() || fs::exists(stage) || recovery.identity().link_count != 1U ||
+                !journal_identity.same_object(recovery.identity())) return 69;
+            facman::platform::StableInputFile replay;
+            if (!owner.open_child_file_no_follow_for_publication_recovery("staging.tmp", "target.txt",
+                    [&](const facman::platform::FileIdentity& value) { return journal_identity.same_object(value); },
+                    bounded_payload, replay).ok() || !owner.finish_child_file_publication("staging.tmp", bounded_payload, replay).ok()) return 69;
+            facman::platform::StableInputFile pinned;
+            if (!owner.open_child_file_no_follow_pinned("target.txt", pinned).ok() ||
+                pinned.identity().link_count != 1U || !journal_identity.same_object(pinned.identity())) return 69;
+        }
+#endif
+#ifdef __APPLE__
+        // Force the explicit observed-name contract's final compare/link
+        // interval. Equal bytes never authorize a replacement inode or cleanup.
+        for (const std::string variant : {"before_check_foreign", "before_link_foreign", "before_check_missing",
+                "before_check_write", "before_link_write", "before_link_symlink", "before_link_extra_link",
+                "before_link_parent", "parent_substitution", "preexisting_target"}) {
+            facman::platform::StableDirectoryObject owner;
+            if (!root_authority.create_child_directory_exclusive("observed-" + variant, owner).ok()) return 70;
+            facman::platform::DurableOutputFile output;
+            if (!owner.create_child_file_exclusive("staging.tmp", 1024, output).ok() ||
+                output.write_at(0, bounded_payload.data(), bounded_payload.size()) != bounded_payload.size() ||
+                !output.flush_file_and_parent().ok()) return 70;
+            facman::platform::StableInputFile staging_reader;
+            if (!owner.open_child_file_no_follow_pinned("staging.tmp", staging_reader).ok()) return 70;
+            const auto bound_identity = staging_reader.identity(); staging_reader = {};
+            if (!owner.reopen_child_file_no_follow_for_relative_publish("staging.tmp", bound_identity, 1024, output).ok()) return 70;
+            const fs::path stage = owner.path() / "staging.tmp", target = owner.path() / "target.txt";
+            observed_hook_applied = false;
+            observed_hook_mode = variant == "parent_substitution" || variant == "before_link_parent" ? "parent" :
+                variant == "before_check_missing" ? "missing" :
+                variant == "before_link_symlink" ? "symlink" :
+                variant == "before_link_extra_link" ? "extra_link" :
+                variant.find("write") != std::string::npos ? "write" : "foreign";
+            if (variant == "preexisting_target") std::ofstream(target, std::ios::binary) << bounded_payload;
+            else if (variant.find("before_link") == 0)
+                facman::platform::testing::set_observed_publication_before_link_hook(interfere_observed_staging);
+            else facman::platform::testing::set_observed_publication_before_check_hook(interfere_observed_staging);
+            const auto result = output.publish_observed_sibling_no_replace(owner, "target.txt", bounded_payload);
+            facman::platform::testing::set_observed_publication_before_check_hook(nullptr);
+            facman::platform::testing::set_observed_publication_before_link_hook(nullptr);
+            output.close_without_flush();
+            const bool interval = variant.find("before_link") == 0;
+            const fs::path preserved_parent = root_authority.path() /
+                (owner.path().filename().string() + "-preserved");
+            const fs::path actual_stage = variant == "before_link_parent" ? preserved_parent / "staging.tmp" : stage;
+            const fs::path actual_target = variant == "before_link_parent" ? preserved_parent / "target.txt" : target;
+            const bool linked = fs::symlink_status(actual_target, error).type() != fs::file_type::not_found;
+            error.clear();
+            if (result.ok() || (variant != "preexisting_target" && !observed_hook_applied) ||
+                (interval && linked && result.code != "output_published_unverified") ||
+                (interval && !linked && (variant != "before_link_symlink" || result.code != "commit_no_replace_failed")) ||
+                (!interval && result.code == "output_published_unverified") ||
+                (variant != "before_link_symlink" && linked != (interval || variant == "preexisting_target"))) return 71;
+            if (variant == "before_check_missing") {
+                if (fs::exists(stage) || !fs::exists(owner.path() / "preserved-staging.tmp")) return 72;
+                continue;
+            }
+            const fs::path preserved_stage = observed_hook_mode == "parent"
+                ? preserved_parent / "staging.tmp" : owner.path() / "preserved-staging.tmp";
+            if ((observed_hook_mode == "parent" || observed_hook_mode == "foreign") && variant != "preexisting_target") {
+                std::ifstream known(preserved_stage, std::ios::binary);
+                std::ifstream foreign(stage, std::ios::binary);
+                if (std::string(std::istreambuf_iterator<char>(known), {}) != bounded_payload ||
+                    std::string(std::istreambuf_iterator<char>(foreign), {}) != bounded_payload) return 72;
+            }
+            if (variant == "before_link_symlink") {
+                if (!fs::is_symlink(stage) || fs::read_symlink(stage) != "preserved-staging.tmp" ||
+                    (linked && (!fs::is_symlink(target) || fs::read_symlink(target) != "preserved-staging.tmp"))) return 72;
+                std::ifstream known(owner.path() / "preserved-staging.tmp", std::ios::binary);
+                if (std::string(std::istreambuf_iterator<char>(known), {}) != bounded_payload) return 72;
+                facman::platform::StableInputFile recovery;
+                if (owner.open_child_file_no_follow_for_publication_recovery("staging.tmp", "target.txt",
+                        [&](const facman::platform::FileIdentity& value) { return bound_identity.same_object(value); },
+                        bounded_payload, recovery).ok() || !fs::is_symlink(stage) ||
+                    (linked && !fs::is_symlink(target))) return 73;
+                continue;
+            }
+            if (interval || variant == "preexisting_target") {
+                facman::platform::PathIdentity stage_before, target_before;
+                if (!facman::platform::inspect_path_no_follow(actual_stage, stage_before).ok() ||
+                    !facman::platform::inspect_path_no_follow(actual_target, target_before).ok()) return 72;
+                std::ifstream input(actual_target, std::ios::binary);
+                const std::string target_bytes{std::istreambuf_iterator<char>(input), {}};
+                const std::string expected = observed_hook_mode == "write" ?
+                    bounded_payload.substr(0, bounded_payload.size() - 1U) + "!" : bounded_payload;
+                if (target_bytes != expected ||
+                    (variant == "before_link_foreign" && (target_before.object == bound_identity.object ||
+                        !stage_before.same_object(target_before))) ||
+                    (variant == "preexisting_target" && target_before.object == bound_identity.object)) return 72;
+                facman::platform::StableInputFile recovery;
+                if (owner.open_child_file_no_follow_for_publication_recovery("staging.tmp", "target.txt",
+                        [&](const facman::platform::FileIdentity& value) { return bound_identity.same_object(value); },
+                        bounded_payload, recovery).ok()) return 73;
+                facman::platform::PathIdentity stage_after, target_after;
+                if (!facman::platform::inspect_path_no_follow(actual_stage, stage_after).ok() ||
+                    !facman::platform::inspect_path_no_follow(actual_target, target_after).ok() ||
+                    !stage_before.unchanged(stage_after) || !target_before.unchanged(target_after)) return 73;
+                std::ifstream unchanged(actual_target, std::ios::binary);
+                if (std::string(std::istreambuf_iterator<char>(unchanged), {}) != target_bytes) return 73;
+                if (variant == "before_link_extra_link") {
+                    const fs::path alias = owner.path() / "foreign-alias.tmp";
+                    facman::platform::PathIdentity alias_identity;
+                    if (!facman::platform::inspect_path_no_follow(alias, alias_identity).ok() ||
+                        !stage_before.same_object(alias_identity) || fs::hard_link_count(alias) != 3U) return 73;
+                    std::ifstream alias_input(alias, std::ios::binary);
+                    if (std::string(std::istreambuf_iterator<char>(alias_input), {}) != bounded_payload) return 73;
+                }
+            }
+        }
+        {
+            facman::platform::StableDirectoryObject owner;
+            facman::platform::DurableOutputFile output;
+            if (!root_authority.create_child_directory_exclusive("observed-cleanup-denied", owner).ok() ||
+                !owner.create_child_file_exclusive("staging.tmp", 1024, output).ok() ||
+                output.write_at(0, bounded_payload.data(), bounded_payload.size()) != bounded_payload.size() ||
+                !output.flush_file_and_parent().ok()) return 74;
+            facman::platform::StableInputFile staged;
+            if (!owner.open_child_file_no_follow_pinned("staging.tmp", staged).ok()) return 74;
+            const auto bound_identity = staged.identity(); staged = {};
+            if (!owner.reopen_child_file_no_follow_for_relative_publish("staging.tmp", bound_identity, 1024, output).ok() ||
+                !output.publish_observed_sibling_no_replace(owner, "target.txt", bounded_payload).ok()) return 74;
+            facman::platform::StableInputFile recovery;
+            if (!owner.open_child_file_no_follow_for_publication_recovery("staging.tmp", "target.txt",
+                    [&](const facman::platform::FileIdentity& value) { return bound_identity.same_object(value); },
+                    bounded_payload, recovery).ok()) return 74;
+            observed_hook_applied = false;
+            facman::platform::testing::set_publication_before_staging_remove_hook(deny_observed_staging_cleanup);
+            const auto denied = owner.finish_child_file_publication("staging.tmp", bounded_payload, recovery);
+            facman::platform::testing::set_publication_before_staging_remove_hook(nullptr);
+            fs::permissions(owner.path(), fs::perms::owner_all, error);
+            if (error || !observed_hook_applied || denied.code != "publication_cleanup_remove_failed" ||
+                !fs::exists(owner.path() / "staging.tmp") || !fs::exists(owner.path() / "target.txt") ||
+                recovery.identity().link_count != 2U ||
+                !owner.finish_child_file_publication("staging.tmp", bounded_payload, recovery).ok() ||
+                recovery.identity().link_count != 1U || !bound_identity.same_object(recovery.identity())) return 75;
+        }
 #endif
         facman::platform::DurableOutputFile substituted_staging;
         if (!bounded.create_child_file_exclusive("substitute-staging.tmp", 1024, substituted_staging).ok() ||

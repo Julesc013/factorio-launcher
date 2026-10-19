@@ -1,0 +1,7 @@
+{
+  "schema": "facman.lab-input-approval.v1",
+  "platform": "windows_x64",
+  "input_sha256": "18a6400065167235f085e82902daa5a5828ac65006cfafb1f3cb2dd2fe8f9656",
+  "issuer": "Codex /root; independent input-custody review",
+  "scope": "input_custody_only"
+}

@@ -24,6 +24,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -111,17 +112,6 @@ std::vector<std::string> option_values(const std::vector<std::string>& args, con
     std::vector<std::string> output;
     for (std::size_t index = 0; index + 1 < args.size(); ++index) if (args[index] == name) output.push_back(args[++index]);
     return output;
-}
-bool repair_plan_arguments_valid(const std::vector<std::string>& args)
-{
-    if (args.size() < 4) return false;
-    std::size_t archive_count = 0, json_count = 0;
-    for (std::size_t index = 4; index < args.size(); ++index) {
-        if (args[index] == "--json" && ++json_count == 1) continue;
-        if (args[index] != "--archive" || ++archive_count > 1 || ++index >= args.size() ||
-            args[index].compare(0, 2, "--") == 0) return false;
-    }
-    return archive_count == 1;
 }
 CliResponse call(
     const Options& options,
@@ -657,7 +647,8 @@ int command_installs(const Options& options)
         (options.args[2] == "plan" || options.args[2] == "apply")) {
         const std::string phase = options.args[2];
         if (phase == "plan") {
-            if (action == "repair" && !repair_plan_arguments_valid(options.args)) return 2;
+            if (action == "repair" && !facman::cli::repair_plan_arguments_valid(options.args)) return 2;
+            if (action == "move" && !facman::cli::move_plan_arguments_valid(options.args)) return 2;
             std::vector<std::pair<std::string, std::string>> fields = {{"install_id", options.args[3]}};
             if (action == "repair") fields.push_back({"archive", option(options.args, "--archive")});
             if (action == "move") {
@@ -665,6 +656,9 @@ int command_installs(const Options& options)
                 if (target.empty()) return 2;
                 fields.push_back({"target_root", target});
             }
+            if (action == "move") return emit_report(
+                call(options, "installs.move.plan", exact_fields_payload(fields)), flag(options.args, "--json"),
+                facman::cli::managed_move_plan_text, "Managed move plan is missing", "Managed move plan is invalid");
             return emit_basic(
                 call(options, "installs." + action + ".plan", exact_fields_payload(fields)),
                 flag(options.args, "--json"),
@@ -674,6 +668,9 @@ int command_installs(const Options& options)
         if (phase == "apply") {
             auto apply = facman::cli::setup_apply_request(action, options.args);
             if (!apply) return 2;
+            if (action == "move") return emit_report(call(options, apply->command, apply->payload, false),
+                flag(options.args, "--json"), facman::cli::managed_move_apply_text,
+                "Managed move result is missing", "Managed move result is invalid");
             return emit_basic(call(options, apply->command, apply->payload, false),
                 flag(options.args, "--json"), apply->success_message);
         }
@@ -704,7 +701,10 @@ int command_installs(const Options& options)
             flag(options.args, "--json"),
             "Managed install plan created through Universal Setup.");
     }
-    if ((action == "verify" || action == "repair" || action == "uninstall") && options.args.size() >= 3) {
+    if (action == "verify" && options.args.size() >= 3) return emit_report(
+        call(options, "installs.verify", fields_payload({{"id", options.args[2]}})), flag(options.args, "--json"),
+        facman::cli::managed_install_verification_text, "Managed verification report is missing", "Managed verification report is invalid");
+    if ((action == "repair" || action == "uninstall") && options.args.size() >= 3) {
         return emit_basic(call(options, "installs." + action, fields_payload({{"id", options.args[2]}})), flag(options.args, "--json"), "Setup operation previewed");
     }
     return 2;
@@ -835,20 +835,21 @@ int command_snapshots(const Options& options)
         payload.add_array("saves", saves);
         return emit_basic(call(options, "snapshots.create", payload.serialize(), false), as_json, "Snapshot created");
     }
-    if (action == "list") return emit_basic(call(options, "snapshots.list", exact_fields_payload(
-        {{"instance_id", options.args[2]}})), as_json, "Snapshots listed");
-    if ((action == "inspect" || action == "verify") && options.args.size() >= 4) {
+    if (action == "list") return emit_basic(call(options, "snapshots.list", exact_fields_payload({{"instance_id", options.args[2]}})), as_json, "Snapshots listed");
+    if ((action == "inspect" || action == "verify") && options.args.size() >= 4)
         return emit_basic(call(options, "snapshots." + action, exact_fields_payload(
             {{"instance_id", options.args[2]}, {"snapshot_id", options.args[3]}})), as_json, "Snapshot " + action + " completed");
-    }
-    if (action == "diff" && options.args.size() >= 5) {
+    if (action == "diff" && options.args.size() >= 5)
         return emit_basic(call(options, "snapshots.diff", exact_fields_payload({
             {"instance_id", options.args[2]}, {"left_snapshot_id", options.args[3]},
             {"right_snapshot_id", options.args[4]}})), as_json, "Snapshot diff completed");
-    }
     if (action == "restore" && options.args.size() >= 4) {
-        return emit_basic(call(options, "snapshots.restore", exact_fields_payload({
-            {"snapshot_ref", options.args[2]}, {"target_instance_id", options.args[3]}}), false), as_json, "Snapshot restored");
+        std::vector<std::pair<std::string, std::string>> fields = {
+            {"snapshot_ref", options.args[2]}, {"target_instance_id", options.args[3]}};
+        const auto install_id = option(options.args, "--install");
+        if (flag(options.args, "--install") && install_id.empty()) return 2;
+        if (!install_id.empty()) fields.push_back({"install_id", install_id});
+        return emit_basic(call(options, "snapshots.restore", exact_fields_payload(fields), false), as_json, "Snapshot restored");
     }
     if (action == "retention" && options.args.size() >= 4 &&
         (options.args[2] == "plan" || options.args[2] == "apply")) {
@@ -1195,40 +1196,33 @@ int command_presentation(const Options& options)
         payload.add_string("scope", scope);
         payload.add_string("expected_snapshot_revision", expected);
         payload.add_string("request_id", request_id);
-        const std::string instance = option(options.args, "--instance");
-        const std::string key = option(options.args, "--idempotency-key");
+        const std::string confirmation = option(options.args, "--confirmation");
         const std::string operation = option(options.args, "--operation-id");
         const std::string attempt = option(options.args, "--attempt-id");
-        const std::string confirmation = option(options.args, "--confirmation");
-        const std::string installation = option(options.args, "--installation");
-        const std::string installation_path = option(options.args, "--installation-path");
-        const std::string new_instance = option(options.args, "--new-instance");
-        const std::string display_name = option(options.args, "--display-name");
-        const std::string template_id = option(options.args, "--template");
-        const std::string profile_id = option(options.args, "--profile");
-        const std::string mod_identity = option(options.args, "--mod");
-        const std::string save = option(options.args, "--save");
-        const std::string output_path = option(options.args, "--output");
-        const std::string source_data_root = option(options.args, "--source-data-root");
-        const std::string source_path = option(options.args, "--source-path");
-        const std::string transaction = option(options.args, "--transaction");
-        if (!instance.empty()) payload.add_string("selected_instance_id", instance);
-        if (!key.empty()) payload.add_string("idempotency_key", key);
-        if (!operation.empty()) payload.add_string("durable_operation_id", operation);
-        if (!attempt.empty()) payload.add_string("attempt_id", attempt);
-        if (!confirmation.empty()) payload.add_string("confirmation", confirmation);
-        if (!installation.empty()) payload.add_string("installation_id", installation);
-        if (!installation_path.empty()) payload.add_string("installation_path", installation_path);
-        if (!new_instance.empty()) payload.add_string("new_instance_id", new_instance);
-        if (!display_name.empty()) payload.add_string("display_name", display_name);
-        if (!template_id.empty()) payload.add_string("template_id", template_id);
-        if (!profile_id.empty()) payload.add_string("profile_id", profile_id);
-        if (!mod_identity.empty()) payload.add_string("mod_identity", mod_identity);
-        if (!save.empty()) payload.add_string("save", save);
-        if (!output_path.empty()) payload.add_string("output_path", output_path);
-        if (!source_data_root.empty()) payload.add_string("source_data_root", source_data_root);
-        if (!source_path.empty()) payload.add_string("source_path", source_path);
-        if (!transaction.empty()) payload.add_string("transaction_id", transaction);
+        for (const auto& field : std::vector<std::pair<const char*, const char*>>{
+                {"selected_instance_id", "--instance"},
+                {"idempotency_key", "--idempotency-key"},
+                {"durable_operation_id", "--operation-id"},
+                {"attempt_id", "--attempt-id"},
+                {"confirmation", "--confirmation"},
+                {"installation_id", "--installation"},
+                {"installation_path", "--installation-path"},
+                {"new_instance_id", "--new-instance"},
+                {"display_name", "--display-name"},
+                {"template_id", "--template"},
+                {"profile_id", "--profile"},
+                {"mod_identity", "--mod"},
+                {"save", "--save"},
+                {"output_path", "--output"},
+                {"source_data_root", "--source-data-root"},
+                {"source_path", "--source-path"},
+                {"snapshot_id", "--snapshot-id"},
+                {"transaction_id", "--transaction"},
+            }) {
+            const std::string value = option(options.args, field.second);
+            if (std::string(field.first) == "snapshot_id" && flag(options.args, field.second) && value.empty()) return 2;
+            if (!value.empty()) payload.add_string(field.first, value);
+        }
         const auto root_values = option_values(options.args, "--root");
         if (!root_values.empty()) {
             json::ArrayBuilder roots;
@@ -1238,7 +1232,9 @@ int command_presentation(const Options& options)
         return emit_basic(call(
                 options, "presentation.action", payload.serialize(),
                 confirmation != "explicit", request_id, operation, attempt),
-            as_json, "Presentation action completed");
+            as_json, options.args[2] == "readiness.prepare_joined" ?
+                "Current settings prepared; review remaining readiness checks. Play remains unavailable." :
+                "Presentation action completed");
     }
     return 2;
 }

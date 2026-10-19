@@ -2,523 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/facman_managed_install_recovery.v1.schema.json",
   "title": "FacMan managed install operation recovery",
-  "type": "object",
-  "required": [
-    "schema",
-    "status",
-    "transaction_id",
-    "install_id",
-    "plan_id",
-    "plan_digest",
-    "classification",
-    "action",
-    "facman_journal_sha256",
-    "pre_record_sha256",
-    "current_record_sha256",
-    "provider_journal_present",
-    "provider_observed_state",
-    "provider_journal_digest",
-    "provider_journal_snapshot_sha256",
-    "provider_installed_state_sha256",
-    "target_exists",
-    "projected_record_sha256"
-  ],
-  "properties": {
-    "schema": {
-      "enum": [
-        "facman.managed_uninstall_recovery.v1",
-        "facman.managed_repair_recovery.v1",
-        "facman.managed_install_recovery.v1"
-      ]
-    },
-    "operation": {
-      "enum": [
-        "repair",
-        "install"
-      ]
-    },
-    "status": {
-      "enum": [
-        "planned",
-        "blocked",
-        "completed"
-      ]
-    },
-    "transaction_id": {
-      "$ref": "#/$defs/transaction_id"
-    },
-    "install_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 256
-    },
-    "plan_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 256
-    },
-    "plan_digest": {
-      "$ref": "#/$defs/sha256"
-    },
-    "classification": {
-      "enum": [
-        "no_provider_effect",
-        "provider_repaired",
-        "provider_retired",
-        "provider_uninstall_blocked",
-        "indeterminate",
-        "provider_installed",
-        "provider_rollback_available",
-        "provider_rolled_back",
-        "provider_replay_available"
-      ]
-    },
-    "action": {
-      "enum": [
-        "close_no_provider_effect",
-        "project_terminal",
-        "none",
-        "rollback_provider",
-        "close_provider_rollback",
-        "replay_provider"
-      ]
-    },
-    "facman_journal_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
-    "pre_record_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
-    "current_record_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
-    "provider_journal_present": {
-      "type": "boolean"
-    },
-    "provider_observed_state": {
-      "type": "string",
-      "maxLength": 64
-    },
-    "provider_journal_digest": {
-      "$ref": "#/$defs/optional_sha256"
-    },
-    "provider_journal_snapshot_sha256": {
-      "$ref": "#/$defs/optional_sha256"
-    },
-    "provider_installed_state_sha256": {
-      "$ref": "#/$defs/optional_sha256"
-    },
-    "target_exists": {
-      "type": "boolean"
-    },
-    "projected_record_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
-    "retained_child_journal_snapshot_sha256": {
-      "$ref": "#/$defs/optional_sha256"
-    }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "schema": {
-            "const": "facman.managed_repair_recovery.v1"
-          }
-        },
-        "required": [
-          "schema"
-        ]
-      },
-      "then": {
-        "required": [
-          "operation"
-        ],
-        "properties": {
-          "classification": {
-            "enum": [
-              "no_provider_effect",
-              "provider_repaired",
-              "indeterminate"
-            ]
-          },
-          "operation": {
-            "const": "repair"
-          }
-        }
-      },
-      "else": {
-        "if": {
-          "properties": {
-            "schema": {
-              "const": "facman.managed_install_recovery.v1"
-            }
-          },
-          "required": [
-            "schema"
-          ]
-        },
-        "then": {
-          "required": [
-            "operation",
-            "retained_child_journal_snapshot_sha256"
-          ],
-          "properties": {
-            "operation": {
-              "const": "install"
-            },
-            "classification": {
-              "enum": [
-                "no_provider_effect",
-                "provider_installed",
-                "indeterminate",
-                "provider_rollback_available",
-                "provider_rolled_back",
-                "provider_replay_available"
-              ]
-            }
-          }
-        },
-        "else": {
-          "not": {
-            "required": [
-              "operation"
-            ]
-          },
-          "properties": {
-            "classification": {
-              "enum": [
-                "no_provider_effect",
-                "provider_retired",
-                "provider_uninstall_blocked",
-                "indeterminate"
-              ]
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "classification": {
-            "const": "indeterminate"
-          }
-        },
-        "required": [
-          "classification"
-        ]
-      },
-      "then": {
-        "properties": {
-          "status": {
-            "const": "blocked"
-          },
-          "action": {
-            "const": "none"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "classification": {
-            "const": "no_provider_effect"
-          }
-        },
-        "required": [
-          "classification"
-        ]
-      },
-      "then": {
-        "properties": {
-          "action": {
-            "const": "close_no_provider_effect"
-          },
-          "provider_journal_present": {
-            "const": false
-          },
-          "provider_observed_state": {
-            "const": ""
-          },
-          "provider_journal_digest": {
-            "const": ""
-          },
-          "provider_journal_snapshot_sha256": {
-            "const": ""
-          }
-        },
-        "allOf": [
-          {
-            "if": {
-              "properties": {
-                "schema": {
-                  "const": "facman.managed_install_recovery.v1"
-                }
-              },
-              "required": [
-                "schema"
-              ]
-            },
-            "then": {
-              "properties": {
-                "provider_installed_state_sha256": {
-                  "const": ""
-                },
-                "target_exists": {
-                  "const": false
-                }
-              }
-            },
-            "else": {
-              "properties": {
-                "provider_installed_state_sha256": {
-                  "$ref": "#/$defs/sha256"
-                },
-                "target_exists": {
-                  "const": true
-                }
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "classification": {
-            "enum": [
-              "provider_repaired",
-              "provider_installed"
-            ]
-          }
-        },
-        "required": [
-          "classification"
-        ]
-      },
-      "then": {
-        "properties": {
-          "action": {
-            "const": "project_terminal"
-          },
-          "provider_journal_present": {
-            "const": true
-          },
-          "provider_observed_state": {
-            "const": "completed"
-          },
-          "provider_journal_digest": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_journal_snapshot_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_installed_state_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "target_exists": {
-            "const": true
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "classification": {
-            "const": "provider_retired"
-          }
-        },
-        "required": [
-          "classification"
-        ]
-      },
-      "then": {
-        "properties": {
-          "action": {
-            "const": "project_terminal"
-          },
-          "provider_journal_present": {
-            "const": true
-          },
-          "provider_observed_state": {
-            "const": "completed"
-          },
-          "provider_journal_digest": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_journal_snapshot_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_installed_state_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "target_exists": {
-            "const": false
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "classification": {
-            "const": "provider_uninstall_blocked"
-          }
-        },
-        "required": [
-          "classification"
-        ]
-      },
-      "then": {
-        "properties": {
-          "action": {
-            "const": "project_terminal"
-          },
-          "provider_journal_present": {
-            "const": true
-          },
-          "provider_observed_state": {
-            "const": "completed"
-          },
-          "provider_journal_digest": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_journal_snapshot_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_installed_state_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "target_exists": {
-            "const": true
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "classification": {
-            "const": "provider_rollback_available"
-          }
-        },
-        "required": [
-          "classification"
-        ]
-      },
-      "then": {
-        "properties": {
-          "action": {
-            "const": "rollback_provider"
-          },
-          "provider_journal_present": {
-            "const": true
-          },
-          "provider_journal_digest": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_journal_snapshot_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_installed_state_sha256": {
-            "const": ""
-          },
-          "target_exists": {
-            "const": false
-          },
-          "status": {
-            "const": "planned"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "classification": {
-            "const": "provider_rolled_back"
-          }
-        },
-        "required": [
-          "classification"
-        ]
-      },
-      "then": {
-        "properties": {
-          "action": {
-            "const": "close_provider_rollback"
-          },
-          "provider_journal_present": {
-            "const": true
-          },
-          "provider_journal_digest": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_journal_snapshot_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_installed_state_sha256": {
-            "const": ""
-          },
-          "target_exists": {
-            "const": false
-          },
-          "provider_observed_state": {
-            "const": "rolled_back"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "classification": {
-            "const": "provider_replay_available"
-          }
-        },
-        "required": [
-          "classification"
-        ]
-      },
-      "then": {
-        "properties": {
-          "action": {
-            "const": "replay_provider"
-          },
-          "provider_journal_present": {
-            "const": true
-          },
-          "provider_journal_digest": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_journal_snapshot_sha256": {
-            "$ref": "#/$defs/sha256"
-          },
-          "provider_installed_state_sha256": {
-            "const": ""
-          },
-          "target_exists": {
-            "const": false
-          },
-          "status": {
-            "const": "planned"
-          },
-          "provider_observed_state": {
-            "enum": [
-              "staging",
-              "staged",
-              "verified",
-              "recovery_required"
-            ]
-          }
-        }
-      }
-    }
-  ],
   "$defs": {
     "sha256": {
       "type": "string",
@@ -535,5 +18,734 @@
       "pattern": "^tx-[a-z0-9]+(?:-[a-z0-9]+)*$"
     }
   },
-  "additionalProperties": false
+  "type": "object",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "status",
+        "transaction_id",
+        "install_id",
+        "plan_id",
+        "plan_digest",
+        "classification",
+        "action",
+        "facman_journal_sha256",
+        "pre_record_sha256",
+        "current_record_sha256",
+        "provider_journal_present",
+        "provider_observed_state",
+        "provider_journal_digest",
+        "provider_journal_snapshot_sha256",
+        "provider_installed_state_sha256",
+        "target_exists",
+        "projected_record_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "enum": [
+            "facman.managed_uninstall_recovery.v1",
+            "facman.managed_repair_recovery.v1",
+            "facman.managed_install_recovery.v1"
+          ]
+        },
+        "operation": {
+          "enum": [
+            "repair",
+            "install"
+          ]
+        },
+        "status": {
+          "enum": [
+            "planned",
+            "blocked",
+            "completed"
+          ]
+        },
+        "transaction_id": {
+          "$ref": "#/$defs/transaction_id"
+        },
+        "install_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "plan_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "plan_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "classification": {
+          "enum": [
+            "no_provider_effect",
+            "provider_repaired",
+            "provider_retired",
+            "provider_uninstall_blocked",
+            "indeterminate",
+            "provider_installed",
+            "provider_rollback_available",
+            "provider_rolled_back",
+            "provider_replay_available"
+          ]
+        },
+        "action": {
+          "enum": [
+            "close_no_provider_effect",
+            "project_terminal",
+            "none",
+            "rollback_provider",
+            "close_provider_rollback",
+            "replay_provider"
+          ]
+        },
+        "facman_journal_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "pre_record_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "current_record_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "provider_journal_present": {
+          "type": "boolean"
+        },
+        "provider_observed_state": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "provider_journal_digest": {
+          "$ref": "#/$defs/optional_sha256"
+        },
+        "provider_journal_snapshot_sha256": {
+          "$ref": "#/$defs/optional_sha256"
+        },
+        "provider_installed_state_sha256": {
+          "$ref": "#/$defs/optional_sha256"
+        },
+        "target_exists": {
+          "type": "boolean"
+        },
+        "projected_record_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "retained_child_journal_snapshot_sha256": {
+          "$ref": "#/$defs/optional_sha256"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "schema": {
+                "const": "facman.managed_repair_recovery.v1"
+              }
+            },
+            "required": [
+              "schema"
+            ]
+          },
+          "then": {
+            "required": [
+              "operation"
+            ],
+            "properties": {
+              "classification": {
+                "enum": [
+                  "no_provider_effect",
+                  "provider_repaired",
+                  "indeterminate"
+                ]
+              },
+              "operation": {
+                "const": "repair"
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "schema": {
+                  "const": "facman.managed_install_recovery.v1"
+                }
+              },
+              "required": [
+                "schema"
+              ]
+            },
+            "then": {
+              "required": [
+                "operation",
+                "retained_child_journal_snapshot_sha256"
+              ],
+              "properties": {
+                "operation": {
+                  "const": "install"
+                },
+                "classification": {
+                  "enum": [
+                    "no_provider_effect",
+                    "provider_installed",
+                    "indeterminate",
+                    "provider_rollback_available",
+                    "provider_rolled_back",
+                    "provider_replay_available"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "operation"
+                ]
+              },
+              "properties": {
+                "classification": {
+                  "enum": [
+                    "no_provider_effect",
+                    "provider_retired",
+                    "provider_uninstall_blocked",
+                    "indeterminate"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "indeterminate"
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "blocked"
+              },
+              "action": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "no_provider_effect"
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "close_no_provider_effect"
+              },
+              "provider_journal_present": {
+                "const": false
+              },
+              "provider_observed_state": {
+                "const": ""
+              },
+              "provider_journal_digest": {
+                "const": ""
+              },
+              "provider_journal_snapshot_sha256": {
+                "const": ""
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "schema": {
+                      "const": "facman.managed_install_recovery.v1"
+                    }
+                  },
+                  "required": [
+                    "schema"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "provider_installed_state_sha256": {
+                      "const": ""
+                    },
+                    "target_exists": {
+                      "const": false
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "provider_installed_state_sha256": {
+                      "$ref": "#/$defs/sha256"
+                    },
+                    "target_exists": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "enum": [
+                  "provider_repaired",
+                  "provider_installed"
+                ]
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "project_terminal"
+              },
+              "provider_journal_present": {
+                "const": true
+              },
+              "provider_observed_state": {
+                "const": "completed"
+              },
+              "provider_journal_digest": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_journal_snapshot_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_installed_state_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "target_exists": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "provider_retired"
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "project_terminal"
+              },
+              "provider_journal_present": {
+                "const": true
+              },
+              "provider_observed_state": {
+                "const": "completed"
+              },
+              "provider_journal_digest": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_journal_snapshot_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_installed_state_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "target_exists": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "provider_uninstall_blocked"
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "project_terminal"
+              },
+              "provider_journal_present": {
+                "const": true
+              },
+              "provider_observed_state": {
+                "const": "completed"
+              },
+              "provider_journal_digest": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_journal_snapshot_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_installed_state_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "target_exists": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "provider_rollback_available"
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "rollback_provider"
+              },
+              "provider_journal_present": {
+                "const": true
+              },
+              "provider_journal_digest": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_journal_snapshot_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_installed_state_sha256": {
+                "const": ""
+              },
+              "target_exists": {
+                "const": false
+              },
+              "status": {
+                "const": "planned"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "provider_rolled_back"
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "close_provider_rollback"
+              },
+              "provider_journal_present": {
+                "const": true
+              },
+              "provider_journal_digest": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_journal_snapshot_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_installed_state_sha256": {
+                "const": ""
+              },
+              "target_exists": {
+                "const": false
+              },
+              "provider_observed_state": {
+                "const": "rolled_back"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "provider_replay_available"
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "replay_provider"
+              },
+              "provider_journal_present": {
+                "const": true
+              },
+              "provider_journal_digest": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_journal_snapshot_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "provider_installed_state_sha256": {
+                "const": ""
+              },
+              "target_exists": {
+                "const": false
+              },
+              "status": {
+                "const": "planned"
+              },
+              "provider_observed_state": {
+                "enum": [
+                  "staging",
+                  "staged",
+                  "verified",
+                  "recovery_required"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "transaction_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "install_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "plan_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "old_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "new_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "plan_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "facman_journal_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "pre_record_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "current_record_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "projected_record_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "provider_journal_snapshot_sha256": {
+          "type": "string",
+          "pattern": "^(|[0-9a-f]{64})$"
+        },
+        "provider_installed_state_sha256": {
+          "type": "string",
+          "pattern": "^(|[0-9a-f]{64})$"
+        },
+        "provider_audit_chain_digest": {
+          "type": "string",
+          "pattern": "^(|[0-9a-f]{64})$"
+        },
+        "schema": {
+          "const": "facman.managed_move_recovery.v1"
+        },
+        "operation": {
+          "const": "move"
+        },
+        "old_root_status": {
+          "const": "retained"
+        },
+        "old_root_removal_available": {
+          "const": false
+        },
+        "grants_ownership": {
+          "const": false
+        },
+        "empty_directory_preservation": {
+          "const": "not_promised"
+        },
+        "observation_atomic": {
+          "const": false
+        },
+        "status": {
+          "enum": [
+            "planned",
+            "blocked",
+            "completed"
+          ]
+        },
+        "classification": {
+          "enum": [
+            "no_provider_effect",
+            "provider_move_completed",
+            "indeterminate"
+          ]
+        },
+        "action": {
+          "enum": [
+            "close_no_provider_effect",
+            "project_terminal",
+            "none"
+          ]
+        },
+        "provider_observed_state": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "transaction_id",
+        "install_id",
+        "plan_id",
+        "old_root",
+        "new_root",
+        "plan_digest",
+        "facman_journal_sha256",
+        "pre_record_sha256",
+        "current_record_sha256",
+        "projected_record_sha256",
+        "provider_journal_snapshot_sha256",
+        "provider_installed_state_sha256",
+        "provider_audit_chain_digest",
+        "schema",
+        "operation",
+        "old_root_status",
+        "old_root_removal_available",
+        "grants_ownership",
+        "empty_directory_preservation",
+        "observation_atomic",
+        "status",
+        "classification",
+        "action",
+        "provider_observed_state"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "provider_move_completed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "project_terminal"
+              },
+              "provider_observed_state": {
+                "const": "completed"
+              },
+              "provider_journal_snapshot_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "provider_installed_state_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "provider_audit_chain_digest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "no_provider_effect"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "close_no_provider_effect"
+              },
+              "provider_observed_state": {
+                "const": ""
+              },
+              "provider_journal_snapshot_sha256": {
+                "const": ""
+              },
+              "provider_installed_state_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "indeterminate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "none"
+              },
+              "status": {
+                "const": "blocked"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

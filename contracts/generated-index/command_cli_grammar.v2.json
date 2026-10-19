@@ -1040,15 +1040,40 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
         "options": [
           {
+            "name": "--target",
+            "repeatable": false,
+            "value": "path"
+          },
+          {
             "name": "--digest",
             "repeatable": false,
             "value": "sha256"
+          },
+          {
+            "name": "--plan-created-at",
+            "repeatable": false,
+            "value": "utc"
+          },
+          {
+            "name": "--record-digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--transaction-id",
+            "repeatable": false,
+            "value": "id"
+          },
+          {
+            "name": "--applied-at",
+            "repeatable": false,
+            "value": "utc"
           },
           {
             "name": "--confirm",
@@ -1068,11 +1093,15 @@
         ],
         "positionals": [
           {
+            "name": "install-id",
+            "required": true
+          },
+          {
             "name": "plan-id",
             "required": true
           }
         ],
-        "usage": "facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+        "usage": "facman installs move apply <install-id> <plan-id> --target <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json"
       },
       "command_id": "installs.move.apply",
       "deprecation": "active",
@@ -1084,6 +1113,24 @@
       "owner": "facman",
       "renderer": "installs_move_apply",
       "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "target_root",
+          "repeatable": false,
+          "request_field": "target_root",
+          "required": true,
+          "type": "path"
+        },
         {
           "choices": [],
           "default": null,
@@ -1103,6 +1150,42 @@
           "type": "sha256"
         },
         {
+          "choices": [],
+          "default": null,
+          "name": "plan_created_at",
+          "repeatable": false,
+          "request_field": "plan_created_at",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_record_sha256",
+          "repeatable": false,
+          "request_field": "install_record_sha256",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "applied_at",
+          "repeatable": false,
+          "request_field": "applied_at",
+          "required": true,
+          "type": "string"
+        },
+        {
           "choices": [
             "APPLY"
           ],
@@ -1115,17 +1198,18 @@
         }
       ],
       "required_capabilities": [
+        "workspace_read",
         "workspace_write",
-        "setup_preview"
+        "setup_mutation"
       ],
-      "risk_tier": "persistent_local_write",
+      "risk_tier": "setup_mutation",
       "runtime_id": "installs.move.apply",
       "schema": "facman.command.v2",
       "visibility": "public"
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -2093,7 +2177,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "live_target_acceptance_required",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -2137,6 +2221,7 @@
         }
       ],
       "required_capabilities": [
+        "workspace_read",
         "setup_preview"
       ],
       "risk_tier": "read_only",
@@ -5297,7 +5382,7 @@
             "required": true
           }
         ],
-        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--source-path <path>] [--transaction <id>] [--root <path>] --json"
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--snapshot-id <id>] [--source-data-root <path>] [--source-path <path>] [--transaction <id>] [--root <path>] --json"
       },
       "command_id": "presentation.action",
       "deprecation": "active",
@@ -5528,6 +5613,15 @@
           "request_field": "launch_intent",
           "required": false,
           "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "snapshot_id",
+          "repeatable": false,
+          "request_field": "snapshot_id",
+          "required": false,
+          "type": "identifier"
         }
       ],
       "required_capabilities": [
@@ -8398,7 +8492,7 @@
             "required": true
           }
         ],
-        "usage": "facman snapshots restore <snapshot-path> <target-instance-id> --json"
+        "usage": "facman snapshots restore <snapshot-path> <target-instance-id> [--install <registered-id>] --json"
       },
       "command_id": "snapshots.restore",
       "deprecation": "active",
@@ -8426,6 +8520,15 @@
           "repeatable": false,
           "request_field": "target_instance_id",
           "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": false,
           "type": "identifier"
         }
       ],
@@ -9787,5 +9890,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "51ea90fdbe90c634d68b5db3b71419d3ac4229a896fff0dd899db0b632e597df"
+  "source_digest": "b6e6cb656eb3307ad953539eb4fa2dcfa529c29876b9f564b412d451ba5dff82"
 }

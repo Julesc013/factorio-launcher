@@ -1,0 +1,127 @@
+{
+  "schema": "facman.selected_save_refresh.linux_independent_review.v1",
+  "status": "PASS_BEHAVIOR_AND_CUSTODY_WITH_CAS_COUNTER_LIMITATION",
+  "reviewer": "Codex /root/selected_save_frontend_acceptance (non-author of Linux controllers)",
+  "source": "841072d550585c6b20337a29d055f3a0c8595b92",
+  "tree": "22e6ae60a296d3927a1d86f1b778a29dd6514a9e",
+  "producer": "4827484828dc82b27e4d8dabd00799277cb392f4",
+  "canonical_dev": "cde863c8567ee82d7c6f2f330aeff8b45d6f15d8",
+  "ci_run": 38826149882,
+  "artifact": 12015803248,
+  "ordinary_commands": 386,
+  "held_children": 14,
+  "all_normal_waited_processes": 400,
+  "intentional_fault_exit74": 11,
+  "methods": [
+    "test_selected_context_refresh.SelectedContextRefreshTests.test_paused_world_profile_configuration_source_and_foreign_object_drift_preserve_the_context",
+    "test_selected_context_refresh.SelectedContextRefreshTests.test_retained_refresh_serializes_competing_owner_and_source_journal_custody",
+    "test_selected_context_refresh.SelectedContextRefreshTests.test_two_explicit_refreshes_keep_world_file_object_and_original_journals",
+    "test_selected_context_refresh.SelectedContextRefreshTests.test_foreign_torn_replaced_linked_and_changed_source_context_get_no_refresh",
+    "test_selected_context_refresh.SelectedContextRefreshTests.test_interrupted_refresh_resumes_only_its_retained_object_and_terminal_is_read_only",
+    "test_selected_context_refresh.SelectedContextRefreshTests.test_unadmitted_partial_and_foreign_interrupted_bytes_are_preserved",
+    "test_selected_context_refresh.SelectedContextRefreshTests.test_pending_refresh_does_not_relabel_other_selected_filename_or_instance",
+    "test_make_ready_joined.JoinedMakeReadyTests.test_changed_selected_save_at_final_receipt_does_not_reuse_readiness"
+  ],
+  "suite": {
+    "tests_run": 8,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "success": true
+  },
+  "cas": {
+    "actual_files": 1626,
+    "actual_bytes": 14285618,
+    "reported_files": 1623,
+    "reported_bytes": 14183432,
+    "all_bytes_and_references_verified": true,
+    "reference_occurrences": 4136,
+    "referenced_unique": 1626,
+    "count_exact": false,
+    "final_save_added_objects": [
+      {
+        "sha256": "3d8f56d87032c02d68fe6a9e4c989bf3e17178c0b3094dc30acf491d01039b7d",
+        "bytes": 79478
+      },
+      {
+        "sha256": "80f204c7f7909b06d6688e94c77ad70b71d9fd7dde87a243ca1be9190b55e15f",
+        "bytes": 22706
+      },
+      {
+        "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "bytes": 2
+      }
+    ],
+    "explanation": "Three explicit final-save bulky serializations occur after recorded cas_files/cas_bytes: package_after79478, fixtures_after22706, shared empty{}2 bytes. Delta exactly3files/102186bytes. Reported counters remain inaccurate; full actual closure verified independently."
+  },
+  "positive_two_refresh_checks": [
+    {
+      "refresh": 1,
+      "before": "62ec03209efb36bf2ac5116db1d688205b16f27924fb0ce9cba6ccdfe4c33369",
+      "after": "95dca00e1a52cb3297e130210a1cc895345316fbbdcb20f106fc215c893b90e0",
+      "world_sha256": "fe7d90be10fc71c2069fd18509c2611d487e2d2839f8b1139a8fe55616d682df",
+      "sidecar_native_identity": "142:2177",
+      "original_journals_unchanged": true,
+      "replay_read_only": true,
+      "current_context_satisfied": true
+    },
+    {
+      "refresh": 2,
+      "before": "a31bee644e9509512be16048bae8f4687e27b9b118f302b01c1013bd375d75cd",
+      "after": "d95d0383aa2e64d095d299eee3ee4be6748a6c9e513d3e4ab9ebe373d9acefcc",
+      "world_sha256": "69af55ed9520b1d0d00010ae9225b5f12df8c13912cd6d482da0010aa912b617",
+      "sidecar_native_identity": "142:2177",
+      "original_journals_unchanged": true,
+      "replay_read_only": true,
+      "current_context_satisfied": true
+    }
+  ],
+  "source_hashes_verified": 1276,
+  "historical_source_closure": "Namespace before/final, admission and root-review maps exactly equal; source execution checked its full closure during actual run.",
+  "later_root_owned_source_changes": [
+    "tests/test_tui_product.py"
+  ],
+  "validators_files_verified": 146,
+  "package_files_verified": 598,
+  "canonical_lf_schemas_verified_in_retained_hash_bound_stage": 448,
+  "namespace": {
+    "uid": 65534,
+    "gid": 65534,
+    "groups": [],
+    "private_tmpfs": true,
+    "network_namespace": true,
+    "source_validators_package_read_only": true,
+    "normal_worker_exit": true,
+    "remaining_processes": 0,
+    "private_and_parent_mounts_empty": true,
+    "fixture_export_empty": true
+  },
+  "distributions": {
+    "zip_sha256": "f1b84500cc664e3c2284b54c7296a1d2ca30cf46e8f0230e224c67f18174cdf6",
+    "tar_sha256": "be822781fcbc4c8334a3e1eaf0e5c77d3cd6167ea1e55805dedd4ec40fb4f9ca",
+    "backend_sha256": "e3f240286764f5d8dff5d49cee698d5e6d795212d3dbc6cc0c4ea302d14ca018",
+    "duplicates_created": 0
+  },
+  "launches": {
+    "stage": {
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-linux-owned-stage-05\\receipt.json",
+      "sha256": "451da5d60daea334d0e8e383b797e6aae176319d02e2b8cc4afffe56620a9c54",
+      "normal_empty": true
+    },
+    "run": {
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-linux-owned-run-05\\receipt.json",
+      "sha256": "6e76f016d565fe5be222dbf084624bacd7fb0f351ca36d9974d93b4f9a0f6778",
+      "normal_empty": true
+    }
+  },
+  "raw_inventory_sha256": "22d6e08b102425a6b4187b3ef1e2afddafb9e3be793bba265bfb5c3ab3bd3cd8",
+  "worker_result_sha256": "a09a653ae2884dbab36acb3bee2c181a89f7507a1e41e7f8ca30dcfbc6b01917",
+  "namespace_result_sha256": "d091fd9d0144a0e502c8aea2107c0510a1a18cff08ad21825154a1cf6945b3cf",
+  "script_sha256": "6ac0d7c75f106de7562d19e2133e1980be8af6cb42733db24fa09cdb71f8f4dd",
+  "limitations": [
+    "CAS recorded counters underreport final serialization by three exact referenced objects; not accepted as exact counters.",
+    "Canonical LF schema comparison is assured by retained reviewed stage03 execution; no new Git invocation in this review.",
+    "Linux proof uses isolated WSL namespace and tmpfs; no physical Linux host/ext4 qualification.",
+    "No replay, product execution, game/human/fullF11/Beta/RC claim."
+  ]
+}

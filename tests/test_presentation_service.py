@@ -162,7 +162,7 @@ class PresentationServiceTests(unittest.TestCase):
             }
             self.assertEqual(
                 apply_fields["mod_identity"]["choices"],
-                ["simple_mod"],
+                ["simple_mod", "simple_mod@1.0.0"],
             )
 
             _, inspected, _ = action(

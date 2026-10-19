@@ -341,7 +341,7 @@ bool load_record(const fs::path& workspace, const std::string& id, Record& recor
             auto size = size_value->number_value();
             auto path = RelativePath::parse(relative);
             auto hash = facman::core::Sha256Digest::parse(digest);
-            if (!size || size.value() < 0 || !path || !hash) { detail = "expected file is invalid"; return false; }
+            if (!size || size.value() < 0 || size.value() >= 18446744073709551616.0 || !path || !hash) { detail = "expected file is invalid"; return false; }
             record.expected_files.push_back({path.take_value(), hash.take_value(), static_cast<std::uint64_t>(size.value())});
         }
     }
@@ -1243,7 +1243,11 @@ record.command_id == "readiness.prepare_selected_save" ||
             ? "verify_and_resume_missing_configuration_owner_preserving_ambiguous_objects"
             : "verify_and_resume_selected_context_owner_preserving_ambiguous_objects");
     else if (record.command_id == "modsets.import")
-        record.recovery_actions.push_back("verify_and_resume_owned_pack_instance");
+        record.recovery_actions.push_back(
+            std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_inventory_bound") == record.completed_steps.end()
+                ? (std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_source_inventory_bound") != record.completed_steps.end()
+                    ? "verify_bound_source_and_resume_missing_pack_files" : "preserve_incomplete_pack_staging_for_review")
+                : "verify_and_resume_owned_pack_instance");
     else if (record.command_id == "modsets.export" &&
              record.commit_strategy == "portable_modpack_export_destination_volume_atomic_no_replace")
         record.recovery_actions.push_back("preserve_portable_export_staging_for_review");
@@ -1798,6 +1802,26 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     Record record;
     std::string detail;
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
+    // Only historical default restores used this exact unbound strategy/context.
+    // New or partial bindings never inherit their weaker compatibility behavior.
+    const bool bound_snapshot = record.command_id == "snapshots.restore" &&
+        !(record.commit_strategy == "verified_snapshot_extract_regenerate_atomic_no_replace" && record.operation_context.empty());
+    bool snapshot_published = false;
+    if (bound_snapshot && !snapshot_restore_recovery_precheck(workspace, record, snapshot_published, detail)) return Refusal {
+        "recovery_snapshot_binding_changed", "Restore binding or inventory requires correction; all data is retained", detail, true};
+    if (bound_snapshot && std::getenv("FACMAN_TEST_SNAPSHOT_RECOVERY_BEFORE_LOCK_PAUSE") != nullptr) {
+        const auto marker = workspace / ".facman-test-snapshot-recovery-before-lock";
+        const auto release = workspace / ".facman-test-snapshot-recovery-lock-release";
+        bool released = false;
+        if (facman::base::write_text_new_atomic(marker, "ready\n", detail)) {
+            for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+                std::error_code error;
+                if (fs::exists(release, error) && !error) { released = true; break; }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        }
+        if (!released) return Refusal {"recovery_snapshot_binding_changed", "Recovery pause did not complete; all restore data is retained", detail, true};
+    }
     if (record.command_id == "readiness.prepare_configuration" ||
         record.commit_strategy == "missing_config_handle_no_replace_v1" ||
         record.commit_strategy == "existing_config_retained_stream_rewrite_v1" ||
@@ -1805,16 +1829,25 @@ record.command_id == "readiness.prepare_selected_save" ||
         record.commit_strategy == "selected_context_handle_no_replace_v1") return Refusal {
             "operation_specific_recovery_required", "Selected context requires its domain recovery path",
             "All selected context and staging objects are preserved", false};
-    if (terminal(record.state)) return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+    if (terminal(record.state) && !bound_snapshot) return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
     if (record.command_id == "modsets.export" &&
         record.commit_strategy == "portable_modpack_export_destination_volume_atomic_no_replace") {
         return Refusal {"recovery_staging_unrecognized",
             "Portable export staging requires review before cleanup",
             "Retained export staging and any published target remain intact", false};
     }
+    if (record.command_id == "modsets.import" &&
+        std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_source_inventory_bound") != record.completed_steps.end() &&
+        std::find(record.completed_steps.begin(), record.completed_steps.end(), "pack_inventory_bound") == record.completed_steps.end())
+        return Refusal {"operation_specific_recovery_required", "Incomplete import requires original selected-content recovery",
+            "Retained import data is preserved", false};
     const fs::path lock_path = recovery_lock_path(workspace, id);
+    facman::platform::StableDirectoryObject snapshot_lock_parent;
+    if (bound_snapshot && !snapshot_lock_parent.open_no_follow(lock_path.parent_path()).ok()) return Refusal {
+        "recovery_snapshot_lock_changed", "Restore recovery lock parent is unavailable; all data is retained", "", true};
     facman::base::StableLocalLock recovery_lock;
     facman::base::StableLockResult lock_result = recovery_lock.create(lock_path);
+    const bool recovery_lock_created = lock_result.acquired();
     if (lock_result.code == facman::base::StableLockCode::exists) {
         facman::base::StableLocalLock existing;
         std::string existing_content;
@@ -1828,7 +1861,9 @@ record.command_id == "readiness.prepare_selected_save" ||
         const bool import_lock = record.command_id == "modsets.import" &&
             record.commit_strategy == "modpack_instance_no_replace_v1" &&
             existing_content == expected_lock.serialize() + "\n";
-        if (existing_result.acquired() && (retention_lock || import_lock)) {
+        const bool snapshot_lock = bound_snapshot &&
+            existing_content == snapshot_restore_lock_text(record, existing);
+        if (existing_result.acquired() && (retention_lock || import_lock || snapshot_lock)) {
             recovery_lock = std::move(existing);
             lock_result = existing_result;
         } else if (existing_result.code == facman::base::StableLockCode::contended ||
@@ -1853,11 +1888,30 @@ record.command_id == "readiness.prepare_selected_save" ||
             true,
         };
     }
+    if (bound_snapshot) {
+        Record current;
+        // The shared lock excludes the writer. Re-read its durable journal and
+        // recompute presence/inventory instead of using any pre-lock decision.
+        if (!load_record(workspace, id, current, detail) || record_json(current) != record_json(record) ||
+            !snapshot_restore_recovery_precheck(workspace, current, snapshot_published, detail)) {
+            if (recovery_lock_created && snapshot_restore_lock_matches(record, recovery_lock, snapshot_lock_parent, detail, true)) {
+                std::string ignored; (void)recovery_lock.remove_exact(ignored);
+            }
+            else recovery_lock.close();
+            return Refusal {"recovery_snapshot_binding_changed", "Restore journal or evidence changed before recovery effects; all data is retained", detail, true};
+        }
+        record = std::move(current);
+    }
     json::ObjectBuilder lock_document;
     lock_document.add_string("schema", "facman.recovery_lock.v1");
     lock_document.add_string("identity", recovery_lock.identity_text());
     const std::string lock_content = lock_document.serialize() + "\n";
-    if (!recovery_lock.write_text(lock_content, detail)) {
+    if (bound_snapshot ? !initialize_snapshot_restore_lock(record, recovery_lock, snapshot_lock_parent, recovery_lock_created, detail)
+                       : !recovery_lock.write_text(lock_content, detail)) {
+        if (bound_snapshot) {
+            recovery_lock.close();
+            return Refusal {"recovery_snapshot_lock_changed", "Restore lease metadata changed; all data is retained", detail, true};
+        }
         std::string ignored;
         (void)recovery_lock.remove_exact(ignored);
         return Refusal {
@@ -1869,9 +1923,40 @@ record.command_id == "readiness.prepare_selected_save" ||
     }
     auto unlock = [&]() {
         std::string ignored;
-        (void)recovery_lock.remove_exact(ignored);
+        if (bound_snapshot) (void)release_snapshot_restore_lock(record, recovery_lock, snapshot_lock_parent, ignored);
+        else (void)recovery_lock.remove_exact(ignored);
     };
-    auto unlock_checked = [&]() { return recovery_lock.remove_exact(detail); };
+    auto unlock_checked = [&]() { return bound_snapshot
+        ? release_snapshot_restore_lock(record, recovery_lock, snapshot_lock_parent, detail) : recovery_lock.remove_exact(detail); };
+    const auto snapshot_lease_current = [&]() { return !bound_snapshot ||
+        snapshot_restore_lock_matches(record, recovery_lock, snapshot_lock_parent, detail); };
+    if (bound_snapshot && std::getenv("FACMAN_TEST_SNAPSHOT_RECOVERY_AFTER_LEASE_PAUSE") != nullptr) {
+        const auto marker = workspace / ".facman-test-snapshot-recovery-after-lease";
+        const auto release = workspace / ".facman-test-snapshot-recovery-lease-release";
+        bool released = false;
+        if (facman::base::write_text_new_atomic(marker, "ready\n", detail)) {
+            for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+                std::error_code error;
+                if (fs::exists(release, error) && !error) { released = true; break; }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        }
+        if (!released) { recovery_lock.close(); return Refusal {
+            "recovery_snapshot_lock_changed", "Restore recovery pause did not complete; all data is retained", detail, true}; }
+    }
+    if (bound_snapshot && (!snapshot_restore_recovery_precheck(workspace, record, snapshot_published, detail) || !snapshot_lease_current())) {
+        recovery_lock.close();
+        return Refusal {"recovery_snapshot_binding_changed", "Restore evidence changed before recovery effects; all data is retained", detail, true};
+    }
+    if (bound_snapshot && terminal(record.state)) {
+        if (!unlock_checked()) return Refusal {"recovery_snapshot_lock_changed", "Terminal restore lease could not be released safely", detail, true};
+        return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
+    }
+    if (bound_snapshot && snapshot_published && record.state == State::committing &&
+        !advance(workspace, record, "committed", "snapshot_restored_instance_committed", detail)) {
+        unlock();
+        return Refusal {"recovery_write_refused", "Verified restore publication could not be recorded", detail, true};
+    }
     if (record.command_id == "modsets.import") {
         const bool recovered = recover_pack_import(workspace, record, detail);
         if (!unlock_checked()) return Refusal {
@@ -1913,7 +1998,7 @@ record.command_id == "readiness.prepare_selected_save" ||
     }
     if (fs::exists(record.target)) {
         record.recovery_actions.push_back("preserved_committed_target");
-        bool commit_recorded = record.state == State::committed || record.state == State::audited ||
+        bool commit_recorded = snapshot_published || record.state == State::committed || record.state == State::audited ||
             std::find_if(record.completed_steps.begin(), record.completed_steps.end(), [](const std::string& step) {
                 return step.find("committed") != std::string::npos;
             }) != record.completed_steps.end();
@@ -1943,6 +2028,8 @@ record.command_id == "readiness.prepare_selected_save" ||
         }
         if (commit_recorded) {
             for (const fs::path& staging : record.staging_roots) {
+                if (!snapshot_lease_current()) { recovery_lock.close(); return Refusal {
+                    "recovery_snapshot_lock_changed", "Restore lease changed before staging cleanup", detail, true}; }
                 if (!fs::exists(staging)) {
                     record.recovery_actions.push_back("staging_already_absent");
                     continue;
@@ -1997,6 +2084,8 @@ record.command_id == "readiness.prepare_selected_save" ||
                 record.recovery_actions.push_back("removed_committed_owned_staging");
             }
             for (const char* marker_name : {facman::archive::owned_staging_marker_name(), ".facman-staging.v1", transaction_marker_name()}) {
+                if (!snapshot_lease_current()) { recovery_lock.close(); return Refusal {
+                    "recovery_snapshot_lock_changed", "Restore lease changed before marker cleanup", detail, true}; }
                 const fs::path marker = record.target / marker_name;
                 std::error_code marker_error;
                 const fs::file_status status = fs::symlink_status(marker, marker_error);
@@ -2005,6 +2094,8 @@ record.command_id == "readiness.prepare_selected_save" ||
                     if (marker_error) { unlock(); return Refusal {"recovery_write_refused", "Committed target marker cleanup failed", marker_error.message(), true}; }
                 }
             }
+            if (!snapshot_lease_current()) { recovery_lock.close(); return Refusal {
+                "recovery_snapshot_lock_changed", "Restore lease changed before journal finalization", detail, true}; }
             if (!complete(workspace, record, detail)) { unlock(); return Refusal {"recovery_write_refused", "Recovery journal finalization failed", detail, true}; }
         } else {
             record.recovery_actions.push_back("manual_target_audit_required");
@@ -2034,12 +2125,16 @@ record.command_id == "readiness.prepare_selected_save" ||
         unlock();
         return Refusal {"recovery_write_refused", "Prepublication recovery could not be durably recorded", detail, true};
     }
+    if (!snapshot_lease_current()) { recovery_lock.close(); return Refusal {
+        "recovery_snapshot_lock_changed", "Restore lease changed before rollback intent", detail, true}; }
     if (!advance(workspace, record, "rollback_required", "recovery_apply_started", detail)) {
         unlock();
         return Refusal {"recovery_write_refused", "Recovery intent could not be durably recorded", detail, true};
     }
     bool removed_staging = false;
     for (const fs::path& staging : record.staging_roots) {
+        if (!snapshot_lease_current()) { recovery_lock.close(); return Refusal {
+            "recovery_snapshot_lock_changed", "Restore lease changed before rollback cleanup", detail, true}; }
         if (!fs::exists(staging)) {
             record.recovery_actions.push_back("staging_already_absent");
             continue;
@@ -2077,6 +2172,8 @@ record.command_id == "readiness.prepare_selected_save" ||
     }
     if (removed_staging) record.recovery_actions.push_back("removed_owned_staging");
     if (record.recovery_actions.empty()) record.recovery_actions.push_back("no_owned_staging_present");
+    if (!snapshot_lease_current()) { recovery_lock.close(); return Refusal {
+        "recovery_snapshot_lock_changed", "Restore lease changed before rollback finalization", detail, true}; }
     if (!advance(workspace, record, "rolled_back", "owned_staging_removed", detail)) { unlock(); return Refusal {"recovery_write_refused", "Recovery journal update failed", detail, true}; }
     if (!unlock_checked()) {
         return Refusal {

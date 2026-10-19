@@ -287,6 +287,20 @@
     },
     {
       "commands": [
+        "installs.move.apply"
+      ],
+      "description": "Apply a resource-bounded reviewed move through pinned Setup, verify and project the new root, and retain the old source pending acceptance under existing explicit Setup authority.",
+      "domain": "installs",
+      "id": "install.managed.move.apply",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "setup_mutation"
+      ],
+      "status": "conditional"
+    },
+    {
+      "commands": [
         "installs.install.plan"
       ],
       "description": "Produce an immutable plan for a new FacMan-managed standalone installation.",
@@ -721,11 +735,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "51ea90fdbe90c634d68b5db3b71419d3ac4229a896fff0dd899db0b632e597df",
+    "catalog_digest": "b6e6cb656eb3307ad953539eb4fa2dcfa529c29876b9f564b412d451ba5dff82",
     "contracts": 132,
-    "refusal_codes": 308,
+    "refusal_codes": 320,
     "registered_routes": 130,
-    "schemas": 444
+    "schemas": 457
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",

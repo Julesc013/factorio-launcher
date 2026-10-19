@@ -225,6 +225,15 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
          !tx::advance(workspace, record, "staging", "configuration_staging_started", detail))) return uncertain(detail);
     facman::platform::StableInputFile published;
     if (!absent(target)) {
+#if defined(__linux__) || defined(__APPLE__)
+        if (!tx::terminal(record.state)) {
+            if (record.effect_file_identity.empty() || !config.open_child_file_no_follow_for_publication_recovery(
+                    staging.filename(), target.filename(), [&](const facman::platform::FileIdentity& file) {
+                        return identity(file) == record.effect_file_identity;
+                    }, bytes, published).ok() || !config.finish_child_file_publication(staging.filename(), bytes, published).ok())
+                return uncertain("Existing configuration publication or owned staging cleanup is inconsistent");
+        } else
+#endif
         if (record.effect_file_identity.empty() || !verify_file(config, target.filename(), record, bytes, nullptr, &published))
             return uncertain("Existing configuration is foreign or differs from the journaled object and bytes");
     } else {
@@ -251,12 +260,27 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
             (!tx::advance(workspace, record, "staged", "configuration_bytes_flushed", detail) ||
              !tx::advance(workspace, record, "verified", "configuration_inputs_revalidated", detail) ||
              !tx::advance(workspace, record, "committing", "configuration_publication_started", detail))) return uncertain(detail);
+#ifdef __APPLE__
+        if (!output.publish_observed_sibling_no_replace(config, "config.ini", bytes).ok())
+#else
         if (!output.publish_in_directory_no_replace(config, "config.ini").ok())
+#endif
             return uncertain("Configuration publication did not return a verified no-replace result");
         output.close_without_flush();
         fault("after_publication"); pause(root_path, "after_publication");
+#if defined(__linux__) || defined(__APPLE__)
+        inputs = guard.observe_inputs(&record);
+        if (!inputs || inputs.value() != guard.inputs_sha256)
+            return uncertain("Configuration inputs changed before owned staging cleanup");
+        if (!config.open_child_file_no_follow_for_publication_recovery(staging.filename(), target.filename(),
+                [&](const facman::platform::FileIdentity& file) { return identity(file) == record.effect_file_identity; },
+                bytes, published).ok() || !config.finish_child_file_publication(staging.filename(), bytes, published).ok())
+            return uncertain("Published configuration or owned staging cleanup changed");
+        fault("after_staging_cleanup");
+#else
         if (!verify_file(config, target.filename(), record, bytes, nullptr, &published))
             return uncertain("Published configuration identity or bytes changed");
+#endif
     }
     pause(root_path, "before_final_observation");
     inputs = guard.observe_inputs(&record);
@@ -276,7 +300,7 @@ Result continue_configuration(const fs::path& workspace, tx::Record& record,
 
 bool configuration_publication_available() noexcept
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
     return true;
 #else
     return false;
@@ -379,15 +403,35 @@ constexpr const char* kRewriteSchema = "factorio.configuration_reconciliation_co
 constexpr const char* kMutationAdmitted = "configuration_rewrite_mutation_authorized";
 constexpr const char* kEffectVerified = "configuration_rewrite_effect_verified";
 
+#if defined(__linux__) || defined(__APPLE__)
+thread_local fs::path rewrite_pause_root;
+#endif
+
 struct RewriteFaultHook {
+#if defined(__linux__) || defined(__APPLE__)
+    explicit RewriteFaultHook(const fs::path& root)
+#else
     RewriteFaultHook()
+#endif
     {
+#if defined(__linux__) || defined(__APPLE__)
+        rewrite_pause_root = root;
+#endif
         facman::platform::testing::set_retained_stream_rewrite_phase_hook([](const char* phase) {
             const std::string name = std::string("rewrite_") + phase;
             fault(name.c_str());
+#if defined(__linux__) || defined(__APPLE__)
+            pause(rewrite_pause_root, name.c_str());
+#endif
         });
     }
-    ~RewriteFaultHook() { facman::platform::testing::set_retained_stream_rewrite_phase_hook(nullptr); }
+    ~RewriteFaultHook()
+    {
+        facman::platform::testing::set_retained_stream_rewrite_phase_hook(nullptr);
+#if defined(__linux__) || defined(__APPLE__)
+        rewrite_pause_root.clear();
+#endif
+    }
 };
 
 bool original_file_identity(const json::Value& context, facman::platform::FileIdentity& file)
@@ -513,7 +557,11 @@ Result continue_existing_configuration(const fs::path& workspace, tx::Record& re
         }
         if (!observe()) return uncertain("Configuration owner inputs changed after durable admission and before the first write");
         fault("rewrite_before_write");
+#if defined(__linux__) || defined(__APPLE__)
+        RewriteFaultHook fault_hook(root_path);
+#else
         RewriteFaultHook fault_hook;
+#endif
         status = file.rewrite_to_intended();
         if (!status.ok()) return uncertain(status.detail);
         fault("rewrite_after_write"); pause(root_path, "rewrite_after_write");
@@ -556,7 +604,9 @@ bool configuration_original_file_identity(const json::Value& context, facman::pl
 Result reconcile_existing_configuration(const fs::path& workspace, const json::Value& plan,
     const ExistingConfigurationGuard& guard)
 {
-    if (!configuration_publication_available()) return refused("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+#if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
+    return refused("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows, Linux and macOS");
+#endif
     facman::platform::FileIdentity original;
     if (!original_file_identity(plan, original) || !guard.observe_inputs || !guard.validate_owner ||
         guard.inputs_sha256.size() != 64U || field(plan, "component") != "existing_routing_configuration")
@@ -596,7 +646,9 @@ Result reconcile_existing_configuration(const fs::path& workspace, const json::V
 
 Result recover_existing_configuration(const fs::path& workspace, const std::string& id, const ExistingConfigurationGuard& guard)
 {
-    if (!configuration_publication_available()) return refused("configuration_publication_unavailable", "Existing INI reconciliation is Windows only");
+#if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
+    return refused("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows, Linux and macOS");
+#endif
     tx::Record record; std::string detail;
     if (!tx::read_record(workspace, id, record, detail)) return refused("recovery_journal_invalid", detail);
     if (record.command_id != kCommand || record.commit_strategy != kRewriteStrategy)

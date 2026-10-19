@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -23,11 +24,21 @@ struct Budgets {
     std::uint32_t maximum_explanation_nodes = 4096;
 };
 
+// Internal presentation constraint, not a soft CLI version preference.
+struct ExactSelection {
+    std::string name;
+    std::string version;
+    std::string file_name;
+    std::string source;
+    std::string sha256;
+};
+
 struct Request {
     std::string instance_id;
     std::vector<std::string> enabled_mods;
     std::vector<std::string> disabled_mods;
     std::vector<std::string> version_preferences;
+    ExactSelection exact_selection;
     std::string transaction_id;
     Budgets budgets;
 };
@@ -44,6 +55,23 @@ facman::core::Result<std::string> explain(
 facman::core::Result<std::string> apply(
     const std::filesystem::path& workspace,
     const Request& request);
+// Readiness observes activation separately from archive/lock verification.
+// This never resolves a new selection or writes managed state.
+facman::core::Result<std::string> verify_activation(
+    const std::filesystem::path& mods_root,
+    const std::string& verified_lock);
+// Reconcile activation of an already verified exact local lock; never resolve.
+facman::core::Result<std::string> plan_locked_activation(
+    const std::filesystem::path& workspace, const std::string& instance_id);
+facman::core::Result<std::string> apply_locked_activation(
+    const std::filesystem::path& workspace, const std::string& instance_id,
+    const std::string& expected_plan_sha256, const std::string& operation_id,
+    const std::string& attempt_id,
+    const std::function<facman::core::Result<std::string>()>& protected_inputs = {});
+facman::core::Result<std::string> verify_locked_activation(
+    const std::filesystem::path& workspace, const std::string& instance_id,
+    const std::string& plan, const std::string& receipt,
+    const std::string& operation_id, const std::string& attempt_id);
 facman::core::Result<std::string> rollback(
     const std::filesystem::path& workspace,
     const Request& request);

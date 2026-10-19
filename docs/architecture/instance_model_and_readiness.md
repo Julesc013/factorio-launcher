@@ -103,7 +103,7 @@ initial dimensions:
 | Instance root | Existing root with no link/reparse traversal |
 | Configuration | Read-data routes to the installation and write-data/mods route to the instance |
 | Profile | Effective profile and override resolution |
-| Mod content | No external mods, explicitly degraded unlocked mods, or verified exact lock/artifacts/hashes/metadata/compatibility |
+| Mod content | No external mods, explicitly degraded unlocked mods, or verified exact lock/activation/artifacts/hashes/metadata/compatibility |
 | Saves | Informational for menu (zero saves valid); required selected archive and declared-context evidence for load_save |
 | Accounts | Not applicable to standalone menu readiness in this slice |
 | Recovery | Any incomplete or invalid transaction takes precedence |

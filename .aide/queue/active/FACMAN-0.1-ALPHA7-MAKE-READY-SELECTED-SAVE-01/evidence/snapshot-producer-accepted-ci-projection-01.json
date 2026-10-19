@@ -1,0 +1,270 @@
+{
+  "schema": "facman.accepted_snapshot_producer_projection.v1",
+  "reviewed_source": "e1b4790133be03f6e5ab6528db2c1cbf47a6b850",
+  "source_tree": "9155a2905afbb2e10ac5a08aaaf1329704dd47af",
+  "integrated_dev": "c51726567dd3bc4becd9afb80546b5a3ef2250bd",
+  "pr": 425,
+  "url": "https://github.com/Julesc013/factorio-launcher/pull/425",
+  "historical_pending_source_receipt_unchanged": true,
+  "workunit_closed": false,
+  "real_game": false,
+  "human": false,
+  "beta": false,
+  "rc": false,
+  "kind": "required_current_CI",
+  "observer_sha256": "3b9c7832d43f5104df2bd5af99c9b75da46cc8d8ae206a42125e8f628f097098",
+  "required_checks": [
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/runs/116356387146",
+      "name": "task-to-dev-promotion-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254003/job/116356258296",
+      "name": "appkit-compile",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254003/job/116356257719",
+      "name": "macos-native-cli",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254003/job/116356257929",
+      "name": "linux-coverage",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254002/job/116356258845",
+      "name": "task-to-dev-promotion-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254003/job/116356257904",
+      "name": "linux-native",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254137/job/116356257764",
+      "name": "python",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254003/job/116356257864",
+      "name": "windows-native-package",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254137/job/116356257990",
+      "name": "csharp",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254003/job/116356257529",
+      "name": "macos-archive-core",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254020/job/116356256862",
+      "name": "development-only-cross-provider-fixture",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254004/job/116356257181",
+      "name": "policy-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38715254137/job/116356258043",
+      "name": "c-cpp",
+      "state": "SUCCESS"
+    }
+  ],
+  "actual_platform_tests": [
+    {
+      "source": "e1b4790133be03f6e5ab6528db2c1cbf47a6b850",
+      "run_id": 38715254003,
+      "job_id": 116356257904,
+      "name": "linux-native",
+      "runner_name": "GitHub Actions 1000099920",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_presentation_service_smoke": 3,
+        "facman_tui_product_model_smoke": 3,
+        "facman_tui_smoke": 3
+      },
+      "actual_python": {
+        "test_presentation_snapshot_create": {
+          "test_blank_save_matches_existing_owner_and_excludes_all_worlds": "passed",
+          "test_compiled_ordinary_entry_optional_save_and_immutable_pending_fields": "explicit_Windows_only_unqualified",
+          "test_descriptor_requires_instance_but_save_is_optional_even_without_saves": "passed",
+          "test_exact_owner_archive_world_bundle_roundtrip_and_replay": "passed",
+          "test_input_identity_confirmation_scope_stale_and_target_gates": "passed",
+          "test_legacy_twenty_field_backup_request_bytes_and_replay_stay_exact": "passed",
+          "test_malformed_recorded_optional_identifier_refuses_without_rewriting_receipt": "passed",
+          "test_publication_death_uses_existing_rollback_and_preserves_unknown_receipt": "passed",
+          "test_retained_owner_failure_is_recovery_required_and_never_redispatched": "passed",
+          "test_rpc_optional_identifier_replays_cli_bytes_and_invalid_fields_have_no_effects": "passed"
+        },
+        "test_presentation_snapshot_restore": {
+          "test_before_and_after_publication_death_recover_without_rewriting_unknown_semantic_receipt": "passed",
+          "test_compiled_scoped_button_fields_returned_selection_and_uncertain_input": "explicit_Windows_only_unqualified",
+          "test_exact_owner_report_local_selection_provenance_and_new_process_replay": "passed",
+          "test_existing_destination_and_non_snapshot_source_preserve_inputs": "passed",
+          "test_live_installation_drift_is_recovery_required_and_replays_without_redispatch": "passed",
+          "test_missing_inputs_confirmation_stale_revision_and_wrong_scope_have_no_effects": "passed",
+          "test_recovery_refuses_changed_archive_target_registration_and_orphan_lock": "passed",
+          "test_saves_advertises_reconstruction_without_an_instance_and_refuses_without_installations": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        },
+        "test_tui_product": {
+          "test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance": "passed",
+          "test_ordinary_snapshot_producer_cancels_then_roundtrips_through_restore": "passed"
+        }
+      },
+      "log_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\snapshot-producer-linux-native-job-116356257904.log",
+      "log_sha256": "5a5585721f6054f62488229f3a82fe81b66ec7c680af5e9c0a318547c2caf898"
+    },
+    {
+      "source": "e1b4790133be03f6e5ab6528db2c1cbf47a6b850",
+      "run_id": 38715254003,
+      "job_id": 116356257864,
+      "name": "windows-native-package",
+      "runner_name": "GitHub Actions 1000099917",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_presentation_service_smoke": 4,
+        "facman_tui_product_model_smoke": 4,
+        "facman_tui_smoke": 4
+      },
+      "actual_python": {
+        "test_presentation_snapshot_create": {
+          "test_blank_save_matches_existing_owner_and_excludes_all_worlds": "passed",
+          "test_compiled_ordinary_entry_optional_save_and_immutable_pending_fields": "passed",
+          "test_descriptor_requires_instance_but_save_is_optional_even_without_saves": "passed",
+          "test_exact_owner_archive_world_bundle_roundtrip_and_replay": "passed",
+          "test_input_identity_confirmation_scope_stale_and_target_gates": "passed",
+          "test_legacy_twenty_field_backup_request_bytes_and_replay_stay_exact": "passed",
+          "test_malformed_recorded_optional_identifier_refuses_without_rewriting_receipt": "passed",
+          "test_publication_death_uses_existing_rollback_and_preserves_unknown_receipt": "passed",
+          "test_retained_owner_failure_is_recovery_required_and_never_redispatched": "passed",
+          "test_rpc_optional_identifier_replays_cli_bytes_and_invalid_fields_have_no_effects": "passed"
+        },
+        "test_presentation_snapshot_restore": {
+          "test_before_and_after_publication_death_recover_without_rewriting_unknown_semantic_receipt": "passed",
+          "test_compiled_scoped_button_fields_returned_selection_and_uncertain_input": "passed",
+          "test_exact_owner_report_local_selection_provenance_and_new_process_replay": "passed",
+          "test_existing_destination_and_non_snapshot_source_preserve_inputs": "passed",
+          "test_live_installation_drift_is_recovery_required_and_replays_without_redispatch": "passed",
+          "test_missing_inputs_confirmation_stale_revision_and_wrong_scope_have_no_effects": "passed",
+          "test_recovery_refuses_changed_archive_target_registration_and_orphan_lock": "passed",
+          "test_saves_advertises_reconstruction_without_an_instance_and_refuses_without_installations": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        },
+        "test_tui_product": {
+          "test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance": "passed",
+          "test_ordinary_snapshot_producer_cancels_then_roundtrips_through_restore": "passed"
+        }
+      },
+      "log_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\snapshot-producer-windows-native-package-job-116356257864.log",
+      "log_sha256": "9f4fac1115e3d774da697d63a007487a30a2babe611e081b92c08244bd1c27c5"
+    },
+    {
+      "source": "e1b4790133be03f6e5ab6528db2c1cbf47a6b850",
+      "run_id": 38715254003,
+      "job_id": 116356257719,
+      "name": "macos-native-cli",
+      "runner_name": "GitHub Actions 1000099916",
+      "conclusion": "success",
+      "actual_native_passes": {
+        "facman_presentation_service_smoke": 1,
+        "facman_tui_product_model_smoke": 1,
+        "facman_tui_smoke": 1
+      },
+      "actual_python": {
+        "test_presentation_snapshot_create": {
+          "test_blank_save_matches_existing_owner_and_excludes_all_worlds": "passed",
+          "test_compiled_ordinary_entry_optional_save_and_immutable_pending_fields": "explicit_Windows_only_unqualified",
+          "test_descriptor_requires_instance_but_save_is_optional_even_without_saves": "passed",
+          "test_exact_owner_archive_world_bundle_roundtrip_and_replay": "passed",
+          "test_input_identity_confirmation_scope_stale_and_target_gates": "passed",
+          "test_legacy_twenty_field_backup_request_bytes_and_replay_stay_exact": "passed",
+          "test_malformed_recorded_optional_identifier_refuses_without_rewriting_receipt": "passed",
+          "test_publication_death_uses_existing_rollback_and_preserves_unknown_receipt": "passed",
+          "test_retained_owner_failure_is_recovery_required_and_never_redispatched": "passed",
+          "test_rpc_optional_identifier_replays_cli_bytes_and_invalid_fields_have_no_effects": "passed"
+        },
+        "test_presentation_snapshot_restore": {
+          "test_before_and_after_publication_death_recover_without_rewriting_unknown_semantic_receipt": "passed",
+          "test_compiled_scoped_button_fields_returned_selection_and_uncertain_input": "explicit_Windows_only_unqualified",
+          "test_exact_owner_report_local_selection_provenance_and_new_process_replay": "passed",
+          "test_existing_destination_and_non_snapshot_source_preserve_inputs": "passed",
+          "test_live_installation_drift_is_recovery_required_and_replays_without_redispatch": "passed",
+          "test_missing_inputs_confirmation_stale_revision_and_wrong_scope_have_no_effects": "passed",
+          "test_recovery_refuses_changed_archive_target_registration_and_orphan_lock": "passed",
+          "test_saves_advertises_reconstruction_without_an_instance_and_refuses_without_installations": "passed"
+        },
+        "test_environment_reconstruction": {
+          "test_clean_workspace_reconstructs_declared_content_profile_world_and_joined_context": "passed",
+          "test_reconstructed_world_context_interruption_recovers_without_reimporting_or_recloning": "passed",
+          "test_reconstruction_owners_preserve_foreign_destinations_and_refuse_invalid_inputs": "passed"
+        },
+        "test_tui_product": {
+          "test_ordinary_saves_snapshot_form_navigation_cancel_and_confirm_without_selected_instance": "passed",
+          "test_ordinary_snapshot_producer_cancels_then_roundtrips_through_restore": "passed"
+        }
+      },
+      "log_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\snapshot-producer-macos-native-cli-job-116356257719.log",
+      "log_sha256": "c41b90c53d263f4b881a577144779cba15bedfeb26194de08c0fd2b7c214e0fb"
+    }
+  ],
+  "actual_existing_GUI": {
+    "status": "PASS_INDEPENDENT_ACTUAL_GUI_CUSTODY",
+    "source": "e1b4790133be03f6e5ab6528db2c1cbf47a6b850",
+    "qualification": "factory-produced Windows legacy WinForms portable file closure",
+    "profile": "windows_legacy_winforms_x64",
+    "result_sha256": "516fc6534f2e9323fa29c076fa4d2255f28cd35563586dcf70e9dd4d29034772",
+    "custody_canonical_sha256": "8599fc4479d00e863bad2802e196857deec882df38867125985d36f23d218c14",
+    "actual_GUI_sessions": 2,
+    "observed_packaged_backend_processes": 68,
+    "complete_owner_effects": 2,
+    "fixture_CLI_calls": 8,
+    "decoded_files": 31,
+    "decoded_bytes": 759077,
+    "GUI_sha256": "337678181d59f5364707b35b99147cafe12db6f82bfcad9c2e99744b705d80b8",
+    "backend_sha256": "ce65bff8e95c2f7a97529656d1da1f8c5737e5169f3539309580ad566d2d5ed3",
+    "package_file_count": 599,
+    "all_owned_jobs_empty": true,
+    "ordinary_cancellations_and_stale_refusal": true,
+    "whole_workspace_inputs_preserved": true,
+    "canonical_installed_desktop": false,
+    "real_game": false,
+    "human": false,
+    "full_make_ready": false,
+    "beta": false,
+    "rc": false
+  },
+  "unchanged_wait_model_polls": 0,
+  "new_optional_campaigns": 0
+}

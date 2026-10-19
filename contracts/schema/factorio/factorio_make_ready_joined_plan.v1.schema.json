@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_make_ready_joined_plan.v1.schema.json",
+  "title": "Existing-instance joined preparation plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "instance_id", "launch_intent", "desired_state", "inputs_sha256", "configuration_plan", "configuration_sha256", "configuration_before_identity", "selected_context_before_identity", "selected_parent_before_identity", "selected_context_target", "selected_context_required", "selected_save_sha256", "plan_sha256"],
+  "properties": {
+    "schema": {"const": "factorio.make_ready_joined_plan.v1"},
+    "instance_id": {"type": "string", "minLength": 1},
+    "launch_intent": {"enum": ["menu", "load_save"]},
+    "desired_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["installation_id", "profile_id", "selected_save", "modset_lock_sha256"],
+      "properties": {
+        "installation_id": {"type": "string", "minLength": 1},
+        "profile_id": {"type": "string", "minLength": 1},
+        "selected_save": {"type": "string"},
+        "modset_lock_sha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "inputs_sha256": {"$ref": "#/$defs/digest"},
+    "configuration_plan": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["plan_sha256", "component", "target"],
+          "properties": {
+            "plan_sha256": {"$ref": "#/$defs/digest"},
+            "component": {"enum": ["missing_routing_configuration", "existing_routing_configuration"]},
+            "target": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "configuration_sha256": {"$ref": "#/$defs/digest"},
+    "configuration_before_identity": {"type": "string", "minLength": 1},
+    "selected_context_before_identity": {"type": "string", "minLength": 1},
+    "selected_parent_before_identity": {"type": "string"},
+    "selected_context_target": {"type": "string"},
+    "selected_context_required": {"type": "boolean"},
+    "selected_save_sha256": {"type": "string", "pattern": "^([0-9a-f]{64})?$"},
+    "plan_sha256": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {"digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

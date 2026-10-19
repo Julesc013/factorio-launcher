@@ -1,0 +1,86 @@
+{
+  "schema": "facman.local_content_maintenance.v1",
+  "status": "LOCAL_NATIVE_FIXTURE_QUALIFIED_DELIVERY_PENDING",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "workunit_closed": false,
+  "base": "0db719812d39e11879f4a06b6b9f9d717c50238a",
+  "branch": "task/facman-local-content-maintenance-01",
+  "outcome": "Explicit existing-instance local version choice previews exact 1-to-2 diff, confirms apply, verifies, and history-rolls back to original activation and locks with other enabled content and protected state preserved.",
+  "source_files": {
+    "runtime/factorio/application/presentation_service.cpp": "821f312540dfe4e335aab6260799d35c495591b3a6ec01705025f45e4f008f25",
+    "runtime/factorio/application/presentation_action_support.cpp": "862656b1db3440db55c9455438513de7fc4446f3688e5ed4fdbd3c8efebda8f3",
+    "runtime/factorio/application/presentation_action_support.h": "1d67e036cc07dcab3350df07496c6f57edb024ef3824ec9401db1f9d7da8c730",
+    "runtime/factorio/modsets/flb_factorio_modset_solver.cpp": "63d046c136b0d98db233dd10f060563f5807408da229943e89fab3604668b5cc",
+    "runtime/factorio/modsets/flb_factorio_modset_solver.h": "3b4317b4cb86b49f2a2b18cd711a86981e6b2d7d56074674f76e14745ba5a2c8",
+    "runtime/factorio/mods/flb_factorio_mods.cpp": "66d1fbb225ece6664fee623b14966312ce0ae5a2951da0e9178113b445dc7b72",
+    "runtime/factorio/mods/flb_factorio_mods.h": "d47bf7b9f84d061ca3c6b558bf67a7a81c6390f4902104298de3a07f2cd8bff2",
+    "apps/tui/tui_product_shell.cpp": "4223bcbb230346969e2cf7bc021afc2b9d58d1c85d6ef748a6043da44bbe3d56",
+    "tests/test_presentation_content_maintenance.py": "3a79496d2089b18ad5708b16c7c3b2cb6de34bc4c4d9f16fd464e4c94a3623bc",
+    "tests/test_presentation_service.py": "e4bbe2ac92719149afcb595029554c7ef90634f750cc54798eed72bbf49270c8"
+  },
+  "backend_sha256": "3ecc4ff5887f78cb6657bb8b0417558a7fa53696cd6645e4f4d60d3fd7221b49",
+  "qualification": {
+    "methods": 5,
+    "cases": 10,
+    "owned_calls": 157,
+    "exit_zero": 150,
+    "expected_refusals": 7,
+    "normal_primary": true,
+    "empty_jobs": true,
+    "safety_cleanup": false,
+    "smokes": 2,
+    "static_checks": 3,
+    "original_package_baseline": "Observed missing version choice in unchanged PR439 original; deliberately failed oracle remains observed-gap, not PASS."
+  },
+  "review": {
+    "path": "content-maintenance-local-actual-review-01.json",
+    "sha256": "865ad22c17e8e5d1c1f8de1a1d50612607ad6f128e842d3f069b62bbe8a8d0be",
+    "verdict": "ACCEPTED_SOURCE_BOUND_LOCAL_EXECUTION"
+  },
+  "metadata_impact": {
+    "schema": "facman.content_maintenance_metadata_impact.v1",
+    "status": "PASS_ADDITIVE_REFUSAL_REGISTRY_ONLY",
+    "registry": "contracts/refusal/refusal_codes.v1.toml",
+    "registered_code": "modset_exact_selection_unavailable",
+    "registry_before_sha256": "303e19e57356f7dd27951c05ec94c42c1394ca6b20b4eb4d29de74ff68f32846",
+    "registry_after_sha256": "253279c5077e8f4b2ae48aeb1dc205dec3f53e45d79b5dbff89309386fc64936",
+    "source_files_unchanged": {
+      "runtime/factorio/application/presentation_service.cpp": "821f312540dfe4e335aab6260799d35c495591b3a6ec01705025f45e4f008f25",
+      "runtime/factorio/application/presentation_action_support.cpp": "862656b1db3440db55c9455438513de7fc4446f3688e5ed4fdbd3c8efebda8f3",
+      "runtime/factorio/application/presentation_action_support.h": "1d67e036cc07dcab3350df07496c6f57edb024ef3824ec9401db1f9d7da8c730",
+      "runtime/factorio/modsets/flb_factorio_modset_solver.cpp": "63d046c136b0d98db233dd10f060563f5807408da229943e89fab3604668b5cc",
+      "runtime/factorio/modsets/flb_factorio_modset_solver.h": "3b4317b4cb86b49f2a2b18cd711a86981e6b2d7d56074674f76e14745ba5a2c8",
+      "runtime/factorio/mods/flb_factorio_mods.cpp": "66d1fbb225ece6664fee623b14966312ce0ae5a2951da0e9178113b445dc7b72",
+      "runtime/factorio/mods/flb_factorio_mods.h": "d47bf7b9f84d061ca3c6b558bf67a7a81c6390f4902104298de3a07f2cd8bff2",
+      "apps/tui/tui_product_shell.cpp": "4223bcbb230346969e2cf7bc021afc2b9d58d1c85d6ef748a6043da44bbe3d56",
+      "tests/test_presentation_content_maintenance.py": "3a79496d2089b18ad5708b16c7c3b2cb6de34bc4c4d9f16fd464e4c94a3623bc",
+      "tests/test_presentation_service.py": "e4bbe2ac92719149afcb595029554c7ef90634f750cc54798eed72bbf49270c8"
+    },
+    "backend_sha256": "3ecc4ff5887f78cb6657bb8b0417558a7fa53696cd6645e4f4d60d3fd7221b49",
+    "version_header_sha256": "c6aeaf1578682b44b25fdd409ac370a6f09a7c70499bce8b39c82fadc146c24e",
+    "compiled_metadata_unchanged": true,
+    "new_native_build": false,
+    "static_checks_sha256": "14062a8c3785c65ecd76ed0a0025c357ca8fdc6bc3902a4ce9e2d88cfc6a0e62",
+    "limits": "Source-bound developer image qualification remains limited to listed runtime/tests; final refusal TOML is checked metadata, not claimed rebuilt. Static03 correctly retained FAIL for stale project-state surfaces; regenerated through tools/project_state.py --write before Static04 PASS."
+  },
+  "retained_failures": [
+    "build01 namespace compile failure",
+    "static01 engineering budget failure fixed via existing helper extraction",
+    "native01 wrong expected exit code and declared recorder budget; aggregate remains FAIL_RETAINED_BUDGET",
+    "static03 stale generated project state corrected by existing generator; aggregate remains failed"
+  ],
+  "custody": {
+    "path": "local-content-maintenance-custody.v1.zip",
+    "sha256": "cf7da0e1a0dca24b0869a13c4f9a503e09a3f6732a53a47ad760c225eb494c6f",
+    "members": 1890,
+    "uncompressed_bytes": 19787047
+  },
+  "delivery_gate": "Fresh exact-head required CI, independent original newly produced Windows CLI/ordinary TUI/actual WinForms proof and source-bound durable PR receipt required before merge.",
+  "compatibility": "Name-only seeds/current-lock-first and direct CLI soft --prefer semantics unchanged. No implicit newest selection or loss of other enabled locked mods. Full artifact tuple with selected physical instance ownership is authoritative.",
+  "limits": [
+    "Synthetic Windows fixtures; no real game or human verdict",
+    "Compiler primary success used exact owned cleanup; compiler natural descendant lifetime not qualified",
+    "Whole Make Ready/F09/F11, canonical Desktop/PR404, provider, Beta/RC/release gates remain open",
+    "No new clone/worktree/task root, provider changes, credential changes or release authority"
+  ]
+}

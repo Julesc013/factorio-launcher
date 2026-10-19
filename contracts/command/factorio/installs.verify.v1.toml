@@ -1,13 +1,17 @@
 command_id = "installs.verify"
 cli = "facman installs verify <install-id> --json"
-effects = ["setup_preview"]
+effects = ["workspace_read", "setup_preview"]
 request_schema = "contracts/schema/command/installs.verify.request.v1.schema.json"
-response_schema = "contracts/schema/common/result.v1.schema.json"
+response_schema = "contracts/schema/factorio/usk_verification_report.v1.schema.json"
 result_schema = "contracts/result/result.v1.schema.json"
 refusal_schema = "contracts/refusal/refusal.v1.schema.json"
 diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
 dry_run_default = false
 executes_process = false
 mutates_workspace = false
-availability = "unavailable_until_gateway"
+availability = "implemented"
 golden_refusal = "tests/golden/commands/installs.verify.refusal.json"
+
+golden_success = "tests/golden/commands/installs.verify.success.json"
+golden_success_shape = "response"
+refusal_codes = ["ownership_denied", "managed_install_provider_mismatch", "managed_install_evidence_incomplete", "live_target_acceptance_required"]

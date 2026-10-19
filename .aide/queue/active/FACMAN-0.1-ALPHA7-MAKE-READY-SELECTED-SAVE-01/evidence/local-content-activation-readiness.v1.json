@@ -1,0 +1,339 @@
+{
+  "schema": "facman.local_content_activation_readiness.v1",
+  "status": "LOCAL_NATIVE_FIXTURE_QUALIFIED_DELIVERY_PENDING",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "workunit_closed": false,
+  "base": "9eab25e9425d7525f36b8d829c7294e1aedd5664",
+  "branch": "task/facman-locked-content-activation-01",
+  "outcome": "Readiness detects locked activation drift; repair remains an explicitly confirmed Content Apply before joined v1 configuration/save preparation.",
+  "candidate_paths": [
+    {
+      "path": "runtime/factorio/instance/flb_factorio_instance_model.cpp",
+      "sha256": "ca08b3e61f41953f691f1a68a86640beaf2567ae87a1d55a420567538af7792e"
+    },
+    {
+      "path": "runtime/factorio/modsets/flb_factorio_modset_solver.cpp",
+      "sha256": "3f1484f85bc3bcb1ec2e4ff31b67d919ba094faa36ca90306d0bf126bc4fa000"
+    },
+    {
+      "path": "runtime/factorio/modsets/flb_factorio_modset_solver.h",
+      "sha256": "663b76e477ee7bccc83bb9439273303cd6aeec77f767d05289727fde14ff0554"
+    },
+    {
+      "path": "tests/test_readiness_content_activation.py",
+      "sha256": "5e4b9e84c617bddaa1bc5059115e1f36d2444940dbdb47c5bce8e12dae9b8c5e"
+    },
+    {
+      "path": "tests/test_make_ready_joined.py",
+      "sha256": "95e4e9a21f954dcd3921dfbd1ea87b0e17c054375d1bf15fba537347e009fe7c"
+    },
+    {
+      "path": "tests/test_presentation_profile_preparation.py",
+      "sha256": "d332dd132bd98baba693479d7a5ac745e45ee5a32806c20f37adec27ef01aeda"
+    },
+    {
+      "path": "docs/product/local_modset_solver.md",
+      "sha256": "c49c2532149c9a3888a9a6cb782a4abd8dd3a79f019e2084d5e2e8f32649392a"
+    },
+    {
+      "path": "docs/architecture/instance_model_and_readiness.md",
+      "sha256": "4e0a2a88d002873693025ed0b133a953669d8a23b44553c83e7040d712e5350d"
+    }
+  ],
+  "baseline": {
+    "source": "031812f843f18ff58878490b1251d48fb3240d69",
+    "run": 39043421452,
+    "artifact": 12107996258,
+    "backend_sha256": "9ea7879baff17985af5725ab2ecfb5462e500641c9cb4b19884feb5b06102ab2",
+    "cases": [
+      "missing mod-list",
+      "locked simple disabled"
+    ],
+    "observed": "locked_verified and joined completed without repair"
+  },
+  "local_native": {
+    "image": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman.exe",
+      "sha256": "47a0729b4d067b496d5fb3eb148b509e3c637c47bc77a7b862b677a040670f65",
+      "delivered_package_qualification": false
+    },
+    "strict_normal_checks": [
+      {
+        "label": "joined-content-baseline-owned-01",
+        "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\joined-content-baseline-owned-01\\receipt.json",
+        "receipt_sha256": "46230aad5cd52c5a644ce8630a1d455c374719df5c2a56560c0c9753bd2af7de",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "sha256": "142fc573fee285d849d45f84932ed9418f1eccee8126b359a7af3fe36213654a",
+            "bytes": 1388
+          },
+          {
+            "name": "stderr.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "name": "stdin.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          }
+        ],
+        "tests_run": null,
+        "skipped": 0,
+        "skip_lines": [],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "safety_termination": false
+      },
+      {
+        "label": "content-activation-focused-owned-03",
+        "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\content-activation-focused-owned-03\\receipt.json",
+        "receipt_sha256": "2f4f9048c2b8d6ed68d323e1989633dbf900e878965c84f97715bd6f5c7694bd",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "name": "stderr.raw",
+            "sha256": "8341c1aede28036e304db8c65961ffa4e675034986e027ff639ff21c848193cb",
+            "bytes": 2190
+          },
+          {
+            "name": "stdin.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          }
+        ],
+        "tests_run": 6,
+        "skipped": 1,
+        "skip_lines": [
+          "  test_shared_lock_disagreement_and_linked_mod_list_are_observed_without_adoption (test_readiness_content_activation.ContentActivationReadinessTests.test_shared_lock_disagreement_and_linked_mod_list_are_observed_without_adoption) (kind='linked-file') ... skipped \"unsupported: file symlink unavailable: [WinError 1314] A required privilege is not held by the client: 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.task-builds\\\\\\\\repositories\\\\\\\\factorio-launcher-5db2844e2f29\\\\\\\\tasks\\\\\\\\task-facman-w-bc5cd0812e\\\\\\\\t\\\\\\\\activation-unsafe-8xsvgivb\\\\\\\\foreign-activation' -> 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.task-builds\\\\\\\\repositories\\\\\\\\factorio-launcher-5db2844e2f29\\\\\\\\tasks\\\\\\\\task-facman-w-bc5cd0812e\\\\\\\\t\\\\\\\\activation-unsafe-8xsvgivb\\\\\\\\instances\\\\\\\\main\\\\\\\\mods\\\\\\\\mod-list.json'\""
+        ],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "safety_termination": false
+      },
+      {
+        "label": "content-activation-profile-control-owned-03",
+        "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\content-activation-profile-control-owned-03\\receipt.json",
+        "receipt_sha256": "806fd9f96239bfd41ebdbe76634730653417b26b0ba82bb8798aec4917a1bf53",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "name": "stderr.raw",
+            "sha256": "e124044c2199f47fef096fec2931ff2695e32286ef88f7eec1906a3cbe35c021",
+            "bytes": 2315
+          },
+          {
+            "name": "stdin.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          }
+        ],
+        "tests_run": 10,
+        "skipped": 0,
+        "skip_lines": [],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "safety_termination": false
+      },
+      {
+        "label": "content-activation-late-drift-owned-01",
+        "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\content-activation-late-drift-owned-01\\receipt.json",
+        "receipt_sha256": "5d833b5ebfbe9391b8b0f6308a4e066f05768f88ff1833d760c8434eea7b7bcb",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "name": "stderr.raw",
+            "sha256": "facd9e6beb3dc7e7a0036283e654bc00932a9fdbf3e1085cc4c24ed9c2c2e425",
+            "bytes": 347
+          },
+          {
+            "name": "stdin.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          }
+        ],
+        "tests_run": 1,
+        "skipped": 0,
+        "skip_lines": [],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "safety_termination": false
+      },
+      {
+        "label": "content-activation-instance-model-smoke-owned-01",
+        "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\content-activation-instance-model-smoke-owned-01\\receipt.json",
+        "receipt_sha256": "be2e45172e44949f6eb3b5936076cff8faa19957697a398351cba319886bc574",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "name": "stderr.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "name": "stdin.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          }
+        ],
+        "tests_run": null,
+        "skipped": 0,
+        "skip_lines": [],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "safety_termination": false
+      },
+      {
+        "label": "content-activation-strict-owned-01",
+        "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\content-activation-strict-owned-01\\receipt.json",
+        "receipt_sha256": "6b2e9e0c657de5e28be1dad909ba8dd81615c50a7e3ff411f1a09726095823cd",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "sha256": "62da6f2d591210565d8f4e0e423ac8b918d3f74ed36851e1c506398b79d84289",
+            "bytes": 6077
+          },
+          {
+            "name": "stderr.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "name": "stdin.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          }
+        ],
+        "tests_run": null,
+        "skipped": 0,
+        "skip_lines": [],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "safety_termination": false
+      },
+      {
+        "label": "content-activation-aide-lite-owned-01",
+        "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\content-activation-aide-lite-owned-01\\receipt.json",
+        "receipt_sha256": "33c084b5056e820f9d9176c50905bbf90a2c798ef7f77663b591ca3ae4926bdd",
+        "streams": [
+          {
+            "name": "stdout.raw",
+            "sha256": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+            "bytes": 402
+          },
+          {
+            "name": "stderr.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "name": "stdin.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          }
+        ],
+        "tests_run": null,
+        "skipped": 0,
+        "skip_lines": [],
+        "normal_primary": true,
+        "owned_job_empty": true,
+        "safety_termination": false
+      }
+    ],
+    "mixed_semantic_only": {
+      "tests_run": 72,
+      "skipped": 2,
+      "unittest_primary_exit": 0,
+      "unittest_assertion_result": "OK",
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\content-activation-regression-owned-01\\receipt.json",
+      "receipt_sha256": "60b84997d5c50aebf6127ca5c68b6a68c7c013ec10b77711ede4a3b9a2138690",
+      "termination": "command_timeout",
+      "declared_seconds": 900,
+      "compiler_job_cleanup": true,
+      "natural_descendant_lifetime_qualified": false,
+      "scope": "semantic assertions only; no repeat of mixed five-module campaign"
+    },
+    "focused": {
+      "tests_run": 6,
+      "classified_skips": 1,
+      "skip": "Windows file symlink creation refused with WinError1314; actual hardlink and directory-junction refusals passed"
+    },
+    "assertions": [
+      "Missing/disabled/unexpected/malformed/duplicate/unsafe activation blocks joined admission without writes.",
+      "Package-only modsets.verify compatibility is preserved.",
+      "Explicit ordinary Content Apply retains locked simple1 despite available simple2, preserves exact locks and protected files, and permits joined v1 configuration/selected-save preparation.",
+      "Semantically equivalent activation edits and valid9MiB changed bytes invalidate reviewed revisions.",
+      "Late mod-list drift after configuration retains its verified effect, stops selected context and preserves exact replay."
+    ],
+    "diagnostic_attempts": [
+      {
+        "attempt": "content-activation-focused-owned-01",
+        "result": "REJECTED",
+        "reason": "test incorrectly expected readiness object for selected-save linked-directory refusal; product refused safely"
+      },
+      {
+        "attempt": "content-activation-focused-owned-02",
+        "result": "DIAGNOSTIC_PASS_ONLY",
+        "reason": "prior binary lacks final parsed-byte digest binding"
+      },
+      {
+        "attempt": "content-activation-profile-control-owned-01",
+        "result": "REJECTED",
+        "reason": "legacy assertion expected archive report despite newly rejected contradictory local/shared locks"
+      },
+      {
+        "attempt": "content-activation-profile-control-owned-02",
+        "result": "TARGETED_PASS",
+        "reason": "corrected existing assertions, followed by complete10-test module pass"
+      }
+    ],
+    "compiler": {
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\content-activation-build-owned-02\\receipt.json",
+      "sha256": "2f7e5302b9d3e768c80aa25a1792617ae628316589e696db615baf195c4773a5",
+      "qualification": "normal compiler primary and exact owned Job cleanup; natural compiler descendant lifetime is not qualified"
+    }
+  },
+  "independent_local_review": {
+    "verdict": "PASS_LOCAL_NATIVE_CONTENT_ACTIVATION_TRUTH_SOURCE_AND_FOCUSED_PROOF",
+    "receipt": "content-activation-actual-review-01.json",
+    "sha256": "524f0fe5dccbc9703615ebe87187e5da383e2952a5d3dc6b622fdb8b7ff51e10"
+  },
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/local-content-activation-readiness-custody.v1.zip",
+    "bytes": 95607,
+    "sha256": "8e22f01e7f86ded2f6a59de51e4607bd3b393282deade176cf69dacd74e72958",
+    "entries": 87,
+    "inventory_sha256": "4a4f1a88d61b98f576042a0fad489de1668ae98efb9bf88960f29632018dd16b"
+  },
+  "integration_gate": {
+    "required": "Exact-head required CI and independently reviewed original newly produced Windows-package activation/Apply/joined proof",
+    "delivered_proof_pending": true,
+    "resolution": "A later exact-source PR receipt must explicitly resolve this historical pending field before normal checked merge."
+  },
+  "authority_delta": "none",
+  "boundaries": [
+    "Joined v1 component schema unchanged; no same-request pending-content reconciliation.",
+    "Existing joined input limits unchanged;9MiB case qualifies readiness freshness with explicit refresh stale refusal, not joined admission.",
+    "No delivered new-package, real Factorio, GUI/human or cross-host qualification.",
+    "No claim of uniform descendant exit codes from outer suite Job drainage; regression includes declared test faults.",
+    "No provider pin, installer, authority, release/main/tag or broader Make Ready/F09/F11/Beta/RC closure.",
+    "WorkUnit and programme goal remain active."
+  ]
+}

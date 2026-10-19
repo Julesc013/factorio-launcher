@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/facman_managed_move_apply_result.v1.schema.json",
+  "title": "Bounded managed move reference projection with old source retained",
+  "type": "object",
+  "properties": {
+    "install_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "plan_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "transaction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "old_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "new_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "setup_state_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "plan_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "installed_state_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "last_verification_identity": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "schema": {
+      "const": "facman.managed_move_apply_result.v1"
+    },
+    "status": {
+      "const": "reference_projected_old_retained_pending_acceptance"
+    },
+    "facman_reference_status": {
+      "const": "projected"
+    },
+    "provider_status": {
+      "const": "new_committed_old_retained"
+    },
+    "lifecycle_status": {
+      "const": "move_pending_acceptance"
+    },
+    "old_root_status": {
+      "const": "retained"
+    },
+    "copy_scope": {
+      "const": "complete_source_files_including_foreign"
+    },
+    "grants_ownership": {
+      "const": false
+    },
+    "empty_directory_preservation": {
+      "const": "not_promised"
+    },
+    "observation_atomic": {
+      "const": false
+    },
+    "old_root_removal_available": {
+      "const": false
+    },
+    "verification_status": {
+      "enum": [
+        "pass",
+        "warn"
+      ]
+    },
+    "provider_report": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/provider_report"
+        }
+      ]
+    }
+  },
+  "required": [
+    "install_id",
+    "plan_id",
+    "transaction_id",
+    "old_root",
+    "new_root",
+    "setup_state_ref",
+    "state_revision",
+    "plan_digest",
+    "installed_state_digest",
+    "last_verification_identity",
+    "schema",
+    "status",
+    "facman_reference_status",
+    "provider_status",
+    "lifecycle_status",
+    "old_root_status",
+    "copy_scope",
+    "grants_ownership",
+    "empty_directory_preservation",
+    "observation_atomic",
+    "old_root_removal_available",
+    "verification_status",
+    "provider_report"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "provider_report": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://facman.invalid/schema/factorio/usk_move_report.v1.schema.json",
+      "title": "Pinned provider move report: reference updates and old removal deferred",
+      "type": "object",
+      "properties": {
+        "completed_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "install_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "new_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "old_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "plan_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "report_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transaction_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema": {
+          "const": "usk.move_report.v1"
+        },
+        "status": {
+          "const": "new_committed_old_retained"
+        },
+        "old_root_status": {
+          "const": "retired_retained"
+        },
+        "reference_update_status": {
+          "const": "not_started"
+        },
+        "report_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "new_verification_ref": {
+          "type": "object",
+          "properties": {
+            "report_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "report_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "enum": [
+                "pass",
+                "warn"
+              ]
+            }
+          },
+          "required": [
+            "report_digest",
+            "report_id",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "prefixItems": [
+            {
+              "type": "object",
+              "properties": {
+                "phase": {
+                  "const": "copy_to_staging"
+                },
+                "status": {
+                  "const": "completed"
+                }
+              },
+              "required": [
+                "phase",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "phase": {
+                  "const": "verify_closure"
+                },
+                "status": {
+                  "const": "completed"
+                }
+              },
+              "required": [
+                "phase",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "phase": {
+                  "const": "commit_new"
+                },
+                "status": {
+                  "const": "completed"
+                }
+              },
+              "required": [
+                "phase",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "phase": {
+                  "const": "update_references"
+                },
+                "status": {
+                  "const": "deferred"
+                }
+              },
+              "required": [
+                "phase",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "phase": {
+                  "const": "retire_old"
+                },
+                "status": {
+                  "const": "completed"
+                }
+              },
+              "required": [
+                "phase",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "phase": {
+                  "const": "accept_old_removal"
+                },
+                "status": {
+                  "const": "deferred"
+                }
+              },
+              "required": [
+                "phase",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "phase": {
+                  "const": "remove_old_owned_state"
+                },
+                "status": {
+                  "const": "deferred"
+                }
+              },
+              "required": [
+                "phase",
+                "status"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "completed_at",
+        "install_id",
+        "new_root",
+        "old_root",
+        "plan_id",
+        "report_id",
+        "transaction_id",
+        "schema",
+        "status",
+        "old_root_status",
+        "reference_update_status",
+        "report_digest",
+        "new_verification_ref",
+        "phases"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

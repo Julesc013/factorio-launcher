@@ -240,6 +240,9 @@ namespace FacMan.WinForms
             planningActions.Controls.Add(ActionButton("Select p&rofile", "Select launch profile", "profile.select"));
             planningActions.Controls.Add(ActionButton("E&xplain config", "Explain effective configuration", "configuration.explain_effective"));
             planningActions.Controls.Add(ActionButton("Preview &menu", "Preview menu launch", "launch.menu_plan"));
+            Button makeReadyJoined = ActionButton("Make Ready with current &settings", "Make Ready with the current profile, content and selected world", "readiness.prepare_joined");
+            makeReadyJoined.Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold);
+            planningActions.Controls.Add(makeReadyJoined);
             planningActions.Controls.Add(ActionButton("Make &Ready", "Prepare this instance", "readiness.prepare"));
             planningActions.Controls.Add(ActionButton("Record selected &save context", "Record selected save context", "readiness.prepare_selected_save"));
             planningActions.Controls.Add(ActionButton("Prepare &configuration", "Prepare routing configuration", "readiness.prepare_configuration"));
@@ -374,6 +377,7 @@ namespace FacMan.WinForms
             layout.Controls.Add(savesList, 0, 2);
             FlowLayoutPanel actions = ActionRow();
             actions.AccessibleName = "Save inspection and backup actions";
+            actions.Controls.Add(ScopedActionButton("Create s&napshot", "Create instance snapshot", "saves", "snapshots.create"));
             actions.Controls.Add(ScopedActionButton(
                 "&Inspect", "Inspect selected local save", "saves", "saves.inspect"));
             actions.Controls.Add(ScopedActionButton(
@@ -382,6 +386,8 @@ namespace FacMan.WinForms
                 "&Back up", "Back up selected local save", "saves", "saves.backup"));
             actions.Controls.Add(ScopedActionButton(
                 "&Restore", "Restore a verified owned backup to a new save", "saves", "saves.restore"));
+            actions.Controls.Add(ScopedActionButton(
+                "Restore &snapshot", "Restore snapshot into new instance", "saves", "snapshots.restore"));
             layout.Controls.Add(actions, 0, 3);
             return page;
         }
@@ -1092,11 +1098,17 @@ namespace FacMan.WinForms
             CommandResult result = await liveStore.ExecuteDescriptorActionAsync(
                 scope, actionId, input, CancellationToken.None);
             if (!CanUpdateWindow) return true;
-            ShowResultIfRefused(result, descriptor.Label + " refused");
+            if (result.Refused && actionId == "readiness.prepare_joined" &&
+                !String.IsNullOrWhiteSpace(liveStore.LastActionSummary))
+                MessageBox.Show(this, liveStore.LastActionSummary, descriptor.Label,
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else ShowResultIfRefused(result, descriptor.Label + " refused");
             if (result.Success &&
                 !String.IsNullOrWhiteSpace(liveStore.LastActionPayload))
             {
                 string detail = liveStore.LastActionPayload;
+                if (actionId == "readiness.prepare_joined" &&
+                    !String.IsNullOrWhiteSpace(liveStore.LastActionSummary)) detail = liveStore.LastActionSummary;
                 if (detail.Length > 6000) detail = detail.Substring(0, 6000) + "...";
                 MessageBox.Show(this, detail, descriptor.Label,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);

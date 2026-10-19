@@ -304,6 +304,7 @@ available = [
   "launch.preview",
 ]
 conditional = [
+  "install.managed.move.apply",
   "install.managed.plan",
   "install.managed.uninstall.apply",
   "install.managed.uninstall.recover",

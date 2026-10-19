@@ -1,0 +1,54 @@
+{
+  "schema": "facman.managed_install_coordination.qualified_source.v1",
+  "base_head": "c089396b6210b8da18299fe8376bf1cea203826a",
+  "base_tree": "961d4cef5a03bb94a162b09c51647124e9306616",
+  "author_packet_sha256": "5202b7f92577eb664538943190a1aca0dae1b294f3dde65041c11168cf446ac7",
+  "independent_review_sha256": "bf95f69109312abb5568322422d598d9c46543d57be2c6248e9920f645c047c2",
+  "authored_files_sha256": {
+    "runtime/factorio/application/handlers/setup.cpp": "81e5df1ecef7cebc0da676f9d8619c08e29de400da01c392b1baf55bafe814f7",
+    "runtime/factorio/application/setup_gateway.cpp": "2cdd37f7109ebaacc9ada5786b4ae288632c96cc94094295138630137742dc8e",
+    "runtime/factorio/application/setup_gateway.h": "61063f6e9ce5ce377b0a7dc1a6ae7e82c45350f01836c10e883d6bf0af35238c",
+    "tests/native/m1_three_repository_system_proof.cpp": "5dcbc5fa1f82747a6ff9fe2d77993eb48104b6adddac6bbd5570d051de4fb574",
+    "tests/integration/facman_managed_install_lifecycle.py": "e5af0838ff937c8f31d88f135535d1b52cad13a96b68c72a6fd2e30b6c9c9f30",
+    "docs/reviews/2026-10-15-managed-install-coordination.md": "6042c2e95313586b5db9caab17e4d53167d6c063214f67ba48e7033586fa8ddf"
+  },
+  "native_tests_passed": 4,
+  "actual_owned_public_commands": 39,
+  "physical_death_commands": 3,
+  "public_result": "partial",
+  "public_exit_code": 1,
+  "retained_host_gap": "Windows provider path policy refuses before the prospective 8192-byte shared metadata limit can be reached",
+  "public_primary_exit_then_owned_cleanup": 36,
+  "all_member_natural_exit_claimed": false,
+  "shared_scope": "FacMan actors sharing one configured Setup installation namespace",
+  "direct_USK_or_distinct_state_root_exclusion": false,
+  "requested_crash_recovery": [
+    "install",
+    "repair",
+    "uninstall"
+  ],
+  "custody": "managed-install-coordination-custody.v1.zip",
+  "custody_sha256": "0dc8deb85b3587bb0b2ff8efaf9924a3d657010086dad856219f08a00d350589",
+  "custody_files": 866,
+  "provider_images_sha256": {
+    "ulk.dll": "d96d05b33b0df2ee2659104125d8e0f70fbc6e48b82dc302b7eb0eb8ac6b6c31",
+    "usk.dll": "99231fbff824df9446159cd91c2dfe01bb439a9f0c3138c9d9625e512696b873"
+  },
+  "binary_images_sha256": {
+    "facman.exe": "7c574891c0488b46cc4cc56a5c9daba770fa83dc19f036ff35d75f592b0f5f38",
+    "m1_three_repository_system_proof.exe": "b7e4f9f61e57769fadf199983332797c8f4f723de51d29b40c440c8b0f53575c",
+    "flb_setup_gateway_smoke.exe": "59039bb43a6a677d5c66452f631deea07fddc8e892458d32c5cb628a3e2d6080",
+    "fl_workspace_store_smoke.exe": "dd33a29227e27a2399a5b916a8180998acbaa5a665634087091d3c2d4bc89944",
+    "facman_isolation_lock_smoke.exe": "c31273fa4725811f6de16a0cf2dee7b5e178c4a387f2abec5a9b56e4fa68c1d8"
+  },
+  "required_checks_pending": true,
+  "produced_package_qualified": false,
+  "workunit_closed": false,
+  "real_game_qualified": false,
+  "human_qualified": false,
+  "beta": false,
+  "rc": false,
+  "new_roots": 0,
+  "new_clones": 0,
+  "new_worktrees": 0
+}

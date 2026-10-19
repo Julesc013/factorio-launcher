@@ -1,0 +1,37 @@
+{
+  "schema": "facman.darwin-acl-absence-qualification.v1",
+  "base_head": "df1dc6a873aa42ae94bffbd06b44814eb795b55b",
+  "files_sha256": {
+    "runtime/platform/fl_file_io.cpp": "d68290260b4bb868835a1a90c92c7dcc6c2302a53a092f47d4767e13aa668291",
+    "tests/native/fl_retained_rewrite_smoke.cpp": "69ff8e70eb27a84730a1784d2354a372b3681da70403af6c253a79db13e2217c"
+  },
+  "failure": {
+    "run_id": 38323133434,
+    "job_id": 115055576417,
+    "head": "df1dc6a873aa42ae94bffbd06b44814eb795b55b",
+    "native_pass": 56,
+    "native_total": 57,
+    "failing_test": "fl_retained_rewrite_smoke",
+    "reported_assertion": "loss bound open",
+    "log_sha256": "01d12d1c9bdc7ee35f081aff828ce96f898d9c545438b1835d899f1e8cc60268",
+    "job_metadata_sha256": "34c9f694bb9677f44822a5c3eaa23076448f92ffaf6abc2b4a1ee6df171430c5"
+  },
+  "independent_review_sha256": "cb52abbf84e86b0bc22ab6754b89429d371d668eb45afd470e123f521302cbd3",
+  "non_apple_equivalence_sha256": "66253a50cc4b1c394dce9d475256b3a8ec0b7010704fd8f42c837af849c0b4e2",
+  "reused_joined_linux_qualification_sha256": "706ab533db54badf4a3255dd85c22d4d88532b18d3e6ed78c44ab935c43e262a",
+  "reused_linux_tests_passed": 43,
+  "explicit_windows_only_skips": 4,
+  "custody": "posix-retained-darwin-acl-absence-custody.v1.zip",
+  "custody_sha256": "d8978707e591a2851bad3c867924f3832bdd83154e11df85595fd0362676c3fd",
+  "custody_members": 14,
+  "required_new_source_ci_pending": true,
+  "macos_execution_qualified": false,
+  "owner_admitted": false,
+  "physical_ext4": false,
+  "apfs": false,
+  "power_loss": false,
+  "game": false,
+  "beta": false,
+  "rc": false,
+  "authority_delta": "none"
+}

@@ -1,0 +1,606 @@
+{
+  "beta_qualified": false,
+  "cmake_cache_sha256": "867df135044bbff50593e1a87bfcba6fdb8d0bcd4e6223500dff311147d7d131",
+  "commands": [
+    {
+      "active_processes_at_primary_exit": 1,
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "tools/workspace_hygiene.py",
+        "paths"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": false,
+      "elapsed_seconds": 0.429182,
+      "exit_code": 0,
+      "job_empty_observed": true,
+      "job_terminated": false,
+      "normal_primary_and_empty_job": true,
+      "phase": "paths",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/paths/receipt.json",
+      "receipt_sha256": "8e378183666adfe916330dce84f9a95193976504a08fce05350994fb36141eb3",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": true
+    },
+    {
+      "active_processes_at_primary_exit": 1,
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "tools/workspace_hygiene.py",
+        "doctor",
+        "--measure",
+        "--base",
+        "origin/dev",
+        "--max-task-roots",
+        "8",
+        "--max-worktrees",
+        "2",
+        "--max-bytes",
+        "21474836480"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": false,
+      "elapsed_seconds": 20.9911,
+      "exit_code": 1,
+      "job_empty_observed": true,
+      "job_terminated": false,
+      "normal_primary_and_empty_job": true,
+      "phase": "doctor",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/doctor/receipt.json",
+      "receipt_sha256": "ef365f65702ac6f36967dd960459ffe558bddaabf6c38c3411ee59d3f70c50dd",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": true
+    },
+    {
+      "active_processes_at_primary_exit": 2,
+      "command": [
+        "cmake",
+        "--build",
+        "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer",
+        "--config",
+        "Release",
+        "--clean-first",
+        "--parallel",
+        "2",
+        "--target",
+        "facman_cli",
+        "flb_setup_gateway_smoke",
+        "m1_three_repository_system_proof",
+        "--",
+        "/p:TrackFileAccess=false",
+        "/nr:false",
+        "/p:UseSharedCompilation=false"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": true,
+      "elapsed_seconds": 457.686763,
+      "exit_code": 0,
+      "job_empty_observed": true,
+      "job_terminated": true,
+      "normal_primary_and_empty_job": false,
+      "phase": "build",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/build/receipt.json",
+      "receipt_sha256": "16e6d99185de3b02a2eee66a10f3b6773c8e70d3507db750d04a565654c3c296",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": false
+    },
+    {
+      "active_processes_at_primary_exit": 1,
+      "command": [
+        "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman.exe",
+        "--workspace",
+        "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t",
+        "product",
+        "inspect",
+        "--json"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": false,
+      "elapsed_seconds": 0.342418,
+      "exit_code": 0,
+      "job_empty_observed": true,
+      "job_terminated": false,
+      "normal_primary_and_empty_job": true,
+      "phase": "binary-identity",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/binary-identity/receipt.json",
+      "receipt_sha256": "6cac71c48b0847f1504afee36250a0873ef0400a9d72b9c5a6c3620d90ab54aa",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": true
+    },
+    {
+      "active_processes_at_primary_exit": 1,
+      "command": [
+        "ctest",
+        "--test-dir",
+        "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer",
+        "-C",
+        "Release",
+        "--output-on-failure",
+        "--timeout",
+        "300",
+        "--no-tests=error",
+        "-j",
+        "1",
+        "-R",
+        "^(flb_setup_gateway_smoke|m1_three_repository_system_proof)$"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": false,
+      "elapsed_seconds": 21.528592,
+      "exit_code": 0,
+      "job_empty_observed": true,
+      "job_terminated": false,
+      "normal_primary_and_empty_job": true,
+      "phase": "native-ctest",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/native-ctest/receipt.json",
+      "receipt_sha256": "115844eea6af455302fc1cece5b7f44d9b09f0bd26cf62646df0f598726be744",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": true
+    },
+    {
+      "active_processes_at_primary_exit": 1,
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "tests/integration/facman_managed_install_lifecycle.py",
+        "--facman",
+        "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman.exe",
+        "--root",
+        "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\managed-move-plan-public-04",
+        "--scenario",
+        "move-preview"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": false,
+      "elapsed_seconds": 4.169518,
+      "exit_code": 0,
+      "job_empty_observed": true,
+      "job_terminated": false,
+      "normal_primary_and_empty_job": true,
+      "phase": "public-move-preview",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/public-move-preview/receipt.json",
+      "receipt_sha256": "3abe8b3d44013499dade0f099ef4acecb513b901fa0466d6bf10a92fbb79ddf6",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": true
+    },
+    {
+      "active_processes_at_primary_exit": 1,
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "unittest",
+        "tests.test_cli.CliTests.test_managed_move_cli_requires_exact_destination_grammar_without_writes",
+        "tests.test_cli.CliTests.test_managed_install_operations_are_setup_gated"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": false,
+      "elapsed_seconds": 2.269572,
+      "exit_code": 0,
+      "job_empty_observed": true,
+      "job_terminated": false,
+      "normal_primary_and_empty_job": true,
+      "phase": "cli-regressions",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/cli-regressions/receipt.json",
+      "receipt_sha256": "8d1d341740b8690b1da6e83a47ae39eed64bc60ababbccd52ab93b52881b8812",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": true
+    },
+    {
+      "active_processes_at_primary_exit": 1,
+      "command": [
+        "C:\\Users\\Jules\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        ".aide/scripts/aide_lite.py",
+        "test"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": false,
+      "elapsed_seconds": 10.992977,
+      "exit_code": 0,
+      "job_empty_observed": true,
+      "job_terminated": false,
+      "normal_primary_and_empty_job": true,
+      "phase": "aide",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/aide/receipt.json",
+      "receipt_sha256": "1c99fff1730d10d09be232ab6042ad01b294c92715b98b17df58b31e30f4a8a4",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": true
+    },
+    {
+      "active_processes_at_primary_exit": 1,
+      "command": [
+        "git",
+        "-c",
+        "core.safecrlf=false",
+        "diff",
+        "--check"
+      ],
+      "compiler_primary_exit_and_owned_cleanup_admitted": false,
+      "elapsed_seconds": 0.120361,
+      "exit_code": 0,
+      "job_empty_observed": true,
+      "job_terminated": false,
+      "normal_primary_and_empty_job": true,
+      "phase": "diff-check",
+      "primary_stopped": true,
+      "receipt": "evidence/managed-move-plan-qualification-04/diff-check/receipt.json",
+      "receipt_sha256": "1734bbe4308db20ac69819eeae70ec862005c4b1c4913c5406ffa4dbcd0738e1",
+      "termination": "completed",
+      "waited_for_job_empty_after_primary": true
+    }
+  ],
+  "compiled_identity": {
+    "backend_role": "facman_cli",
+    "binding_id": "flb.factorio",
+    "build": {
+      "build_identity": "facman=78ca6b4741a7bfd5bac029c8adb2bfe62079b2bc;universal_launcher=5479939ca5cbc9ee0f901608a92012778b4752ae;universal_setup=2749a15b835a6c1c9968598a2b434d85809691ad;provider_mode=source;provider_source_linkage=shared;provider_lock_kind=tracked;provider_conformance_only=false;provider_sdk_consumption_candidate=false;provider_candidate_differs_from_tracked=false;provider_consumption_classification=tracked_source;provider_release_identity_coherent=true;ulk_session_consumer_canary=false;msvc_runtime=static;source_dirty=true",
+      "source_dirty": true,
+      "source_revision": "78ca6b4741a7bfd5bac029c8adb2bfe62079b2bc",
+      "universal_launcher_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "universal_setup_revision": "2749a15b835a6c1c9968598a2b434d85809691ad"
+    },
+    "command_catalog_sha256": "300478fada177e7cd877ba2dcf3071ff1e764c5bb2675874459f087e19d18b40",
+    "contract_set_sha256": "908ca856fe84d9b6e4ba4893bdaf64ad24e6f4dca38539e832a33443c0617f0d",
+    "package": {
+      "authenticity": "not_applicable",
+      "backend_relative_path": null,
+      "backend_sha256": null,
+      "build_matches_package": false,
+      "closure_sha256": null,
+      "contract_set_matches_build": false,
+      "contract_set_sha256": null,
+      "detail": "running executable is not in a built package",
+      "files_verified": 0,
+      "integrity": "not_packaged",
+      "manifest_sha256": null,
+      "mode": "source_checkout",
+      "profile_id": null,
+      "source_dirty": null,
+      "source_revision": null,
+      "universal_launcher_revision": null,
+      "universal_setup_revision": null,
+      "verified": false
+    },
+    "product_id": "factorio",
+    "run_execute": {
+      "availability": "unavailable_until_isolation_proof",
+      "command": "run.execute",
+      "enabled": false,
+      "refusal_code": "isolation_not_proven"
+    },
+    "schema": "facman.backend_identity.v1",
+    "transport": {
+      "protocol_version": 2,
+      "request_schema": "facman.transport_request.v2",
+      "response_schema": "facman.transport_response.v2"
+    }
+  },
+  "compiler_output_admission": {
+    "active_members_at_primary_exit": 2,
+    "canary_qualification": false,
+    "elapsed_seconds": 457.686763,
+    "job_empty_after_owned_cleanup": true,
+    "job_terminated": true,
+    "member_identity_limit": "Original/full-build remaining members were not individually identified; later tiny-compile VCTIP observations do not identify them. Existing helper terminates only its exact assigned owned Job; no name exemptions/foreign cleanup.",
+    "natural_descendant_lifetime_pass": false,
+    "natural_descendant_lifetime_status": "NOT_QUALIFIED",
+    "primary_exit_code": 0,
+    "primary_stopped": true,
+    "termination": "completed",
+    "wait_for_natural_empty_job": false
+  },
+  "consumed_source_static": [
+    {
+      "covered_checks": [
+        "full_strict",
+        "generated_metadata_via_generated_catalog_check.generate(write=False)",
+        "technical_preview_census.main(--check)"
+      ],
+      "full_source_cohort": "managed-move-plan-source03-full-source-cohort-01.json",
+      "receipt": "managed-move-plan-source03-static-01/strict/receipt.json",
+      "receipt_sha256": "9467538279348e3b7635cc110c304356d989380e006382cb92fe2499c233d2f6",
+      "required_output": [
+        "generated-catalog: ok (0 known exceptions)",
+        "technical-preview-census: ok",
+        "strict-check: ok"
+      ]
+    },
+    {
+      "covered_checks": [
+        "11 affected command-contract/setup-workflow/engineering-quality tests"
+      ],
+      "full_source_cohort": "managed-move-plan-source03-full-source-cohort-01.json",
+      "receipt": "managed-move-plan-source03-static-01/affected-static/receipt.json",
+      "receipt_sha256": "f970d9be48d0ddf3475f18e9690e5c06aaa43fcf01b1ac9c8df58947b1d68688",
+      "required_output": [
+        "Ran 11 tests",
+        "OK"
+      ]
+    }
+  ],
+  "custody": {
+    "bytes": 1427221,
+    "manifest_member": "custody-manifest.v1.json",
+    "members": 127,
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/managed-move-plan-native.custody.zip",
+    "selected_uncompressed_bytes": 5126337,
+    "sha256": "4ba2b6081b8f7b827c1363dc1f9636d95a470d3e76bf00b50e8f9d1eb14196d4"
+  },
+  "f07_closed": false,
+  "f11_closed": false,
+  "fixture_setup_calls": 2,
+  "full_source_cohort": {
+    "before_after_equal": true,
+    "members": 5181,
+    "path": "evidence/managed-move-plan-source03-full-source-cohort-01.json",
+    "qualification_before_after_sha256": "c34505e8febab68787f80741f52ffc349a945fb0746d3f7fcf8d1988e290adf5",
+    "sha256": "5b142f9b6c735ce8469653c5ecf756fe3582cf5686b7281eaf417eeea9cf6f1b"
+  },
+  "game_qualified": false,
+  "historical_source02_passing_cohorts": {
+    "limit": "Old source02 images passed these normal cohorts before normal strict failure. No source03 or natural-build acceptance inferred.",
+    "phases": [
+      "binary-identity",
+      "native-ctest",
+      "public-move-preview",
+      "cli-regressions"
+    ],
+    "result": "evidence/managed-move-plan-qualification-03/result.json"
+  },
+  "host_qualified": false,
+  "human_cli_calls": 1,
+  "human_qualified": false,
+  "image_cohort": [
+    {
+      "bytes": 6032896,
+      "mtime_ns": 1792159980516876400,
+      "path": "facman.exe",
+      "sha256": "5c4b45c39fe8e902eae551a41e79823bd3907fc1e0f6a204e5a2c07bf620d5c1"
+    },
+    {
+      "bytes": 912384,
+      "mtime_ns": 1792160109350323300,
+      "path": "flb_setup_gateway_smoke.exe",
+      "sha256": "effd01cf56c673b879e3e1513cfce075dd9abb59ee8d86014acaea29e397d339"
+    },
+    {
+      "bytes": 3540480,
+      "mtime_ns": 1792160262909091700,
+      "path": "m1_three_repository_system_proof.exe",
+      "sha256": "ef44354aa009ffb21a160624659f5833084dcb2ea49c37e4f277d35abcfd8667"
+    },
+    {
+      "bytes": 208384,
+      "mtime_ns": 1792160115424321900,
+      "path": "ulk.dll",
+      "sha256": "d96d05b33b0df2ee2659104125d8e0f70fbc6e48b82dc302b7eb0eb8ac6b6c31"
+    },
+    {
+      "bytes": 1516544,
+      "mtime_ns": 1792160172461322600,
+      "path": "usk.dll",
+      "sha256": "99231fbff824df9446159cd91c2dfe01bb439a9f0c3138c9d9625e512696b873"
+    }
+  ],
+  "independent_actual_qualification_review": {
+    "path": "evidence/managed-move-plan-independent-qualification-review-04.json",
+    "sha256": "b0b92745ed8202347b037a5a77f34090aa4df2ea873d1feb75fe6c43c2a898a0",
+    "verdict": "PASS_SCOPED_SOURCE_BEHAVIOR_ONLY"
+  },
+  "independent_source_review": {
+    "path": "evidence/managed-move-plan-independent-source-review-03.json",
+    "sha256": "c660159a039637676c9b2fcab1f93bd3cdb25553fd5e07480c0e605ae6ddbe1b",
+    "verdict": "PASS_SOURCE_REVIEW_ONLY"
+  },
+  "json_rpc_calls": 1,
+  "limitations": [
+    "Synthetic dirty source_checkout behavior only; no fresh-commit/produced-package claim.",
+    "Natural compiler descendant lifetime NOT_QUALIFIED; original build/tiny lifetime failures remain FAIL.",
+    "Read-only observations are not atomic; no ownership/move apply/mutation permit/repair/game authority.",
+    "No genuine Factorio input read/copied/adopted/run.",
+    "Complete F07/F11/lifecycle, canonical installed owner gate, game/human/physical hosts/other platforms/Beta/release remain open."
+  ],
+  "move_apply_available": false,
+  "observations": [
+    "Pinned-provider synthetic M1 and gateway smoke passed exactly both selected native CTest targets.",
+    "Public scenario made22actual calls including synthetic fixture install plan/apply, ordinary human CLI, JSON previews and v2 RPC. Preview/refusal oracles preserve source/foreign/empty-directory/workspace/FacMan-record/provider-state/audit/parent bytes and absent destination.",
+    "Both CLI regressions passed. Exact source03 strict and11static receipts were consumed on the identical5181-member cohort, including generated metadata and technical census; AIDE/diff passed normally.",
+    "Every noncompiler dispatched/consumed command passed normal primary/empty-Job/no-termination checks. Compiler-output admission is separate and never natural-lifetime PASS."
+  ],
+  "preserved_failures": [
+    {
+      "campaign": "managed-move-plan-qualification-01",
+      "job_terminated": true,
+      "meaning": "1200s natural Job lifetime failed with2remaining members; outputs subsequently admitted only for historical source02 behavior tests; never build PASS",
+      "natural_descendant_lifetime_pass": false,
+      "phase": "build",
+      "primary_compile_exit_code": 0
+    },
+    {
+      "campaign": "managed-move-plan-qualification-03",
+      "meaning": "strict failed normally for stale project truth/manual JSON/CLI budget/handler parsing; historical source02 binary identity,2native/public/2CLI cohorts passed normally before this failure; source03 fixes now source-static PASS only",
+      "phase": "strict"
+    },
+    {
+      "campaign": "managed-move-plan-lifetime-tiny-compile-03",
+      "meaning": "Compiler primary0; exact-owned VCTIP persisted; historical diagnostic, no product qualification",
+      "natural_descendant_lifetime_pass": false
+    },
+    {
+      "campaign": "managed-move-plan-lifetime-tiny-compile-04",
+      "meaning": "VSTEL_EWDK=1 empirical attempt failed; exact-owned VCTIP persisted,20s owned Job cleanup; no VSTEL_EWDK added to this plan",
+      "natural_descendant_lifetime_pass": false
+    },
+    {
+      "campaign": "managed-move-plan-independent-source-review-01",
+      "reason": "Original decoder staging expectation setup/staging rejected real sibling destinations; source02 corrected destination.parent_path(), exact golden, native/public positive and wrong-root negative. Failed review retained.",
+      "verdict": "FAIL"
+    }
+  ],
+  "private_public_contract_limits": {
+    "apply_available": false,
+    "copy_scope": "complete_source_files_including_foreign",
+    "default_unconfigured_capability": "unavailable; explicit existing acceptance configuration required",
+    "empty_directory_preservation": "not_promised",
+    "grants_ownership": false,
+    "observation_atomic": false,
+    "owned_label_limit": "Raw copy_owned_file/ownership_required labels can describe foreign content. grants_ownership=false governs all such labels; no mutation authority.",
+    "raw_provider_plan_and_digest": "Preserved unchanged in facman.managed_move_plan.v1; exact file/effect coverage and pinned private digest validated."
+  },
+  "proof_calls": 22,
+  "provider_and_full_semantic_cache_unchanged": true,
+  "providers": {
+    "ULK": {
+      "head": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "root": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\providers\\universal-launcher-5479939ca5cb",
+      "status": ""
+    },
+    "USK": {
+      "head": "2749a15b835a6c1c9968598a2b434d85809691ad",
+      "root": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-u-507ecf4b41\\providers\\universal-setup-2749a15b835a",
+      "status": ""
+    }
+  },
+  "public_dispatches": {
+    "closed_move_apply": 1,
+    "fixture_setup": 2,
+    "human": 1,
+    "json": 20,
+    "move_plan": 19,
+    "move_plan_default_unavailable": 1,
+    "move_plan_refusals": 14,
+    "move_plan_success": 4,
+    "v2_rpc": 1
+  },
+  "public_fixture_bytes": 81823,
+  "public_receipt_sha256": "c6723c32725981f4fed0c028d515cf7fe825fe1e79da0ecd6ee9b7ba24b1592e",
+  "publication_delta": "Only exact reviewed ExecPlan append and two evidence files follow qualification; runtime unchanged. Original qualified ExecPlan hash remains in frozen47.",
+  "qualification_result": {
+    "path": "evidence/managed-move-plan-qualification-04/result.json",
+    "sha256": "05f7c59a57b07d3b89b409ce9c296672e84203f3b485fa3b596f1a8c1e851f75"
+  },
+  "qualified_changed_file_count": 47,
+  "qualified_source_files_sha256": {
+    ".aide/memory/project-state.md": "609fd1ec323011a09d157eb9715ee44e98786e76742c87d2a2d5dbdc21ccd052",
+    ".aide/memory/project-state.v2.json": "a5ace2434333389484c8e0e6d6ef7c66d42f47498ac428195e576c5ffb8f82de",
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/ExecPlan.md": "609a3f89ee015dee9bef1f7a3cbadb5f165e25566081afdef42284880b07302f",
+    "README.md": "ef2067c7bf4df9696489d1e3fa2e41a1cb170feccc21e721b17c095a25d17eb9",
+    "apps/cli/command_dispatch.cpp": "20542cf889a9d2d118d3295cdf1ccb439a955b0cb8a2932cd368a6aaf6003f9c",
+    "apps/cli/completions/FacMan.ps1": "ecc3e9f5968fa4177e6d3db0bc5f2e7f09c084d4c4cfc39b26f05b4597cd2c8c",
+    "apps/cli/completions/_facman": "367e5ed30c60ac3a801fb178b61decff79d9bed0fa7bba725b55d3aa5ab29f1a",
+    "apps/cli/completions/facman.bash": "16ffecd26f062fc29f492f51b57dcf3f4b597ec09d4f304080359b38ff38c3e1",
+    "apps/cli/completions/facman.fish": "9602914afe106b869eb37e2aaa039458d13d1aa3b7fe58815c7135e30a5ac9a5",
+    "apps/cli/generated/command_help.inc": "9f8693c2448a7a8c9e25fa54d7c641fd2c56a9b7425906c6288468629c537a21",
+    "apps/cli/report_text.cpp": "ff6b7aa8e87ef790cb43398fd098fa29a77c2a7a9b48e81c298fc9a03db88801",
+    "apps/cli/report_text.h": "8676787051ab1bdac8eae6bbb9df05f428a7c00303bf362a1c73303ffb38aeed",
+    "apps/cli/setup_commands.cpp": "54ad7c913903d4bf165b215b92f7fce7f42c0bdd1386f9e1275ef229d5455294",
+    "apps/cli/setup_commands.h": "beaa8cf266fe40dcfa3d9fb6ddecaa7dc2055d96671aab2860a8fd7263304861",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h": "98355e5919b9d3af2afef329724a9d5cca2057dc37eca77628f0395d84aa0497",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m": "d798753a43a9f12fedd75f60e4e3de72e5b50fb6b8af88052004ff48e9152074",
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "d1f705c0c08855bb36f317962f7f348e506b656d045831c02a1d841423ef0a86",
+    "apps/tui/generated_command_catalog.hpp": "f99ea6c755cb79a45777173cf37ba866159bfc985d3b45660996aad1b7e8afcf",
+    "contracts/command/factorio/installs.move.plan.v1.toml": "b45f08a1d4082d261e00b888cb9e1925872b5fe1f7f0c23c3688a0394556fac6",
+    "contracts/command/frontend/frontend.required_commands.v1.toml": "171fbb14b835881e169c65f1d8f578e2249de0ab13d8599939f5e4150908037e",
+    "contracts/generated-index/command_catalog.v2.json": "0c4929ac25b99976893938b94cc4b115f4ea307172798ddd61868001f665f851",
+    "contracts/generated-index/command_cli_grammar.v2.json": "25c308b2336ccbddf03275abbb033c650c8a6c456946a7121cab3cb1561521a3",
+    "contracts/generated-index/frontend_command_catalog.v1.json": "50bb09cc7f29315f9c66e14e05697b9204a61fd970d5786b5aa0bf480853f329",
+    "contracts/refusal/refusal_codes.v1.toml": "7e226b18e76ccd598f8573e058cb3038a2ffd0d182f003f6d27fb076dbae38f4",
+    "contracts/schema/factorio/facman_managed_move_plan.v1.schema.json": "47607aaf072cbc3721c056258c7b9e988896bf180e9d90a1e63a63cfacd7e1e2",
+    "contracts/schema/factorio/usk_move_plan.v1.schema.json": "ed5250230e07a96985e44132652a78dfaae865df1582ab48a614551358ab1a0b",
+    "docs/architecture/managed-setup-command-workflows.v1.md": "c7a72c55bf4338611a3a583c04305bdcd4cc1132ff3651a4aa1572495a283687",
+    "docs/reference/generated-command-catalog.md": "637665a860e5ab0e85a51a963ef5e53d7bd97c0b091592cf44eb6f7c46817f07",
+    "release/generated/technical_preview_command_api_conformance.v1.json": "7315f6ee12151456a4d24a0577cb2f50543886f3190c4d04213568bd373d40d2",
+    "runtime/core/generated/command_catalog.h": "7078d93be93d5599b9b3a3acef791e84dc2dd360fb58f25b672c6c555027ef04",
+    "runtime/core/generated/version.h": "6de196283b4f3880ff04aad9ba6a34a4780a9a742d88f3e29e3e295f5c565bbd",
+    "runtime/factorio/application/generated/command_ids.inc": "54825bcc7e352060ba1d13b5ddd0eaa5a90bba8313acd800b64463a68b063610",
+    "runtime/factorio/application/generated/command_lookup.inc": "c69c98b3956898d08d8126524cc5f769eb82ae0750ff8e0461d91ec9b1d477ba",
+    "runtime/factorio/application/generated/command_names.inc": "33564372c17bc85cfc0677d672a2bbc17a2a9f2edd549f37cf2fb579bc351f59",
+    "runtime/factorio/application/generated/command_writes.inc": "3f37fafb3999121d6abf7794b00da019e6077e4dbc405c83ca537dded703dc78",
+    "runtime/factorio/application/generated/request_contracts.inc": "1de11ed6c85856780517b047b27e225023b21e80df3f8601a392b75cde6ed2cc",
+    "runtime/factorio/application/handlers/setup.cpp": "6bcc7d05ab4713826289def23b6e62f1ea72e526a8f1bb065fcab15fc0091f91",
+    "runtime/factorio/application/setup_gateway.cpp": "cf10aa4774104deae65ea1638f55c517409b12d6e806f310864c04e900e126e6",
+    "runtime/factorio/application/setup_gateway.h": "2867f581e11d30dd22b7ef0c8dfdfb4d7f0e60411ef79755846216155e3f7b54",
+    "tests/golden/commands/installs.move.plan.refusal.json": "9d93eab5d41e2cb5a7dfe0b510469882645331477744521e8b170c54595a596b",
+    "tests/golden/commands/installs.move.plan.success.json": "7aa4f9076317cf3ddcf680b58ebd77ba0eb065a8838a2771ce2e041f01cd0476",
+    "tests/integration/facman_managed_install_lifecycle.py": "1d03a5947df7547974cc5829a8c08bf9722129658b4ada05de518a890ef9d8f7",
+    "tests/native/flb_setup_gateway_smoke.cpp": "1b4eb2a9c538c5bf2f3d13cb7e49feaddfb90a16536ef51326b0b6af0a6fdaeb",
+    "tests/native/m1_three_repository_system_proof.cpp": "53f298f30faf28e0e88f2d50f52737a46184587c5ffb902e00a81a80e3da1896",
+    "tests/test_cli.py": "757a0e74b6ffe9b7e4560ae44ac3d1390acf3a92ca90a767e39a755fd828b660",
+    "tests/test_command_contracts.py": "cd1febc6571ba04100a04dcc77aa4e82c8fd2008ba152538f2bb73eeec0688e4",
+    "tools/setup_workflow_check.py": "ae3fd73b1c2a6d1bc42adfe16a14c5b0b56582b338e58c9e48cf274a0e1ee992"
+  },
+  "release_qualified": false,
+  "resource_budget": {
+    "actual_after": {
+      "additional_peak_bytes": 0,
+      "free_after_peak_bytes": 18129027072,
+      "free_bytes": 18129027072,
+      "measured_root_bytes": 15138355482,
+      "projected_root_bytes": 15138355482,
+      "task_roots": 8,
+      "utc": "2026-10-16T14:19:55.454470+00:00"
+    },
+    "actual_before": {
+      "additional_peak_bytes": 3221225472,
+      "free_after_peak_bytes": 14850658304,
+      "free_bytes": 18071883776,
+      "measured_root_bytes": 15137170683,
+      "projected_root_bytes": 18358396155,
+      "task_roots": 8,
+      "utc": "2026-10-16T14:08:09.903652+00:00"
+    },
+    "actual_build_admission": {
+      "additional_peak_bytes": 3221225472,
+      "free_after_peak_bytes": 14835531776,
+      "free_bytes": 18056757248,
+      "measured_root_bytes": 15137185445,
+      "projected_root_bytes": 18358410917,
+      "task_roots": 8,
+      "utc": "2026-10-16T14:10:03.743859+00:00"
+    },
+    "actual_retained_growth_bytes": 1184799,
+    "doctor_advisory_only": [
+      "unmanaged_secondary_worktrees_present"
+    ],
+    "limits": {
+      "aide_seconds": 600,
+      "available_ram_bytes": 3221225472,
+      "build_output_bytes_per_stream": 33554432,
+      "build_primary_and_job_lifetime_seconds": 1200,
+      "build_workers": 2,
+      "cli_regression_seconds": 300,
+      "heavy_jobs": 1,
+      "individual_wait_seconds_max": 60,
+      "native_ctest_seconds": 300,
+      "new_object_link_peak_budget_bytes": 2147483648,
+      "new_total_bytes": 3221225472,
+      "other_output_bytes_per_stream": 8388608,
+      "owned_safety_cleanup_seconds": 5,
+      "public_fixture_bytes": 268435456,
+      "public_scenario_seconds": 600,
+      "raw_and_source_evidence_budget_bytes": 536870912,
+      "reserve_bytes": 12884901888,
+      "resource_first_latest_bytes_per_phase": 16777216,
+      "resource_probe_seconds": 45,
+      "resource_wait_lifetime": "indefinite, bounded storage, no LLM/status polling or healthy-wait output",
+      "source_cohort_bytes_per_file": 16777216,
+      "strict_seconds": 600,
+      "task_root_bytes": 21474836480,
+      "task_roots": 8,
+      "temporary_budget_bytes": 268435456,
+      "wait_backoff_seconds": [
+        60,
+        120,
+        300,
+        600
+      ]
+    },
+    "no_foreign_cleanup": true
+  },
+  "schema": "facman.managed_move_plan_native_acceptance.v1",
+  "source_base": "78ca6b4741a7bfd5bac029c8adb2bfe62079b2bc",
+  "source_branch": "task/facman-managed-move-plan-01",
+  "source_dirty": true,
+  "source_head_tree": "8cb46774620a563f152f3af3477b3f6b29c8c4e5",
+  "status": "SOURCE_BEHAVIOR_PASS_WITH_COMPILER_OWNED_CLEANUP",
+  "work_item": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+  "workunit_closed": false
+}

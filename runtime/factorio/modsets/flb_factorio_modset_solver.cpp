@@ -10,6 +10,8 @@
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 #include "flb_factorio_modsets.h"
+#include "flb_factorio_content_records.h"
+#include "flb_factorio_modset_operations.h"
 
 #include <algorithm>
 #include <cctype>
@@ -19,6 +21,7 @@
 #include <set>
 #include <system_error>
 #include <thread>
+#include <utility>
 
 namespace facman::factorio::modsets::solver {
 namespace fs = std::filesystem;
@@ -52,6 +55,11 @@ struct ResolvedPlan {
     std::uint32_t states = 0;
     std::uint32_t backtracks = 0;
     std::uint32_t edges = 0;
+    std::string locked_plan;
+    std::string preserved_lock;
+    std::string operation_id;
+    std::string attempt_id;
+    std::function<facman::core::Result<std::string>()> protected_inputs;
 };
 
 template<typename T>
@@ -154,6 +162,38 @@ std::map<std::string, CurrentEntry> current_lock(const std::string& text)
         output[name] = entry;
     }
     return output;
+}
+
+facman::core::Result<std::map<std::string, bool>> activation_entries(
+    const std::string& text, bool exact_fields = false)
+{
+    using Entries = std::map<std::string, bool>;
+    json::Limits limits;
+    limits.maximum_bytes = kMaximumStateFileBytes;
+    limits.maximum_depth = 24U;
+    limits.maximum_nodes = 100000U;
+    auto document = json::parse(text, limits);
+    const auto* mods = document ? document.value().find("mods") : nullptr;
+    if (!document || !document.value().is_object() || !mods || !mods->is_array())
+        return failure<Entries>("modset_activation_invalid", "Mod list must contain a mods array");
+    if (exact_fields && document.value().object_keys() != std::vector<std::string>{"mods"})
+        return failure<Entries>("modset_activation_foreign", "Preserve unrecognized mod-list fields for explicit content repair");
+    Entries entries;
+    for (std::size_t index = 0; index < mods->size(); ++index) {
+        const auto* item = mods->at(index);
+        const auto name = item ? field_string(*item, "name") : std::string();
+        const auto* flag = item ? item->find("enabled") : nullptr;
+        auto active = flag ? flag->bool_value() : facman::core::Result<bool>::success(false);
+        std::string detail;
+        auto keys = item && item->is_object() ? item->object_keys() : std::vector<std::string>{};
+        std::sort(keys.begin(), keys.end());
+        if (!item || !item->is_object() || !facman::base::validate_identifier(name, detail) ||
+            !flag || !active || !entries.emplace(name, active.value()).second)
+            return failure<Entries>("modset_activation_invalid", "Mod list entries require unique names and boolean enabled flags");
+        if (exact_fields && keys != std::vector<std::string>{"enabled", "name"})
+            return failure<Entries>("modset_activation_foreign", "Preserve unrecognized mod-list fields for explicit content repair");
+    }
+    return facman::core::Result<Entries>::success(std::move(entries));
 }
 
 std::string state_fingerprint(
@@ -335,7 +375,8 @@ facman::core::Result<ResolvedPlan> resolve_plan(const fs::path& workspace, const
         if (mods == nullptr || !mods->is_array() || mods->size() != 0U) return failure<ResolvedPlan>(
             "modset_external_drift", "Current lock cannot be parsed as trusted local state");
     }
-    auto inventory = facman::factorio::mods::local_inventory(workspace);
+    auto inventory = facman::factorio::mods::local_inventory(workspace, {},
+        request.exact_selection.name.empty() ? std::string() : request.instance_id);
     if (!inventory) return failure<ResolvedPlan>(inventory.error().code, inventory.error().message, fs::u8path(inventory.error().path));
     auto preferred = preferences(request);
     if (!preferred) return failure<ResolvedPlan>(preferred.error().code, preferred.error().message);
@@ -349,11 +390,20 @@ facman::core::Result<ResolvedPlan> resolve_plan(const fs::path& workspace, const
     std::vector<facman::factorio::mods::ModRef> filtered;
     for (const auto& mod : inventory.value()) {
         const bool admitted = mod.virtual_package ? mod.source == install_source : contains(mod.instance_references, request.instance_id);
+        const auto& exact = request.exact_selection;
+        if (!exact.name.empty() && mod.name == exact.name &&
+            (mod.virtual_package || mod.version != exact.version ||
+                mod.file_name != exact.file_name || mod.source != exact.source ||
+                mod.sha256 != exact.sha256 ||
+                mod.file_path != instance.value().record.root / "mods" / exact.file_name)) continue;
         if (admitted && mod.valid && factorio_versions_compatible(mod.factorio_version, instance.value().record.factorio_version)) {
             filtered.push_back(mod);
         }
     }
     for (const auto& mod : filtered) engine.candidates[mod.name].push_back(&mod);
+    if (!request.exact_selection.name.empty() && engine.candidates.count(request.exact_selection.name) == 0) {
+        return failure<ResolvedPlan>("modset_exact_selection_unavailable", "The confirmed selected-instance artifact is unavailable");
+    }
     if (engine.candidates.size() > request.budgets.maximum_packages) {
         return failure<ResolvedPlan>("solver_budget_exceeded", "Local package count exceeds maximum_packages");
     }
@@ -376,12 +426,21 @@ facman::core::Result<ResolvedPlan> resolve_plan(const fs::path& workspace, const
         });
     }
     std::set<std::string> seeds(request.enabled_mods.begin(), request.enabled_mods.end());
+    if (!request.exact_selection.name.empty()) {
+        // Version maintenance retains the other declared enabled packages.
+        // Its exact artifact is a hard constraint; dependency failure refuses.
+        seeds.insert(request.exact_selection.name);
+        for (const auto& entry : current) if (entry.second.enabled) seeds.insert(entry.first);
+    }
     if (seeds.empty()) for (const auto& entry : current) if (entry.second.enabled) seeds.insert(entry.first);
     if (seeds.empty()) for (const auto& mod : filtered) if (!mod.virtual_package) seeds.insert(mod.name);
     for (const std::string& seed : seeds) if (engine.disabled.count(seed) == 0 && !engine.resolve(seed, {}, {}, {})) {
         const std::string code = engine.failure_detail.find("budget") != std::string::npos
             ? "solver_budget_exceeded" : "local_dependency_unavailable";
         return failure<ResolvedPlan>(code, engine.failure_detail);
+    }
+    if (!request.exact_selection.name.empty() && engine.selected.count(request.exact_selection.name) == 0) {
+        return failure<ResolvedPlan>("modset_exact_selection_unavailable", "The confirmed artifact was not selected");
     }
     ResolvedPlan output;
     output.instance = instance.take_value();
@@ -805,6 +864,263 @@ facman::core::Result<std::string> activation_id(
     return failure<std::string>("persistent_target_exists", "Activation attempt limit reached", mods_root);
 }
 
+struct LockedObservation {
+    bool present = false;
+    std::string text;
+    std::string identity = "absent";
+};
+
+facman::core::Result<LockedObservation> observe_locked_file(const fs::path& path, bool missing = false)
+{
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return failure<LockedObservation>("modset_path_unsafe", detail, path);
+    facman::platform::PathIdentity status;
+    if (!facman::platform::inspect_path_no_follow(path, status).ok())
+        return failure<LockedObservation>("modset_state_read_failed", "State path cannot be observed", path);
+    if (!status.exists && missing) return facman::core::Result<LockedObservation>::success({});
+    facman::platform::StableInputFile input;
+    if (!input.open_no_follow_pinned(path).ok() || !input.identity().regular_file ||
+        input.identity().link_count != 1U || input.size() > kMaximumStateFileBytes)
+        return failure<LockedObservation>("modset_state_read_failed", "State is not a bounded singly-linked regular file", path);
+    LockedObservation observed;
+    observed.present = true;
+    observed.text.resize(static_cast<std::size_t>(input.size()));
+    std::uint64_t offset = 0;
+    while (offset < input.size()) {
+        const auto count = input.read_at(offset, observed.text.data() + offset,
+            observed.text.size() - static_cast<std::size_t>(offset));
+        if (count == 0U) return failure<LockedObservation>("modset_state_read_failed", "State read ended before EOF", path);
+        offset += count;
+    }
+    if (!input.revalidate_path().ok() || facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return failure<LockedObservation>("modset_external_drift", "State changed during observation", path);
+    observed.identity = "file:" + std::to_string(input.identity().device) + ":" +
+        std::to_string(input.identity().object) + ":" + std::to_string(input.size()) + ":" + sha256_text(observed.text);
+    return facman::core::Result<LockedObservation>::success(std::move(observed));
+}
+
+facman::core::Result<std::string> locked_parent_identity(const fs::path& path)
+{
+    facman::platform::StableDirectoryObject parent;
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail) || !parent.open_no_follow(path).ok() ||
+        !parent.revalidate().ok() || facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return failure<std::string>("modset_path_unsafe", "Content parent is unavailable or unsafe", path);
+    return facman::core::Result<std::string>::success(tx::directory_effect_identity(parent));
+}
+
+facman::core::Result<ResolvedPlan> locked_activation(const fs::path& workspace, const std::string& id)
+{
+    auto loaded = load_instance(workspace, id);
+    if (!loaded) return facman::core::Result<ResolvedPlan>::failure(loaded.error());
+    ResolvedPlan plan;
+    plan.instance = loaded.take_value();
+    auto root = locked_parent_identity(plan.instance.record.root);
+    if (!root) return facman::core::Result<ResolvedPlan>::failure(root.error());
+    const std::vector<fs::path> targets {plan.instance.mod_list, plan.instance.local_lock, plan.instance.shared_lock};
+    const std::vector<std::string> keys {"mod-list", "local-lock", "shared-lock"};
+    std::vector<LockedObservation> before;
+    json::ObjectBuilder target_inputs;
+    for (std::size_t index = 0; index < targets.size(); ++index) {
+        auto observed = observe_locked_file(targets[index], index == 0U);
+        auto parent = locked_parent_identity(targets[index].parent_path());
+        if (!observed) return facman::core::Result<ResolvedPlan>::failure(observed.error());
+        if (!parent) return facman::core::Result<ResolvedPlan>::failure(parent.error());
+        json::ObjectBuilder entry;
+        entry.add_string("path", facman::platform::path_to_utf8(targets[index]));
+        entry.add_string("identity", observed.value().identity);
+        entry.add_string("parent_identity", parent.value());
+        entry.add_bool("present", observed.value().present);
+        entry.add_string("sha256", observed.value().present ? sha256_text(observed.value().text) : "");
+        target_inputs.add_object(keys[index], entry);
+        before.push_back(observed.take_value());
+    }
+    if (before[1].text.empty() || before[1].text != before[2].text)
+        return failure<ResolvedPlan>("modset_external_drift", "Exact instance and shared locks must agree");
+    auto lock = facman::factorio::content::content_lock_from_modset_lock_json(before[1].text);
+    if (!lock || lock.value().instance_id != id || lock.value().factorio_version != plan.instance.record.factorio_version)
+        return failure<ResolvedPlan>("modset_lock_invalid", "Content lock does not describe the current instance");
+    if (lock.value().entries.size() > Budgets{}.maximum_packages)
+        return failure<ResolvedPlan>("solver_budget_exceeded", "Pinned package count exceeds the existing local content budget");
+    const auto verified = facman::factorio::modsets::operations::verify_modset(workspace, {id});
+    const auto* report = std::get_if<facman::factorio::modsets::operations::VerifyResult>(&verified);
+    if (!report || !report->problems.empty())
+        return failure<ResolvedPlan>("modset_locked_artifacts_unavailable", "The exact locked archives and metadata must verify before activation");
+    auto inventory = facman::factorio::mods::local_inventory(workspace);
+    if (!inventory) return facman::core::Result<ResolvedPlan>::failure(inventory.error());
+    plan.inventory.reserve(lock.value().entries.size());
+    std::set<std::string> expected {"base"};
+    json::ArrayBuilder artifacts;
+    for (const auto& entry : lock.value().entries) {
+        if (!entry.enabled) continue;
+        expected.insert(entry.name);
+        const auto selected = std::find_if(inventory.value().begin(), inventory.value().end(), [&](const auto& mod) {
+            return mod.valid && mod.name == entry.name && mod.version == entry.version &&
+                mod.file_name == entry.file_name && mod.sha256 == entry.sha256 && mod.source == entry.source &&
+                mod.virtual_package == entry.virtual_package &&
+                (mod.virtual_package ? mod.source == "install-data:" + plan.instance.record.install_ref.str() &&
+                    mod.metadata_source == "builtin_info_json" && mod.validation_status == "virtual" :
+                    contains(mod.instance_references, id));
+        });
+        if (entry.virtual_package && selected == inventory.value().end())
+            return failure<ResolvedPlan>("modset_locked_artifacts_unavailable", "A pinned local artifact or built-in provenance is unavailable");
+        auto pinned = entry.virtual_package ? *selected : facman::factorio::mods::inspect_mod_zip(
+            plan.instance.record.root / "mods" / fs::u8path(entry.file_name));
+        if (!pinned.valid || pinned.name != entry.name || pinned.version != entry.version ||
+            pinned.file_name != entry.file_name || pinned.sha256 != entry.sha256 ||
+            pinned.source != entry.source || pinned.virtual_package != entry.virtual_package)
+            return failure<ResolvedPlan>("modset_locked_artifacts_unavailable", "The instance's exact pinned artifact is unavailable");
+        plan.inventory.push_back(std::move(pinned));
+        const auto& owned = plan.inventory.back();
+        plan.selected[entry.name] = &owned;
+        const auto path = owned.virtual_package ? owned.file_path / "info.json" : owned.file_path;
+        auto observed = observe_locked_file(path);
+        if (!observed) return facman::core::Result<ResolvedPlan>::failure(observed.error());
+        if (!owned.virtual_package && sha256_text(observed.value().text) != entry.sha256)
+            return failure<ResolvedPlan>("modset_archive_changed", "A pinned archive changed during observation", path);
+        json::ObjectBuilder artifact;
+        artifact.add_string("path", facman::platform::path_to_utf8(path));
+        artifact.add_string("identity", observed.value().identity);
+        artifacts.add_object(artifact);
+    }
+    if (before[0].present) {
+        auto entries = activation_entries(before[0].text, true);
+        if (!entries) return facman::core::Result<ResolvedPlan>::failure(entries.error());
+        std::set<std::string> enabled;
+        for (const auto& entry : entries.value()) {
+            if (!expected.count(entry.first))
+                return failure<ResolvedPlan>("modset_activation_foreign", "Preserve unselected mod-list entries for explicit content repair");
+            if (entry.second) enabled.insert(entry.first);
+        }
+        if (enabled == expected) return failure<ResolvedPlan>("modset_activation_already_current", "Locked activation is already current");
+    }
+    auto record = observe_locked_file(plan.instance.record.source_path);
+    if (!record) return facman::core::Result<ResolvedPlan>::failure(record.error());
+    plan.current = current_lock(before[1].text);
+    plan.current_state_sha256 = state_fingerprint(before[0].text, before[1].text, before[2].text);
+    plan.preserved_lock = before[1].text;
+    plan.explanation.push_back("Activate only the exact already verified local lock; do not resolve a new selection");
+    plan.plan_id = sha256_text(plan_core_json(plan));
+    json::ArrayBuilder desired;
+    for (const auto& selected : plan.selected) desired.add_object(selected_entry(*selected.second));
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.locked_content_activation_plan.v1");
+    output.add_string("instance_id", id);
+    output.add_string("instance_identity", record.value().identity);
+    output.add_string("root_identity", root.value());
+    output.add_string("lock_sha256", sha256_text(plan.preserved_lock));
+    output.add_string("mod_list_sha256", sha256_text(mod_list_json(plan)));
+    output.add_string("owner_plan_id", plan.plan_id);
+    output.add_array("desired_mods", desired);
+    output.add_object("before_targets", target_inputs);
+    output.add_array("artifact_inputs", artifacts);
+    for (std::size_t index = 0; index < targets.size(); ++index) {
+        auto observed = observe_locked_file(targets[index], index == 0U);
+        if (!observed || observed.value().identity != before[index].identity)
+            return failure<ResolvedPlan>("modset_external_drift", "Content inputs changed during activation planning");
+    }
+    auto after_record = observe_locked_file(plan.instance.record.source_path);
+    auto after_instance = load_instance(workspace, id);
+    if (!after_record || after_record.value().identity != record.value().identity || !after_instance ||
+        after_instance.value().record.root != plan.instance.record.root ||
+        after_instance.value().record.install_ref.str() != plan.instance.record.install_ref.str() ||
+        after_instance.value().record.factorio_version != plan.instance.record.factorio_version ||
+        after_instance.value().record.profile != plan.instance.record.profile)
+        return failure<ResolvedPlan>("modset_external_drift", "Instance changed during activation planning");
+    const auto reverified = facman::factorio::modsets::operations::verify_modset(workspace, {id});
+    const auto* current_report = std::get_if<facman::factorio::modsets::operations::VerifyResult>(&reverified);
+    auto artifact_document = json::parse(artifacts.serialize());
+    if (!current_report || !current_report->problems.empty() || !artifact_document)
+        return failure<ResolvedPlan>("modset_external_drift", "Locked metadata changed during activation planning");
+    for (std::size_t index = 0; index < artifact_document.value().size(); ++index) {
+        const auto* artifact = artifact_document.value().at(index);
+        auto observed = observe_locked_file(facman::platform::path_from_utf8(field_string(*artifact, "path")));
+        if (!observed || observed.value().identity != field_string(*artifact, "identity"))
+            return failure<ResolvedPlan>("modset_external_drift", "Pinned artifact changed during activation planning");
+    }
+    for (std::size_t index = 0; index < targets.size(); ++index) {
+        auto observed = observe_locked_file(targets[index], index == 0U);
+        if (!observed || observed.value().identity != before[index].identity)
+            return failure<ResolvedPlan>("modset_external_drift", "Content state changed during final activation observation");
+    }
+    auto final_record = observe_locked_file(plan.instance.record.source_path);
+    auto final_root = locked_parent_identity(plan.instance.record.root);
+    if (!final_record || final_record.value().identity != record.value().identity || !final_root || final_root.value() != root.value())
+        return failure<ResolvedPlan>("modset_external_drift", "Instance changed during final activation observation");
+    auto body = json::parse(output.serialize());
+    auto canonical = body ? json::canonical_integer_json(body.value()) : json::canonical_integer_json(json::Value{});
+    if (!canonical) return failure<ResolvedPlan>("modset_locked_plan_invalid", "Locked activation plan cannot be canonicalized");
+    output.add_string("plan_sha256", sha256_text(canonical.value()));
+    plan.locked_plan = output.serialize();
+    return facman::core::Result<ResolvedPlan>::success(std::move(plan));
+}
+
+facman::core::Result<std::string> locked_commit_context(const ResolvedPlan& plan,
+    const std::vector<StateFile>& files, const fs::path& stage, const fs::path& history)
+{
+    auto admitted = json::parse(plan.locked_plan);
+    const auto* before = admitted ? admitted.value().find("before_targets") : nullptr;
+    const auto* artifacts = admitted ? admitted.value().find("artifact_inputs") : nullptr;
+    auto instance = observe_locked_file(plan.instance.record.source_path);
+    auto root = locked_parent_identity(plan.instance.record.root);
+    if (!before || !before->is_object() || !artifacts || !artifacts->is_array() || !instance ||
+        instance.value().identity != field_string(admitted.value(), "instance_identity") || !root ||
+        root.value() != field_string(admitted.value(), "root_identity"))
+        return failure<std::string>("modset_external_drift", "Locked activation admission changed");
+    for (std::size_t index = 0; index < artifacts->size(); ++index) {
+        const auto* artifact = artifacts->at(index);
+        if (!artifact || !artifact->is_object()) return failure<std::string>("modset_locked_plan_invalid", "Pinned input binding is invalid");
+        auto current = observe_locked_file(facman::platform::path_from_utf8(field_string(*artifact, "path")));
+        if (!current || current.value().identity != field_string(*artifact, "identity"))
+            return failure<std::string>("modset_archive_changed", "A pinned content input changed before publication");
+    }
+    json::ArrayBuilder effects;
+    for (std::size_t index = 0; index < files.size(); ++index) {
+        const auto& file = files[index];
+        const auto* original = before->find(file.key);
+        auto current = observe_locked_file(file.target, !file.before_present);
+        auto parent = locked_parent_identity(file.target.parent_path());
+        const auto staged_path = stage / (index == 0U ? "mod-list.json" : index == 1U ? "local-lock.json" : "shared-lock.json");
+        auto staged = observe_locked_file(staged_path);
+        if (!original || !current || !parent || !staged || current.value().identity != field_string(*original, "identity") ||
+            parent.value() != field_string(*original, "parent_identity") || staged.value().text != file.after)
+            return failure<std::string>("modset_external_drift", "Exact content targets, parents or staged bytes changed");
+        json::ObjectBuilder effect;
+        effect.add_string("key", file.key);
+        effect.add_string("target", facman::platform::path_to_utf8(file.target));
+        effect.add_string("parent_identity", parent.value());
+        effect.add_string("identity", staged.value().identity);
+        effect.add_string("sha256", sha256_text(file.after));
+        if (file.before_present) {
+            auto backup = observe_locked_file(history / (file.key + ".before"));
+            if (!backup || backup.value().text != file.before)
+                return failure<std::string>("modset_history_invalid", "An exact retained backup changed");
+            effect.add_string("backup_identity", backup.value().identity);
+        } else effect.add_string("backup_identity", "absent");
+        effects.add_object(effect);
+    }
+    auto manifest = observe_locked_file(history / "activation.v1.json");
+    if (!manifest) return facman::core::Result<std::string>::failure(manifest.error());
+    auto stage_identity = locked_parent_identity(stage);
+    auto history_identity = locked_parent_identity(history);
+    auto history_parent = locked_parent_identity(history.parent_path());
+    if (!stage_identity || !history_identity || !history_parent)
+        return failure<std::string>("modset_path_unsafe", "Activation staging or history custody is unavailable");
+    json::ObjectBuilder context;
+    context.add_string("schema", "factorio.locked_content_activation_commit.v1");
+    context.add_string("operation_id", plan.operation_id);
+    context.add_string("attempt_id", plan.attempt_id);
+    context.add_string("history_id", plan.transaction_id);
+    context.add_value("plan", admitted.value());
+    context.add_array("effects", effects);
+    context.add_string("history_identity", manifest.value().identity);
+    context.add_string("stage_directory_identity", stage_identity.value());
+    context.add_string("history_directory_identity", history_identity.value());
+    context.add_string("history_parent_identity", history_parent.value());
+    return facman::core::Result<std::string>::success(context.serialize());
+}
+
 facman::core::Result<std::string> apply_plan(const fs::path& workspace, ResolvedPlan plan)
 {
     facman::base::StableLocalLock configuration_lock;
@@ -812,6 +1128,10 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
     if (!locked.acquired()) return failure<std::string>(
         locked.code == facman::base::StableLockCode::contended ? "instance_configuration_lock_contended" : "instance_configuration_lock_unsafe",
         locked.detail, plan.instance.record.root);
+    if (plan.protected_inputs) {
+        auto current = plan.protected_inputs();
+        if (!current) return current;
+    }
     plan.plan_id = sha256_text(plan_core_json(plan));
     for (const auto& selected : plan.selected) if (!selected.second->virtual_package) {
         auto current = facman::factorio::mods::inspect_mod_zip(selected.second->file_path);
@@ -820,7 +1140,7 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
         }
     }
     const std::string new_mod_list = mod_list_json(plan);
-    const std::string new_lock = lock_json(plan);
+    const std::string new_lock = plan.locked_plan.empty() ? lock_json(plan) : plan.preserved_lock;
     std::vector<StateFile> files;
     for (auto result : {
             state_file("mod-list", plan.instance.mod_list, new_mod_list),
@@ -874,6 +1194,11 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
         transaction.sources.push_back(selected.second->file_path);
     }
     transaction.commit_strategy = "backup_then_atomic_replace_with_rollback";
+    if (!plan.locked_plan.empty()) {
+        auto context = locked_commit_context(plan, files, stage, history);
+        if (!context) return facman::core::Result<std::string>::failure(context.error());
+        transaction.operation_context = context.take_value();
+    }
     auto started = tx::TransactionSession::begin(workspace, std::move(transaction));
     if (!started) return failure<std::string>("recovery_write_refused", started.error().message);
     tx::TransactionSession session = started.take_value();
@@ -897,6 +1222,15 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
         session.require_recovery(detail);
         return failure<std::string>("transaction_recovery_required", detail, stage,
             facman::core::OutcomeKind::recovery_required);
+    }
+    if (!plan.locked_plan.empty()) {
+        auto context = locked_commit_context(plan, files, stage, history);
+        if (!context || context.value() != session.record().operation_context) {
+            session.require_recovery("Locked activation identities changed before publication; staging is retained");
+            return failure<std::string>("transaction_recovery_required",
+                "Locked activation identities changed before publication; preserve staging and inspect recovery", stage,
+                facman::core::OutcomeKind::recovery_required);
+        }
     }
     const char* pause_enabled = std::getenv("FACMAN_TEST_MODSET_APPLY_BEFORE_PUBLICATION_PAUSE");
     if (pause_enabled != nullptr && std::string(pause_enabled) == "1") {
@@ -989,6 +1323,23 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
     std::string output = serialize_plan(plan, "modsets.apply", true);
     auto document = json::parse(output);
     if (!document) return failure<std::string>("modset_result_invalid", "Applied result could not be serialized");
+    if (!plan.locked_plan.empty()) {
+        auto admitted = json::parse(plan.locked_plan);
+        json::ObjectBuilder receipt;
+        receipt.add_string("schema", "factorio.locked_content_activation_result.v1");
+        receipt.add_string("command", "modsets.apply");
+        receipt.add_string("instance_id", plan.instance.record.id.str());
+        receipt.add_string("plan_sha256", field_string(admitted.value(), "plan_sha256"));
+        receipt.add_string("transaction_id", session.record().transaction_id);
+        receipt.add_string("history_id", plan.transaction_id);
+        receipt.add_string("operation_id", plan.operation_id);
+        receipt.add_string("attempt_id", plan.attempt_id);
+        receipt.add_string("effect_binding_sha256", sha256_text(session.record().operation_context));
+        receipt.add_value("apply_result", document.value());
+        receipt.add_bool("execution_started", false);
+        receipt.add_bool("permit_issued", false);
+        return facman::core::Result<std::string>::success(receipt.serialize());
+    }
     return facman::core::Result<std::string>::success(std::move(output));
 }
 
@@ -1176,6 +1527,196 @@ facman::core::Result<std::string> apply(const fs::path& workspace, const Request
     auto resolved = resolve_plan(workspace, request);
     if (!resolved) return failure<std::string>(resolved.error().code, resolved.error().message, fs::u8path(resolved.error().path));
     return apply_plan(workspace, resolved.take_value());
+}
+
+facman::core::Result<std::string> verify_activation(const fs::path& mods_root,
+    const std::string& verified_lock)
+{
+    const fs::path path = mods_root / "mod-list.json";
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return failure<std::string>("modset_activation_unsafe", detail, path);
+    auto text = stable_text(path);
+    if (!text) return text;
+    auto entries = activation_entries(text.value());
+    if (!entries) return failure<std::string>(entries.error().code, entries.error().message, path);
+    std::set<std::string> enabled;
+    for (const auto& entry : entries.value()) if (entry.second) enabled.insert(entry.first);
+    // Apply always writes base as enabled, even for legacy locks that omit it.
+    std::set<std::string> expected {"base"};
+    auto lock = facman::factorio::content::content_lock_from_modset_lock_json(verified_lock);
+    if (!lock) return failure<std::string>(lock.error().code, lock.error().message, path);
+    for (const auto& entry : lock.value().entries)
+        if (entry.enabled) expected.insert(entry.name);
+    if (enabled != expected) return failure<std::string>("modset_activation_drift",
+        "Enabled mod list differs from the verified lock; review and apply the instance modset", path);
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return failure<std::string>("modset_activation_unsafe", detail, path);
+    return facman::core::Result<std::string>::success(text.take_value());
+}
+
+facman::core::Result<std::string> plan_locked_activation(const fs::path& workspace, const std::string& id)
+{
+    auto planned = locked_activation(workspace, id);
+    if (!planned) return facman::core::Result<std::string>::failure(planned.error());
+    return facman::core::Result<std::string>::success(planned.value().locked_plan);
+}
+
+facman::core::Result<std::string> verify_locked_activation(const fs::path& workspace, const std::string& id,
+    const std::string& source, const std::string& receipt_text, const std::string& operation, const std::string& attempt)
+{
+    const auto refuse = [&]() { return failure<std::string>("modset_locked_effect_unverified",
+        "Retained locked activation cannot be verified; inspect its domain journal before continuing", {},
+        facman::core::OutcomeKind::recovery_required); };
+    auto plan = json::parse(source);
+    auto receipt = json::parse(receipt_text);
+    auto instance = load_instance(workspace, id);
+    const auto flag = [](const json::Value& value, const char* key, bool expected) {
+        const auto* field = value.find(key);
+        auto observed = field ? field->bool_value() : facman::core::Result<bool>::failure({"missing", "missing", {}});
+        return observed && observed.value() == expected;
+    };
+    if (!plan || !receipt || !instance || operation.empty() || attempt.empty() ||
+        field_string(plan.value(), "schema") != "factorio.locked_content_activation_plan.v1" ||
+        field_string(plan.value(), "instance_id") != id ||
+        field_string(receipt.value(), "schema") != "factorio.locked_content_activation_result.v1" ||
+        field_string(receipt.value(), "command") != "modsets.apply" ||
+        field_string(receipt.value(), "instance_id") != id ||
+        field_string(receipt.value(), "plan_sha256") != field_string(plan.value(), "plan_sha256") ||
+        field_string(receipt.value(), "operation_id") != operation || field_string(receipt.value(), "attempt_id") != attempt ||
+        !flag(receipt.value(), "execution_started", false) || !flag(receipt.value(), "permit_issued", false))
+        return refuse();
+    auto unhashed = json::canonical_integer_object_without(plan.value(), "plan_sha256");
+    if (!unhashed || sha256_text(unhashed.value()) != field_string(plan.value(), "plan_sha256")) return refuse();
+    const auto history_id = field_string(receipt.value(), "history_id");
+    if (history_id.size() != 64U || !std::all_of(history_id.begin(), history_id.end(), [](unsigned char c) { return std::isxdigit(c) != 0; }))
+        return refuse();
+    const auto mods = instance.value().record.root / "mods";
+    const auto history = mods / ".facman-modset-history" / history_id;
+    const auto stage = mods / (".facman-modset-stage-" + history_id);
+    tx::Record journal;
+    std::string detail;
+    auto workspace_record = facman::workspace::WorkspaceRepository(facman::workspace::WorkspaceLayout(workspace)).load();
+    if (!tx::read_record(workspace, field_string(receipt.value(), "transaction_id"), journal, detail) ||
+        !workspace_record || journal.workspace_id != workspace_record.value().id.str() ||
+        journal.state != tx::State::complete || journal.command_id != "modsets.apply" ||
+        journal.target != instance.value().mod_list || journal.staging_roots != std::vector<fs::path>{stage, history} ||
+        journal.commit_strategy != "backup_then_atomic_replace_with_rollback" ||
+        !tx::verify_staging_ownership(journal, stage, detail) || !tx::verify_staging_ownership(journal, history, detail) ||
+        sha256_text(journal.operation_context) != field_string(receipt.value(), "effect_binding_sha256")) return refuse();
+    auto context = json::parse(journal.operation_context);
+    const auto* admitted = context ? context.value().find("plan") : nullptr;
+    const auto* effects = context ? context.value().find("effects") : nullptr;
+    const auto* before = plan.value().find("before_targets");
+    const auto* artifacts = plan.value().find("artifact_inputs");
+    const auto* applied = receipt.value().find("apply_result");
+    const auto* desired = plan.value().find("desired_mods");
+    const auto* applied_desired = applied ? applied->find("desired_mods") : nullptr;
+    if (!context || !admitted || admitted->serialize() != plan.value().serialize() || !effects || !effects->is_array() || effects->size() != 3U ||
+        !before || !before->is_object() || !artifacts || !artifacts->is_array() || !applied || !applied->is_object() ||
+        !desired || !desired->is_array() || !applied_desired || desired->serialize() != applied_desired->serialize() ||
+        field_string(context.value(), "schema") != "factorio.locked_content_activation_commit.v1" ||
+        field_string(context.value(), "operation_id") != operation || field_string(context.value(), "attempt_id") != attempt ||
+        field_string(context.value(), "history_id") != history_id ||
+        field_string(*applied, "schema") != "factorio.modset_apply.v1" || field_string(*applied, "command") != "modsets.apply" ||
+        field_string(*applied, "instance_id") != id || field_string(*applied, "transaction_id") != history_id ||
+        field_string(*applied, "status") != "applied" || field_string(*applied, "plan_id") != field_string(plan.value(), "owner_plan_id") ||
+        !flag(*applied, "mutation_executed", true) || !flag(*applied, "local_artifacts_only", true) || !flag(*applied, "portal_access", false)) return refuse();
+    auto manifest = observe_locked_file(history / "activation.v1.json");
+    auto entries = read_history(history / "activation.v1.json", history_id, id);
+    auto record = observe_locked_file(instance.value().record.source_path);
+    auto root_identity = locked_parent_identity(instance.value().record.root);
+    auto stage_identity = locked_parent_identity(stage);
+    auto history_identity = locked_parent_identity(history);
+    auto history_parent = locked_parent_identity(history.parent_path());
+    if (!manifest || manifest.value().identity != field_string(context.value(), "history_identity") || !entries ||
+        !record || record.value().identity != field_string(plan.value(), "instance_identity") ||
+        !root_identity || root_identity.value() != field_string(plan.value(), "root_identity") ||
+        !stage_identity || stage_identity.value() != field_string(context.value(), "stage_directory_identity") ||
+        !history_identity || history_identity.value() != field_string(context.value(), "history_directory_identity") ||
+        !history_parent || history_parent.value() != field_string(context.value(), "history_parent_identity")) return refuse();
+    const std::vector<fs::path> targets {instance.value().mod_list, instance.value().local_lock, instance.value().shared_lock};
+    const std::vector<std::string> keys {"mod-list", "local-lock", "shared-lock"};
+    std::vector<std::string> identities;
+    std::set<std::string> history_files {"activation.v1.json", tx::transaction_staging_marker_name()};
+    for (std::size_t index = 0; index < targets.size(); ++index) {
+        const auto* effect = effects->at(index);
+        const auto* original = before->find(keys[index]);
+        const auto& retained = entries.value()[index];
+        auto current = observe_locked_file(targets[index]);
+        auto parent = locked_parent_identity(targets[index].parent_path());
+        const auto* present = original ? original->find("present") : nullptr;
+        auto present_value = present ? present->bool_value() : facman::core::Result<bool>::failure({"missing", "missing", {}});
+        const auto wanted_sha = field_string(plan.value(), index == 0U ? "mod_list_sha256" : "lock_sha256");
+        if (!effect || !original || !current || !parent || !present_value || retained.key != keys[index] ||
+            retained.target != targets[index] || retained.before_present != present_value.value() ||
+            retained.before_hash != field_string(*original, "sha256") || retained.after_hash != wanted_sha ||
+            field_string(*effect, "key") != keys[index] || field_string(*effect, "target") != facman::platform::path_to_utf8(targets[index]) ||
+            current.value().identity != field_string(*effect, "identity") || sha256_text(current.value().text) != wanted_sha ||
+            field_string(*effect, "sha256") != wanted_sha || parent.value() != field_string(*effect, "parent_identity") ||
+            parent.value() != field_string(*original, "parent_identity")) return refuse();
+        if (retained.before_present) {
+            history_files.insert(keys[index] + ".before");
+            auto backup = observe_locked_file(history / (keys[index] + ".before"));
+            if (!backup || backup.value().identity != field_string(*effect, "backup_identity") ||
+                sha256_text(backup.value().text) != retained.before_hash) return refuse();
+        } else if (field_string(*effect, "backup_identity") != "absent") return refuse();
+        identities.push_back(current.value().identity);
+    }
+    for (std::size_t index = 0; index < artifacts->size(); ++index) {
+        const auto* artifact = artifacts->at(index);
+        if (!artifact || !artifact->is_object()) return refuse();
+        auto observed = observe_locked_file(facman::platform::path_from_utf8(field_string(*artifact, "path")));
+        if (!observed || observed.value().identity != field_string(*artifact, "identity")) return refuse();
+    }
+    for (const auto& expected : {std::make_pair(history, history_files),
+            std::make_pair(stage, std::set<std::string>{tx::transaction_staging_marker_name()})}) {
+        std::error_code error;
+        std::set<std::string> actual;
+        fs::directory_iterator iterator(expected.first, error);
+        if (error) return refuse();
+        for (; iterator != fs::directory_iterator(); iterator.increment(error)) {
+            if (error) return refuse();
+            actual.insert(facman::platform::path_to_utf8(iterator->path().filename()));
+        }
+        if (error || actual != expected.second) return refuse();
+    }
+    auto lock = observe_locked_file(instance.value().local_lock);
+    auto selected_lock = lock ? facman::factorio::content::content_lock_from_modset_lock_json(lock.value().text) :
+        failure<facman::factorio::content::ContentLock>("unavailable", "unavailable");
+    if (!selected_lock) return refuse();
+    std::set<fs::path> expected_sources;
+    for (const auto& entry : selected_lock.value().entries)
+        if (entry.enabled && !entry.virtual_package) expected_sources.insert(mods / fs::u8path(entry.file_name));
+    if (journal.sources.size() != expected_sources.size() ||
+        std::set<fs::path>(journal.sources.begin(), journal.sources.end()) != expected_sources) return refuse();
+    auto activation = lock ? verify_activation(mods, lock.value().text) : failure<std::string>("unavailable", "unavailable");
+    const auto verified = facman::factorio::modsets::operations::verify_modset(workspace, {id});
+    const auto* report = std::get_if<facman::factorio::modsets::operations::VerifyResult>(&verified);
+    if (!activation || sha256_text(activation.value()) != field_string(plan.value(), "mod_list_sha256") || !report || !report->problems.empty()) return refuse();
+    for (std::size_t index = 0; index < targets.size(); ++index) {
+        auto current = observe_locked_file(targets[index]);
+        if (!current || current.value().identity != identities[index]) return refuse();
+    }
+    return facman::core::Result<std::string>::success(receipt_text);
+}
+
+facman::core::Result<std::string> apply_locked_activation(const fs::path& workspace, const std::string& id,
+    const std::string& expected, const std::string& operation, const std::string& attempt,
+    const std::function<facman::core::Result<std::string>()>& protected_inputs)
+{
+    auto planned = locked_activation(workspace, id);
+    if (!planned) return facman::core::Result<std::string>::failure(planned.error());
+    auto document = json::parse(planned.value().locked_plan);
+    if (!document || expected.empty() || field_string(document.value(), "plan_sha256") != expected || operation.empty() || attempt.empty())
+        return failure<std::string>("modset_locked_plan_changed", "Exact locked activation changed; refresh before confirming");
+    const auto source = planned.value().locked_plan;
+    planned.value().operation_id = operation;
+    planned.value().attempt_id = attempt;
+    planned.value().protected_inputs = protected_inputs;
+    auto applied = apply_plan(workspace, planned.take_value());
+    if (!applied) return applied;
+    return verify_locked_activation(workspace, id, source, applied.value(), operation, attempt);
 }
 
 facman::core::Result<std::string> rollback(const fs::path& workspace, const Request& request)

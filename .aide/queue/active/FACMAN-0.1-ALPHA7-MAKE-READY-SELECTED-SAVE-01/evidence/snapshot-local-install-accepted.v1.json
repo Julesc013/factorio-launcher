@@ -1,0 +1,23 @@
+{
+  "schema": "facman.snapshot_local_install.accepted.v1",
+  "pr": 423,
+  "source": "45ed488d04c14c7243b881b120a2b389c450cd27",
+  "tree": "12aa2a8da1be551ec2804aca0777bf3836092de2",
+  "integrated_dev": "6c6efc8a679404147a56a24803bd8c4618bafefa",
+  "status": "accepted_bounded_source_required_and_delivered_qualification",
+  "metadata_source_sha256": {
+    "snapshot-local-install-checked-integration-result-01.json": "868d007837e13eead162d43d85efe5afff246311489d689057a879f368eab241",
+    "snapshot-local-install-delivered-author-packet-01.json": "a414a57e7b15027eaf47ccce36763f921f6fd5134786f003d77f526ec4211605",
+    "snapshot-local-install-delivered-independent-review-01.json": "6bcbdbf346a5dc3a6df5e0ea2085da52c2b57b2c141f95fb67bbade8570206f1"
+  },
+  "required_receipt": "snapshot-local-install-accepted-required.v1.json",
+  "delivered_receipt": "snapshot-local-install-accepted-delivered.v1.json",
+  "custody": "snapshot-local-install-accepted.sha256",
+  "derivation": "Metadata projections of the three independently reviewed result JSON documents. No command logs, 2025 raw artifacts, product ZIP, source copies or game files are imported.",
+  "historical_pending_receipt_preserved": "snapshot-local-install.v1.json",
+  "workunit_closed": false,
+  "real_game": false,
+  "beta": false,
+  "rc": false,
+  "release_eligible": false
+}
