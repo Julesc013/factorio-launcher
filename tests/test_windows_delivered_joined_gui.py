@@ -751,12 +751,26 @@ class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
     assert_effects = joined.JoinedMakeReadyTests.assert_effects
 
     def test_actual_managed_repair_controls_dispatch_production_packaged_backend(self):
-        """Reuse a supplied exact package; never assemble a candidate in this probe."""
+        """Use a supplied exact product or the source cohort's normal canonical factory."""
         from test_make_ready_managed_repair import ManagedRepairMakeReadyTests
         package = os.environ.get("FACMAN_DELIVERED_GUI_PACKAGE")
         consumer = os.environ.get("FACMAN_DELIVERED_GUI_CONSUMER")
-        if not package or not consumer:
-            self.skipTest("required_blocked: supplied exact Windows package and owned consumer required")
+        qualification = "supplied exact canonical product; generated inert archive; actual ordinary controls"
+        if not package and not consumer:
+            build = Path(os.environ.get("FACMAN_WINFORMS_SHARED_BUILD_ROOT",
+                native_cli.ROOT / "build/winforms-shared")).resolve()
+            if not (build / "CMakeCache.txt").is_file():
+                self.skipTest("required_blocked: matching Windows shared native build/candidate absent")
+            # The source CI cohort already built this clean matching shared cache
+            # and WinForms. Keep the normal factory's source/provider checks intact.
+            from tools import package_build
+            campaign = Path(tempfile.mkdtemp(prefix="fmg-repair-"))
+            package = package_build.build_profile(profile_id="windows_product_x64",
+                out_root=campaign / "p", build_root=build, dist_root=None, allow_dirty=False)
+            consumer = str(campaign / "c")
+            Path(consumer).mkdir()
+            qualification = "factory-produced canonical windows_product_x64; generated inert archive; actual ordinary controls"
+        self.assertTrue(package and consumer, "Package and owned consumer are both required")
         package, consumer = Path(package).resolve(), Path(consumer).resolve()
         self.assertTrue(consumer.is_dir())
         self.assertFalse(consumer.is_relative_to(native_cli.ROOT))
@@ -791,7 +805,7 @@ class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
             self.assertLess(sum(len(str(c)) for c in calls), 4 * 1024 * 1024)
             return response
         result = dict(schema="facman.windows_delivered_managed_repair_gui.v1", result="FAIL",
-            qualification="supplied exact package; generated inert archive; actual ordinary controls",
+            qualification=qualification,
             human_accessibility_acceptance=False, whole_make_ready_acceptance=False, factorio_executed=False,
             gui_sha256=hashes["FacMan.exe"], backend_sha256=hashes["bin/facman.exe"],
             closure_sha256=manifest_digest, build_info=build_info, calls=calls)
