@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -80,6 +81,21 @@ public:
     active_flags.push_back(active);
     return facman::core::Result<void>::success();
   }
+  facman::core::Result<void> retire_bootstrap_shortcut_backup(
+      const Generation &source, const Generation &target,
+      const facman::self_maintenance::CoordinatorLockToken &lock) override {
+    ++bootstrap_retire_calls;
+    if (!lock.binds_generation(target) || source.generation_id != target.generation_id ||
+        refuse_bootstrap_backup)
+      return facman::core::Result<void>::failure(
+          {"self_maintenance_retirement_recovery_required",
+           "simulated foreign backup or interrupted bootstrap retirement", {}});
+    bootstrap_backup_present = false;
+    return facman::core::Result<void>::success();
+  }
+  bool bootstrap_backup_present = false;
+  bool refuse_bootstrap_backup = false;
+  int bootstrap_retire_calls = 0;
   std::vector<std::string> removed_install_ids;
   std::vector<bool> active_flags;
 };
@@ -138,6 +154,17 @@ public:
     }
     return {true, false, digest("registration-cutover\n"), {}};
   }
+  facman::self_maintenance::EffectResult retire_epoch_shortcut_backup(
+      const Generation &, const Generation &) override {
+    ++retire_calls;
+    if (refuse_retirement)
+      return {false, true, {}, "backup foreign, unreadable, or retirement interrupted"};
+    backup_present = false;
+    return {true, false, digest("bootstrap-backup-retired\n"), {}};
+  }
+  bool backup_present = true;
+  bool refuse_retirement = false;
+  int retire_calls = 0;
   bool interrupt_clone = true;
   bool interrupt_registration = true;
   bool refuse_plan = false;
@@ -304,6 +331,15 @@ int main() {
                         "self_maintenance_epoch_recovery_required" &&
                     bootstrap_effects.clone_calls == 1,
                 "interrupted native cutover became authoritative");
+  bootstrap_effects.refuse_retirement = true;
+  auto retirement_refused = facman::self_maintenance::bootstrap_compatibility_authority(
+      bootstrap_request, bootstrap_effects);
+  ok &= require(!retirement_refused &&
+                    retirement_refused.error().code == "self_maintenance_epoch_recovery_required" &&
+                    bootstrap_effects.backup_present && bootstrap_effects.retire_calls == 1 &&
+                    !fs::exists(handoff_coordinator / "authority-bootstrap.v1" / "60-complete.v1.json"),
+                "bootstrap declared completion with unresolved shortcut backup");
+  bootstrap_effects.refuse_retirement = false;
   auto handoff_completed =
       facman::self_maintenance::bootstrap_compatibility_authority(
           bootstrap_request, bootstrap_effects);
@@ -330,8 +366,29 @@ int main() {
                     fs::exists(handoff_coordinator / "authority-handoff.v1.json") &&
                     !fs::exists(handoff_coordinator / "retirements"),
                 "real epoch did not inherit non-destructive compatibility handoff");
+  ok &= require(!bootstrap_effects.backup_present && bootstrap_effects.retire_calls == 2,
+                "bootstrap retry did not retire its exact backup");
+  // Model an older completed bootstrap whose durable phase bytes are valid but
+  // whose auxiliary shortcut backup was never retired.
+  bootstrap_effects.backup_present = true;
+  bootstrap_effects.refuse_retirement = true;
+  auto legacy_refused = facman::self_maintenance::bootstrap_compatibility_authority(
+      bootstrap_request, bootstrap_effects);
+  ok &= require(!legacy_refused && bootstrap_effects.backup_present &&
+                    legacy_refused.error().code == "self_maintenance_epoch_recovery_required" &&
+                    bootstrap_effects.retire_calls == 3,
+                "legacy complete record bypassed backup retirement refusal");
+  bootstrap_effects.refuse_retirement = false;
   auto exact_retry = facman::self_maintenance::bootstrap_compatibility_authority(
       bootstrap_request, bootstrap_effects);
+  ok &= require(exact_retry && !bootstrap_effects.backup_present &&
+                    bootstrap_effects.retire_calls == 4,
+                "legacy complete bootstrap backup was not retired on retry");
+  auto absent_retry = facman::self_maintenance::bootstrap_compatibility_authority(
+      bootstrap_request, bootstrap_effects);
+  ok &= require(absent_retry && bootstrap_effects.retire_calls == 5 &&
+                    bootstrap_effects.clone_calls == 1,
+                "absent bootstrap backup retry was not idempotent");
   ok &= require(exact_retry && exact_retry.value().phase == "complete" &&
                     bootstrap_effects.clone_calls == 1,
                 "completed bootstrap retry called the provider again");
@@ -346,6 +403,15 @@ int main() {
   auto epoch_retirement_preview = facman::self_maintenance::retire_active(
       epoch_retirement, epoch_retirement_effects);
   epoch_retirement.apply = true;
+  epoch_retirement_effects.bootstrap_backup_present = true;
+  epoch_retirement_effects.refuse_bootstrap_backup = true;
+  auto bootstrap_retirement_refused = facman::self_maintenance::retire_active(
+      epoch_retirement, epoch_retirement_effects);
+  ok &= require(!bootstrap_retirement_refused &&
+                    epoch_retirement_effects.bootstrap_backup_present &&
+                    epoch_retirement_effects.removed_install_ids.empty(),
+                "bootstrap backup refusal retired a provider generation");
+  epoch_retirement_effects.refuse_bootstrap_backup = false;
   auto epoch_retirement_first = facman::self_maintenance::retire_active(
       epoch_retirement, epoch_retirement_effects);
   auto retiring_selected =
@@ -391,6 +457,52 @@ int main() {
                         std::vector<bool>({false, true}) &&
                     fs::exists(handoff_coordinator / "authority-handoff.v1.json"),
                 "epoch retirement lost a provider identity or repeated an effect");
+
+  // Simulate a genuine legacy completed/retired epoch with a surviving native
+  // backup. Provider roots may be gone; only retained authority authorizes this.
+  epoch_retirement_effects.bootstrap_backup_present = true;
+  epoch_retirement_effects.refuse_bootstrap_backup = true;
+  auto retired_backup_refused = facman::self_maintenance::retire_active(
+      epoch_retirement, epoch_retirement_effects);
+  ok &= require(!retired_backup_refused &&
+                    epoch_retirement_effects.bootstrap_backup_present &&
+                    epoch_retirement_effects.removed_install_ids.size() == 2U,
+                "retired epoch accepted foreign/unresolved bootstrap backup");
+  epoch_retirement_effects.refuse_bootstrap_backup = false;
+  auto retired_backup_retry = facman::self_maintenance::retire_active(
+      epoch_retirement, epoch_retirement_effects);
+  auto retired_backup_absent = facman::self_maintenance::retire_active(
+      epoch_retirement, epoch_retirement_effects);
+  ok &= require(retired_backup_retry && retired_backup_absent &&
+                    !epoch_retirement_effects.bootstrap_backup_present &&
+                    epoch_retirement_effects.removed_install_ids.size() == 2U,
+                "retired bootstrap backup retry repeated provider retirement");
+  const fs::path bootstrap_complete = handoff_coordinator /
+      "authority-bootstrap.v1" / "60-complete.v1.json";
+  for (const fs::path &tampered_record : std::vector<fs::path>{
+           bootstrap_complete,
+           epoch_retirement_preview.value().journal_directory / "00-intent.v1.json",
+           epoch_retirement_preview.value().journal_directory / "99-completed.v1.json"}) {
+    std::ifstream complete_input(tampered_record, std::ios::binary);
+    const std::string complete_original((std::istreambuf_iterator<char>(complete_input)), {});
+    complete_input.close();
+    const int calls_before_tamper = epoch_retirement_effects.bootstrap_retire_calls;
+    for (const std::string &bad : {std::string("{\"foreign\":true}\n"), std::string("{\"schema\":")}) {
+      std::ofstream(tampered_record, std::ios::binary | std::ios::trunc) << bad;
+      auto torn_retirement = facman::self_maintenance::retire_active(
+          epoch_retirement, epoch_retirement_effects);
+      ok &= require(!torn_retirement &&
+                        epoch_retirement_effects.bootstrap_retire_calls == calls_before_tamper &&
+                        epoch_retirement_effects.removed_install_ids.size() == 2U,
+                    "foreign/torn completed bootstrap dispatched a retirement effect");
+    }
+    std::ofstream(tampered_record, std::ios::binary | std::ios::trunc) << complete_original;
+    auto restored_retirement = facman::self_maintenance::retire_active(
+        epoch_retirement, epoch_retirement_effects);
+    ok &= require(restored_retirement &&
+                      epoch_retirement_effects.bootstrap_retire_calls == calls_before_tamper + 1,
+                  "restored exact retired bootstrap did not remain retryable");
+  }
 
   auto retired_epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
       handoff_coordinator);

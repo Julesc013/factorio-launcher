@@ -1,0 +1,43 @@
+{
+  "schema_version": "facman.bootstrap-backup-retirement-local.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+  "status": "active",
+  "result": "LOCAL_QUALIFIED_DELIVERY_AND_NATIVE_RECOVERY_PENDING",
+  "base_revision": "16f83b504321c729afc8577c1056d829a281ee9f",
+  "branch": "task/facman-bootstrap-backup-retirement-01",
+  "problem": "A completed compatibility bootstrap retained its operation-bound source shortcut backup after epoch uninstall.",
+  "behavior": [
+    "Fresh bootstrap retires its exact backup after durable native cutover before completion.",
+    "Repeated shell-integrated uninstall validates retained bootstrap/epoch/retirement authority and reconciles the original backup after payloads and current shortcut are gone.",
+    "Only absent or live handle-owned old_exact backup succeeds; foreign, torn, changed or unreadable state is preserved for recovery."
+  ],
+  "qualification": {
+    "native_targets": "Release VS18 clean-first, two workers; primary exit0 with four owned compiler descendants cleaned; no natural compiler descendant claim",
+    "affected_tests": "six native/synthetic lifecycle tests passed; natural primary exit0 and empty Jobs without termination",
+    "public_oracle": "seven actual-assertion cases passed",
+    "strict": "passed including generated plan/catalog state",
+    "source_snapshot_sha256": "a035f1b45416a9d2eccc4bf6a08b94d2956695cda575e50a494c8ed91f535462",
+    "build_result_sha256": "eaef80ed08aefdd88fb189a93916cd15c35cd63952adadea989706864efd5ebb",
+    "test_result_sha256": "6572a750374c86022961f1a6372bfcaee6394779629285554a4ef47c8a6a0000",
+    "public_oracle_sha256": "960fde08b1ae4c84d6e733f2de047d0e1a9da1ddb3191ca88b94f5c5e128b0a8",
+    "prepared_source_review_sha256": "8479a974502a2e35345960a68590e7d53930492466e71f679c6add581da6e868"
+  },
+  "retained_original_native_failure": {
+    "candidate_source_revision": "c624c256f86b90e8c8edccd7759144120e05145a",
+    "aggregate": "FAIL preserved after otherwise passed27-command public native core",
+    "remaining_backup_sha256": "0182a86a61913a5ca0625fd6920d349069e12b4f6628382475a0794e83abb1cf",
+    "operation_id": "bootstrap.00d6bd14d81edde1d3dfc00969384ef7",
+    "retained_capture_sha256": "ec85424c9d872d60c6b33434a87f385025d4578e2d36a548f8612df9bb693581",
+    "semantic_limit": "Original COM fields null; host projection does not qualify live old_exact ownership",
+    "cleanup_or_guest_recovery_performed": false
+  },
+  "dependency_truth": {
+    "provider_adoption": "PR343 merged and exact head is an ancestor of this integrated base; the old provider-adoption blocker does not apply to this FacMan hook",
+    "new_provider_capability_required": false
+  },
+  "remaining": [
+    "Independent final snapshot review, normal required CI and exact original Setup artifact admission.",
+    "Root-owned masked guest execution of supported repeated uninstall with fresh native old_exact verification.",
+    "Affected fresh genuine A/fixed-B native closure; programme remains active."
+  ]
+}

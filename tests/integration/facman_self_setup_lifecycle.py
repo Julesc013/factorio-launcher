@@ -729,6 +729,20 @@ def inspect_registry_64() -> dict[str, object]:
 def assert_absent_native(shortcut: dict[str, object], registry: dict[str, object], phase: str) -> None:
     if shortcut.get("state") != "absent" or registry.get("state") != "absent":
         raise AssertionError(f"{phase}: current-user integration is present or unreadable; preserving it")
+    # A cutover backup is still a native effect, even after FacMan.lnk is gone.
+    link = Path(str(shortcut["path"]))
+    try:
+        entries = os.scandir(link.parent)
+    except FileNotFoundError:
+        return
+    with entries:
+        for index, entry in enumerate(entries):
+            if index >= 4096:
+                raise AssertionError(f"{phase}: Start Menu immediate-entry observation exceeded its bound")
+            name = entry.name.casefold()
+            if (name.startswith(link.name.casefold() + ".facman-backup.") or
+                    name.startswith(link.name.casefold() + ".facman-pending.")):
+                raise AssertionError(f"{phase}: auxiliary shortcut remains; preserving {entry.path}")
 
 
 def same_windows_path(left: object, right: Path) -> bool:
