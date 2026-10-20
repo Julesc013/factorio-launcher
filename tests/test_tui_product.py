@@ -43,6 +43,15 @@ def cli_executable() -> Path | None:
     return next((path for path in candidates if path.is_file()), None)
 
 
+def ordinary_action_tabs(projected: dict, action_id: str) -> str:
+    """Navigate from the Refresh action preserved when opening an ordinary page."""
+    actions = projected["available_semantic_actions"]
+    current = next(i for i, action in enumerate(actions)
+                   if action["action_id"] == "presentation.refresh")
+    target = next(i for i, action in enumerate(actions) if action["action_id"] == action_id)
+    return "tab\n" * ((target - current) % len(actions))
+
+
 @unittest.skipUnless(tui_executable(), "optional: functional TUI build is not available")
 class TuiProductTests(unittest.TestCase):
     @classmethod
@@ -323,7 +332,7 @@ class TuiProductTests(unittest.TestCase):
             result = self.invoke(
                 ["--workspace", str(workspace), "--ordinary", "--plain",
                  "--transport", "process", "--cli-path", str(cli)],
-                stdin="s\n2\n" + "tab\n" * index + "space\nspace\nq\n",
+                stdin="s\n2\n" + ordinary_action_tabs(projected, "readiness.prepare_selected_save") + "space\nspace\nq\n",
             )
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertIn("Status: Refresh selected save context completed", result.stdout)
@@ -428,7 +437,7 @@ class TuiProductTests(unittest.TestCase):
 
         def make_ready_input(projected: dict) -> str:
             actions = projected["available_semantic_actions"]
-            self.assertEqual("presentation.refresh", actions[0]["action_id"])
+            self.assertIn("presentation.refresh", [action["action_id"] for action in actions])
             index = next(i for i, action in enumerate(actions)
                          if action["action_id"] == "readiness.prepare")
             descriptor = actions[index]
@@ -437,7 +446,7 @@ class TuiProductTests(unittest.TestCase):
             self.assertEqual(["selected_instance_id"],
                              [field["field_id"] for field in descriptor["input_fields"]])
             self.assertEqual("main", descriptor["input_fields"][0]["default"])
-            return "tab\n" * index
+            return ordinary_action_tabs(projected, "readiness.prepare")
 
         with tempfile.TemporaryDirectory(prefix="tui-posix-make-ready-") as temporary:
             workspace = Path(temporary)
@@ -577,7 +586,7 @@ class TuiProductTests(unittest.TestCase):
 
         def make_ready_input(projected: dict) -> str:
             actions = projected["available_semantic_actions"]
-            self.assertEqual("presentation.refresh", actions[0]["action_id"])
+            self.assertIn("presentation.refresh", [action["action_id"] for action in actions])
             index = next(i for i, action in enumerate(actions)
                          if action["action_id"] == "readiness.prepare")
             descriptor = actions[index]
@@ -586,7 +595,7 @@ class TuiProductTests(unittest.TestCase):
             self.assertEqual(["selected_instance_id"],
                              [field["field_id"] for field in descriptor["input_fields"]])
             self.assertEqual("main", descriptor["input_fields"][0]["default"])
-            return "tab\n" * index
+            return ordinary_action_tabs(projected, "readiness.prepare")
 
         for intent in ("menu", "load_save"):
             with self.subTest(intent=intent), tempfile.TemporaryDirectory(prefix="tui-make-ready-") as temporary:
