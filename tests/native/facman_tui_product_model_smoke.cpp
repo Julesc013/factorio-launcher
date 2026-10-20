@@ -57,6 +57,16 @@ int main(int argc, char** argv)
             TuiAction action;
             action.id = "readiness.prepare_joined";
             const auto feedback = action_response_status(action, response);
+            const auto* installation_summary = test.find("expected_installation_summary");
+            if (installation_summary) {
+                auto expected_installation = installation_summary->bool_value();
+                if (!expected_installation || verified_installation_preparation_completion(response) != expected_installation.value() ||
+                    (feedback.find("Registered installation executable and current settings were prepared") != std::string::npos) != expected_installation.value()) {
+                    std::cerr << "Invalid v3 installation completion: " << string(test, "name") << ": " << feedback << '\n';
+                    return 66;
+                }
+                continue;
+            }
             const auto* summary_field = test.find("expected_summary");
             if (summary_field) expected = summary_field->bool_value();
             if (!expected) return 65;

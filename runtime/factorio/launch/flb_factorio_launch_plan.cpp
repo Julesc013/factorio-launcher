@@ -929,7 +929,7 @@ std::string launch_preflight_json(const LaunchPreflightResult& preflight)
 InstanceRunLockResult acquire_instance_run_lock(
     const fs::path& instance_root,
     std::uint64_t stale_after_seconds,
-    InstanceRunLock& lock
+    InstanceRunLock& lock, bool recover_stale
 )
 {
     InstanceRunLockResult result;
@@ -954,6 +954,11 @@ InstanceRunLockResult acquire_instance_run_lock(
     auto held = std::make_shared<facman::base::StableLocalLock>();
     facman::base::StableLockResult create_result = held->create(lock_path);
     if (create_result.code == facman::base::StableLockCode::exists) {
+        if (!recover_stale) {
+            result.code = "run_lock_contended";
+            result.detail = "existing run ownership requires explicit inspection before installation repair";
+            return result;
+        }
         std::string existing;
         facman::base::StableLockResult open_result =
             held->open_existing(lock_path, 4096, existing);
@@ -1035,7 +1040,7 @@ InstanceRunLockResult acquire_instance_run_lock(
     return result;
 }
 
-bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail)
+bool verify_instance_run_lock(const InstanceRunLock& lock, std::string& detail)
 {
     if (!lock.owns_lock || lock.path.empty() || lock.token.empty() ||
         lock.identity.empty() || !lock.stable_handle) {
@@ -1055,9 +1060,12 @@ bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail)
         detail = "run lock recorded identity changed";
         return false;
     }
-    if (!lock.stable_handle->remove_exact(detail)) {
-        return false;
-    }
+    return lock.stable_handle->identity_text() == lock.identity && lock.stable_handle->identity_matches_path(detail);
+}
+
+bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail)
+{
+    if (!verify_instance_run_lock(lock, detail) || !lock.stable_handle->remove_exact(detail)) return false;
     lock = InstanceRunLock {};
     detail.clear();
     return true;

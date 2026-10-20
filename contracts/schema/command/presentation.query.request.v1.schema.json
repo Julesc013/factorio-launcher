@@ -16,6 +16,11 @@
       ],
       "type": "string"
     },
+    "repair_review_id": {
+      "maxLength": 256,
+      "minLength": 1,
+      "type": "string"
+    },
     "scope": {
       "enum": [
         "launch_deck",

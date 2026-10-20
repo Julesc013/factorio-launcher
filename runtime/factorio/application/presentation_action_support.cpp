@@ -12,6 +12,12 @@
 #include "flb_factorio_profiles.h"
 #include "handlers/snapshots.h"
 #include "handlers/modsets.h"
+#include "handlers/setup.h"
+#include "command_admission.h"
+#include "presentation_service.h"
+#include "fl_sha256.h"
+#include "fl_file_io.h"
+#include "fl_workspace_store.h"
 
 #include <algorithm>
 #include <iterator>
@@ -21,6 +27,7 @@
 
 namespace facman::factorio::application {
 namespace json = facman::core::json;
+namespace fs = std::filesystem;
 namespace {
 
 std::string string_field(const json::Value& value, const char* key)
@@ -29,6 +36,18 @@ std::string string_field(const json::Value& value, const char* key)
     if (field == nullptr || !field->is_string()) return {};
     auto text = field->string_value();
     return text ? text.take_value() : std::string();
+}
+
+std::string json_string(const json::Value& value)
+{
+    auto text = value.string_value();
+    return text ? text.take_value() : std::string();
+}
+
+std::string repair_review_digest(const std::string& value)
+{
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(value.data()), value.size());
 }
 
 } // namespace
@@ -121,6 +140,7 @@ json::ObjectBuilder action_descriptor(
     action.add_string("availability", available ? "available" : "refused");
     json::ArrayBuilder effects;
     effects.add_string(effect);
+    if (std::string(effect) == "setup_preview" || std::string(effect) == "setup_mutation") effects.add_string("workspace_write");
     action.add_array("effects", effects);
     action.add_string("confirmation", confirmation);
     action.add_string("input_contract", input_contract);
@@ -180,6 +200,7 @@ std::string action_request_json(const SemanticActionRequest& request)
     // Preserve the immutable legacy fingerprint when the new input is absent.
     if (!request.source_path.empty()) input.add_string("source_path", request.source_path);
     if (!request.snapshot_id.empty()) input.add_string("snapshot_id", request.snapshot_id);
+    if (!request.repair_review_id.empty()) input.add_string("repair_review_id", request.repair_review_id);
     return input.serialize();
 }
 
@@ -218,6 +239,11 @@ bool recorded_action_request_shape(const json::Value& request)
         "source_data_root", "transaction_id", "roots",
     };
     // Optional extensions leave immutable legacy request bytes unchanged.
+    if (request.find("repair_review_id") != nullptr) {
+        const auto key = string_field(request, "repair_review_id");
+        if (key.empty() || key.size() > 256U) return false;
+        expected.emplace_back("repair_review_id");
+    }
     if (request.find("launch_intent") != nullptr) {
         if (string_field(request, "launch_intent") != "load_save") return false;
         expected.emplace_back("launch_intent");
@@ -553,7 +579,9 @@ facman::core::Result<std::string> snapshot_action_preparation_plan(const std::st
 
 bool effectful_semantic_action(const std::string& action_id)
 {
-    return action_id == "readiness.prepare_joined" || action_id == "readiness.prepare" || action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
+    return action_id == "readiness.review_install_repair" || action_id == "readiness.prepare_joined" ||
+        action_id == "readiness.prepare" || action_id == "readiness.prepare_configuration" ||
+        action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
         action_id == "installation.register_read_only" ||
         action_id == "instance.create_isolated" ||
         action_id == "profile.create" ||
@@ -677,6 +705,10 @@ std::string action_result_json(
 
     json::ArrayBuilder effects;
     for (const char* effect : declared_effects) effects.add_string(effect);
+    const bool writes_workspace = std::any_of(declared_effects.begin(), declared_effects.end(),
+        [](const char* effect) { return std::string(effect) == "workspace_write"; });
+    if (writes_workspace && request.action_id == "readiness.review_install_repair") effects.add_string("setup_preview");
+    if (writes_workspace && request.action_id == "readiness.prepare_joined" && !request.repair_review_id.empty()) effects.add_string("setup_mutation");
     json::ArrayBuilder diagnostics;
     json::ArrayBuilder problems;
     if (!problem_code.empty()) add_problem(problems, problem_code, problem_summary);
@@ -739,10 +771,20 @@ json::ObjectBuilder joined_preparation_descriptor(const std::string& preparation
         add("profile_id", "Current profile", string_field(*desired, "profile_id"));
         if (string_field(*plan, "launch_intent") == "load_save")
             add("save", "Exact selected save", string_field(*desired, "selected_save"));
+        if (string_field(*plan, "schema") == "factorio.make_ready_joined_plan.v3") {
+            add("repair_review_id", "Reviewed managed installation repair", string_field(*plan, "repair_review_id"));
+            add("installation_path", "Registered installation repair target", string_field(*plan, "installation_root"));
+            const auto* installation = plan->find("installation_plan");
+            const auto* native_request = installation ? installation->find("plan_request") : nullptr;
+            const auto* archive = native_request ? native_request->find("archive") : nullptr;
+            add("source_path", "Reviewed exact local repair archive", archive ? string_field(*archive, "path") : "");
+        }
     }
     const auto code = refusal ? string_field(*refusal, "code") : "make_ready_plan_invalid";
-    return action_descriptor("readiness.prepare_joined", "presentation.action", "Make Ready with current settings",
-        "primary", "workspace_write", available, available ? nullptr : code.c_str(),
+    const bool repair = available && string_field(*plan, "schema") == "factorio.make_ready_joined_plan.v3";
+    return action_descriptor("readiness.prepare_joined", "presentation.action", repair ?
+        "Repair registered installation executable and prepare current content, configuration and selected world" : "Make Ready with current settings",
+        "primary", repair ? "setup_mutation" : "workspace_write", available, available ? nullptr : code.c_str(),
         "explicit", "facman.semantic_action_input.v1", fields);
 }
 
@@ -755,11 +797,21 @@ facman::core::Result<std::string> snapshot_joined_plan(const std::string& snapsh
     const auto* report = dependencies ? dependencies->find("joined_preparation") : nullptr;
     const auto* plan = report ? report->find("plan") : nullptr;
     const auto* desired = plan ? plan->find("desired_state") : nullptr;
+    if (plan && string_field(*plan, "schema") == "factorio.make_ready_joined_plan.v3") {
+        const auto* owner = plan->find("installation_plan");
+        const auto* native = owner ? owner->find("plan_request") : nullptr;
+        const auto* archive = native ? native->find("archive") : nullptr;
+        if (!archive || request.source_path != string_field(*archive, "path") ||
+            request.installation_path != string_field(*plan, "installation_root"))
+            return Result::failure({"make_ready_desired_state_mismatch",
+                "Confirm the exact reviewed archive and registered installation repair target", {}, facman::core::OutcomeKind::refused});
+    }
     if (!desired || !request.new_instance_id.empty() || string_field(*plan, "instance_id") != request.selected_instance_id ||
         string_field(*plan, "launch_intent") != request.launch_intent ||
         string_field(*desired, "installation_id") != request.installation_id ||
         string_field(*desired, "profile_id") != request.profile_id ||
         string_field(*desired, "selected_save") != request.save ||
+        string_field(*plan, "repair_review_id") != request.repair_review_id ||
         !lower_hex_digest(string_field(*plan, "plan_sha256")))
         return Result::failure({"make_ready_desired_state_mismatch",
             "Desired installation, current profile and selected save must match the reviewed plan and its locked content", {}, facman::core::OutcomeKind::refused});
@@ -818,6 +870,8 @@ std::string joined_preparation_result(const std::string& source,
     const std::string& continuation, bool effects_verified)
 {
     auto plan = json::parse(source);
+    if (plan && string_field(plan.value(), "schema") == "factorio.make_ready_joined_plan.v3")
+        return joined_installation_preparation_result(source, {}, {}, continuation, false, false);
     if (plan && string_field(plan.value(), "schema") == "factorio.make_ready_joined_plan.v2")
         return joined_content_preparation_result(source, {}, {}, continuation, false, false);
     auto observed = json::parse(readiness);
@@ -846,6 +900,211 @@ std::string joined_preparation_result(const std::string& source,
     result.add_bool("permit_issued", false);
     result.add_string("factorio_support_claim", "unclaimed");
     return result.serialize();
+}
+
+std::string joined_installation_preparation_result(const std::string& source,
+    const std::string& receipt, const std::string& remaining, const std::string& continuation,
+    bool installation_verified, bool effects_verified)
+{
+    auto plan = json::parse(source), owner = json::parse(receipt), nested = json::parse(remaining);
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.make_ready_joined_result.v3");
+    result.add_string("command", "readiness.prepare_joined");
+    add_json(result, "plan", source);
+    result.add_string("plan_sha256", plan ? string_field(plan.value(), "plan_sha256") : "");
+    json::ArrayBuilder completed;
+    if (owner && string_field(owner.value(), "schema") == "factorio.managed_repair_apply_result.v1") {
+        json::ObjectBuilder effect;
+        effect.add_string("component", "managed_installation_repair");
+        effect.add_string("owner_command", "installs.repair.apply");
+        effect.add_string("transaction_id", string_field(owner.value(), "transaction_id"));
+        effect.add_string("plan_digest", string_field(owner.value(), "plan_digest"));
+        effect.add_value("owner_result", owner.value());
+        completed.add_object(effect);
+    }
+    const auto* nested_effects = nested ? nested.value().find("completed_components") : nullptr;
+    if (nested_effects && nested_effects->is_array())
+        for (std::size_t index = 0; index < nested_effects->size(); ++index) completed.add_value(*nested_effects->at(index));
+    result.add_array("completed_components", completed);
+    add_json(result, "joined_result", remaining);
+    result.add_bool("installation_effect_verified", installation_verified);
+    result.add_bool("completed_effects_verified", effects_verified);
+    result.add_string("continuation", continuation);
+    result.add_bool("remaining_effects_blocked_before_effects", continuation == "fresh_request_after_input_correction");
+    const auto* readiness = nested ? nested.value().find("readiness_observation") : nullptr;
+    if (readiness) result.add_value("readiness_observation", *readiness); else result.add_null("readiness_observation");
+    const auto* prepared = nested ? nested.value().find("preparation_complete") : nullptr;
+    auto ready = prepared ? prepared->bool_value() : facman::core::Result<bool>::success(false);
+    const bool complete = installation_verified && effects_verified && ready && ready.value();
+    result.add_bool("preparation_complete", complete);
+    result.add_bool("fresh_revision_required", !complete);
+    result.add_bool("readiness_complete", false);
+    result.add_bool("execution_started", false);
+    result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return result.serialize();
+}
+
+AdvertisedAction advertised_action(const std::string& snapshot, const std::string& action_id)
+{
+    AdvertisedAction result;
+    auto document = json::parse(snapshot);
+    if (!document || !document.value().is_object()) return result;
+    const json::Value* actions = document.value().find("available_semantic_actions");
+    if (actions == nullptr || !actions->is_array()) return result;
+    for (std::size_t index = 0; index < actions->size(); ++index) {
+        const json::Value* action = actions->at(index);
+        if (action == nullptr || !action->is_object()) continue;
+        const json::Value* id = action->find("action_id");
+        if (id == nullptr || json_string(*id) != action_id) continue;
+        result.found = true;
+        const json::Value* availability = action->find("availability");
+        result.available = availability != nullptr && json_string(*availability) == "available";
+        const json::Value* refusal = action->find("refusal");
+        if (refusal != nullptr && refusal->is_object()) {
+            const json::Value* code = refusal->find("code");
+            const json::Value* reason = refusal->find("reason");
+            if (code != nullptr) result.refusal_code = json_string(*code);
+            if (reason != nullptr) result.refusal_reason = json_string(*reason);
+        }
+        return result;
+    }
+    return result;
+}
+
+facman::core::Result<std::string> verified_repair_review_binding(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& source, const std::string& request_source)
+{
+    using Result = facman::core::Result<std::string>;
+    const auto invalid = [](const std::string& detail) {
+        return Result::failure({"make_ready_repair_review_invalid", detail, {}, facman::core::OutcomeKind::refused});
+    };
+    auto receipt = json::parse(source);
+    auto input = json::parse(request_source);
+    const auto* operation = receipt ? receipt.value().find("operation") : nullptr;
+    const auto* payload = receipt ? receipt.value().find("action_payload") : nullptr;
+    const auto* owner_plan = payload ? payload->find("owner_plan") : nullptr;
+    facman::workspace::WorkspaceRepository repository {facman::workspace::WorkspaceLayout(workspace)};
+    const auto workspace_record = repository.load();
+    if (!receipt || !input || string_field(input.value(), "scope") != "instances" ||
+        string_field(input.value(), "selected_instance_id") != instance_id ||
+        string_field(receipt.value(), "action_id") != "readiness.review_install_repair" ||
+        string_field(receipt.value(), "outcome") != "completed" || !operation || !payload ||
+        string_field(*operation, "target_instance_id") != instance_id ||
+        string_field(*payload, "schema") != "factorio.managed_repair_review.v1" || !workspace_record || !owner_plan ||
+        string_field(*payload, "workspace_id") != workspace_record.value().id.str() ||
+        string_field(*payload, "workspace_root_digest") != repair_review_digest(facman::platform::path_to_utf8(fs::weakly_canonical(workspace))) ||
+        string_field(*owner_plan, "schema") != "factorio.managed_repair_plan.v1" ||
+        string_field(*operation, "target_installation_id") != string_field(*owner_plan, "install_id"))
+        return invalid("The selected review does not name this instance and registered installation");
+    const auto* native_request = owner_plan->find("plan_request");
+    const auto* archive = native_request ? native_request->find("archive") : nullptr;
+    std::error_code error;
+    const auto selected_archive = fs::absolute(fs::u8path(string_field(input.value(), "source_path")), error).lexically_normal();
+    if (!archive || error || selected_archive != fs::u8path(string_field(*archive, "path")))
+        return invalid("The selected review archive does not match its original explicit input");
+    return Result::success(payload->serialize());
+}
+
+std::string reviewed_repair_preparation_json(const std::filesystem::path& workspace,
+    const PresentationQueryRequest& request, const facman::core::Result<std::string>& repair)
+{
+    const auto reviewed = repair ? json::parse(repair.value()) : json::parse("null");
+    const auto* owner = reviewed ? reviewed.value().find("owner_plan") : nullptr;
+    auto planned = repair && owner ? facman::factorio::instance::joined_repair_plan(workspace,
+        {request.selected_instance_id, request.launch_intent}, owner->serialize(), request.repair_review_id,
+        string_field(reviewed.value(), "archive_source_identity")) : repair;
+    json::ObjectBuilder report;
+    if (planned) { add_json(report, "plan", planned.value()); report.add_null("refusal"); }
+    else {
+        report.add_null("plan");
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", planned.error().code);
+        refusal.add_string("detail", planned.error().message);
+        report.add_object("refusal", refusal);
+    }
+    return report.serialize();
+}
+
+json::ObjectBuilder installation_repair_review_descriptor(const std::vector<facman::workspace::InstanceRecord>& instances,
+    const std::string& instance_id, const std::string& default_instance)
+{
+    const auto selected = std::find_if(instances.begin(), instances.end(), [&](const auto& item) {
+        return item.id.str() == instance_id;
+    });
+    const std::string install = selected == instances.end() ? std::string() : selected->install_ref.str();
+    return action_descriptor("readiness.review_install_repair", "presentation.action",
+        "Review installation repair from local archive", "manage", "setup_preview", !install.empty(),
+        install.empty() ? "no_installation_selected" : nullptr, "explicit", "facman.semantic_action_input.v1", {
+            {"selected_instance_id", "Instance", "enum", true, default_instance, {default_instance}},
+            {"installation_id", "Registered installation", "enum", true, install, {install}},
+            {"source_path", "Exact local installation archive (.zip)", "path", true, {}, {}}});
+}
+
+std::string dispatch_installation_repair_review(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot)
+{
+    std::string output;
+    const auto instance_id = facman::core::InstanceId::parse_legacy(request.selected_instance_id);
+    const auto instance = instance_id ? context.instances().load(instance_id.value()) :
+        facman::core::Result<facman::workspace::InstanceRecord>::failure(instance_id.error());
+    if (!instance || request.scope != "instances" || request.source_path.empty() || !fs::u8path(request.source_path).is_absolute() ||
+        instance.value().install_ref.str() != request.installation_id) {
+        output = action_result_json(request, "refused_before_effects", snapshot, {},
+            "make_ready_repair_selection_invalid", "Select the current instance installation and an explicit local repair archive", false, {"workspace_write"});
+    } else {
+        ServiceOperationRequest review;
+        review.install_id = request.installation_id;
+        review.archive = request.source_path;
+        auto before = facman::factorio::instance::joined_repair_archive_identity(fs::u8path(review.archive));
+        if (!before) output = action_result_json(request, "refused_before_effects", snapshot, {},
+            before.error().code, before.error().message, false, {"workspace_write"});
+        else {
+            auto planned = handlers::plan_repair_install(context, review);
+            auto after = facman::factorio::instance::joined_repair_archive_identity(fs::u8path(review.archive));
+            if (planned.status == ULK_STATUS_OK && (!after || before.value() != after.value()))
+                output = action_result_json(request, "refused_before_effects", snapshot, {},
+                    "make_ready_repair_source_changed", "The explicit local archive changed during repair review", false, {"workspace_write"});
+            else {
+                json::ObjectBuilder reviewed;
+                reviewed.add_string("schema", "factorio.managed_repair_review.v1");
+                const auto workspace_record = context.workspace_repository().load();
+                reviewed.add_string("workspace_id", workspace_record ? workspace_record.value().id.str() : "");
+                reviewed.add_string("workspace_root_digest", repair_review_digest(facman::platform::path_to_utf8(fs::weakly_canonical(context.workspace()))));
+                reviewed.add_string("archive_source_identity", before.value());
+                add_json(reviewed, "owner_plan", result_string(planned));
+                output = action_result_json(request, planned.status == ULK_STATUS_OK ? "completed" : "refused_before_effects",
+                    snapshot, planned.status == ULK_STATUS_OK ? reviewed.serialize() : result_string(planned),
+                    planned.error_code, planned.error_message, false, {"workspace_write"});
+            }
+        }
+    }
+    return output;
+}
+
+std::string joined_preparation_json(const std::filesystem::path& workspace,
+    const PresentationQueryRequest& request, const PresentationActionLedger& ledger)
+{
+    std::string preparation = joined_preparation_json(workspace, request.selected_instance_id, request.launch_intent);
+    if (!request.repair_review_id.empty()) {
+        auto repair = ledger.repair_review(workspace, request.repair_review_id, request.selected_instance_id);
+        preparation = reviewed_repair_preparation_json(workspace, request, repair);
+    }
+    return preparation;
+}
+
+std::optional<ApplicationResult> installation_repair_admission(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot)
+{
+    if (request.action_id == "readiness.review_install_repair" ||
+        (request.action_id == "readiness.prepare_joined" && !request.repair_review_id.empty())) {
+        const auto admission = admit_command(context.configuration(), request.action_id == "readiness.review_install_repair" ?
+            CommandId::installs_repair_plan : CommandId::installs_repair_apply);
+        if (!admission.admitted)
+            return refused(action_result_json(request, "refused_before_effects", snapshot, {}, admission.code, admission.reason,
+                false, {"workspace_write"}), admission.code, admission.reason, facman::core::OutcomeKind::refused);
+    }
+    return std::nullopt;
 }
 
 } // namespace facman::factorio::application

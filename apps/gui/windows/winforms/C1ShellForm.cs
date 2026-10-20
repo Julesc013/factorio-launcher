@@ -183,7 +183,6 @@ namespace FacMan.WinForms
             item.Click += delegate { SelectEvidenceState(state); };
             return item;
         }
-
         private TabPage BuildInstancesPage()
         {
             TabPage page = Page("Instances", "Instances page");
@@ -243,6 +242,7 @@ namespace FacMan.WinForms
             Button makeReadyJoined = ActionButton("Make Ready with current &settings", "Make Ready with the current profile, content and selected world", "readiness.prepare_joined");
             makeReadyJoined.Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold);
             planningActions.Controls.Add(makeReadyJoined);
+            planningActions.Controls.Add(ActionButton("Review installation &repair", "Review installation repair from a local archive without changing the installation", "readiness.review_install_repair"));
             planningActions.Controls.Add(ActionButton("Make &Ready", "Prepare this instance", "readiness.prepare"));
             planningActions.Controls.Add(ActionButton("Record selected &save context", "Record selected save context", "readiness.prepare_selected_save"));
             planningActions.Controls.Add(ActionButton("Prepare &configuration", "Prepare routing configuration", "readiness.prepare_configuration"));

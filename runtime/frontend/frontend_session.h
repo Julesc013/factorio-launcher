@@ -67,6 +67,7 @@ struct FrontendSessionIdentity {
 };
 
 struct FrontendNegotiationRequest {
+    std::string repair_review_id;
     std::string request_id;
     std::string operation_id;
     std::string attempt_id;
@@ -82,6 +83,7 @@ struct FrontendNegotiationRequest {
 };
 
 struct FrontendQueryRequest {
+    std::string repair_review_id;
     std::string request_id;
     std::string operation_id;
     std::string attempt_id;

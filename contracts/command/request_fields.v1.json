@@ -1259,6 +1259,11 @@
         "kind": "identifier",
         "name": "snapshot_id",
         "required": false
+      },
+      {
+        "kind": "string",
+        "name": "repair_review_id",
+        "required": false
       }
     ],
     "presentation.query": [
@@ -1285,6 +1290,11 @@
       {
         "kind": "enum",
         "name": "launch_intent",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "repair_review_id",
         "required": false
       }
     ],

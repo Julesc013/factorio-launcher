@@ -404,6 +404,8 @@ def request_schema(runtime_id: str) -> str:
                 properties[name]["enum"] = ["true", "false"]
             elif kind == "enum" and enum_choices(runtime_id, name):
                 properties[name]["enum"] = enum_choices(runtime_id, name)
+            if runtime_id in {"presentation.query", "presentation.action"} and name == "repair_review_id":
+                properties[name].update({"minLength": 1, "maxLength": 256})
             if is_required and "minLength" not in properties[name]:
                 properties[name]["minLength"] = 1
         if is_required:

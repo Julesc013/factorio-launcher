@@ -166,10 +166,11 @@ std::string launch_preflight_json(const LaunchPreflightResult& preflight);
 InstanceRunLockResult acquire_instance_run_lock(
     const std::filesystem::path& instance_root,
     std::uint64_t stale_after_seconds,
-    InstanceRunLock& lock
+    InstanceRunLock& lock, bool recover_stale = true
 );
 
 bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail);
+bool verify_instance_run_lock(const InstanceRunLock& lock, std::string& detail);
 
 std::string command_line_for_display(
     const std::filesystem::path& executable,

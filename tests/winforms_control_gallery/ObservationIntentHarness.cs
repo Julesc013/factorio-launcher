@@ -46,6 +46,22 @@ internal static class ObservationIntentHarness
             Require(Object.ReferenceEquals(identity, pendingType.GetProperty("Identity",
                 BindingFlags.Instance | BindingFlags.NonPublic).GetValue(pending, null)), "uncertain identity changed");
             Require(store.HasUncertainAction, "changing observation erased uncertainty");
+            var workspaceContext = typeof(C1LivePresentationStore).GetMethod("SelectWorkspaceContext", BindingFlags.Instance | BindingFlags.NonPublic);
+            var reviewId = typeof(C1LivePresentationStore).GetField("repairReviewId", BindingFlags.Instance | BindingFlags.NonPublic);
+            var reviewInstance = typeof(C1LivePresentationStore).GetField("repairReviewInstanceId", BindingFlags.Instance | BindingFlags.NonPublic);
+            string workspaceA = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "facman-review-workspace-a");
+            string workspaceB = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "facman-review-workspace-b");
+            workspaceContext.Invoke(store, new object[] { workspaceA + System.IO.Path.DirectorySeparatorChar });
+            reviewId.SetValue(store, "review-from-a");
+            reviewInstance.SetValue(store, "main");
+            typeof(C1LivePresentationStore).GetField("uncertainAction", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(store, pending);
+            workspaceContext.Invoke(store, new object[] { workspaceA });
+            Require((string)reviewId.GetValue(store) == "review-from-a" && store.HasUncertainAction,
+                "same-workspace selection erased review or accepted uncertainty");
+            workspaceContext.Invoke(store, new object[] { workspaceB });
+            typeof(C1LivePresentationStore).GetProperty("SelectedInstanceId").GetSetMethod(true).Invoke(store, new object[] { "main" });
+            Require((string)reviewId.GetValue(store) == String.Empty && (string)reviewInstance.GetValue(store) == String.Empty,
+                "repair selection leaked into another workspace with the same instance ID");
             var previewInput = new Dictionary<string, object> {
                 { "composition_state", "partial" }, { "plan_digest", new string('b', 64) },
                 // Even malformed incoming authority booleans cannot enable an advisory apply.

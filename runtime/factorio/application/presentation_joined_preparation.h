@@ -11,6 +11,7 @@
 #include <string>
 
 namespace facman::factorio::application {
+class ApplicationContext;
 
 struct JoinedPreparationOutcome {
     const char* outcome = "refused_before_effects";
@@ -21,7 +22,7 @@ struct JoinedPreparationOutcome {
 
 // The presentation ledger must have claimed the entire reviewed request first.
 // Checkpoints retain unknown outer outcome and never authorize replay dispatch.
-JoinedPreparationOutcome prepare_joined(const std::filesystem::path& workspace,
+JoinedPreparationOutcome prepare_joined(ApplicationContext& context,
     const SemanticActionRequest& request,
     const std::string& joined_plan,
     const std::function<bool(const std::string&, std::string&)>& checkpoint);

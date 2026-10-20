@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace facman::contracts::presentation_v1 {
-inline constexpr const char* kSourceDigest = "c58b6eec72fdf467e27e18b4432d2ed3c606d32c8760225fb336e384442f7aa5";
+inline constexpr const char* kSourceDigest = "9ace5359b2560e818d758f1e94c75de494df7a03e5ce68f1125c0765edf8f3ca";
 
 struct SemanticActionRequest {
     std::string action_id;
@@ -33,6 +33,7 @@ struct SemanticActionRequest {
     std::optional<std::string> new_instance_id;
     std::optional<std::string> output_path;
     std::optional<std::string> profile_id;
+    std::optional<std::string> repair_review_id;
     std::optional<std::vector<std::string>> roots;
     std::optional<std::string> save;
     std::optional<std::string> selected_instance_id;
@@ -47,6 +48,7 @@ struct PresentationQuery {
     std::string scope;
     std::optional<std::string> known_revision;
     std::optional<std::string> launch_intent;
+    std::optional<std::string> repair_review_id;
     std::optional<std::string> search;
     std::optional<std::string> selected_instance_id;
 };
@@ -260,6 +262,9 @@ inline std::string encode_json(const SemanticActionRequest& value)
     if (value.profile_id) {
         output.add_string("profile_id", *value.profile_id);
     }
+    if (value.repair_review_id) {
+        output.add_string("repair_review_id", *value.repair_review_id);
+    }
     if (value.roots) {
         facman::core::json::ArrayBuilder array_roots;
         for (const auto& item : *value.roots) {
@@ -296,7 +301,7 @@ inline facman::core::Result<SemanticActionRequest> decode_semantic_action_reques
     auto document = facman::core::json::parse(raw);
     if (!document || !document.value().is_object())
         return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("contract is not an object"));
-    if (!detail::keys_allowed(document.value(), {"action_id", "expected_snapshot_revision", "request_id", "scope", "attempt_id", "confirmation", "display_name", "durable_operation_id", "idempotency_key", "installation_id", "installation_path", "launch_intent", "mod_identity", "new_instance_id", "output_path", "profile_id", "roots", "save", "selected_instance_id", "snapshot_id", "source_data_root", "source_path", "template_id", "transaction_id"}, false))
+    if (!detail::keys_allowed(document.value(), {"action_id", "expected_snapshot_revision", "request_id", "scope", "attempt_id", "confirmation", "display_name", "durable_operation_id", "idempotency_key", "installation_id", "installation_path", "launch_intent", "mod_identity", "new_instance_id", "output_path", "profile_id", "repair_review_id", "roots", "save", "selected_instance_id", "snapshot_id", "source_data_root", "source_path", "template_id", "transaction_id"}, false))
         return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("contract contains an unknown field"));
     SemanticActionRequest value;
     const auto* field_action_id = document.value().find("action_id");
@@ -447,6 +452,15 @@ inline facman::core::Result<SemanticActionRequest> decode_semantic_action_reques
         if (!detail::portable_identifier(decoded_profile_id)) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("profile_id has an invalid type or value"));
         value.profile_id = std::move(decoded_profile_id);
     }
+    const auto* field_repair_review_id = document.value().find("repair_review_id");
+    if (field_repair_review_id != nullptr) {
+        if (!field_repair_review_id->is_string()) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("repair_review_id has an invalid type or value"));
+        auto decoded_repair_review_id_result = field_repair_review_id->string_value();
+        if (!decoded_repair_review_id_result) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("repair_review_id has an invalid type or value"));
+        std::string decoded_repair_review_id = decoded_repair_review_id_result.take_value();
+        if (decoded_repair_review_id.size() < 1U || decoded_repair_review_id.size() > 256U) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("repair_review_id has an invalid type or value"));
+        value.repair_review_id = std::move(decoded_repair_review_id);
+    }
     const auto* field_roots = document.value().find("roots");
     if (field_roots != nullptr) {
         if (!field_roots->is_array()) return facman::core::Result<SemanticActionRequest>::failure(detail::invalid("roots has an invalid type or value"));
@@ -535,6 +549,9 @@ inline std::string encode_json(const PresentationQuery& value)
     if (value.launch_intent) {
         output.add_string("launch_intent", *value.launch_intent);
     }
+    if (value.repair_review_id) {
+        output.add_string("repair_review_id", *value.repair_review_id);
+    }
     if (value.search) {
         output.add_string("search", *value.search);
     }
@@ -549,7 +566,7 @@ inline facman::core::Result<PresentationQuery> decode_presentation_query(const s
     auto document = facman::core::json::parse(raw);
     if (!document || !document.value().is_object())
         return facman::core::Result<PresentationQuery>::failure(detail::invalid("contract is not an object"));
-    if (!detail::keys_allowed(document.value(), {"scope", "known_revision", "launch_intent", "search", "selected_instance_id"}, false))
+    if (!detail::keys_allowed(document.value(), {"scope", "known_revision", "launch_intent", "repair_review_id", "search", "selected_instance_id"}, false))
         return facman::core::Result<PresentationQuery>::failure(detail::invalid("contract contains an unknown field"));
     PresentationQuery value;
     const auto* field_scope = document.value().find("scope");
@@ -580,6 +597,15 @@ inline facman::core::Result<PresentationQuery> decode_presentation_query(const s
         std::string decoded_launch_intent = decoded_launch_intent_result.take_value();
         if ((decoded_launch_intent != "menu" && decoded_launch_intent != "load_save")) return facman::core::Result<PresentationQuery>::failure(detail::invalid("launch_intent has an invalid type or value"));
         value.launch_intent = std::move(decoded_launch_intent);
+    }
+    const auto* field_repair_review_id = document.value().find("repair_review_id");
+    if (field_repair_review_id != nullptr) {
+        if (!field_repair_review_id->is_string()) return facman::core::Result<PresentationQuery>::failure(detail::invalid("repair_review_id has an invalid type or value"));
+        auto decoded_repair_review_id_result = field_repair_review_id->string_value();
+        if (!decoded_repair_review_id_result) return facman::core::Result<PresentationQuery>::failure(detail::invalid("repair_review_id has an invalid type or value"));
+        std::string decoded_repair_review_id = decoded_repair_review_id_result.take_value();
+        if (decoded_repair_review_id.size() < 1U || decoded_repair_review_id.size() > 256U) return facman::core::Result<PresentationQuery>::failure(detail::invalid("repair_review_id has an invalid type or value"));
+        value.repair_review_id = std::move(decoded_repair_review_id);
     }
     const auto* field_search = document.value().find("search");
     if (field_search != nullptr) {

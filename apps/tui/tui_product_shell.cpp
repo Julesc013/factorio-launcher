@@ -58,7 +58,8 @@ bool refresh(CommandClient& client, TuiState& state, std::ostream& error)
 {
     const std::string scope = scope_for(state.page);
     auto identity = client.negotiate(
-        scope, state.snapshot.selected_instance_id, state.search, state.launch_intent);
+        scope, state.snapshot.selected_instance_id, state.search, state.launch_intent,
+        state.repair_review_instance_id == state.snapshot.selected_instance_id ? state.repair_review_id : "");
     if (!identity) {
         TuiEvent event;
         event.kind = TuiEventKind::transport_disconnected;
@@ -246,94 +247,181 @@ bool joined_content_feedback_valid(const facman::client::CommandResponse& respon
     const auto* operation = response.parsed_payload->find("operation");
     if (!operation || !operation->is_object() || text(*operation, "operation_id") != response.operation.operation_id ||
         text(*operation, "attempt_id") != response.operation.attempt_id || text(*operation, "request_id") != response.request_id) return false;
-    if (!exact(result, {"schema", "command", "plan", "plan_sha256", "completed_components", "continuation",
-            "completed_effects_verified", "remaining_effects_blocked_before_effects", "readiness_observation",
-            "preparation_complete", "fresh_revision_required", "readiness_complete", "execution_started", "permit_issued",
-            "factorio_support_claim", "joined_result", "content_effect_verified"}) ||
-        !strings(result, {"schema", "command", "plan_sha256", "continuation", "factorio_support_claim"}) ||
-        text(result, "schema") != "factorio.make_ready_joined_result.v2" || text(result, "command") != "readiness.prepare_joined" ||
-        text(result, "factorio_support_claim") != "unclaimed" || !flag(result, "content_effect_verified", true) ||
-        !flag(result, "completed_effects_verified", true) || !flag(result, "execution_started", false) ||
-        !flag(result, "permit_issued", false) || !flag(result, "readiness_complete", false) ||
-        !flag(result, "remaining_effects_blocked_before_effects", partial) ||
-        text(result, "continuation") != (partial ? "fresh_request_after_input_correction" : "observe_readiness")) return false;
-    const auto& plan = *result.find("plan");
-    if (!exact(plan, {"schema", "instance_id", "launch_intent", "desired_state", "inputs_sha256", "content_plan", "plan_sha256"}) ||
-        !strings(plan, {"schema", "instance_id", "launch_intent", "inputs_sha256", "plan_sha256"}) ||
-        text(plan, "schema") != "factorio.make_ready_joined_plan.v2" || text(plan, "instance_id").empty() ||
-        (text(plan, "launch_intent") != "menu" && text(plan, "launch_intent") != "load_save") ||
-        !digest(text(plan, "inputs_sha256")) || !digest(text(plan, "plan_sha256")) ||
-        text(plan, "plan_sha256") != text(result, "plan_sha256")) return false;
-    const auto& desired = *plan.find("desired_state");
-    const auto& content = *plan.find("content_plan");
-    if (text(*operation, "target_instance_id") != text(plan, "instance_id") ||
-        text(*operation, "target_installation_id") != text(desired, "installation_id")) return false;
-    if (!exact(desired, {"installation_id", "profile_id", "selected_save", "modset_lock_sha256"}) ||
-        !strings(desired, {"installation_id", "profile_id", "selected_save", "modset_lock_sha256"}) ||
-        text(desired, "installation_id").empty() || text(desired, "profile_id").empty() || !digest(text(desired, "modset_lock_sha256")) ||
-        !exact(content, {"schema", "instance_id", "instance_identity", "root_identity", "lock_sha256", "mod_list_sha256", "owner_plan_id",
-            "desired_mods", "before_targets", "artifact_inputs", "plan_sha256"}) ||
-        !strings(content, {"schema", "instance_id", "instance_identity", "root_identity", "lock_sha256", "mod_list_sha256", "owner_plan_id", "plan_sha256"}) ||
-        text(content, "schema") != "factorio.locked_content_activation_plan.v1" || text(content, "instance_id") != text(plan, "instance_id") ||
-        text(content, "lock_sha256") != text(desired, "modset_lock_sha256")) return false;
-    for (const auto* key : {"lock_sha256", "mod_list_sha256", "owner_plan_id", "plan_sha256"}) if (!digest(text(content, key))) return false;
-    const auto& before = *content.find("before_targets");
-    if (!exact(before, {"mod-list", "local-lock", "shared-lock"})) return false;
-    for (const auto* key : {"mod-list", "local-lock", "shared-lock"}) {
-        const auto& target = *before.find(key);
-        if (!exact(target, {"path", "identity", "parent_identity", "present", "sha256"}) ||
-            !strings(target, {"path", "identity", "parent_identity", "sha256"}) || text(target, "path").empty() || text(target, "parent_identity").empty()) return false;
-        if (flag(target, "present", true)) {
-            if (!digest(text(target, "sha256")) || text(target, "identity").rfind("file:", 0) != 0U) return false;
-            if (std::string(key) != "mod-list" && text(target, "sha256") != text(content, "lock_sha256")) return false;
-        } else if (!flag(target, "present", false) || std::string(key) != "mod-list" ||
-            text(target, "identity") != "absent" || !text(target, "sha256").empty()) return false;
-    }
-    const auto* artifacts = content.find("artifact_inputs"); const auto* mods = content.find("desired_mods");
-    if (!artifacts->is_array() || !mods->is_array() || artifacts->size() != mods->size() || mods->size() > 512U) return false;
-    std::set<std::string> names;
-    for (std::size_t i = 0; i < mods->size(); ++i) {
-        const auto& mod = *mods->at(i); const auto& artifact = *artifacts->at(i);
-        if (!exact(mod, {"name", "version", "file_name", "sha1", "sha256", "enabled", "virtual_package", "source"}) ||
-            !strings(mod, {"name", "version", "file_name", "sha1", "sha256", "source"}) || !flag(mod, "enabled", true) ||
-            (!flag(mod, "virtual_package", true) && !flag(mod, "virtual_package", false)) || text(mod, "name").empty() ||
-            !names.insert(text(mod, "name")).second || !exact(artifact, {"path", "identity"}) ||
-            !strings(artifact, {"path", "identity"}) || text(artifact, "path").empty() || text(artifact, "identity").rfind("file:", 0) != 0U) return false;
-    }
+    const auto validate_content = [&]() -> const V* {
+        if (!exact(result, {"schema", "command", "plan", "plan_sha256", "completed_components", "continuation",
+                "completed_effects_verified", "remaining_effects_blocked_before_effects", "readiness_observation",
+                "preparation_complete", "fresh_revision_required", "readiness_complete", "execution_started", "permit_issued",
+                "factorio_support_claim", "joined_result", "content_effect_verified"}) ||
+            !strings(result, {"schema", "command", "plan_sha256", "continuation", "factorio_support_claim"}) ||
+            text(result, "schema") != "factorio.make_ready_joined_result.v2" || text(result, "command") != "readiness.prepare_joined" ||
+            text(result, "factorio_support_claim") != "unclaimed" || !flag(result, "content_effect_verified", true) ||
+            !flag(result, "completed_effects_verified", true) || !flag(result, "execution_started", false) ||
+            !flag(result, "permit_issued", false) || !flag(result, "readiness_complete", false) ||
+            !flag(result, "remaining_effects_blocked_before_effects", partial) ||
+            text(result, "continuation") != (partial ? "fresh_request_after_input_correction" : "observe_readiness")) return nullptr;
+        const auto& plan = *result.find("plan");
+        if (!exact(plan, {"schema", "instance_id", "launch_intent", "desired_state", "inputs_sha256", "content_plan", "plan_sha256"}) ||
+            !strings(plan, {"schema", "instance_id", "launch_intent", "inputs_sha256", "plan_sha256"}) ||
+            text(plan, "schema") != "factorio.make_ready_joined_plan.v2" || text(plan, "instance_id").empty() ||
+            (text(plan, "launch_intent") != "menu" && text(plan, "launch_intent") != "load_save") ||
+            !digest(text(plan, "inputs_sha256")) || !digest(text(plan, "plan_sha256")) ||
+            text(plan, "plan_sha256") != text(result, "plan_sha256")) return nullptr;
+        const auto& desired = *plan.find("desired_state");
+        const auto& content = *plan.find("content_plan");
+        if (text(*operation, "target_instance_id") != text(plan, "instance_id") ||
+            text(*operation, "target_installation_id") != text(desired, "installation_id")) return nullptr;
+        if (!exact(desired, {"installation_id", "profile_id", "selected_save", "modset_lock_sha256"}) ||
+            !strings(desired, {"installation_id", "profile_id", "selected_save", "modset_lock_sha256"}) ||
+            text(desired, "installation_id").empty() || text(desired, "profile_id").empty() || !digest(text(desired, "modset_lock_sha256")) ||
+            !exact(content, {"schema", "instance_id", "instance_identity", "root_identity", "lock_sha256", "mod_list_sha256", "owner_plan_id",
+                "desired_mods", "before_targets", "artifact_inputs", "plan_sha256"}) ||
+            !strings(content, {"schema", "instance_id", "instance_identity", "root_identity", "lock_sha256", "mod_list_sha256", "owner_plan_id", "plan_sha256"}) ||
+            text(content, "schema") != "factorio.locked_content_activation_plan.v1" || text(content, "instance_id") != text(plan, "instance_id") ||
+            text(content, "lock_sha256") != text(desired, "modset_lock_sha256")) return nullptr;
+        for (const auto* key : {"lock_sha256", "mod_list_sha256", "owner_plan_id", "plan_sha256"}) if (!digest(text(content, key))) return nullptr;
+        const auto& before = *content.find("before_targets");
+        if (!exact(before, {"mod-list", "local-lock", "shared-lock"})) return nullptr;
+        for (const auto* key : {"mod-list", "local-lock", "shared-lock"}) {
+            const auto& target = *before.find(key);
+            if (!exact(target, {"path", "identity", "parent_identity", "present", "sha256"}) ||
+                !strings(target, {"path", "identity", "parent_identity", "sha256"}) || text(target, "path").empty() || text(target, "parent_identity").empty()) return nullptr;
+            if (flag(target, "present", true)) {
+                if (!digest(text(target, "sha256")) || text(target, "identity").rfind("file:", 0) != 0U) return nullptr;
+                if (std::string(key) != "mod-list" && text(target, "sha256") != text(content, "lock_sha256")) return nullptr;
+            } else if (!flag(target, "present", false) || std::string(key) != "mod-list" ||
+                text(target, "identity") != "absent" || !text(target, "sha256").empty()) return nullptr;
+        }
+        const auto* artifacts = content.find("artifact_inputs"); const auto* mods = content.find("desired_mods");
+        if (!artifacts->is_array() || !mods->is_array() || artifacts->size() != mods->size() || mods->size() > 512U) return nullptr;
+        std::set<std::string> names;
+        for (std::size_t i = 0; i < mods->size(); ++i) {
+            const auto& mod = *mods->at(i); const auto& artifact = *artifacts->at(i);
+            if (!exact(mod, {"name", "version", "file_name", "sha1", "sha256", "enabled", "virtual_package", "source"}) ||
+                !strings(mod, {"name", "version", "file_name", "sha1", "sha256", "source"}) || !flag(mod, "enabled", true) ||
+                (!flag(mod, "virtual_package", true) && !flag(mod, "virtual_package", false)) || text(mod, "name").empty() ||
+                !names.insert(text(mod, "name")).second || !exact(artifact, {"path", "identity"}) ||
+                !strings(artifact, {"path", "identity"}) || text(artifact, "path").empty() || text(artifact, "identity").rfind("file:", 0) != 0U) return nullptr;
+        }
+        const auto* effects = result.find("completed_components");
+        if (!effects->is_array() || effects->size() < 1U || effects->size() > 3U) return nullptr;
+        const auto& effect = *effects->at(0);
+        if (!exact(effect, {"component", "owner_command", "transaction_id", "plan_sha256", "owner_result"}) ||
+            !strings(effect, {"component", "owner_command", "transaction_id", "plan_sha256"}) ||
+            text(effect, "component") != "locked_content_activation" || text(effect, "owner_command") != "modsets.apply") return nullptr;
+        const auto& owner = *effect.find("owner_result");
+        if (!exact(owner, {"schema", "command", "instance_id", "plan_sha256", "transaction_id", "history_id", "operation_id", "attempt_id",
+                "effect_binding_sha256", "apply_result", "execution_started", "permit_issued"}) ||
+            !strings(owner, {"schema", "command", "instance_id", "plan_sha256", "transaction_id", "history_id", "operation_id", "attempt_id", "effect_binding_sha256"}) ||
+            text(owner, "schema") != "factorio.locked_content_activation_result.v1" || text(owner, "command") != "modsets.apply" ||
+            text(owner, "instance_id") != text(plan, "instance_id") || text(owner, "plan_sha256") != text(content, "plan_sha256") ||
+            text(effect, "plan_sha256") != text(owner, "plan_sha256") || text(effect, "transaction_id") != text(owner, "transaction_id") ||
+            text(owner, "transaction_id").empty() || !digest(text(owner, "history_id")) || !digest(text(owner, "effect_binding_sha256")) ||
+            text(owner, "operation_id") != response.operation.operation_id || text(owner, "attempt_id") != response.operation.attempt_id ||
+            !flag(owner, "execution_started", false) || !flag(owner, "permit_issued", false)) return nullptr;
+        const auto& applied = *owner.find("apply_result");
+        if (!exact(applied, {"schema", "command", "status", "instance_id", "factorio_version", "plan_id", "transaction_id", "current_state_sha256", "desired_mods",
+                "changes", "explanation", "budget_usage", "local_artifacts_only", "portal_access", "mutation_executed"}) ||
+            !strings(applied, {"schema", "command", "status", "instance_id", "factorio_version", "plan_id", "transaction_id", "current_state_sha256"}) ||
+            text(applied, "schema") != "factorio.modset_apply.v1" || text(applied, "command") != "modsets.apply" || text(applied, "status") != "applied" ||
+            text(applied, "instance_id") != text(plan, "instance_id") || text(applied, "plan_id") != text(content, "owner_plan_id") ||
+            text(applied, "transaction_id") != text(owner, "history_id") || !digest(text(applied, "current_state_sha256")) ||
+            !same(applied.find("desired_mods"), mods) || !applied.find("changes")->is_array() || !applied.find("explanation")->is_array() ||
+            !applied.find("budget_usage")->is_object() || !flag(applied, "local_artifacts_only", true) ||
+            !flag(applied, "portal_access", false) || !flag(applied, "mutation_executed", true)) return nullptr;
+        return &owner;
+    };
+    const std::string schema = text(result, "schema");
+    const auto* outer_plan = result.find("plan");
+    const auto* outer_desired = outer_plan ? outer_plan->find("desired_state") : nullptr;
     const auto* effects = result.find("completed_components");
-    if (!effects->is_array() || effects->size() < 1U || effects->size() > 3U) return false;
-    const auto& effect = *effects->at(0);
-    if (!exact(effect, {"component", "owner_command", "transaction_id", "plan_sha256", "owner_result"}) ||
-        !strings(effect, {"component", "owner_command", "transaction_id", "plan_sha256"}) ||
-        text(effect, "component") != "locked_content_activation" || text(effect, "owner_command") != "modsets.apply") return false;
-    const auto& owner = *effect.find("owner_result");
-    if (!exact(owner, {"schema", "command", "instance_id", "plan_sha256", "transaction_id", "history_id", "operation_id", "attempt_id",
-            "effect_binding_sha256", "apply_result", "execution_started", "permit_issued"}) ||
-        !strings(owner, {"schema", "command", "instance_id", "plan_sha256", "transaction_id", "history_id", "operation_id", "attempt_id", "effect_binding_sha256"}) ||
-        text(owner, "schema") != "factorio.locked_content_activation_result.v1" || text(owner, "command") != "modsets.apply" ||
-        text(owner, "instance_id") != text(plan, "instance_id") || text(owner, "plan_sha256") != text(content, "plan_sha256") ||
-        text(effect, "plan_sha256") != text(owner, "plan_sha256") || text(effect, "transaction_id") != text(owner, "transaction_id") ||
-        text(owner, "transaction_id").empty() || !digest(text(owner, "history_id")) || !digest(text(owner, "effect_binding_sha256")) ||
-        text(owner, "operation_id") != response.operation.operation_id || text(owner, "attempt_id") != response.operation.attempt_id ||
-        !flag(owner, "execution_started", false) || !flag(owner, "permit_issued", false)) return false;
-    const auto& applied = *owner.find("apply_result");
-    if (!exact(applied, {"schema", "command", "status", "instance_id", "factorio_version", "plan_id", "transaction_id", "current_state_sha256", "desired_mods",
-            "changes", "explanation", "budget_usage", "local_artifacts_only", "portal_access", "mutation_executed"}) ||
-        !strings(applied, {"schema", "command", "status", "instance_id", "factorio_version", "plan_id", "transaction_id", "current_state_sha256"}) ||
-        text(applied, "schema") != "factorio.modset_apply.v1" || text(applied, "command") != "modsets.apply" || text(applied, "status") != "applied" ||
-        text(applied, "instance_id") != text(plan, "instance_id") || text(applied, "plan_id") != text(content, "owner_plan_id") ||
-        text(applied, "transaction_id") != text(owner, "history_id") || !digest(text(applied, "current_state_sha256")) ||
-        !same(applied.find("desired_mods"), mods) || !applied.find("changes")->is_array() || !applied.find("explanation")->is_array() ||
-        !applied.find("budget_usage")->is_object() || !flag(applied, "local_artifacts_only", true) ||
-        !flag(applied, "portal_access", false) || !flag(applied, "mutation_executed", true)) return false;
-    const auto* nested = result.find("joined_result");
-    if (nested->is_null()) return partial && effects->size() == 1U && flag(result, "preparation_complete", false) &&
+    if (!outer_plan || !outer_desired || !effects || !effects->is_array()) return false;
+    const auto& plan = *outer_plan;
+    const auto& desired = *outer_desired;
+    const V* owner_result = nullptr;
+    const V* nested = &result;
+    std::size_t owner_offset = 0U;
+    if (schema == "factorio.make_ready_joined_result.v2") {
+        owner_result = validate_content();
+        if (!owner_result) return false;
+        nested = result.find("joined_result");
+        owner_offset = 1U;
+    } else if (schema == "factorio.make_ready_joined_result.v3") {
+        if (!exact(result, {"schema", "command", "plan", "plan_sha256", "completed_components", "continuation",
+                "completed_effects_verified", "remaining_effects_blocked_before_effects", "readiness_observation",
+                "preparation_complete", "fresh_revision_required", "readiness_complete", "execution_started", "permit_issued",
+                "factorio_support_claim", "joined_result", "installation_effect_verified"}) ||
+            !exact(plan, {"schema", "instance_id", "launch_intent", "desired_state", "repair_review_id", "archive_source_identity",
+                "installation_root", "installation_executable", "inputs_sha256", "installation_plan", "plan_sha256"}) ||
+            !strings(plan, {"schema", "instance_id", "launch_intent", "repair_review_id", "archive_source_identity",
+                "installation_root", "installation_executable", "inputs_sha256", "plan_sha256"}) ||
+            text(plan, "schema") != "factorio.make_ready_joined_plan.v3" || !digest(text(plan, "plan_sha256")) ||
+            text(plan, "plan_sha256") != text(result, "plan_sha256") || !digest(text(plan, "inputs_sha256")) ||
+            text(result, "command") != "readiness.prepare_joined" || text(result, "factorio_support_claim") != "unclaimed" ||
+            !flag(result, "installation_effect_verified", true) || !flag(result, "completed_effects_verified", true) ||
+            !flag(result, "execution_started", false) || !flag(result, "permit_issued", false) || !flag(result, "readiness_complete", false) ||
+            text(result, "continuation") != (partial ? "fresh_request_after_input_correction" : "observe_readiness") ||
+            !flag(result, "remaining_effects_blocked_before_effects", partial) || effects->size() == 0U || effects->size() > 4U) return false;
+        const auto* reviewed = plan.find("installation_plan");
+        const auto* effect = effects->at(0U);
+        owner_result = effect ? effect->find("owner_result") : nullptr;
+        if (!reviewed || !effect || !owner_result ||
+            !exact(*reviewed, {"schema", "command", "install_id", "plan_id", "plan_digest", "created_at", "install_record_sha256", "plan_request", "provider_plan"}) ||
+            text(*reviewed, "schema") != "factorio.managed_repair_plan.v1" || text(*reviewed, "command") != "installs.repair.plan" ||
+            text(*reviewed, "install_id") != text(desired, "installation_id") ||
+            !exact(*effect, {"component", "owner_command", "transaction_id", "plan_digest", "owner_result"}) ||
+            !exact(*owner_result, {"schema", "status", "disposition", "install_id", "plan_id", "plan_digest", "provider_plan_digest",
+                "transaction_id", "completed_at", "installed_state_digest", "setup_state_ref", "last_verification_identity", "state_revision", "verification_status"}) ||
+            !strings(*owner_result, {"schema", "status", "disposition", "install_id", "plan_id", "plan_digest", "provider_plan_digest",
+                "transaction_id", "completed_at", "installed_state_digest", "setup_state_ref", "last_verification_identity", "state_revision", "verification_status"}) ||
+            text(*effect, "component") != "managed_installation_repair" || text(*effect, "owner_command") != "installs.repair.apply" ||
+            text(*owner_result, "schema") != "factorio.managed_repair_apply_result.v1" || text(*owner_result, "status") != "completed" ||
+            text(*owner_result, "disposition") != "applied" || text(*owner_result, "install_id") != text(desired, "installation_id") ||
+            text(*owner_result, "plan_id") != text(*reviewed, "plan_id") ||
+            !digest(text(*reviewed, "plan_digest")) || text(*owner_result, "plan_digest") != text(*reviewed, "plan_digest") ||
+            text(*effect, "plan_digest") != text(*reviewed, "plan_digest") || text(*owner_result, "transaction_id").empty() ||
+            text(*effect, "transaction_id") != text(*owner_result, "transaction_id") ||
+            text(*operation, "target_instance_id") != text(plan, "instance_id") ||
+            text(*operation, "target_installation_id") != text(desired, "installation_id")) return false;
+        const auto* provider = reviewed->find("provider_plan");
+        if (!provider || text(*provider, "schema") != "usk.repair_plan.v1" ||
+            text(*provider, "install_id") != text(desired, "installation_id") ||
+            text(*owner_result, "provider_plan_digest") != text(*provider, "plan_digest") ||
+            !digest(text(*owner_result, "provider_plan_digest")) || !digest(text(*owner_result, "installed_state_digest")) ||
+            text(*owner_result, "setup_state_ref").empty() || text(*owner_result, "last_verification_identity").empty() ||
+            text(*owner_result, "state_revision").empty() || text(*owner_result, "completed_at").empty() ||
+            (text(*owner_result, "verification_status") != "pass" && text(*owner_result, "verification_status") != "warn")) return false;
+        nested = result.find("joined_result");
+        owner_offset = 1U;
+        if (nested && text(*nested, "schema") == "factorio.make_ready_joined_result.v2") {
+            if (!joined_content_feedback_valid(response, *nested, partial)) return false;
+            const auto* child_plan = nested->find("plan");
+            const auto* child_effects = nested->find("completed_components");
+            if (!child_plan || !same(child_plan->find("desired_state"), &desired) ||
+                text(*child_plan, "instance_id") != text(plan, "instance_id") || text(*child_plan, "launch_intent") != text(plan, "launch_intent") ||
+                !child_effects || child_effects->size() + 1U != effects->size() ||
+                !same(nested->find("readiness_observation"), result.find("readiness_observation")) ||
+                !same(nested->find("preparation_complete"), result.find("preparation_complete")) ||
+                !same(nested->find("fresh_revision_required"), result.find("fresh_revision_required"))) return false;
+            std::set<std::string> transactions {text(*owner_result, "transaction_id")};
+            for (std::size_t i = 0; i < child_effects->size(); ++i)
+                if (!same(child_effects->at(i), effects->at(i + 1U)) ||
+                    !transactions.insert(text(*child_effects->at(i), "transaction_id")).second) return false;
+            return true;
+        }
+    } else if (schema != "factorio.make_ready_joined_result.v1" ||
+        text(*operation, "target_instance_id") != text(plan, "instance_id") ||
+        text(*operation, "target_installation_id") != text(desired, "installation_id")) return false;
+    if (!nested) return false;
+    if (nested->is_null()) return partial && owner_offset == 1U && effects->size() == 1U && flag(result, "preparation_complete", false) &&
         flag(result, "fresh_revision_required", true) && result.find("readiness_observation")->is_null();
     if (!exact(*nested, {"schema", "command", "plan", "plan_sha256", "completed_components", "continuation", "completed_effects_verified",
             "remaining_effects_blocked_before_effects", "readiness_observation", "preparation_complete", "fresh_revision_required", "readiness_complete",
             "execution_started", "permit_issued", "factorio_support_claim"}) || text(*nested, "schema") != "factorio.make_ready_joined_result.v1" ||
         text(*nested, "command") != "readiness.prepare_joined" || !flag(*nested, "execution_started", false) || !flag(*nested, "permit_issued", false) ||
         !flag(*nested, "readiness_complete", false) || text(*nested, "factorio_support_claim") != "unclaimed") return false;
+    if (!exact(desired, {"installation_id", "profile_id", "selected_save", "modset_lock_sha256"}) ||
+        !strings(desired, {"installation_id", "profile_id", "selected_save", "modset_lock_sha256"}) ||
+        text(desired, "installation_id").empty() || text(desired, "profile_id").empty() || !digest(text(desired, "modset_lock_sha256"))) return false;
     const auto* nested_plan = nested->find("plan"); const auto* nested_effects = nested->find("completed_components");
     if (!nested_plan || !exact(*nested_plan, {"schema", "instance_id", "launch_intent", "desired_state", "inputs_sha256", "configuration_plan",
             "configuration_sha256", "configuration_before_identity", "selected_context_before_identity", "selected_parent_before_identity",
@@ -345,8 +433,9 @@ bool joined_content_feedback_valid(const facman::client::CommandResponse& respon
         (!flag(*nested_plan, "selected_context_required", true) && !flag(*nested_plan, "selected_context_required", false)) ||
         !same(nested_plan->find("desired_state"), &desired) || text(*nested_plan, "instance_id") != text(plan, "instance_id") ||
         text(*nested_plan, "launch_intent") != text(plan, "launch_intent") || !nested_effects->is_array() ||
-        nested_effects->size() + 1U != effects->size() || text(*nested_plan, "plan_sha256") != text(*nested, "plan_sha256")) return false;
-    std::set<std::string> transactions {text(owner, "transaction_id")};
+        nested_effects->size() + owner_offset != effects->size() || text(*nested_plan, "plan_sha256") != text(*nested, "plan_sha256")) return false;
+    std::set<std::string> transactions;
+    if (owner_result) transactions.insert(text(*owner_result, "transaction_id"));
     std::set<std::string> components;
     const auto* configuration = nested_plan->find("configuration_plan");
     if (!configuration->is_null() && (!exact(*configuration, {"plan_sha256", "component", "target"}) ||
@@ -355,7 +444,7 @@ bool joined_content_feedback_valid(const facman::client::CommandResponse& respon
             text(*configuration, "component") != "existing_routing_configuration"))) return false;
     for (std::size_t i = 0; i < nested_effects->size(); ++i) {
         const auto& item = *nested_effects->at(i);
-        if (!same(&item, effects->at(i + 1U)) || !exact(item, {"component", "owner_command", "transaction_id", "plan_sha256", "owner_result"}) ||
+        if (!same(&item, effects->at(i + owner_offset)) || !exact(item, {"component", "owner_command", "transaction_id", "plan_sha256", "owner_result"}) ||
             !strings(item, {"component", "owner_command", "transaction_id", "plan_sha256"}) || !digest(text(item, "plan_sha256")) ||
             !transactions.insert(text(item, "transaction_id")).second || text(item, "transaction_id").empty() ||
             !components.insert(text(item, "component")).second) return false;
@@ -389,6 +478,8 @@ bool joined_content_feedback_valid(const facman::client::CommandResponse& respon
             !same_target(text(*child, "target"), text(*nested_plan, "selected_context_target")) ||
             (!configuration->is_null() && components.count("routing_configuration") == 0U)) return false;
     }
+    if (!partial && ((!configuration->is_null() && components.count("routing_configuration") == 0U) ||
+            (flag(*nested_plan, "selected_context_required", true) && components.count("selected_save_declared_context") == 0U))) return false;
     if (partial) {
         const bool empty = nested_effects->size() == 0U;
         return flag(result, "preparation_complete", false) && flag(result, "fresh_revision_required", true) &&
@@ -468,6 +559,13 @@ std::string operation_feedback(const facman::client::CommandResponse& response)
             auto value = field ? field->bool_value() : facman::core::Result<bool>::failure({"missing", "missing", {}});
             return value && value.value() == expected;
         };
+        if (text("schema") == "factorio.make_ready_joined_result.v3") {
+            if (!joined_content_feedback_valid(response, *preparation, outcome == "recovery_required"))
+                return "Installation preparation needs attention; inspect the original request and domain recovery";
+            if (outcome == "completed" && text("continuation") == "observe_readiness")
+                return "Registered installation executable and current settings were prepared; review remaining readiness checks; Play remains unavailable";
+            return "Completed installation repair is retained; inspect the original request before starting another preparation request";
+        }
         const bool v2 = text("schema") == "factorio.make_ready_joined_result.v2";
         if (v2 && !joined_content_feedback_valid(response, *preparation, outcome == "recovery_required"))
             return "Preparation needs attention; inspect the original request and domain recovery before continuing";
@@ -607,6 +705,18 @@ int activate_selected_action(CommandClient& client, TuiState& state)
         state.status = state.operation_status;
         if (!response.value().error_code.empty()) state.status += ": " + response.value().error_code;
         return 0;
+    }
+
+    if (action.id == "readiness.review_install_repair" && response.value().payload_string("outcome") == "completed") {
+        state.repair_review_id = identity.idempotency_key;
+        state.repair_review_instance_id = state.snapshot.selected_instance_id;
+        state.refresh_requested = true;
+    }
+    if (action.id == "readiness.prepare_joined" && response.value().payload_string("outcome") == "completed" &&
+        (state.repair_review_id.empty() || verified_installation_preparation_completion(response.value()))) {
+        state.repair_review_id.clear();
+        state.repair_review_instance_id.clear();
+        state.refresh_requested = true;
     }
 
     TuiEvent event;
@@ -1270,6 +1380,15 @@ int run_full_screen(
 }
 
 } // namespace
+
+bool verified_installation_preparation_completion(const facman::client::CommandResponse& response)
+{
+    const auto* payload = response.parsed_payload ? response.parsed_payload->find("action_payload") : nullptr;
+    const auto* schema = payload ? payload->find("schema") : nullptr;
+    auto version = schema ? schema->string_value() : facman::core::Result<std::string>::success("");
+    return response.ok() && response.payload_string("outcome") == "completed" &&
+        version && version.value() == "factorio.make_ready_joined_result.v3" && joined_content_feedback_valid(response, *payload, false);
+}
 
 std::string action_response_status(
     const TuiAction& action,

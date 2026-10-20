@@ -321,8 +321,9 @@ class LockedContentMakeReadyTests(unittest.TestCase):
                     instance = self.prepare(workspace)
                 observation = self.query(workspace, "instances", "load_save")
                 index = next(i for i, a in enumerate(observation["available_semantic_actions"]) if a["action_id"] == "readiness.prepare_joined")
+                refresh_index = next(i for i, a in enumerate(observation["available_semantic_actions"]) if a["action_id"] == "presentation.refresh")
                 run = subprocess.run([str(facman_executable()), "tui", "--workspace", str(workspace), "--ordinary", "--plain"],
-                    input="s\n2\n" + "tab\n" * index + "space\nspace\nq\n", cwd=ROOT, capture_output=True, text=True, timeout=45)
+                    input="s\n2\n" + "tab\n" * (index - refresh_index) + "space\nspace\nq\n", cwd=ROOT, capture_output=True, text=True, timeout=45)
                 self.assertEqual((0, ""), (run.returncode, run.stderr), run.stdout)
                 self.assertIn("Confirm Make Ready with current settings", run.stdout)
                 self.assertIn("review remaining readiness checks", run.stdout)

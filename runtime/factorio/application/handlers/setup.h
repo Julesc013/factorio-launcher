@@ -19,7 +19,8 @@ ApplicationResult apply_install(ApplicationContext& context, const ServiceOperat
 ApplicationResult verify_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult plan_repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
-ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest& request,
+    const std::function<facman::core::Result<std::string>()>& protected_inputs = {});
 ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult apply_move_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request);

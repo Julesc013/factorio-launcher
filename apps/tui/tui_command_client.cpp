@@ -60,13 +60,14 @@ facman::core::Result<facman::frontend::FrontendSessionIdentity> CommandClient::n
     const std::string& scope,
     const std::string& selected_instance_id,
     const std::string& search,
-    const std::string& launch_intent)
+    const std::string& launch_intent, const std::string& repair_review_id)
 {
     facman::frontend::FrontendNegotiationRequest request;
     request.scope = scope;
     request.target_instance_id = selected_instance_id;
     request.search = search;
     request.launch_intent = launch_intent;
+    request.repair_review_id = repair_review_id;
     return session_.negotiate(std::move(request));
 }
 

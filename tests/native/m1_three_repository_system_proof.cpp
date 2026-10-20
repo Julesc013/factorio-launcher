@@ -1091,6 +1091,21 @@ proof::LauncherReference prove_move_and_repair(
     apply_request.plan_digest = json_string(plan.value(), "plan_digest");
     apply_request.plan_created_at = json_string(plan.value(), "created_at");
     apply_request.install_record_sha256 = json_string(plan.value(), "install_record_sha256");
+    apply_request.transaction_id = "tx-m1-facman-repair-protected-inputs";
+    apply_request.applied_at = "2098-01-01T01:00:06Z";
+    apply_request.confirmation = "APPLY";
+    apply_request.plan_digest = json_string(plan.value(), "plan_digest");
+    bool protected_inputs_observed_under_lease = false;
+    const auto joined_refused = application::handlers::apply_repair_install(context, apply_request, [&]() {
+        protected_inputs_observed_under_lease = true;
+        return facman::core::Result<std::string>::failure({"make_ready_inputs_changed",
+            "Generated protected-input drift at the actual owner boundary", {}, facman::core::OutcomeKind::refused});
+    });
+    if (!protected_inputs_observed_under_lease || joined_refused.status == ULK_STATUS_OK ||
+        joined_refused.error_code != "make_ready_inputs_changed" || tree_signature(moved_target) != target_before_plan ||
+        read_text(loaded_before.value().source_path) != record_before) {
+        throw std::runtime_error("Joined protected-input refusal reached provider effects or changed the managed reference");
+    }
     apply_request.transaction_id = "tx-m1-facman-repair";
     apply_request.applied_at = "2098-01-01T01:00:06Z";
     apply_request.confirmation = "APPLY";

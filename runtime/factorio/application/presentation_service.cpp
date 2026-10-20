@@ -44,6 +44,7 @@ namespace transactions = facman::transaction;
 namespace fs = std::filesystem;
 
 namespace {
+thread_local std::function<void()> before_launch_dispatch_observer;
 
 std::string digest(const std::string& value)
 {
@@ -106,7 +107,7 @@ bool read_action_receipt(
     std::string& fingerprint,
     std::string& receipt_state,
     std::string& result,
-    std::string& detail)
+    std::string& detail, std::string* original_request = nullptr)
 {
     facman::platform::StableInputFile input;
     auto opened = input.open_no_follow(path);
@@ -191,6 +192,7 @@ bool read_action_receipt(
         detail = "presentation action receipt request digest is invalid";
         return false;
     }
+    if (original_request) *original_request = decoded_request.value();
     auto request_document = json::parse(decoded_request.value(), limits);
     if (!request_document || !recorded_action_request_shape(request_document.value())) {
         detail = "presentation action receipt request shape is invalid";
@@ -467,39 +469,6 @@ std::string recovery_json(const std::filesystem::path& workspace)
     return transactions::to_json(std::get<transactions::Refusal>(outcome), "workspace.recovery.inspect");
 }
 
-struct AdvertisedAction {
-    bool found = false;
-    bool available = false;
-    std::string refusal_code;
-    std::string refusal_reason;
-};
-
-AdvertisedAction advertised_action(const std::string& snapshot, const std::string& action_id)
-{
-    AdvertisedAction result;
-    auto document = json::parse(snapshot);
-    if (!document || !document.value().is_object()) return result;
-    const json::Value* actions = document.value().find("available_semantic_actions");
-    if (actions == nullptr || !actions->is_array()) return result;
-    for (std::size_t index = 0; index < actions->size(); ++index) {
-        const json::Value* action = actions->at(index);
-        if (action == nullptr || !action->is_object()) continue;
-        const json::Value* id = action->find("action_id");
-        if (id == nullptr || json_string(*id) != action_id) continue;
-        result.found = true;
-        const json::Value* availability = action->find("availability");
-        result.available = availability != nullptr && json_string(*availability) == "available";
-        const json::Value* refusal = action->find("refusal");
-        if (refusal != nullptr && refusal->is_object()) {
-            const json::Value* code = refusal->find("code");
-            const json::Value* reason = refusal->find("reason");
-            if (code != nullptr) result.refusal_code = json_string(*code);
-            if (reason != nullptr) result.refusal_reason = json_string(*reason);
-        }
-        return result;
-    }
-    return result;
-}
 
 ApplicationResult service_refusal(
     const char* action,
@@ -570,6 +539,30 @@ ApplicationResult replayed_action_result(const std::string& source)
 }
 
 } // namespace
+
+std::function<void()> testing::exchange_before_launch_dispatch_observer(std::function<void()> observer)
+{
+    auto previous = std::move(before_launch_dispatch_observer);
+    before_launch_dispatch_observer = std::move(observer);
+    return previous;
+}
+
+facman::core::Result<std::string> PresentationActionLedger::repair_review(
+    const fs::path& workspace, const std::string& key, const std::string& instance_id) const
+{
+    using Result = facman::core::Result<std::string>;
+    const auto invalid = [](const std::string& detail) {
+        return Result::failure({"make_ready_repair_review_invalid", detail, {}, facman::core::OutcomeKind::refused});
+    };
+    if (key.empty() || key.size() > 256U) return invalid("Select a completed installation repair review");
+    SemanticActionRequest selector;
+    selector.idempotency_key = key;
+    std::string fingerprint, state, source, detail, request_source;
+    if (!read_action_receipt(action_receipt_path(workspace, key), selector,
+            fingerprint, state, source, detail, &request_source) || state != "terminal")
+        return invalid("The selected installation repair review is unavailable: " + detail);
+    return verified_repair_review_binding(workspace, instance_id, source, request_source);
+}
 
 PresentationActionLedger::Lookup PresentationActionLedger::lookup(
     const std::filesystem::path& workspace,
@@ -1045,8 +1038,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         context_.workspace(), request.selected_instance_id, request.launch_intent);
     const std::string configuration_preparation = configuration_preparation_json(
         context_.workspace(), request.selected_instance_id, request.launch_intent);
-    const std::string joined_preparation = joined_preparation_json(
-        context_.workspace(), request.selected_instance_id, request.launch_intent);
+    const std::string joined_preparation = joined_preparation_json(context_.workspace(), request, action_ledger_);
     const std::string recovery = recovery_json(context_.workspace());
     const LastRunProjection last_run = request.selected_instance_id.empty()
         ? LastRunProjection {LastRunAuthorityState::no_record, last_run_provider_.provider_id(), {}, {}}
@@ -1126,6 +1118,9 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     const std::vector<ActionInputField> instance_input = {{
         "selected_instance_id", "Instance", "enum", true,
         default_instance, instance_choices}};
+    if (request.scope == "instances" && selected_exists) {
+        actions.add_object(installation_repair_review_descriptor(instances, request.selected_instance_id, default_instance));
+    }
     const std::vector<ActionInputField> profile_create_input = {{
         "profile_id", "New profile ID", "identifier", true,
         "new-profile", {}}};
@@ -1267,7 +1262,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "secondary", "read_only", selected_exists,
             selected_exists ? nullptr : "no_instance_selected",
             "none", "facman.semantic_action_input.v1", instance_input));
-        const bool launch_available = request.launch_intent == "menu" && launch_executor_ != nullptr &&
+        const bool launch_recovery_pending = transactions::incomplete_count(context_.workspace()) != 0U;
+        const bool launch_available = !launch_recovery_pending && request.launch_intent == "menu" && launch_executor_ != nullptr &&
             launch_executor_->available(request);
         actions.add_object(selected_save_action_descriptor(selected_save_preparation, request.selected_instance_id));
         actions.add_object(configuration_action_descriptor(configuration_preparation, request.selected_instance_id));
@@ -1280,7 +1276,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                 ? "Relaunch" : "Play",
             "primary", "process_execution",
             launch_available,
-            launch_available ? nullptr : "execution_authority_unavailable",
+            launch_available ? nullptr : launch_recovery_pending ? "instance_recovery_required" : "execution_authority_unavailable",
             "explicit", "facman.semantic_action_input.v1", instance_input));
         if (stop_available) {
             actions.add_object(action_descriptor(
@@ -1455,6 +1451,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
 
     json::ObjectBuilder selection;
     selection.add_string("launch_intent", request.launch_intent);
+    if (!request.repair_review_id.empty()) selection.add_string("repair_review_id", request.repair_review_id);
     if (request.selected_instance_id.empty()) selection.add_null("instance_id");
     else selection.add_string("instance_id", request.selected_instance_id);
     if (!selected_exists) {
@@ -1593,6 +1590,7 @@ ApplicationResult PresentationService::action(
     query_request.launch_intent = request.launch_intent;
     query_request.scope = request.scope;
     query_request.selected_instance_id = request.selected_instance_id;
+    query_request.repair_review_id = request.repair_review_id;
     ApplicationResult current = query(query_request);
     const std::string current_snapshot = result_string(current);
     if (current.status != ULK_STATUS_OK || current_snapshot.empty()) return current;
@@ -1718,6 +1716,8 @@ ApplicationResult PresentationService::action(
         profile_plan = bound.take_value();
     }
     const std::string joined_plan = request.action_id == "readiness.prepare_joined" ? profile_plan : std::string();
+    if (auto repair_refusal = installation_repair_admission(context_, request, current_snapshot))
+        return *repair_refusal;
 
     const char* durable_effect = request.action_id == "launch.play"
         ? "process_execution"
@@ -2067,8 +2067,10 @@ ApplicationResult PresentationService::action(
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
         }
+    } else if (request.action_id == "readiness.review_install_repair") {
+        output = dispatch_installation_repair_review(context_, request, current_snapshot);
     } else if (request.action_id == "readiness.prepare_joined") {
-        auto prepared = prepare_joined(context_.workspace(), request, joined_plan,
+        auto prepared = prepare_joined(context_, request, joined_plan,
                 [&](const std::string& pending, std::string& detail) {
                     return action_ledger_.checkpoint(context_.workspace(), request, fingerprint, pending, detail);
                 });
@@ -2400,7 +2402,16 @@ ApplicationResult PresentationService::action(
     } else if (request.action_id == "launch.play" && request.launch_intent == "menu" &&
                (request.scope == "launch_deck" || request.scope == "instances") &&
                launch_executor_ != nullptr) {
-        PresentationLaunchExecution execution = launch_executor_->execute(request);
+        // A launch admitted before a repair journal belongs to a published
+        // instance covered by repair's held run-lock census. Later launches
+        // must refuse while that journal is incomplete, including new instances.
+        PresentationLaunchExecution execution;
+        if (before_launch_dispatch_observer) before_launch_dispatch_observer();
+        if (transactions::incomplete_count(context_.workspace()) != 0U) {
+            execution.error_code = "instance_recovery_required";
+            execution.error_message = "An incomplete workspace transaction blocks process dispatch; inspect recovery first";
+            execution.error_kind = facman::core::OutcomeKind::refused;
+        } else execution = launch_executor_->execute(request);
         if (!execution.error_code.empty()) {
             output = action_result_json(
                 request, "refused_before_effects", current_snapshot, execution.payload,

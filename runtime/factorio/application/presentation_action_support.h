@@ -7,6 +7,7 @@
 #include "application_types.h"
 
 #include <initializer_list>
+#include <optional>
 #include <string>
 
 namespace facman::core::json { class Value; class ObjectBuilder; class ArrayBuilder; }
@@ -14,6 +15,30 @@ namespace facman::core::json { class Value; class ObjectBuilder; class ArrayBuil
 namespace facman::factorio::application {
 
 class ApplicationContext;
+class PresentationActionLedger;
+
+struct AdvertisedAction {
+    bool found = false;
+    bool available = false;
+    std::string refusal_code;
+    std::string refusal_reason;
+};
+AdvertisedAction advertised_action(const std::string& snapshot, const std::string& action_id);
+// Only the private strict ledger reader supplies its already verified original receipt/request.
+facman::core::Result<std::string> verified_repair_review_binding(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& receipt, const std::string& original_request);
+std::string reviewed_repair_preparation_json(const std::filesystem::path& workspace,
+    const PresentationQueryRequest& request, const facman::core::Result<std::string>& verified_review);
+facman::core::json::ObjectBuilder installation_repair_review_descriptor(
+    const std::vector<facman::workspace::InstanceRecord>& instances,
+    const std::string& instance_id, const std::string& default_instance);
+std::string dispatch_installation_repair_review(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot);
+
+std::string joined_preparation_json(const std::filesystem::path& workspace,
+    const PresentationQueryRequest& request, const PresentationActionLedger& ledger);
+std::optional<ApplicationResult> installation_repair_admission(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot);
 
 struct ActionInputField {
     std::string id;
@@ -103,6 +128,9 @@ facman::core::Result<std::string> snapshot_action_preparation_plan(const std::st
 
 std::string joined_preparation_json(const std::filesystem::path& workspace,
     const std::string& instance_id, const std::string& launch_intent);
+std::string joined_installation_preparation_result(const std::string& plan,
+    const std::string& installation_receipt, const std::string& remaining_result,
+    const std::string& continuation, bool installation_verified, bool effects_verified);
 facman::core::json::ObjectBuilder joined_preparation_descriptor(const std::string& preparation);
 facman::core::Result<std::string> snapshot_joined_plan(const std::string& snapshot,
     const SemanticActionRequest& request);

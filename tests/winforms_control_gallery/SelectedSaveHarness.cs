@@ -112,6 +112,34 @@ internal static class SelectedSaveHarness
             var ids = test.ContainsKey("identity") ? (Dictionary<string, object>)test["identity"] : bundle;
             var identity = test.ContainsKey("identity") ? Activator.CreateInstance(identityType, BindingFlags.Instance | BindingFlags.NonPublic,
                 null, new object[] { ids["operation_id"], ids["attempt_id"], ids["request_id"] }, null) : defaultIdentity;
+            if (test.ContainsKey("expected_installation_summary"))
+            {
+                var installationInputs = (Dictionary<string, object>)test["input"];
+                var installationPending = Activator.CreateInstance(pendingType, BindingFlags.Instance | BindingFlags.NonPublic,
+                    null, new object[] { "instances", "readiness.prepare_joined", installationInputs, identity, false }, null);
+                var installationResult = (CommandResult)decoder.Invoke(null, new object[] { CommandCatalog.Find("presentation.action"),
+                    Convert.ToInt32(test["exit_code"]), Encoding.UTF8.GetBytes((string)test["envelope"]), new byte[0], identity, 16 * 1024 * 1024 });
+                var installationReceipt = (SemanticActionReceipt)typeof(SemanticActionReceipt).GetMethod("ParseEnvelope",
+                    BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { (string)test["envelope"] });
+                var installationContinuation = assembly.GetType("FacMan.WinForms.MakeReadyContinuation");
+                bool installationValidated = (bool)installationContinuation.GetMethod("VerifiedCompleted", BindingFlags.Static | BindingFlags.NonPublic)
+                    .Invoke(null, new object[] { installationReceipt.ActionPayload, installationInputs, identity });
+                string installationSummary = (string)installationContinuation.GetMethod("Summary", BindingFlags.Static | BindingFlags.NonPublic)
+                    .Invoke(null, new object[] { installationReceipt.ActionPayload, false });
+                bool installationExpected = (bool)test["expected_installation_summary"];
+                Require(installationValidated == installationExpected && installationSummary.Contains("registered installation executable and current settings were prepared") == installationExpected,
+                    "installation completion changed authority: " + test["name"]);
+                var installationStore = new C1LivePresentationStore();
+                var installationSelected = typeof(C1LivePresentationStore).GetField("repairReviewId", BindingFlags.Instance | BindingFlags.NonPublic);
+                typeof(C1LivePresentationStore).GetField("repairReviewInstanceId", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(installationStore, installationInputs["selected_instance_id"]);
+                installationSelected.SetValue(installationStore, installationInputs["repair_review_id"]);
+                typeof(C1LivePresentationStore).GetMethod("AcceptRepairReviewSelection", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(installationStore, new object[] { installationResult, installationReceipt, installationPending });
+                Require(((string)installationSelected.GetValue(installationStore) == String.Empty) == installationExpected,
+                    "unverified completion cleared the selected review: " + test["name"]);
+                checkedCases++;
+                continue;
+            }
             if (test.ContainsKey("expected_summary"))
             {
                 var receipt = (SemanticActionReceipt)typeof(SemanticActionReceipt).GetMethod("ParseEnvelope",

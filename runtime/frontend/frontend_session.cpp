@@ -394,6 +394,7 @@ facman::core::Result<FrontendQueryResult> FrontendSession::query(
         }
         payload.add_string("known_revision", request.known_revision);
     }
+    if (!request.repair_review_id.empty()) payload.add_string("repair_review_id", request.repair_review_id);
     FrontendInvocation invocation;
     invocation.command = "presentation.query";
     invocation.payload = payload.serialize();
@@ -420,6 +421,7 @@ facman::core::Result<FrontendSessionIdentity> FrontendSession::negotiate(
     query_request.target_instance_id = std::move(request.target_instance_id);
     query_request.search = std::move(request.search);
     query_request.known_revision = std::move(request.known_revision);
+    query_request.repair_review_id = std::move(request.repair_review_id);
     query_request.launch_intent = std::move(request.launch_intent);
     query_request.deadline = request.deadline;
     query_request.cancellation = std::move(request.cancellation);

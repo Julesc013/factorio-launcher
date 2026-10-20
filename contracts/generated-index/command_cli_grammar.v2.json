@@ -5382,7 +5382,7 @@
             "required": true
           }
         ],
-        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--snapshot-id <id>] [--source-data-root <path>] [--source-path <path>] [--transaction <id>] [--root <path>] --json"
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--snapshot-id <id>] [--source-data-root <path>] [--source-path <path>] [--repair-review-id <key>] [--transaction <id>] [--root <path>] --json"
       },
       "command_id": "presentation.action",
       "deprecation": "active",
@@ -5622,13 +5622,24 @@
           "request_field": "snapshot_id",
           "required": false,
           "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "repair_review_id",
+          "repeatable": false,
+          "request_field": "repair_review_id",
+          "required": false,
+          "type": "string"
         }
       ],
       "required_capabilities": [
         "workspace_read",
-        "workspace_write"
+        "workspace_write",
+        "setup_preview",
+        "setup_mutation"
       ],
-      "risk_tier": "persistent_local_write",
+      "risk_tier": "setup_mutation",
       "runtime_id": "presentation.action",
       "schema": "facman.command.v2",
       "visibility": "public"
@@ -5656,7 +5667,7 @@
             "required": true
           }
         ],
-        "usage": "facman presentation query <scope> [--instance <id>] [--intent menu|load_save] [--search <text>] [--known-revision <sha256>] --json"
+        "usage": "facman presentation query <scope> [--instance <id>] [--intent menu|load_save] [--search <text>] [--known-revision <sha256>] [--repair-review-id <key>] --json"
       },
       "command_id": "presentation.query",
       "deprecation": "active",
@@ -5723,6 +5734,15 @@
           "request_field": "launch_intent",
           "required": false,
           "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "repair_review_id",
+          "repeatable": false,
+          "request_field": "repair_review_id",
+          "required": false,
+          "type": "string"
         }
       ],
       "required_capabilities": [
@@ -9890,5 +9910,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "b6e6cb656eb3307ad953539eb4fa2dcfa529c29876b9f564b412d451ba5dff82"
+  "source_digest": "f7ee0fa96928cd61bfc59e31efe4c758968e409e582bc680360ab88de78cb9f5"
 }

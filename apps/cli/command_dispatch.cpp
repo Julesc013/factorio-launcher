@@ -1182,6 +1182,7 @@ int command_presentation(const Options& options)
             {"launch_intent", intent},
             {"selected_instance_id", option(options.args, "--instance")},
             {"search", option(options.args, "--search")},
+            {"repair_review_id", option(options.args, "--repair-review-id")},
             {"known_revision", option(options.args, "--known-revision")}})),
             as_json, "Presentation snapshot computed");
     }
@@ -1217,6 +1218,7 @@ int command_presentation(const Options& options)
                 {"source_data_root", "--source-data-root"},
                 {"source_path", "--source-path"},
                 {"snapshot_id", "--snapshot-id"},
+                {"repair_review_id", "--repair-review-id"},
                 {"transaction_id", "--transaction"},
             }) {
             const std::string value = option(options.args, field.second);
