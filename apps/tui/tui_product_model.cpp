@@ -471,7 +471,7 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
             model.body.push_back("  " + field.id + "=" + value +
                 (field.required ? " (required)" : ""));
         }
-        model.body.push_back("Enter field=value, then activate the action again.");
+        model.body.push_back("Linear: enter field=value; fullscreen: press : to edit. Then activate again.");
     }
     if (model.body.empty()) model.body.push_back("No records in this authoritative snapshot.");
     model.problems = state.snapshot.blockers;

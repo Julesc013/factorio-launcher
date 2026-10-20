@@ -930,7 +930,7 @@ public:
     int read_continuation()
     {
 #ifdef _WIN32
-        return read();
+        return _kbhit() ? read() : EOF;
 #else
         fd_set input;
         FD_ZERO(&input);
@@ -954,6 +954,32 @@ private:
 #endif
 };
 
+struct TerminalEscape {
+    std::string text;
+    bool complete = true;
+};
+
+TerminalEscape read_terminal_escape(RawTerminal& terminal)
+{
+    TerminalEscape sequence;
+    const int prefix = terminal.read_continuation();
+    if (prefix == EOF) return sequence; // standalone Escape
+    // A new Escape starts a new boundary; retain its possible following CSI
+    // in the caller instead of swallowing the next paste/key delimiter.
+    if (prefix == 27) return {};
+    sequence.text.push_back(static_cast<char>(prefix));
+    if (prefix != '[' && prefix != 'O') return sequence;
+    for (std::size_t count = 0U; count < 16U; ++count) {
+        const int item = terminal.read_continuation();
+        if (item == EOF) break;
+        if (item == 27) return {}; // resynchronize on the newest Escape
+        sequence.text.push_back(static_cast<char>(item));
+        if (item >= 0x40 && item <= 0x7e) return sequence;
+    }
+    sequence.complete = false;
+    return sequence;
+}
+
 inline constexpr int kProductShellFallbackLinear = 65;
 
 int run_full_screen(
@@ -969,7 +995,21 @@ int run_full_screen(
     RawTerminal terminal(true);
     TerminalCapabilities current_capabilities = capabilities;
     int result = 0;
+    bool editing_field = false;
+    bool input_overflow = false;
+    bool unsupported_input = false;
+    bool discard_escape_tail = false;
+    bool discard_paste = false;
+    bool possible_following_csi = false;
+    std::string pending_escape;
+    std::string field_input;
+    constexpr std::size_t maximum_field_input = 4096U;
     while (!state.quit_requested) {
+        if (state.refresh_requested || state.form.id.empty()) {
+            editing_field = false;
+            input_overflow = false;
+            field_input.clear();
+        }
         if (state.refresh_requested) refresh(client, state, error);
         current_capabilities = observe_terminal_capabilities(false);
         if (current_capabilities.selected_renderer != TerminalRendererMode::full_screen) {
@@ -983,13 +1023,18 @@ int run_full_screen(
         resized.columns = current_capabilities.observed.columns;
         resized.rows = current_capabilities.observed.rows;
         state = reduce_tui_state(state, resized);
-        ProductRenderer::render_full_screen(
-            output, make_tui_render_model(state, unicode), current_capabilities);
+        TuiRenderModel model = make_tui_render_model(state, unicode);
+        if (editing_field) {
+            model.footer = "Edit field=value (Enter review; Esc/Ctrl+C cancel): " + field_input;
+        }
+        ProductRenderer::render_full_screen(output, model, current_capabilities);
         int signal_number = signals.take();
-        const int key = signal_number == 0 ? terminal.read() : kTerminalNoInput;
+        int key = signal_number == 0 ? terminal.read() : kTerminalNoInput;
         if (signal_number == 0) signal_number = signals.take();
 #ifndef _WIN32
         if (signal_number == SIGTSTP) {
+            editing_field = false;
+            field_input.clear();
             terminal.suspend();
             screen.suspend();
             signals.suspend_process();
@@ -1001,6 +1046,8 @@ int run_full_screen(
             continue;
         }
         if (signal_number == SIGINT) {
+            editing_field = false;
+            field_input.clear();
             TuiEvent event;
             event.kind = TuiEventKind::cancel;
             state = reduce_tui_state(state, event);
@@ -1014,7 +1061,137 @@ int run_full_screen(
         (void)signal_number;
 #endif
         if (key == kTerminalNoInput) continue;
-        if (key == EOF || key == 'q') break;
+        if (key == EOF) break;
+        if (discard_escape_tail && key != 27) {
+            if (key >= 0x40 && key <= 0x7e) discard_escape_tail = false;
+            continue;
+        }
+        if (key == 27) discard_escape_tail = false;
+        // Standalone Escape cancels immediately after its bounded timeout,
+        // but a later CSI/SS3 prefix can still belong to that same key/paste
+        // boundary. Preserve that ambiguity without withholding normal keys.
+        if (possible_following_csi) {
+            possible_following_csi = false;
+            if (key == '[' || key == 'O') {
+                pending_escape.assign(1U, static_cast<char>(key));
+                state.status = "Terminal escape awaiting continuation";
+                continue;
+            }
+        }
+        TerminalEscape escape;
+        if (!pending_escape.empty() && key != 27) {
+            if (pending_escape.size() >= 32U) {
+                if (editing_field) unsupported_input = true;
+                pending_escape.clear();
+                discard_escape_tail = !(key >= 0x40 && key <= 0x7e);
+                continue;
+            }
+            pending_escape.push_back(static_cast<char>(key));
+            if (key < 0x40 || key > 0x7e) continue;
+            escape.text = std::move(pending_escape);
+            pending_escape.clear();
+            key = 27;
+        } else if (key == 27) {
+            if (editing_field && !pending_escape.empty()) unsupported_input = true;
+            pending_escape.clear();
+            escape = read_terminal_escape(terminal);
+        }
+        if (key == 27 && !escape.complete) {
+            // A fragmented [200~ must still become a paste boundary when its
+            // suffix arrives. Preserve the bounded prefix across input reads.
+            pending_escape = std::move(escape.text);
+            state.status = "Terminal escape awaiting continuation";
+            continue;
+        }
+        if (key == 27 && escape.text.empty()) possible_following_csi = true;
+        if (discard_paste) {
+            if (key == 27 && escape.text == "[201~") {
+                discard_paste = false;
+                state.status = "Paste ignored; typed input is ready";
+            } else if (key == 27 && escape.text.empty()) {
+                state.status = "Paste escape awaiting continuation";
+            }
+            continue;
+        }
+        if (key == 27 && escape.text == "[200~") {
+            discard_paste = true;
+            state.status = "Paste ignored; type the action selector, then Enter to review";
+            continue;
+        }
+        if (key == 27 && escape.text == "[201~") continue;
+        // Modal text belongs to the active backend-owned form. Navigation keys
+        // (including q, m/s and digits) are data until review or cancellation.
+        if (editing_field && key != 0x1a && key != 0x12) {
+            if (key == 27 && !escape.text.empty()) {
+                const bool known_key = escape.text == "[A" || escape.text == "[B" ||
+                    escape.text == "[C" || escape.text == "[D" || escape.text == "[Z" ||
+                    escape.text == "OP" || escape.text == "[P";
+                if (!known_key) {
+                    unsupported_input = true;
+                    state.status = "Only printable ASCII selectors are supported; review rejects this input";
+                }
+                continue;
+            }
+            if (key == 27 || key == 0x03) {
+                editing_field = false;
+                field_input.clear();
+                TuiEvent event;
+                event.kind = TuiEventKind::cancel;
+                state = reduce_tui_state(state, event);
+            } else if (key == '\r' || key == '\n') {
+                editing_field = false;
+                const std::size_t equals = field_input.find('=');
+                if (unsupported_input) {
+                    state.status = "Action input rejected: only printable ASCII selectors are supported";
+                } else if (input_overflow) {
+                    state.status = "Action input exceeds 4096 bytes; edit the field again";
+                } else if (equals == std::string::npos || equals == 0U) {
+                    state.status = "Action input requires field=value; no action was dispatched";
+                } else {
+                    // process_line validates the field and emits the existing
+                    // edit_field event; it never dispatches a field assignment.
+                    process_line(client, state, std::move(field_input));
+                }
+                field_input.clear();
+            } else if (key == 8 || key == 127) {
+                if (!field_input.empty()) field_input.pop_back();
+            }
+#ifdef _WIN32
+            else if (key == 0 || key == 224) {
+                (void)terminal.read(); // consume the extended key as a unit
+                // _getwch's extended prefix overlaps high-bit text values;
+                // this ASCII-only editor must reject that ambiguous input.
+                unsupported_input = true;
+                state.status = "Only printable ASCII selectors are supported; review rejects this input";
+            }
+#endif
+            else if (key >= 32 && key <= 126) {
+                if (field_input.size() < maximum_field_input) {
+                    field_input.push_back(static_cast<char>(key));
+                } else {
+                    input_overflow = true;
+                }
+            } else {
+                // Never drop unsupported bytes and accidentally turn different
+                // user input into a valid exact-version/history selector.
+                unsupported_input = true;
+                state.status = "Only printable ASCII selectors are supported; review rejects this input";
+            }
+            continue;
+        }
+        if (key == 0x1a || key == 0x12) {
+            editing_field = false;
+            field_input.clear();
+        }
+        if (key == ':' && !state.form.id.empty()) {
+            editing_field = true;
+            input_overflow = false;
+            unsupported_input = false;
+            field_input.clear();
+            state.pending_action.clear();
+            continue;
+        }
+        if (key == 'q') break;
         if (key >= '1' && key <= '8') navigate(state, static_cast<std::size_t>(key - '1'));
         else if (key == 'm' || key == 's') {
             observe_launch_intent(state, key == 'm' ? "menu" : "load_save");
@@ -1075,29 +1252,19 @@ int run_full_screen(
             else if (extended == 80) select_relative(state, 1);
             else if (extended == 59) toggle_help(state);
         }
+#endif
         else if (key == 27) {
-            TuiEvent event;
-            event.kind = TuiEventKind::cancel;
-            state = reduce_tui_state(state, event);
-        }
-#else
-        else if (key == 0x1b) {
-            const int bracket = terminal.read_continuation();
-            if (bracket == EOF) {
+            if (escape.text.empty()) {
                 TuiEvent event;
                 event.kind = TuiEventKind::cancel;
                 state = reduce_tui_state(state, event);
-                continue;
-            }
-            const int direction = terminal.read_continuation();
-            if (bracket == '[' && direction == 'A') select_relative(state, -1);
-            else if (bracket == '[' && direction == 'B') select_relative(state, 1);
-            else if (bracket == '[' && direction == 'C') navigate_relative(state, 1);
-            else if (bracket == '[' && direction == 'D') navigate_relative(state, -1);
-            else if (bracket == '[' && direction == 'Z') select_action_relative(state, -1);
-            else if ((bracket == 'O' || bracket == '[') && direction == 'P') toggle_help(state);
+            } else if (escape.text == "[A") select_relative(state, -1);
+            else if (escape.text == "[B") select_relative(state, 1);
+            else if (escape.text == "[C") navigate_relative(state, 1);
+            else if (escape.text == "[D") navigate_relative(state, -1);
+            else if (escape.text == "[Z") select_action_relative(state, -1);
+            else if (escape.text == "OP" || escape.text == "[P") toggle_help(state);
         }
-#endif
     }
     return result;
 }
