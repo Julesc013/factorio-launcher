@@ -1155,8 +1155,9 @@ def readme_status(data: dict[str, Any]) -> str:
         data["execution_truth"]["current_active_workunit"]["value"]
         or "none (standby)"
     )
-    next_work_unit = data["product"].get("next_work_unit") or (
+    next_work_unit = (
         data["execution_truth"]["next_dependency_ready_workunit"]["value"]
+        or data["product"].get("next_work_unit")
         or "none pending owner direction"
     )
     lines = [
