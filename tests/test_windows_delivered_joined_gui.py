@@ -592,6 +592,7 @@ class OwnedControls:
         result = ctypes.c_size_t()
         if not self.api.SendMessageTimeoutW(hwnd, message, wparam, lparam,
                                            2, 2000, ctypes.byref(result)):
+            self.require_owned(hwnd)
             raise AssertionError("Bounded owned-control message failed")
         return result.value
 
@@ -741,6 +742,38 @@ class OwnedControls:
             raise AssertionError("Owned GUI/accessibility cleanup failed: " + repr(cleanup_errors))
         if safety or self.process.returncode != 0 or out or err:
             raise AssertionError("GUI must drain and exit normally: " + repr(self.terminal))
+
+
+class OwnedControlMessageTests(unittest.TestCase):
+    def test_failed_message_preserves_disposal_and_live_process_boundaries(self):
+        for failure in ("disposed", "live", "process_exit"):
+            with self.subTest(failure=failure):
+                controls = OwnedControls.__new__(OwnedControls)
+                controls.process = unittest.mock.Mock(pid=123)
+                controls.process.poll.return_value = None
+                controls.api = unittest.mock.Mock()
+                owner = [123]
+                def window_process(hwnd, output):
+                    output._obj.value = owner[0]
+                def failed_message(*arguments):
+                    self.assertEqual((2, 2000), arguments[4:6])
+                    if failure == "disposed":
+                        owner[0] = 0
+                    elif failure == "process_exit":
+                        controls.process.poll.return_value = 1
+                    return 0
+                controls.api.GetWindowThreadProcessId.side_effect = window_process
+                controls.api.SendMessageTimeoutW.side_effect = failed_message
+                expected = {"disposed": ControlGone, "live": AssertionError,
+                            "process_exit": AssertionError}[failure]
+                message = {"disposed": "Control no longer belongs to the live owned GUI",
+                           "live": "Bounded owned-control message failed",
+                           "process_exit": "Owned GUI process exited unexpectedly"}[failure]
+                with self.assertRaisesRegex(expected, message) as caught:
+                    controls.send(456, 0x148)
+                self.assertIs(type(caught.exception), expected)
+                self.assertEqual(2, controls.api.GetWindowThreadProcessId.call_count)
+                controls.api.SendMessageTimeoutW.assert_called_once()
 
 
 @unittest.skipUnless(os.name == "nt", "unsupported: native WinForms requires Windows")
