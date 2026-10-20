@@ -101,7 +101,7 @@ struct PresentationQueryRequest {
     std::string search;
     std::string known_revision;
     std::string launch_intent = "menu";
-    std::string repair_review_id;
+    std::string repair_review_id {};
 };
 struct SemanticActionRequest {
     std::string action_id;
