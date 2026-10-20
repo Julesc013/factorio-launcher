@@ -13,6 +13,7 @@
 #include "modules/presentation_module.h"
 #include "presentation_service.h"
 #include "flb_factorio_execution.h"
+#include "fl_transaction.h"
 
 #include <filesystem>
 #include <fstream>
@@ -641,6 +642,43 @@ int run_smoke()
     if (launch_snapshot.find("\"action_id\":\"launch.play\"") == std::string::npos ||
         launch_snapshot.find("\"availability\":\"available\"") == std::string::npos ||
         launch_snapshot.find("\"confirmation\":\"explicit\"") == std::string::npos) return 20;
+
+    // A newly published instance cannot cross the final ordinary launch gate
+    // while an installation repair journal is incomplete, even when its fake
+    // executor advertises availability and the request was already accepted.
+    {
+        const auto gate_root = root / "final-launch-gate";
+        ApplicationContext gate_context(ApplicationConfiguration::load(gate_root), make_ulk_session_last_run_provider(gate_root));
+        if (!write_instance_fixture(gate_context, fs::path(FACMAN_TEST_PROCESS_PROBE_PATH))) return 141;
+        FixtureLaunchExecutor gate_executor(gate_root);
+        PresentationActionLedger gate_ledger;
+        PresentationService gate_service(gate_context, gate_context.last_run_provider(), gate_ledger, &gate_executor);
+        SemanticActionRequest gate_play;
+        gate_play.action_id = "launch.play";
+        gate_play.scope = "launch_deck";
+        gate_play.selected_instance_id = "main";
+        gate_play.expected_snapshot_revision = field(output(gate_service.query(launch_query)), "revision");
+        gate_play.request_id = "request-final-repair-gate";
+        gate_play.idempotency_key = "idempotency-final-repair-gate";
+        gate_play.durable_operation_id = "operation-final-repair-gate";
+        gate_play.attempt_id = "attempt-final-repair-gate";
+        gate_play.confirmation = "explicit";
+        std::unique_ptr<facman::transaction::TransactionSession> pending;
+        const auto previous = testing::exchange_before_launch_dispatch_observer([&] {
+            facman::transaction::Record record;
+            record.command_id = "instance.create";
+            record.target = gate_root / "instances/new-after-census";
+            record.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+            auto started = facman::transaction::TransactionSession::begin(gate_root, std::move(record));
+            if (started) pending = std::make_unique<facman::transaction::TransactionSession>(started.take_value());
+        });
+        const auto refused = gate_service.action(gate_play, true);
+        testing::exchange_before_launch_dispatch_observer(previous);
+        if (!pending || refused.status == ULK_STATUS_OK || refused.error_code != "instance_recovery_required" || gate_executor.dispatch_count != 0U ||
+            output(gate_service.query(launch_query)).find("instance_recovery_required") == std::string::npos ||
+            output(gate_service.action(gate_play, true)) != output(refused)) return 142;
+        if (!pending->refused("Final dispatch test retained no process effects")) return 143;
+    }
 
     // The existing permissive executor deliberately ignores intent. Product admission must quarantine it.
     auto save_query = launch_query;

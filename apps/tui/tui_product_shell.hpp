@@ -29,5 +29,6 @@ int run_product_shell(
 std::string action_response_status(
     const TuiAction& action,
     const facman::client::CommandResponse& response);
+bool verified_installation_preparation_completion(const facman::client::CommandResponse& response);
 
 } // namespace facman::tui

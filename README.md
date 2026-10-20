@@ -11,6 +11,8 @@ branding assets.
 
 ## Current alpha direction
 
+The [20 October development checkpoint](docs/release/checkpoints/facman-0-1-development-checkpoint-2026-10-20.md) records implemented workflows and remaining acceptance work. This development checkpoint is not a release.
+
 `0.1.0-alpha.6` is the current allocated development identity. It is
 unqualified, unsigned, untagged, and unpublished. `0.1.0-alpha.5` remains
 historical exact machine-qualified candidate evidence only.
@@ -128,7 +130,7 @@ Catalog-only CLI, TUI, toolkit, and earlier distribution records are not current
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 132 commands, 457 schemas, and 320 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 132 commands, 460 schemas, and 320 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `2749a15b835a6c1c9968598a2b434d85809691ad`.

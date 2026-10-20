@@ -223,7 +223,7 @@ class OwnedControls:
     """Address only HWNDs belonging to the exact launched product process."""
 
     def __init__(self, executable: Path, consumer: Path, workspace: Path, environment: dict,
-                 deadline: float):
+                 deadline: float, backend: Path | None = None):
         self.deadline = deadline
         self.api = ctypes.WinDLL("user32", use_last_error=True)
         self.callback = ctypes.WINFUNCTYPE(wt.BOOL, wt.HWND, wt.LPARAM)
@@ -260,7 +260,7 @@ class OwnedControls:
             startupinfo=startup, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             creationflags=0x4)  # Documented CREATE_SUSPENDED; assign the job before execution.
         try:
-            self.job = OwnedProcessJob(self.process, executable.parent / "facman.exe")
+            self.job = OwnedProcessJob(self.process, backend if backend is not None else executable.parent / "facman.exe")
         except Exception:
             self.process.kill()
             self.process.communicate(timeout=10)
@@ -443,6 +443,18 @@ class OwnedControls:
         return self.wait(lambda: next((h for h in self.enumerate(window)
             if self.text(h).replace("&", "") == label and all(
                 state["visible"] and state["enabled"] for state in self.ancestors(h))), None), label)
+
+    def edit(self, hwnd, value):
+        self.require_owned(hwnd)
+        if "EDIT" not in self.text(hwnd, True).upper() or not all(
+                state["visible"] and state["enabled"] for state in self.ancestors(hwnd)):
+            raise AssertionError("Text input requires an enabled owned edit control")
+        text = ctypes.create_unicode_buffer(value)
+        reply = ctypes.c_size_t()
+        if not self.api.SendMessageTimeoutW(hwnd, 0xC, 0, ctypes.addressof(text),
+                0x2, 2000, ctypes.byref(reply)) or not reply.value or self.text(hwnd) != value:
+            raise AssertionError("Owned edit did not retain the explicit archive path")
+        self.events.append(dict(stage="WM_SETTEXT", pid=self.process.pid, hwnd=hwnd, value=value))
 
     def click(self, hwnd):
         self.require_owned(hwnd)
@@ -737,6 +749,158 @@ class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
     preserved_inputs = joined.JoinedMakeReadyTests.preserved_inputs
     journals = joined.JoinedMakeReadyTests.journals
     assert_effects = joined.JoinedMakeReadyTests.assert_effects
+
+    def test_actual_managed_repair_controls_dispatch_production_packaged_backend(self):
+        """Reuse a supplied exact package; never assemble a candidate in this probe."""
+        from test_make_ready_managed_repair import ManagedRepairMakeReadyTests
+        package = os.environ.get("FACMAN_DELIVERED_GUI_PACKAGE")
+        consumer = os.environ.get("FACMAN_DELIVERED_GUI_CONSUMER")
+        if not package or not consumer:
+            self.skipTest("required_blocked: supplied exact Windows package and owned consumer required")
+        package, consumer = Path(package).resolve(), Path(consumer).resolve()
+        self.assertTrue(consumer.is_dir())
+        self.assertFalse(consumer.is_relative_to(native_cli.ROOT))
+        gui, backend = package / "FacMan.exe", package / "bin/facman.exe"
+        hashes = dict(line.split("  ", 1)[::-1] for line in (package / "manifest/hashes.sha256").read_text().splitlines())
+        closure = {p.relative_to(package).as_posix() for p in package.rglob("*") if p.is_file()}
+        self.assertEqual(set(hashes) | {"manifest/hashes.sha256"}, closure)
+        for name, digest in hashes.items():
+            self.assertEqual(digest, hashlib.sha256((package / name).read_bytes()).hexdigest(), name)
+        manifest_digest = hashlib.sha256((package / "manifest/hashes.sha256").read_bytes()).hexdigest()
+        build_info = json.loads((package / "manifest/build_info.v1.json").read_bytes())
+        self.assertEqual("windows_product_x64", build_info["profile_id"])
+        self.assertFalse(build_info["source_dirty"])
+        owned = consumer / "managed-repair-controls"
+        self.assertFalse(owned.exists(), "Managed repair evidence must not overwrite a prior probe")
+        owned.mkdir()
+        evidence = owned / "evidence"
+        evidence.mkdir()
+        fixture = ManagedRepairMakeReadyTests()
+        environment = {k: v for k, v in os.environ.items() if not k.startswith("FACMAN_")}
+        environment.update(fixture.environment(owned), PATH="", PYTHONDONTWRITEBYTECODE="1")
+        started = time.monotonic()
+        calls = []
+        real_run = subprocess.run
+        def delivered_run(args, **kwargs):
+            self.assertLess(time.monotonic() - started, 180)
+            self.assertLess(len(calls), 40)
+            self.assertEqual(str(backend), args[0])
+            kwargs.update(cwd=consumer, env=environment, timeout=30)
+            response = real_run(args, **kwargs)
+            calls.append(dict(argv=list(args), exit_code=response.returncode, stdout=response.stdout, stderr=response.stderr))
+            self.assertLess(sum(len(str(c)) for c in calls), 4 * 1024 * 1024)
+            return response
+        result = dict(schema="facman.windows_delivered_managed_repair_gui.v1", result="FAIL",
+            qualification="supplied exact package; generated inert archive; actual ordinary controls",
+            human_accessibility_acceptance=False, whole_make_ready_acceptance=False, factorio_executed=False,
+            gui_sha256=hashes["FacMan.exe"], backend_sha256=hashes["bin/facman.exe"],
+            closure_sha256=manifest_digest, build_info=build_info, calls=calls)
+        active = None
+        try:
+            with patch.dict(os.environ, dict(environment, FACMAN_CLI_EXE=str(backend))), \
+                    patch.object(native_cli, "ROOT", consumer), patch.object(subprocess, "run", delivered_run):
+                workspace, target, archive = fixture.prepare(owned, content_pending=True, selected_world=True)
+                source_digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+                target_before = modsets.snapshot(target)
+                world = workspace / "instances/main/saves/selected.zip"
+                world_before = world.read_bytes()
+                active = OwnedControls(gui, consumer, workspace, environment, started + 180, backend=backend)
+                result["events"] = active.events
+                main = active.window("FacMan")
+                active.selected_observation(main)
+                title = "Review installation repair from local archive"
+                active.click(active.control(main, "Review installation repair"))
+                dialog = active.window(title, "Continue")
+                edits = [h for h in active.enumerate(dialog) if "EDIT" in active.text(h, True).upper()]
+                self.assertEqual(1, len(edits), "Ordinary review must require one explicit archive path")
+                active.edit(edits[0], str(archive))
+                active.frame(dialog, "explicit local repair archive")
+                active.click(active.control(dialog, "Continue"))
+                confirm = active.window(title, "Apply " + title)
+                active.frame(confirm, "review preview explicitly confirmed")
+                active.click(active.control(confirm, "OK"))
+                completed = active.window(title, "factorio.managed_repair_review.v1")
+                active.frame(completed, "actual immutable owner-plan review")
+                def receipts(action):
+                    return [r for p in (workspace / ".facman/action-receipts-v2").glob("*.v2.json")
+                        if (r := json.loads(p.read_bytes()))["action_id"] == action and r["state"] == "terminal"]
+                reviews = receipts("readiness.review_install_repair")
+                self.assertEqual(1, len(reviews))
+                review = json.loads(reviews[0]["result_json"])
+                self.assertEqual("completed", review["outcome"])
+                self.assertEqual(target_before, modsets.snapshot(target), "Review preview changed the installation")
+                active.click(active.control(completed, "OK"))
+                # The next ordinary input form must contain the selected review,
+                # archive and target automatically; no plan JSON or query override.
+                repair_title = "Repair registered installation executable and prepare current content, configuration and selected world"
+                active.click(active.control(main, "Make Ready with current settings"))
+                dialog = active.window(repair_title, "Continue")
+                combos = [h for h in active.enumerate(dialog) if "COMBOBOX" in active.text(h, True).upper()]
+                selected = [active.text(h) for h in combos]
+                self.assertEqual(["main", "managed", "gui", "selected.zip", reviews[0]["idempotency_key"], str(target), str(archive)], selected)
+                active.frame(dialog, "automatically selected exact review and preparation inputs")
+                time.sleep(1.05)
+                active.click(active.control(dialog, "Continue"))
+                confirm = active.window(repair_title, "Apply " + repair_title)
+                active.frame(confirm, "registered installation and remaining preparation effects confirmed")
+                self.assertFalse((target / "bin/x64/factorio.exe").exists())
+                active.click(active.control(confirm, "OK"))
+                completed = active.window(repair_title, "registered installation executable and current settings were prepared")
+                active.frame(completed, "actual joined owner completion")
+                applied = receipts("readiness.prepare_joined")
+                self.assertEqual(1, len(applied))
+                outcome = json.loads(applied[0]["result_json"])
+                request = json.loads(applied[0]["request_json"])
+                self.assertEqual("completed", outcome["outcome"])
+                self.assertEqual(reviews[0]["idempotency_key"], request["repair_review_id"])
+                self.assertEqual(review["action_payload"]["owner_plan"], outcome["action_payload"]["plan"]["installation_plan"])
+                self.assertEqual(str(archive), request["source_path"])
+                self.assertEqual(str(target), request["installation_path"])
+                self.assertEqual("explicit", request["confirmation"])
+                effects = outcome["action_payload"]["completed_components"]
+                self.assertEqual(["installs.repair.apply", "modsets.apply", "readiness.prepare_configuration", "readiness.prepare_selected_save"],
+                    [effect["owner_command"] for effect in effects])
+                for effect in effects:
+                    record = json.loads((workspace / "transactions" / (effect["transaction_id"] + ".transaction.v1.json")).read_bytes())
+                    self.assertEqual("complete", record["state"])
+                    self.assertEqual(effect["owner_command"], record["command_id"])
+                self.assertEqual(fixture.executable_bytes, (target / "bin/x64/factorio.exe").read_bytes())
+                self.assertEqual(b"Preserve unowned local information.\n", (target / "operator-note.txt").read_bytes())
+                self.assertEqual(source_digest, hashlib.sha256(archive.read_bytes()).hexdigest())
+                self.assertEqual(world_before, world.read_bytes())
+                self.assertTrue((workspace / "instances/main/config/config.ini").is_file())
+                observation = fixture.query(workspace, intent="load_save")
+                self.assertEqual("satisfied", observation["readiness"]["selected_save"]["state"])
+                self.assertFalse(observation["readiness"]["execution_available"])
+                result.update(review=reviews[0], receipt=applied[0], observation=observation)
+                active.click(active.control(completed, "OK"))
+                active.finish()
+                self.assertEqual(closure, {p.relative_to(package).as_posix() for p in package.rglob("*") if p.is_file()})
+                for name, digest in hashes.items():
+                    self.assertEqual(digest, hashlib.sha256((package / name).read_bytes()).hexdigest(), name)
+                self.assertEqual(manifest_digest, hashlib.sha256((package / "manifest/hashes.sha256").read_bytes()).hexdigest())
+                result.update(result="PASS", package_closure_unchanged=True)
+        except Exception:
+            result["exception"] = traceback.format_exc()
+            raise
+        finally:
+            try:
+                if active is not None:
+                    try:
+                        active.finish()
+                    except Exception:
+                        result.update(result="FAIL", cleanup_exception=traceback.format_exc())
+                        raise
+                    finally:
+                        result.update(terminal=active.terminal, observed_backend_processes=active.job.records, launch=active.job.launch)
+            finally:
+                result["elapsed_seconds"] = time.monotonic() - started
+                record = json.dumps(result, indent=2).encode("utf-8")
+                self.assertLess(len(record), 4 * 1024 * 1024)
+                (evidence / "result.json").write_bytes(record)
+                print("delivered-windows-managed-repair-gui-result " + json.dumps(dict(result=result["result"],
+                    source=build_info["source_commit"], gui_sha256=result["gui_sha256"], backend_sha256=result["backend_sha256"],
+                    result_sha256=hashlib.sha256(record).hexdigest(), no_human_accessibility_acceptance=True), sort_keys=True))
 
     def test_actual_joined_controls_dispatch_production_packaged_backend(self):
         started = time.monotonic()

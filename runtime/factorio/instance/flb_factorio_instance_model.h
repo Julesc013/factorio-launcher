@@ -8,9 +8,11 @@
 
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace facman::transaction { struct Record; }
-namespace facman::platform { class RetainedStreamRewriteFile; }
+namespace facman::platform { class RetainedStreamRewriteFile; class StableInputFile; }
+namespace facman::factorio::launch { struct InstanceRunLock; }
 
 namespace facman::factorio::instance {
 
@@ -54,6 +56,17 @@ facman::core::Result<std::string> recover_configuration_preparation(
 // Its stable binding excludes only the separately journaled routing/context effects.
 facman::core::Result<std::string> joined_preparation_plan(
     const std::filesystem::path& workspace, const ProjectionRequest& request);
+// Managed repair may change only its separately reviewed installation owner.
+// All instance, content, configuration and selected-world inputs stay pinned.
+facman::core::Result<std::string> joined_repair_inputs(
+    const std::filesystem::path& workspace, const ProjectionRequest& request,
+    const std::string& own_transaction = {},
+    const std::vector<facman::factorio::launch::InstanceRunLock>* own_run_locks = nullptr);
+facman::core::Result<std::string> joined_repair_archive_identity(const std::filesystem::path& archive,
+    const facman::platform::StableInputFile* held_archive = nullptr);
+facman::core::Result<std::string> joined_repair_plan(
+    const std::filesystem::path& workspace, const ProjectionRequest& request,
+    const std::string& repair_envelope, const std::string& review_id, const std::string& archive_identity);
 facman::core::Result<std::string> verify_joined_content_inputs(
     const std::filesystem::path& workspace, const ProjectionRequest& request,
     const std::string& plan);

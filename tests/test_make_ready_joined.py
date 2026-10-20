@@ -609,8 +609,9 @@ class JoinedMakeReadyTests(unittest.TestCase):
             instance, expected = missing.ConfigurationPreparationTests.prepare(self, workspace, "load_save", True)
             observation = self.query(workspace, "instances", "load_save")
             index = next(i for i, a in enumerate(observation["available_semantic_actions"]) if a["action_id"] == "readiness.prepare_joined")
+            refresh_index = next(i for i, a in enumerate(observation["available_semantic_actions"]) if a["action_id"] == "presentation.refresh")
             result = subprocess.run([str(executable), "tui", "--workspace", str(workspace), "--ordinary", "--plain"],
-                input="s\n2\n" + "tab\n" * index + "space\nspace\nq\n", cwd=ROOT,
+                input="s\n2\n" + "tab\n" * (index - refresh_index) + "space\nspace\nq\n", cwd=ROOT,
                 capture_output=True, text=True, timeout=45)
             self.assertEqual((0, ""), (result.returncode, result.stderr), result.stdout)
             self.assertIn("Confirm Make Ready with current settings", result.stdout)

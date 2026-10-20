@@ -10,6 +10,59 @@ contexts remain explicit prerequisite refusals for their existing owners.
 This path does not acquire an installation, reconstruct a profile or resolve a
 new content selection.
 
+For an exact managed installation executable repair, choose **Review installation
+repair from local archive** on the ordinary Instances page. Supply the original
+local ZIP explicitly. The existing Setup planner runs once; its original plan,
+timestamps and installation-record preimage are retained in the normal durable
+semantic action receipt alongside the archive's physical identity and digest.
+This review changes only FacMan receipt metadata. TUI and WinForms carry the
+completed review selection into their next ordinary Make Ready observation.
+
+CLI callers use `presentation action readiness.review_install_repair` with the
+current instance, installation, explicit `--source-path`, revision and normal
+confirmed operation identities. Supply that action's idempotency key as
+`--repair-review-id` on the subsequent presentation query and Make Ready action.
+No plan JSON needs to be authored or copied. Omitting this optional selection
+keeps the existing v1/v2 preparation paths and historical request bytes.
+
+The additive v3 plan enumerates the registered installation executable repair
+before current content, routing configuration and selected-world preparation.
+Its Make Ready confirmation names those effects. The existing repair owner
+revalidates the original provider plan, archive and record preimage under its
+installation lease. A verified terminal repair is checkpointed before deriving
+the remaining v1/v2 plan, with exact protected settings reobserved on both sides.
+The new effect path is admitted only on Windows: original archive and ancestor
+directory handles remain pinned through repair and its checkpoint. Other hosts
+receive a specific custody-capability refusal; v1/v2 support is unchanged.
+The existing domain admission is applied separately to review (`setup_preview`)
+and repair (`setup_mutation`), alongside their ordinary receipt metadata writes.
+Those effects are declared by the corresponding descriptors and durable results.
+
+Under the repair's incomplete journal, FacMan acquires the existing run lock for
+every registered instance referencing that installation, in deterministic order,
+without adopting or deleting existing lock files. Exact manifest, directory,
+token and lock identities are retained through the installation effect. A changed
+reference census refuses entry. An ordinary Play dispatch rechecks incomplete
+transactions immediately before calling its existing executor: a previously
+admitted published instance must compete with its held run lock, while an instance
+created later cannot launch through the incomplete repair. All held run locks
+must be verified and released before content/configuration/world preparation.
+This protects the current registered workspace's ordinary routes; it does not
+claim exclusion of arbitrary external processes. Process loss can retain normal
+run-lock recovery evidence, and cannot turn an accepted request into a fresh apply.
+
+An interrupted or unverifiable effect remains recovery-required; replaying the
+accepted identity reads its existing receipt and never dispatches repair again.
+
+This bounded path requires intact exact local locked content, profile and world
+inputs, and accepts repairs only to the registered executable. Installation data
+reconstruction, source acquisition, foreign/read-only installations and broader
+reconciliation retain their existing owner refusals. Changed or missing archives,
+same-path archive replacement, competing writers and active instance sessions
+cannot authorize a new repair effect through a stale review. Generated inert
+fixtures and pre-admitted fake-process controls exercise this path without starting Factorio; whole Make Ready and host
+or release qualification remain separate.
+
 For pending activation of an already verified exact local lock, the additive
 `factorio.make_ready_joined_plan.v2` first delegates to the existing content
 apply owner. It admits a missing mod-list or a safe, strictly understood list

@@ -2483,7 +2483,7 @@ facman::core::Result<std::string> recover_configuration_preparation(const fs::pa
 }
 
 namespace {
-bool joined_recovery_current(const fs::path& workspace)
+bool joined_recovery_current(const fs::path& workspace, const std::string& own_transaction = {})
 {
     const auto recovery = tx::inspect(workspace);
     const auto* report = std::get_if<tx::RecoveryResult>(&recovery);
@@ -2491,6 +2491,7 @@ bool joined_recovery_current(const fs::path& workspace)
     const auto* journals = document ? document.value().find("transactions") : nullptr;
     if (!journals || !journals->is_array()) return false;
     for (std::size_t index = 0; index < journals->size(); ++index) {
+        if (!own_transaction.empty() && object_string(*journals->at(index), "transaction_id") == own_transaction) continue;
         auto state = tx::parse_state(object_string(*journals->at(index), "state"));
         if (!state || !tx::terminal(state.value())) return false;
     }
@@ -2498,13 +2499,15 @@ bool joined_recovery_current(const fs::path& workspace)
 }
 
 facman::core::Result<std::string> joined_inputs(const fs::path& workspace,
-    const ProjectionRequest& request, Projection* snapshot = nullptr, bool content_effect = false)
+    const ProjectionRequest& request, Projection* snapshot = nullptr, bool content_effect = false,
+    bool installation_effect = false, const std::string& own_transaction = {},
+    const std::vector<launch::InstanceRunLock>* own_run_locks = nullptr)
 {
     auto observed = project(workspace, request);
     if (!observed) return facman::core::Result<std::string>::failure(observed.error());
     const auto& p = observed.value();
     if (!p.root_safe || !p.install_present || !p.install_record || !p.install || !p.install_ref ||
-        !p.installation_healthy || !p.version_family_eligible || !p.version_matches || !p.content_present ||
+        (!p.installation_healthy && !installation_effect) || !p.version_family_eligible || !p.version_matches || !p.content_present ||
         !p.profile_valid || !p.profile_plan || !p.modset_lock ||
         ((!p.modset_valid || p.modset_status != "locked_verified") && !(content_effect && p.modset_archives_verified)) ||
         p.profile_launch_intent != request.launch_intent ||
@@ -2512,11 +2515,28 @@ facman::core::Result<std::string> joined_inputs(const fs::path& workspace,
             p.selected_save_state == "blocked" || p.selected_archive_identity.rfind("file:", 0) != 0)))
         return fail<std::string>("make_ready_prerequisites_unavailable",
             "The current installation, profile, locked content or selected save is unavailable; prepare it with its existing action");
-    if (p.pending_transactions != 0U || !joined_recovery_current(workspace)) return fail<std::string>("make_ready_pending_recovery",
+    bool own_pending = false;
+    if (!own_transaction.empty() && installation_effect) {
+        tx::Record own;
+        std::string detail;
+        own_pending = tx::read_record(workspace, own_transaction, own, detail) &&
+            own.command_id == "installs.repair.apply" && own.target == p.install->root && !tx::terminal(own.state);
+        if (!own_pending) return fail<std::string>("make_ready_pending_recovery", "The exact installation repair coordinator is unavailable");
+    }
+    if (p.pending_transactions != (own_pending ? 1U : 0U) || !joined_recovery_current(workspace, own_pending ? own_transaction : "")) return fail<std::string>("make_ready_pending_recovery",
         "Recover existing domain transactions before joined preparation");
-    for (const char* lock : {"run.lock", "save.write.lock"})
-        if (lock_input_identity(p.instance.root / "locks" / lock) != "absent")
+    for (const char* lock : {"run.lock", "save.write.lock"}) {
+        bool exact_owned_run = false;
+        if (installation_effect && own_pending && own_run_locks && std::string(lock) == "run.lock") {
+            const auto held = std::find_if(own_run_locks->begin(), own_run_locks->end(), [&](const auto& proof) {
+                return proof.path == p.instance.root / "locks/run.lock";
+            });
+            std::string detail;
+            exact_owned_run = held != own_run_locks->end() && launch::verify_instance_run_lock(*held, detail);
+        }
+        if (!exact_owned_run && lock_input_identity(p.instance.root / "locks" / lock) != "absent")
             return fail<std::string>("make_ready_locked", "Joined preparation conflicts with an instance writer");
+    }
     if (lock_input_identity(p.instance.root / "config-path.cfg") != "absent" ||
         lock_input_identity(p.instance.root / "config/config-path.cfg") != "absent")
         return fail<std::string>("make_ready_legacy_routing_present", "Existing legacy routing must be preserved for explicit repair");
@@ -2524,7 +2544,7 @@ facman::core::Result<std::string> joined_inputs(const fs::path& workspace,
     const auto list = lock_input_identity(p.instance.root / "mods/mod-list.json");
     const auto settings = lock_input_identity(p.instance.root / "mods/mod-settings.dat");
     const auto parents = configuration_parent_identity(p.instance.root);
-    if (!parents || executable.rfind("file:", 0) != 0 ||
+    if (!parents || (!installation_effect && executable.rfind("file:", 0) != 0) ||
         (list != "absent" && list.rfind("present:file:", 0) != 0) ||
         (settings != "absent" && settings.rfind("present:file:", 0) != 0))
         return fail<std::string>("make_ready_inputs_unsafe", "Joined input custody is unavailable");
@@ -2532,20 +2552,29 @@ facman::core::Result<std::string> joined_inputs(const fs::path& workspace,
     inputs.add_string("schema", content_effect ? "factorio.make_ready_joined_inputs.v2" : "factorio.make_ready_joined_inputs.v1");
     inputs.add_string("instance", p.instance_record.identity);
     inputs.add_string("root", p.instance_root_identity);
-    inputs.add_string("installation", p.install_record->identity);
-    inputs.add_string("installation_evidence", p.installation_evidence_digest);
-    inputs.add_string("executable", executable);
+    if (installation_effect) {
+        inputs.add_string("installation_id", p.install->id.str());
+        inputs.add_string("installation_root", path_string(p.install->root));
+        inputs.add_string("installation_executable", path_string(p.install->executable));
+        inputs.add_string("installation_version", p.install->version);
+        inputs.add_string("installation_source", p.install->source_ref);
+    } else {
+        inputs.add_string("installation", p.install_record->identity);
+        inputs.add_string("installation_evidence", p.installation_evidence_digest);
+        inputs.add_string("executable", executable);
+    }
     inputs.add_string("profile", p.profile_digest);
     inputs.add_string("profile_source", p.profile_source_identity);
     inputs.add_string("profile_request", p.profile_plan->request_json);
     inputs.add_string("overrides", p.overrides_input_identity);
-    inputs.add_string("local_lock", content_effect ? p.modset_lock->digest : p.modset_local_lock_identity);
-    inputs.add_string("shared_lock", content_effect ? p.modset_lock->digest : p.modset_shared_lock_identity);
+    const bool activating_content = content_effect && !installation_effect;
+    inputs.add_string("local_lock", activating_content ? p.modset_lock->digest : p.modset_local_lock_identity);
+    inputs.add_string("shared_lock", activating_content ? p.modset_lock->digest : p.modset_shared_lock_identity);
     auto bound_artifacts = p.modset_artifacts;
-    if (content_effect) bound_artifacts.erase(std::remove_if(bound_artifacts.begin(), bound_artifacts.end(),
+    if (activating_content) bound_artifacts.erase(std::remove_if(bound_artifacts.begin(), bound_artifacts.end(),
         [](const auto& artifact) { return artifact.first == "mod-list.json"; }), bound_artifacts.end());
     inputs.add_array("artifacts", artifact_strings(bound_artifacts));
-    inputs.add_string("mod_list", content_effect ? "separate_verified_content_effect" : list);
+    inputs.add_string("mod_list", activating_content ? "separate_verified_content_effect" : list);
     inputs.add_string("mod_settings", settings);
     inputs.add_string("configuration_parents", parents.value());
     inputs.add_string("launch_intent", request.launch_intent);
@@ -2594,6 +2623,93 @@ bool joined_effect(const fs::path& workspace, const std::string& transaction,
     return current && current.value().digest == sha && file.revalidate_path().ok();
 }
 } // namespace
+
+facman::core::Result<std::string> joined_repair_inputs(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& own_transaction,
+    const std::vector<launch::InstanceRunLock>* own_run_locks)
+{
+    return joined_inputs(workspace, request, nullptr, true, true, own_transaction, own_run_locks);
+}
+
+facman::core::Result<std::string> joined_repair_archive_identity(const fs::path& archive,
+    const facman::platform::StableInputFile* held_archive)
+{
+    facman::platform::StableInputFile local;
+    std::string unsafe;
+    if (facman::base::path_crosses_link_or_reparse_point(archive, unsafe) ||
+        (!held_archive && !local.open_no_follow_pinned(archive).ok()))
+        return fail<std::string>("make_ready_repair_source_unavailable", "The explicit local repair archive cannot be pinned safely");
+    const auto& file = held_archive ? *held_archive : local;
+    if (!file.open() || file.identity().link_count != 1U || !file.revalidate_path().ok())
+        return fail<std::string>("make_ready_repair_source_changed", "The original repair archive path changed");
+    facman::base::Sha256Hasher hash;
+    char bytes[65536];
+    std::uint64_t offset = 0;
+    while (offset < file.size()) {
+        const auto count = file.read_at(offset, bytes, static_cast<std::size_t>(std::min<std::uint64_t>(sizeof(bytes), file.size() - offset)));
+        if (count == 0U) return fail<std::string>("make_ready_repair_source_unavailable", "The original repair archive cannot be read completely");
+        hash.update(reinterpret_cast<const unsigned char*>(bytes), count);
+        offset += count;
+    }
+    if (!file.revalidate_path().ok()) return fail<std::string>("make_ready_repair_source_changed", "The original repair archive changed during observation");
+    const auto& identity = file.identity();
+    return facman::core::Result<std::string>::success("file:" + std::to_string(identity.device) + ":" +
+        std::to_string(identity.object) + ":" + std::to_string(identity.size) + ":sha256:" + hash.finish());
+}
+
+facman::core::Result<std::string> joined_repair_plan(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& repair_envelope, const std::string& review_id,
+    const std::string& archive_identity)
+{
+#ifndef _WIN32
+    return fail<std::string>("make_ready_repair_custody_unavailable", "Joined executable repair requires the Windows retained source custody capability");
+#endif
+    Projection p;
+    auto binding = joined_inputs(workspace, request, &p, true, true);
+    auto repair = json::parse(repair_envelope);
+    if (!binding) return binding;
+    const auto* native_request = repair ? repair.value().find("plan_request") : nullptr;
+    const auto* archive = native_request ? native_request->find("archive") : nullptr;
+    auto source = archive ? joined_repair_archive_identity(fs::u8path(object_string(*archive, "path"))) :
+        fail<std::string>("make_ready_repair_source_unavailable", "The reviewed repair archive is unavailable");
+    if (!source || source.value() != archive_identity)
+        return fail<std::string>("make_ready_repair_source_changed", "The original reviewed archive object changed; review the explicit source again");
+    if (!repair || !p.install || p.install->ownership != "managed" ||
+        p.install->provider_id != "universal-setup" || p.install->source != "universal-setup" ||
+        object_string(repair.value(), "schema") != "factorio.managed_repair_plan.v1" ||
+        object_string(repair.value(), "install_id") != p.install->id.str() ||
+        object_string(repair.value(), "install_record_sha256") != p.install_record->digest)
+        return fail<std::string>("make_ready_repair_review_invalid", "Review an exact eligible managed installation repair first");
+    const auto* provider = repair.value().find("provider_plan");
+    const auto* repairs = provider ? provider->find("repairs") : nullptr;
+    // This bounded continuation requires existing locked content to be intact.
+    // Installation data reconstruction needs its own reviewed dependency plan.
+    if (!repairs || !repairs->is_array() || repairs->size() == 0U)
+        return fail<std::string>("make_ready_repair_scope_unavailable", "The reviewed repair has no supported executable effect");
+    for (std::size_t index = 0; index < repairs->size(); ++index) {
+        const auto* item = repairs->at(index);
+        if (!item || p.install->root / fs::u8path(object_string(*item, "relative_path")) != p.install->executable)
+            return fail<std::string>("make_ready_repair_scope_unavailable", "Prepare installation data with its existing repair action before joining current settings");
+    }
+    json::ObjectBuilder desired;
+    desired.add_string("installation_id", p.install->id.str());
+    desired.add_string("profile_id", p.instance.profile);
+    desired.add_string("selected_save", request.launch_intent == "load_save" ? p.selected_save : "");
+    desired.add_string("modset_lock_sha256", p.modset_lock->digest);
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.make_ready_joined_plan.v3");
+    plan.add_string("instance_id", request.instance_id);
+    plan.add_string("launch_intent", request.launch_intent);
+    plan.add_object("desired_state", desired);
+    plan.add_string("repair_review_id", review_id);
+    plan.add_string("archive_source_identity", archive_identity);
+    plan.add_string("installation_root", path_string(p.install->root));
+    plan.add_string("installation_executable", path_string(p.install->executable));
+    plan.add_string("inputs_sha256", binding.value());
+    plan.add_value("installation_plan", repair.value());
+    plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+    return facman::core::Result<std::string>::success(plan.serialize());
+}
 
 facman::core::Result<std::string> joined_preparation_plan(const fs::path& workspace,
     const ProjectionRequest& request)

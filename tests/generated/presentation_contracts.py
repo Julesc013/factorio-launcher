@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-SOURCE_DIGEST = "c58b6eec72fdf467e27e18b4432d2ed3c606d32c8760225fb336e384442f7aa5"
+SOURCE_DIGEST = "9ace5359b2560e818d758f1e94c75de494df7a03e5ce68f1125c0765edf8f3ca"
 
 @dataclass
 class SemanticActionRequest:
@@ -26,6 +26,7 @@ class SemanticActionRequest:
     new_instance_id: Optional[str] = None
     output_path: Optional[str] = None
     profile_id: Optional[str] = None
+    repair_review_id: Optional[str] = None
     roots: Optional[list[str]] = None
     save: Optional[str] = None
     selected_instance_id: Optional[str] = None
@@ -40,6 +41,7 @@ class PresentationQuery:
     scope: str
     known_revision: Optional[str] = None
     launch_intent: Optional[str] = None
+    repair_review_id: Optional[str] = None
     search: Optional[str] = None
     selected_instance_id: Optional[str] = None
 

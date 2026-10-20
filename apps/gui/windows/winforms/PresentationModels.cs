@@ -641,6 +641,8 @@ namespace FacMan.WinForms
                         !SameTarget(PresentationJson.Text(owner, "target"), PresentationJson.Text(plan, "selected_context_target"))) return false;
                     if (!Exact(owner, ownerKeys.ToArray())) return false;
                 }
+                if (!partial && ((configuration != null && !commands.Contains("readiness.prepare_configuration")) ||
+                    ((bool)plan["selected_context_required"] && !commands.Contains("readiness.prepare_selected_save")))) return false;
                 return true;
         }
 
@@ -814,9 +816,116 @@ namespace FacMan.WinForms
                 prepared == (configuration == "ready" && preparation == "already_prepared");
         }
 
+        internal static bool VerifiedCompleted(IDictionary<string, object> payload,
+            IDictionary<string, object> input, TransportIdentity identity)
+        {
+            try
+            {
+                var plan = PresentationJson.Record(payload, "plan");
+                var desired = PresentationJson.Record(plan, "desired_state");
+                if (input == null) input = new Dictionary<string, object> {
+                    { "selected_instance_id", PresentationJson.Text(plan, "instance_id") },
+                    { "launch_intent", PresentationJson.Text(plan, "launch_intent") },
+                    { "installation_id", PresentationJson.Text(desired, "installation_id") },
+                    { "profile_id", PresentationJson.Text(desired, "profile_id") },
+                    { "save", PresentationJson.Text(desired, "selected_save") },
+                    { "repair_review_id", PresentationJson.Text(plan, "repair_review_id") } };
+                if (PresentationJson.Text(plan, "instance_id") != PresentationJson.Text(input, "selected_instance_id") ||
+                    PresentationJson.Text(plan, "launch_intent") != PresentationJson.Text(input, "launch_intent") ||
+                    PresentationJson.Text(desired, "installation_id") != PresentationJson.Text(input, "installation_id") ||
+                    PresentationJson.Text(desired, "profile_id") != PresentationJson.Text(input, "profile_id") ||
+                    PresentationJson.Text(desired, "selected_save") != PresentationJson.Text(input, "save") ||
+                    PresentationJson.Text(payload, "continuation") != "observe_readiness" ||
+                    !Flag(payload, "remaining_effects_blocked_before_effects", false) ||
+                    !ValidCompletedReadiness(PresentationJson.Record(payload, "readiness_observation"), plan,
+                        Flag(payload, "preparation_complete", true))) return false;
+                string schema = PresentationJson.Text(payload, "schema");
+                if (schema == "factorio.make_ready_joined_result.v1") return ValidV1Partial(payload, input, false);
+                if (schema != "factorio.make_ready_joined_result.v2" && schema != "factorio.make_ready_joined_result.v3") return false;
+                bool installation = schema == "factorio.make_ready_joined_result.v3";
+                if (!installation && !ValidContentReceipt(payload, input, identity)) return false;
+                var effects = payload["completed_components"] as object[];
+                var nested = PresentationJson.Record(payload, "joined_result");
+                var nestedPlan = PresentationJson.Record(nested, "plan");
+                var nestedEffects = nested != null && nested.ContainsKey("completed_components") ? nested["completed_components"] as object[] : null;
+                if (effects == null || effects.Length == 0 || nestedEffects == null || nestedEffects.Length + 1 != effects.Length ||
+                    !SameJson(desired, PresentationJson.Record(nestedPlan, "desired_state")) || !VerifiedCompleted(nested, input, identity) ||
+                    !SameJson(payload["readiness_observation"], nested["readiness_observation"]) ||
+                    !SameJson(payload["preparation_complete"], nested["preparation_complete"]) ||
+                    !SameJson(payload["fresh_revision_required"], nested["fresh_revision_required"])) return false;
+                var first = effects[0] as IDictionary<string, object>;
+                var owner = PresentationJson.Record(first, "owner_result");
+                if (installation)
+                {
+                    var reviewed = PresentationJson.Record(plan, "installation_plan");
+                    var provider = PresentationJson.Record(reviewed, "provider_plan");
+                    if (!Exact(payload, "schema", "command", "plan", "plan_sha256", "completed_components", "continuation",
+                            "completed_effects_verified", "remaining_effects_blocked_before_effects", "readiness_observation", "preparation_complete",
+                            "fresh_revision_required", "readiness_complete", "execution_started", "permit_issued", "factorio_support_claim",
+                            "joined_result", "installation_effect_verified") ||
+                        !Exact(plan, "schema", "instance_id", "launch_intent", "desired_state", "repair_review_id", "archive_source_identity",
+                            "installation_root", "installation_executable", "inputs_sha256", "installation_plan", "plan_sha256") ||
+                        !Exact(first, "component", "owner_command", "transaction_id", "plan_digest", "owner_result") ||
+                        !Exact(reviewed, "schema", "command", "install_id", "plan_id", "plan_digest", "created_at", "install_record_sha256", "plan_request", "provider_plan") ||
+                        PresentationJson.Text(reviewed, "schema") != "factorio.managed_repair_plan.v1" ||
+                        PresentationJson.Text(reviewed, "command") != "installs.repair.plan" ||
+                        PresentationJson.Text(reviewed, "install_id") != PresentationJson.Text(desired, "installation_id") ||
+                        !Exact(owner, "schema", "status", "disposition", "install_id", "plan_id", "plan_digest", "provider_plan_digest",
+                            "transaction_id", "completed_at", "installed_state_digest", "setup_state_ref", "last_verification_identity", "state_revision", "verification_status") ||
+                        !Strings(owner, "schema", "status", "disposition", "install_id", "plan_id", "plan_digest", "provider_plan_digest",
+                            "transaction_id", "completed_at", "installed_state_digest", "setup_state_ref", "last_verification_identity", "state_revision", "verification_status") ||
+                        PresentationJson.Text(payload, "command") != "readiness.prepare_joined" ||
+                        PresentationJson.Text(payload, "factorio_support_claim") != "unclaimed" ||
+                        PresentationJson.Text(plan, "schema") != "factorio.make_ready_joined_plan.v3" ||
+                        PresentationJson.Text(plan, "repair_review_id") != PresentationJson.Text(input, "repair_review_id") ||
+                        !Digest(PresentationJson.Text(plan, "plan_sha256")) || !Digest(PresentationJson.Text(plan, "inputs_sha256")) ||
+                        PresentationJson.Text(plan, "plan_sha256") != PresentationJson.Text(payload, "plan_sha256") ||
+                        !Flag(payload, "execution_started", false) || !Flag(payload, "permit_issued", false) || !Flag(payload, "readiness_complete", false) ||
+                        !Flag(payload, "installation_effect_verified", true) || !Flag(payload, "completed_effects_verified", true) ||
+                        PresentationJson.Text(first, "component") != "managed_installation_repair" ||
+                        PresentationJson.Text(first, "owner_command") != "installs.repair.apply" ||
+                        PresentationJson.Text(owner, "schema") != "factorio.managed_repair_apply_result.v1" ||
+                        PresentationJson.Text(owner, "status") != "completed" || PresentationJson.Text(owner, "disposition") != "applied" ||
+                        PresentationJson.Text(owner, "install_id") != PresentationJson.Text(desired, "installation_id") ||
+                        PresentationJson.Text(owner, "plan_id") != PresentationJson.Text(reviewed, "plan_id") ||
+                        !Digest(PresentationJson.Text(reviewed, "plan_digest")) ||
+                        PresentationJson.Text(owner, "plan_digest") != PresentationJson.Text(reviewed, "plan_digest") ||
+                        PresentationJson.Text(first, "plan_digest") != PresentationJson.Text(reviewed, "plan_digest") ||
+                        PresentationJson.Text(owner, "provider_plan_digest") != PresentationJson.Text(provider, "plan_digest") ||
+                        PresentationJson.Text(provider, "schema") != "usk.repair_plan.v1" ||
+                        PresentationJson.Text(provider, "install_id") != PresentationJson.Text(desired, "installation_id") ||
+                        !Digest(PresentationJson.Text(owner, "provider_plan_digest")) || !Digest(PresentationJson.Text(owner, "installed_state_digest")) ||
+                        String.IsNullOrWhiteSpace(PresentationJson.Text(owner, "setup_state_ref")) ||
+                        String.IsNullOrWhiteSpace(PresentationJson.Text(owner, "last_verification_identity")) ||
+                        String.IsNullOrWhiteSpace(PresentationJson.Text(owner, "state_revision")) ||
+                        String.IsNullOrWhiteSpace(PresentationJson.Text(owner, "completed_at")) ||
+                        (PresentationJson.Text(owner, "verification_status") != "pass" && PresentationJson.Text(owner, "verification_status") != "warn") ||
+                        String.IsNullOrWhiteSpace(PresentationJson.Text(owner, "transaction_id")) ||
+                        PresentationJson.Text(first, "transaction_id") != PresentationJson.Text(owner, "transaction_id")) return false;
+                }
+                var transactions = new HashSet<string>(StringComparer.Ordinal) { PresentationJson.Text(owner, "transaction_id") };
+                for (int index = 0; index < nestedEffects.Length; ++index)
+                    if (!SameJson(effects[index + 1], nestedEffects[index]) ||
+                        !transactions.Add(PresentationJson.Text(nestedEffects[index] as IDictionary<string, object>, "transaction_id"))) return false;
+                return true;
+            }
+            catch (InvalidDataException) { return false; }
+            catch (ArgumentException) { return false; }
+            catch (KeyNotFoundException) { return false; }
+            catch (InvalidCastException) { return false; }
+        }
+
         internal static string Summary(IDictionary<string, object> payload, bool knownPartial)
         {
             string schema = PresentationJson.Text(payload, "schema");
+            if (schema == "factorio.make_ready_joined_result.v3")
+            {
+                if (PresentationJson.Text(payload, "continuation") != "observe_readiness")
+                    return "Installation preparation needs attention. Inspect the original request and domain recovery before continuing.";
+                return VerifiedCompleted(payload, null, null) ?
+                    "The registered installation executable and current settings were prepared. Review remaining readiness checks. Play remains unavailable." :
+                    "Installation preparation needs attention. Inspect the original request before continuing.";
+            }
             if (schema == "factorio.make_ready_joined_result.v2")
             {
                 try

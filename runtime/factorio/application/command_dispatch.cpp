@@ -583,11 +583,13 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "selected_instance_id", typed.selected_instance_id, detail) ||
             !optional_string(payload, "search", typed.search, detail) ||
             !optional_string(payload, "known_revision", typed.known_revision, detail) ||
+            !optional_string(payload, "repair_review_id", typed.repair_review_id, detail) ||
             !optional_string(payload, "launch_intent", typed.launch_intent, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::presentation_action: {
         SemanticActionRequest typed;
+        if (!optional_string(payload, "repair_review_id", typed.repair_review_id, detail)) return false;
         if (!required_string(payload, "action_id", typed.action_id, detail) ||
             !required_string(payload, "scope", typed.scope, detail) ||
             !required_string(payload, "expected_snapshot_revision", typed.expected_snapshot_revision, detail) ||

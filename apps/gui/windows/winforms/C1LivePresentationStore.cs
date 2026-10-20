@@ -195,11 +195,22 @@ namespace FacMan.WinForms
             string workspace, CancellationToken cancellationToken)
         {
             if (Busy || String.IsNullOrWhiteSpace(workspace)) return;
-            Workspace = Path.GetFullPath(workspace);
+            SelectWorkspaceContext(workspace);
+            await RefreshAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        private void SelectWorkspaceContext(string workspace)
+        {
+            string selected = Path.GetFullPath(workspace);
+            if (!String.IsNullOrWhiteSpace(Workspace) &&
+                String.Equals(Path.GetFullPath(Workspace).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                    selected.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)) return;
+            Workspace = selected;
             SelectedInstanceId = String.Empty;
             LastDoctor = null;
             uncertainAction = null;
-            await RefreshAsync(cancellationToken).ConfigureAwait(false);
+            repairReviewId = String.Empty;
+            repairReviewInstanceId = String.Empty;
         }
 
         public Task<CommandResult> InitializeWorkspaceAsync(
@@ -325,6 +336,9 @@ namespace FacMan.WinForms
             return DispatchActionAsync(pending, cancellationToken);
         }
 
+        private string repairReviewId = String.Empty;
+        private string repairReviewInstanceId = String.Empty;
+
         private async Task<BackendPresentationSnapshot> QueryAsync(
             string scope,
             string selectedInstanceId,
@@ -334,6 +348,8 @@ namespace FacMan.WinForms
             Dictionary<string, object> payload = new Dictionary<string, object>();
             payload["scope"] = scope;
             payload["launch_intent"] = ObservationIntent;
+            if (selectedInstanceId == repairReviewInstanceId && !String.IsNullOrWhiteSpace(repairReviewId))
+                payload["repair_review_id"] = repairReviewId;
             if (!String.IsNullOrWhiteSpace(selectedInstanceId))
                 payload["selected_instance_id"] = selectedInstanceId;
             CommandResult result = await transport.InvokeAsync(
@@ -426,6 +442,7 @@ namespace FacMan.WinForms
             try
             {
                 SemanticActionReceipt receipt = SemanticActionReceipt.ParseEnvelope(result.Stdout);
+                AcceptRepairReviewSelection(result, receipt, pending);
                 JavaScriptSerializer serializer = new JavaScriptSerializer();
                 LastActionPayload = serializer.Serialize(receipt.ActionPayload);
                 AcceptMakeReadyContinuation(result, receipt, pending);
@@ -444,6 +461,27 @@ namespace FacMan.WinForms
             return result;
         }
 
+        private void AcceptRepairReviewSelection(CommandResult result, SemanticActionReceipt receipt, PendingSemanticAction pending)
+        {
+            if (!result.Success || receipt.Outcome != "completed" || receipt.ActionId != pending.ActionId ||
+                receipt.RequestId != pending.Identity.RequestId || receipt.OperationId != pending.Identity.OperationId ||
+                receipt.AttemptId != pending.Identity.AttemptId) return;
+            if (pending.ActionId == "readiness.review_install_repair")
+            {
+                if (PresentationJson.Text(receipt.ActionPayload, "schema") != "factorio.managed_repair_review.v1") return;
+                repairReviewId = PresentationJson.Text(pending.Payload, "idempotency_key");
+                repairReviewInstanceId = PresentationJson.Text(pending.Payload, "selected_instance_id");
+            }
+            else if (pending.ActionId == "readiness.prepare_joined" &&
+                repairReviewId == PresentationJson.Text(pending.Payload, "repair_review_id") &&
+                repairReviewInstanceId == PresentationJson.Text(pending.Payload, "selected_instance_id") &&
+                MakeReadyContinuation.VerifiedCompleted(receipt.ActionPayload, pending.Payload, pending.Identity))
+            {
+                repairReviewId = String.Empty;
+                repairReviewInstanceId = String.Empty;
+            }
+        }
+
         private bool AcceptMakeReadyContinuation(CommandResult result, SemanticActionReceipt receipt,
             PendingSemanticAction pending)
         {
@@ -452,6 +490,11 @@ namespace FacMan.WinForms
                 return false;
             bool knownPartial = MakeReadyContinuation.CanStartFreshRequest(result, receipt, pending.Payload, pending.Identity);
             LastActionSummary = MakeReadyContinuation.Summary(receipt.ActionPayload, knownPartial);
+            if (PresentationJson.Text(receipt.ActionPayload, "schema") == "factorio.make_ready_joined_result.v3" &&
+                receipt.Outcome == "completed" && (receipt.RequestId != pending.Identity.RequestId ||
+                    receipt.OperationId != pending.Identity.OperationId || receipt.AttemptId != pending.Identity.AttemptId ||
+                    !MakeReadyContinuation.VerifiedCompleted(receipt.ActionPayload, pending.Payload, pending.Identity)))
+                LastActionSummary = "Installation preparation needs attention. Inspect the original request before continuing.";
             if (!result.Success && PresentationJson.Text(receipt.ActionPayload, "continuation") == "observe_readiness")
                 LastActionSummary = "Preparation needs attention. Inspect the original request before continuing.";
             if (Object.ReferenceEquals(uncertainAction, pending) && knownPartial) uncertainAction = null;

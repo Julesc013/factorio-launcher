@@ -7,7 +7,7 @@ namespace FacMan.WinForms.GeneratedContracts
 {
     public static class PresentationContractIdentity
     {
-        public const string SourceDigest = "c58b6eec72fdf467e27e18b4432d2ed3c606d32c8760225fb336e384442f7aa5";
+        public const string SourceDigest = "9ace5359b2560e818d758f1e94c75de494df7a03e5ce68f1125c0765edf8f3ca";
     }
 
     public sealed class SemanticActionRequest
@@ -28,6 +28,7 @@ namespace FacMan.WinForms.GeneratedContracts
         public string NewInstanceId { get; set; }
         public string OutputPath { get; set; }
         public string ProfileId { get; set; }
+        public string RepairReviewId { get; set; }
         public IList<string> Roots { get; set; }
         public string Save { get; set; }
         public string SelectedInstanceId { get; set; }
@@ -43,6 +44,7 @@ namespace FacMan.WinForms.GeneratedContracts
         public string Scope { get; set; }
         public string KnownRevision { get; set; }
         public string LaunchIntent { get; set; }
+        public string RepairReviewId { get; set; }
         public string Search { get; set; }
         public string SelectedInstanceId { get; set; }
     }

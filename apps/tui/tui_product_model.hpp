@@ -136,6 +136,8 @@ struct TuiEvent {
 };
 
 struct TuiState {
+    std::string repair_review_id;
+    std::string repair_review_instance_id;
     TuiPage page = TuiPage::home;
     TuiFocusRegion focus_region = TuiFocusRegion::navigation;
     std::size_t selected_item = 0;

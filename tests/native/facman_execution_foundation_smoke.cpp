@@ -445,10 +445,38 @@ int process_failure(
 
 } // namespace
 
-int main()
+int main(int argc, char** argv)
 {
     facman::platform::RealClock clock;
     facman::platform::RandomIdGenerator ids;
+    if (argc == 3 && std::string(argv[1]) == "--pre-admitted-lock-control") {
+        // Construct the admitted fake-process request before the repair owner
+        // takes its census, then pause before the real execution run-lock gate.
+        const fs::path instance = fs::u8path(argv[2]);
+        auto request = request_for(instance, "success");
+        class NeverDispatch final : public launch::ProcessSupervisor {
+        public:
+            unsigned calls = 0;
+            facman::platform::ProcessResult run(const facman::platform::ProcessRequest&) override {
+                ++calls; return {};
+            }
+        } supervisor;
+        launch::LaunchExecutionService service(supervisor, clock, ids);
+        std::string detail;
+        const auto marker = instance / ".facman-test-pre-admitted-launch";
+        const auto release = instance / ".facman-test-pre-admitted-launch-release";
+        if (!facman::base::write_text_new_atomic(marker, "ready\n", detail)) return 120;
+        bool released = false;
+        for (unsigned index = 0; index < 2000U; ++index) {
+            if (fs::exists(release)) { released = true; break; }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        if (!released) return 121;
+        const auto result = service.execute(request);
+        if (result || result.error().code != "run_lock_contended" || supervisor.calls != 0U) return 122;
+        std::cout << "PASS pre-admitted fake launch refused by exact shared run lease; supervisor calls=0\n";
+        return 0;
+    }
     TemporaryTree tree {
         fs::temp_directory_path() / ids.next("facman-execution-foundation")};
     std::error_code error;
@@ -916,6 +944,12 @@ int main()
     launch::InstanceRunLock held_lock;
     const auto held = launch::acquire_instance_run_lock(locked_root, 300, held_lock);
     if (!held.acquired) return 43;
+    auto foreign_proof = held_lock;
+    foreign_proof.token = "foreign-token";
+    std::string proof_detail;
+    if (launch::verify_instance_run_lock(foreign_proof, proof_detail) ||
+        launch::release_instance_run_lock(foreign_proof, proof_detail) ||
+        !fs::is_regular_file(held_lock.path) || !launch::verify_instance_run_lock(held_lock, proof_detail)) return 123;
     SuccessfulSupervisor concurrent_supervisor;
     launch::LaunchExecutionService concurrent_service(concurrent_supervisor, clock, ids);
     auto concurrent = concurrent_service.execute(request_for(locked_root, "success"));

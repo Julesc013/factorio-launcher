@@ -62,6 +62,11 @@
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
     },
+    "repair_review_id": {
+      "maxLength": 256,
+      "minLength": 1,
+      "type": "string"
+    },
     "request_id": {
       "minLength": 1,
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",

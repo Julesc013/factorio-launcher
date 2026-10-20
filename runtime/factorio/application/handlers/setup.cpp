@@ -1888,7 +1888,8 @@ ApplicationResult plan_repair_install(ApplicationContext& context, const Service
 #endif
 }
 
-ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest& request)
+ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest& request,
+    const std::function<facman::core::Result<std::string>()>& protected_inputs)
 {
 #if FACMAN_WITH_SETUP
     // This implemented provider route replaces the former live_target_acceptance_required stub.
@@ -2000,6 +2001,18 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
         return repair_recovery_failure("installs.repair.apply", {
             "stale_plan", "Reviewed repair preimage changed under the installation lease", request.install_id});
     }
+    if (protected_inputs) {
+        auto current = protected_inputs();
+        if (!current) {
+            std::string detail;
+            if (!session.refused("No provider entry: joined protected inputs changed") ||
+                !operation_lease.value()->release_after_closure(detail)) return repair_recovery_failure(
+                    "installs.repair.apply", {"recovery_write_refused", "Joined repair refusal could not release its lease", detail});
+            return refused(safety_refusal("installs.repair.apply", current.error().code,
+                "Joined preparation changed before installation repair", current.error().message, true),
+                current.error().code, current.error().message, facman::core::OutcomeKind::refused);
+        }
+    }
     if (!session.validated("reviewed_outer_plan_bound") || !session.planned("exact_provider_plan_persisted") ||
         !session.staged("provider_entry_prepared") || !session.verified("current_record_bound")) {
         return refused(safety_refusal("installs.repair.apply", "recovery_write_refused", "Repair coordinator journal could not enter provider phase", session.detail(), true),
@@ -2012,6 +2025,33 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
     std::string lease_detail;
     if (!operation_lease.value()->revalidate(lease_detail)) return repair_recovery_failure(
         "installs.repair.apply", {"recovery_write_refused", "Repair installation lease changed before provider entry", lease_detail});
+    if (protected_inputs && std::getenv("FACMAN_TEST_JOINED_REPAIR_PAUSE_BEFORE_PROVIDER") != nullptr) {
+        std::string detail;
+        const auto marker = context.workspace() / ".facman-test-joined-repair-before-provider";
+        const auto release = context.workspace() / ".facman-test-joined-repair-before-provider-release";
+        bool released = false;
+        if (facman::base::write_text_new_atomic(marker, "ready\n", detail)) {
+            for (unsigned index = 0; index < 2000U; ++index) {
+                std::error_code error;
+                if (fs::exists(release, error) && !error) { released = true; break; }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        }
+        if (!released) { session.failed("Joined repair test boundary timed out"); return repair_recovery_failure(
+            "installs.repair.apply", {"transaction_recovery_required", "Joined repair test boundary timed out", request.transaction_id}); }
+    }
+    if (protected_inputs) {
+        auto current = protected_inputs();
+        if (!current) {
+            std::string detail;
+            if (!session.refused("No provider entry: final joined custody/census changed") ||
+                !operation_lease.value()->release_after_closure(detail)) return repair_recovery_failure(
+                    "installs.repair.apply", {"recovery_write_refused", "Final joined repair refusal could not release its lease", detail});
+            return refused(safety_refusal("installs.repair.apply", current.error().code,
+                "Joined custody changed before provider entry", current.error().message, true),
+                current.error().code, current.error().message, facman::core::OutcomeKind::refused);
+        }
+    }
     if (!session.committing("provider_entry_started")) return refused(
         safety_refusal("installs.repair.apply", "recovery_write_refused", "Repair provider-entry intent could not be recorded", session.detail(), true),
         "recovery_write_refused", session.detail(), facman::core::OutcomeKind::recovery_required);
@@ -2094,6 +2134,7 @@ ApplicationResult apply_repair_install(ApplicationContext& context, const Servic
     return result;
 #else
     (void)request;
+    (void)protected_inputs;
     return unavailable(context, "installs.repair.apply", "setup_unavailable", "Universal Setup support is disabled in this build");
 #endif
 }
