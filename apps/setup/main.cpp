@@ -4,6 +4,7 @@
 #include "facman_self_setup.h"
 #include "facman_self_maintenance.h"
 #include "facman_self_maintenance_provider.h"
+#include "windows_maintenance_handoff.h"
 #include "windows_integration.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
@@ -26,6 +27,7 @@
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -35,6 +37,9 @@
 namespace fs = std::filesystem;
 
 namespace {
+
+std::string utf8(const std::wstring &value);
+bool lowercase_hex_64(const std::string &value);
 
 struct Options {
   facman::self_setup::Operation operation =
@@ -64,11 +69,117 @@ struct Options {
   unsigned no_shell_integration_count = 0;
   std::optional<facman::self_setup::DurableBoundary>
       qualification_interrupt_after;
+  bool qualification_interrupt_after_activation = false;
+  bool qualification_activation_interrupt_armed = false;
   fs::path qualification_interrupt_permit;
   bool qualification_interrupt_permit_explicit = false;
   fs::path qualification_fixture_permit;
   bool qualification_fixture_permit_explicit = false;
 };
+
+struct ContinuationOptions {
+  std::string operation_id;
+  std::string nonce;
+  fs::path journal;
+  std::string journal_sha256;
+  std::uintptr_t parent_handle = 0;
+  DWORD parent_pid = 0;
+  std::uint64_t parent_created = 0;
+  std::uint64_t deadline_tick_ms = 0;
+};
+
+bool parse_unsigned(const std::wstring &text, std::uint64_t &value) {
+  if (text.empty()) return false;
+  std::uint64_t result = 0;
+  for (const wchar_t character : text) {
+    if (character < L'0' || character > L'9') return false;
+    const std::uint64_t digit = static_cast<std::uint64_t>(character - L'0');
+    if (result > ((std::numeric_limits<std::uint64_t>::max)() - digit) / 10U)
+      return false;
+    result = result * 10U + digit;
+  }
+  value = result;
+  return true;
+}
+
+bool parse_continuation(int argc, wchar_t **argv, ContinuationOptions &options,
+                        std::string &problem) {
+  if (argc != 18 || std::wstring(argv[1]) != L"continue-maintenance") {
+    problem = "private continuation requires exactly eight named inputs";
+    return false;
+  }
+  unsigned operation_count = 0, nonce_count = 0, journal_count = 0,
+           journal_sha_count = 0, handle_count = 0, pid_count = 0,
+           created_count = 0, deadline_count = 0;
+  std::uint64_t handle = 0, pid = 0;
+  for (int index = 2; index < argc; index += 2) {
+    const std::wstring name(argv[index]);
+    const std::wstring value(argv[index + 1]);
+    if (value.empty()) {
+      problem = "private continuation input is empty";
+      return false;
+    }
+    if (name == L"--operation-id") {
+      ++operation_count;
+      options.operation_id = utf8(value);
+    } else if (name == L"--handoff-nonce") {
+      ++nonce_count;
+      options.nonce = utf8(value);
+    } else if (name == L"--handoff-journal") {
+      ++journal_count;
+      options.journal = fs::path(value);
+    } else if (name == L"--handoff-journal-sha256") {
+      ++journal_sha_count;
+      options.journal_sha256 = utf8(value);
+    } else if (name == L"--parent-handle") {
+      ++handle_count;
+      if (!parse_unsigned(value, handle)) {
+        problem = "private continuation parent handle is invalid";
+        return false;
+      }
+    } else if (name == L"--parent-pid") {
+      ++pid_count;
+      if (!parse_unsigned(value, pid)) {
+        problem = "private continuation parent PID is invalid";
+        return false;
+      }
+    } else if (name == L"--parent-created") {
+      ++created_count;
+      if (!parse_unsigned(value, options.parent_created)) {
+        problem = "private continuation parent creation time is invalid";
+        return false;
+      }
+    } else if (name == L"--deadline-tick-ms") {
+      ++deadline_count;
+      if (!parse_unsigned(value, options.deadline_tick_ms)) {
+        problem = "private continuation deadline is invalid";
+        return false;
+      }
+    } else {
+      problem = "private continuation contains an unknown input";
+      return false;
+    }
+  }
+  std::string identifier_detail;
+  if (operation_count != 1U || nonce_count != 1U || journal_count != 1U ||
+      journal_sha_count != 1U || handle_count != 1U || pid_count != 1U ||
+      created_count != 1U || deadline_count != 1U ||
+      !facman::base::validate_identifier(options.operation_id, identifier_detail) ||
+      !facman::base::validate_identifier(options.nonce, identifier_detail) ||
+      handle == 0 ||
+      handle > static_cast<std::uint64_t>((std::numeric_limits<std::intptr_t>::max)()) ||
+      pid == 0 || pid > (std::numeric_limits<DWORD>::max)() ||
+      options.parent_created == 0 || options.deadline_tick_ms == 0 ||
+      !options.journal.is_absolute() ||
+      options.journal != options.journal.lexically_normal() ||
+      !lowercase_hex_64(options.journal_sha256)) {
+    problem = "private continuation inputs are incomplete or out of range";
+    return false;
+  }
+  options.parent_handle = static_cast<std::uintptr_t>(handle);
+  options.parent_pid = static_cast<DWORD>(pid);
+  return true;
+}
 
 struct MaterializedPackage {
   fs::path path;
@@ -87,6 +198,7 @@ class SetupPackageMaterializer final
 public:
   facman::core::Result<fs::path> materialize(
       const fs::path &source) override;
+  const fs::path &materialized_path() const { return materialized_.path; }
 
 private:
   MaterializedPackage materialized_;
@@ -297,7 +409,7 @@ void usage() {
       << "  FacManSetup rollback  [--root PATH] [--state-root PATH] "
          "[--acceptance-root PATH] [--yes] [--json]\n\n"
       << "Qualification interruption requires both "
-         "--qualification-interrupt-after provider_plan_reviewed|files_applied|shortcut_applied and "
+         "--qualification-interrupt-after provider_plan_reviewed|files_applied|shortcut_applied|activation_published and "
          "--qualification-interrupt-permit PATH, with explicit noninteractive "
          "installed-operation inputs.\n\n"
       << "Self-maintenance --no-shell-integration requires an exact "
@@ -396,7 +508,8 @@ bool parse(int argc, wchar_t **argv, Options &options, std::string &problem) {
         return false;
       }
       if (argument == L"--qualification-interrupt-after") {
-        if (options.qualification_interrupt_after.has_value()) {
+        if (options.qualification_interrupt_after.has_value() ||
+            options.qualification_interrupt_after_activation) {
           problem = "duplicate option: --qualification-interrupt-after";
           return false;
         }
@@ -407,6 +520,8 @@ bool parse(int argc, wchar_t **argv, Options &options, std::string &problem) {
           options.qualification_interrupt_after = facman::self_setup::DurableBoundary::files_applied;
         else if (value == L"shortcut_applied")
           options.qualification_interrupt_after = facman::self_setup::DurableBoundary::shortcut_applied;
+        else if (value == L"activation_published")
+          options.qualification_interrupt_after_activation = true;
         else {
           problem = "invalid qualification interruption boundary: " + utf8(value);
           return false;
@@ -587,19 +702,25 @@ struct QualificationInterrupt {
 bool consume_qualification_interrupt(Options &options,
                                       std::optional<QualificationInterrupt> &interrupt,
                                       std::string &problem) {
-  const bool after_supplied = options.qualification_interrupt_after.has_value();
+  const bool after_supplied = options.qualification_interrupt_after.has_value() ||
+      options.qualification_interrupt_after_activation;
   const bool permit_supplied = options.qualification_interrupt_permit_explicit;
   if (!after_supplied && !permit_supplied)
     return true;
-  if (options.maintenance_operation.has_value()) {
-    problem = "qualification interruption is not supported for self-maintenance verbs";
+  const bool maintenance_interrupt = options.maintenance_operation.has_value() &&
+      *options.maintenance_operation == facman::self_maintenance::Operation::rollback &&
+      options.qualification_interrupt_after_activation;
+  if (options.maintenance_operation.has_value() != maintenance_interrupt ||
+      options.qualification_interrupt_after_activation != maintenance_interrupt) {
+    problem = "activation_published interruption requires a real-epoch rollback; other maintenance interruption boundaries are unsupported";
     return false;
   }
   if (!after_supplied || !permit_supplied) {
     problem = "qualification interruption requires both --qualification-interrupt-after and --qualification-interrupt-permit";
     return false;
   }
-  if (options.operation == facman::self_setup::Operation::verify ||
+  if ((!maintenance_interrupt &&
+       options.operation == facman::self_setup::Operation::verify) ||
       !options.install_root_explicit || !options.state_root_explicit ||
       !options.acceptance_root_explicit || options.install_root_count != 1U ||
       options.state_root_count != 1U || options.acceptance_root_count != 1U ||
@@ -609,9 +730,11 @@ bool consume_qualification_interrupt(Options &options,
       options.shell_integration_count != 1U || !options.shell_integration ||
       options.no_shell_integration_count != 0U ||
       options.interactive ||
-      ((options.operation == facman::self_setup::Operation::install ||
-        options.operation == facman::self_setup::Operation::repair) &&
-       (!options.package_explicit || options.package_count != 1U)) ||
+      (!maintenance_interrupt &&
+       (options.operation == facman::self_setup::Operation::install ||
+         options.operation == facman::self_setup::Operation::repair) &&
+        (!options.package_explicit || options.package_count != 1U)) ||
+      (maintenance_interrupt && options.package_count != 0U) ||
       (options.operation == facman::self_setup::Operation::uninstall &&
        options.package_count != 0U)) {
     problem = "qualification interruption requires one explicit noninteractive installed operation with --root, --state-root, --acceptance-root, --yes, --json, and --shell-integration";
@@ -710,8 +833,9 @@ bool consume_qualification_interrupt(Options &options,
     problem = "qualification interrupt permit is outside its bounded time window";
     return false;
   }
-  if (operation != operation_text(options.operation) ||
-      boundary != boundary_text(*options.qualification_interrupt_after) ||
+  if (operation != (maintenance_interrupt ? "rollback" : operation_text(options.operation)) ||
+      boundary != (maintenance_interrupt ? "activation_published" :
+                   boundary_text(*options.qualification_interrupt_after)) ||
       product_version != FACMAN_VERSION_SEMVER ||
       permit_install_root != facman::platform::path_to_utf8(install_root) ||
       permit_state_root != facman::platform::path_to_utf8(state_root) ||
@@ -754,6 +878,10 @@ bool consume_qualification_interrupt(Options &options,
   options.install_root = install_root;
   options.state_root = state_root;
   options.acceptance_root = acceptance_root;
+  if (maintenance_interrupt) {
+    options.qualification_activation_interrupt_armed = true;
+    return true;
+  }
   facman::self_setup::QualificationClaims claims;
   claims.operation = options.operation;
   claims.install_root = install_root;
@@ -783,6 +911,14 @@ void print_error(const facman::core::Error &value, bool json_mode) {
   error.add_string("detail", value.detail);
   output.add_object("error", error);
   std::cout << output.serialize() << '\n';
+}
+
+facman::core::Error setup_error_with_detail(std::string code,
+                                            std::string message,
+                                            std::string detail) {
+  facman::core::Error error(std::move(code), std::move(message), "");
+  error.detail = std::move(detail);
+  return error;
 }
 
 void print_maintenance_error(const facman::core::Error &value,
@@ -1050,6 +1186,54 @@ facman::self_setup::RetainedSourceResult validate_maintenance_launcher(
       context, expected_sha256, false, retained_pins);
 }
 
+facman::core::Result<void> retire_repair_source(
+    const facman::self_setup::NativeContext &context,
+    PinnedRepairSource &pins) {
+  std::string detail;
+  if (!pins.revalidate(detail))
+    return facman::core::Result<void>::failure(
+        {"self_maintenance_repair_source_retirement_failed",
+         "retained repair source changed before retirement", detail});
+
+  const fs::path source = context.repair_source;
+  const std::pair<fs::path, facman::platform::FileIdentity> files[] = {
+      {source, pins.source.identity()},
+      {repair_launcher_path(source), pins.launcher.identity()},
+      {repair_receipt_path(source), pins.receipt.identity()},
+  };
+  // Pinned reads deliberately deny namespace replacement.  Retain their exact
+  // identities, close only the three generation-owned handles, then reopen and
+  // remove each pathname through remove_exact_object's identity check.  The
+  // acceptance, state, cache, and marker objects stay pinned throughout.
+  pins.source = facman::platform::StableInputFile{};
+  pins.launcher = facman::platform::StableInputFile{};
+  pins.receipt = facman::platform::StableInputFile{};
+  for (const auto &[path, identity] : files) {
+    const auto removed = facman::platform::remove_exact_object(path, identity);
+    if (!removed.ok())
+      return facman::core::Result<void>::failure(
+          {"self_maintenance_repair_source_retirement_failed",
+           "exact retained repair source file could not be retired",
+           facman::platform::path_to_utf8(path) + ": " + removed.detail});
+  }
+
+  const auto acceptance_status = pins.acceptance.revalidate();
+  const auto state_status = pins.state.revalidate();
+  const auto cache_status = pins.cache.revalidate();
+  const auto marker_status = pins.marker.revalidate_path();
+  if (!acceptance_status.ok() || !state_status.ok() || !cache_status.ok() ||
+      !marker_status.ok()) {
+    const auto &failed = !acceptance_status.ok() ? acceptance_status
+        : (!state_status.ok() ? state_status
+        : (!cache_status.ok() ? cache_status : marker_status));
+    return facman::core::Result<void>::failure(
+        {"self_maintenance_repair_source_retirement_failed",
+         "repair source cache identity changed during retirement",
+         failed.detail});
+  }
+  return facman::core::Result<void>::success();
+}
+
 facman::self_setup::RetainedSourceResult retain_repair_source(
     const facman::self_setup::NativeContext &context,
     const fs::path &package, const fs::path &maintenance_launcher,
@@ -1252,6 +1436,9 @@ facman::self_setup::RetainedSourceResult retain_repair_source(
 
 class SetupNativeEffects final : public facman::self_setup::NativeEffects {
 public:
+  explicit SetupNativeEffects(std::string controller_package_sha256 = {})
+      : controller_package_sha256_(std::move(controller_package_sha256)) {}
+
   facman::self_setup::RetainedSourceResult retain_repair_source(
       const facman::self_setup::NativeContext &context,
       const fs::path &package,
@@ -1277,22 +1464,26 @@ public:
       const facman::self_setup::NativeContext &context,
       facman::self_setup::NativeEffect effect) override {
     PinnedRepairSource pins;
+    PinnedRepairSource controller_pins;
     const auto retained = context.operation == facman::self_setup::Operation::uninstall
         ? ::validate_maintenance_launcher(
               context, context.repair_source.stem().string(), &pins)
         : ::validate_repair_source(
               context, context.repair_source.stem().string(), &pins);
     if (!retained.ok) return facman::self_setup::NativeOwnership::unreadable;
+    const auto controller = validate_controller(context, controller_pins);
+    if (!controller.ok) return facman::self_setup::NativeOwnership::unreadable;
     const auto observed = facman::setup::integration::inspect_windows_effect(
         effect == facman::self_setup::NativeEffect::shortcut
             ? facman::setup::integration::Effect::shortcut
             : facman::setup::integration::Effect::registration,
-        {context.install_root, context.state_root, context.acceptance_root,
-         context.repair_source},
+        integration_context(context),
         context.product_version,
         context.operation == facman::self_setup::Operation::uninstall);
     std::string pin_detail;
-    if (!pins.revalidate(pin_detail))
+    if (!pins.revalidate(pin_detail) ||
+        (!controller_package_sha256_.empty() &&
+         !controller_pins.revalidate(pin_detail)))
       return facman::self_setup::NativeOwnership::unreadable;
     switch (observed) {
     case facman::setup::integration::Ownership::absent:
@@ -1313,33 +1504,84 @@ public:
       const facman::self_setup::NativeContext &context,
       facman::self_setup::NativeEffect effect) override {
     PinnedRepairSource pins;
+    PinnedRepairSource controller_pins;
     const auto retained = context.operation == facman::self_setup::Operation::uninstall
         ? ::validate_maintenance_launcher(
               context, context.repair_source.stem().string(), &pins)
         : ::validate_repair_source(
               context, context.repair_source.stem().string(), &pins);
     if (!retained.ok) return {false, retained.detail, true};
+    const auto controller = validate_controller(context, controller_pins);
+    if (!controller.ok) return {false, controller.detail, true};
     const auto result = facman::setup::integration::apply_windows_effect(
         effect == facman::self_setup::NativeEffect::shortcut
             ? facman::setup::integration::Effect::shortcut
             : facman::setup::integration::Effect::registration,
-        {context.install_root, context.state_root, context.acceptance_root,
-         context.repair_source},
+        integration_context(context),
         context.product_version,
         context.operation == facman::self_setup::Operation::uninstall);
     std::string pin_detail;
-    if (!pins.revalidate(pin_detail)) {
+    if (!pins.revalidate(pin_detail) ||
+        (!controller_package_sha256_.empty() &&
+         !controller_pins.revalidate(pin_detail))) {
       const std::string detail = result.detail.empty()
           ? pin_detail : result.detail + "; cache revalidation: " + pin_detail;
       return {false, detail, true};
     }
     return {result.ok, result.detail, result.recovery_required};
   }
+
+private:
+  facman::setup::integration::MaintenanceContext integration_context(
+      const facman::self_setup::NativeContext &context) const {
+    const fs::path controller = controller_package_sha256_.empty()
+        ? fs::path{}
+        : context.state_root / "repair-sources" /
+            facman::platform::path_from_utf8(
+                controller_package_sha256_ + ".FacManSetup.exe");
+    return {context.install_root, context.state_root, context.acceptance_root,
+            context.repair_source, controller};
+  }
+
+  facman::self_setup::RetainedSourceResult validate_controller(
+      const facman::self_setup::NativeContext &context,
+      PinnedRepairSource &pins) const {
+    if (controller_package_sha256_.empty()) return {true, {}, {}};
+    auto controller_context = context;
+    controller_context.repair_source = context.state_root / "repair-sources" /
+        facman::platform::path_from_utf8(
+            controller_package_sha256_ + ".zip");
+    return ::validate_maintenance_launcher(
+        controller_context, controller_package_sha256_, &pins);
+  }
+
+  std::string controller_package_sha256_;
 };
 
 std::string digest_text(const std::string &value) {
   return facman::base::sha256_hex_bytes(
       reinterpret_cast<const unsigned char *>(value.data()), value.size());
+}
+
+bool same_path(const fs::path &left, const fs::path &right);
+
+facman::core::Result<std::string> epoch_controller_package_sha256(
+    const fs::path &coordinator_root, const std::string &epoch_id,
+    const fs::path &state_root, const fs::path &acceptance_root) {
+  auto genesis =
+      facman::self_maintenance::discover_lifecycle_epoch_genesis_generation(
+          coordinator_root, epoch_id);
+  if (!genesis)
+    return facman::core::Result<std::string>::failure(genesis.error());
+  if (!same_path(genesis.value().state_root, state_root) ||
+      !same_path(genesis.value().acceptance_root, acceptance_root) ||
+      !lowercase_hex_64(genesis.value().package_sha256))
+    return facman::core::Result<std::string>::failure(
+        {"self_maintenance_epoch_recovery_required",
+         "real epoch genesis does not bind a retained maintenance controller",
+         epoch_id});
+  return facman::core::Result<std::string>::success(
+      genesis.value().package_sha256);
 }
 
 class MaintenanceEffects final : public facman::self_maintenance::Effects,
@@ -1351,12 +1593,17 @@ public:
                      fs::path state_root, fs::path acceptance_root,
                      fs::path maintenance_launcher,
                      std::string maintenance_launcher_sha256,
-                     bool shell_integration)
+                     bool shell_integration,
+                     std::string controller_package_sha256 = {},
+                     bool qualification_activation_interrupt = false)
       : provider_(provider), state_root_(std::move(state_root)),
         acceptance_root_(std::move(acceptance_root)),
         maintenance_launcher_(std::move(maintenance_launcher)),
         maintenance_launcher_sha256_(std::move(maintenance_launcher_sha256)),
-        shell_integration_(shell_integration) {}
+        controller_package_sha256_(shell_integration
+            ? std::move(controller_package_sha256) : std::string{}),
+        shell_integration_(shell_integration),
+        qualification_activation_interrupt_(qualification_activation_interrupt) {}
 
   facman::self_maintenance::CandidateState inspect_candidate(
       const facman::self_maintenance::Plan &plan) override {
@@ -1379,14 +1626,24 @@ public:
         : facman::self_maintenance::CandidateState::unreadable;
   }
 
+  facman::self_maintenance::EffectResult inspect_retained_installed(
+      const facman::self_maintenance::Plan &plan) override {
+    if (!ensure_target_pins(plan))
+      return {false, false, {}, target_pin_detail_};
+    return provider_.inspect_retained_installed(plan);
+  }
+
   facman::self_maintenance::EffectResult review_install_local(
       const facman::self_maintenance::Plan &plan) override {
     return provider_.review_install_local(plan);
   }
 
   facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>
-  retain_handoff_inputs(const facman::self_maintenance::Plan &plan) override {
-    return retain_epoch_handoff_inputs(plan);
+  retain_handoff_inputs(const facman::self_maintenance::Plan &plan,
+      const fs::path &continuation_helper,
+      const std::string &continuation_helper_sha256) override {
+    return retain_epoch_handoff_inputs(
+        plan, continuation_helper, continuation_helper_sha256);
   }
 
   facman::core::Result<facman::self_maintenance::ProviderApplyBinding>
@@ -1475,9 +1732,42 @@ public:
     return cutover(facman::setup::integration::Effect::registration, plan);
   }
 
+  facman::self_maintenance::EffectResult retire_shortcut_backup(
+      const facman::self_maintenance::Plan &plan) override {
+    if (!ensure_target_pins(plan))
+      return {false, false, {}, target_pin_detail_};
+    if (qualification_activation_interrupt_) {
+      // The one-use qualification permit binds this rollback and its owned
+      // roots. Terminate without unwinding after durable activation publication,
+      // before the actual shortcut backup retirement effect.
+      TerminateProcess(GetCurrentProcess(), 137U);
+      return {false, false, {}, "qualification process termination failed"};
+    }
+    const std::string receipt = digest_text(
+        plan.operation_id + "\nshortcut-backup-retired\n");
+    if (!shell_integration_)
+      return {true, false, receipt,
+              "shortcut integration is disabled; no backup exists"};
+    const auto result =
+        facman::setup::integration::retire_windows_shortcut_cutover_backup(
+            windows_context(plan));
+    if (!revalidate_target_pins()) {
+      const std::string detail = result.detail.empty()
+          ? target_pin_detail_
+          : result.detail + "; target pin revalidation: " +
+                target_pin_detail_;
+      return {false, true, {}, detail};
+    }
+    if (!result.ok)
+      return {false, result.recovery_required, {}, result.detail};
+    return {true, false, receipt, result.detail};
+  }
+
 private:
   facman::core::Result<facman::self_maintenance::RetainedMaintenanceInputs>
-  retain_epoch_handoff_inputs(const facman::self_maintenance::Plan &plan) {
+  retain_epoch_handoff_inputs(const facman::self_maintenance::Plan &plan,
+      const fs::path &continuation_helper,
+      const std::string &continuation_helper_sha256) {
     using Inputs = facman::self_maintenance::RetainedMaintenanceInputs;
     const fs::path handoff_root = plan.target.state_root / "epoch-handoff";
     const fs::path operation_root = handoff_root / plan.operation_id;
@@ -1505,8 +1795,8 @@ private:
     const auto is_initial_prefix = [&](const std::vector<fs::path> &names) {
       return names.empty() || names == std::vector<fs::path>{"package.zip"} ||
           names == std::vector<fs::path>{"package.staging"} ||
-          names == std::vector<fs::path>{"FacManSetup.staging", "package.zip"} ||
-          names == std::vector<fs::path>{"FacManSetup.exe", "package.zip"};
+          names == std::vector<fs::path>{"FacManContinuation.staging", "package.zip"} ||
+          names == std::vector<fs::path>{"FacManContinuation.exe", "package.zip"};
     };
     if (!operation.list_child_names_bounded(3U, initial_names).ok() ||
         !is_initial_prefix(initial_names))
@@ -1603,13 +1893,14 @@ private:
     };
     auto package = retain(plan.package, "package.zip", "package.staging",
                           kMaximumRepairSourceBytes, plan.package_sha256);
-    auto helper = package ? retain(maintenance_launcher_, "FacManSetup.exe", "FacManSetup.staging",
+    auto helper = package ? retain(continuation_helper, "FacManContinuation.exe",
+                                   "FacManContinuation.staging",
                                    kMaximumRepairLauncherBytes,
-                                   maintenance_launcher_sha256_)
+                                   continuation_helper_sha256)
                           : facman::core::Result<std::string>::failure(package.error());
     std::vector<fs::path> names;
     if (!package || !helper || !operation.list_child_names_bounded(3U, names).ok() ||
-        names != std::vector<fs::path>{"FacManSetup.exe", "package.zip"} ||
+        names != std::vector<fs::path>{"FacManContinuation.exe", "package.zip"} ||
         !acceptance.revalidate().ok() || !acceptance.validate_descendant(plan.target.state_root, false).ok() ||
         !state.revalidate().ok() || !handoffs.revalidate().ok() || !operation.revalidate().ok() ||
         !operation.flush_metadata().ok() || !handoffs.flush_metadata().ok() ||
@@ -1618,7 +1909,8 @@ private:
           facman::core::Error{"self_maintenance_epoch_recovery_required",
               "epoch handoff custody set is incomplete or changed", {}});
     return facman::core::Result<Inputs>::success(
-        {operation_root / "package.zip", package.value(), operation_root / "FacManSetup.exe", helper.value()});
+        {operation_root / "package.zip", package.value(),
+         operation_root / "FacManContinuation.exe", helper.value()});
   }
 
   facman::self_setup::NativeContext native_context(
@@ -1635,10 +1927,15 @@ private:
       const facman::self_maintenance::Plan &plan) const {
     const auto source = native_context(plan.source);
     const auto target = native_context(plan.target);
+    const fs::path controller = controller_package_sha256_.empty()
+        ? fs::path{}
+        : state_root_ / "repair-sources" /
+            facman::platform::path_from_utf8(
+                controller_package_sha256_ + ".FacManSetup.exe");
     return {{source.install_root, source.state_root, source.acceptance_root,
-             source.repair_source},
+             source.repair_source, controller},
             {target.install_root, target.state_root, target.acceptance_root,
-             target.repair_source},
+             target.repair_source, controller},
             plan.source.product_version, plan.target.product_version,
             plan.operation_id};
   }
@@ -1716,12 +2013,33 @@ private:
     }
     const auto retained_digest = digest_stable_input(target_pins_.launcher);
     const auto installed_digest = digest_stable_input(maintenance);
+    const bool legacy_retained_generation =
+        (plan.operation == "downgrade" || plan.operation == "rollback") &&
+        plan.target.install_id == "facman.self" &&
+        same_path(plan.target.install_root, plan.target.logical_root);
+    // A real epoch's installed Setup comes from the package payload. Its
+    // retained repair helper can be the larger self-extracting Setup overlay.
+    // Both are pinned to the same inspected package before reactivation.
+    const bool package_installed_launcher =
+        (plan.operation == "bootstrap" ||
+         plan.provider_operation == "reactivate") &&
+        installed_digest.has_value() &&
+        *installed_digest == maintenance_launcher_sha256_;
     if (!retained_digest.has_value() || !installed_digest.has_value() ||
-        *retained_digest != *installed_digest) {
+        (*retained_digest != *installed_digest &&
+         !legacy_retained_generation && !package_installed_launcher)) {
       target_pin_detail_ =
           "installed maintenance launcher differs from the retained helper";
       return false;
     }
+    if (!ensure_controller_pins(plan)) return false;
+    // Legacy installs retained the downloaded self-extracting Setup file as
+    // their repair helper, while Universal Setup owned the smaller embedded
+    // maintenance entry point under the logical installation root.  The
+    // migrated generation record and provider installed-state verification
+    // bind both identities independently.  Keep both files pinned here; only
+    // skip their byte-equality requirement for that exact retained legacy
+    // generation.
     target_gui_ = std::move(gui);
     target_maintenance_ = std::move(maintenance);
     target_files_ready_ = true;
@@ -1733,6 +2051,12 @@ private:
     if (!target_pins_ready_ || !target_pins_.revalidate(detail)) {
       target_pin_detail_ = detail.empty()
           ? "retained maintenance inputs are not pinned" : detail;
+      return false;
+    }
+    if (!controller_package_sha256_.empty() &&
+        (!controller_pins_ready_ || !controller_pins_.revalidate(detail))) {
+      target_pin_detail_ = detail.empty()
+          ? "epoch maintenance controller is not pinned" : detail;
       return false;
     }
     if (!target_files_ready_) {
@@ -1748,6 +2072,25 @@ private:
     }
     target_pin_detail_.clear();
     return true;
+  }
+
+  bool ensure_controller_pins(const facman::self_maintenance::Plan &plan) {
+    if (controller_package_sha256_.empty()) return true;
+    if (controller_pins_ready_) {
+      std::string detail;
+      if (controller_pins_.revalidate(detail)) return true;
+      target_pin_detail_ = detail;
+      return false;
+    }
+    auto context = native_context(plan.target);
+    context.repair_source = state_root_ / "repair-sources" /
+        facman::platform::path_from_utf8(
+            controller_package_sha256_ + ".zip");
+    const auto controller = ::validate_maintenance_launcher(
+        context, controller_package_sha256_, &controller_pins_);
+    controller_pins_ready_ = controller.ok;
+    if (!controller.ok) target_pin_detail_ = controller.detail;
+    return controller.ok;
   }
 
   bool ensure_target_pins(const facman::self_maintenance::Plan &plan) {
@@ -1768,13 +2111,126 @@ private:
   fs::path acceptance_root_;
   fs::path maintenance_launcher_;
   std::string maintenance_launcher_sha256_;
+  std::string controller_package_sha256_;
   PinnedRepairSource target_pins_;
+  PinnedRepairSource controller_pins_;
   facman::platform::StableInputFile target_gui_;
   facman::platform::StableInputFile target_maintenance_;
   bool target_pins_ready_ = false;
+  bool controller_pins_ready_ = false;
   bool target_files_ready_ = false;
   std::string target_pin_detail_;
   bool shell_integration_ = true;
+  bool qualification_activation_interrupt_ = false;
+};
+
+class SetupBootstrapEffects final
+    : public facman::self_maintenance::CompatibilityAuthorityBootstrapEffects {
+public:
+  SetupBootstrapEffects(facman::self_maintenance::ProviderBridge &provider,
+      const facman::self_maintenance::PackageInspection &package,
+      fs::path state_root, fs::path acceptance_root, bool shell_integration)
+      : provider_(provider), package_(package),
+        native_(provider, std::move(state_root), std::move(acceptance_root),
+            package.package,
+            package.maintenance_launcher_sha256, shell_integration) {}
+
+  facman::self_maintenance::EffectResult inspect_epoch_clone(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    const auto plan = transition(source, target);
+    const auto inspected = provider_.inspect_installed(plan);
+    if (!inspected.ok || inspected.outcome_unknown)
+      return inspected;
+    const auto verified = provider_.verify_installed(plan);
+    return verified.ok && !verified.outcome_unknown
+        ? inspected
+        : facman::self_maintenance::EffectResult{
+            false, verified.outcome_unknown, {}, verified.detail};
+  }
+
+  facman::self_maintenance::EffectResult clone_epoch(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    const auto plan = transition(source, target);
+    const auto candidate = provider_.inspect_candidate(plan);
+    if (candidate != facman::self_maintenance::CandidateState::absent)
+      return {false, candidate == facman::self_maintenance::CandidateState::unreadable,
+              {}, "epoch clone target is already present or unsafe"};
+    const facman::self_setup::NativeContext context{
+        facman::self_setup::Operation::repair, target.install_root,
+        target.state_root, target.acceptance_root, package_.package,
+        target.product_version};
+    PinnedRepairSource pinned;
+    const auto retained = validate_repair_source(
+        context, target.package_sha256, &pinned);
+    if (!retained.ok)
+      return {false, retained.recovery_required, {}, retained.detail};
+    const auto reviewed = review_epoch_clone(source, target);
+    if (!reviewed.ok || reviewed.outcome_unknown)
+      return reviewed;
+    std::string detail;
+    if (!pinned.revalidate(detail))
+      return {false, true, {}, detail};
+    const auto applied = provider_.install_local(plan);
+    if (!applied.ok || applied.outcome_unknown)
+      return applied;
+    if (!pinned.revalidate(detail))
+      return {false, true, {}, detail};
+    return inspect_epoch_clone(source, target);
+  }
+
+  facman::self_maintenance::EffectResult review_epoch_clone(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    return provider_.review_install_local(transition(source, target));
+  }
+
+  facman::self_maintenance::ShellState inspect_epoch_shortcut(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    return native_.inspect_shortcut(transition(source, target));
+  }
+  facman::self_maintenance::ShellState inspect_epoch_registration(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    return native_.inspect_registration(transition(source, target));
+  }
+  facman::self_maintenance::EffectResult cutover_epoch_shortcut(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    return native_.cutover_shortcut(transition(source, target));
+  }
+  facman::self_maintenance::EffectResult cutover_epoch_registration(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    return native_.cutover_registration(transition(source, target));
+  }
+  facman::self_maintenance::EffectResult retire_epoch_shortcut_backup(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    return native_.retire_shortcut_backup(transition(source, target));
+  }
+
+private:
+  facman::self_maintenance::Plan transition(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) const {
+    facman::self_maintenance::Plan plan;
+    plan.operation = "bootstrap";
+    plan.operation_id = "bootstrap." +
+        digest_text(target.install_id + "\n").substr(0, 32);
+    plan.source = source;
+    plan.target = target;
+    plan.package = package_.package;
+    plan.package_sha256 = package_.package_sha256;
+    plan.provider_operation = "install_local";
+    return plan;
+  }
+
+  facman::self_maintenance::ProviderBridge &provider_;
+  facman::self_maintenance::PackageInspection package_;
+  MaintenanceEffects native_;
 };
 
 class QualificationInterruptHook final
@@ -1985,6 +2441,197 @@ bool admit_maintenance_qualification(
   return true;
 }
 
+constexpr std::uint64_t kMaintenanceHandoffBudgetMs = 600000U;
+
+std::uint64_t maintenance_utc_ms() {
+  const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch()).count();
+  return elapsed > 0 ? static_cast<std::uint64_t>(elapsed) : 0;
+}
+
+bool extract_target_maintenance_launcher(
+    const facman::self_maintenance::PackageInspection &package,
+    MaterializedPackage &target_launcher, std::string &problem) {
+  wchar_t temporary_root[MAX_PATH + 1]{};
+  wchar_t temporary_file[MAX_PATH + 1]{};
+  if (GetTempPathW(MAX_PATH, temporary_root) == 0 ||
+      GetTempFileNameW(temporary_root, L"fmm", 0, temporary_file) == 0) {
+    problem = "Windows could not allocate target launcher staging";
+    return false;
+  }
+  target_launcher.temporary = fs::path(temporary_file);
+  std::error_code removed;
+  fs::remove(target_launcher.temporary, removed);
+  if (removed) {
+    problem = "target launcher staging could not be prepared: " +
+        removed.message();
+    return false;
+  }
+  auto extracted = facman::self_maintenance::extract_maintenance_launcher(
+      package, target_launcher.temporary);
+  if (!extracted) {
+    problem = extracted.error().message;
+    if (!extracted.error().detail.empty())
+      problem += ": " + extracted.error().detail;
+    return false;
+  }
+  target_launcher.path = target_launcher.temporary;
+  return true;
+}
+
+std::optional<std::string> exact_regular_file_digest(
+    const fs::path &path, std::string &problem) {
+  facman::platform::StableInputFile input;
+  const auto opened = input.open_no_follow_pinned(path);
+  if (!opened.ok() || !input.identity().regular_file ||
+      input.identity().link_count != 1U || input.size() == 0U ||
+      input.size() > kMaximumRepairLauncherBytes) {
+    problem = opened.ok() ? "file identity is not an admitted regular file"
+                          : opened.detail;
+    return std::nullopt;
+  }
+  auto digest = digest_stable_input(input);
+  if (!digest || !input.revalidate().ok() || !input.revalidate_path().ok()) {
+    problem = "file identity changed while it was hashed";
+    return std::nullopt;
+  }
+  return digest;
+}
+
+bool derive_continuation_coordinator(const ContinuationOptions &options,
+                                     fs::path &coordinator,
+                                     std::string &problem) {
+  const fs::path operation = options.journal.parent_path();
+  const fs::path maintenance = operation.parent_path();
+  const fs::path epoch = maintenance.parent_path();
+  const fs::path epochs = epoch.parent_path();
+  coordinator = epochs.parent_path();
+  std::string identifier_detail;
+  if (options.journal.filename() != "00-handoff-ready.v3.json" ||
+      operation.filename() != fs::path(options.operation_id) ||
+      maintenance.filename() != "maintenance" || epochs.filename() != "epochs" ||
+      coordinator.empty() || !coordinator.is_absolute() ||
+      !facman::base::validate_identifier(options.operation_id,
+                                         identifier_detail) ||
+      !facman::base::validate_identifier(options.nonce, identifier_detail) ||
+      !lowercase_hex_64(epoch.filename().string())) {
+    problem = "private continuation journal does not have the canonical epoch path";
+    return false;
+  }
+  const fs::path expected = coordinator / "epochs" / epoch.filename() /
+      "maintenance" / options.operation_id / "00-handoff-ready.v3.json";
+  if (expected.lexically_normal() != options.journal) {
+    problem = "private continuation journal path is not canonical";
+    return false;
+  }
+  return true;
+}
+
+facman::setup::handoff::Result launch_continuation_helper(
+    const facman::self_maintenance::EpochTransitionPreparation &prepared) {
+  const std::uint64_t now = GetTickCount64();
+  std::uint64_t remaining = kMaintenanceHandoffBudgetMs;
+  if (prepared.deadline_utc_ms != 0) {
+    const std::uint64_t utc_now = maintenance_utc_ms();
+    if (utc_now == 0 || utc_now >= prepared.deadline_utc_ms)
+      return {false, "maintenance handoff operation deadline has expired"};
+    remaining = (std::min)(remaining, prepared.deadline_utc_ms - utc_now);
+  }
+  if (now > (std::numeric_limits<std::uint64_t>::max)() - remaining)
+    return {false, "maintenance handoff deadline overflow"};
+  return facman::setup::handoff::launch({prepared.inputs.helper,
+      prepared.inputs.helper_sha256, prepared.journal, prepared.journal_sha256,
+      prepared.transition.operation_id, prepared.nonce,
+      now + remaining});
+}
+
+int run_private_continuation(const ContinuationOptions &options) {
+  const auto waited = facman::setup::handoff::wait_for_initiator(
+      {options.parent_handle, options.parent_pid, options.parent_created,
+       options.deadline_tick_ms});
+  if (!waited.ok) return 4;
+
+  fs::path coordinator_root;
+  std::string problem;
+  if (!derive_continuation_coordinator(options, coordinator_root, problem) ||
+      GetTickCount64() >= options.deadline_tick_ms)
+    return 4;
+  auto pending =
+      facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
+          coordinator_root);
+  if (!pending || !pending.value().has_value()) return 4;
+  const auto &transition = *pending.value();
+  if (transition.pre_handoff || transition.completed ||
+      transition.operation_id != options.operation_id ||
+      transition.nonce != options.nonce ||
+      transition.journal_sha256 != options.journal_sha256 ||
+      (transition.deadline_utc_ms != 0 &&
+       maintenance_utc_ms() >= transition.deadline_utc_ms))
+    return 4;
+
+  auto executable = current_executable_path(problem);
+  auto executable_digest = executable
+      ? exact_regular_file_digest(*executable, problem)
+      : std::optional<std::string>{};
+  if (!executable || !executable_digest ||
+      !same_path(*executable, transition.retained_inputs.helper) ||
+      *executable_digest != transition.retained_inputs.helper_sha256)
+    return 4;
+
+  MaterializedPackage target_launcher;
+  if (!extract_target_maintenance_launcher(
+          transition.retained_package, target_launcher, problem) ||
+      GetTickCount64() >= options.deadline_tick_ms ||
+      (transition.deadline_utc_ms != 0 &&
+       maintenance_utc_ms() >= transition.deadline_utc_ms))
+    return 4;
+  facman::self_maintenance::ProviderBridge provider(
+      transition.target.state_root, transition.target.acceptance_root);
+  std::string controller_sha256;
+  if (transition.shell_integration) {
+    auto controller = epoch_controller_package_sha256(
+        coordinator_root, transition.epoch_id, transition.target.state_root,
+        transition.target.acceptance_root);
+    if (!controller) return 4;
+    controller_sha256 = controller.take_value();
+  }
+  MaintenanceEffects effects(provider, transition.target.state_root,
+      transition.target.acceptance_root, target_launcher.path,
+      transition.retained_package.maintenance_launcher_sha256,
+      transition.shell_integration, controller_sha256);
+
+  std::string phase = transition.phase;
+  if (phase == "continuation_pending") {
+    auto continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
+        {coordinator_root, options.operation_id, options.nonce,
+         options.journal_sha256, true}, effects);
+    if (!continued) return 4;
+    phase = "publication_pending";
+  }
+  if (GetTickCount64() >= options.deadline_tick_ms ||
+      (transition.deadline_utc_ms != 0 &&
+       maintenance_utc_ms() >= transition.deadline_utc_ms)) return 4;
+  if (phase == "publication_pending") {
+    auto published = facman::self_maintenance::execute_lifecycle_epoch_publication(
+        {coordinator_root, options.operation_id, options.nonce,
+         options.journal_sha256, true},
+        static_cast<facman::self_maintenance::EpochContinuationEffects &>(effects));
+    if (!published) return 4;
+    phase = "shell_cutover_pending";
+  }
+  if (GetTickCount64() >= options.deadline_tick_ms ||
+      (transition.deadline_utc_ms != 0 &&
+       maintenance_utc_ms() >= transition.deadline_utc_ms)) return 4;
+  if (phase == "shell_cutover_pending") {
+    auto shell = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
+        {coordinator_root, options.operation_id, options.nonce,
+         options.journal_sha256, true}, effects);
+    if (!shell || shell.value().phase != "shell_cutover_complete") return 4;
+    phase = shell.value().phase;
+  }
+  return phase == "shell_cutover_complete" ? 0 : 4;
+}
+
 int run_maintenance(Options &options, const fs::path &,
                     MaintenanceQualification *qualification) {
   const auto operation = *options.maintenance_operation;
@@ -2001,10 +2648,8 @@ int run_maintenance(Options &options, const fs::path &,
       return 4;
     }
   }
-  // This read-side preflight is deliberately before package materialization:
-  // an epoch makes rollback invalid and must not fall through to any legacy
-  // preparation work.  The epoch is discovered again under normal authority
-  // below before it is used.
+  // Discover an epoch before materialization so rollback cannot fall through
+  // to the flat coordinator. The epoch is re-read under authority below.
   auto pending_preflight =
       facman::self_maintenance::discover_lifecycle_epoch_pending_transition(
           coordinator_root);
@@ -2023,12 +2668,23 @@ int run_maintenance(Options &options, const fs::path &,
     epoch_present_preflight = !epoch_preflight.value().epochs.empty() &&
         !epoch_preflight.value().epochs.back().compatibility_epoch;
   }
-  if (epoch_present_preflight &&
-      operation == facman::self_maintenance::Operation::rollback) {
-    print_maintenance_error({"self_maintenance_rollback_invalid",
-                 "rollback is not defined across an authoritative lifecycle epoch", ""},
-                options.json);
-    return 4;
+  if (options.qualification_activation_interrupt_armed && !epoch_present_preflight) {
+    print_maintenance_error({"self_setup_qualification_interrupt_invalid",
+        "activation_published interruption requires an existing real lifecycle epoch", {}},
+        options.json);
+    return 2;
+  }
+  if (epoch_present_preflight && !pending_preflight.value().has_value()) {
+    auto selected = facman::self_maintenance::resolve_authoritative_active_state(
+        coordinator_root);
+    if (!selected || !selected.value().has_value() ||
+        !selected.value()->epoch.has_value()) {
+      print_maintenance_error(!selected ? selected.error() :
+          facman::core::Error{"self_maintenance_epoch_recovery_required",
+              "real epoch is not yet authoritative for maintenance", {}},
+          options.json);
+      return 4;
+    }
   }
   std::optional<facman::self_maintenance::PackageInspection> package;
   SetupPackageMaterializer materializer;
@@ -2156,10 +2812,27 @@ int run_maintenance(Options &options, const fs::path &,
     }
     pending_epoch = std::move(terminal_epoch);
   }
-  const bool pending_is_new_request = pending_epoch.value().has_value() &&
-      pending_epoch.value()->completed && package.has_value() &&
-      (operation != pending_epoch.value()->operation ||
-       !same_epoch_package(*package, pending_epoch.value()->retained_package));
+  bool activation_backup_pending = false;
+  if (pending_epoch.value().has_value() && pending_epoch.value()->completed &&
+      pending_epoch.value()->phase == "reactivation_complete" &&
+      pending_epoch.value()->shell_integration) {
+    const auto inspected =
+        facman::setup::integration::inspect_windows_shortcut_cutover_backup_presence(
+            pending_epoch.value()->operation_id, activation_backup_pending);
+    if (!inspected.ok) {
+      print_maintenance_error({"self_maintenance_epoch_recovery_required",
+          "published activation has indeterminate shortcut backup retirement",
+          inspected.detail}, options.json);
+      return 4;
+    }
+  }
+  const bool pending_is_new_request = !activation_backup_pending &&
+      pending_epoch.value().has_value() &&
+      pending_epoch.value()->completed &&
+      (operation == facman::self_maintenance::Operation::rollback ||
+       (package.has_value() &&
+        (operation != pending_epoch.value()->operation ||
+         !same_epoch_package(*package, pending_epoch.value()->retained_package))));
   if (pending_epoch.value().has_value() && !pending_epoch.value()->pre_handoff &&
       !pending_is_new_request) {
     const auto &pending = *pending_epoch.value();
@@ -2183,17 +2856,79 @@ int run_maintenance(Options &options, const fs::path &,
           facman::platform::path_to_utf8(pending.target.logical_root)}, options.json);
       return 4;
     }
+    if (options.shell_integration != pending.shell_integration) {
+      print_maintenance_error({"self_maintenance_epoch_recovery_required",
+          "requested shell integration does not match the immutable pending handoff",
+          pending.operation_id}, options.json);
+      return 4;
+    }
+    std::string controller_sha256;
+    if (pending.shell_integration) {
+      auto controller = epoch_controller_package_sha256(
+          coordinator_root, pending.epoch_id, pending.target.state_root,
+          pending.target.acceptance_root);
+      if (!controller) {
+        print_maintenance_error(controller.error(), options.json);
+        return 4;
+      }
+      controller_sha256 = controller.take_value();
+    }
     MaintenanceEffects effects(provider, options.state_root,
-                               options.acceptance_root,
-                               pending.retained_inputs.helper,
-                               pending.retained_inputs.helper_sha256,
-                               options.shell_integration);
+                               options.acceptance_root, {},
+                               pending.retained_package.maintenance_launcher_sha256,
+                               pending.shell_integration, controller_sha256,
+                               options.qualification_activation_interrupt_armed);
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error({"self_maintenance_provider_root_unsafe",
           "maintenance authority changed before pending epoch recovery", authority_detail},
           options.json);
       return 4;
+    }
+    if (pending.phase == "reactivation_pending" ||
+        pending.phase == "reactivation_complete") {
+      facman::self_maintenance::EpochTransitionRequest reactivation;
+      reactivation.coordinator_root = coordinator_root;
+      reactivation.epoch_id = pending.epoch_id;
+      reactivation.operation = pending.operation;
+      reactivation.operation_id = pending.operation_id;
+      reactivation.package = package.has_value()
+          ? *package : pending.retained_package;
+      reactivation.apply = options.apply;
+      reactivation.shell_integration = pending.shell_integration;
+      auto result = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          reactivation, effects, effects);
+      if (!result) {
+        print_maintenance_error(result.error(), options.json);
+        return 4;
+      }
+      const fs::path epoch_root = coordinator_root / "epochs" / pending.epoch_id;
+      const std::string phase = activation_backup_pending && !options.apply
+          ? "reactivation_pending" : result.value().phase;
+      if (options.json) {
+        facman::core::json::ObjectBuilder output;
+        output.add_string("schema", "facman.self_maintenance_cli.v1");
+        output.add_string("status", "ok");
+        output.add_string("operation", maintenance_operation_text(operation));
+        output.add_string("phase", phase);
+        output.add_string("operation_id", pending.operation_id);
+        output.add_string("generation_id", result.value().generation.generation_id);
+        output.add_string("product_version", result.value().generation.product_version);
+        output.add_string("install_id", result.value().generation.install_id);
+        output.add_string("install_root", facman::platform::path_to_utf8(
+            result.value().generation.install_root));
+        output.add_string("generation_record", facman::platform::path_to_utf8(
+            epoch_root / "generations" /
+            ("generation." + result.value().generation.generation_id + ".v2.json")));
+        output.add_string("activation_record", facman::platform::path_to_utf8(
+            epoch_root / "activations" /
+            ("activation." + pending.operation_id + ".v2.json")));
+        std::cout << output.serialize() << '\n';
+      } else {
+        std::cout << "FacManSetup " << maintenance_operation_text(operation)
+                  << ' ' << phase << '\n';
+      }
+      return 0;
     }
     std::string phase = pending.phase;
     std::string nonce = pending.nonce;
@@ -2219,7 +2954,12 @@ int run_maintenance(Options &options, const fs::path &,
       facman::self_maintenance::EpochTransitionRequest request{
           coordinator_root, pending.epoch_id, pending.operation,
           pending.operation_id,
-          pending.retained_package, true};
+          pending.retained_package, true, {}, {}, true};
+      request.continuation_helper = pending.retained_inputs.helper;
+      request.continuation_helper_sha256 =
+          pending.retained_inputs.helper_sha256;
+      request.shell_integration = pending.shell_integration;
+      request.deadline_utc_ms = pending.deadline_utc_ms;
       auto prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
           request, effects);
       if (!prepared) {
@@ -2231,54 +2971,38 @@ int run_maintenance(Options &options, const fs::path &,
       reported = prepared.value().transition.target;
       phase = "continuation_pending";
     }
-    if (options.apply && phase == "continuation_pending") {
-      if (!authority_stable(authority_detail)) {
-        print_maintenance_error({"self_maintenance_provider_root_unsafe",
-            "maintenance authority changed before epoch provider continuation", authority_detail},
+    if (options.apply && !pending.completed && phase != "handoff_staging") {
+      if (phase != "continuation_pending" && phase != "publication_pending" &&
+          phase != "shell_cutover_pending") {
+        print_maintenance_error({"self_maintenance_epoch_recovery_required",
+            "pending epoch is not at an externally continuable phase", phase},
             options.json);
         return 4;
       }
-      auto continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
-          {coordinator_root, pending.operation_id, nonce, journal_sha256, true}, effects);
-      if (!continued) {
-        print_maintenance_error(continued.error(), options.json);
-        return 4;
-      }
-      reported = continued.value().transition.target;
-      phase = "publication_pending";
-    }
-    if (options.apply && phase == "publication_pending") {
       if (!authority_stable(authority_detail)) {
         print_maintenance_error({"self_maintenance_provider_root_unsafe",
-            "maintenance authority changed before epoch publication", authority_detail},
+            "maintenance authority changed before external helper launch", authority_detail},
             options.json);
         return 4;
       }
-      auto published = facman::self_maintenance::execute_lifecycle_epoch_publication(
-          {coordinator_root, pending.operation_id, nonce, journal_sha256, true},
-          static_cast<facman::self_maintenance::EpochContinuationEffects &>(effects));
-      if (!published) {
-        print_maintenance_error(published.error(), options.json);
-        return 4;
-      }
-      reported = published.value().generation;
-      phase = "shell_cutover_pending";
-    }
-    if (options.apply && phase == "shell_cutover_pending") {
-      if (!authority_stable(authority_detail)) {
-        print_maintenance_error({"self_maintenance_provider_root_unsafe",
-            "maintenance authority changed before epoch shell cutover", authority_detail},
+      facman::self_maintenance::EpochTransitionPreparation prepared;
+      prepared.phase = "handoff_ready";
+      prepared.transition.operation_id = pending.operation_id;
+      prepared.transition.target = pending.target;
+      prepared.journal = coordinator_root / "epochs" / pending.epoch_id /
+          "maintenance" / pending.operation_id / "00-handoff-ready.v3.json";
+      prepared.journal_sha256 = journal_sha256;
+      prepared.inputs = pending.retained_inputs;
+      prepared.nonce = nonce;
+      prepared.deadline_utc_ms = pending.deadline_utc_ms;
+      const auto launched = launch_continuation_helper(prepared);
+      if (!launched.ok) {
+        print_maintenance_error({"self_maintenance_epoch_recovery_required",
+            "external maintenance helper could not be launched", launched.detail},
             options.json);
         return 4;
       }
-      auto shell = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
-          {coordinator_root, pending.operation_id, nonce, journal_sha256, true}, effects);
-      if (!shell) {
-        print_maintenance_error(shell.error(), options.json);
-        return 4;
-      }
-      reported = shell.value().generation;
-      phase = shell.value().phase;
+      phase = "handoff_launched";
     }
     const fs::path epoch_root = coordinator_root / "epochs" / pending.epoch_id;
     const fs::path generation_record = reported.generation_id.empty() ? fs::path() :
@@ -2344,10 +3068,24 @@ int run_maintenance(Options &options, const fs::path &,
       return 4;
     }
     if (operation == facman::self_maintenance::Operation::rollback) {
-      print_maintenance_error({"self_maintenance_rollback_invalid",
-                   "rollback is not defined across an authoritative lifecycle epoch", ""},
-                  options.json);
-      return 4;
+      if (!epoch_active.value().active.previous.has_value()) {
+        print_maintenance_error({"self_maintenance_rollback_invalid",
+            "real epoch has no immediate retained predecessor", ""}, options.json);
+        return 4;
+      }
+      const auto &previous = *epoch_active.value().active.previous;
+      const fs::path retained = previous.state_root / "repair-sources" /
+          (previous.package_sha256 + ".zip");
+      auto inspected = facman::self_maintenance::inspect_package(retained);
+      if (!inspected || inspected.value().package_sha256 != previous.package_sha256) {
+        print_maintenance_error(!inspected ? inspected.error() :
+            setup_error_with_detail("self_maintenance_rollback_invalid",
+                "immediate predecessor repair package changed",
+                facman::platform::path_to_utf8(retained)),
+            options.json);
+        return 4;
+      }
+      package = inspected.take_value();
     }
     if (!package.has_value()) {
       print_maintenance_error({"self_maintenance_input_invalid",
@@ -2355,9 +3093,15 @@ int run_maintenance(Options &options, const fs::path &,
       return 4;
     }
 
-    const std::string operation_id = "maint." + maintenance_operation_text(operation) + "." +
+    const std::string legacy_operation_id = "maint." + maintenance_operation_text(operation) + "." +
         epoch_active.value().active.active.generation_id.substr(0, 8) + "." +
         package->package_sha256.substr(0, 20);
+    const std::string operation_id = pending_epoch.value().has_value() &&
+        pending_epoch.value()->pre_handoff &&
+        pending_epoch.value()->operation_id == legacy_operation_id
+            ? legacy_operation_id
+            : legacy_operation_id + "." +
+                epoch_active.value().active.activation_sha256.substr(0, 16);
     if (pending_epoch.value().has_value() && pending_epoch.value()->pre_handoff &&
         !pending_epoch.value()->operation_id.empty() &&
         pending_epoch.value()->operation_id != operation_id) {
@@ -2373,16 +3117,95 @@ int run_maintenance(Options &options, const fs::path &,
     epoch_request.operation_id = operation_id;
     epoch_request.package = *package;
     epoch_request.apply = options.apply;
+    epoch_request.shell_integration = options.shell_integration;
+    if (options.apply) {
+      const std::uint64_t now = maintenance_utc_ms();
+      if (now == 0 || now > (std::numeric_limits<std::uint64_t>::max)() -
+                              kMaintenanceHandoffBudgetMs) {
+        print_maintenance_error({"self_maintenance_epoch_recovery_required",
+            "maintenance operation deadline could not be established", ""},
+            options.json);
+        return 4;
+      }
+      epoch_request.deadline_utc_ms = now + kMaintenanceHandoffBudgetMs;
+      std::string helper_problem;
+      auto current_helper = current_executable_path(helper_problem);
+      auto current_helper_sha256 = current_helper
+          ? exact_regular_file_digest(*current_helper, helper_problem)
+          : std::optional<std::string>{};
+      if (!current_helper || !current_helper_sha256) {
+        print_maintenance_error({"self_maintenance_launcher_invalid",
+            "current setup binary cannot be retained for continuation",
+            helper_problem}, options.json);
+        return 4;
+      }
+      epoch_request.continuation_helper = *current_helper;
+      epoch_request.continuation_helper_sha256 = *current_helper_sha256;
+    }
+    std::string controller_sha256;
+    if (options.shell_integration) {
+      auto controller = epoch_controller_package_sha256(
+          coordinator_root, epoch_active.value().epoch.epoch_id,
+          options.state_root, options.acceptance_root);
+      if (!controller) {
+        print_maintenance_error(controller.error(), options.json);
+        return 4;
+      }
+      controller_sha256 = controller.take_value();
+    }
     MaintenanceEffects effects(provider, options.state_root,
                                options.acceptance_root, launcher,
                                package->maintenance_launcher_sha256,
-                               options.shell_integration);
+                               options.shell_integration, controller_sha256,
+                               options.qualification_activation_interrupt_armed);
     std::string authority_detail;
     if (!authority_stable(authority_detail)) {
       print_maintenance_error(
           {"self_maintenance_provider_root_unsafe",
            "maintenance authority changed before epoch preparation", authority_detail},
           options.json);
+      return 4;
+    }
+    auto reactivation_review = epoch_request;
+    reactivation_review.apply = false;
+    auto retained = facman::self_maintenance::review_lifecycle_epoch_reactivation(
+        reactivation_review, effects);
+    if (retained) {
+      auto result = facman::self_maintenance::execute_lifecycle_epoch_reactivation(
+          epoch_request, effects, effects);
+      if (!result) {
+        print_maintenance_error(result.error(), options.json);
+        return 4;
+      }
+      const fs::path epoch_root = coordinator_root / "epochs" / epoch_request.epoch_id;
+      if (options.json) {
+        facman::core::json::ObjectBuilder output;
+        output.add_string("schema", "facman.self_maintenance_cli.v1");
+        output.add_string("status", "ok");
+        output.add_string("operation", maintenance_operation_text(operation));
+        output.add_string("phase", result.value().phase);
+        output.add_string("operation_id", operation_id);
+        output.add_string("generation_id", result.value().generation.generation_id);
+        output.add_string("product_version", result.value().generation.product_version);
+        output.add_string("install_id", result.value().generation.install_id);
+        output.add_string("install_root", facman::platform::path_to_utf8(
+            result.value().generation.install_root));
+        output.add_string("generation_record", facman::platform::path_to_utf8(
+            epoch_root / "generations" /
+            ("generation." + result.value().generation.generation_id + ".v2.json")));
+        output.add_string("activation_record", facman::platform::path_to_utf8(
+            epoch_root / "activations" /
+            ("activation." + operation_id + ".v2.json")));
+        std::cout << output.serialize() << '\n';
+      } else {
+        std::cout << "FacManSetup " << maintenance_operation_text(operation)
+                  << ' ' << result.value().phase << '\n';
+      }
+      return 0;
+    }
+    if (operation == facman::self_maintenance::Operation::rollback ||
+        retained.error().code != "self_maintenance_retained_target_invalid") {
+      print_maintenance_error(retained.error(), options.json);
       return 4;
     }
     auto prepared = facman::self_maintenance::prepare_lifecycle_epoch_transition(
@@ -2397,61 +3220,21 @@ int run_maintenance(Options &options, const fs::path &,
     fs::path generation_record;
     fs::path activation_record;
     if (options.apply) {
-      const auto continuation_request = facman::self_maintenance::EpochContinuationRequest{
-          coordinator_root, operation_id, prepared.value().nonce,
-          prepared.value().journal_sha256, true};
       if (!authority_stable(authority_detail)) {
         print_maintenance_error(
             {"self_maintenance_provider_root_unsafe",
-             "maintenance authority changed before epoch provider continuation", authority_detail},
+             "maintenance authority changed before external helper launch", authority_detail},
             options.json);
         return 4;
       }
-      auto continued = facman::self_maintenance::execute_lifecycle_epoch_continuation(
-          continuation_request, effects);
-      if (!continued) {
-        print_maintenance_error(continued.error(), options.json);
-        return 4;
-      }
-      const auto publication_request = facman::self_maintenance::EpochPublicationRequest{
-          coordinator_root, operation_id, prepared.value().nonce,
-          prepared.value().journal_sha256, true};
-      if (!authority_stable(authority_detail)) {
-        print_maintenance_error(
-            {"self_maintenance_provider_root_unsafe",
-             "maintenance authority changed before epoch publication", authority_detail},
+      const auto launched = launch_continuation_helper(prepared.value());
+      if (!launched.ok) {
+        print_maintenance_error({"self_maintenance_epoch_recovery_required",
+            "external maintenance helper could not be launched", launched.detail},
             options.json);
         return 4;
       }
-      auto published = facman::self_maintenance::execute_lifecycle_epoch_publication(
-          publication_request,
-          static_cast<facman::self_maintenance::EpochContinuationEffects &>(effects));
-      if (!published) {
-        print_maintenance_error(published.error(), options.json);
-        return 4;
-      }
-      const auto shell_request = facman::self_maintenance::EpochShellCutoverRequest{
-          coordinator_root, operation_id, prepared.value().nonce,
-          prepared.value().journal_sha256, true};
-      if (!authority_stable(authority_detail)) {
-        print_maintenance_error(
-            {"self_maintenance_provider_root_unsafe",
-             "maintenance authority changed before epoch shell cutover", authority_detail},
-            options.json);
-        return 4;
-      }
-      auto shell = facman::self_maintenance::execute_lifecycle_epoch_shell_cutover(
-          shell_request, effects);
-      if (!shell) {
-        print_maintenance_error(shell.error(), options.json);
-        return 4;
-      }
-      reported = shell.value().generation;
-      phase = shell.value().phase;
-      generation_record = coordinator_root / "epochs" / epoch_request.epoch_id /
-          "generations" / ("generation." + reported.generation_id + ".v2.json");
-      activation_record = coordinator_root / "epochs" / epoch_request.epoch_id /
-          "activations" / ("activation." + operation_id + ".v2.json");
+      phase = "handoff_launched";
     }
     if (options.json) {
       facman::core::json::ObjectBuilder output;
@@ -2476,17 +3259,22 @@ int run_maintenance(Options &options, const fs::path &,
     }
     return 0;
   }
-  auto discovered = facman::self_maintenance::discover_active(
+  auto selected = facman::self_maintenance::resolve_authoritative_active_state(
       coordinator_root);
-  if (!discovered) {
-    print_maintenance_error(discovered.error(), options.json);
+  if (!selected) {
+    print_maintenance_error(selected.error(), options.json);
     return 4;
   }
 
   facman::self_maintenance::ActiveState state;
   bool migrate_legacy = false;
-  if (discovered.value().has_value()) {
-    state = *discovered.value();
+  if (selected.value().has_value()) {
+    if (selected.value()->epoch.has_value()) {
+      print_maintenance_error({"self_maintenance_epoch_recovery_required",
+          "real epoch appeared before flat maintenance selection", ""}, options.json);
+      return 4;
+    }
+    state = selected.value()->active;
     if (!same_path(state.active.logical_root, options.install_root) ||
         !same_path(state.active.state_root, options.state_root) ||
         !same_path(state.active.acceptance_root, options.acceptance_root)) {
@@ -2508,9 +3296,7 @@ int run_maintenance(Options &options, const fs::path &,
     if (!same_path(identity.value().install_root, options.install_root) ||
         identity.value().product_version != descriptor.value().product_version ||
         identity.value().provider_revision !=
-            descriptor.value().universal_setup_revision ||
-        identity.value().provider_revision !=
-            facman::self_setup::provider_revision()) {
+            descriptor.value().universal_setup_revision) {
       print_maintenance_error({"self_maintenance_legacy_invalid",
                    "legacy package and provider identities do not agree", ""},
                   options.json);
@@ -2599,10 +3385,11 @@ int run_maintenance(Options &options, const fs::path &,
   if (options.apply && migrate_legacy) {
     const auto admitted = effects.review_install_local(reviewed.value());
     if (!admitted.ok) {
-      print_maintenance_error(
-          {"self_maintenance_plan_failed",
-           "candidate installation plan was refused before legacy adoption",
-           admitted.detail}, options.json);
+      facman::core::Error error{
+          "self_maintenance_plan_failed",
+          "candidate installation plan was refused before legacy adoption", ""};
+      error.detail = admitted.detail;
+      print_maintenance_error(error, options.json);
       return 4;
     }
     std::string authority_detail;
@@ -2674,14 +3461,54 @@ class SetupRetirementEffects final
     : public facman::self_maintenance::RetirementEffects {
 public:
   SetupRetirementEffects(const Options &options, fs::path coordinator_root,
-                         SetupNativeEffects &native_effects)
+                         SetupNativeEffects &native_effects,
+                         bool preserve_repair_sources = false)
       : options_(options), coordinator_root_(std::move(coordinator_root)),
-        native_effects_(native_effects) {}
+        native_effects_(native_effects),
+        preserve_repair_sources_(preserve_repair_sources) {}
+
+  facman::core::Result<void> retire_bootstrap_shortcut_backup(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target,
+      const facman::self_maintenance::CoordinatorLockToken &coordinator_lock) override {
+    const auto refused = [](const std::string &detail) {
+      return facman::core::Result<void>::failure(
+          {"self_maintenance_retirement_recovery_required",
+           "bootstrap shortcut backup retirement is unresolved", detail});
+    };
+    if (!options_.shell_integration ||
+        !same_path(coordinator_lock.coordinator_root(), coordinator_root_) ||
+        !coordinator_lock.binds_generation(target) ||
+        !same_path(source.logical_root, target.logical_root) ||
+        !same_path(source.state_root, target.state_root) ||
+        !same_path(source.acceptance_root, target.acceptance_root) ||
+        !same_path(options_.state_root, target.state_root) ||
+        !same_path(options_.acceptance_root, target.acceptance_root))
+      return refused("native scope or coordinator token does not bind this bootstrap");
+    // Pin retained authority, not legitimately removed installation payloads.
+    facman::platform::StableDirectoryObject acceptance, state, coordinator;
+    if (!acceptance.open_no_follow(target.acceptance_root).ok() ||
+        !state.open_no_follow(target.state_root).ok() ||
+        !coordinator.open_no_follow(coordinator_root_).ok())
+      return refused("retained bootstrap authority cannot be pinned");
+    const facman::setup::integration::CutoverContext context{
+        {source.install_root, source.state_root, source.acceptance_root, {}, {}},
+        {target.install_root, target.state_root, target.acceptance_root, {}, {}},
+        source.product_version, target.product_version,
+        "bootstrap." + digest_text(target.install_id + "\n").substr(0, 32)};
+    const auto retired =
+        facman::setup::integration::retire_windows_shortcut_cutover_backup(context);
+    if (!retired.ok || !acceptance.revalidate().ok() ||
+        !state.revalidate().ok() || !coordinator.revalidate().ok())
+      return refused(retired.detail);
+    return facman::core::Result<void>::success();
+  }
 
   facman::core::Result<void> inspect_retirement_generation(
       const facman::self_maintenance::Generation &generation,
-      bool active) override {
-    (void)active;
+      bool active,
+      const facman::self_maintenance::CoordinatorLockToken
+          &coordinator_lock) override {
     auto pending = facman::self_setup::has_pending_operation(
         generation.install_root, coordinator_root_);
     if (!pending)
@@ -2697,11 +3524,127 @@ public:
         !same_path(inspected.value().install_root, generation.install_root) ||
         inspected.value().product_version != generation.product_version ||
         inspected.value().source_archive_sha256 != generation.package_sha256 ||
-        inspected.value().provider_revision != generation.universal_setup_revision)
+        inspected.value().provider_revision !=
+            facman::self_maintenance::generation_creating_provider_revision(generation))
       return facman::core::Result<void>::failure(
           {"self_maintenance_provider_identity_ambiguous",
            "provider installed identity does not exactly bind the generation",
            inspected ? generation.install_id : inspected.error().detail});
+    // Uninstall planning does not inventory foreign content. Verify the
+    // complete installed root before retirement writes its first intent, and
+    // again at each effect edge through this same inspection callback.
+    facman::self_setup::Request verification;
+    verification.operation = facman::self_setup::Operation::verify;
+    verification.install_id = generation.install_id;
+    verification.install_root = generation.install_root;
+    verification.product_version = generation.product_version;
+    verification.state_root = generation.state_root;
+    verification.acceptance_root = generation.acceptance_root;
+    verification.coordinator_lock = &coordinator_lock;
+    verification.retirement_generation = &generation;
+    auto verified = facman::self_setup::execute(verification);
+    auto report = verified
+        ? facman::core::json::parse(verified.value().provider_json)
+        : facman::core::Result<facman::core::json::Value>::failure(
+              verified.error());
+    const auto field_equals = [](const facman::core::json::Value *object,
+                                 const char *name,
+                                 const std::string &expected) {
+      const auto *field = object != nullptr && object->is_object()
+          ? object->find(name) : nullptr;
+      if (field == nullptr) return false;
+      auto value = field->string_value();
+      return value && value.value() == expected;
+    };
+    const auto *envelope = report ? &report.value() : nullptr;
+    const auto *response_error = envelope != nullptr && envelope->is_object()
+        ? envelope->find("error") : nullptr;
+    const auto *payload = envelope != nullptr && envelope->is_object()
+        ? envelope->find("payload") : nullptr;
+    const auto *unknown = payload != nullptr && payload->is_object()
+        ? payload->find("unknown_paths") : nullptr;
+    const auto *summary = payload != nullptr && payload->is_object()
+        ? payload->find("summary") : nullptr;
+    const auto *unknown_count = summary != nullptr && summary->is_object()
+        ? summary->find("unknown_paths") : nullptr;
+    const auto *report_digest = payload != nullptr && payload->is_object()
+        ? payload->find("report_digest") : nullptr;
+    const auto digest = report_digest != nullptr
+        ? report_digest->string_value()
+        : facman::core::Result<std::string>::failure(
+              {"self_maintenance_provider_identity_ambiguous",
+               "verification report digest is absent", {}});
+    const auto count = unknown_count != nullptr
+        ? unknown_count->unsigned_integer_value()
+        : facman::core::Result<std::uint64_t>::failure(
+              {"self_maintenance_provider_identity_ambiguous",
+               "verification summary is absent", {}});
+    if (!verified || verified.value().operation != "verify" ||
+        verified.value().phase != "receipt" ||
+        !field_equals(envelope, "schema", "usk.command_response.v1") ||
+        !field_equals(envelope, "status", "ok") ||
+        response_error == nullptr || !response_error->is_null() ||
+        !field_equals(payload, "schema", "usk.verification_report.v1") ||
+        !field_equals(payload, "install_id", generation.install_id) ||
+        (!field_equals(payload, "status", "pass") &&
+         !field_equals(payload, "status", "warn") &&
+         !field_equals(payload, "status", "fail")) ||
+        !digest || !lowercase_hex_64(digest.value()) ||
+        unknown == nullptr || !unknown->is_array() || !count ||
+        count.value() != unknown->size() ||
+        (field_equals(payload, "status", "pass") && unknown->size() != 0U) ||
+        (field_equals(payload, "status", "warn") && unknown->size() == 0U))
+      return facman::core::Result<void>::failure(
+          setup_error_with_detail(
+              "self_maintenance_provider_identity_ambiguous",
+              "provider verification could not inventory the generation before retirement",
+              verified ? "installed.verify returned an incompatible report"
+                       : verified.error().code + ": " + verified.error().message));
+    if (unknown->size() != 0U)
+      return facman::core::Result<void>::failure(
+          setup_error_with_detail("self_setup_provider_refused",
+                                  "foreign content requires review before uninstall",
+                                  "foreign_content_review_required"));
+    facman::self_setup::Request preview;
+    preview.operation = facman::self_setup::Operation::uninstall;
+    preview.install_id = generation.install_id;
+    preview.maintenance_launcher = generation.maintenance_launcher;
+    preview.install_root = generation.install_root;
+    preview.state_root = generation.state_root;
+    preview.acceptance_root = generation.acceptance_root;
+    preview.product_version = generation.product_version;
+    preview.apply = false;
+    preview.coordinator_lock = &coordinator_lock;
+    preview.retirement_generation = &generation;
+    if (active && options_.shell_integration)
+      preview.native_effects = &native_effects_;
+    auto planned = facman::self_setup::execute(preview);
+    if (!planned || planned.value().phase != "plan")
+      return facman::core::Result<void>::failure(
+          !planned ? planned.error() : facman::core::Error{
+              "self_maintenance_provider_identity_ambiguous",
+              "provider uninstall preview did not return a plan",
+              generation.install_id});
+    if (active && options_.shell_integration) {
+      const facman::self_setup::NativeContext context{
+          facman::self_setup::Operation::uninstall,
+          generation.install_root, generation.state_root,
+          generation.acceptance_root,
+          generation.state_root / "repair-sources" /
+              facman::platform::path_from_utf8(
+                  generation.package_sha256 + ".zip"),
+          generation.product_version};
+      for (const auto effect : {facman::self_setup::NativeEffect::shortcut,
+                                facman::self_setup::NativeEffect::registration}) {
+        const auto ownership = native_effects_.inspect(context, effect);
+        if (ownership != facman::self_setup::NativeOwnership::owned &&
+            ownership != facman::self_setup::NativeOwnership::absent)
+          return facman::core::Result<void>::failure(
+              {"self_maintenance_provider_identity_ambiguous",
+               "active Windows integration is foreign or unreadable before retirement",
+               generation.install_id});
+      }
+    }
     return facman::core::Result<void>::success();
   }
 
@@ -2710,6 +3653,24 @@ public:
       bool active,
       const facman::self_maintenance::CoordinatorLockToken
           &coordinator_lock) override {
+    const facman::self_setup::NativeContext retirement_context{
+        facman::self_setup::Operation::uninstall,
+        generation.install_root,
+        generation.state_root,
+        generation.acceptance_root,
+        generation.state_root / "repair-sources" /
+            facman::platform::path_from_utf8(generation.package_sha256 + ".zip"),
+        generation.product_version};
+    PinnedRepairSource retirement_pins;
+    if (!active && !preserve_repair_sources_) {
+      const auto retained = validate_repair_source(
+          retirement_context, generation.package_sha256, &retirement_pins);
+      if (!retained.ok)
+        return facman::core::Result<void>::failure(
+            {"self_maintenance_repair_source_retirement_failed",
+             "retained generation repair source is not exactly owned",
+             retained.detail});
+    }
     facman::self_setup::Request request;
     request.operation = facman::self_setup::Operation::uninstall;
     request.install_id = generation.install_id;
@@ -2720,11 +3681,18 @@ public:
     request.product_version = generation.product_version;
     request.apply = true;
     request.coordinator_lock = &coordinator_lock;
+    request.retirement_generation = &generation;
     if (active && options_.shell_integration)
       request.native_effects = &native_effects_;
     auto removed = facman::self_setup::execute(request);
     if (!removed)
       return facman::core::Result<void>::failure(removed.error());
+    if (!active && !preserve_repair_sources_) {
+      auto retired = retire_repair_source(
+          retirement_context, retirement_pins);
+      if (!retired)
+        return facman::core::Result<void>::failure(retired.error());
+    }
     return facman::core::Result<void>::success();
   }
 
@@ -2732,12 +3700,124 @@ private:
   const Options &options_;
   fs::path coordinator_root_;
   SetupNativeEffects &native_effects_;
+  bool preserve_repair_sources_ = false;
 };
+
+facman::core::Result<facman::self_maintenance::CompatibilityAuthorityBootstrapResponse>
+bootstrap_installed_facman(const Options &options, const fs::path &coordinator_root,
+                           bool apply, const fs::path &materialized_package = {}) {
+  using Bootstrap = facman::self_maintenance::CompatibilityAuthorityBootstrapResponse;
+  auto flat = facman::self_maintenance::discover_activation_chain(coordinator_root);
+  if (!flat) return facman::core::Result<Bootstrap>::failure(flat.error());
+  facman::self_maintenance::ProviderBridge provider(
+      options.state_root, options.acceptance_root);
+  if (!flat.value().has_value()) {
+    if (!apply)
+      return facman::core::Result<Bootstrap>::failure(
+          {"self_maintenance_legacy_invalid",
+           "bootstrap preview requires an existing flat activation history", {}});
+    auto descriptor = facman::self_maintenance::inspect_legacy_descriptor(
+        options.install_root);
+    auto installed = provider.inspect_identity("facman.self");
+    if (!descriptor || !installed ||
+        !same_path(installed.value().install_root, options.install_root) ||
+        installed.value().product_version != descriptor.value().product_version ||
+        installed.value().provider_revision !=
+            descriptor.value().universal_setup_revision)
+      return facman::core::Result<Bootstrap>::failure(
+          !descriptor ? descriptor.error() : !installed ? installed.error() :
+          facman::core::Error{"self_maintenance_legacy_invalid",
+              "installed Setup identity does not match its package descriptor", {}});
+    auto generation = facman::self_maintenance::make_generation(
+        descriptor.value(), installed.value().source_archive_sha256,
+        "facman.self", options.install_root, options.install_root,
+        options.state_root, options.acceptance_root);
+    if (!generation) return facman::core::Result<Bootstrap>::failure(
+        generation.error());
+    facman::self_maintenance::Plan source_plan;
+    source_plan.operation = "migration";
+    source_plan.operation_id = "bootstrap.source." +
+        generation.value().generation_id.substr(0, 32);
+    source_plan.source = generation.value();
+    source_plan.target = generation.value();
+    const auto exact = provider.inspect_installed(source_plan);
+    const auto verified = exact.ok ? provider.verify_installed(source_plan)
+        : facman::self_maintenance::EffectResult{};
+    if (!exact.ok || !verified.ok)
+      return facman::core::Result<Bootstrap>::failure(
+          {"self_maintenance_legacy_invalid",
+           "installed Setup source cannot be verified before bootstrap",
+           exact.ok ? verified.detail : exact.detail});
+    auto adopted = facman::self_maintenance::adopt_legacy(
+        coordinator_root, generation.value(), true);
+    if (!adopted) return facman::core::Result<Bootstrap>::failure(adopted.error());
+    flat = facman::self_maintenance::discover_activation_chain(coordinator_root);
+    if (!flat || !flat.value().has_value())
+      return facman::core::Result<Bootstrap>::failure(!flat ? flat.error() :
+          facman::core::Error{"self_maintenance_epoch_recovery_required",
+              "legacy adoption did not establish a flat activation history", {}});
+  }
+  const auto &source = flat.value()->generations.back();
+  const fs::path repair_source = source.state_root / "repair-sources" /
+      facman::platform::path_from_utf8(source.package_sha256 + ".zip");
+  const facman::self_setup::NativeContext repair_context{
+      facman::self_setup::Operation::repair, source.install_root,
+      source.state_root, source.acceptance_root, repair_source,
+      source.product_version};
+  PinnedRepairSource pins;
+  auto retained = validate_repair_source(
+      repair_context, source.package_sha256, &pins);
+  if (apply && !retained.ok && !options.package.empty()) {
+    SetupPackageMaterializer materializer;
+    auto materialized = materialized_package.empty()
+        ? materializer.materialize(options.package)
+        : facman::core::Result<fs::path>::success(materialized_package);
+    auto supplied = materialized
+        ? facman::self_maintenance::inspect_package(materialized.value())
+        : facman::core::Result<facman::self_maintenance::PackageInspection>::failure(
+            materialized.error());
+    std::string launcher_problem;
+    auto launcher = current_executable_path(launcher_problem);
+    if (supplied && launcher.has_value() &&
+        supplied.value().package_sha256 == source.package_sha256) {
+      const auto copied = retain_repair_source(repair_context,
+          supplied.value().package, *launcher, source.package_sha256);
+      if (copied.ok)
+        retained = validate_repair_source(
+            repair_context, source.package_sha256, &pins);
+    }
+  }
+  if (!retained.ok)
+    return facman::core::Result<Bootstrap>::failure(
+        {"self_maintenance_repair_source_missing",
+         "active Setup package must be retained before epoch bootstrap",
+         retained.detail});
+  auto package = facman::self_maintenance::inspect_package(repair_source);
+  std::string detail;
+  if (!package || package.value().package_sha256 != source.package_sha256 ||
+      !pins.revalidate(detail))
+    return facman::core::Result<Bootstrap>::failure(!package ? package.error() :
+        facman::core::Error{"self_maintenance_package_incompatible",
+            "retained active package changed before epoch bootstrap", detail});
+  SetupBootstrapEffects effects(provider, package.value(), source.state_root,
+                                source.acceptance_root, options.shell_integration);
+  return facman::self_maintenance::bootstrap_compatibility_authority(
+      {coordinator_root, package.value().descriptor,
+       package.value().package_sha256, options.shell_integration, apply},
+      effects);
+}
 
 } // namespace
 
 int wmain(int argc, wchar_t **argv) {
   SetConsoleOutputCP(CP_UTF8);
+  if (argc > 1 && std::wstring(argv[1]) == L"continue-maintenance") {
+    ContinuationOptions continuation;
+    std::string continuation_problem;
+    if (!parse_continuation(argc, argv, continuation, continuation_problem))
+      return 2;
+    return run_private_continuation(continuation);
+  }
   Options options;
   std::string problem;
   if (!parse(argc, argv, options, problem)) {
@@ -2786,12 +3866,121 @@ int wmain(int argc, wchar_t **argv) {
     return run_maintenance(options, local,
         maintenance_qualification ? &*maintenance_qualification : nullptr);
 
+  std::optional<facman::self_maintenance::Generation>
+      active_repair_generation;
+  std::string active_epoch_controller_sha256;
   if (options.operation == facman::self_setup::Operation::verify ||
       options.operation == facman::self_setup::Operation::repair ||
       options.operation == facman::self_setup::Operation::uninstall) {
     const fs::path coordinator_root =
         (options.state_root.parent_path() / "setup-coordinator.v1")
             .lexically_normal();
+    if (options.operation == facman::self_setup::Operation::uninstall) {
+      auto epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
+          coordinator_root);
+      const bool epoch_discovery_flat_recovery =
+          !epochs && epochs.error().code ==
+              "self_maintenance_retirement_recovery_required";
+      if (!epochs && !epoch_discovery_flat_recovery) {
+        print_error(epochs.error(), options.json);
+        return 4;
+      }
+      if (epoch_discovery_flat_recovery) {
+        for (const char *name : {"epochs", "epoch-retirements",
+                                 "authority-handoff.v1.json",
+                                 "authority-bootstrap.v1"}) {
+          facman::platform::PathIdentity identity;
+          const auto observed = facman::platform::inspect_path_no_follow(
+              coordinator_root / name, identity);
+          if (!observed.ok() || identity.exists) {
+            print_error({"self_maintenance_epoch_recovery_required",
+                         "flat retirement cannot resume through mixed epoch state",
+                         name}, options.json);
+            return 4;
+          }
+        }
+      }
+      if (epochs && !epochs.value().epochs.empty() &&
+          !epochs.value().epochs.back().compatibility_epoch) {
+        std::string controller_sha256;
+        // A completed retirement has no active controller.  The retirement
+        // coordinator still needs to accept an exact repeated uninstall.
+        if (options.shell_integration &&
+            epochs.value().epochs.back().retirement_sha256.empty()) {
+          auto controller = epoch_controller_package_sha256(
+              coordinator_root, epochs.value().epochs.back().epoch_id,
+              options.state_root, options.acceptance_root);
+          if (!controller) {
+            print_error(controller.error(), options.json);
+            return 4;
+          }
+          controller_sha256 = controller.take_value();
+        }
+        SetupNativeEffects retirement_native_effects(controller_sha256);
+        SetupRetirementEffects retirement_effects(
+            options, coordinator_root, retirement_native_effects, true);
+        facman::self_maintenance::RetirementRequest retirement;
+        retirement.coordinator_root = coordinator_root;
+        retirement.apply = options.apply;
+        retirement.epoch_mode = true;
+        retirement.logical_root = options.install_root;
+        retirement.state_root = options.state_root;
+        retirement.acceptance_root = options.acceptance_root;
+        auto retired = facman::self_maintenance::retire_active(
+            retirement, retirement_effects);
+        if (!retired) {
+          print_error(retired.error(), options.json);
+          return 4;
+        }
+        if (options.apply) {
+          const std::size_t maximum_steps = retired.value().steps.size();
+          for (std::size_t step = 1U;
+               retired.value().phase == "step_completed" &&
+                   step < maximum_steps; ++step) {
+            auto resumed = facman::self_maintenance::retire_active(
+                retirement, retirement_effects);
+            if (!resumed) {
+              print_error(resumed.error(), options.json);
+              return 4;
+            }
+            retired = std::move(resumed);
+          }
+          if (retired.value().phase != "completed") {
+            print_error({"self_maintenance_retirement_recovery_required",
+                         "epoch retirement did not reach its durable completion",
+                         retired.value().phase}, options.json);
+            return 4;
+          }
+        }
+        if (options.json) {
+          facman::core::json::ObjectBuilder output;
+          output.add_string("schema", "facman.self_setup_cli.v1");
+          output.add_string("status", "ok");
+          output.add_string("operation", "uninstall");
+          output.add_string("phase", retired.value().phase);
+          output.add_string("retirement_journal",
+              facman::platform::path_to_utf8(
+                  retired.value().journal_directory));
+          std::cout << output.serialize() << '\n';
+        } else if (retired.value().phase == "planned") {
+          std::cout << "FacMan epoch retirement is planned. Repeat with --yes to apply it.\n";
+        } else {
+          std::cout << "FacMan epoch retirement " << retired.value().phase << ".\n";
+        }
+        return 0;
+      }
+    }
+    auto selected = facman::self_maintenance::resolve_authoritative_active_state(
+        coordinator_root);
+    const bool resumable_flat_retirement =
+        !selected &&
+        options.operation == facman::self_setup::Operation::uninstall &&
+        selected.error().code ==
+            "self_maintenance_retirement_recovery_required";
+    if (!selected && !resumable_flat_retirement) {
+      print_error(selected.error(), options.json);
+      return 4;
+    }
     if (options.operation == facman::self_setup::Operation::uninstall) {
       auto chain = facman::self_maintenance::discover_activation_chain(
           coordinator_root);
@@ -2801,7 +3990,8 @@ int wmain(int argc, wchar_t **argv) {
       }
       if (chain.value().has_value()) {
         const auto &generation = chain.value()->generations.back();
-        if (!same_path(generation.logical_root, options.install_root) ||
+        if ((!same_path(generation.logical_root, options.install_root) &&
+             !same_path(generation.install_root, options.install_root)) ||
             !same_path(generation.state_root, options.state_root) ||
             !same_path(generation.acceptance_root, options.acceptance_root)) {
           print_error({"self_maintenance_lineage_mismatch",
@@ -2839,40 +4029,34 @@ int wmain(int argc, wchar_t **argv) {
         }
         return 0;
       }
+      if (!selected) {
+        print_error(selected.error(), options.json);
+        return 4;
+      }
     }
-    auto active = facman::self_maintenance::discover_active(coordinator_root);
-    if (!active) {
-      print_error(active.error(), options.json);
-      return 4;
-    }
-    if (active.value().has_value() &&
-        options.operation == facman::self_setup::Operation::verify) {
-      print_error({"self_maintenance_active_generation_unsupported",
-                   "verify of an activation-chain installation must use a "
-                   "future chain-aware maintenance command",
-                   active.value()->active.install_id}, options.json);
-      return 4;
-    }
-    if (active.value().has_value() &&
-        options.operation == facman::self_setup::Operation::repair &&
-        active.value()->active.install_id != "facman.self") {
-      print_error({"self_maintenance_active_generation_unsupported",
-                   "repair of an active side-by-side generation "
-                   "are not available in this checkpoint",
-                   active.value()->active.install_id}, options.json);
-      return 4;
-    }
-    if (active.value().has_value() &&
-        options.operation == facman::self_setup::Operation::repair) {
-      const auto &generation = active.value()->active;
-      if (!same_path(generation.logical_root, options.install_root) ||
-          !same_path(generation.install_root, options.install_root) ||
+    if (selected.value().has_value() &&
+        (options.operation == facman::self_setup::Operation::repair ||
+         options.operation == facman::self_setup::Operation::verify)) {
+      const auto &generation = selected.value()->active.active;
+      if ((!same_path(generation.logical_root, options.install_root) &&
+           !same_path(generation.install_root, options.install_root)) ||
           !same_path(generation.state_root, options.state_root) ||
           !same_path(generation.acceptance_root, options.acceptance_root)) {
-        print_error({"self_maintenance_lineage_mismatch",
-                     "repair roots do not bind the active migrated legacy generation",
-                     generation.install_id}, options.json);
+        print_error(setup_error_with_detail(
+            "self_maintenance_lineage_mismatch",
+            "setup roots do not bind the active activation-chain generation",
+            generation.install_id), options.json);
         return 4;
+      }
+      if (options.shell_integration && selected.value()->epoch.has_value()) {
+        auto controller = epoch_controller_package_sha256(
+            coordinator_root, selected.value()->epoch->epoch_id,
+            options.state_root, options.acceptance_root);
+        if (!controller) {
+          print_error(controller.error(), options.json);
+          return 4;
+        }
+        active_epoch_controller_sha256 = controller.take_value();
       }
       facman::self_maintenance::ProviderBridge provider(
           options.state_root, options.acceptance_root);
@@ -2883,14 +4067,60 @@ int wmain(int argc, wchar_t **argv) {
       active_plan.source = generation;
       active_plan.target = generation;
       const auto inspected = provider.inspect_installed(active_plan);
-      const auto verified = provider.verify_installed(active_plan);
-      if (!inspected.ok || !verified.ok) {
-        print_error({"self_maintenance_active_generation_unsupported",
-                     "repair requires a verified active facman.self installation",
-                     !inspected.ok ? inspected.detail : verified.detail},
-                    options.json);
+      if (!inspected.ok) {
+        std::string detail = generation.install_id;
+        if (!inspected.detail.empty()) detail += ": " + inspected.detail;
+        print_error(setup_error_with_detail(
+            "self_maintenance_active_generation_unavailable",
+            "setup requires an exact provider-inspected active generation",
+            std::move(detail)), options.json);
         return 4;
       }
+      active_repair_generation = generation;
+    }
+  }
+  bool resume_bootstrap = false;
+  bool successor_install = false;
+  SetupPackageMaterializer package_materializer;
+  if (options.operation == facman::self_setup::Operation::install) {
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    auto flat = facman::self_maintenance::discover_activation_chain(
+        coordinator_root);
+    if (!flat) {
+      print_error(flat.error(), options.json);
+      return 4;
+    }
+    auto epochs = facman::self_maintenance::discover_lifecycle_epoch_chain(
+        coordinator_root);
+    if (!epochs && epochs.error().code !=
+                       "self_maintenance_epoch_recovery_required") {
+      print_error(epochs.error(), options.json);
+      return 4;
+    }
+    if (!epochs || (!epochs.value().epochs.empty() &&
+        !epochs.value().epochs.back().compatibility_epoch))
+      successor_install = true;
+    resume_bootstrap = flat.value().has_value() && !successor_install;
+    if (!resume_bootstrap && !successor_install) {
+      auto legacy = facman::self_maintenance::inspect_legacy_descriptor(
+          options.install_root);
+      resume_bootstrap = legacy.ok();
+    }
+    auto selected = facman::self_maintenance::resolve_authoritative_active_state(
+        coordinator_root);
+    if (!selected && !resume_bootstrap && !successor_install) {
+      print_error(selected.error(), options.json);
+      return 4;
+    }
+    if (selected && selected.value().has_value() &&
+        selected.value()->epoch.has_value()) {
+      print_error(setup_error_with_detail(
+          "self_maintenance_epoch_operation_unsupported",
+          "install over an authoritative lifecycle epoch requires its "
+          "maintenance route", selected.value()->epoch->epoch_id), options.json);
+      return 4;
     }
   }
   fs::path maintenance_launcher;
@@ -2908,6 +4138,44 @@ int wmain(int argc, wchar_t **argv) {
     options.package = maintenance_launcher;
   }
 
+  std::optional<facman::self_maintenance::RetiredEpochSuccessorPlan>
+      successor_plan;
+  if (successor_install) {
+    if (!options.shell_integration) {
+      print_error({"self_maintenance_epoch_operation_unsupported",
+                   "epoch successor install requires installed-mode integration",
+                   {}}, options.json);
+      return 4;
+    }
+    auto supplied = package_materializer.materialize(options.package);
+    auto inspected = supplied
+        ? facman::self_maintenance::inspect_package(supplied.value())
+        : facman::core::Result<facman::self_maintenance::PackageInspection>::failure(
+              supplied.error());
+    if (!inspected) {
+      print_error(inspected.error(), options.json);
+      return 4;
+    }
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    auto planned = facman::self_maintenance::plan_retired_epoch_successor(
+        coordinator_root, inspected.value().descriptor,
+        inspected.value().package_sha256);
+    if (!planned ||
+        !same_path(planned.value().epoch.logical_root, options.install_root) ||
+        !same_path(planned.value().epoch.state_root, options.state_root) ||
+        !same_path(planned.value().epoch.acceptance_root,
+                   options.acceptance_root)) {
+      print_error(!planned ? planned.error() :
+          setup_error_with_detail("self_maintenance_lineage_mismatch",
+              "successor install roots do not bind the retired epoch",
+              planned.value().epoch.epoch_id), options.json);
+      return 4;
+    }
+    successor_plan = planned.take_value();
+  }
+
   if (options.interactive) {
     const int answer = MessageBoxW(
         nullptr,
@@ -2920,6 +4188,96 @@ int wmain(int argc, wchar_t **argv) {
     options.apply = true;
   }
 
+  if (resume_bootstrap) {
+    SetupPackageMaterializer materializer;
+    auto supplied = materializer.materialize(options.package);
+    auto metadata = supplied
+        ? facman::self_maintenance::has_self_maintenance_metadata(
+            supplied.value())
+        : facman::core::Result<bool>::failure(supplied.error());
+    if (!metadata) {
+      print_error(metadata.error(), options.json);
+      return 4;
+    }
+    if (!metadata.value() || !options.shell_integration) {
+      const fs::path coordinator_root =
+          (options.state_root.parent_path() / "setup-coordinator.v1")
+              .lexically_normal();
+      auto flat = facman::self_maintenance::discover_activation_chain(
+          coordinator_root);
+      std::string package_problem;
+      auto supplied_sha256 = exact_regular_file_digest(
+          supplied.value(), package_problem);
+      facman::self_maintenance::ProviderBridge provider(
+          options.state_root, options.acceptance_root);
+      auto installed = provider.inspect_identity("facman.self");
+      const bool same_flat = flat && flat.value().has_value() &&
+          supplied_sha256 &&
+          flat.value()->generations.back().package_sha256 == *supplied_sha256;
+      const bool same_legacy = flat && !flat.value().has_value() &&
+          supplied_sha256 && installed &&
+          installed.value().provider_revision == facman::self_setup::provider_revision() &&
+          installed.value().source_archive_sha256 == *supplied_sha256 &&
+          same_path(installed.value().install_root, options.install_root);
+      if (!flat || (!same_flat && !same_legacy)) {
+        print_error(!flat ? flat.error() : setup_error_with_detail(
+            "self_maintenance_package_incompatible",
+            "compatibility Setup retry must match the exact installed flat package",
+            package_problem), options.json);
+        return 4;
+      }
+      // Portable Setup has no installed-mode offline source or native
+      // integration to cut over. Current-only archives also have no strict
+      // maintenance descriptor. Exact retries stay on the flat Setup route,
+      // whose locked epoch guard still rejects an entered bootstrap.
+      resume_bootstrap = false;
+    }
+  }
+
+  if (resume_bootstrap) {
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    auto bootstrap = bootstrap_installed_facman(
+        options, coordinator_root, options.apply);
+    if (!bootstrap) {
+      print_error(bootstrap.error(), options.json);
+      return 4;
+    }
+    if (options.json) {
+      facman::core::json::ObjectBuilder output;
+      output.add_string("schema", "facman.self_setup_cli.v1");
+      output.add_string("status", "ok");
+      output.add_string("operation", "install");
+      output.add_string("phase", bootstrap.value().phase);
+      output.add_string("epoch_id", bootstrap.value().epoch.epoch_id);
+      std::cout << output.serialize() << '\n';
+    } else {
+      std::cout << "FacManSetup install " << bootstrap.value().phase
+                << ": epoch " << bootstrap.value().epoch.epoch_id << '\n';
+    }
+    return 0;
+  }
+
+  if (options.operation == facman::self_setup::Operation::install) {
+    auto supplied = package_materializer.materialize(options.package);
+    auto metadata = supplied
+        ? facman::self_maintenance::has_self_maintenance_metadata(
+              supplied.value())
+        : facman::core::Result<bool>::failure(supplied.error());
+    if (!metadata) {
+      print_error(metadata.error(), options.json);
+      return 4;
+    }
+    if (metadata.value()) {
+      auto inspected = facman::self_maintenance::inspect_package(
+          supplied.value());
+      if (!inspected) {
+        print_error(inspected.error(), options.json);
+        return 4;
+      }
+    }
+  }
   facman::self_setup::Request request;
   request.operation = options.operation;
   request.package = options.package;
@@ -2928,9 +4286,31 @@ int wmain(int argc, wchar_t **argv) {
   request.state_root = options.state_root;
   request.acceptance_root = options.acceptance_root;
   request.product_version = FACMAN_VERSION_SEMVER;
+  if (successor_plan.has_value()) {
+    request.install_id = successor_plan->target.install_id;
+    request.install_root = successor_plan->target.install_root;
+    request.product_version = successor_plan->target.product_version;
+    request.reserved_successor_epoch_id = successor_plan->epoch.epoch_id;
+  }
+  if (active_repair_generation.has_value()) {
+    request.install_id = active_repair_generation->install_id;
+    request.install_root = active_repair_generation->install_root;
+    request.state_root = active_repair_generation->state_root;
+    request.acceptance_root = active_repair_generation->acceptance_root;
+    request.product_version = active_repair_generation->product_version;
+    if (options.operation == facman::self_setup::Operation::repair &&
+        !active_epoch_controller_sha256.empty()) {
+      // The registered genesis controller can execute a repair of an older
+      // active package. Its immutable repair-source pair still belongs to
+      // that older package, so retention must compare that package's helper.
+      request.maintenance_launcher = repair_launcher_path(
+          request.state_root / "repair-sources" /
+          facman::platform::path_from_utf8(
+              active_repair_generation->package_sha256 + ".zip"));
+    }
+  }
   request.apply = options.apply;
-  SetupNativeEffects native_effects;
-  SetupPackageMaterializer package_materializer;
+  SetupNativeEffects native_effects(active_epoch_controller_sha256);
   if (options.shell_integration)
     request.native_effects = &native_effects;
   if (options.operation == facman::self_setup::Operation::install ||
@@ -2941,11 +4321,121 @@ int wmain(int argc, wchar_t **argv) {
     qualification_hook.emplace(qualification_interrupt->boundary);
     request.durable_boundary_hook = &*qualification_hook;
     request.qualification_claims = qualification_interrupt->claims;
+    if (successor_plan.has_value())
+      request.qualification_claims->install_root = request.install_root;
+    if (active_repair_generation.has_value())
+      request.qualification_claims->install_root = request.install_root;
+  }
+  if (successor_plan.has_value() && options.apply) {
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    // A manifest without genesis reserves the exact successor before Setup
+    // can touch its provider or singleton native integration. Interrupted
+    // Setup retries use this same immutable target.
+    if (successor_plan->manifest_staging) {
+      auto recovered =
+          facman::self_maintenance::recover_retired_successor_manifest(
+              coordinator_root, *successor_plan);
+      if (!recovered) {
+        print_error(recovered.error(), options.json);
+        return 4;
+      }
+    }
+    auto reserved = facman::self_maintenance::publish_lifecycle_epoch(
+        coordinator_root, successor_plan->epoch, true);
+    if (!reserved) {
+      print_error(reserved.error(), options.json);
+      return 4;
+    }
   }
   auto response = facman::self_setup::execute(request);
   if (!response) {
     print_error(response.error(), options.json);
     return 4;
+  }
+  std::optional<facman::self_maintenance::CompatibilityAuthorityBootstrapResponse>
+      installed_bootstrap;
+  std::optional<std::string> installed_successor_epoch;
+  if (successor_plan.has_value() && options.apply) {
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    auto inspected = facman::self_maintenance::inspect_package(
+        package_materializer.materialized_path());
+    if (!inspected) {
+      print_error(inspected.error(), options.json);
+      return 4;
+    }
+    facman::self_maintenance::ProviderBridge provider(
+        options.state_root, options.acceptance_root);
+    SetupBootstrapEffects effects(provider, inspected.value(),
+        options.state_root, options.acceptance_root, true);
+    const auto verified = effects.inspect_epoch_clone(
+        successor_plan->source, successor_plan->target);
+    const auto shortcut = effects.inspect_epoch_shortcut(
+        successor_plan->source, successor_plan->target);
+    const auto registration = effects.inspect_epoch_registration(
+        successor_plan->source, successor_plan->target);
+    if (!verified.ok || verified.outcome_unknown ||
+        shortcut != facman::self_maintenance::ShellState::new_exact ||
+        registration != facman::self_maintenance::ShellState::new_exact) {
+      print_error({"self_maintenance_epoch_recovery_required",
+                   "successor package or native integration is not exactly verified",
+                   verified.detail}, options.json);
+      return 4;
+    }
+    auto activated = facman::self_maintenance::activate_lifecycle_epoch_genesis(
+        {coordinator_root, successor_plan->epoch.epoch_id,
+         successor_plan->target, true});
+    if (!activated) {
+      print_error(activated.error(), options.json);
+      return 4;
+    }
+    auto selected = facman::self_maintenance::resolve_authoritative_active_state(
+        coordinator_root);
+    if (!selected || !selected.value().has_value() ||
+        !selected.value()->epoch.has_value() ||
+        selected.value()->epoch->epoch_id != successor_plan->epoch.epoch_id ||
+        selected.value()->active.active.install_id !=
+            successor_plan->target.install_id) {
+      print_error(!selected ? selected.error() :
+          setup_error_with_detail("self_maintenance_epoch_recovery_required",
+              "successor epoch did not become authoritative",
+              successor_plan->epoch.epoch_id), options.json);
+      return 4;
+    }
+    installed_successor_epoch = successor_plan->epoch.epoch_id;
+  }
+  if (options.operation == facman::self_setup::Operation::install &&
+      options.apply && !successor_plan.has_value()) {
+    const fs::path coordinator_root =
+        (options.state_root.parent_path() / "setup-coordinator.v1")
+            .lexically_normal();
+    fs::path supplied = package_materializer.materialized_path();
+    if (supplied.empty()) {
+      auto materialized = package_materializer.materialize(options.package);
+      if (!materialized) {
+        print_error(materialized.error(), options.json);
+        return 4;
+      }
+      supplied = materialized.take_value();
+    }
+    auto metadata = facman::self_maintenance::has_self_maintenance_metadata(
+        supplied);
+    if (!metadata) {
+      print_error(metadata.error(), options.json);
+      return 4;
+    }
+    if (metadata.value() && options.shell_integration) {
+      auto bootstrap = bootstrap_installed_facman(
+          options, coordinator_root, true, supplied);
+      if (!bootstrap) {
+        print_error(bootstrap.error(), options.json);
+        return 4;
+      }
+      installed_bootstrap = bootstrap.take_value();
+    }
   }
   const std::string integration = options.shell_integration
       ? "coordinated current-user integration"
@@ -2963,11 +4453,28 @@ int wmain(int argc, wchar_t **argv) {
       output.add_string("provider_json", response.value().provider_json);
     output.add_string("windows_integration", integration);
     output.add_string("setup_operation_id", response.value().setup_operation_id);
+    if (installed_bootstrap.has_value()) {
+      output.add_string("bootstrap_phase", installed_bootstrap->phase);
+      output.add_string("epoch_id", installed_bootstrap->epoch.epoch_id);
+    }
+    if (installed_successor_epoch.has_value())
+      output.add_string("epoch_id", *installed_successor_epoch);
+    if (successor_plan.has_value()) {
+      output.add_string("successor_epoch_id", successor_plan->epoch.epoch_id);
+      output.add_string("successor_install_root",
+          facman::platform::path_to_utf8(successor_plan->target.install_root));
+    }
     std::cout << output.serialize() << '\n';
   } else {
     std::cout << "FacManSetup " << response.value().operation << ' '
               << response.value().phase << ":\n"
               << response.value().provider_json << '\n';
+    if (installed_bootstrap.has_value())
+      std::cout << "Lifecycle epoch " << installed_bootstrap->epoch.epoch_id
+                << " " << installed_bootstrap->phase << '\n';
+    if (installed_successor_epoch.has_value())
+      std::cout << "Lifecycle epoch " << *installed_successor_epoch
+                << " complete\n";
     if (!options.apply &&
         options.operation != facman::self_setup::Operation::verify) {
       std::cout << "Review the plan, then repeat with --yes to apply it.\n";

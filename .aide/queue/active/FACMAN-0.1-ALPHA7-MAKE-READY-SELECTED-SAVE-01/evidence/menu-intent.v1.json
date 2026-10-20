@@ -1,0 +1,171 @@
+{
+  "schema": "facman.menu_readiness_intent.v1",
+  "status": "PASS_SCOPED_WINDOWS_SOURCE_FIXTURE",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base": "fbc721fcf6bfd1d441b58a883855621eda3c0d37",
+  "behavior": "Menu readiness blocks effective load-save and benchmark profiles, including instance overrides; human readiness/describe expose matching states, blockers and safe preview actions.",
+  "source_hashes": {
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "b4d1482aa91d474c6a4fed199f35e689c4cfa21d32df29cb12fe49926086a8ee",
+    "tests/test_profiles_templates.py": "e9b609a6a93c2662f2b55654856c9440d928befe4e14a07ea528088f9eb398c3",
+    "apps/cli/command_dispatch.cpp": "ddbb9290c016bf1deebbf3a4162f56d04502a2b68bf311a09cf24b2635f26ef3",
+    "apps/cli/report_text.cpp": "08ab6b9867b94d1fcdff5ccd18888b752f2389f212c472064e2421555f73bf46",
+    "apps/cli/report_text.h": "2eb556a00b3fd18080b5c5cd7459af5379f5c62a9907fd582e8d13ae97fc081d",
+    "docs/architecture/instance_model_and_readiness.md": "be5bdeecd40872199aaa36cb2929ba7f46680515276773ca2cc4c2d352727583",
+    "tests/test_plan_views.py": "fbf57df628c7c76534f72b6476f00c3fad8cec5008cbd0c546de2a509bc82c5b"
+  },
+  "CLI_sha256": "737c32d9f9008748583f50cd752a1305e8f72a89baf5fb9a42fd18e95f578488",
+  "acceptance_scope": {
+    "four_selected_profile_and_override_cases": true,
+    "public_profile_and_readiness_tests": 12,
+    "native_instance_model_tests": 1,
+    "state_tests": 89,
+    "JSON_schema_validation": true,
+    "read_only_workspace_oracle": true,
+    "ordinary_gui_profile_apply_restores_menu_compatibility": true
+  },
+  "retained_failures": {
+    "baseline": "Four public failures: menu profile incorrectly satisfied",
+    "source_proof01": "Backend build/native PASS; human CLI hid mismatch and next action",
+    "source_proof02": "Native/public PASS; planning fixture counted former and current primary",
+    "planning_fixture_correction": "Replace the current admitted primary in a copied fixture; production WIP and admission guards remain unchanged"
+  },
+  "verification": {
+    "state-tests": {
+      "exit_code": 0,
+      "log_member": "make-ready-intent-QA-03-state-tests.log",
+      "sha256": "4e8021b4f1c5645b3959e11d8f48ccf668459de85bf726280b04d2ace31c7a0b"
+    },
+    "plan-check": {
+      "exit_code": 0,
+      "log_member": "make-ready-intent-QA-03-plan-check.log",
+      "sha256": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31"
+    },
+    "state-check": {
+      "exit_code": 0,
+      "log_member": "make-ready-intent-QA-03-state-check.log",
+      "sha256": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd"
+    },
+    "strict": {
+      "exit_code": 0,
+      "log_member": "make-ready-intent-QA-03-strict.log",
+      "sha256": "e458a0ddbcc05a69f417f96f3c5e1553659138aa3cf0888e205687fef991f4b6"
+    },
+    "format": {
+      "exit_code": 0,
+      "log_member": "make-ready-intent-QA-03-format.log",
+      "sha256": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191"
+    },
+    "portable": {
+      "exit_code": 0,
+      "log_member": "make-ready-intent-QA-03-portable.log",
+      "sha256": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1"
+    },
+    "diff": {
+      "exit_code": 0,
+      "log_member": "make-ready-intent-QA-03-diff.log",
+      "sha256": "ef45d21499959bb0afd2f1d5dd0cff078bd022f6b37a63b54f5ecc9968ac880f"
+    }
+  },
+  "source_review": {
+    "member": "make-ready-intent-source-review-01.json",
+    "sha256": "f4286f4753bffaadb99ddb78139639af523cff059de21bce4ca625640642e4e1",
+    "independent": true,
+    "non_authoring": true,
+    "scope": "Static six-file runtime/CLI/public-test/doc review before rebuild; final commit review separately required",
+    "requested_profile": "gpt-6.1-sol Medium",
+    "effective_profile": "unknown"
+  },
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/menu-intent-custody.zip",
+    "sha256": "ac441414d398e56f63dd07e533adf8f32ed42d1553a72828d0f25d1a5cf7f61e",
+    "members": {
+      "make-ready-admission-01-branch-create.log": "f0ef9b9a6e785ca6d2a8705009a2ef614890c6b359dc9d9e2da8c55b92713f3c",
+      "make-ready-admission-01-corrected-plan-check.log": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31",
+      "make-ready-admission-01-corrected-plan-generate.log": "543102a83caea4bc8cdda0d179a9f4db8b3c4085d9bb1881ec01d6a461807288",
+      "make-ready-admission-01-corrected-state-check.log": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd",
+      "make-ready-admission-01-corrected-state-generate.log": "7ee87d872ba74a7c1a0af55b84d8f10b7cf0ee42a3ddf8fc979f6f3f8143fb53",
+      "make-ready-admission-01-doctor.json": "99cb65eb1491ec9538c599c9d9ed94244bc1d80215265ad8114a471c30626b1c",
+      "make-ready-admission-01-git-detect.log": "45a66512e2a315415f9c80bf298548eda234778772b610d3d4472e2682707405",
+      "make-ready-admission-01-git-plan.log": "e37a1d350f25b7df7ed6d32d8c7312a72187f8ed1ddc4682ffe7ab35bff2d862",
+      "make-ready-admission-01-git-policy.log": "71ce5018e4abc2321cd3962f0b6c32fe1c00f85a9026b82e8130a7013700ba71",
+      "make-ready-admission-01-initial-failure.json": "a955915295b02fb1c2d5d985f760bccb2993979ce114fa5249b740c5b78b288e",
+      "make-ready-admission-01-paths.json": "ef8d26829ebf621a61f34c075a75d6e0b7121ec5457defba1fbac4ae857635a9",
+      "make-ready-admission-01-plan-generate.log": "34876ec1ee5065595579041b7ab6e252f6ad845c5c4939a85a1c36f4561351db",
+      "make-ready-admission-01-plan.json": "6d03c80eabdbe8ac35ed37284f24035f95faa5ac3c746ab367221acc8b4a9ded",
+      "make-ready-admission-01-task-inspect.log": "0c0943773869f209bc71c1b274f7b342fc339b859de05ade22a5691faf072fba",
+      "make-ready-admission-01-task-noop-check.log": "fe8cfc19b24e702e40589d9d6393ec5cfda25a018a9c50b372ddec9d03459260",
+      "make-ready-admission-01-task-recover.log": "c792423fe06cce39ecd75b91fd7c7a6146c241b4c3915f60b758e87bf90aa6e4",
+      "make-ready-admission-01-task-start.log": "e928b68efca079489a7b1218e5d08b7693dfdf0175861c170d725ed059a34bbc",
+      "make-ready-admission-01.claim.json": "c523c8a802ac62877116ab1abe413043b4cc53204b768a31aad595e7fa2b07af",
+      "make-ready-admission-01.json": "d3e50d78146ce32e17193cb393c5ed371966f3336b44d04b9486c9c6a082c5f3",
+      "make-ready-admission-01.py": "3d8f8319708c2b9df861284c29fe9c706f471328e878f397be51d18d4c012e1a",
+      "make-ready-intent-QA-03-diff.log": "ef45d21499959bb0afd2f1d5dd0cff078bd022f6b37a63b54f5ecc9968ac880f",
+      "make-ready-intent-QA-03-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-intent-QA-03-plan-check.log": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31",
+      "make-ready-intent-QA-03-portable.log": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+      "make-ready-intent-QA-03-state-check.log": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd",
+      "make-ready-intent-QA-03-state-tests.log": "4e8021b4f1c5645b3959e11d8f48ccf668459de85bf726280b04d2ace31c7a0b",
+      "make-ready-intent-QA-03-strict.log": "e458a0ddbcc05a69f417f96f3c5e1553659138aa3cf0888e205687fef991f4b6",
+      "make-ready-intent-QA-03.json": "c2e5b1b87adc9a8ca5adebde316a44687d57d32c952b7eadb114de72d0cdd1fb",
+      "make-ready-intent-regression-baseline-rx2.log": "3141e7ad1202c5dc0cd66cf44b36c0d094aac297b65597c44c82b1516257ed10",
+      "make-ready-intent-regression-baseline.json": "0b6b927197127ccaea67334a7b1fb1e6fadfb9d4a5e9cd2c1a75c68cdc7ce8d8",
+      "make-ready-intent-regression-baseline.log": "2a93926f32067ad63159ebd7672a6ff1307d41e86c0d63d5cfbbb3bea8fea6a6",
+      "make-ready-intent-source-proof-01-build.log": "68e08b1fecadd76b47bd15b6b03c2cba26d8272dc5336f628f03aff66ca8dcfa",
+      "make-ready-intent-source-proof-01-doctor.json": "09c511d7480bb0228e158c01daa2ac42b02ff58104b29e57fcf877e5eda5beda",
+      "make-ready-intent-source-proof-01-native-model.log": "3b360f2802fb82de65a4386b9a94f516e1ed3e0ea1386c0d9572f9f20c46ed02",
+      "make-ready-intent-source-proof-01-paths.json": "6a14c517c97614c504f53e9fe66b143f07a4bc56dfe833e7173f667c0008c60f",
+      "make-ready-intent-source-proof-01-public-regression.log": "86eeb4c7d4447c79e1d1d7b5ff1dc46b911ed52f33399b4e077baef01df312b5",
+      "make-ready-intent-source-proof-01.claim.json": "aa1b5ac36eea5530bef8af35cb48fcfcbf52d112b814cb0de8bf62e775745618",
+      "make-ready-intent-source-proof-01.json": "bdb9fa6153a51c5ff2e1a4ced42bf6d9ed7d9d7a69910ec510724ff5f4ab0d7d",
+      "make-ready-intent-source-proof-01.py": "d61f51625f5d34d0f0091181887e41037864ed27e3c68543e79e6197bffa75d0",
+      "make-ready-intent-source-proof-02-build.log": "86f65fa136675b6606da3442570a06b61f3aeaee1142312085521783e57436ee",
+      "make-ready-intent-source-proof-02-doctor.json": "e6a0e2525ab32cb70204de1090a2caa79c2ba34f859ec7c9fdca56d74769c29e",
+      "make-ready-intent-source-proof-02-native-model.log": "f40d1d17e0cbcad2277d938c2c7a36dc9a94b72f17c5141decfe248cefb3ed63",
+      "make-ready-intent-source-proof-02-paths.json": "6a14c517c97614c504f53e9fe66b143f07a4bc56dfe833e7173f667c0008c60f",
+      "make-ready-intent-source-proof-02-profiles-and-query.log": "9cb3bdf39361d3913341c0f331bfa9c84e99ee6a55bd0e0d90661f3376717667",
+      "make-ready-intent-source-proof-02-state-tests.log": "d8ecd038aa8e42e271ae8b4f685663a35756699964df2d75ff0b58ad82f5c972",
+      "make-ready-intent-source-proof-02.claim.json": "427c6fe78022d1f25ee153a52209d452767ecdb4c3c5de48f0198f66de97bcee",
+      "make-ready-intent-source-proof-02.json": "1f7baf99c93554470a23b0d330b5160b116e191c1314cbf1e169a1533139562c",
+      "make-ready-intent-source-proof-02.py": "f3063baa7692cf60cd2c424baae206365b2ec15509819096a17b4c3b0fdafe0c",
+      "make-ready-intent-source-review-01.json": "f4286f4753bffaadb99ddb78139639af523cff059de21bce4ca625640642e4e1"
+    }
+  },
+  "resource_use": {
+    "native_builds": 2,
+    "reason": "First build qualified backend and exposed human output gap; second build includes new CLI formatter",
+    "optional_candidate_dispatches": 0,
+    "CI_reruns": 0,
+    "new_roots": 0,
+    "new_worktrees": 0,
+    "maximum_native_workers": 2,
+    "old_world_restore_images_preserved_externally": true
+  },
+  "original_acceptance": [
+    "Make one typed readiness plan reconcile install, instance, content and selected world before launch.",
+    "Exercise stale inputs, recoverable partial preparation and selected-save mismatch through ordinary workflows."
+  ],
+  "close_after": [
+    "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+    "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+    "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+    "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+    "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+  ],
+  "qualification": {
+    "source_fixture": true,
+    "produced_package": false,
+    "actual_Factorio": false,
+    "human_experience": false,
+    "physical_host": false,
+    "release": false,
+    "whole_workunit": false,
+    "full_programme": false
+  },
+  "external_gates_preserved": [
+    "PR343 protected control owner authorization",
+    "Genuine distinct-version Linux Setup A5 update/rollback",
+    "MakeReady five original close-after prerequisites"
+  ],
+  "next_acceptance": "Complete typed multi-domain preparation with revision/partial recovery and selected-save Play through ordinary workflows.",
+  "finished_at_utc": "2026-10-04T17:57:51.602512+00:00"
+}

@@ -4,6 +4,7 @@
 add_executable(facman_cli
   main.c
   command_dispatch.cpp
+  report_text.cpp
   resource_commands.cpp
   resource_export_command.cpp
   resource_response.cpp

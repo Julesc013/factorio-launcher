@@ -1,4 +1,4 @@
-# generated source-sha256: 26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428
+# generated source-sha256: f7ee0fa96928cd61bfc59e31efe4c758968e409e582bc680360ab88de78cb9f5
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -57,6 +57,7 @@
 # path: modsets diff
 # path: modsets explain
 # path: modsets export
+# path: modsets import
 # path: modsets lock
 # path: modsets plan
 # path: modsets rollback
@@ -89,6 +90,7 @@
 # path: saves index
 # path: saves inspect
 # path: saves list
+# path: saves restore
 # path: saves retention apply
 # path: saves retention plan
 # path: saves verify

@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_make_ready_joined_result.v3.schema.json",
+  "title": "Retained installation repair and remaining preparation receipts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "plan",
+    "plan_sha256",
+    "completed_components",
+    "continuation",
+    "completed_effects_verified",
+    "remaining_effects_blocked_before_effects",
+    "readiness_observation",
+    "preparation_complete",
+    "fresh_revision_required",
+    "readiness_complete",
+    "execution_started",
+    "permit_issued",
+    "factorio_support_claim",
+    "joined_result",
+    "installation_effect_verified"
+  ],
+  "properties": {
+    "schema": {
+      "const": "factorio.make_ready_joined_result.v3"
+    },
+    "command": {
+      "const": "readiness.prepare_joined"
+    },
+    "plan": {
+      "$ref": "factorio_make_ready_joined_plan.v3.schema.json"
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "completed_components": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "component",
+              "owner_command",
+              "transaction_id",
+              "plan_digest",
+              "owner_result"
+            ],
+            "properties": {
+              "component": {
+                "const": "managed_installation_repair"
+              },
+              "owner_command": {
+                "const": "installs.repair.apply"
+              },
+              "transaction_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner_result": {
+                "$ref": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_managed_repair_apply_result.v1.schema.json"
+              },
+              "plan_digest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "component",
+              "owner_command",
+              "transaction_id",
+              "plan_sha256",
+              "owner_result"
+            ],
+            "properties": {
+              "component": {
+                "const": "locked_content_activation"
+              },
+              "owner_command": {
+                "const": "modsets.apply"
+              },
+              "transaction_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "plan_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "owner_result": {
+                "$ref": "factorio_locked_content_activation_result.v1.schema.json"
+              }
+            }
+          },
+          {
+            "$ref": "factorio_make_ready_preparation_result.v1.schema.json#/properties/completed_components/items"
+          }
+        ]
+      }
+    },
+    "continuation": {
+      "enum": [
+        "inspect_original_request",
+        "inspect_domain_recovery",
+        "fresh_request_after_input_correction",
+        "observe_readiness"
+      ]
+    },
+    "completed_effects_verified": {
+      "type": "boolean"
+    },
+    "remaining_effects_blocked_before_effects": {
+      "type": "boolean"
+    },
+    "readiness_observation": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "factorio_instance_readiness.v1.schema.json"
+        }
+      ]
+    },
+    "preparation_complete": {
+      "type": "boolean"
+    },
+    "fresh_revision_required": {
+      "type": "boolean"
+    },
+    "readiness_complete": {
+      "const": false
+    },
+    "execution_started": {
+      "const": false
+    },
+    "permit_issued": {
+      "const": false
+    },
+    "factorio_support_claim": {
+      "const": "unclaimed"
+    },
+    "joined_result": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "factorio_make_ready_joined_result.v1.schema.json"
+        },
+        {
+          "$ref": "factorio_make_ready_joined_result.v2.schema.json"
+        }
+      ]
+    },
+    "installation_effect_verified": {
+      "type": "boolean"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "continuation": {
+            "const": "fresh_request_after_input_correction"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "completed_components": {
+            "minItems": 1
+          },
+          "completed_effects_verified": {
+            "const": true
+          },
+          "remaining_effects_blocked_before_effects": {
+            "const": true
+          },
+          "readiness_observation": {
+            "type": "null"
+          },
+          "preparation_complete": {
+            "const": false
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "remaining_effects_blocked_before_effects": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "preparation_complete": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "fresh_revision_required": {
+            "const": false
+          },
+          "readiness_observation": {
+            "type": "object",
+            "properties": {
+              "configuration_state": {
+                "const": "ready"
+              },
+              "preparation_state": {
+                "const": "already_prepared"
+              }
+            }
+          },
+          "installation_effect_verified": {
+            "const": true
+          },
+          "completed_effects_verified": {
+            "const": true
+          },
+          "joined_result": {
+            "type": "object",
+            "properties": {
+              "preparation_complete": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "fresh_revision_required": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
+}

@@ -177,6 +177,120 @@ class CliTests(unittest.TestCase):
             self.assertIn("no install references registered yet", stdout)
             self.assertEqual(list(Path(tmp).iterdir()), [])
 
+    def test_reconciliation_target_aliases_preserve_external_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install = root / "Factorio External"
+            workspace = root / "workspace"
+            shutil.copytree(FIXTURE_INSTALL, install)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "import", str(install),
+                "--id", "fixture", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            # Synthetic external-manager metadata is fixture setup, never
+            # adoption authority. Snapshot after this explicit setup write.
+            record_path = workspace / "installs" / "refs" / "fixture.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            record.update(source="steam", distribution_origin="steam", platform_integration="steam",
+                          strict_isolation_eligibility="", external_state_domains=[])
+            record_path.write_text(json.dumps(record, ensure_ascii=False) + "\n", encoding="utf-8")
+            separate = root / "separate"
+            separate.mkdir()
+            aliases = [str(install) + os.sep + ".", str(install / "data") + os.sep + ".."]
+            availability = {"windows_case_alias": False, "distinct_short_name_alias": False,
+                            "directory_link_alias": False, "directory_link_error": None}
+            if os.name == "nt":
+                import ctypes
+                uppercase = str(install).upper()
+                if Path(uppercase).exists() and os.path.samefile(install, uppercase):
+                    aliases.append(uppercase)
+                    availability["windows_case_alias"] = True
+                kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+                short_name = kernel.GetShortPathNameW
+                short_name.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32]
+                short_name.restype = ctypes.c_uint32
+                size = short_name(str(install), None, 0)
+                if size:
+                    buffer = ctypes.create_unicode_buffer(size)
+                    written = short_name(str(install), buffer, size)
+                    if 0 < written < size and buffer.value != str(install):
+                        self.assertTrue(os.path.samefile(install, buffer.value))
+                        aliases.append(buffer.value)
+                        availability["distinct_short_name_alias"] = True
+            alias_link = root / "root-alias"
+            try:
+                alias_link.symlink_to(install, target_is_directory=True)
+            except OSError as error:
+                availability["directory_link_error"] = error.winerror if os.name == "nt" else error.errno
+            else:
+                self.assertTrue(os.path.samefile(install, alias_link))
+                aliases.append(str(alias_link))
+                availability["directory_link_alias"] = True
+
+            def inventory() -> dict[str, str]:
+                entries = {}
+                for path in sorted(root.rglob("*")):
+                    value = ("link:" + os.readlink(path) if path.is_symlink() else
+                             "directory" if path.is_dir() else hashlib.sha256(path.read_bytes()).hexdigest())
+                    entries[path.relative_to(root).as_posix()] = value
+                return entries
+
+            before = inventory()
+            self.target_alias_observations = {"availability": availability, "same_targets": aliases,
+                                              "before_inventory": before, "cases": []}
+            required = {"external_root_requires_distinct_managed_target", "in_place_authority_conversion_refused"}
+            for target in aliases:
+                with self.subTest(target=target):
+                    args = ["--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                            "--management", "managed", "--source-ref", "synthetic-source:2.0.77",
+                            "--target", target, "--json"]
+                    code, stdout, stderr = invoke(args)
+                    self.assertEqual(0, code, stderr or stdout)
+                    plan = json.loads(stdout)
+                    self.assertTrue(required <= set(plan["blockers"]))
+                    self.assertEqual(target, plan["desired_state"]["target_root"])
+                    self.assertEqual("selected_unverified", plan["desired_state"]["source"]["trust_status"])
+                    self.assertFalse(plan["mutation_executed"])
+                    self.assertFalse(plan["apply_available"])
+                    self.assertTrue(all(value is False for value in plan["no_write_guarantees"].values()))
+                    self.assertEqual(before, inventory())
+                    self.target_alias_observations["cases"].append({"target": target, "kind": "same",
+                                                                    "plan": plan, "after_inventory": inventory()})
+                    code, stdout, stderr = invoke([
+                        "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                        "--target", target, "--json",
+                    ])
+                    self.assertEqual(0, code, stderr or stdout)
+                    self.assertEqual("already_reconciled", json.loads(stdout)["summary"]["status"])
+                    self.assertEqual(before, inventory())
+            for target in (separate, root / "absent-target"):
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                    "--management", "managed", "--target", str(target), "--json",
+                ])
+                self.assertEqual(0, code, stderr or stdout)
+                plan = json.loads(stdout)
+                self.assertFalse(required & set(plan["blockers"]))
+                self.assertIn("source_candidate_required_for_materialisation", plan["blockers"])
+                self.assertFalse(plan["apply_available"])
+                self.assertEqual(before, inventory())
+                self.target_alias_observations["cases"].append({"target": str(target), "kind": "distinct",
+                                                                "plan": plan, "after_inventory": inventory()})
+            invalid_target = str(install / "data" / "base" / "info.json" / "child")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                "--management", "managed", "--target", invalid_target, "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            invalid_plan = json.loads(stdout)
+            self.assertIn("target_identity_unresolved", invalid_plan["blockers"])
+            self.assertTrue(required <= set(invalid_plan["blockers"]))
+            self.assertFalse(invalid_plan["apply_available"])
+            self.assertEqual(before, inventory())
+            self.target_alias_observations["cases"].append({"target": invalid_target, "kind": "unresolved",
+                                                            "plan": invalid_plan, "after_inventory": inventory()})
+
     def test_install_model_and_reconciliation_are_read_only_and_conservative(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -422,6 +536,61 @@ class CliTests(unittest.TestCase):
                 ])
             self.assertNotEqual(code, 0, stderr)
             self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
+
+    def test_managed_move_cli_requires_exact_destination_grammar_without_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace, destination = root / "workspace", root / "destination"
+            for arguments in ([], ["--target"], ["--target", ""],
+                              ["--target", str(destination), "--target", str(destination)],
+                              ["--target", str(destination), "--json", "--json"],
+                              ["--target", str(destination), "--unknown", "value"],
+                              ["--target", str(destination), "stray"]):
+                code, _stdout, _stderr = invoke([
+                    "--workspace", str(workspace), "installs", "move", "plan", "managed-fixture", *arguments,
+                ])
+                self.assertEqual(code, 2, arguments)
+                self.assertFalse(workspace.exists())
+                self.assertFalse(destination.exists())
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "move", "plan", "unknown-install",
+                "--target", str(destination), "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse(workspace.exists())
+            self.assertFalse(destination.exists())
+
+    def test_managed_move_apply_requires_complete_exact_handoff_without_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace, destination = root / "workspace", root / "destination"
+            valid = ["installs", "move", "apply", "managed-fixture", "move-plan-fixture",
+                     "--target", str(destination), "--digest", "1" * 64,
+                     "--plan-created-at", "2099-01-01T00:00:00Z", "--record-digest", "2" * 64,
+                     "--transaction-id", "tx-move-fixture", "--applied-at", "2099-01-01T00:00:01Z",
+                     "--confirm", "APPLY"]
+            invalid = [valid[:4], ["installs", "move", "apply", "old-plan", "--digest", "1" * 64, "--confirm", "APPLY"]]
+            for option in ("--target", "--record-digest", "--plan-created-at", "--transaction-id", "--applied-at"):
+                changed = valid.copy()
+                offset = changed.index(option)
+                del changed[offset:offset + 2]
+                invalid.append(changed)
+            invalid.extend([valid + ["--target", str(destination)], valid + ["--json", "--json"],
+                            valid + ["--unknown", "value"]])
+            for arguments in invalid:
+                code, _stdout, _stderr = invoke(["--workspace", str(workspace), *arguments])
+                self.assertEqual(code, 2, arguments)
+                self.assertFalse(workspace.exists())
+                self.assertFalse(destination.exists())
+            environment = {"FACMAN_SETUP_STATE_ROOT": "", "FACMAN_SETUP_ACCEPTANCE_ROOT": "",
+                           "FACMAN_SETUP_POLICY_ACTIVATION": ""}
+            with mock.patch.dict(os.environ, environment, clear=False):
+                code, stdout, stderr = invoke(["--workspace", str(workspace), *valid, "--json"])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "live_target_acceptance_required")
+            self.assertFalse(workspace.exists())
+            self.assertFalse(destination.exists())
 
     def test_managed_uninstall_plan_requires_bound_lifecycle_evidence_without_writes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -706,7 +875,7 @@ class CliTests(unittest.TestCase):
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "readiness", "main",
-                "--intent", "load_save", "--json",
+                "--intent", "benchmark", "--json",
             ])
             self.assertNotEqual(code, 0, stderr)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "unsupported_launch_intent")
@@ -1048,8 +1217,16 @@ class CliTests(unittest.TestCase):
             code, stdout, stderr = invoke(["--workspace", str(workspace), "modsets", "export", "modded", str(pack), "--json"])
             self.assertEqual(code, 0, stderr)
             exported = json.loads(stdout)
-            self.assertEqual(exported["files"], 2)
+            self.assertEqual(exported["files"], 3)
             self.assertTrue(pack.read_bytes().startswith(b"PK\x03\x04"))
+            with zipfile.ZipFile(pack) as archive:
+                self.assertEqual(set(archive.namelist()), {
+                    "modpack-manifest.v1.json", "modset-lock.v1.json", "mods/metadata-example_9.8.7.zip",
+                })
+                self.assertEqual(archive.read("mods/metadata-example_9.8.7.zip"), mod_zip.read_bytes())
+                manifest = json.loads(archive.read("modpack-manifest.v1.json"))
+                self.assertEqual(manifest["source_lock"]["blob"]["sha256"],
+                                 hashlib.sha256(archive.read("modset-lock.v1.json")).hexdigest())
 
     def test_managed_install_operations_are_setup_gated(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -1174,6 +1351,13 @@ class CliTests(unittest.TestCase):
                     "install",
                     "apply",
                     "plan.fixture",
+                    "--version", "2.0.77",
+                    "--archive", str(archive),
+                    "--target", str(target),
+                    "--id", "managed-fixture",
+                    "--plan-created-at", "2026-09-26T00:00:00Z",
+                    "--transaction-id", "tx-managed-gated",
+                    "--applied-at", "2026-09-26T00:00:01Z",
                     "--digest",
                     digest,
                     "--confirm",
@@ -1184,7 +1368,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1)
             apply_refusal = json.loads(stdout)
             self.assertEqual(apply_refusal["operation"], "installs.install.apply")
-            self.assertEqual(apply_refusal["refusal"]["code"], "live_target_acceptance_required")
+            self.assertEqual(apply_refusal["refusal"]["code"], "setup_authority_required")
             self.assertFalse(target.exists())
 
             code, _stdout, _stderr = invoke(
@@ -1195,6 +1379,13 @@ class CliTests(unittest.TestCase):
                     "install",
                     "apply",
                     "plan.fixture",
+                    "--version", "2.0.77",
+                    "--archive", str(archive),
+                    "--target", str(target),
+                    "--id", "managed-fixture",
+                    "--plan-created-at", "2026-09-26T00:00:00Z",
+                    "--transaction-id", "tx-managed-gated",
+                    "--applied-at", "2026-09-26T00:00:01Z",
                     "--digest",
                     digest,
                     "--confirm",

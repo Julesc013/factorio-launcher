@@ -1,0 +1,118 @@
+{
+  "schema": "facman.tui_content_instance_context_source_fix.v1",
+  "status": "SOURCE_QUALIFIED_REQUIRES_CURRENT_HEAD_REQUIRED_CI_AND_PRODUCED_WINDOWS_TUI_PROOF",
+  "recorded_at_utc": "2026-10-17T13:13:25.526805+00:00",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base_commit": "b7be2d4832958574ea36959b25730461b404b68c",
+  "problem": "A selected builtin-mod row on Content was used as the selected instance; ordinary confirmed pack import then refused invalid_identifier.",
+  "change": "Use selected_context as instance authority; only enrich missing metadata from a matching explicit instance_id row. Preserve content highlighting.",
+  "source_files": {
+    "apps/tui/tui_product_model.cpp": "547aa11f0ae31f756dafbd0050b640990051ef38aaf3deca49dad093d0dfbb7d",
+    "tests/native/facman_tui_product_model_smoke.cpp": "9cea6160e0c04aed52a6c8b23398c012d8bc0f1d359bc91ae739ff0201233dac",
+    "tests/test_tui_product.py": "06a47d969a6e1066d6917459fe4d3330e30f891c0e223614a12e45c0fdce41c9"
+  },
+  "retained_delivered_baseline": {
+    "artifact": 12081497785,
+    "producer": "da5b50a40290c1a749c2cbc36a92e2e3c79a61ac",
+    "status": "FAIL_RETAINED",
+    "calls": 10,
+    "confirmed_error": "invalid_identifier",
+    "no_confirmed_import_published": true,
+    "source": "evidence/tui-pack-import-result-01.json",
+    "sha256": "67e2d89796fe304c93e8b489d776f291990e1aed8770f20737e6a984fcf204e0"
+  },
+  "source_validation": {
+    "native_tests": 2,
+    "native_result_sha256": "80c4a6397e857c20ba05cf6ceb7319168495045df034c782dd078d0e7ab36852",
+    "source_dirty": true,
+    "exact_three_file_delta": true,
+    "ordinary_linear_process_tui_tests": 1,
+    "ordinary_tui_invocations": 3,
+    "cli_invocations": 10,
+    "input_cancel": true,
+    "confirmation_cancel": true,
+    "explicit_confirmation": true,
+    "offline_selected_content_settings_provenance_rebound_lock_verified": true,
+    "producer_installation_and_foreign_data_preserved": true,
+    "all_product_jobs_natural_and_empty": true,
+    "result_sha256": "f29e0878057293c2021a4075b7e5d726f64389a6b6d6c9e71da6524347596200",
+    "source_review_sha256": "b830d3357ef528b66c9480d755be7fb31a3fc71db34535851d0c318c81e064e1",
+    "actual_source_review_sha256": "4f35e83b17702642dbeb209353a5a11a72b18c82c51f91e202d512f8213546e1"
+  },
+  "compiler_lifetime": {
+    "primary_exit_zero": true,
+    "compiler_only_owned_job_cleanup": true,
+    "natural_descendant_lifetime_qualified": false
+  },
+  "custody": {
+    "file": "tui-pack-import-context-custody.v1.zip",
+    "sha256": "22d5ffbb87a75d16892e71cf12c37645490e5f3e5167ff8f76aec3da28fb3163",
+    "bytes": 818839,
+    "entries": 209,
+    "source_and_output_hashes_only_for_bulk_repository_and_native_executables": true
+  },
+  "required_ci": {
+    "pending": true,
+    "complete_python_profile_includes_remaining_unchanged_tui_methods": true
+  },
+  "produced_windows_tui_proof_pending": true,
+  "limits": {
+    "one_existing_cache_build": true,
+    "new_task_roots": 0,
+    "new_clones": 0,
+    "new_worktrees": 0,
+    "vm_changes": false,
+    "provider_changes": false,
+    "original_baseline_unchanged": true,
+    "full_logs_external": true
+  },
+  "authority_delta": "none",
+  "workunit_closed": false,
+  "fullscreen_or_physical_terminal_accepted": false,
+  "real_game": false,
+  "human": false,
+  "beta": false,
+  "rc": false,
+  "release": false,
+  "ci_followup": {
+    "source": "78c45dd61a8a42a333c14be171dcfd17673294e8",
+    "run": 39035949753,
+    "failed_job": 117405624782,
+    "original_failed_suite": {
+      "tests": 2156,
+      "failures": 1,
+      "errors": 2,
+      "skips": 100
+    },
+    "causes": [
+      "UTF-8 config oracle decoded with CP1252 on Python3.11 Windows",
+      "Existing late-recovery preservation snapshot raced the exclusive lease after releasing its owner"
+    ],
+    "test_only_corrections": [
+      "Explicit UTF-8 config decoding retains exact Unicode path assertion",
+      "Snapshot all bytes before releasing owner; include exact own b'go' release file and compare all retained bytes after join"
+    ],
+    "new_runtime_changes": false,
+    "new_native_builds": 0,
+    "focused_tests": 2,
+    "late_recovery_subcases": [
+      "target",
+      "stage",
+      "journal"
+    ],
+    "focused_skips": 0,
+    "python": "3.11.9",
+    "utf8_mode": 0,
+    "default_text_encoding": "cp1252",
+    "focused_actual_result_sha256": "735ca11bd5b04a2942831cbab7f31305998e7ad7e4aaeb35dc1f1f76c4310dc4",
+    "independent_source_review_sha256": "030c6f98843a47eeade89f6f7425e59566dc1a8ff558a5b14a5862046c2ff811",
+    "custody": {
+      "file": "tui-pack-import-ci-oracle-custody.v1.zip",
+      "sha256": "2f7b2ca46d875694ec4a0c0f00bb98423b99d2b48d354da1bf1a52fa5ad43b40",
+      "bytes": 1852248
+    },
+    "full_workspace_and_refusal_assertions_retained": true,
+    "required_new_head_ci_pending": true,
+    "produced_windows_proof_pending": true
+  }
+}

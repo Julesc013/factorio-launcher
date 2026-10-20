@@ -8,6 +8,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -40,11 +41,37 @@ void write_text(const fs::path& path, const std::string& text)
     output << text;
 }
 
+std::map<std::string, std::string> snapshot(const fs::path& root)
+{
+    std::map<std::string, std::string> result;
+    for (const auto& entry : fs::recursive_directory_iterator(root)) {
+        const std::string relative = entry.path().lexically_relative(root).generic_string();
+        if (entry.is_directory()) {
+            result["directory:" + relative] = "";
+        } else if (entry.is_regular_file()) {
+            std::ifstream input(entry.path(), std::ios::binary);
+            result["file:" + relative] = std::string(
+                std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+        }
+    }
+    return result;
+}
+
+struct TemporaryTree {
+    fs::path path;
+    ~TemporaryTree()
+    {
+        std::error_code ignored;
+        fs::remove_all(path, ignored);
+    }
+};
+
 } // namespace
 
 int main()
 {
     fs::path root = unique_root();
+    const TemporaryTree cleanup {root};
     fs::path install_root = root / "foreign install";
     fs::path instance_root = root / "workspace" / "instances" / "snowman";
     fs::create_directories(install_root / "data" / "base");
@@ -53,6 +80,11 @@ int main()
     fs::create_directories(instance_root / "saves");
     fs::create_directories(instance_root / "locks");
     write_text(install_root / "factorio-test", "probe\n");
+    const fs::path base_identity = install_root / "data" / "base" / "info.json";
+    write_text(base_identity, "{\"version\":\"2.0.77\"}");
+    write_text(install_root / "saves" / "foreign.zip", "foreign-save");
+    write_text(install_root / "mods" / "foreign.zip", "foreign-mod");
+    write_text(install_root / "config" / "config.ini", "foreign-config");
 
     launch::InstanceLaunchRef instance;
     instance.instance_id = "snowman";
@@ -93,6 +125,28 @@ int main()
     if (preflight.version_family_id != "F200" ||
         preflight.version_family_status != "eligible" ||
         !preflight.version_exact_patch) return 48;
+
+    const auto content_refused_without_effects = [&]() {
+        const auto before = snapshot(root);
+        const auto current = launch::preflight_launch(
+            instance, install, "launch_plan.preflight", protected_factorio_roots);
+        return !current.ok && has_problem(current, "install base identity file is missing") &&
+            snapshot(root) == before;
+    };
+    fs::remove(base_identity);
+    if (!content_refused_without_effects()) return 51;
+    fs::create_directory(base_identity);
+    if (!content_refused_without_effects()) return 52;
+    fs::remove(base_identity);
+    write_text(base_identity, "{\"version\":\"2.0.77\"}");
+    fs::rename(base_identity.parent_path(), install_root / "data" / "retained-base");
+    if (!content_refused_without_effects()) return 53;
+    fs::rename(install_root / "data" / "retained-base", base_identity.parent_path());
+    const auto restored_before = snapshot(root);
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
+    if (!preflight.ok || snapshot(root) != restored_before) return 54;
+
     for (const auto& version_case : {
              std::pair<const char*, const char*> {"1.0.0", "F100"},
              {"1.1.110", "F110"}, {"2.0.77", "F200"}, {"2.1.14", "F210"},

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_instance_model.h"
+#include "flb_factorio_instance_staging.h"
+#include "flb_factorio_routing_ini_delta.h"
 
 #include "fl_file_io.h"
 #include "fl_json.h"
@@ -11,9 +13,13 @@
 #include "fl_workspace_store.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_install_model.h"
+#include "flb_factorio_content_records.h"
 #include "flb_factorio_launch_plan.h"
+#include "flb_factorio_mods.h"
 #include "flb_factorio_modset_operations.h"
+#include "flb_factorio_modset_solver.h"
 #include "flb_factorio_profiles.h"
+#include "flb_factorio_save_index.h"
 #include "flb_factorio_version_family.h"
 
 #include <algorithm>
@@ -93,9 +99,37 @@ struct Projection {
     std::string installation_health = "not_observed";
     std::string instance_root_identity = "not_observed";
     std::string profile_digest = "not_observed";
+    std::string profile_source_identity = "not_observed";
+    std::string recovery_identity = "not_observed";
     std::string profile_status = "not_observed";
+    std::string profile_launch_intent = "menu";
+    std::string launch_intent = "menu";
+    std::string selected_save;
+    std::string selected_save_evidence;
+    std::string selected_save_identity = "not_observed";
+    std::string selected_context_identity = "not_observed";
+    std::string selected_association_identity = "not_observed";
+    std::string selected_archive_identity = "not_observed";
+    std::string selected_save_state = "blocked";
+    std::string selected_save_code = "instance_selected_save_not_selected";
+    std::string selected_save_detail = "The effective profile does not select a save";
     std::string modset_status = "not_required";
     std::string modset_detail;
+    std::string modset_local_lock_identity = "not_observed";
+    std::string modset_shared_lock_identity = "not_observed";
+    std::string modset_verification;
+    std::vector<std::pair<std::string, std::string>> modset_artifacts;
+    std::optional<profiles::CurrentInstancePlan> profile_plan;
+    std::string profile_plan_refusal;
+    std::string profile_plan_refusal_message;
+    std::string profile_plan_refusal_path;
+    std::string overrides_input_identity = "not_observed";
+    std::string overrides_presence = "unavailable";
+    std::string installation_plan;
+    std::string installation_plan_refusal;
+    std::string installation_plan_refusal_message;
+    std::string installation_plan_refusal_path;
+    bool owner_inputs_changed = false;
     std::string backup_state = "not_configured";
     std::string last_run_state = "not_observed";
     std::size_t override_count = 0;
@@ -116,6 +150,7 @@ struct Projection {
     bool config_valid = false;
     bool profile_valid = false;
     bool modset_valid = true;
+    bool modset_archives_verified = false;
 };
 
 struct EncodedComponent {
@@ -254,6 +289,13 @@ json::ArrayBuilder strings(const std::vector<std::string>& values)
     return output;
 }
 
+json::ArrayBuilder artifact_strings(const std::vector<std::pair<std::string, std::string>>& values)
+{
+    json::ArrayBuilder output;
+    for (const auto& value : values) output.add_string(value.first + ":" + value.second);
+    return output;
+}
+
 json::ObjectBuilder operation_guarantees()
 {
     json::ObjectBuilder output;
@@ -388,6 +430,27 @@ void inspect_installation(Projection& projection, const fs::path& workspace)
         if (health != nullptr) projection.installation_health = object_string(*health, "status");
     }
 
+    installation::DesiredInstallationState desired;
+    desired.install_id = projection.instance.install_ref.str();
+    desired.version = projection.instance.factorio_version;
+    desired.source_ref = projection.install->source_ref;
+    desired.target_root = path_string(projection.install->root);
+    if (!projection.version_recorded || !projection.version_exact_patch) {
+        projection.installation_plan_refusal = "instance_required_version_unusable";
+    }
+    auto planned = installation::reconciliation_plan_json(*projection.install_ref, desired);
+    if (planned && projection.installation_plan_refusal.empty()) {
+        auto report = json::parse(planned.value());
+        if (!report || object_string(report.value(), "current_evidence_digest") != projection.installation_evidence_digest) {
+            projection.owner_inputs_changed = true;
+        }
+        projection.installation_plan = planned.take_value();
+    } else if (!planned) {
+        projection.installation_plan_refusal = planned.error().code;
+        projection.installation_plan_refusal_message = planned.error().message;
+        projection.installation_plan_refusal_path = planned.error().path;
+    }
+
     std::error_code error;
     const bool root = fs::is_directory(projection.install->root, error) && !error;
     const bool executable = fs::is_regular_file(projection.install->executable, error) && !error;
@@ -397,7 +460,8 @@ void inspect_installation(Projection& projection, const fs::path& workspace)
     projection.version_matches = projection.version_recorded &&
         projection.instance.factorio_version == projection.install->version;
     projection.content_present = root &&
-        fs::is_directory(projection.install->root / "data" / "base", error) && !error;
+        fs::is_directory(projection.install->root / "data" / "base", error) && !error &&
+        fs::is_regular_file(projection.install->root / "data" / "base" / "info.json", error) && !error;
 }
 
 void inspect_root_and_content(Projection& projection, const fs::path& workspace)
@@ -437,14 +501,37 @@ void inspect_root_and_content(Projection& projection, const fs::path& workspace)
     }
 }
 
+std::string optional_evidence_identity(const fs::path& path);
+
 void inspect_profile(Projection& projection, const fs::path& workspace)
 {
+    if (projection.root_safe) {
+        const fs::path path = projection.instance.root / "instance-overrides.v1.json";
+        std::error_code error;
+        const fs::file_status status = fs::symlink_status(path, error);
+        if (error == std::errc::no_such_file_or_directory || (!error && status.type() == fs::file_type::not_found)) {
+            projection.overrides_presence = "absent";
+            projection.overrides_input_identity = "absent";
+        } else {
+            projection.overrides_input_identity = optional_evidence_identity(path);
+            if (!error && fs::is_regular_file(status) && projection.overrides_input_identity.rfind("file:", 0U) == 0U)
+                projection.overrides_presence = "present";
+        }
+    }
     auto effective = profiles::effective_profile_for_instance(
         workspace, projection.instance.id.str(), projection.instance.profile);
     if (!effective) {
+        std::string detail;
+        if (facman::base::validate_identifier(projection.instance.profile, detail))
+            projection.profile_source_identity = optional_evidence_identity(
+                workspace / "profiles" / fs::u8path(projection.instance.profile) / "profile.v1.json");
         projection.profile_status = effective.error().code;
+        projection.profile_plan_refusal = effective.error().code;
+        projection.profile_plan_refusal_message = effective.error().message;
+        projection.profile_plan_refusal_path = effective.error().path;
         return;
     }
+    projection.profile_source_identity = "sha256:" + effective.value().source_profile_sha256;
     json::ArrayBuilder arguments;
     for (const std::string& argument : effective.value().launch_arguments) arguments.add_string(argument);
     json::ObjectBuilder settings;
@@ -462,8 +549,36 @@ void inspect_profile(Projection& projection, const fs::path& workspace)
     identity.add_string("template_id", effective.value().template_id);
     identity.add_object("settings", settings);
     projection.profile_digest = sha256_text(canonical_json(identity.serialize()));
+    auto planned = profiles::plan_current_instance(workspace, projection.instance.id.str(),
+        projection.instance.profile, projection.instance_record.digest);
+    if (planned) {
+        const std::string override_suffix = ":sha256:" + planned.value().overrides_sha256;
+        const bool presence_changed = projection.overrides_presence == "unavailable" ||
+            (projection.overrides_presence == "present") != planned.value().overrides_present;
+        const bool override_changed = presence_changed || (planned.value().overrides_present &&
+            (projection.overrides_input_identity.size() < override_suffix.size() ||
+             projection.overrides_input_identity.compare(projection.overrides_input_identity.size() - override_suffix.size(),
+                 override_suffix.size(), override_suffix) != 0));
+        if (override_changed || !profiles::current_plan_matches_effective(planned.value(), effective.value())) {
+            projection.owner_inputs_changed = true;
+        }
+        projection.profile_plan = planned.take_value();
+    } else {
+        projection.profile_plan_refusal = planned.error().code;
+        projection.profile_plan_refusal_message = planned.error().message;
+        projection.profile_plan_refusal_path = planned.error().path;
+        projection.owner_inputs_changed = projection.owner_inputs_changed ||
+            planned.error().code == "instance_projection_inputs_changed" ||
+            planned.error().code == "profile_instance_revision_changed";
+    }
     projection.profile_status = "valid";
     projection.profile_valid = true;
+    if (effective.value().settings.selection_mode == "load-save") {
+        projection.profile_launch_intent = "load_save";
+        projection.selected_save = effective.value().settings.selection;
+    } else if (effective.value().settings.selection_mode == "benchmark-save") {
+        projection.profile_launch_intent = "benchmark";
+    }
 
     const fs::path overrides = projection.instance.root / "instance-overrides.v1.json";
     std::error_code error;
@@ -477,6 +592,59 @@ void inspect_profile(Projection& projection, const fs::path& workspace)
         }
     }
 }
+
+// Internal model seam proposed for the existing-file owner. No runtime API,
+// serialized override, launch authority or currently qualified source change.
+// Caller supplies the SAME retained capability bound by the domain owner.
+facman::core::Result<FileObservation> observe_owner_configuration(
+    const facman::platform::RetainedStreamRewriteFile& held)
+{
+    std::string bytes;
+    facman::platform::FileIdentity identity;
+    const auto status = held.observe(bytes, identity);
+    if (!status.ok()) return fail<FileObservation>(
+        "configuration_held_observation_unavailable", status.detail);
+    FileObservation result;
+    result.text = std::move(bytes);
+    result.digest = sha256_text(result.text);
+    result.identity = "file:" + std::to_string(identity.device) + ":" +
+        std::to_string(identity.object) + ":" + std::to_string(identity.size) +
+        ":" + std::to_string(identity.link_count) + ":sha256:" + result.digest;
+    return facman::core::Result<FileObservation>::success(std::move(result));
+}
+
+bool unchanged_owner_configuration(const FileObservation& before,
+    const facman::platform::RetainedStreamRewriteFile& held)
+{
+    const auto after = observe_owner_configuration(held);
+    return after && before.identity == after.value().identity &&
+        before.digest == after.value().digest && before.text == after.value().text;
+}
+
+// Replace only the internal inspect_configuration call/path-check branches
+// when project() receives a non-null, owner-held capability. Ordinary callers
+// retain all original path reads. The pure byte-parser overload must reuse the
+// original effective-config parser and all root/path checks, without opening
+// config.ini. Raw original/intended/partial membership is checked by the owner
+// and capability; this projection must never turn partial bytes into ready.
+bool inspect_owner_configuration(Projection& projection,
+    const facman::platform::RetainedStreamRewriteFile& held)
+{
+    if (!projection.root_safe || !same_path(held.path(), projection.instance.root / "config/config.ini")) return false;
+    const auto before = observe_owner_configuration(held);
+    if (!before) return false;
+    const auto effective = launch::parse_effective_config_bytes(
+        projection.instance.root / "config/config.ini",
+        projection.instance.root / "mods", before.value().text);
+    if (!unchanged_owner_configuration(before.value(), held)) return false;
+    projection.config = before.value();
+    projection.config_valid = effective.ok && projection.install &&
+        same_path(effective.read_data, projection.install->root / "data") &&
+        same_path(effective.write_data, projection.instance.root) &&
+        same_path(effective.mod_root, projection.instance.root / "mods");
+    return true;
+}
+
 
 void inspect_configuration(Projection& projection)
 {
@@ -499,11 +667,73 @@ void inspect_configuration(Projection& projection)
         same_path(effective.mod_root, projection.instance.root / "mods");
 }
 
+std::string artifact_identity(const fs::path& path)
+{
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return "unavailable:unsafe_artifact";
+    facman::platform::StableInputFile input;
+    auto status = input.open_no_follow(path);
+    if (!status.ok() || !input.identity().regular_file || input.identity().link_count != 1U)
+        return "unavailable:unsafe_artifact";
+    facman::base::Sha256Hasher hash;
+    unsigned char buffer[64U * 1024U];
+    std::uint64_t offset = 0;
+    while (offset < input.size()) {
+        const std::size_t count = input.read_at(offset, reinterpret_cast<char*>(buffer),
+            static_cast<std::size_t>(std::min<std::uint64_t>(sizeof(buffer), input.size() - offset)));
+        if (count == 0U) return "unavailable:artifact_read_failed";
+        hash.update(buffer, count);
+        offset += count;
+    }
+    if (!input.revalidate().ok()) return "unavailable:artifact_changed";
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return "unavailable:unsafe_artifact";
+    const auto& identity = input.identity();
+    return "file:" + std::to_string(identity.device) + ":" + std::to_string(identity.object) +
+        ":" + std::to_string(identity.size) + ":sha256:" + hash.finish();
+}
+
+std::string builtin_metadata_identity(const fs::path& path)
+{
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail)) return "unavailable:unsafe_artifact";
+    auto observed = observe_file(path, 1024U * 1024U);
+    if (!observed || facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return "unavailable:builtin_metadata";
+    return observed.value().identity;
+}
+
 bool safe_mod_file_name(const std::string& value)
 {
     if (value.empty() || value.size() > 255U) return false;
     const fs::path parsed = fs::u8path(value);
     return parsed == parsed.filename() && value != "." && value != "..";
+}
+
+std::string lock_input_identity(const fs::path& path)
+{
+    std::string detail;
+    if (path.empty() || facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return "unavailable:unsafe_lock_path";
+    std::error_code error;
+    const fs::file_status status = fs::symlink_status(path, error);
+    if (error == std::errc::no_such_file_or_directory || (!error && status.type() == fs::file_type::not_found))
+        return "absent";
+    if (error) return "unavailable:lock_status";
+    if (!fs::is_regular_file(status)) return "present:unavailable:non_regular_lock";
+    return "present:" + optional_evidence_identity(path);
+}
+
+facman::core::Result<FileObservation> activation_observation(const fs::path& path)
+{
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return fail<FileObservation>("instance_evidence_unsafe", detail, path);
+    auto observed = observe_file(path, 16U * 1024U * 1024U);
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail))
+        return fail<FileObservation>("instance_evidence_unsafe", detail, path);
+    return observed;
 }
 
 void inspect_modset(Projection& projection, const fs::path& workspace)
@@ -513,6 +743,10 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
     const auto shared_result = layout.modset_lock(projection.instance.id);
     const fs::path local = local_result ? local_result.value() : fs::path {};
     const fs::path shared = shared_result ? shared_result.value() : fs::path {};
+    // The projection prefers the shared lock; the actual verifier consumes the
+    // local lock. Preserve both raw owner inputs even when later inspection refuses.
+    projection.modset_local_lock_identity = lock_input_identity(local);
+    projection.modset_shared_lock_identity = lock_input_identity(shared);
     std::error_code error;
     fs::path lock_path;
     if (!shared.empty() && fs::is_regular_file(shared, error) && !error) lock_path = shared;
@@ -541,6 +775,18 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         return;
     }
 
+    const auto activation_file = activation_observation(mods_root / "mod-list.json");
+    const auto activation_identity = activation_file ? activation_file.value().identity :
+        "unavailable:" + activation_file.error().code;
+    projection.modset_artifacts.emplace_back("mod-list.json", activation_identity);
+
+    std::string lock_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(lock_path, lock_detail)) {
+        projection.modset_status = "invalid";
+        projection.modset_detail = "Modset lock path crosses a link or reparse boundary";
+        projection.modset_valid = false;
+        return;
+    }
     auto observed = observe_file(lock_path);
     if (!observed) {
         projection.modset_status = "invalid";
@@ -548,6 +794,11 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         projection.modset_valid = false;
         return;
     }
+    const std::string& expected_lock_identity = lock_path == shared
+        ? projection.modset_shared_lock_identity : projection.modset_local_lock_identity;
+    if (expected_lock_identity != "present:" + observed.value().identity ||
+        facman::base::path_crosses_link_or_reparse_point(lock_path, lock_detail))
+        projection.owner_inputs_changed = true;
     projection.modset_lock = observed.take_value();
     auto document = json::parse(projection.modset_lock->text);
     if (!document || !document.value().is_object()) {
@@ -567,6 +818,18 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         return;
     }
     projection.mod_count = mods->size();
+    // Archive verification consumes the local owner lock. Activation and the
+    // readiness binding must describe that same selection, including when the
+    // projection found the shared copy first.
+    if (lock_path == shared) {
+        auto local_lock = observe_file(local);
+        if (!local_lock || local_lock.value().text != projection.modset_lock->text) {
+            projection.modset_status = "verification_failed";
+            projection.modset_detail = "Instance and shared modset locks disagree";
+            projection.modset_valid = false;
+            return;
+        }
+    }
     if (!projection.instance.factorio_version.empty() &&
         version != projection.instance.factorio_version) {
         projection.modset_status = "incompatible";
@@ -574,37 +837,89 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         projection.modset_valid = false;
         return;
     }
-    for (std::size_t index = 0; index < mods->size(); ++index) {
-        const json::Value* item = mods->at(index);
-        if (item == nullptr || !item->is_object()) {
-            projection.modset_status = "invalid";
-            projection.modset_detail = "Modset lock contains a non-object entry";
-            projection.modset_valid = false;
-            return;
+    auto content_lock = facman::factorio::content::content_lock_from_modset_lock_json(
+        projection.modset_lock->text);
+    if (!content_lock || content_lock.value().instance_id != projection.instance.id.str()) {
+        projection.modset_status = "invalid";
+        projection.modset_detail = content_lock ? "Modset lock names another instance" : content_lock.error().message;
+        projection.modset_valid = false;
+        return;
+    }
+    std::vector<std::pair<fs::path, std::string>> observed_artifacts;
+    std::vector<std::pair<fs::path, std::string>> observed_builtins;
+    std::optional<std::vector<facman::factorio::mods::ModRef>> inventory;
+    for (const auto& entry : content_lock.value().entries) {
+        if (!entry.enabled) continue;
+        fs::path artifact = mods_root / fs::u8path(entry.file_name);
+        if (entry.virtual_package) {
+            if (!projection.install || entry.source != "install-data:" + projection.install->id.str() ||
+                !safe_mod_file_name(entry.file_name)) {
+                projection.modset_status = "invalid";
+                projection.modset_detail = "Built-in package is not bound to the selected installation";
+                projection.modset_valid = false;
+                return;
+            }
+            artifact = projection.install->root / "data" / fs::u8path(entry.file_name) / "info.json";
+            const std::string before = builtin_metadata_identity(artifact);
+            projection.modset_artifacts.emplace_back("builtin:" + entry.file_name, before);
+            if (before.rfind("file:", 0U) != 0U) {
+                projection.modset_status = "missing_artifacts";
+                projection.modset_detail = "Built-in package metadata is unavailable or unsafe: " + entry.file_name;
+                projection.modset_valid = false;
+                return;
+            }
+            if (!inventory) {
+                auto values = facman::factorio::mods::local_inventory(workspace);
+                if (!values) {
+                    projection.modset_status = "verification_failed";
+                    projection.modset_detail = values.error().message;
+                    projection.modset_valid = false;
+                    return;
+                }
+                inventory = values.take_value();
+            }
+            const auto trusted = std::find_if(inventory->begin(), inventory->end(), [&](const auto& value) {
+                return value.valid && value.virtual_package && value.metadata_source == "builtin_info_json" &&
+                    value.validation_status == "virtual" && value.source == entry.source &&
+                    value.name == entry.name && value.version == entry.version &&
+                    value.file_name == entry.file_name && same_path(value.file_path / "info.json", artifact);
+            });
+            if (trusted == inventory->end()) {
+                projection.modset_status = "verification_failed";
+                projection.modset_detail = "Built-in package does not match the selected installation: " + entry.name;
+                projection.modset_valid = false;
+                return;
+            }
+            observed_builtins.emplace_back(artifact, before);
+            continue;
         }
-        const bool enabled = object_bool(*item, "enabled", true);
-        const json::Value* file_field = item->find("file_name");
-        if (!enabled || file_field == nullptr || file_field->is_null()) continue;
-        auto file_name = file_field->string_value();
-        if (!file_name || !safe_mod_file_name(file_name.value())) {
-            projection.modset_status = "invalid";
-            projection.modset_detail = "Modset lock contains an unsafe artifact name";
-            projection.modset_valid = false;
-            return;
-        }
-        const fs::path artifact = mods_root / fs::u8path(file_name.value());
+        const std::string identity = artifact_identity(artifact);
+        projection.modset_artifacts.emplace_back(entry.file_name, identity);
+        observed_artifacts.emplace_back(artifact, identity);
         const auto status = fs::symlink_status(artifact, error);
         std::string detail;
         if (error || !fs::is_regular_file(status) ||
             facman::base::path_crosses_link_or_reparse_point(artifact, detail)) {
             projection.modset_status = "missing_artifacts";
-            projection.modset_detail = "Required mod artifact is unavailable: " + file_name.value();
+            projection.modset_detail = "Required mod artifact is unavailable: " + entry.file_name;
             projection.modset_valid = false;
             return;
         }
     }
     const auto verification = modset_operations::verify_modset(
         workspace, {projection.instance.id.str()});
+    if (projection.modset_local_lock_identity != lock_input_identity(local) ||
+        projection.modset_shared_lock_identity != lock_input_identity(shared))
+        projection.owner_inputs_changed = true;
+    for (const auto& artifact : observed_artifacts) {
+        if (artifact.second != artifact_identity(artifact.first)) projection.owner_inputs_changed = true;
+    }
+    for (const auto& artifact : observed_builtins) {
+        if (artifact.second != builtin_metadata_identity(artifact.first)) projection.owner_inputs_changed = true;
+    }
+    projection.modset_verification = std::visit([](const auto& value) {
+        return modset_operations::to_json(value);
+    }, verification);
     if (const auto* refusal = std::get_if<modset_operations::Refusal>(&verification)) {
         projection.modset_status = "verification_failed";
         projection.modset_detail = refusal->reason + ": " + refusal->detail;
@@ -618,17 +933,145 @@ void inspect_modset(Projection& projection, const fs::path& workspace)
         projection.modset_valid = false;
         return;
     }
+    projection.modset_archives_verified = true;
+    const auto activation = facman::factorio::modsets::solver::verify_activation(
+        mods_root, projection.modset_lock->text);
+    const auto activation_after = activation_observation(mods_root / "mod-list.json");
+    if (activation_file && (!activation_after || activation_file.value().identity != activation_after.value().identity))
+        projection.owner_inputs_changed = true;
+    // Bind the bytes whose enabled set the owner actually parsed, as well as
+    // the surrounding path observations; a restored edit must not mix them.
+    if (activation && activation_file && sha256_text(activation.value()) != activation_file.value().digest)
+        projection.owner_inputs_changed = true;
+    if (!activation || !activation_file) {
+        projection.modset_status = "verification_failed";
+        projection.modset_detail = activation ? "Mod list identity is unavailable" : activation.error().message;
+        projection.modset_valid = false;
+        return;
+    }
     projection.modset_status = "locked_verified";
-    projection.modset_detail = "The exact modset lock, artifacts, hashes, metadata, and compatibility verify";
+    projection.modset_detail = "The exact modset lock, activation, artifacts, hashes, metadata, and compatibility verify";
+}
+
+std::string optional_evidence_identity(const fs::path& path)
+{
+    std::string detail;
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail)) return "unsafe:linked_path";
+    auto observed = observe_file(path);
+    if (facman::base::path_crosses_link_or_reparse_point(path, detail)) return "unsafe:linked_path";
+    return observed ? observed.value().identity : "unavailable:" + observed.error().code;
+}
+
+// Save inspection owns archive recognition. This projection consumes its exact
+// selected record; it neither probes a second archive nor grants launch authority.
+void inspect_selected_save(Projection& projection, const fs::path& workspace)
+{
+    if (!projection.root_safe) {
+        projection.selected_save_code = "instance_root_unsafe";
+        projection.selected_save_detail = "Selected-save observation requires a safe instance root";
+        projection.selected_save_identity = "refused:instance_root_unsafe";
+        return;
+    }
+    if (!projection.profile_valid || projection.profile_launch_intent != "load_save" ||
+        projection.selected_save.empty()) return;
+    facman::factorio::saves::index::Request request;
+    request.instance_id = projection.instance.id.str();
+    request.save = projection.selected_save;
+    const fs::path local_lock = projection.instance.root / "mods" / "modset-lock.v1.json";
+    const fs::path association_path = projection.instance.root / "metadata" / "save-refs" /
+        fs::u8path(projection.selected_save + ".save-ref.v1.json");
+    // Effective-profile validation guards the selection filename. The reused
+    // internal inspector reads only that exact archive; this projection also
+    // requires the exact selected filename and path in the returned evidence.
+    const bool simple_name = safe_mod_file_name(projection.selected_save) &&
+        projection.selected_save.find_first_of("/\\:") == std::string::npos;
+    std::string path_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(local_lock, path_detail) ||
+        (simple_name && (facman::base::path_crosses_link_or_reparse_point(association_path, path_detail) ||
+            facman::base::path_crosses_link_or_reparse_point(
+                projection.instance.root / "saves" / fs::u8path(projection.selected_save), path_detail)))) {
+        projection.selected_save_code = "instance_selected_save_path_unsafe";
+        projection.selected_save_detail = "Selected save or context crosses a link/reparse boundary";
+        projection.selected_save_identity = "refused:instance_selected_save_path_unsafe";
+        return;
+    }
+    const std::string local_before = optional_evidence_identity(local_lock);
+    const std::string association_before = simple_name ? optional_evidence_identity(association_path) : "unsafe";
+    projection.selected_association_identity = association_before;
+    projection.selected_context_identity = "lock:" + local_before + ":association:" + association_before;
+    if (simple_name) projection.selected_archive_identity = artifact_identity(
+        projection.instance.root / "saves" / fs::u8path(projection.selected_save));
+    if (local_before == "unsafe:linked_path" || association_before == "unsafe:linked_path") {
+        projection.selected_save_code = "instance_selected_save_path_unsafe";
+        projection.selected_save_detail = "Selected context became unsafe during evidence observation";
+        projection.selected_save_identity = "refused:instance_selected_save_path_unsafe";
+        return;
+    }
+    auto inspected = facman::factorio::saves::index::inspect_exact_filename(workspace, request);
+    if (!inspected) {
+        projection.selected_save_code = inspected.error().code;
+        projection.selected_save_detail = inspected.error().message;
+        projection.selected_save_identity = "refused:" + inspected.error().code;
+        return;
+    }
+    auto report = json::parse(inspected.value());
+    const json::Value* saves = report ? report.value().find("saves") : nullptr;
+    const json::Value* record = saves && saves->is_array() && saves->size() == 1U ? saves->at(0) : nullptr;
+    const json::Value* archive = record ? record->find("archive_structure") : nullptr;
+    const json::Value* association = record ? record->find("association") : nullptr;
+    const json::Value* context = association ? association->find("context") : nullptr;
+    const json::Value* version = context ? context->find("factorio_version") : nullptr;
+    const json::Value* modset = context ? context->find("modset_lock") : nullptr;
+    if (record) {
+        projection.selected_save_evidence = canonical_json(record->serialize());
+        projection.selected_save_identity = "sha256:" + sha256_text(projection.selected_save_evidence);
+    }
+    if (local_before != optional_evidence_identity(local_lock) ||
+        (simple_name && association_before != optional_evidence_identity(association_path)) ||
+        !record || !archive || !association || !context || !version || !modset ||
+        object_string(*record, "filename") != projection.selected_save ||
+        !same_path(fs::u8path(object_string(*record, "path")),
+            projection.instance.root / "saves" / fs::u8path(projection.selected_save)) ||
+        object_string(*version, "current") != projection.instance.factorio_version ||
+        (projection.modset_lock && !object_string(*modset, "current_sha256").empty() &&
+            object_string(*modset, "current_sha256") != projection.modset_lock->digest)) {
+        projection.selected_save_code = "instance_selected_save_observation_inconsistent";
+        projection.selected_save_detail = "Selected-save inspection does not match the instance projection";
+        return;
+    }
+    if (object_string(*archive, "status") != "valid" || !object_bool(*record, "factorio_save_recognized")) {
+        projection.selected_save_code = "instance_selected_save_invalid";
+        projection.selected_save_detail = "Selected archive is malformed or not structurally recognized as a Factorio save";
+    } else if (object_string(*association, "status") == "drifted" ||
+        object_string(*version, "status") == "drifted" || object_string(*modset, "status") == "drifted") {
+        projection.selected_save_code = "instance_selected_save_context_drifted";
+        projection.selected_save_detail = "Selected save bytes or recorded declared version/modset context have drifted";
+    } else if (object_string(*association, "status") == "invalid" || object_string(*context, "status") == "unavailable") {
+        projection.selected_save_code = "instance_selected_save_context_unavailable";
+        projection.selected_save_detail = "Selected save association or current declared context is invalid, unsafe, or unavailable";
+    } else {
+        projection.selected_save_state = object_string(*context, "status") == "match" ? "satisfied" : "degraded";
+        projection.selected_save_code = "instance_selected_save_context_unknown";
+        projection.selected_save_detail = projection.selected_save_state == "satisfied"
+            ? "Selected save structure and recorded declared context match; gameplay compatibility remains unclaimed"
+            : "Selected save structure is recognized; recorded declared context is unknown and gameplay compatibility remains unclaimed";
+    }
+}
+
+bool unchanged(const fs::path& path, const FileObservation& expected)
+{
+    auto observed = observe_file(path);
+    return observed && observed.value().identity == expected.identity;
 }
 
 facman::core::Result<Projection> project(
     const fs::path& workspace,
-    const ProjectionRequest& request)
+    const ProjectionRequest& request,
+    const facman::platform::RetainedStreamRewriteFile* held_configuration = nullptr)
 {
-    if (request.launch_intent != "menu") return fail<Projection>(
+    if (request.launch_intent != "menu" && request.launch_intent != "load_save") return fail<Projection>(
         "unsupported_launch_intent",
-        "Gate 2 evaluates only the menu launch intent",
+        "Readiness evaluates only menu and load_save launch intents",
         {},
         facman::core::OutcomeKind::invalid_argument);
     auto parsed_id = facman::core::InstanceId::parse_legacy(request.instance_id);
@@ -639,6 +1082,7 @@ facman::core::Result<Projection> project(
 
     Projection projection;
     projection.instance = loaded.take_value();
+    projection.launch_intent = request.launch_intent;
     const version::VersionClassification classified =
         version::classify(projection.instance.factorio_version);
     projection.version_recorded = !projection.instance.factorio_version.empty();
@@ -655,10 +1099,85 @@ facman::core::Result<Projection> project(
 
     inspect_installation(projection, workspace);
     inspect_root_and_content(projection, workspace);
+    if (projection.launch_intent == "load_save") {
+        if (!projection.root_safe) return fail<Projection>("instance_root_unsafe",
+            "Selected-save observation requires a safe instance root", projection.instance.root);
+        std::string detail;
+        for (const fs::path& path : {projection.instance.root / "saves",
+                projection.instance.root / "mods", projection.instance.root / "metadata" / "save-refs",
+                projection.instance.root / "backups"}) {
+            if (facman::base::path_crosses_link_or_reparse_point(path, detail)) {
+                return fail<Projection>("instance_selected_save_path_unsafe",
+                    "Selected save/context path crosses a link or reparse point", path);
+            }
+        }
+    }
     inspect_profile(projection, workspace);
-    inspect_configuration(projection);
+    if (held_configuration) (void)inspect_owner_configuration(projection, *held_configuration);
+    else inspect_configuration(projection);
     inspect_modset(projection, workspace);
+    if (projection.launch_intent == "load_save") {
+        inspect_selected_save(projection, workspace);
+        // The save inspector reloads instance/context. Reject mixed observations rather
+        // than presenting them as one coherent preparation plan.
+        Projection current = projection;
+        current.profile_valid = false;
+        current.profile_plan.reset();
+        current.modset_artifacts.clear();
+        current.profile_digest = "not_observed";
+        current.modset_lock.reset();
+        current.modset_valid = true;
+        current.modset_archives_verified = false;
+        inspect_profile(current, workspace);
+        inspect_modset(current, workspace);
+        if (!unchanged(projection.instance.source_path, projection.instance_record) ||
+            current.profile_valid != projection.profile_valid || current.profile_digest != projection.profile_digest ||
+            current.modset_valid != projection.modset_valid || current.modset_status != projection.modset_status ||
+            current.modset_archives_verified != projection.modset_archives_verified ||
+            current.modset_artifacts != projection.modset_artifacts ||
+            current.modset_lock.has_value() != projection.modset_lock.has_value() ||
+            (projection.modset_lock && current.modset_lock->identity != projection.modset_lock->identity) ||
+            (projection.install_record && !unchanged(projection.install->source_path, *projection.install_record)) ||
+            (projection.config && !(held_configuration
+                ? unchanged_owner_configuration(*projection.config, *held_configuration)
+                : unchanged(projection.instance.root / "config" / "config.ini", *projection.config)))) {
+            return fail<Projection>("instance_projection_inputs_changed",
+                "Instance, profile, configuration, installation or modset changed during selected-save observation");
+        }
+    }
     projection.pending_transactions = tx::incomplete_count(workspace);
+    const auto recovery = tx::inspect(workspace);
+    if (const auto* report = std::get_if<tx::RecoveryResult>(&recovery)) {
+        projection.recovery_identity = "sha256:" + sha256_text(canonical_json(report->json));
+        // A reachable prefix can still be valid JSON and match the new save.
+        // Public observation must retain the exact pending owner's uncertainty.
+        // The private refresh guard separately requires its retained file and
+        // durable authority; there is no public partial-context override.
+        if (request.launch_intent == "load_save" && !projection.selected_save.empty()) {
+            const fs::path selected_target = projection.instance.root / "metadata/save-refs" /
+                fs::u8path(projection.selected_save + ".save-ref.v1.json");
+            auto inspected = json::parse(report->json);
+            const auto* journals = inspected ? inspected.value().find("transactions") : nullptr;
+            for (std::size_t i = 0; journals && i < journals->size(); ++i) {
+                const auto* item = journals->at(i);
+                auto state = tx::parse_state(object_string(*item, "state"));
+                if (!state || tx::terminal(state.value()) || object_string(*item, "command_id") != "readiness.prepare_selected_save" ||
+                    !same_path(fs::u8path(object_string(*item, "target")), selected_target)) continue;
+                tx::Record pending; std::string detail;
+                if (tx::read_record(workspace, object_string(*item, "transaction_id"), pending, detail) &&
+                    pending.schema_version == 2U && pending.command_id == "readiness.prepare_selected_save" &&
+                    pending.commit_strategy == "selected_context_retained_stream_rewrite_v1" && same_path(pending.target, selected_target)) {
+                    projection.selected_save_state = "blocked";
+                    projection.selected_save_code = "instance_selected_save_context_refresh_pending";
+                    projection.selected_save_detail = "Selected context belongs to a pending retained refresh; inspect its owner recovery";
+                    break;
+                }
+            }
+        }
+    } else projection.recovery_identity = "sha256:" + sha256_text(
+        canonical_json(tx::to_json(std::get<tx::Refusal>(recovery), "workspace.recovery.inspect")));
+    if (projection.owner_inputs_changed) return fail<Projection>("instance_projection_inputs_changed",
+        "Owner planning inputs changed during readiness observation");
     return facman::core::Result<Projection>::success(std::move(projection));
 }
 
@@ -754,6 +1273,9 @@ json::ArrayBuilder binding_dependencies(const Projection& projection)
         projection.installation_evidence_digest,
         projection.install_present ? "observed" : "missing",
         true));
+    output.add_object(dependency("installation_record",
+        projection.install_record ? "sha256:" + projection.install_record->digest : "not_observed",
+        projection.install_record ? "observed" : "missing", true));
     output.add_object(dependency(
         "instance_root",
         projection.instance_root_identity,
@@ -769,16 +1291,31 @@ json::ArrayBuilder binding_dependencies(const Projection& projection)
         projection.profile_digest,
         projection.profile_valid ? "observed" : "missing",
         true));
+    output.add_object(dependency("profile_source", projection.profile_source_identity, "observed", true));
+    output.add_object(dependency("recovery_observation", projection.recovery_identity, "observed", true));
+    output.add_object(dependency("stored_overrides", projection.overrides_presence + ":" + projection.overrides_input_identity,
+        projection.overrides_presence == "present" ? "observed" :
+            (projection.overrides_presence == "absent" ? "missing" : "unavailable"), true));
     output.add_object(dependency(
         "template_provenance",
         "template:" + projection.instance.template_id,
         projection.instance.template_id == "vanilla" ? "observed" : "not_observed",
         true));
+    for (const auto& lock : std::vector<std::pair<const char*, std::string>> {
+            {"modset_lock_local", projection.modset_local_lock_identity},
+            {"modset_lock_shared", projection.modset_shared_lock_identity}}) {
+        output.add_object(dependency(lock.first, lock.second,
+            lock.second == "absent" ? "missing" :
+                (lock.second.rfind("present:file:", 0U) == 0U ? "observed" : "unavailable"), true));
+    }
     output.add_object(dependency(
         "modset_lock",
         projection.modset_lock ? "sha256:" + projection.modset_lock->digest : "not_observed",
         projection.modset_lock ? "observed" : "not_observed",
         true));
+    for (const auto& artifact : projection.modset_artifacts)
+        output.add_object(dependency("modset_artifact", artifact.first + ":" + artifact.second,
+            artifact.second.rfind("file:", 0U) == 0U ? "observed" : "unavailable", true));
     output.add_object(dependency(
         "recovery_state",
         "incomplete-transactions:" + std::to_string(projection.pending_transactions),
@@ -789,6 +1326,13 @@ json::ArrayBuilder binding_dependencies(const Projection& projection)
         projection.config_valid ? "structural-preflight:pass" : "structural-preflight:blocked",
         "observed",
         true));
+    if (projection.launch_intent == "load_save") {
+        output.add_object(dependency("selected_save_context", projection.selected_context_identity, "observed", true));
+        output.add_object(dependency("selected_save_archive", projection.selected_archive_identity, "observed", true));
+        output.add_object(dependency("selected_save",
+            "selection:" + projection.selected_save + ":" + projection.selected_save_identity,
+            projection.selected_save_evidence.empty() ? "unavailable" : "observed", true));
+    }
     return output;
 }
 
@@ -866,6 +1410,128 @@ void add_dimension(
 {
     dimensions.push_back({
         std::move(id), std::move(state), required, std::move(summary), std::move(dependencies)});
+}
+
+json::ObjectBuilder encode_preparation_preview(
+    const Projection& projection, const EncodedComponent& spec, const EncodedComponent& binding,
+    const std::string& configuration_state)
+{
+    json::ObjectBuilder installation_plan;
+    installation_plan.add_string("planning_owner", "FacMan factorio.installation_model.v2");
+    installation_plan.add_string("mutation_owner", "Universal Setup");
+    installation_plan.add_string("provider_plan", "unavailable");
+    installation_plan.add_string("disposition", projection.installation_plan.empty() ? "refusal" : "plan");
+    if (projection.installation_plan.empty()) {
+        installation_plan.add_null("report");
+        installation_plan.add_string("refusal", !projection.install_present ? "instance_installation_missing" :
+            (projection.installation_plan_refusal.empty() ? "installation_plan_unavailable" : projection.installation_plan_refusal));
+    } else {
+        installation_plan.add_value("report", parsed_value(projection.installation_plan));
+        installation_plan.add_null("refusal");
+    }
+
+    if (projection.installation_plan.empty()) {
+        installation_plan.add_string("refusal_message", projection.installation_plan_refusal_message);
+        installation_plan.add_string("refusal_path", projection.installation_plan_refusal_path);
+    } else {
+        installation_plan.add_null("refusal_message");
+        installation_plan.add_null("refusal_path");
+    }
+
+    json::ObjectBuilder profile_plan;
+    profile_plan.add_string("planning_owner", "FacMan profiles");
+    profile_plan.add_string("disposition", projection.profile_plan ? "plan" : "refusal");
+    profile_plan.add_string("recovery", "profile_apply_two_file_v1");
+    if (projection.profile_plan) {
+        profile_plan.add_value("request", parsed_value(projection.profile_plan->request_json));
+        profile_plan.add_bool("overrides_present", projection.profile_plan->overrides_present);
+        if (projection.profile_plan->overrides_present)
+            profile_plan.add_string("overrides_sha256", projection.profile_plan->overrides_sha256);
+        else profile_plan.add_null("overrides_sha256");
+        profile_plan.add_value("report", parsed_value(projection.profile_plan->report));
+        profile_plan.add_null("refusal");
+    } else {
+        profile_plan.add_null("request");
+        profile_plan.add_null("overrides_present");
+        profile_plan.add_null("overrides_sha256");
+        profile_plan.add_null("report");
+        profile_plan.add_string("refusal", projection.profile_plan_refusal.empty() ? projection.profile_status : projection.profile_plan_refusal);
+    }
+
+    if (projection.profile_plan) {
+        profile_plan.add_null("refusal_message");
+        profile_plan.add_null("refusal_path");
+    } else {
+        profile_plan.add_string("refusal_message", projection.profile_plan_refusal_message);
+        profile_plan.add_string("refusal_path", projection.profile_plan_refusal_path);
+    }
+
+    json::ObjectBuilder root;
+    root.add_string("disposition", projection.root_safe && projection.config_valid ? "observation_only" : "plan_unavailable");
+    root.add_string("root_identity", projection.instance_root_identity);
+    root.add_string("routing_preflight", projection.config_valid ? "satisfied" : "blocked");
+    if (projection.config) root.add_string("config_sha256", projection.config->digest);
+    else root.add_null("config_sha256");
+
+    json::ObjectBuilder mods;
+    mods.add_string("disposition", projection.modset_status == "not_required" ? "not_required" :
+        (projection.modset_valid && projection.modset_status != "unlocked_local_mods" ? "observation_only" : "plan_unavailable"));
+    mods.add_string("status", projection.modset_status);
+    mods.add_string("local_lock_identity", projection.modset_local_lock_identity);
+    mods.add_string("shared_lock_identity", projection.modset_shared_lock_identity);
+    if (projection.modset_lock) mods.add_string("lock_sha256", projection.modset_lock->digest);
+    else mods.add_null("lock_sha256");
+    mods.add_array("artifact_identities", artifact_strings(projection.modset_artifacts));
+    if (projection.modset_verification.empty()) mods.add_null("verification");
+    else mods.add_value("verification", parsed_value(projection.modset_verification));
+
+    json::ObjectBuilder world;
+    world.add_string("disposition", projection.launch_intent == "menu" ? "not_required" :
+        (projection.selected_save_state == "blocked" ? "plan_unavailable" : "observation_only"));
+    world.add_string("gameplay_compatibility", "unclaimed");
+    if (projection.launch_intent == "menu") {
+        world.add_null("filename");
+        world.add_null("inspection_identity");
+        world.add_null("record");
+    } else {
+        world.add_string("filename", projection.selected_save);
+        world.add_string("inspection_identity", projection.selected_save_identity);
+        if (projection.selected_save_evidence.empty()) world.add_null("record");
+        else world.add_value("record", parsed_value(projection.selected_save_evidence));
+    }
+
+    json::ObjectBuilder core;
+    core.add_string("schema", "factorio.preparation_preview.v1");
+    core.add_string("canonicalization_version", kCanonicalizationVersion);
+    core.add_string("mode", "plan_only");
+    core.add_string("composition_state", projection.pending_transactions != 0U || configuration_state == "blocked" ||
+        !projection.profile_plan || projection.installation_plan.empty() ? "blocked" : "partial");
+    core.add_string("instance_id", projection.instance.id.str());
+    core.add_string("profile_id", projection.instance.profile);
+    core.add_string("installation_id", projection.instance.install_ref.str());
+    core.add_string("required_version", projection.instance.factorio_version);
+    core.add_string("launch_intent", projection.launch_intent);
+    core.add_string("instance_spec_digest", spec.digest);
+    core.add_string("instance_binding_digest", binding.digest);
+    core.add_string("manifest_sha256", projection.instance_record.digest);
+    core.add_array("dependency_identities", binding_dependencies(projection));
+    core.add_object("installation", installation_plan);
+    core.add_object("profile", profile_plan);
+    core.add_object("root_configuration", root);
+    core.add_object("modset", mods);
+    core.add_object("selected_world", world);
+    core.add_string("recovery_state", projection.pending_transactions != 0U ? "pending" : "clear");
+    core.add_string("rollback", "no_combined_rollback");
+    core.add_array("executed_effects", strings({}));
+    core.add_string("observation_scope", "query_only_point_in_time");
+    core.add_bool("revalidate_before_use", true);
+    core.add_null("expires_at");
+    core.add_bool("preparation_available", false);
+    core.add_bool("execution_available", false);
+    core.add_object("operation_guarantees", operation_guarantees());
+    json::ObjectBuilder output = core;
+    output.add_string("plan_digest", sha256_text(canonical_json(core.serialize())));
+    return output;
 }
 
 ReadinessComponent encode_readiness(
@@ -974,6 +1640,16 @@ ReadinessComponent encode_readiness(
             true, "inspect_profile"});
         actions.push_back({"inspect_profile", "Inspect the referenced profile",
             "facman profiles inspect " + projection.instance.profile + " --json", false});
+    } else if (projection.profile_launch_intent != projection.launch_intent) {
+        add_dimension(dimensions, "profile", "blocked", true,
+            "The effective profile selects a different launch intent", {"profile"});
+        blockers.push_back({"instance_launch_intent_mismatch", "profile",
+            "The profile selection does not satisfy " + projection.launch_intent + " readiness",
+            "Effective profile selects " + projection.profile_launch_intent + "; requested intent is " + projection.launch_intent,
+            true, projection.launch_intent == "menu" ? "configure_menu_profile" : "configure_load_save_profile"});
+        actions.push_back({projection.launch_intent == "menu" ? "configure_menu_profile" : "configure_load_save_profile",
+            "Preview a profile for " + projection.launch_intent + " launch",
+            projection.launch_intent == "menu" ? "facman profiles plan " + projection.instance.id.str() + " gui --json" : "", false});
     } else {
         add_dimension(dimensions, "profile", "satisfied", true,
             "The referenced profile and effective overrides are valid", {"profile"});
@@ -999,7 +1675,17 @@ ReadinessComponent encode_readiness(
             projection.modset_detail, {"modset_lock"});
     }
 
-    add_dimension(dimensions, "saves", "satisfied", false,
+    if (projection.launch_intent == "load_save") {
+        add_dimension(dimensions, "saves", projection.selected_save_state, true,
+            projection.selected_save_detail, {"selected_save", "profile", "instance_record", "modset_lock"});
+        actions.push_back({"inspect_selected_save", "Inspect the selected save and its recorded declared context", "", false});
+        if (projection.selected_save_state == "blocked") {
+            blockers.push_back({projection.selected_save_code, "saves", "Selected-save prerequisite is not satisfied",
+                projection.selected_save_detail, true, "inspect_selected_save"});
+        } else if (projection.selected_save_state == "degraded") {
+            findings.push_back({projection.selected_save_code, "saves", "warning", projection.selected_save_detail});
+        }
+    } else add_dimension(dimensions, "saves", "satisfied", false,
         projection.save_count == 0U
             ? "Zero saves is valid for menu launch"
             : std::to_string(projection.save_count) + " save archive(s) are available inside the instance",
@@ -1084,12 +1770,24 @@ ReadinessComponent encode_readiness(
     core.add_string("canonicalization_version", kCanonicalizationVersion);
     core.add_string("policy_revision", kPolicyRevision);
     core.add_string("instance_id", projection.instance.id.str());
-    core.add_string("launch_intent", "menu");
+    core.add_string("launch_intent", projection.launch_intent);
+    if (projection.launch_intent == "load_save") {
+        json::ObjectBuilder selected;
+        selected.add_string("filename", projection.selected_save);
+        selected.add_string("state", projection.selected_save_state);
+        selected.add_string("inspection_identity", projection.selected_save_identity);
+        selected.add_string("observation_scope", "query_only_point_in_time");
+        selected.add_string("gameplay_compatibility", "unclaimed");
+        if (projection.selected_save_evidence.empty()) selected.add_null("record");
+        else selected.add_value("record", parsed_value(projection.selected_save_evidence));
+        core.add_object("selected_save", selected);
+    }
     core.add_string("instance_spec_digest", spec.digest);
     core.add_string("instance_binding_digest", binding.digest);
     core.add_string("overall_state", overall_state);
     core.add_string("configuration_state", configuration_state);
     core.add_string("preparation_state", preparation_state);
+    core.add_object("preparation_preview", encode_preparation_preview(projection, spec, binding, configuration_state));
     core.add_string("play_authority_state", "unavailable");
     core.add_array("dimensions", dimension_values);
     core.add_array("satisfied_requirements", strings(satisfied));
@@ -1190,6 +1888,12 @@ facman::core::Result<std::string> describe_instance(
     const EncodedComponent spec = encode_spec(projection.value());
     const EncodedComponent binding = encode_binding(projection.value());
     const ReadinessComponent readiness = encode_readiness(projection.value(), spec, binding);
+    auto current = project(workspace, request);
+    if (!current || readiness.encoded.text != encode_readiness(current.value(),
+            encode_spec(current.value()), encode_binding(current.value())).encoded.text) {
+        return fail<std::string>("instance_projection_inputs_changed",
+            "Instance dependencies or owner plans changed before preview publication");
+    }
     return facman::core::Result<std::string>::success(
         encode_view(projection.value(), spec, binding, readiness));
 }
@@ -1202,8 +1906,1004 @@ facman::core::Result<std::string> instance_readiness(
     if (!projection) return facman::core::Result<std::string>::failure(projection.error());
     const EncodedComponent spec = encode_spec(projection.value());
     const EncodedComponent binding = encode_binding(projection.value());
-    return facman::core::Result<std::string>::success(
-        encode_readiness(projection.value(), spec, binding).encoded.text);
+    const ReadinessComponent readiness = encode_readiness(projection.value(), spec, binding);
+    auto current = project(workspace, request);
+    if (!current || readiness.encoded.text != encode_readiness(current.value(),
+            encode_spec(current.value()), encode_binding(current.value())).encoded.text) {
+        return fail<std::string>("instance_projection_inputs_changed",
+            "Instance dependencies or owner plans changed before preview publication");
+    }
+    return facman::core::Result<std::string>::success(readiness.encoded.text);
+}
+
+namespace {
+struct SelectedContextPlan {
+    Projection projection;
+    std::string inputs;
+    std::string parents;
+    std::string sha;
+    std::string text;
+};
+
+facman::core::Result<std::string> selected_context_inputs(
+    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own,
+    const facman::platform::RetainedStreamRewriteFile* held_context = nullptr)
+{
+    auto observed = project(workspace, request);
+    if (!observed) return facman::core::Result<std::string>::failure(observed.error());
+    const auto& p = observed.value();
+    std::string refresh_evidence;
+    const bool refreshing = own && own->commit_strategy == "selected_context_retained_stream_rewrite_v1";
+    if (refreshing || (!own && p.selected_save_code == "instance_selected_save_context_drifted")) {
+        saves::index::Request selected;
+        selected.instance_id = request.instance_id; selected.save = p.selected_save;
+        selected.profile_id = p.instance.profile; selected.source_operation = "readiness.prepare_selected_save";
+        auto proof = saves::index::selected_context_refresh_evidence(workspace, selected, own, held_context);
+        if (!proof) return facman::core::Result<std::string>::failure(proof.error());
+        refresh_evidence = proof.take_value();
+    }
+    bool owned_publication_context = false;
+#if defined(__linux__) || defined(__APPLE__)
+    // Ordinary inspection correctly refuses a two-link sidecar. Only this
+    // journal owner may read its exact staging/destination pair during recovery.
+    if (own && p.selected_save_code == "instance_selected_save_context_unavailable") {
+        const auto context = json::parse(own->operation_context);
+        const fs::path target = p.instance.root / "metadata/save-refs" / fs::u8path(p.selected_save + ".save-ref.v1.json");
+        const fs::path staging = fs::u8path(".facman-selected-context-" + own->transaction_id);
+        facman::platform::StableDirectoryObject root, metadata, refs;
+        facman::platform::StableInputFile file;
+        if (context && own->command_id == "readiness.prepare_selected_save" &&
+            own->commit_strategy == "selected_context_handle_no_replace_v1" && own->target == target &&
+            object_string(context.value(), "schema") == "factorio.selected_context_commit.v1" &&
+            root.open_no_follow(p.instance.root).ok() && root.open_child_directory_no_follow("metadata", metadata).ok() &&
+            metadata.open_child_directory_no_follow("save-refs", refs).ok()) {
+            owned_publication_context = refs.open_child_file_no_follow_for_publication_recovery(
+                staging, target.filename(), [&](const facman::platform::FileIdentity& identity) {
+                    return std::to_string(identity.device) + ":" + std::to_string(identity.object) == own->effect_file_identity;
+                }, object_string(context.value(), "sidecar_text"), file).ok() && root.revalidate().ok() &&
+                metadata.revalidate().ok() && refs.revalidate().ok();
+        }
+    }
+#endif
+    if (request.launch_intent != "load_save" || !p.root_safe || !p.install_present || !p.install_record ||
+        !p.installation_healthy || !p.version_family_eligible || !p.version_matches || !p.content_present ||
+        !p.config_valid || !p.config || !p.profile_valid || !p.profile_plan || !p.modset_valid ||
+        !p.modset_lock || p.modset_status != "locked_verified" || p.selected_save.empty() ||
+        (p.selected_save_state == "blocked" && !owned_publication_context && refresh_evidence.empty()) || p.selected_archive_identity.rfind("file:", 0) != 0)
+        return fail<std::string>("selected_context_prerequisites_unavailable",
+            "Selected context requires a valid current profile, installation, configuration, locked content and recognized selected save");
+    const auto recovery = tx::inspect(workspace);
+    const auto* report = std::get_if<tx::RecoveryResult>(&recovery);
+    auto document = report ? json::parse(report->json) : json::parse("null");
+    const auto* journals = document ? document.value().find("transactions") : nullptr;
+    if (!journals || !journals->is_array()) return fail<std::string>("recovery_journal_invalid", "Recovery journals could not be validated");
+    for (std::size_t i = 0; i < journals->size(); ++i) {
+        const auto* item = journals->at(i);
+        if (own && object_string(*item, "transaction_id") == own->transaction_id) continue;
+        auto state = tx::parse_state(object_string(*item, "state"));
+        if (!state || !tx::terminal(state.value())) return fail<std::string>("selected_context_pending_recovery", "Another workspace transaction requires recovery");
+    }
+    for (const char* lock : {"run.lock", "save.write.lock"}) {
+        if (lock_input_identity(p.instance.root / "locks" / lock) != "absent")
+            return fail<std::string>("save_locked", "Selected context conflicts with an active or unsafe instance lock");
+    }
+    const std::string executable = artifact_identity(p.install->executable);
+    if (executable.rfind("file:", 0) != 0) return fail<std::string>("selected_context_installation_unsafe", "Installation executable could not be stably observed");
+    const std::string mod_list = lock_input_identity(p.instance.root / "mods" / "mod-list.json");
+    const std::string mod_settings = lock_input_identity(p.instance.root / "mods" / "mod-settings.dat");
+    if ((mod_list != "absent" && mod_list.rfind("present:file:", 0) != 0) ||
+        (mod_settings != "absent" && mod_settings.rfind("present:file:", 0) != 0))
+        return fail<std::string>("selected_context_settings_unsafe", "Instance content settings could not be stably observed");
+    auto save = json::parse(p.selected_save_evidence);
+    if (!save) return fail<std::string>("instance_selected_save_invalid", "Selected save evidence is unavailable");
+    if (own) {
+        auto context = json::parse(own->operation_context);
+        auto sidecar = context ? json::parse(object_string(context.value(), "sidecar_text")) : json::parse("null");
+        if (!context || !sidecar || !same_path(fs::u8path(object_string(context.value(), "instance_root")), p.instance.root) ||
+            object_string(context.value(), "instance_id") != p.instance.id.str() ||
+            object_string(context.value(), "save_filename") != p.selected_save ||
+            object_string(sidecar.value(), "save_sha256") != object_string(save.value(), "sha256") ||
+            object_string(sidecar.value(), "profile_id") != p.instance.profile ||
+            object_string(sidecar.value(), "factorio_version") != p.instance.factorio_version ||
+            object_string(sidecar.value(), "modset_lock_sha256") != p.modset_lock->digest)
+            return fail<std::string>("selected_context_journal_inputs_mismatch", "Immutable selected context bytes do not describe the current selected inputs");
+    }
+    json::ObjectBuilder inputs;
+    inputs.add_string("schema", refresh_evidence.empty() ? "factorio.selected_context_inputs.v1" : "factorio.selected_context_refresh_inputs.v1");
+    if (!refresh_evidence.empty()) inputs.add_string("refresh_owner_evidence", refresh_evidence);
+    inputs.add_string("instance_id", p.instance.id.str());
+    inputs.add_string("instance_record", p.instance_record.identity);
+    inputs.add_string("installation_record", p.install_record->identity);
+    inputs.add_string("installation_evidence", p.installation_evidence_digest);
+    inputs.add_string("installation_executable", executable);
+    inputs.add_string("configuration", p.config->identity);
+    inputs.add_string("profile", p.profile_digest);
+    inputs.add_string("profile_source", p.profile_source_identity);
+    inputs.add_string("overrides", p.overrides_input_identity);
+    inputs.add_string("local_lock", p.modset_local_lock_identity);
+    inputs.add_string("shared_lock", p.modset_shared_lock_identity);
+    inputs.add_array("artifacts", artifact_strings(p.modset_artifacts));
+    inputs.add_string("mod_list", mod_list);
+    inputs.add_string("mod_settings", mod_settings);
+    inputs.add_string("selected_filename", p.selected_save);
+    inputs.add_string("selected_archive", p.selected_archive_identity);
+    return facman::core::Result<std::string>::success(sha256_text(inputs.serialize()));
+}
+
+facman::core::Result<SelectedContextPlan> selected_context_plan(const fs::path& workspace, const ProjectionRequest& request)
+{
+    if (request.launch_intent != "load_save" || request.instance_id.empty()) return fail<SelectedContextPlan>(
+        "selected_context_load_save_required", "Select an instance and the load-save intent to record selected save context");
+    if (!saves::index::selected_association_publication_available()) return fail<SelectedContextPlan>(
+        "selected_context_publication_unavailable", "Selected context preparation is not qualified on this host");
+    auto inputs = selected_context_inputs(workspace, request, nullptr);
+    if (!inputs) return facman::core::Result<SelectedContextPlan>::failure(inputs.error());
+    auto p = project(workspace, request);
+    if (!p) return facman::core::Result<SelectedContextPlan>::failure(p.error());
+    saves::index::Request selected;
+    selected.instance_id = request.instance_id;
+    selected.save = p.value().selected_save;
+    selected.profile_id = p.value().instance.profile;
+    selected.source_operation = "readiness.prepare_selected_save";
+    auto exact = saves::index::prepare_exact_association(workspace, selected);
+    std::string refresh_evidence;
+    if (!exact && p.value().selected_save_code == "instance_selected_save_context_drifted") {
+        auto proof = saves::index::selected_context_refresh_evidence(workspace, selected);
+        if (!proof) return facman::core::Result<SelectedContextPlan>::failure(proof.error());
+        refresh_evidence = proof.take_value();
+        auto parsed = json::parse(refresh_evidence);
+        exact = saves::index::prepare_refreshed_association(workspace, selected,
+            object_string(parsed.value(), "original_sidecar_text"), {});
+    }
+    if (!exact) return facman::core::Result<SelectedContextPlan>::failure(exact.error());
+    auto parents = saves::index::selected_association_parent_identity(p.value().instance.root);
+    if (!parents) return facman::core::Result<SelectedContextPlan>::failure(parents.error());
+    auto current = selected_context_inputs(workspace, request, nullptr);
+    if (!current || current.value() != inputs.value()) return fail<SelectedContextPlan>("selected_context_inputs_changed", "Selected context inputs changed during planning");
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.selected_save_preparation_plan.v1");
+    plan.add_string("instance_id", request.instance_id);
+    plan.add_string("launch_intent", "load_save");
+    plan.add_string("selected_save", selected.save);
+    plan.add_string("profile_id", selected.profile_id);
+    plan.add_string("component", "selected_save_declared_context");
+    plan.add_string("composition", "partial");
+    plan.add_string("inputs_sha256", inputs.value());
+    plan.add_string("parent_before_identity", parents.value());
+    plan.add_string("target", path_string(exact.value().target));
+    if (!refresh_evidence.empty()) {
+        auto proof = json::parse(refresh_evidence);
+        json::ObjectBuilder refresh;
+        for (const char* key : {"source_transaction_id", "source_journal_sha256", "source_journal_file_identity"})
+            refresh.add_string(key, object_string(proof.value(), key));
+        refresh.add_string("sidecar_identity", object_string(proof.value(), "original_device") + ":" + object_string(proof.value(), "original_object"));
+        refresh.add_string("sidecar_before_sha256", object_string(proof.value(), "original_sidecar_sha256"));
+        refresh.add_string("sidecar_metadata_sha256", sha256_text(object_string(proof.value(), "original_metadata_identity")));
+        refresh.add_string("selected_save_sha256", object_string(proof.value(), "selected_save_sha256"));
+        plan.add_object("refresh", refresh);
+    }
+    plan.add_bool("preparation_available", true);
+    plan.add_bool("mutation_executed", false);
+    plan.add_bool("execution_started", false);
+    plan.add_bool("permit_issued", false);
+    plan.add_string("factorio_support_claim", "unclaimed");
+    const std::string sha = sha256_text(plan.serialize());
+    plan.add_string("plan_sha256", sha);
+    return facman::core::Result<SelectedContextPlan>::success({p.take_value(), inputs.take_value(), parents.take_value(), sha, plan.serialize()});
+}
+} // namespace
+
+facman::core::Result<std::string> selected_save_preparation_plan(const fs::path& workspace, const ProjectionRequest& request)
+{
+    auto plan = selected_context_plan(workspace, request);
+    if (!plan) return facman::core::Result<std::string>::failure(plan.error());
+    return facman::core::Result<std::string>::success(plan.value().text);
+}
+
+facman::core::Result<std::string> observe_selected_save_preparation_inputs(
+    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own,
+    const facman::platform::RetainedStreamRewriteFile* held_context)
+{
+    return selected_context_inputs(workspace, request, own, held_context);
+}
+
+namespace {
+facman::core::Result<std::string> configuration_inputs(
+    const fs::path& workspace, const ProjectionRequest& request, const tx::Record* own,
+    Projection* snapshot = nullptr,
+    const facman::platform::RetainedStreamRewriteFile* held_configuration = nullptr,
+    const json::Value* existing = nullptr)
+{
+    auto observed = project(workspace, request, held_configuration);
+    if (!observed) return facman::core::Result<std::string>::failure(observed.error());
+    const auto& p = observed.value();
+    if (!p.root_safe || !p.install_present || !p.install_record || !p.install_ref ||
+        !p.installation_healthy || !p.version_family_eligible || !p.version_matches || !p.content_present ||
+        !p.profile_valid || !p.profile_plan || !p.modset_valid || !p.modset_lock || p.modset_status != "locked_verified" ||
+        (request.launch_intent == "load_save" && (p.selected_save.empty() || p.selected_save_state == "blocked" ||
+            p.selected_archive_identity.rfind("file:", 0) != 0)))
+        return fail<std::string>("configuration_prerequisites_unavailable",
+            "Missing configuration requires a valid current profile, registered installation and verified locked content");
+    auto parents = configuration_parent_identity(p.instance.root);
+    if (!parents) return parents;
+    if (lock_input_identity(p.instance.root / "config-path.cfg") != "absent" ||
+        lock_input_identity(p.instance.root / "config/config-path.cfg") != "absent")
+        return fail<std::string>("configuration_legacy_routing_present", "Existing legacy routing must be preserved");
+    const fs::path target = p.instance.root / "config/config.ini";
+    std::string intended = instance_effective_config(p.instance, *p.install_ref);
+    const std::string target_status = held_configuration ? "present:held" : lock_input_identity(target);
+    if (existing) {
+        const std::string original = object_string(*existing, "original_config_text");
+        const auto delta = detail::routing_ini_delta(original,
+            path_string(fs::absolute(p.install->root / "data").lexically_normal()),
+            path_string(fs::absolute(p.instance.root).lexically_normal()));
+        const auto* device = existing->find("original_device");
+        const auto* object = existing->find("original_object");
+        const auto* size = existing->find("original_size");
+        if (!p.config || original.empty() || !delta.ok || delta.bytes == original ||
+            delta.bytes != object_string(*existing, "config_text") ||
+            sha256_text(original) != object_string(*existing, "original_config_sha256") ||
+            sha256_text(delta.bytes) != object_string(*existing, "config_sha256") ||
+            object_string(*existing, "instance_id") != request.instance_id ||
+            object_string(*existing, "launch_intent") != request.launch_intent ||
+            !same_path(fs::u8path(object_string(*existing, "instance_root")), p.instance.root) ||
+            object_string(*existing, "parent_before_identity") != parents.value() || !device || !object || !size)
+            return fail<std::string>("configuration_journal_inputs_mismatch", "Original and intended routing do not describe current owner inputs");
+        facman::platform::FileIdentity original_identity;
+        if (!configuration_original_file_identity(*existing, original_identity) || original_identity.size != original.size())
+            return fail<std::string>("configuration_journal_inputs_mismatch", "Original configuration identity is invalid");
+        if (own) {
+            auto context = json::parse(own->operation_context);
+            if (!context || !held_configuration || own->command_id != "readiness.prepare_configuration" ||
+                own->commit_strategy != "existing_config_retained_stream_rewrite_v1" || own->target != target ||
+                object_string(context.value(), "schema") != "factorio.configuration_reconciliation_commit.v1")
+                return fail<std::string>("configuration_journal_inputs_mismatch", "Existing configuration requires its exact held journal owner");
+            for (const char* key : {"instance_id", "launch_intent", "instance_root", "inputs_sha256", "parent_before_identity",
+                    "config_text", "config_sha256", "original_config_text", "original_config_sha256", "original_metadata_identity"}) {
+                if (object_string(context.value(), key) != object_string(*existing, key))
+                    return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable existing configuration guard changed");
+            }
+            for (const char* key : {"original_device", "original_object", "original_size"}) {
+                const auto* current = context.value().find(key); const auto* expected = existing->find(key);
+                if (!current || !expected || current->serialize() != expected->serialize())
+                    return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable original file identity changed");
+            }
+        } else if (p.config->text != original) {
+            return fail<std::string>("configuration_existing_bytes_changed", "Existing original configuration changed before admission");
+        }
+        std::string metadata;
+        if (held_configuration) {
+            if (!same_path(held_configuration->path(), target) || !held_configuration->readable_metadata_identity(metadata).ok())
+                return fail<std::string>("configuration_held_observation_unavailable", "Held configuration does not belong to this owner target");
+        } else {
+            facman::platform::StableDirectoryObject root, parent;
+            facman::platform::RetainedStreamRewriteFile file;
+            if (!root.open_no_follow_for_relative_writes(p.instance.root).ok() ||
+                !root.open_child_directory_no_follow_for_relative_writes("config", parent).ok() ||
+                !parent.open_child_file_no_follow_for_retained_rewrite("config.ini", original_identity, original, delta.bytes,
+                    facman::platform::RetainedStreamRewriteState::original_only, file).ok() ||
+                !file.readable_metadata_identity(metadata).ok() || !root.revalidate().ok() || !parent.revalidate().ok())
+                return fail<std::string>("configuration_original_custody_unavailable", "Existing configuration cannot retain its original object and bytes");
+        }
+        if (metadata != object_string(*existing, "original_metadata_identity"))
+            return fail<std::string>("configuration_original_metadata_changed", "Foreign readable metadata changed; preserve it without restoration");
+        intended = delta.bytes;
+    } else {
+        if (!own && target_status != "absent") return fail<std::string>(
+            "configuration_existing_leaf_preserved", "Existing configuration is outside missing-file preparation");
+        if (own) {
+            auto context = json::parse(own->operation_context);
+            if (!context || object_string(context.value(), "schema") != "factorio.configuration_preparation_commit.v1" ||
+                object_string(context.value(), "instance_id") != request.instance_id ||
+                object_string(context.value(), "launch_intent") != request.launch_intent ||
+                !same_path(fs::u8path(object_string(context.value(), "instance_root")), p.instance.root) ||
+                object_string(context.value(), "parent_before_identity") != parents.value() ||
+                object_string(context.value(), "config_text") != intended || own->target != target)
+                return fail<std::string>("configuration_journal_inputs_mismatch", "Immutable configuration does not describe the current owner inputs");
+            if (target_status != "absent") {
+                facman::platform::StableInputFile file;
+#if defined(__linux__) || defined(__APPLE__)
+                facman::platform::StableDirectoryObject root, config;
+                if (own->command_id != "readiness.prepare_configuration" ||
+                    own->commit_strategy != "missing_config_handle_no_replace_v1" || own->effect_file_identity.empty() ||
+                    !root.open_no_follow(p.instance.root).ok() || !root.open_child_directory_no_follow("config", config).ok() ||
+                    !config.open_child_file_no_follow_for_publication_recovery(
+                        fs::u8path(".facman-configuration-" + own->transaction_id), "config.ini",
+                        [&](const facman::platform::FileIdentity& identity) {
+                            return std::to_string(identity.device) + ":" + std::to_string(identity.object) == own->effect_file_identity;
+                        }, intended, file).ok() || !root.revalidate().ok() || !config.revalidate().ok())
+#else
+                if (!p.config_valid || !p.config || p.config->text != intended || own->effect_file_identity.empty() ||
+                    !file.open_no_follow_pinned(target).ok() || file.identity().link_count != 1U ||
+                    std::to_string(file.identity().device) + ":" + std::to_string(file.identity().object) != own->effect_file_identity ||
+                    !file.revalidate_path().ok())
+#endif
+                    return fail<std::string>("configuration_foreign_effect_preserved", "Existing configuration is not the exact journaled owner effect");
+            }
+        }
+    }
+    const auto recovery = tx::inspect(workspace);
+    const auto* report = std::get_if<tx::RecoveryResult>(&recovery);
+    auto document = report ? json::parse(report->json) : json::parse("null");
+    const auto* journals = document ? document.value().find("transactions") : nullptr;
+    if (!journals || !journals->is_array()) return fail<std::string>("recovery_journal_invalid", "Recovery journals could not be validated");
+    for (std::size_t i = 0; i < journals->size(); ++i) {
+        const auto* item = journals->at(i);
+        if (own && object_string(*item, "transaction_id") == own->transaction_id) continue;
+        auto state = tx::parse_state(object_string(*item, "state"));
+        if (!state || !tx::terminal(state.value())) return fail<std::string>(
+            "configuration_pending_recovery", "Another workspace transaction requires recovery");
+    }
+    for (const char* lock : {"run.lock", "save.write.lock"}) {
+        if (lock_input_identity(p.instance.root / "locks" / lock) != "absent")
+            return fail<std::string>("configuration_locked", "Configuration preparation conflicts with an instance writer");
+    }
+    const std::string executable = artifact_identity(p.install->executable);
+    const std::string mod_list = lock_input_identity(p.instance.root / "mods/mod-list.json");
+    const std::string mod_settings = lock_input_identity(p.instance.root / "mods/mod-settings.dat");
+    if (executable.rfind("file:", 0) != 0 ||
+        (mod_list != "absent" && mod_list.rfind("present:file:", 0) != 0) ||
+        (mod_settings != "absent" && mod_settings.rfind("present:file:", 0) != 0))
+        return fail<std::string>("configuration_inputs_unsafe", "Installation or content settings could not be stably observed");
+    json::ObjectBuilder inputs;
+    inputs.add_string("schema", existing ? "factorio.configuration_reconciliation_inputs.v1" : "factorio.configuration_preparation_inputs.v1");
+    if (existing) {
+        for (const char* key : {"original_config_text", "original_config_sha256", "original_metadata_identity"})
+            inputs.add_string(key, object_string(*existing, key));
+        for (const char* key : {"original_device", "original_object", "original_size"})
+            inputs.add_value(key, *existing->find(key));
+    }
+    inputs.add_string("instance_id", p.instance.id.str());
+    inputs.add_string("launch_intent", request.launch_intent);
+    inputs.add_string("instance_record", p.instance_record.identity);
+    inputs.add_string("installation_record", p.install_record->identity);
+    inputs.add_string("installation_evidence", p.installation_evidence_digest);
+    inputs.add_string("installation_executable", executable);
+    inputs.add_string("parents", parents.value());
+    inputs.add_string("intended_config", intended);
+    inputs.add_string("profile", p.profile_digest);
+    inputs.add_string("profile_source", p.profile_source_identity);
+    inputs.add_string("current_profile_request", p.profile_plan->request_json);
+    inputs.add_string("overrides", p.overrides_input_identity);
+    inputs.add_string("local_lock", p.modset_local_lock_identity);
+    inputs.add_string("shared_lock", p.modset_shared_lock_identity);
+    inputs.add_array("artifacts", artifact_strings(p.modset_artifacts));
+    inputs.add_string("mod_list", mod_list);
+    inputs.add_string("mod_settings", mod_settings);
+    if (request.launch_intent == "load_save") {
+        inputs.add_string("selected_filename", p.selected_save);
+        inputs.add_string("selected_archive", p.selected_archive_identity);
+        inputs.add_string("selected_context", p.selected_context_identity);
+    }
+    const std::string sha = sha256_text(inputs.serialize());
+    if (snapshot) *snapshot = observed.take_value();
+    return facman::core::Result<std::string>::success(sha);
+}
+
+facman::core::Result<std::string> existing_configuration_plan(
+    const fs::path& workspace, const ProjectionRequest& request)
+{
+    auto observed = project(workspace, request);
+    if (!observed) return facman::core::Result<std::string>::failure(observed.error());
+    const auto& p = observed.value();
+    if (!p.config || p.config->text.empty() || !p.install || !p.root_safe)
+        return fail<std::string>("configuration_existing_bytes_unavailable", "Existing configuration must be a bounded nonempty plain file");
+    const auto delta = detail::routing_ini_delta(p.config->text,
+        path_string(fs::absolute(p.install->root / "data").lexically_normal()),
+        path_string(fs::absolute(p.instance.root).lexically_normal()));
+    if (!delta.ok) return fail<std::string>(delta.refusal, "Ambiguous routing configuration must be preserved for explicit repair");
+    if (delta.bytes == p.config->text)
+        return fail<std::string>("configuration_already_current", "Routing is already current; preserve the existing configuration");
+#if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
+    return fail<std::string>("configuration_publication_unavailable", "Existing INI reconciliation is qualified only on Windows, Linux and macOS");
+#endif
+    const auto effective = launch::parse_effective_config_bytes(
+        p.instance.root / "config/config.ini", p.instance.root / "mods", delta.bytes);
+    if (!effective.ok || !same_path(effective.read_data, p.install->root / "data") ||
+        !same_path(effective.write_data, p.instance.root) || !same_path(effective.mod_root, p.instance.root / "mods"))
+        return fail<std::string>("configuration_intended_routing_invalid", "Proposed routing did not pass the existing effective configuration parser");
+    facman::platform::FileIdentity original;
+    {
+        facman::platform::StableInputFile file;
+        if (!file.open_no_follow_pinned(p.instance.root / "config/config.ini").ok() ||
+            file.size() != p.config->text.size() || file.identity().link_count != 1U || !file.revalidate_path().ok())
+            return fail<std::string>("configuration_existing_bytes_changed", "Original file identity changed during planning");
+        std::string bytes(p.config->text.size(), '\0');
+        if (file.read_at(0, bytes.data(), bytes.size()) != bytes.size() || bytes != p.config->text || !file.revalidate_path().ok())
+            return fail<std::string>("configuration_existing_bytes_changed", "Original bytes changed during planning");
+        original = file.identity();
+    }
+    const auto parents = configuration_parent_identity(p.instance.root);
+    if (!parents) return parents;
+    std::string metadata;
+    {
+        facman::platform::StableDirectoryObject root, parent;
+        facman::platform::RetainedStreamRewriteFile file;
+        if (!root.open_no_follow_for_relative_writes(p.instance.root).ok() ||
+            !root.open_child_directory_no_follow_for_relative_writes("config", parent).ok() ||
+            !parent.open_child_file_no_follow_for_retained_rewrite("config.ini", original, p.config->text, delta.bytes,
+                facman::platform::RetainedStreamRewriteState::original_only, file).ok() ||
+            !file.readable_metadata_identity(metadata).ok() || !root.revalidate().ok() || !parent.revalidate().ok())
+            return fail<std::string>("configuration_original_custody_unavailable", "Original file cannot be retained safely for this repair");
+    }
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.configuration_preparation_plan.v1");
+    plan.add_string("instance_id", request.instance_id); plan.add_string("launch_intent", request.launch_intent);
+    plan.add_string("instance_root", path_string(p.instance.root));
+    plan.add_string("component", "existing_routing_configuration"); plan.add_string("composition", "partial");
+    plan.add_string("parent_before_identity", parents.value());
+    plan.add_string("target", path_string(p.instance.root / "config/config.ini"));
+    plan.add_string("config_text", delta.bytes); plan.add_string("config_sha256", sha256_text(delta.bytes));
+    plan.add_string("original_config_text", p.config->text); plan.add_string("original_config_sha256", p.config->digest);
+    plan.add_string("original_metadata_identity", metadata);
+    plan.add_string("original_device", std::to_string(original.device));
+    plan.add_string("original_object", std::to_string(original.object));
+    (void)plan.add_unsigned_integer("original_size", original.size);
+    auto context = json::parse(plan.serialize());
+    if (!context) return fail<std::string>("configuration_plan_invalid", "Original configuration plan is invalid");
+    const auto inputs = configuration_inputs(workspace, request, nullptr, nullptr, nullptr, &context.value());
+    const auto repeated = configuration_inputs(workspace, request, nullptr, nullptr, nullptr, &context.value());
+    if (!inputs || !repeated || inputs.value() != repeated.value())
+        return fail<std::string>("configuration_inputs_changed", "Configuration inputs changed during planning");
+    plan.add_string("inputs_sha256", inputs.value());
+    plan.add_bool("preparation_available", true); plan.add_bool("mutation_executed", false);
+    plan.add_bool("execution_started", false); plan.add_bool("permit_issued", false);
+    plan.add_bool("existing_settings_modified", false); plan.add_string("factorio_support_claim", "unclaimed");
+    plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+    return facman::core::Result<std::string>::success(plan.serialize());
+}
+
+ExistingConfigurationGuard existing_configuration_guard(const fs::path& workspace,
+    const ProjectionRequest& request, const json::Value& context)
+{
+    ExistingConfigurationGuard guard;
+    guard.inputs_sha256 = object_string(context, "inputs_sha256");
+    guard.parent_before_identity = object_string(context, "parent_before_identity");
+    const std::string immutable = context.serialize();
+    guard.validate_owner = [workspace, request, immutable](const tx::Record& record) {
+        const auto expected = json::parse(immutable);
+        const auto actual = json::parse(record.operation_context);
+        const auto id = facman::core::InstanceId::parse_legacy(request.instance_id);
+        if (!expected || !actual || !id || record.command_id != "readiness.prepare_configuration" ||
+            record.commit_strategy != "existing_config_retained_stream_rewrite_v1" ||
+            object_string(actual.value(), "schema") != "factorio.configuration_reconciliation_commit.v1" ||
+            object_string(actual.value(), "instance_id") != request.instance_id ||
+            object_string(actual.value(), "launch_intent") != request.launch_intent ||
+            object_string(actual.value(), "inputs_sha256") != object_string(expected.value(), "inputs_sha256"))
+            return fail<std::string>("configuration_owner_binding_invalid", "Configuration journal owner identity is invalid");
+        workspace_store::InstanceRepository repository {workspace_store::WorkspaceLayout(workspace)};
+        const auto loaded = repository.load(id.value());
+        if (!loaded) return facman::core::Result<std::string>::failure(loaded.error());
+        const auto& instance = loaded.value();
+        const auto parents = configuration_parent_identity(instance.root);
+        if (!same_path(fs::u8path(object_string(actual.value(), "instance_root")), instance.root) ||
+            record.target != instance.root / "config/config.ini" ||
+            record.sources != std::vector<fs::path> {instance.root / "instance.v1.json"} ||
+            !parents || parents.value() != object_string(actual.value(), "parent_before_identity") ||
+            record.effect_parent_identity != parents.value())
+            return fail<std::string>("configuration_owner_binding_invalid", "Journal target is outside the actual registered instance owner");
+        return facman::core::Result<std::string>::success(path_string(instance.root));
+    };
+    guard.observe_inputs = [workspace, request, immutable](const tx::Record* own,
+        const facman::platform::RetainedStreamRewriteFile* held) {
+        const auto original = json::parse(immutable);
+        if (!original) return fail<std::string>("configuration_journal_invalid", "Immutable configuration owner input is invalid");
+        return configuration_inputs(workspace, request, own, nullptr, held, &original.value());
+    };
+    return guard;
+}
+
+
+ConfigurationGuard configuration_guard(const fs::path& workspace, const ProjectionRequest& request,
+    const json::Value& context)
+{
+    ConfigurationGuard guard;
+    guard.inputs_sha256 = object_string(context, "inputs_sha256");
+    guard.parent_before_identity = object_string(context, "parent_before_identity");
+    guard.observe_inputs = [workspace, request](const tx::Record* own) {
+        return configuration_inputs(workspace, request, own);
+    };
+    return guard;
+}
+} // namespace
+
+facman::core::Result<std::string> configuration_preparation_plan(
+    const fs::path& workspace, const ProjectionRequest& request)
+{
+#if !defined(__APPLE__)
+    if (!configuration_publication_available()) return fail<std::string>(
+        "configuration_publication_unavailable", "Missing configuration preparation is not qualified on this host");
+#endif
+    // Common queries with an existing INI need no second content/archive scan.
+    auto id = facman::core::InstanceId::parse_legacy(request.instance_id);
+    if (!id) return facman::core::Result<std::string>::failure(id.error());
+    workspace_store::InstanceRepository repository {workspace_store::WorkspaceLayout(workspace)};
+    auto registered = repository.load(id.value());
+    if (!registered) return facman::core::Result<std::string>::failure(registered.error());
+    if (lock_input_identity(registered.value().root / "config/config.ini") != "absent")
+        return existing_configuration_plan(workspace, request);
+#if defined(__APPLE__)
+    // Darwin existing-file admission is separate from missing-file publication.
+    if (!configuration_publication_available()) return fail<std::string>(
+        "configuration_publication_unavailable", "Missing configuration preparation is not qualified on this host");
+#endif
+    Projection p;
+    auto inputs = configuration_inputs(workspace, request, nullptr, &p);
+    if (!inputs) return inputs;
+    auto parents = configuration_parent_identity(p.instance.root);
+    auto current = configuration_inputs(workspace, request, nullptr);
+    if (!parents || !current || current.value() != inputs.value()) return fail<std::string>(
+        "configuration_inputs_changed", "Configuration owner inputs changed during planning");
+    const std::string bytes = instance_effective_config(p.instance, *p.install_ref);
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.configuration_preparation_plan.v1");
+    plan.add_string("instance_id", request.instance_id); plan.add_string("launch_intent", request.launch_intent);
+    plan.add_string("instance_root", path_string(p.instance.root));
+    plan.add_string("component", "missing_routing_configuration"); plan.add_string("composition", "partial");
+    plan.add_string("inputs_sha256", inputs.value()); plan.add_string("parent_before_identity", parents.value());
+    plan.add_string("target", path_string(p.instance.root / "config/config.ini"));
+    plan.add_string("config_text", bytes); plan.add_string("config_sha256", sha256_text(bytes));
+    plan.add_bool("preparation_available", true); plan.add_bool("mutation_executed", false);
+    plan.add_bool("execution_started", false); plan.add_bool("permit_issued", false);
+    plan.add_bool("existing_settings_modified", false); plan.add_string("factorio_support_claim", "unclaimed");
+    plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+    return facman::core::Result<std::string>::success(plan.serialize());
+}
+
+facman::core::Result<std::string> prepare_configuration(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& expected_plan_sha256,
+    const std::string& operation_id, const std::string& attempt_id)
+{
+    auto planned = configuration_preparation_plan(workspace, request);
+    if (!planned) return planned;
+    auto plan = json::parse(planned.value());
+    if (!plan || object_string(plan.value(), "plan_sha256") != expected_plan_sha256)
+        return fail<std::string>("configuration_plan_changed", "Configuration no longer matches its reviewed snapshot");
+    if (object_string(plan.value(), "component") == "existing_routing_configuration") {
+        auto existing_guard = existing_configuration_guard(workspace, request, plan.value());
+        existing_guard.operation_id = operation_id; existing_guard.attempt_id = attempt_id;
+        return reconcile_existing_configuration(workspace, plan.value(), existing_guard);
+    }
+    auto guard = configuration_guard(workspace, request, plan.value());
+    guard.operation_id = operation_id; guard.attempt_id = attempt_id;
+    return publish_missing_configuration(workspace, fs::u8path(object_string(plan.value(), "instance_root")),
+        request.instance_id, request.launch_intent, object_string(plan.value(), "config_text"), guard);
+}
+
+facman::core::Result<std::string> recover_configuration_preparation(const fs::path& workspace, const std::string& id)
+{
+    tx::Record record; std::string detail;
+    if (!tx::read_record(workspace, id, record, detail)) return fail<std::string>("recovery_journal_invalid", detail);
+    auto context = json::parse(record.operation_context);
+    if (!context || !context.value().is_object()) return fail<std::string>("recovery_journal_invalid", "Configuration context is invalid");
+    const ProjectionRequest request {object_string(context.value(), "instance_id"), object_string(context.value(), "launch_intent")};
+    if (record.commit_strategy == "existing_config_retained_stream_rewrite_v1")
+        return recover_existing_configuration(workspace, id, existing_configuration_guard(workspace, request, context.value()));
+    return recover_missing_configuration(workspace, id, configuration_guard(workspace, request, context.value()));
+}
+
+namespace {
+bool joined_recovery_current(const fs::path& workspace, const std::string& own_transaction = {})
+{
+    const auto recovery = tx::inspect(workspace);
+    const auto* report = std::get_if<tx::RecoveryResult>(&recovery);
+    auto document = report ? json::parse(report->json) : json::parse("null");
+    const auto* journals = document ? document.value().find("transactions") : nullptr;
+    if (!journals || !journals->is_array()) return false;
+    for (std::size_t index = 0; index < journals->size(); ++index) {
+        if (!own_transaction.empty() && object_string(*journals->at(index), "transaction_id") == own_transaction) continue;
+        auto state = tx::parse_state(object_string(*journals->at(index), "state"));
+        if (!state || !tx::terminal(state.value())) return false;
+    }
+    return true;
+}
+
+facman::core::Result<std::string> joined_inputs(const fs::path& workspace,
+    const ProjectionRequest& request, Projection* snapshot = nullptr, bool content_effect = false,
+    bool installation_effect = false, const std::string& own_transaction = {},
+    const std::vector<launch::InstanceRunLock>* own_run_locks = nullptr)
+{
+    auto observed = project(workspace, request);
+    if (!observed) return facman::core::Result<std::string>::failure(observed.error());
+    const auto& p = observed.value();
+    if (!p.root_safe || !p.install_present || !p.install_record || !p.install || !p.install_ref ||
+        (!p.installation_healthy && !installation_effect) || !p.version_family_eligible || !p.version_matches || !p.content_present ||
+        !p.profile_valid || !p.profile_plan || !p.modset_lock ||
+        ((!p.modset_valid || p.modset_status != "locked_verified") && !(content_effect && p.modset_archives_verified)) ||
+        p.profile_launch_intent != request.launch_intent ||
+        (request.launch_intent == "load_save" && (p.selected_save.empty() ||
+            p.selected_save_state == "blocked" || p.selected_archive_identity.rfind("file:", 0) != 0)))
+        return fail<std::string>("make_ready_prerequisites_unavailable",
+            "The current installation, profile, locked content or selected save is unavailable; prepare it with its existing action");
+    bool own_pending = false;
+    if (!own_transaction.empty() && installation_effect) {
+        tx::Record own;
+        std::string detail;
+        own_pending = tx::read_record(workspace, own_transaction, own, detail) &&
+            own.command_id == "installs.repair.apply" && own.target == p.install->root && !tx::terminal(own.state);
+        if (!own_pending) return fail<std::string>("make_ready_pending_recovery", "The exact installation repair coordinator is unavailable");
+    }
+    if (p.pending_transactions != (own_pending ? 1U : 0U) || !joined_recovery_current(workspace, own_pending ? own_transaction : "")) return fail<std::string>("make_ready_pending_recovery",
+        "Recover existing domain transactions before joined preparation");
+    for (const char* lock : {"run.lock", "save.write.lock"}) {
+        bool exact_owned_run = false;
+        if (installation_effect && own_pending && own_run_locks && std::string(lock) == "run.lock") {
+            const auto held = std::find_if(own_run_locks->begin(), own_run_locks->end(), [&](const auto& proof) {
+                return proof.path == p.instance.root / "locks/run.lock";
+            });
+            std::string detail;
+            exact_owned_run = held != own_run_locks->end() && launch::verify_instance_run_lock(*held, detail);
+        }
+        if (!exact_owned_run && lock_input_identity(p.instance.root / "locks" / lock) != "absent")
+            return fail<std::string>("make_ready_locked", "Joined preparation conflicts with an instance writer");
+    }
+    if (lock_input_identity(p.instance.root / "config-path.cfg") != "absent" ||
+        lock_input_identity(p.instance.root / "config/config-path.cfg") != "absent")
+        return fail<std::string>("make_ready_legacy_routing_present", "Existing legacy routing must be preserved for explicit repair");
+    const auto executable = artifact_identity(p.install->executable);
+    const auto list = lock_input_identity(p.instance.root / "mods/mod-list.json");
+    const auto settings = lock_input_identity(p.instance.root / "mods/mod-settings.dat");
+    const auto parents = configuration_parent_identity(p.instance.root);
+    if (!parents || (!installation_effect && executable.rfind("file:", 0) != 0) ||
+        (list != "absent" && list.rfind("present:file:", 0) != 0) ||
+        (settings != "absent" && settings.rfind("present:file:", 0) != 0))
+        return fail<std::string>("make_ready_inputs_unsafe", "Joined input custody is unavailable");
+    json::ObjectBuilder inputs;
+    inputs.add_string("schema", content_effect ? "factorio.make_ready_joined_inputs.v2" : "factorio.make_ready_joined_inputs.v1");
+    inputs.add_string("instance", p.instance_record.identity);
+    inputs.add_string("root", p.instance_root_identity);
+    if (installation_effect) {
+        inputs.add_string("installation_id", p.install->id.str());
+        inputs.add_string("installation_root", path_string(p.install->root));
+        inputs.add_string("installation_executable", path_string(p.install->executable));
+        inputs.add_string("installation_version", p.install->version);
+        inputs.add_string("installation_source", p.install->source_ref);
+    } else {
+        inputs.add_string("installation", p.install_record->identity);
+        inputs.add_string("installation_evidence", p.installation_evidence_digest);
+        inputs.add_string("executable", executable);
+    }
+    inputs.add_string("profile", p.profile_digest);
+    inputs.add_string("profile_source", p.profile_source_identity);
+    inputs.add_string("profile_request", p.profile_plan->request_json);
+    inputs.add_string("overrides", p.overrides_input_identity);
+    const bool activating_content = content_effect && !installation_effect;
+    inputs.add_string("local_lock", activating_content ? p.modset_lock->digest : p.modset_local_lock_identity);
+    inputs.add_string("shared_lock", activating_content ? p.modset_lock->digest : p.modset_shared_lock_identity);
+    auto bound_artifacts = p.modset_artifacts;
+    if (activating_content) bound_artifacts.erase(std::remove_if(bound_artifacts.begin(), bound_artifacts.end(),
+        [](const auto& artifact) { return artifact.first == "mod-list.json"; }), bound_artifacts.end());
+    inputs.add_array("artifacts", artifact_strings(bound_artifacts));
+    inputs.add_string("mod_list", activating_content ? "separate_verified_content_effect" : list);
+    inputs.add_string("mod_settings", settings);
+    inputs.add_string("configuration_parents", parents.value());
+    inputs.add_string("launch_intent", request.launch_intent);
+    inputs.add_string("selected_save", p.selected_save);
+    inputs.add_string("selected_archive", p.selected_archive_identity);
+    if (content_effect) {
+        const auto configuration = lock_input_identity(p.instance.root / "config/config.ini");
+        if (configuration != "absent" && configuration.rfind("present:file:", 0) != 0)
+            return fail<std::string>("make_ready_inputs_unsafe", "Configuration custody is unavailable");
+        inputs.add_string("configuration_before", configuration);
+        // Content owns replacement of the lock object. Keep the separately
+        // observed association object pinned; the raw lock digest is bound above.
+        inputs.add_string("selected_context_before", p.selected_association_identity);
+        if (request.launch_intent == "load_save") {
+            auto selected_parents = saves::index::selected_association_parent_identity(p.instance.root);
+            if (!selected_parents) return selected_parents;
+            inputs.add_string("selected_parent_before", selected_parents.value());
+        }
+    }
+    if (snapshot) *snapshot = observed.take_value();
+    return facman::core::Result<std::string>::success(sha256_text(inputs.serialize()));
+}
+
+bool joined_effect(const fs::path& workspace, const std::string& transaction,
+    const char* command, const fs::path& target, const std::string& expected_sha,
+    const std::string& operation, const std::string& attempt)
+{
+    tx::Record record;
+    std::string detail;
+    if (!tx::read_record(workspace, transaction, record, detail)) return false;
+    const auto context = json::parse(record.operation_context);
+    facman::platform::StableInputFile file;
+    if (!context || record.command_id != command || record.state != tx::State::complete ||
+        record.target != target || object_string(context.value(), "operation_id") != operation ||
+        object_string(context.value(), "attempt_id") != attempt || !file.open_no_follow_pinned(target).ok() ||
+        file.identity().link_count != 1U || record.effect_file_identity !=
+            std::to_string(file.identity().device) + ":" + std::to_string(file.identity().object)) return false;
+    const fs::path root = fs::u8path(object_string(context.value(), "instance_root"));
+    const bool configuration = record.command_id == "readiness.prepare_configuration";
+    auto parents = configuration ? configuration_parent_identity(root) : saves::index::selected_association_parent_identity(root);
+    const fs::path expected_target = configuration ? root / "config/config.ini" :
+        root / "metadata/save-refs" / fs::u8path(object_string(context.value(), "save_filename") + ".save-ref.v1.json");
+    if (!parents || parents.value() != record.effect_parent_identity || expected_target != target) return false;
+    auto current = observe_file(target);
+    const auto sha = expected_sha.empty() ? sha256_text(object_string(context.value(), "sidecar_text")) : expected_sha;
+    return current && current.value().digest == sha && file.revalidate_path().ok();
+}
+} // namespace
+
+facman::core::Result<std::string> joined_repair_inputs(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& own_transaction,
+    const std::vector<launch::InstanceRunLock>* own_run_locks)
+{
+    return joined_inputs(workspace, request, nullptr, true, true, own_transaction, own_run_locks);
+}
+
+facman::core::Result<std::string> joined_repair_archive_identity(const fs::path& archive,
+    const facman::platform::StableInputFile* held_archive)
+{
+    facman::platform::StableInputFile local;
+    std::string unsafe;
+    if (facman::base::path_crosses_link_or_reparse_point(archive, unsafe) ||
+        (!held_archive && !local.open_no_follow_pinned(archive).ok()))
+        return fail<std::string>("make_ready_repair_source_unavailable", "The explicit local repair archive cannot be pinned safely");
+    const auto& file = held_archive ? *held_archive : local;
+    if (!file.open() || file.identity().link_count != 1U || !file.revalidate_path().ok())
+        return fail<std::string>("make_ready_repair_source_changed", "The original repair archive path changed");
+    facman::base::Sha256Hasher hash;
+    char bytes[65536];
+    std::uint64_t offset = 0;
+    while (offset < file.size()) {
+        const auto count = file.read_at(offset, bytes, static_cast<std::size_t>(std::min<std::uint64_t>(sizeof(bytes), file.size() - offset)));
+        if (count == 0U) return fail<std::string>("make_ready_repair_source_unavailable", "The original repair archive cannot be read completely");
+        hash.update(reinterpret_cast<const unsigned char*>(bytes), count);
+        offset += count;
+    }
+    if (!file.revalidate_path().ok()) return fail<std::string>("make_ready_repair_source_changed", "The original repair archive changed during observation");
+    const auto& identity = file.identity();
+    return facman::core::Result<std::string>::success("file:" + std::to_string(identity.device) + ":" +
+        std::to_string(identity.object) + ":" + std::to_string(identity.size) + ":sha256:" + hash.finish());
+}
+
+facman::core::Result<std::string> joined_repair_plan(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& repair_envelope, const std::string& review_id,
+    const std::string& archive_identity)
+{
+#ifndef _WIN32
+    return fail<std::string>("make_ready_repair_custody_unavailable", "Joined executable repair requires the Windows retained source custody capability");
+#endif
+    Projection p;
+    auto binding = joined_inputs(workspace, request, &p, true, true);
+    auto repair = json::parse(repair_envelope);
+    if (!binding) return binding;
+    const auto* native_request = repair ? repair.value().find("plan_request") : nullptr;
+    const auto* archive = native_request ? native_request->find("archive") : nullptr;
+    auto source = archive ? joined_repair_archive_identity(fs::u8path(object_string(*archive, "path"))) :
+        fail<std::string>("make_ready_repair_source_unavailable", "The reviewed repair archive is unavailable");
+    if (!source || source.value() != archive_identity)
+        return fail<std::string>("make_ready_repair_source_changed", "The original reviewed archive object changed; review the explicit source again");
+    if (!repair || !p.install || p.install->ownership != "managed" ||
+        p.install->provider_id != "universal-setup" || p.install->source != "universal-setup" ||
+        object_string(repair.value(), "schema") != "factorio.managed_repair_plan.v1" ||
+        object_string(repair.value(), "install_id") != p.install->id.str() ||
+        object_string(repair.value(), "install_record_sha256") != p.install_record->digest)
+        return fail<std::string>("make_ready_repair_review_invalid", "Review an exact eligible managed installation repair first");
+    const auto* provider = repair.value().find("provider_plan");
+    const auto* repairs = provider ? provider->find("repairs") : nullptr;
+    // This bounded continuation requires existing locked content to be intact.
+    // Installation data reconstruction needs its own reviewed dependency plan.
+    if (!repairs || !repairs->is_array() || repairs->size() == 0U)
+        return fail<std::string>("make_ready_repair_scope_unavailable", "The reviewed repair has no supported executable effect");
+    for (std::size_t index = 0; index < repairs->size(); ++index) {
+        const auto* item = repairs->at(index);
+        if (!item || p.install->root / fs::u8path(object_string(*item, "relative_path")) != p.install->executable)
+            return fail<std::string>("make_ready_repair_scope_unavailable", "Prepare installation data with its existing repair action before joining current settings");
+    }
+    json::ObjectBuilder desired;
+    desired.add_string("installation_id", p.install->id.str());
+    desired.add_string("profile_id", p.instance.profile);
+    desired.add_string("selected_save", request.launch_intent == "load_save" ? p.selected_save : "");
+    desired.add_string("modset_lock_sha256", p.modset_lock->digest);
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.make_ready_joined_plan.v3");
+    plan.add_string("instance_id", request.instance_id);
+    plan.add_string("launch_intent", request.launch_intent);
+    plan.add_object("desired_state", desired);
+    plan.add_string("repair_review_id", review_id);
+    plan.add_string("archive_source_identity", archive_identity);
+    plan.add_string("installation_root", path_string(p.install->root));
+    plan.add_string("installation_executable", path_string(p.install->executable));
+    plan.add_string("inputs_sha256", binding.value());
+    plan.add_value("installation_plan", repair.value());
+    plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+    return facman::core::Result<std::string>::success(plan.serialize());
+}
+
+facman::core::Result<std::string> joined_preparation_plan(const fs::path& workspace,
+    const ProjectionRequest& request)
+{
+    Projection p;
+    auto binding = joined_inputs(workspace, request, &p);
+    if (!binding) {
+        auto protected_inputs = joined_inputs(workspace, request, &p, true);
+        if (!protected_inputs) return binding;
+        auto content = facman::factorio::modsets::solver::plan_locked_activation(workspace, request.instance_id);
+        if (!content) return content;
+        json::ObjectBuilder desired;
+        desired.add_string("installation_id", p.instance.install_ref.str());
+        desired.add_string("profile_id", p.instance.profile);
+        desired.add_string("selected_save", request.launch_intent == "load_save" ? p.selected_save : "");
+        desired.add_string("modset_lock_sha256", p.modset_lock->digest);
+        json::ObjectBuilder plan;
+        plan.add_string("schema", "factorio.make_ready_joined_plan.v2");
+        plan.add_string("instance_id", request.instance_id);
+        plan.add_string("launch_intent", request.launch_intent);
+        plan.add_object("desired_state", desired);
+        plan.add_string("inputs_sha256", protected_inputs.value());
+        auto owner = json::parse(content.value());
+        plan.add_value("content_plan", owner.value());
+        auto current = joined_inputs(workspace, request, nullptr, true);
+        auto current_content = facman::factorio::modsets::solver::plan_locked_activation(workspace, request.instance_id);
+        if (!current || current.value() != protected_inputs.value() || !current_content || current_content.value() != content.value())
+            return fail<std::string>("make_ready_inputs_changed", "Locked activation or protected inputs changed during planning");
+        plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+        return facman::core::Result<std::string>::success(plan.serialize());
+    }
+    auto configuration = configuration_preparation_plan(workspace, request);
+    if (!configuration && configuration.error().code != "configuration_already_current") return configuration;
+    const auto configuration_plan = configuration ? json::parse(configuration.value()) : json::parse("null");
+    if (!configuration_plan || (!configuration && (!p.config_valid || !p.config)))
+        return fail<std::string>("make_ready_configuration_unavailable", "Routing configuration is not safely prepared");
+    json::ObjectBuilder desired;
+    desired.add_string("installation_id", p.instance.install_ref.str());
+    desired.add_string("profile_id", p.instance.profile);
+    desired.add_string("selected_save", request.launch_intent == "load_save" ? p.selected_save : "");
+    desired.add_string("modset_lock_sha256", p.modset_lock->digest);
+    const bool selected_needed = request.launch_intent == "load_save" && p.selected_save_state != "satisfied";
+    std::string selected_parent;
+    if (request.launch_intent == "load_save") {
+        auto parents = saves::index::selected_association_parent_identity(p.instance.root);
+        if (!parents) return parents;
+        selected_parent = parents.value();
+        if (selected_needed) {
+            saves::index::Request selected;
+            selected.instance_id = request.instance_id;
+            selected.save = p.selected_save;
+            selected.profile_id = p.instance.profile;
+            selected.source_operation = "readiness.prepare_selected_save";
+            auto exact = saves::index::prepare_exact_association(workspace, selected);
+            if (!exact) return facman::core::Result<std::string>::failure(exact.error());
+        }
+    }
+    auto current = joined_inputs(workspace, request);
+    if (!current || current.value() != binding.value())
+        return fail<std::string>("make_ready_inputs_changed", "Joined owner inputs changed during planning");
+    json::ObjectBuilder plan;
+    plan.add_string("schema", "factorio.make_ready_joined_plan.v1");
+    plan.add_string("instance_id", request.instance_id);
+    plan.add_string("launch_intent", request.launch_intent);
+    plan.add_object("desired_state", desired);
+    plan.add_string("inputs_sha256", binding.value());
+    if (configuration) {
+        json::ObjectBuilder owner;
+        for (const char* key : {"plan_sha256", "component", "target"})
+            owner.add_string(key, object_string(configuration_plan.value(), key));
+        plan.add_object("configuration_plan", owner);
+    } else plan.add_null("configuration_plan");
+    plan.add_string("configuration_sha256", configuration ? object_string(configuration_plan.value(), "config_sha256") : p.config->digest);
+    plan.add_string("configuration_before_identity", p.config ? p.config->identity : "absent");
+    plan.add_string("selected_context_before_identity", p.selected_context_identity);
+    plan.add_string("selected_parent_before_identity", selected_parent);
+    plan.add_string("selected_context_target", request.launch_intent == "load_save" ?
+        path_string(p.instance.root / "metadata/save-refs" / fs::u8path(p.selected_save + ".save-ref.v1.json")) : "");
+    plan.add_bool("selected_context_required", selected_needed);
+    auto save = json::parse(p.selected_save_evidence);
+    plan.add_string("selected_save_sha256", save ? object_string(save.value(), "sha256") : "");
+    plan.add_string("plan_sha256", sha256_text(plan.serialize()));
+    return facman::core::Result<std::string>::success(plan.serialize());
+}
+
+facman::core::Result<std::string> verify_joined_content_inputs(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& source)
+{
+    auto plan = json::parse(source);
+    if (!plan || object_string(plan.value(), "schema") != "factorio.make_ready_joined_plan.v2" ||
+        object_string(plan.value(), "instance_id") != request.instance_id ||
+        object_string(plan.value(), "launch_intent") != request.launch_intent)
+        return fail<std::string>("make_ready_plan_invalid", "Pending content plan does not match this request");
+    auto current = joined_inputs(workspace, request, nullptr, true);
+    if (!current || current.value() != object_string(plan.value(), "inputs_sha256"))
+        return fail<std::string>("make_ready_inputs_changed", "Protected inputs changed before content activation");
+    return current;
+}
+
+facman::core::Result<std::string> continue_joined_after_content(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& source, const std::string& content_receipt,
+    const std::string& operation, const std::string& attempt)
+{
+    auto plan = json::parse(source);
+    const auto* owner = plan ? plan.value().find("content_plan") : nullptr;
+    if (!plan || !owner || object_string(plan.value(), "schema") != "factorio.make_ready_joined_plan.v2" ||
+        object_string(plan.value(), "instance_id") != request.instance_id ||
+        object_string(plan.value(), "launch_intent") != request.launch_intent)
+        return fail<std::string>("make_ready_plan_invalid", "Pending content plan does not match this request");
+    auto verified = facman::factorio::modsets::solver::verify_locked_activation(workspace,
+        request.instance_id, owner->serialize(), content_receipt, operation, attempt);
+    if (!verified) return verified;
+    auto before = joined_inputs(workspace, request, nullptr, true);
+    if (!before || before.value() != object_string(plan.value(), "inputs_sha256"))
+        return fail<std::string>("make_ready_inputs_changed", "Content activation is retained; protected inputs changed before configuration or save preparation");
+    auto next = joined_preparation_plan(workspace, request);
+    auto nested = next ? json::parse(next.value()) : json::parse("null");
+    const auto* desired = plan.value().find("desired_state");
+    const auto* nested_desired = nested ? nested.value().find("desired_state") : nullptr;
+    if (!next) return next;
+    if (!nested || !desired || !nested_desired || desired->serialize() != nested_desired->serialize() ||
+        object_string(nested.value(), "schema") != "factorio.make_ready_joined_plan.v1")
+        return fail<std::string>("make_ready_desired_state_mismatch", "Content activation is retained; the remaining plan no longer matches the confirmed selection");
+    auto after = joined_inputs(workspace, request, nullptr, true);
+    if (!after || after.value() != before.value())
+        return fail<std::string>("make_ready_inputs_changed", "Protected inputs changed while deriving the remaining owner plan");
+    return next;
+}
+
+bool joined_completed_effects_current(const fs::path& workspace, const std::string& source,
+    const std::string& configuration_transaction, const std::string& selected_transaction,
+    const std::string& operation_id, const std::string& attempt_id)
+{
+    auto plan = json::parse(source);
+    if (!plan || (configuration_transaction.empty() && selected_transaction.empty())) return false;
+    if (!joined_recovery_current(workspace)) return false;
+    if (!configuration_transaction.empty()) {
+        const auto* owner = plan.value().find("configuration_plan");
+        if (!owner || !owner->is_object() || !joined_effect(workspace, configuration_transaction,
+                "readiness.prepare_configuration", fs::u8path(object_string(*owner, "target")),
+                object_string(plan.value(), "configuration_sha256"), operation_id, attempt_id)) return false;
+    }
+    return selected_transaction.empty() || joined_effect(workspace, selected_transaction,
+        "readiness.prepare_selected_save", fs::u8path(object_string(plan.value(), "selected_context_target")),
+        {}, operation_id, attempt_id);
+}
+
+facman::core::Result<std::string> verify_joined_preparation(const fs::path& workspace,
+    const ProjectionRequest& request, const std::string& source,
+    const std::string& configuration_transaction, const std::string& selected_transaction,
+    const std::string& operation_id, const std::string& attempt_id)
+{
+    auto plan = json::parse(source);
+    Projection p;
+    auto current = joined_inputs(workspace, request, &p);
+    if (!plan || !current || object_string(plan.value(), "schema") != "factorio.make_ready_joined_plan.v1" ||
+        object_string(plan.value(), "instance_id") != request.instance_id ||
+        object_string(plan.value(), "launch_intent") != request.launch_intent ||
+        object_string(plan.value(), "inputs_sha256") != current.value())
+        return fail<std::string>("make_ready_inputs_changed", "The installation, profile, content or selected save changed; applied preparation is retained; refresh before confirming a new request");
+    const fs::path configuration = p.instance.root / "config/config.ini";
+    if (!p.config_valid || !p.config || p.config->digest != object_string(plan.value(), "configuration_sha256") ||
+        (configuration_transaction.empty() ? p.config->identity != object_string(plan.value(), "configuration_before_identity") :
+            !joined_effect(workspace, configuration_transaction, "readiness.prepare_configuration", configuration,
+                p.config->digest, operation_id, attempt_id)))
+        return fail<std::string>("make_ready_configuration_effect_changed", "The prepared configuration can no longer be verified; inspect recovery before continuing");
+    if (request.launch_intent == "load_save") {
+        if (selected_transaction.empty()) {
+            const auto parents = saves::index::selected_association_parent_identity(p.instance.root);
+            if (!parents || parents.value() != object_string(plan.value(), "selected_parent_before_identity") ||
+                p.selected_context_identity != object_string(plan.value(), "selected_context_before_identity"))
+                return fail<std::string>("make_ready_selected_context_changed", "The selected save context or its location changed; applied preparation is retained; refresh before confirming a new request");
+        } else {
+            const fs::path target = p.instance.root / "metadata/save-refs" / fs::u8path(p.selected_save + ".save-ref.v1.json");
+            auto bytes = observe_file(target);
+            auto sidecar = bytes ? json::parse(bytes.value().text) : json::parse("null");
+            if (!sidecar || !joined_effect(workspace, selected_transaction, "readiness.prepare_selected_save",
+                    target, {}, operation_id, attempt_id) || p.selected_save_state != "satisfied" ||
+                object_string(sidecar.value(), "save_sha256") != object_string(plan.value(), "selected_save_sha256") ||
+                object_string(sidecar.value(), "instance_id") != request.instance_id ||
+                object_string(sidecar.value(), "profile_id") != p.instance.profile ||
+                object_string(sidecar.value(), "factorio_version") != p.instance.factorio_version ||
+                object_string(sidecar.value(), "modset_lock_sha256") != p.modset_lock->digest ||
+                object_string(sidecar.value(), "source_operation") != "readiness.prepare_selected_save")
+                return fail<std::string>("make_ready_selected_effect_changed", "The saved context can no longer be verified; inspect recovery before continuing");
+        }
+    }
+    auto readiness = instance_readiness(workspace, request);
+    Projection after;
+    auto reobserved = joined_inputs(workspace, request, &after);
+    if (!readiness || !reobserved || reobserved.value() != current.value() || !after.config ||
+        after.config->identity != p.config->identity || after.selected_context_identity != p.selected_context_identity)
+        return fail<std::string>("make_ready_inputs_changed", "Joined inputs changed during final owner observation");
+    return readiness;
 }
 
 } // namespace facman::factorio::instance

@@ -147,3 +147,482 @@ MSVC and GCC accepted but Clang rejected under
 affected maintenance target rebuilt and passed on Windows and Ubuntu 24.04;
 source formatting and `git diff --check` also passed. The corrected macOS
 hosted build remains the exact platform acceptance check for this correction.
+
+## 2026-09-22 external retained-helper handoff checkpoint
+
+Implemented from exact integrated dev base
+`ea43094b2dfa8d4b2b80fe3b2811e2a50bacafda`, the public epoch apply now
+retains the currently executing setup binary as `FacManContinuation.exe`,
+launches it with a pinned v3 handoff journal, reports `handoff_launched`, and
+exits before provider, publication, or shell effects. The external helper
+waits for the exact parent process identity, revalidates its own retained path
+and digest, extracts the target package's separate maintenance launcher, and
+continues the durable operation under the original absolute deadline.
+
+The Windows candidate controller can now wait for the owned Job to become
+empty after the public process exits. It preserves the ordinary descendant
+termination mode for every other command and still terminates the complete Job
+on timeout or execution failure. The packaged lifecycle covers normal external
+handoff and a second public apply from an already durable staged v3 journal.
+
+Current-source Windows native and packaged tests, WSL native compilation and
+execution, Python controller/candidate tests, strict validation, formatting,
+portable AIDE validation, and diff checks pass. Independent non-authoring
+source review found no safety blocker. The WorkUnit remains active pending the
+source-distinct produced-package Windows candidate, real Start Menu/HKCU
+effects, chain-aware repair/removal and supported-platform/human acceptance.
+
+## 2026-09-22 PR #320 handoff-boundary remediation
+
+The first hosted PR attempt found that the private continuation inherited a
+caller's redirected standard handles. That kept captured pipes open while the
+child waited for its parent and made the nominally asynchronous public apply
+consume most of the Debug lifecycle budget. The helper now inherits only the
+exact parent-process handle plus explicit `NUL` standard handles and runs
+without a console.
+
+The packaged lifecycle retains one complete public external continuation. Its
+staged-retry regression reuses the resulting active epoch, promotes the exact
+staged v3 journal, launches a lightweight retained probe, and proves the public
+initiator writes no continuation records after launch. Native tests retain the
+full staged continuation/recovery matrix. The unchanged Windows lifecycle gate
+passes in 111.31 seconds instead of timing out at 180 seconds; the focused four
+Windows tests and two WSL maintenance/provider tests pass. Hosted
+requalification remains pending, including the separate coverage-runner export
+timeout; no validation limit or coverage threshold changed.
+
+## 2026-09-22 hosted Debug observer correction
+
+PR #320 run `35640200272` passed the previously failing Linux coverage job
+under its unchanged limits. Windows Debug proved that the isolated continuation
+can outlive a new 65-second fixture observer while remaining inside the
+product's existing 600-second absolute handoff budget. Cleanup then encountered
+the still-live installed executable and refused deletion. The observer now
+allows 120 seconds inside the unchanged 180-second outer CTest gate, retaining
+time for terminal observation, the staged-launch regression, and cleanup.
+This changes no product deadline, CTest timeout, test selection, or coverage
+threshold. The exact local Windows Debug lifecycle passed in 112.21 seconds;
+hosted requalification remains pending.
+
+## 2026-09-22 hosted Debug archive-cost correction
+
+PR #320 run `35642988291` passed every non-Windows lane, including Linux
+coverage under its unchanged limits, but the Windows lifecycle reached the
+unchanged 180-second outer CTest timeout before the synthetic external helper
+finished. A retained local phase trace showed correct progress through all
+eight durable phases and isolated the cost to repeatedly hashing and copying
+the uncompressed Debug Setup image in the maintenance archives.
+
+The ordinary lifecycle still exercises stored archives. The synthetic
+external-maintenance packages now use the other admitted format, Deflate,
+while retaining the complete helper launch, provider, publication, shell,
+terminal observation, mismatch and staged-retry assertions. The exact local
+Windows Debug lifecycle passed in 81.04 seconds, down from the immediately
+preceding retained 89-second observation. Product deadlines, the outer CTest
+timeout, the test selection, and every assertion remain unchanged. Exact
+hosted requalification remains pending.
+
+## 2026-09-22 source-distinct predecessor product correction
+
+Product-candidate run `35662564497` was bound to exact integrated dev
+`171eb897e3390078a73a9d300593a22ce3a3984f`. Linux and macOS platform jobs
+passed, and Windows passed its complete 49-test native matrix, current-source
+package proofs and real current-user setup lifecycle. The source-distinct
+transition then stopped before producing the Alpha.5 predecessor package:
+the detached predecessor built its native product but had not built the
+WinForms component required by the `windows_product_x64` profile.
+
+The bounded successor invokes the predecessor checkout's own
+`tools.winforms_build` helper, writes its output beneath the predecessor-owned
+task root, and pins `PYTHONPATH` to that detached source. It does not reuse the
+candidate GUI or relax the product profile. Focused candidate/controller tests,
+the broader 120-test package and candidate matrix, source formatting, Python
+compilation, diff checks and the complete strict repository check pass. A new
+exact hosted product-candidate run remains required; the failed run grants no
+source-distinct transition or candidate-bundle qualification.
+
+## 2026-09-22 predecessor WinForms output binding correction
+
+Product-candidate run `35668651886` tested exact integrated dev
+`05016bb154c147b0926642f190437f3578bc1dfa`. Linux and macOS passed again.
+Windows reached the detached Alpha.5 predecessor build, completed its native
+and WinForms builds, and then failed before package construction because the
+predecessor package process was not given the external WinForms output path.
+It therefore searched only the detached checkout's default `bin/Release`
+directory even though the required executable existed in the marker-owned
+predecessor task root.
+
+The corrective successor binds the predecessor's existing
+`FACMAN_WINFORMS_OUTPUT_ROOT` package input to that exact owned output. It does
+not copy a binary into the checkout, use the candidate GUI, or broaden the
+package resolver. Focused candidate, workflow, and external-component staging
+tests pass, as do the broader 120-test candidate/package matrix, Python
+compilation, source formatting, diff checks and the complete strict repository
+check. A new exact hosted product-candidate run remains required; run
+`35668651886` grants no transition or bundle qualification.
+
+## 2026-09-22 predecessor CI source-identity correction
+
+Product-candidate run `35673461778` tested exact integrated dev
+`bd838f1b92c976f9c6138d188a8d978ede023fd1` against Alpha.5 predecessor
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+completed the current-source package, real current-user setup lifecycle, and
+the detached predecessor native and WinForms builds. The predecessor package
+then refused before the source-distinct transition because it inherited the
+candidate run's `GITHUB_SHA` while its package correctly declared the Alpha.5
+source revision.
+
+The bounded successor passes the resolved predecessor revision into its
+isolated environment as `FACMAN_CI_SOURCE_SHA`, the package provenance
+contract's explicit checkout-source identity. It keeps the outer candidate
+`GITHUB_SHA`, package comparison, and exact provenance check intact. A new
+hosted run remains required; the failed run grants no transition or bundle
+qualification.
+
+## 2026-09-22 current-contract predecessor audit correction
+
+Product-candidate run `35678300868` tested exact integrated dev
+`d94166a2337ca27794881212586c7bce92cd48a2` against Alpha.5 predecessor
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+passed its current-source native, package, resource and current-user setup
+work, then successfully built the detached predecessor native, WinForms,
+portable and Setup products. This confirms the predecessor source-identity
+correction. The run stopped before the A-to-B transition when the Alpha.5
+checkout's historical setup-overlay auditor treated
+`facman/state/self-maintenance-package.v1.json` as an unowned extra file.
+
+The exact retained Alpha.5 portable and Setup artifacts pass the current
+`windows_setup_overlay_v1` auditor unchanged. The bounded successor therefore
+keeps predecessor production, tools, environment and provenance pinned to
+Alpha.5, but qualifies those produced artifacts with the current candidate
+controller's ownership contract. It does not remove the retained state file,
+reuse a candidate product, or weaken payload equivalence. A new exact hosted
+run remains required; run `35678300868` grants no transition or final bundle
+qualification.
+
+## 2026-09-22 predecessor produced-name identity correction
+
+Product-candidate run `35683529084` tested exact integrated dev
+`e94142405f868f996f555916279fb1428a65c1ea` against Alpha.5 predecessor
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. Linux and macOS passed. Windows
+passed the current-source native, package, resource and current-user setup
+work, built the detached predecessor products, and passed the corrected current
+setup-overlay contract. It then stopped before the A-to-B transition because
+identity admission compared the Setup-embedded original portable filename with
+the differently named retained evidence copy.
+
+The successor reads package identity from the original produced Setup and
+portable pair, while separately requiring their byte sizes and SHA-256 values
+to match the exact retained evidence records and files. It therefore preserves
+the filename identity written by production and the custody relationship of
+the renamed evidence copies. It does not relax the portable digest, Setup
+identity, payload-equivalence contract, source distinction or transition
+admission. A new exact hosted run remains required; run `35683529084` grants no
+transition or final bundle qualification.
+
+## 2026-09-22 retained Setup-overlay identity correction
+
+Product-candidate run `35688220467` tested exact integrated dev
+`d84e464b00fa8a533399c59b266f107de9a63f7e`. Linux and macOS passed. Windows
+passed the current-source product and setup work, built and audited the exact
+Alpha.5 predecessor products, and entered the real source-distinct transition.
+The Alpha.5 Setup installation completed with its real Start Menu and HKCU
+effects, then the qualification harness stopped because it compared the
+retained repair source with the SHA-256 of the outer Setup executable.
+
+The installed source is correctly the Setup executable's materialized ZIP
+overlay, retained under that overlay's own SHA-256. The bounded successor reads
+the exact non-ZIP64 overlay boundary using the same end-record, local-header and
+central-directory invariants as the Windows runtime, hashes only those retained
+bytes through a stable single-link input, and uses that digest for every
+generation, repair-source and transition assertion. Outer Setup hashes remain
+recorded separately. A new exact hosted run remains required; run `35688220467`
+grants no completed A-to-B transition or final bundle qualification.
+
+## 2026-09-22 complete local source-distinct lifecycle
+
+The next hosted attempt, run `35693982331` on integrated dev
+`e4ee70065af133fcbc0d01c0fde033910435ab20`, passed Linux, macOS and contract
+work but exposed two product-boundary assumptions in the Windows transition.
+The migrated Alpha.5 retained helper is the downloaded outer Setup while its
+installed maintenance entrypoint is the embedded Setup, and exact predecessor
+reactivation completes inline because it performs no provider or executable
+mutation. The implementation and harness now preserve those distinctions while
+requiring both exact provider and file identities.
+
+The local `realv13` candidate then completed Alpha.5 install, an effect-free
+over-limit refusal, Alpha.6 update, exact Alpha.5 downgrade, Alpha.6 rollback,
+one retained-generation retirement, and final registered uninstall through the
+real current-user Start Menu and 64-bit HKCU adapters. The predecessor's exact
+digest-named ZIP, Setup helper and custody receipt are retired only after its
+provider uninstall succeeds. The active Setup repair triplet remains available
+after final uninstall because it is the executing helper and broader retention
+policy is a later boundary.
+
+The retained evidence is
+`realv13/windows-real-self-maintenance-transition.v1.json`, SHA-256
+`0cbcfea4ef182d0a38bde089e1dfba765b0088155e2ffa6e2e5f4f5ffe2bd9ac`.
+It binds candidate outer Setup SHA-256
+`372575cb9eb396de7942ae385d2674d0de5965b76ccbee047fcf8ac495b04256`,
+candidate overlay SHA-256
+`979d06826ac88af89da4702ff9a5ae1e637b832977afc813d19de2b7cebb9c20`
+and predecessor overlay SHA-256
+`b5cdf9d768e192e2c1b877625b05577b910ba061d79d95a15777b7d2965aadc7`.
+The candidate record correctly says `source_dirty=true`; this is exact local
+implementation evidence, not committed-source or release qualification.
+
+Six focused native CTests, the direct Windows ownership and platform-I/O
+fixtures, and 134 candidate/package Python tests pass. The WorkUnit remains
+active for clean committed hosted requalification, chain-aware active repair,
+supported-platform qualification and human/product acceptance.
+
+## 2026-10-03 genuine cross-provider installed-state failure
+
+Independently reviewed packages A (`203321188f88cc5587bd95ff6b4da4a602c745d2`,
+Alpha.5, Setup `4c766b342e68656a2d4e26a14cfe51ab2209ad41`) and B
+(`426a42429a1e4cfe58011bd9b9b3b51274d1d116`, Alpha.6, Setup
+`2749a15b835a6c1c9968598a2b434d85809691ad`) reproduced a production rejection in
+a disposable Windows Sandbox account. A installed and native ownership checks
+passed. B refused A's installed-state response before provider planning with
+`self_maintenance_provider_response_invalid`: the ABI 1.0 response retained A's
+original pin, while the decoder demanded B's executing pin. Full failed fixture,
+command receipts, guest identity and package bindings are retained under
+`task-facman-u-507ecf4b41/evidence/produced-pair-sandbox-rx4-output`.
+Earlier PATH, guest-lifetime and omitted-helper-input failures remain preserved;
+none qualifies a successful product transition.
+
+The bounded correction reads the exact supported ABI 1.0 shape with a valid
+original revision, binds candidate and retained inspections to their recorded
+generation pin, and derives historical recipe identity from that pin. Legacy
+and bootstrap admission keep the package-descriptor equality. New install
+planning/apply retain executing-pin equality, and the flat compatibility retry
+keeps its existing current-pin restriction. Independent decision review required
+the explicit candidate-pin binder and audited that retry before implementation.
+Native regressions cover successful historical inspection/verification and
+refusal of wrong generation pins, malformed revisions, unsupported ABI versions
+and historical install authority. The affected developer test run and strict
+validation pass, with full logs retained in the owned evidence root. Independent
+snapshot review passed before commit `366da90e9b1db4bd95deff2cba15a0d1d919a61c`.
+The genuine cross-pin runtime continuation below supersedes the remaining
+update/recovery uncertainty; epoch external continuation remains unqualified.
+
+## 2026-10-03 genuine cross-provider retirement admission failure
+
+A corrected, source-exact Alpha.6 package from `366da90e9b1db4bd95deff2cba15a0d1d919a61c`
+passed production metadata, runtime/hash smoke and payload-equivalence checks.
+Its disposable-account run with the existing genuine Alpha.5 predecessor passed
+update A to B, downgrade to retained A, reapplication of B and active repair,
+including refusal of a missing repair payload. Registered chain removal then
+refused retained A's historical installed-state pin before retirement intent:
+`self_maintenance_retirement_recovery_required` wrapped `self_setup_response_invalid`.
+The complete failed fixture remains in the owned evidence root. Its transition
+receipt SHA-256 is `70078cff7658f3cc08457f22cfa60a6f0229439e8a6a00b8afb59a271a47f448`;
+`retirement-witness-reproduction.json` binds the guest result, exact package
+hashes, commands and observed phases. This is partial runtime qualification,
+not successful removal or epoch external-continuation evidence.
+
+Generic Setup retirement now admits verify/uninstall through a call-scoped
+generation witness and a private coordinator-lock proof minted for that exact
+validated retirement step. Lifecycle authority and user-wide Windows integration
+may have different coordinators: exact-root reuse remains permitted, otherwise
+Setup acquires its own global lock and refuses contention before dispatch. This
+preserves the existing two-lock behavior for isolated and selected-root installs.
+Historical
+installed state and uninstall plans bind original pin, source, recipe and state/
+ownership digests before preview or apply. A namespaced synthetic uninstall
+source digest binds exact generation-record bytes into durable intent, without
+changing ordinary intent bytes or journal schema. Missing or substituted witness
+refuses before request adoption, rollback inspection or native continuation.
+Execution uses the current SDK and records its current pin. Install/repair
+authority, native ownership, retained-source custody and outer entered-marker
+refusal remain unchanged. Focused qualification combines 53 unchanged passing
+native CTests with the corrected recovery test's 129 passing checks. All 145
+selected Python tests and strict validation pass. Full failed receipts remain
+preserved, including the existing mock's refusal envelope assigned to `Error.path`
+instead of `detail`, and a packaging fixture that regenerated timestamped input
+ZIPs while asserting identical output. That fixture now fixes input timestamps;
+production still binds the exact original archive checksum. Exact snapshot
+review precedes committing this correction. Genuine produced-package removal
+and epoch continuation remain open until the next runtime proof completes.
+
+## 2026-10-03 predecessor provider custody
+
+The independent continuation slice uses `task/facman-cross-provider-maintenance-01`
+from integrated dev `cf82d7ebb5598021f4371fc116b8e0ddd158c576`. Read-only admission
+of Alpha.5 `203321188f88cc5587bd95ff6b4da4a602c745d2` reproduced the differing-lock
+refusal before any package build. The predecessor builder also supplied the
+candidate's provider roots to historical production.
+
+The existing provider workspace materializer now accepts an explicit consumer
+checkout through its internal API. Differing-lock baseline production uses that
+checkout's lock, source-owned output marker, exact detached provider revisions
+and trees. Its provider manifest is retained before later qualification gates.
+Package identity admission binds baseline and candidate to their respective
+Setup pins; source-distinct ancestry, strict SemVer ordering, exact package
+metadata and payload-equivalence gates remain required.
+
+54 focused provider-workspace, maintenance-candidate and product-candidate tests
+passed, including real local Git histories with distinct provider commits and
+source ownership. The strict check and unchanged engineering complexity budget
+passed. Full logs are retained in the marker-owned external task root
+`task-facman-c-e6a6a8453f/evidence`. The original static assertion for mandatory
+same-provider rejection was removed because the behavioral regression now
+covers differing-lock admission with exact historical inputs.
+
+This source correction is pending independent review and integration. It does
+not qualify a cross-provider runtime transition or epoch external continuation.
+Those require genuine produced-package observations, compatible installed-state
+handling, interruption/recovery, rollback, repair/removal and the remaining
+supported-host and human gates. This WorkUnit remains active.
+
+PR #367's required Windows run `37117983856`, job `111188395977`, exposed a
+fixture-path assertion failure: the temporary directory used its `RUNNER~1`
+alias while the materializer correctly recorded the canonical `runneradmin`
+path. The regression now resolves its fixture root before deriving the consumer,
+lock and output paths. Exact provider revision/tree and source ownership checks
+remain intact. All four provider-workspace tests pass; the historical-consumer
+case also passes through a real Windows 8.3 temporary-directory alias. The
+original hosted failure and local observations are retained in the owned
+`task-facman-c-e6a6a8453f/evidence` root. Required successor-head CI remains due.
+
+## 2026-09-22 authoritative maintenance-state selection
+
+Hosted product-candidate run `35724336883` passed at exact merged source
+`b18018cdd8754dea175b11103622463fb78aaf9b` against Alpha.5 predecessor
+`203321188f88cc5587bd95ff6b4da4a602c745d2`. It produced the six expected
+unsigned Windows, Linux and macOS portable/setup assets and completed the
+Windows source-distinct lifecycle, including active repair and final chain
+retirement. Local custody verification is retained outside the checkout at
+`task-facman-c-f1dde6a75f/evidence/product-candidate-dev-b18018cd-run-35724336883/local-verification.v1.json`,
+SHA-256
+`f3a3318f8710a1d03e99d388cebeb45b03ae4941d988eae8a573ce246b07bb1f`.
+That run qualifies the classic activation-chain path; it does not prove the
+separate lifecycle-epoch external handoff.
+
+Independent source review then confirmed that the production public install,
+update, repair and uninstall paths could not reach a real lifecycle epoch
+without a test-only seed. The first bounded successor adds one authoritative
+read-side selection: a committed real epoch takes precedence over flat
+compatibility history, an active compatibility chain remains the fallback, and
+an exactly completed compatibility retirement reports no active state. Public
+verify and repair consume that selection. Public uninstall refuses a real
+epoch before flat retirement effects, while the exact incomplete-flat
+retirement condition may still resume through its existing journal. Epoch
+bootstrap, provider-root transfer and chain-aware epoch retirement remain
+disabled pending their separately reviewed implementation.
+
+The unchanged 60-second native maintenance smoke passed in 33.34 seconds; the
+new authority regression passed in 0.41 seconds. The public Setup lifecycle
+passed in 94.41 seconds under its unchanged 180-second limit and covers exact
+epoch verify/repair selection, real-epoch uninstall refusal, clean two-step
+flat retirement, effect-free repeat uninstall, and refusal of an inserted epoch
+namespace before an incomplete flat retirement can advance. The affected
+recovery and Windows ownership CTests, 22 focused Python tests, source
+formatting, diff checks and the complete strict repository check also pass. The WorkUnit
+remains active for journaled classic-to-first-epoch bootstrap, actual external
+continuation from produced packages, epoch repair/rollback/retirement,
+supported-platform qualification and human/product acceptance.
+
+
+## 2026-10-04 cross-provider epoch creator and interrupted apply
+
+The genuine A/B campaign at local source `f362c0b2b0805cf9060355233045bca565b70f61`
+completed both classic retirement steps and fresh epoch genesis. Its epoch
+downgrade stopped before external continuation because A's original package
+provider differs from the executing B SDK. That failed campaign also had an
+incomplete long-path fixture copy; it is diagnosis, not full runtime custody or
+qualification. Original packages, receipts and failed operations are preserved
+in the owned `task-facman-u-507ecf4b41/evidence` root.
+
+The correction preserves original archive identity and generation IDs, records
+the actual creating SDK in exact additive epoch shapes, and binds recipes,
+recovery and retirement to that frozen creator. Historical record bytes and
+ordinary install admission stay exact. Reactivation retains the complete
+original generation; conflicting creator provenance is refused.
+
+The real SDK regression exposed a second boundary: after interrupted apply
+has completed, install planning refuses its occupied target. Completion recovery
+therefore validates the original immutable request through provider-owned
+`recovery.inspect`, with exact installed identity and completed inspection-only
+journal/report evidence. It grants no apply authority; absent targets retain the
+original reviewed-plan checks. Independent review and exact-source validation
+receipts are retained alongside `epoch-creator-final-validation.json`.
+
+A new exact-source produced B, genuine external continuation and the remaining
+supported-host and product gates are still required. PR #343's exact-head
+protected-control owner gate remains external. This WorkUnit stays active.
+
+
+## 2026-10-04 produced epoch continuation observation
+
+Qualified source `7096f28d976151ff7f77cbae898ce6b93055d5a2` produced a genuine
+Alpha.6 B package. Its 54 product CTests, runtime smoke, 115-file payload
+equivalence and independent delivery review passed. The unchanged Alpha.5 A
+archive retains source `203321188f88cc5587bd95ff6b4da4a602c745d2` and its
+original provider pin. Exact package and source receipts remain in the owned
+`task-facman-u-507ecf4b41/evidence` root.
+
+The actual disposable Windows guest completed classic update, downgrade,
+rollback, repair and retirement, then ordinary epoch genesis. Its external
+epoch downgrade reached the native terminal cutover record after interruption
+and resumption, but the public Python observer missed the 264-unit Windows
+record path and timed out. Complete fixture custody and the native records
+are preserved in `epoch-creator-pair-sandbox-output`; this failed campaign does
+not qualify the remaining epoch lifecycle steps.
+
+The observer correction uses explicit Windows long paths only for filesystem
+reads. It retains deadline, duplicate-terminal refusal and read-only product
+queries, and checks original archive/source/provider identity separately from
+the actual creating SDK, derived epoch install/root identities, exact activated
+generation bytes and predecessor activation. Flat compatibility record
+admission remains unchanged. Frozen-source validation and independent review
+are retained as `epoch-observer-validation-rx2.json` and
+`epoch-observer-source.review.json`. The next campaign reuses the qualified B
+application bytes and records its newer committed harness source separately;
+neither package is relabeled. Full epoch runtime qualification, supported-host
+and human gates remain due. This WorkUnit remains active.
+
+
+## 2026-10-04 exact-head integration gate and execution slot
+
+Reviewed PR #343 is pushed at
+`cdc4065247bd30826f363d90657d67b82c8448e7`. Genuine produced B remains
+`7096f28d976151ff7f77cbae898ce6b93055d5a2`; its separately identified committed
+harness completed Windows classic and real-epoch interruption/recovery,
+repair/reapply/rollback and public retirement. Independent runtime assurance
+hash-binds all 321 retained fixture files. These are not integrated-source,
+full supported-profile, human or release acceptance.
+
+The exact-head protected-control check currently refuses integration until the
+repository owner supplies the supported issue comment. One observer owns the
+remaining required CI. This WorkUnit records that specific blocked integration
+action and releases its implementation WIP slot; it retains all other missing
+qualification and close_after requirements. It is not complete. Independent
+existing-install Play work proceeds from the latest integrated dev while the
+branch, packages, failures and evidence remain preserved.
+
+
+## 2026-10-07 preserved provider adoption forward integration
+
+The existing adoption branch is forward-integrated with actual `dev`
+`53d9e821f8c10430acde0f985ab518d5a91ddfb1`, after PR #394 passed required
+source checks, merged normally and synchronized. The earlier dated failed
+campaign and pending-observer entries above remain historical diagnosis. The
+subsequent genuine produced A/B acceptance is preserved: native B source
+`7096f28d976151ff7f77cbae898ce6b93055d5a2`, distinct observer source
+`cdc4065247bd30826f363d90657d67b82c8448e7`, 27 public Setup commands and 44
+child receipts, actual process loss and external continuation, repair, five-node
+activation and public retirement. Independent runtime review hash-binds all
+321 retained fixture files; it does not qualify this new integrated source.
+Original A archive provenance and the separately frozen actual creating SDK
+remain unchanged. Full supported-host, human and release gates remain open.
+
+Repository-owner comment `5966998438` explicitly authorizes this continuation
+and supported head-specific control rebind after source changes. The remaining
+control check requires its exact current-head command through the trusted
+owner-comment workflow; standing permission is recorded, and technical
+materialization follows the final reviewed push. This grants no check bypass,
+human acceptance or release authority. Fresh combined-source qualification and
+independent conflict review are required before the forward merge is committed.
+The WorkUnit remains incomplete; no elapsed-time historical package rerun, new
+clone, worktree or task root is required for this source integration.

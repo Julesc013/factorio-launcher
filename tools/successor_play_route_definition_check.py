@@ -114,6 +114,10 @@ CURRENT_PACKAGE_PROVIDER_PINS = {
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
 }
+REPAIRED_PACKAGE_PROVIDER_PINS = {
+    "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup": "2749a15b835a6c1c9968598a2b434d85809691ad",
+}
 EXPECTED_PROVIDER_BINDINGS = [
     {
         "id": "universal_launcher",
@@ -505,6 +509,7 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
                 PROTECTED_PACKAGE_PROVIDER_PINS,
                 CORRECTED_PACKAGE_PROVIDER_PINS,
                 CURRENT_PACKAGE_PROVIDER_PINS,
+                REPAIRED_PACKAGE_PROVIDER_PINS,
             ):
                 problems.append(
                     "workspace lock is neither the immutable route-v1 provider set "
@@ -871,6 +876,7 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
                     PROTECTED_PACKAGE_PROVIDER_PINS,
                     CORRECTED_PACKAGE_PROVIDER_PINS,
                     CURRENT_PACKAGE_PROVIDER_PINS,
+                    REPAIRED_PACKAGE_PROVIDER_PINS,
                 )
                 and convergence.get("universal_launcher_consumed_pin")
                     == live_pins["universal_launcher"]

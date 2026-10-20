@@ -1,0 +1,82 @@
+{
+  "behavior": "Forward integrate repaired provider adoption and creator-bound lifecycle recovery with current application, selected-save, reconstruction and portable AIDE changes. Both source histories survive; original archive identity remains separate from actual creating SDK.",
+  "boundaries": {
+    "beta_qualified": false,
+    "human_qualification": false,
+    "real_game_effects": false,
+    "release_qualification": false,
+    "required_new_head_CI_pending": true,
+    "supported_profile_matrix_complete": false,
+    "whole_workunit_closed": false
+  },
+  "combined_source_review_sha256": "4951845e157dd4c4d5627d3aad32cc2096c2585611bf2b538c24de30358759c5",
+  "historical_runtime": {
+    "child_receipts": 44,
+    "custody_files": 321,
+    "independent_review_sha256": "20dc2d18cef861210a29746528263181d31e7292c23ec01d48521c869de922ca",
+    "native_source": "7096f28d976151ff7f77cbae898ce6b93055d5a2",
+    "observer_source": "cdc4065247bd30826f363d90657d67b82c8448e7",
+    "pipeline_sha256": "44a79c43a568536dd62b70ae774e12f9b08f8dc00888e9fd830b9bacbd089544",
+    "public_setup_commands": 27,
+    "qualified_new_head_package": false,
+    "replayed": false,
+    "unchanged": true
+  },
+  "owner_authority": {
+    "body_sha256": "ab62570e831edffe48f029b3e541076b202e262a4db491a79535e15b59ff9445",
+    "exact_head_control_rebind_required_after_final_push": true,
+    "required_checks_unchanged": true,
+    "standing_comment": "https://github.com/Julesc013/factorio-launcher/pull/343#issuecomment-5966998438"
+  },
+  "qualification": {
+    "cli_sha256": "5adf0d3b45ff302ef7f29f4320d245a997be0c6eba1f6cb241b04c37c0063489",
+    "host_skip": {
+      "log_line": "test_private_runtime_preserves_distinct_symlink_aliases (tests.test_provider_conformance.ProviderConformanceTests.test_private_runtime_preserves_distinct_symlink_aliases) ... skipped \"unsupported: runtime symlink unavailable: [WinError 1314] A required privilege is not held by the client: 'universal-setup.dll' -> 'D:\\\\\\\\Projects\\\\\\\\Factorio\\\\\\\\.fm-test-14588\\\\\\\\tmpdfsf17mj\\\\\\\\sdk\\\\\\\\universal_setup\\\\\\\\bin\\\\\\\\zz-universal-setup.dll'\"",
+      "reason": "WinError1314: required symlink privilege unavailable; supported-platform CI remains required",
+      "test": "tests.test_provider_conformance.ProviderConformanceTests.test_private_runtime_preserves_distinct_symlink_aliases"
+    },
+    "native_campaign": "10 PASS from q02 plus unchanged-binary 2 PASS replay in q05; q07 binds passing tests and strict with truthful existing host skip and custody cleanup; original q02/q03 SDK path-capacity failures retained",
+    "native_failure_logs_preserved": true,
+    "native_passed": 12,
+    "native_tests": 12,
+    "python_passed": 111,
+    "python_tests": 112,
+    "scope": "Windows developer source fixtures; actual compiled SDK and public synthetic Setup lifecycle",
+    "setup_sha256": "e5ce753212c0ae53b1cf549249f9c1719ef936ab9a8f70c23ec16ddd14da4074",
+    "short_runtime_fixture_review_sha256": "4d70f7ffcb06ade9cb75d985d82e95b4f6414e4ed2dcb9a3bbdf99b38fde7c34",
+    "skipped": 1,
+    "strict": true
+  },
+  "qualification_sha256": "d5a7928d7f4049016663a370bb426411110fb354732c2084ca6a3e1a50b4bb9c",
+  "qualified_index_tree": "edbd80a07a5225b11885052586835cbf0729044b",
+  "resources": {
+    "additional_native_peak_bytes": 2147483648,
+    "ephemeral_runtime_fixture_marker_sha256": "5c62a10d625dd85d8ef0c264aa4be9e3ba10ce6614fb9022cd6f014ab2da49fd",
+    "ephemeral_runtime_fixture_observed_peak_bytes": 59790487,
+    "ephemeral_runtime_fixture_parent": "D:\\Projects\\Factorio\\.fm-test-14588",
+    "ephemeral_runtime_fixture_removed_empty_only": true,
+    "existing_native_cache_regenerated_in_place": true,
+    "new_build_roots": 0,
+    "new_product_candidates": 0,
+    "new_project_source_clones": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "preserved_hygiene_findings": [
+      "unmanaged_secondary_worktrees_present",
+      "merged_local_task_branches_present"
+    ],
+    "preserved_previous_LastTest_sha256": "4636f112efca862113ec35782fc7797795e99b108cb7b28f606848059934ac15",
+    "runtime_maintenance_custody_manifest_sha256": "9823ff691265310224f29984f7606d7a5d5b071b5fe1264af8a60741ac263e9d",
+    "runtime_maintenance_fixture_preserved_by_move": true,
+    "runtime_maintenance_retained_bytes": 803584,
+    "task_root_bytes_before": 11283424039,
+    "workers": 2
+  },
+  "schema": "facman.repaired_provider_adoption_forward_integration.v1",
+  "source_freeze_sha256": "b8cda2abf56350d8d785b99b419d2eee0fe2e77f316076af3be8b112948ad116",
+  "source_parents": [
+    "cdc4065247bd30826f363d90657d67b82c8448e7",
+    "53d9e821f8c10430acde0f985ab518d5a91ddfb1"
+  ],
+  "work_item": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01"
+}

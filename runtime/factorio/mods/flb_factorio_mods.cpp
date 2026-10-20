@@ -1187,7 +1187,8 @@ ModRef builtin_package(const facman::workspace::InstallRecord& install, const fs
     return mod;
 }
 
-void add_archive(std::vector<ModRef>& output, const fs::path& path, const std::string& instance_id)
+void add_archive(std::vector<ModRef>& output, const fs::path& path, const std::string& instance_id,
+    const fs::path& preferred_mods_root)
 {
     ModRef mod = inspect_mod_zip(path);
     if (!instance_id.empty()) mod.instance_references.push_back(instance_id);
@@ -1204,18 +1205,31 @@ void add_archive(std::vector<ModRef>& output, const fs::path& path, const std::s
     duplicate->instance_references.erase(
         std::unique(duplicate->instance_references.begin(), duplicate->instance_references.end()),
         duplicate->instance_references.end());
-    if (path_string(mod.file_path) < path_string(duplicate->file_path)) duplicate->file_path = mod.file_path;
+    const bool already_preferred = !preferred_mods_root.empty() &&
+        duplicate->file_path.parent_path() == preferred_mods_root;
+    if ((path.parent_path() == preferred_mods_root && mod.valid && !duplicate->valid) ||
+        (!preferred_mods_root.empty() && path.parent_path() == preferred_mods_root && !already_preferred) ||
+        (!already_preferred && path_string(mod.file_path) < path_string(duplicate->file_path))) {
+        auto references = std::move(duplicate->instance_references);
+        *duplicate = std::move(mod);
+        duplicate->instance_references = std::move(references);
+    }
 }
 
 facman::core::Result<std::vector<ModRef>> build_inventory(
     const fs::path& workspace,
-    const std::vector<fs::path>& explicit_roots)
+    const std::vector<fs::path>& explicit_roots,
+    const std::string& preferred_instance = {})
 {
     std::vector<ModRef> output;
     facman::workspace::WorkspaceLayout layout(workspace);
     facman::workspace::InstanceRepository instances(layout);
     auto instance_records = instances.list();
     if (!instance_records) return facman::core::Result<std::vector<ModRef>>::failure(instance_records.error());
+    fs::path preferred_mods_root;
+    for (const auto& instance : instance_records.value()) if (instance.id.str() == preferred_instance) {
+        preferred_mods_root = instance.root / "mods";
+    }
     std::set<std::string> scanned;
     auto scan = [&](const fs::path& root, const std::string& instance_id) -> facman::core::Result<void> {
         const std::string normalized = path_string(root.lexically_normal());
@@ -1233,7 +1247,7 @@ facman::core::Result<std::vector<ModRef>> build_inventory(
         }
         if (error) return facman::core::Result<void>::failure({"inventory_root_read_failed", error.message(), normalized});
         std::sort(archives.begin(), archives.end());
-        for (const fs::path& archive : archives) add_archive(output, archive, instance_id);
+        for (const fs::path& archive : archives) add_archive(output, archive, instance_id, preferred_mods_root);
         return facman::core::Result<void>::success();
     };
     for (const auto& instance : instance_records.value()) {
@@ -1373,9 +1387,10 @@ facman::core::Result<std::string> inventory_explain(const fs::path& workspace, c
 
 facman::core::Result<std::vector<ModRef>> local_inventory(
     const fs::path& workspace,
-    const std::vector<fs::path>& explicit_roots)
+    const std::vector<fs::path>& explicit_roots,
+    const std::string& preferred_instance)
 {
-    return build_inventory(workspace, explicit_roots);
+    return build_inventory(workspace, explicit_roots, preferred_instance);
 }
 
 } // namespace facman::factorio::mods

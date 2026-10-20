@@ -1,0 +1,1228 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+"""Real WinForms controls and production package transport; no gallery seam."""
+from __future__ import annotations
+
+import ctypes
+from ctypes import wintypes as wt
+import hashlib
+import base64
+import json
+import os
+from pathlib import Path
+import stat
+import subprocess
+import tempfile
+import threading
+import time
+import traceback
+import unittest
+import zlib
+from unittest.mock import patch
+
+import native_cli
+import test_configuration_reconciliation as existing
+import test_make_ready_joined as joined
+import test_readiness_builtin_content as builtin
+import test_local_modset_solver as modsets
+
+
+class ControlGone(AssertionError):
+    """A read-only enumeration raced normal modal-window disposal."""
+
+
+class ControlReadFailed(AssertionError):
+    """A bounded owned EDIT read failed; frames can retain partial diagnostics."""
+
+
+class OwnedProcessJob:
+    """Retain a kernel-owned descendant set and prove zero live descendants."""
+
+    def __init__(self, process, backend, require_backend=True):
+        self.require_backend = require_backend
+        self.api = ctypes.WinDLL("kernel32", use_last_error=True)
+        for name, args, result in (
+            ("CreateJobObjectW", [ctypes.c_void_p, wt.LPCWSTR], wt.HANDLE),
+            ("AssignProcessToJobObject", [wt.HANDLE, wt.HANDLE], wt.BOOL),
+            ("IsProcessInJob", [wt.HANDLE, wt.HANDLE, ctypes.POINTER(wt.BOOL)], wt.BOOL),
+            ("GetProcessId", [wt.HANDLE], wt.DWORD),
+            ("GetProcessTimes", [wt.HANDLE, ctypes.POINTER(wt.FILETIME),
+                ctypes.POINTER(wt.FILETIME), ctypes.POINTER(wt.FILETIME),
+                ctypes.POINTER(wt.FILETIME)], wt.BOOL),
+            ("CreateToolhelp32Snapshot", [wt.DWORD, wt.DWORD], wt.HANDLE),
+            ("OpenThread", [wt.DWORD, wt.BOOL, wt.DWORD], wt.HANDLE),
+            ("GetProcessIdOfThread", [wt.HANDLE], wt.DWORD),
+            ("ResumeThread", [wt.HANDLE], wt.DWORD),
+            ("SetInformationJobObject", [wt.HANDLE, ctypes.c_int, ctypes.c_void_p, wt.DWORD], wt.BOOL),
+            ("QueryInformationJobObject", [wt.HANDLE, ctypes.c_int, ctypes.c_void_p,
+                                           wt.DWORD, ctypes.POINTER(wt.DWORD)], wt.BOOL),
+            ("OpenProcess", [wt.DWORD, wt.BOOL, wt.DWORD], wt.HANDLE),
+            ("QueryFullProcessImageNameW", [wt.HANDLE, wt.DWORD, wt.LPWSTR,
+                                            ctypes.POINTER(wt.DWORD)], wt.BOOL),
+            ("WaitForSingleObject", [wt.HANDLE, wt.DWORD], wt.DWORD),
+            ("GetExitCodeProcess", [wt.HANDLE, ctypes.POINTER(wt.DWORD)], wt.BOOL),
+            ("TerminateJobObject", [wt.HANDLE, wt.UINT], wt.BOOL),
+            ("CloseHandle", [wt.HANDLE], wt.BOOL),
+        ):
+            method = getattr(self.api, name)
+            method.argtypes, method.restype = args, result
+        self.job, self.primary_thread = None, None
+        class Limits(ctypes.Structure):
+            _fields_ = [("process_time", ctypes.c_int64), ("job_time", ctypes.c_int64),
+                ("flags", wt.DWORD), ("min_working", ctypes.c_size_t),
+                ("max_working", ctypes.c_size_t), ("active_limit", wt.DWORD),
+                ("affinity", ctypes.c_size_t), ("priority", wt.DWORD), ("scheduling", wt.DWORD)]
+        class Extended(ctypes.Structure):
+            _fields_ = [("basic", Limits), ("io", ctypes.c_uint64 * 6),
+                ("process_memory", ctypes.c_size_t), ("job_memory", ctypes.c_size_t),
+                ("peak_process", ctypes.c_size_t), ("peak_job", ctypes.c_size_t)]
+        self.pid, self.backend = process.pid, backend.resolve()
+        self.handles, self.records, self.closed = {}, [], False
+        try:
+            limits = Extended()
+            limits.basic.flags = 0x2000  # Exact owned cleanup on every exception.
+            self.job = self.api.CreateJobObjectW(None, None)
+            if not self.job or not self.api.SetInformationJobObject(self.job, 9,
+                    ctypes.byref(limits), ctypes.sizeof(limits)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if self.api.GetProcessId(int(process._handle)) != self.pid:
+                raise AssertionError("Retained suspended GUI process identity differs")
+            if not self.api.AssignProcessToJobObject(self.job, int(process._handle)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            membership = wt.BOOL()
+            if not self.api.IsProcessInJob(int(process._handle), self.job,
+                    ctypes.byref(membership)) or not membership.value:
+                raise AssertionError("Suspended GUI has no exact owned-job membership")
+            # Popen closes CreateProcess's original primary-thread handle. Before
+            # execution there is exactly one thread; retain its supported Win32
+            # handle and verify its owning PID before releasing that suspension.
+            class ThreadEntry(ctypes.Structure):
+                _fields_ = [("size", wt.DWORD), ("usage", wt.DWORD),
+                    ("thread_id", wt.DWORD), ("owner_pid", wt.DWORD),
+                    ("base_priority", wt.LONG), ("delta_priority", wt.LONG),
+                    ("flags", wt.DWORD)]
+            self.api.Thread32First.argtypes = [wt.HANDLE, ctypes.POINTER(ThreadEntry)]
+            self.api.Thread32Next.argtypes = [wt.HANDLE, ctypes.POINTER(ThreadEntry)]
+            snapshot = self.api.CreateToolhelp32Snapshot(4, 0)  # TH32CS_SNAPTHREAD
+            if snapshot == ctypes.c_void_p(-1).value:
+                raise ctypes.WinError(ctypes.get_last_error())
+            try:
+                entry, threads = ThreadEntry(), []
+                entry.size = ctypes.sizeof(entry)
+                available = self.api.Thread32First(snapshot, ctypes.byref(entry))
+                while available:
+                    if entry.owner_pid == self.pid:
+                        threads.append(entry.thread_id)
+                    entry.size = ctypes.sizeof(entry)
+                    available = self.api.Thread32Next(snapshot, ctypes.byref(entry))
+                if len(threads) != 1:
+                    raise AssertionError("Suspended initial GUI thread is not unique")
+            finally:
+                self.api.CloseHandle(snapshot)
+            self.primary_thread = self.api.OpenThread(0x2 | 0x800, False, threads[0])
+            if not self.primary_thread or self.api.GetProcessIdOfThread(self.primary_thread) != self.pid:
+                raise AssertionError("Retained primary thread belongs to another process")
+            previous = self.api.ResumeThread(self.primary_thread)
+            if previous != 1:
+                raise AssertionError("Initial primary-thread suspension count differs from one")
+            self.launch = dict(created_suspended=True, pid=self.pid, primary_thread_id=threads[0],
+                exact_job_membership_before_resume=True, resume_previous_suspend_count=previous)
+        except Exception:
+            if self.primary_thread:
+                self.api.CloseHandle(self.primary_thread)
+            if self.job:
+                self.api.CloseHandle(self.job)
+            self.closed = True
+            raise
+
+    def observe(self):
+        if self.closed:
+            return []
+        # Two DWORD counts followed by ULONG_PTR process IDs. Exact own job only.
+        buffer = ctypes.create_string_buffer(4096)
+        if not self.api.QueryInformationJobObject(self.job, 3, buffer, len(buffer), None):
+            raise ctypes.WinError(ctypes.get_last_error())
+        assigned, listed = (ctypes.c_uint32 * 2).from_buffer(buffer)
+        if assigned > 128 or listed > assigned:
+            raise AssertionError("Owned descendant inventory exceeds its exact bound")
+        self.last_counts = dict(assigned=assigned, listed=listed)
+        pids = list((ctypes.c_size_t * listed).from_buffer(buffer, 8))
+        for pid in pids:
+            if pid == self.pid:
+                continue
+            handle = self.api.OpenProcess(0x1000 | 0x100000, False, pid)
+            if not handle:  # The job still proves lifetime for an already exited child.
+                continue
+            membership = wt.BOOL()
+            if not self.api.IsProcessInJob(handle, self.job, ctypes.byref(membership)) or not membership.value:
+                # PID list can race exit/reuse; never adopt a foreign opened handle.
+                self.api.CloseHandle(handle)
+                continue
+            creation, exit_time, kernel, user = (wt.FILETIME() for _ in range(4))
+            if self.api.GetProcessId(handle) != pid or not self.api.GetProcessTimes(handle,
+                    ctypes.byref(creation), ctypes.byref(exit_time), ctypes.byref(kernel), ctypes.byref(user)):
+                self.api.CloseHandle(handle)
+                continue
+            identity = str(pid) + ":" + str((creation.dwHighDateTime << 32) | creation.dwLowDateTime)
+            if identity in self.handles:
+                self.api.CloseHandle(handle)
+                continue
+            image = ctypes.create_unicode_buffer(32768)
+            length = wt.DWORD(len(image))
+            if not self.api.QueryFullProcessImageNameW(handle, 0, image, ctypes.byref(length)):
+                self.api.CloseHandle(handle)
+                continue
+            observed = Path(image.value).resolve()
+            console_host = Path(os.environ["SystemRoot"]) / "System32/conhost.exe"
+            if observed not in (self.backend, console_host.resolve()):
+                self.api.CloseHandle(handle)
+                raise AssertionError("Owned GUI dispatched a foreign backend image: " + image.value)
+            self.handles[identity] = handle
+            self.records.append(dict(pid=pid, gui_pid=self.pid, image=image.value,
+                process_identity=identity, exact_job_membership=True,
+                role="packaged_backend" if observed == self.backend else "windows_console_host",
+                image_sha256=hashlib.sha256(observed.read_bytes()).hexdigest()))
+        return pids
+
+    def finish(self):
+        if self.closed:
+            return
+        try:
+            live = self.observe()
+            # Concurrent production query children may exit while the kernel copies
+            # the ID list. Require both counts to reach zero after GUI termination.
+            deadline = time.monotonic() + 5
+            while (live or self.last_counts["assigned"]) and time.monotonic() < deadline:
+                time.sleep(.025)
+                live = self.observe()
+            if live or self.last_counts["assigned"]:
+                self.api.TerminateJobObject(self.job, 1)
+                raise AssertionError("Owned GUI job retained live descendants; safety termination is not PASS")
+            if self.require_backend and not any(r["role"] == "packaged_backend" for r in self.records):
+                raise AssertionError("No actual production backend process identity was observed")
+            for record in self.records:
+                handle = self.handles[record["process_identity"]]
+                if self.api.WaitForSingleObject(handle, 0) != 0:
+                    raise AssertionError("Observed owned backend did not exit")
+                code = wt.DWORD()
+                if not self.api.GetExitCodeProcess(handle, ctypes.byref(code)):
+                    raise ctypes.WinError(ctypes.get_last_error())
+                record["exit_code"] = code.value
+                if code.value not in (0, 1):
+                    raise AssertionError("Owned backend terminated abnormally")
+        finally:
+            for handle in self.handles.values():
+                self.api.CloseHandle(handle)
+            if self.primary_thread:
+                self.api.CloseHandle(self.primary_thread)
+            self.api.CloseHandle(self.job)
+            self.closed = True
+
+
+class OwnedControls:
+    """Address only HWNDs belonging to the exact launched product process."""
+
+    def __init__(self, executable: Path, consumer: Path, workspace: Path, environment: dict,
+                 deadline: float, backend: Path | None = None):
+        self.deadline = deadline
+        self.api = ctypes.WinDLL("user32", use_last_error=True)
+        self.callback = ctypes.WINFUNCTYPE(wt.BOOL, wt.HWND, wt.LPARAM)
+        for name, args in {
+            "EnumWindows": [self.callback, wt.LPARAM],
+            "EnumChildWindows": [wt.HWND, self.callback, wt.LPARAM],
+            "GetWindowThreadProcessId": [wt.HWND, ctypes.POINTER(wt.DWORD)],
+            "GetGUIThreadInfo": [wt.DWORD, ctypes.c_void_p],
+            "GetWindowTextW": [wt.HWND, wt.LPWSTR, ctypes.c_int],
+            "GetClassNameW": [wt.HWND, wt.LPWSTR, ctypes.c_int],
+            "GetParent": [wt.HWND], "GetDlgCtrlID": [wt.HWND],
+            "IsWindowEnabled": [wt.HWND], "IsWindowVisible": [wt.HWND],
+            "GetAncestor": [wt.HWND, wt.UINT],
+            "GetForegroundWindow": [],
+            "GetWindowRect": [wt.HWND, ctypes.POINTER(wt.RECT)],
+            "PostMessageW": [wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM],
+            "SetWindowPos": [wt.HWND, wt.HWND, ctypes.c_int, ctypes.c_int,
+                             ctypes.c_int, ctypes.c_int, wt.UINT],
+            "SendMessageTimeoutW": [wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM,
+                                    wt.UINT, wt.UINT, ctypes.POINTER(ctypes.c_size_t)],
+        }.items():
+            getattr(self.api, name).argtypes = args
+        self.api.GetParent.restype = wt.HWND
+        self.api.GetAncestor.restype = wt.HWND
+        self.api.GetForegroundWindow.restype = wt.HWND
+        self.api.GetWindowThreadProcessId.restype = wt.DWORD
+        self.api.GetGUIThreadInfo.restype = wt.BOOL
+        self.api.SendMessageTimeoutW.restype = ctypes.c_size_t
+        startup = subprocess.STARTUPINFO()
+        startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startup.wShowWindow = 0
+        environment = dict(environment, FACMAN_WORKSPACE=str(workspace))
+        self.process = subprocess.Popen([str(executable)], cwd=consumer, env=environment,
+            startupinfo=startup, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            creationflags=0x4)  # Documented CREATE_SUSPENDED; assign the job before execution.
+        try:
+            self.job = OwnedProcessJob(self.process, backend if backend is not None else executable.parent / "facman.exe")
+        except Exception:
+            self.process.kill()
+            self.process.communicate(timeout=10)
+            raise
+        self.events = []
+        self.terminal = None
+        self.invocations = []
+        self.cleanup_complete = False
+
+    def require_owned(self, hwnd):
+        pid = wt.DWORD()
+        self.api.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if self.process.poll() is not None:
+            raise AssertionError("Owned GUI process exited unexpectedly")
+        if pid.value != self.process.pid:
+            raise ControlGone("Control no longer belongs to the live owned GUI")
+
+    def text(self, hwnd, class_name=False):
+        self.require_owned(hwnd)
+        value = ctypes.create_unicode_buffer(16384)
+        if not class_name and "COMBOBOX" in self.text(hwnd, True).upper():
+            index = self.send(hwnd, 0x147)  # CB_GETCURSEL
+            if index == ctypes.c_size_t(-1).value:
+                return ""
+            length = self.send(hwnd, 0x149, index)  # CB_GETLBTEXTLEN
+            if length >= len(value):
+                raise AssertionError("Owned combo text exceeds the evidence bound")
+            self.send(hwnd, 0x148, index, ctypes.addressof(value))  # CB_GETLBTEXT
+            return value.value
+        if not class_name and "EDIT" in self.text(hwnd, True).upper():
+            # GetWindowText reads another process's cached caption, which can
+            # retain the constructor text after the actual edit contents change.
+            try:
+                length = self.send(hwnd, 0xD, len(value), ctypes.addressof(value))  # WM_GETTEXT
+            except ControlGone:
+                raise
+            except AssertionError as error:
+                self.require_owned(hwnd)  # Disposal must remain ControlGone.
+                raise ControlReadFailed("Bounded owned EDIT text read failed") from error
+            self.require_owned(hwnd)  # Never accept text after HWND disposal/reuse.
+            if length >= len(value) - 1:
+                raise ControlReadFailed("Owned edit text exceeds the evidence bound")
+            return value.value
+        method = self.api.GetClassNameW if class_name else self.api.GetWindowTextW
+        method(hwnd, value, len(value))
+        return value.value
+
+    def enumerate(self, parent=None, observe=True):
+        if observe:
+            self.job.observe()
+        result = []
+        @self.callback
+        def collect(hwnd, unused):
+            pid = wt.DWORD()
+            self.api.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            if pid.value == self.process.pid:
+                result.append(int(hwnd))
+            return True
+        if parent is None:
+            self.api.EnumWindows(collect, 0)
+            current = []
+            for hwnd in result:
+                try:
+                    self.require_owned(hwnd)
+                except ControlGone:
+                    continue
+                # No activation, global keyboard input or user-window movement.
+                self.api.SetWindowPos(hwnd, None, -20000, -20000, 0, 0, 0x15)
+                current.append(hwnd)
+            result = current
+        else:
+            self.require_owned(parent)
+            self.api.EnumChildWindows(parent, collect, 0)
+        return result
+
+    def frame(self, hwnd, stage):
+        controls = []
+        result = dict(stage=stage, pid=self.process.pid, hwnd=hwnd, controls=controls)
+        try:
+            result["title"] = self.text(hwnd)
+            children = self.enumerate(hwnd)
+        except ControlGone:
+            result["control_gone"] = True
+            self.events.append(result)
+            return result
+        for child in children:
+            try:
+                controls.append(dict(hwnd=child, text=self.text(child),
+                    class_name=self.text(child, True), **self.control_state(child)))
+            except ControlGone:
+                controls.append(dict(hwnd=child, control_gone=True))
+            except ControlReadFailed as error:
+                controls.append(dict(hwnd=child, read_error=str(error)))
+        self.events.append(result)
+        return result
+
+    def control_state(self, hwnd):
+        self.require_owned(hwnd)
+        return dict(parent_hwnd=self.api.GetParent(hwnd),
+            root_hwnd=self.api.GetAncestor(hwnd, 2),
+            control_id=self.api.GetDlgCtrlID(hwnd),
+            enabled=bool(self.api.IsWindowEnabled(hwnd)),
+            visible=bool(self.api.IsWindowVisible(hwnd)),
+            observed_at=time.monotonic())
+
+    def ancestors(self, hwnd):
+        root = self.api.GetAncestor(hwnd, 2)
+        self.require_owned(root)
+        current, result = hwnd, []
+        for unused in range(16):
+            result.append(dict(hwnd=current, **self.control_state(current)))
+            if current == root:
+                return result
+            current = self.api.GetParent(current)
+            if not current:
+                break
+        raise AssertionError("Owned control ancestors did not terminate at its exact root")
+
+    def show_main_offscreen(self, main):
+        self.require_owned(main)
+        class_name = self.text(main, True)
+        if (self.text(main) != "FacMan" or not class_name.startswith("WindowsForms10.Window.")
+                or self.api.GetAncestor(main, 2) != main):
+            raise AssertionError("Passive show target is not the exact owned FacMan main form")
+        rectangle = wt.RECT()
+        if not self.api.GetWindowRect(main, ctypes.byref(rectangle)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if rectangle.right >= -10000 or rectangle.bottom >= -10000:
+            raise AssertionError("Owned main form must be offscreen before it is shown")
+        foreground = self.api.GetForegroundWindow()
+        # Preserve size/Z order and prohibit activation. Only the verified main
+        # form is shown; other enumerated helper windows keep their show state.
+        if not self.api.SetWindowPos(main, None, -20000, -20000, 0, 0, 0x55):
+            raise ctypes.WinError(ctypes.get_last_error())
+        after = self.api.GetForegroundWindow()
+        self.events.append(dict(stage="owned main shown offscreen", pid=self.process.pid,
+            hwnd=main, class_name=class_name, flags=0x55,
+            offscreen_rectangle=dict(left=rectangle.left, top=rectangle.top,
+                right=rectangle.right, bottom=rectangle.bottom),
+            foreground_before=foreground, foreground_after=after,
+            foreground_unchanged=foreground == after, **self.control_state(main)))
+
+    def wait(self, predicate, description, seconds=35):
+        deadline = min(time.monotonic() + seconds, self.deadline)
+        while time.monotonic() < deadline and self.process.poll() is None:
+            self.collect_invocations()
+            try:
+                value = predicate()
+            except ControlGone:
+                value = None
+            if value:
+                return value
+            time.sleep(.025)
+        for hwnd in self.enumerate(observe=False):
+            try:
+                self.frame(hwnd, "timeout: " + description)
+            except ControlGone:
+                self.events.append(dict(stage="timeout: " + description,
+                    pid=self.process.pid, hwnd=hwnd, control_gone=True))
+        for event in reversed(self.events):
+            if event["stage"] == "UIA InvokePattern":
+                try:
+                    state = self.control_state(event["hwnd"])
+                except ControlGone:
+                    state = dict(control_gone=True)
+                self.events.append(dict(stage="timeout: last click target",
+                    pid=self.process.pid, hwnd=event["hwnd"], **state))
+                break
+        raise AssertionError("Owned GUI did not reach " + description)
+
+    def window(self, title, control_text=None):
+        def find():
+            for hwnd in self.enumerate():
+                if self.text(hwnd) == title and (control_text is None or any(
+                    control_text in self.text(c) for c in self.enumerate(hwnd))):
+                    return hwnd
+        return self.wait(find, title + " / " + str(control_text))
+
+    def control(self, window, label):
+        return self.wait(lambda: next((h for h in self.enumerate(window)
+            if self.text(h).replace("&", "") == label and all(
+                state["visible"] and state["enabled"] for state in self.ancestors(h))), None), label)
+
+    def edit(self, hwnd, value):
+        self.require_owned(hwnd)
+        if "EDIT" not in self.text(hwnd, True).upper() or not all(
+                state["visible"] and state["enabled"] for state in self.ancestors(hwnd)):
+            raise AssertionError("Text input requires an enabled owned edit control")
+        text = ctypes.create_unicode_buffer(value)
+        reply = ctypes.c_size_t()
+        if not self.api.SendMessageTimeoutW(hwnd, 0xC, 0, ctypes.addressof(text),
+                0x2, 2000, ctypes.byref(reply)) or not reply.value or self.text(hwnd) != value:
+            raise AssertionError("Owned edit did not retain the explicit archive path")
+        self.events.append(dict(stage="WM_SETTEXT", pid=self.process.pid, hwnd=hwnd, value=value))
+
+    def click(self, hwnd):
+        self.require_owned(hwnd)
+        if "BUTTON" not in self.text(hwnd, True).upper():
+            raise AssertionError("Button notification target is not a native button")
+        ancestors = self.ancestors(hwnd)
+        if not all(state["visible"] and state["enabled"] for state in ancestors):
+            raise AssertionError("Button notification requires visible and enabled owned control ancestors")
+        parent = self.api.GetParent(hwnd)
+        self.require_owned(parent)
+        identifier = self.api.GetDlgCtrlID(hwnd)
+        state = self.control_state(hwnd)
+        root = state["root_hwnd"]
+        self.require_owned(root)
+        if (len(ancestors) < 2 or ancestors[0]["hwnd"] != hwnd
+                or ancestors[1]["hwnd"] != parent or state["parent_hwnd"] != parent
+                or state["control_id"] != identifier or not state["visible"] or not state["enabled"]
+                or ancestors[-1]["hwnd"] != root
+                or any(item["root_hwnd"] != root for item in ancestors)):
+            raise AssertionError("Button notification identity differs from observed owned ancestors")
+        event = dict(stage="UIA InvokePattern", pid=self.process.pid, hwnd=hwnd,
+            text=self.text(hwnd), notification_parent=parent, notification_control_id=identifier,
+            ancestors=ancestors, **state)
+        self.events.append(event)
+        # Invoke the public accessibility action on the exact control. Keep the
+        # client asynchronous: a modal product handler can hold Invoke until the
+        # dialog closes. The dialog/backend effects remain the outcome oracle.
+        powershell = Path(os.environ["SystemRoot"]) / "System32/WindowsPowerShell/v1.0/powershell.exe"
+        command = [str(powershell), "-NoLogo", "-NoProfile", "-NonInteractive", "-MTA",
+            "-ExecutionPolicy", "Bypass", "-File", str(Path(__file__).with_name("windows_uia_invoke.ps1")),
+            "-Handle", str(hwnd), "-ExpectedPid", str(self.process.pid)]
+        helper = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            creationflags=0x4 | 0x08000000)
+        try:
+            job = OwnedProcessJob(helper, powershell, require_backend=False)
+        except Exception:
+            helper.kill()
+            helper.communicate(timeout=10)
+            raise
+        event.update(helper_pid=helper.pid, argv=command, started_at=time.monotonic())
+        capture = {"stdout": bytearray(), "stderr": bytearray(), "overflow": False, "errors": []}
+        def drain(stream, name):
+            try:
+                while True:
+                    data = stream.read(4096)
+                    if not data:
+                        break
+                    if len(capture[name]) + len(data) > 16384:
+                        capture["overflow"] = True
+                        break
+                    capture[name].extend(data)
+            except Exception as error:
+                capture["errors"].append(repr(error))
+            finally:
+                stream.close()
+        readers = [threading.Thread(target=drain, args=(stream, name), daemon=True)
+            for stream, name in ((helper.stdout, "stdout"), (helper.stderr, "stderr"))]
+        self.invocations.append((helper, job, event, capture, readers))
+        for reader in readers:
+            reader.start()
+
+    def collect_invocations(self):
+        for helper, job, event, capture, readers in self.invocations:
+            if capture["overflow"]:
+                job.api.TerminateJobObject(job.job, 1)
+                event["safety_termination"] = True
+                raise AssertionError("Accessibility helper exceeded capture bound")
+            if "helper_exit_code" in event or helper.poll() is None:
+                continue
+            try:
+                for reader in readers:
+                    if reader.ident is not None:
+                        reader.join(timeout=1)
+                if (any(reader.is_alive() for reader in readers) or capture["errors"]
+                        or capture["overflow"]):
+                    raise AssertionError("Accessibility helper capture did not finish")
+                out, err = bytes(capture["stdout"]), bytes(capture["stderr"])
+            finally:
+                job.finish()
+            event.update(helper_exit_code=helper.returncode,
+                stdout=out.decode("utf-8", errors="strict"),
+                stderr=err.decode("utf-8", errors="strict"))
+            event["owned_job_active_processes"] = 0
+            if helper.returncode or err or len(out) > 16384:
+                raise AssertionError("Owned accessibility invocation failed: " + repr(event))
+            result = json.loads(event["stdout"])
+            if (result["pid"] != self.process.pid or result["hwnd"] != event["hwnd"]
+                    or not result["invoked"]):
+                raise AssertionError("Accessibility invocation identity differs")
+            event["accessibility"] = result
+
+    def input_boundary(self, main, stage):
+        """Observe the owned native route; this does not acknowledge managed Click."""
+        button = self.control(main, "Make Ready with current settings")
+        ancestors = self.ancestors(button)
+        event = dict(stage=stage, pid=self.process.pid, hwnd=button,
+            ancestors=ancestors, managed_click_acknowledged=False, probes=[])
+        self.events.append(event)
+        class GuiThreadInfo(ctypes.Structure):
+            _fields_ = [("cbSize", wt.DWORD), ("flags", wt.DWORD),
+                ("hwndActive", wt.HWND), ("hwndFocus", wt.HWND),
+                ("hwndCapture", wt.HWND), ("hwndMenuOwner", wt.HWND),
+                ("hwndMoveSize", wt.HWND), ("hwndCaret", wt.HWND), ("rcCaret", wt.RECT)]
+        for hwnd in dict.fromkeys([ancestors[1]["hwnd"], ancestors[-1]["hwnd"]]):
+            self.require_owned(hwnd)
+            pid = wt.DWORD()
+            thread = self.api.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            self.require_owned(hwnd)
+            if not thread or pid.value != self.process.pid:
+                raise AssertionError("Input-boundary thread is not owned")
+            info = GuiThreadInfo()
+            info.cbSize = ctypes.sizeof(info)
+            observed = bool(self.api.GetGUIThreadInfo(thread, ctypes.byref(info)))
+            probe = dict(hwnd=hwnd, thread_id=thread, pid=pid.value,
+                gui_thread_info_available=observed, gui_thread_info_error=(
+                    0 if observed else ctypes.get_last_error()))
+            event["probes"].append(probe)
+            if observed:
+                # Retain handles only; never inspect another process's windows.
+                probe["gui_thread_info"] = {name: getattr(info, name) for name in
+                    ("flags", "hwndActive", "hwndFocus", "hwndCapture", "hwndMenuOwner",
+                     "hwndMoveSize", "hwndCaret")}
+            reply = ctypes.c_size_t()
+            before = time.monotonic()
+            responsive = self.api.SendMessageTimeoutW(hwnd, 0, 0, 0, 2, 2000,
+                ctypes.byref(reply))  # WM_NULL; no button notification.
+            probe.update(wm_null_responsive=bool(responsive), wm_null_reply=reply.value,
+                wm_null_error=0 if responsive else ctypes.get_last_error(),
+                wm_null_elapsed_seconds=time.monotonic() - before)
+            self.require_owned(hwnd)
+        self.frame(main, stage + " controls")
+
+    def send(self, hwnd, message, wparam=0, lparam=0):
+        self.require_owned(hwnd)
+        result = ctypes.c_size_t()
+        if not self.api.SendMessageTimeoutW(hwnd, message, wparam, lparam,
+                                           2, 2000, ctypes.byref(result)):
+            self.require_owned(hwnd)
+            raise AssertionError("Bounded owned-control message failed")
+        return result.value
+
+    def select(self, hwnd, index, value):
+        self.require_owned(hwnd)
+        self.send(hwnd, 0x14E, index)  # CB_SETCURSEL
+        if self.text(hwnd) != value:
+            raise AssertionError("Actual typed selection differs from reviewed value")
+        parent = self.api.GetParent(hwnd)
+        self.require_owned(parent)
+        identifier = self.api.GetDlgCtrlID(hwnd)
+        # The ordinary event can start package hashing before its first await.
+        # Queue the owned notification; observe its resulting revision below.
+        if not self.api.PostMessageW(parent, 0x111, (1 << 16) | (identifier & 0xFFFF), hwnd):
+            raise ctypes.WinError(ctypes.get_last_error())
+        self.events.append(dict(stage="CBN_SELCHANGE", pid=self.process.pid,
+                                hwnd=hwnd, value=value))
+
+    def inputs(self, main):
+        self.click(self.control(main, "Make Ready with current settings"))
+        dialog = self.window("Make Ready with current settings", "Continue")
+        combos = [h for h in self.enumerate(dialog) if "COMBOBOX" in self.text(h, True).upper()]
+        actual = [self.text(h) for h in combos]
+        if actual != ["main", "fixture", "gui", "selected.zip"]:
+            raise AssertionError("Actual form lost exact selected-save inputs: " + repr(actual))
+        for hwnd, value in zip(combos, actual):
+            self.select(hwnd, 0, value)
+        self.frame(dialog, "typed semantic inputs")
+        return dialog
+
+    def revision(self, main):
+        return next((self.text(h) for h in self.enumerate(main)
+                     if self.text(h).startswith("Readiness:")), "")
+
+    def selected_observation(self, main):
+        self.show_main_offscreen(main)
+        original = self.wait(lambda: self.revision(main) if "revision 0" not in
+            self.revision(main) else None, "actual backend revision")
+        observation = next(h for h in self.enumerate(main) if
+            "COMBOBOX" in self.text(h, True).upper() and self.text(h) == "Menu")
+        self.select(observation, 1, "Selected Save")
+        self.wait(lambda: self.api.IsWindowEnabled(observation) and
+            self.revision(main) != original and "revision 0" not in self.revision(main),
+            "actual selected-save backend replacement revision")
+        self.frame(main, "selected-save observation completed")
+
+    def finish(self):
+        if self.cleanup_complete:
+            return
+        errors = []
+        try:
+            self._finish_owned()
+        except Exception as error:
+            errors.append(error)
+        finally:
+            # Enumeration, capture and decoding can fail too. Every retained
+            # kernel job must close even when the ordinary shutdown path fails.
+            for helper, job, event, capture, readers in self.invocations:
+                try:
+                    job.finish()
+                except Exception as error:
+                    event["cleanup_error"] = repr(error)
+                    errors.append(error)
+                try:
+                    helper.wait(timeout=5)
+                    for reader in readers:
+                        if reader.ident is not None:
+                            reader.join(timeout=1)
+                except Exception as error:
+                    errors.append(error)
+            try:
+                self.job.finish()
+            except Exception as error:
+                errors.append(error)
+            if self.process.poll() is None:
+                try:
+                    self.process.communicate(timeout=5)
+                except Exception as error:
+                    errors.append(error)
+            self.cleanup_complete = True
+        if errors:
+            raise AssertionError("Owned GUI/accessibility finalization failed: " + repr(errors))
+
+    def _finish_owned(self):
+        # Let the final ordinary invocation close its dialog before asking the
+        # main form to exit. Otherwise a newly started accessibility client can
+        # race destruction of the very HWND it was asked to invoke.
+        invocation_deadline = min(self.deadline, time.monotonic() + 10)
+        while (any(helper.poll() is None for helper, *_ in self.invocations)
+                and time.monotonic() < invocation_deadline):
+            time.sleep(.025)
+        # Cleanup must still work if descendant identity observation caused the
+        # original failure. Never let that failure retain the owned GUI/job.
+        for hwnd in self.enumerate(observe=False):
+            try:
+                if self.text(hwnd) == "FacMan":
+                    self.require_owned(hwnd)
+                    self.api.PostMessageW(hwnd, 0x10, 0, 0)
+            except ControlGone:
+                continue
+        safety = False
+        try:
+            out, err = self.process.communicate(timeout=15)
+        except subprocess.TimeoutExpired:
+            safety = True
+            self.process.kill()
+            out, err = self.process.communicate(timeout=10)
+        self.terminal = dict(pid=self.process.pid, exit_code=self.process.returncode,
+            stdout=out.decode("utf-8", errors="strict"),
+            stderr=err.decode("utf-8", errors="strict"), safety_termination=safety)
+        cleanup_errors = []
+        for helper, job, event, capture, readers in self.invocations:
+            try:
+                if helper.poll() is None:
+                    helper.wait(timeout=max(.1, min(10, self.deadline - time.monotonic())))
+            except subprocess.TimeoutExpired as error:
+                cleanup_errors.append(error)
+                try:
+                    job.api.TerminateJobObject(job.job, 1)
+                    helper.wait(timeout=10)
+                    event["safety_termination"] = True
+                except Exception as cleanup_error:
+                    cleanup_errors.append(cleanup_error)
+            finally:
+                try:
+                    job.finish()
+                except Exception as error:
+                    cleanup_errors.append(error)
+                for reader in readers:
+                    if reader.ident is not None:
+                        reader.join(timeout=1)
+        try:
+            self.collect_invocations()
+        except Exception as error:
+            cleanup_errors.append(error)
+        finally:
+            gui_drained = False
+            try:
+                self.job.finish()
+                gui_drained = True
+            except Exception as error:
+                cleanup_errors.append(error)
+        self.terminal.update(owned_job_active_processes=0 if gui_drained else None,
+                             backend_processes=self.job.records,
+                             launch=self.job.launch)
+        if cleanup_errors:
+            raise AssertionError("Owned GUI/accessibility cleanup failed: " + repr(cleanup_errors))
+        if safety or self.process.returncode != 0 or out or err:
+            raise AssertionError("GUI must drain and exit normally: " + repr(self.terminal))
+
+
+class OwnedControlMessageTests(unittest.TestCase):
+    def test_failed_message_preserves_disposal_and_live_process_boundaries(self):
+        for failure in ("disposed", "live", "process_exit"):
+            with self.subTest(failure=failure):
+                controls = OwnedControls.__new__(OwnedControls)
+                controls.process = unittest.mock.Mock(pid=123)
+                controls.process.poll.return_value = None
+                controls.api = unittest.mock.Mock()
+                owner = [123]
+                def window_process(hwnd, output):
+                    output._obj.value = owner[0]
+                def failed_message(*arguments):
+                    self.assertEqual((2, 2000), arguments[4:6])
+                    if failure == "disposed":
+                        owner[0] = 0
+                    elif failure == "process_exit":
+                        controls.process.poll.return_value = 1
+                    return 0
+                controls.api.GetWindowThreadProcessId.side_effect = window_process
+                controls.api.SendMessageTimeoutW.side_effect = failed_message
+                expected = {"disposed": ControlGone, "live": AssertionError,
+                            "process_exit": AssertionError}[failure]
+                message = {"disposed": "Control no longer belongs to the live owned GUI",
+                           "live": "Bounded owned-control message failed",
+                           "process_exit": "Owned GUI process exited unexpectedly"}[failure]
+                with self.assertRaisesRegex(expected, message) as caught:
+                    controls.send(456, 0x148)
+                self.assertIs(type(caught.exception), expected)
+                self.assertEqual(2, controls.api.GetWindowThreadProcessId.call_count)
+                controls.api.SendMessageTimeoutW.assert_called_once()
+
+
+@unittest.skipUnless(os.name == "nt", "unsupported: native WinForms requires Windows")
+class WindowsDeliveredJoinedGuiTests(unittest.TestCase):
+    query = joined.JoinedMakeReadyTests.query
+    preserved_inputs = joined.JoinedMakeReadyTests.preserved_inputs
+    journals = joined.JoinedMakeReadyTests.journals
+    assert_effects = joined.JoinedMakeReadyTests.assert_effects
+
+    def test_actual_managed_repair_controls_dispatch_production_packaged_backend(self):
+        """Use a supplied exact product or the source cohort's normal canonical factory."""
+        from test_make_ready_managed_repair import ManagedRepairMakeReadyTests
+        package = os.environ.get("FACMAN_DELIVERED_GUI_PACKAGE")
+        consumer = os.environ.get("FACMAN_DELIVERED_GUI_CONSUMER")
+        qualification = "supplied exact canonical product; generated inert archive; actual ordinary controls"
+        if not package and not consumer:
+            build = Path(os.environ.get("FACMAN_WINFORMS_SHARED_BUILD_ROOT",
+                native_cli.ROOT / "build/winforms-shared")).resolve()
+            if not (build / "CMakeCache.txt").is_file():
+                self.skipTest("required_blocked: matching Windows shared native build/candidate absent")
+            # The source CI cohort already built this clean matching shared cache
+            # and WinForms. Keep the normal factory's source/provider checks intact.
+            from tools import package_build
+            campaign = Path(tempfile.mkdtemp(prefix="fmg-repair-"))
+            package = package_build.build_profile(profile_id="windows_product_x64",
+                out_root=campaign / "p", build_root=build, dist_root=None, allow_dirty=False)
+            consumer = str(campaign / "c")
+            Path(consumer).mkdir()
+            qualification = "factory-produced canonical windows_product_x64; generated inert archive; actual ordinary controls"
+        self.assertTrue(package and consumer, "Package and owned consumer are both required")
+        package, consumer = Path(package).resolve(), Path(consumer).resolve()
+        self.assertTrue(consumer.is_dir())
+        self.assertFalse(consumer.is_relative_to(native_cli.ROOT))
+        gui, backend = package / "FacMan.exe", package / "bin/facman.exe"
+        hashes = dict(line.split("  ", 1)[::-1] for line in (package / "manifest/hashes.sha256").read_text().splitlines())
+        closure = {p.relative_to(package).as_posix() for p in package.rglob("*") if p.is_file()}
+        self.assertEqual(set(hashes) | {"manifest/hashes.sha256"}, closure)
+        for name, digest in hashes.items():
+            self.assertEqual(digest, hashlib.sha256((package / name).read_bytes()).hexdigest(), name)
+        manifest_digest = hashlib.sha256((package / "manifest/hashes.sha256").read_bytes()).hexdigest()
+        build_info = json.loads((package / "manifest/build_info.v1.json").read_bytes())
+        self.assertEqual("windows_product_x64", build_info["profile_id"])
+        self.assertFalse(build_info["source_dirty"])
+        owned = consumer / "managed-repair-controls"
+        self.assertFalse(owned.exists(), "Managed repair evidence must not overwrite a prior probe")
+        owned.mkdir()
+        evidence = owned / "evidence"
+        evidence.mkdir()
+        fixture = ManagedRepairMakeReadyTests()
+        environment = {k: v for k, v in os.environ.items() if not k.startswith("FACMAN_")}
+        environment.update(fixture.environment(owned), PATH="", PYTHONDONTWRITEBYTECODE="1")
+        started = time.monotonic()
+        calls = []
+        real_run = subprocess.run
+        def delivered_run(args, **kwargs):
+            self.assertLess(time.monotonic() - started, 180)
+            self.assertLess(len(calls), 40)
+            self.assertEqual(str(backend), args[0])
+            kwargs.update(cwd=consumer, env=environment, timeout=30)
+            response = real_run(args, **kwargs)
+            calls.append(dict(argv=list(args), exit_code=response.returncode, stdout=response.stdout, stderr=response.stderr))
+            self.assertLess(sum(len(str(c)) for c in calls), 4 * 1024 * 1024)
+            return response
+        result = dict(schema="facman.windows_delivered_managed_repair_gui.v1", result="FAIL",
+            qualification=qualification,
+            human_accessibility_acceptance=False, whole_make_ready_acceptance=False, factorio_executed=False,
+            gui_sha256=hashes["FacMan.exe"], backend_sha256=hashes["bin/facman.exe"],
+            closure_sha256=manifest_digest, build_info=build_info, calls=calls)
+        active = None
+        try:
+            with patch.dict(os.environ, dict(environment, FACMAN_CLI_EXE=str(backend))), \
+                    patch.object(native_cli, "ROOT", consumer), patch.object(subprocess, "run", delivered_run):
+                workspace, target, archive = fixture.prepare(owned, content_pending=True, selected_world=True)
+                source_digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+                target_before = modsets.snapshot(target)
+                world = workspace / "instances/main/saves/selected.zip"
+                world_before = world.read_bytes()
+                active = OwnedControls(gui, consumer, workspace, environment, started + 180, backend=backend)
+                result["events"] = active.events
+                main = active.window("FacMan")
+                active.selected_observation(main)
+                title = "Review installation repair from local archive"
+                active.click(active.control(main, "Review installation repair"))
+                dialog = active.window(title, "Continue")
+                edits = [h for h in active.enumerate(dialog) if "EDIT" in active.text(h, True).upper()]
+                self.assertEqual(1, len(edits), "Ordinary review must require one explicit archive path")
+                active.edit(edits[0], str(archive))
+                active.frame(dialog, "explicit local repair archive")
+                active.click(active.control(dialog, "Continue"))
+                confirm = active.window(title, "Apply " + title)
+                active.frame(confirm, "review preview explicitly confirmed")
+                active.click(active.control(confirm, "OK"))
+                completed = active.window(title, "factorio.managed_repair_review.v1")
+                active.frame(completed, "actual immutable owner-plan review")
+                def receipts(action):
+                    return [r for p in (workspace / ".facman/action-receipts-v2").glob("*.v2.json")
+                        if (r := json.loads(p.read_bytes()))["action_id"] == action and r["state"] == "terminal"]
+                reviews = receipts("readiness.review_install_repair")
+                self.assertEqual(1, len(reviews))
+                review = json.loads(reviews[0]["result_json"])
+                self.assertEqual("completed", review["outcome"])
+                self.assertEqual(target_before, modsets.snapshot(target), "Review preview changed the installation")
+                active.click(active.control(completed, "OK"))
+                # The next ordinary input form must contain the selected review,
+                # archive and target automatically; no plan JSON or query override.
+                repair_title = "Repair registered installation executable and prepare current content, configuration and selected world"
+                active.click(active.control(main, "Make Ready with current settings"))
+                dialog = active.window(repair_title, "Continue")
+                combos = [h for h in active.enumerate(dialog) if "COMBOBOX" in active.text(h, True).upper()]
+                selected = [active.text(h) for h in combos]
+                self.assertEqual(["main", "managed", "gui", "selected.zip", reviews[0]["idempotency_key"], str(target), str(archive)], selected)
+                active.frame(dialog, "automatically selected exact review and preparation inputs")
+                time.sleep(1.05)
+                active.click(active.control(dialog, "Continue"))
+                confirm = active.window(repair_title, "Apply " + repair_title)
+                active.frame(confirm, "registered installation and remaining preparation effects confirmed")
+                self.assertFalse((target / "bin/x64/factorio.exe").exists())
+                active.click(active.control(confirm, "OK"))
+                completed = active.window(repair_title, "registered installation executable and current settings were prepared")
+                active.frame(completed, "actual joined owner completion")
+                applied = receipts("readiness.prepare_joined")
+                self.assertEqual(1, len(applied))
+                outcome = json.loads(applied[0]["result_json"])
+                request = json.loads(applied[0]["request_json"])
+                self.assertEqual("completed", outcome["outcome"])
+                self.assertEqual(reviews[0]["idempotency_key"], request["repair_review_id"])
+                self.assertEqual(review["action_payload"]["owner_plan"], outcome["action_payload"]["plan"]["installation_plan"])
+                self.assertEqual(str(archive), request["source_path"])
+                self.assertEqual(str(target), request["installation_path"])
+                self.assertEqual("explicit", request["confirmation"])
+                effects = outcome["action_payload"]["completed_components"]
+                self.assertEqual(["installs.repair.apply", "modsets.apply", "readiness.prepare_configuration", "readiness.prepare_selected_save"],
+                    [effect["owner_command"] for effect in effects])
+                for effect in effects:
+                    record = json.loads((workspace / "transactions" / (effect["transaction_id"] + ".transaction.v1.json")).read_bytes())
+                    self.assertEqual("complete", record["state"])
+                    self.assertEqual(effect["owner_command"], record["command_id"])
+                self.assertEqual(fixture.executable_bytes, (target / "bin/x64/factorio.exe").read_bytes())
+                self.assertEqual(b"Preserve unowned local information.\n", (target / "operator-note.txt").read_bytes())
+                self.assertEqual(source_digest, hashlib.sha256(archive.read_bytes()).hexdigest())
+                self.assertEqual(world_before, world.read_bytes())
+                self.assertTrue((workspace / "instances/main/config/config.ini").is_file())
+                observation = fixture.query(workspace, intent="load_save")
+                self.assertEqual("satisfied", observation["readiness"]["selected_save"]["state"])
+                self.assertFalse(observation["readiness"]["execution_available"])
+                result.update(review=reviews[0], receipt=applied[0], observation=observation)
+                active.click(active.control(completed, "OK"))
+                active.finish()
+                self.assertEqual(closure, {p.relative_to(package).as_posix() for p in package.rglob("*") if p.is_file()})
+                for name, digest in hashes.items():
+                    self.assertEqual(digest, hashlib.sha256((package / name).read_bytes()).hexdigest(), name)
+                self.assertEqual(manifest_digest, hashlib.sha256((package / "manifest/hashes.sha256").read_bytes()).hexdigest())
+                result.update(result="PASS", package_closure_unchanged=True)
+        except Exception:
+            result["exception"] = traceback.format_exc()
+            raise
+        finally:
+            try:
+                if active is not None:
+                    try:
+                        active.finish()
+                    except Exception:
+                        result.update(result="FAIL", cleanup_exception=traceback.format_exc())
+                        raise
+                    finally:
+                        result.update(terminal=active.terminal, observed_backend_processes=active.job.records, launch=active.job.launch)
+            finally:
+                result["elapsed_seconds"] = time.monotonic() - started
+                record = json.dumps(result, indent=2).encode("utf-8")
+                self.assertLess(len(record), 4 * 1024 * 1024)
+                (evidence / "result.json").write_bytes(record)
+                print("delivered-windows-managed-repair-gui-result " + json.dumps(dict(result=result["result"],
+                    source=build_info["source_commit"], gui_sha256=result["gui_sha256"], backend_sha256=result["backend_sha256"],
+                    result_sha256=hashlib.sha256(record).hexdigest(), no_human_accessibility_acceptance=True), sort_keys=True))
+
+    def test_actual_joined_controls_dispatch_production_packaged_backend(self):
+        started = time.monotonic()
+        candidate = os.environ.get("FACMAN_DELIVERED_GUI_PACKAGE")
+        consumer = os.environ.get("FACMAN_DELIVERED_GUI_CONSUMER")
+        qualification = "original portable file closure reconstructed from produced self-setup payload"
+        if not candidate and not consumer:
+            build = Path(os.environ.get("FACMAN_WINFORMS_SHARED_BUILD_ROOT",
+                native_cli.ROOT / "build/winforms-shared")).resolve()
+            if not (build / "CMakeCache.txt").is_file():
+                self.skipTest("required_blocked: matching Windows shared native build/candidate absent")
+            # Existing required Windows Python CI already built the native Release
+            # product and WinForms. Assemble once with the ordinary package factory;
+            # clean source and exact build/provider checks remain mandatory.
+            from tools import package_build
+            campaign = Path(tempfile.mkdtemp(prefix="fmg-"))
+            package = package_build.build_profile(profile_id="windows_legacy_winforms_x64",
+                out_root=campaign / "p", build_root=build, dist_root=None, allow_dirty=False)
+            candidate = str(package)
+            consumer = str(campaign / "c")
+            Path(consumer).mkdir()
+            qualification = "factory-produced Windows legacy WinForms portable file closure"
+        self.assertTrue(candidate and consumer, "Candidate and owned consumer are both required")
+        package, consumer = Path(candidate).resolve(), Path(consumer).resolve()
+        self.assertFalse(consumer.is_relative_to(native_cli.ROOT))
+        self.assertTrue(consumer.is_dir())
+        gui, backend = package / "bin/FacMan.WinForms.exe", package / "bin/facman.exe"
+        self.assertTrue(gui.is_file() and backend.is_file())
+        hashes = dict(line.split("  ", 1)[::-1] for line in
+                      (package / "manifest/hashes.sha256").read_text().splitlines())
+        manifest_digest = hashlib.sha256((package / "manifest/hashes.sha256").read_bytes()).hexdigest()
+        actual = {p.relative_to(package).as_posix() for p in package.rglob("*") if p.is_file()}
+        self.assertEqual(set(hashes) | {"manifest/hashes.sha256"}, actual)
+        for name, digest in hashes.items():
+            self.assertEqual(digest, hashlib.sha256((package / name).read_bytes()).hexdigest(), name)
+        build_info = json.loads((package / "manifest/build_info.v1.json").read_bytes())
+        self.assertEqual("windows_legacy_winforms_x64", build_info["profile_id"])
+        self.assertFalse(build_info["source_dirty"])
+        # Only this admitted package's existing files. Bytes and closure are checked
+        # again after the actual product sessions; no manifest is rewritten.
+        for name in actual:
+            os.chmod(package / name, stat.S_IREAD)
+        environment = {k: v for k, v in os.environ.items() if not k.startswith("FACMAN_")}
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        environment["PATH"] = ""
+        custody = consumer / "evidence"
+        custody.mkdir(exist_ok=True)
+        files = {}
+        stream_bytes = 0
+        def inventory(path):
+            self.assertLess(time.monotonic() - started, 300)
+            result = {}
+            for p in sorted(path.rglob("*")):
+                if p.is_file():
+                    data = p.read_bytes()
+                    digest = hashlib.sha256(data).hexdigest()
+                    files.setdefault(digest, data)
+                    self.assertLess(sum(map(len, files.values())), 8 * 1024 * 1024)
+                    result[p.relative_to(path).as_posix()] = dict(sha256=digest,
+                        size_bytes=len(data), file_identity=joined.file_identity(p))
+            return result
+        calls, sessions, snapshots = [], [], []
+        real_run = subprocess.run
+        def delivered_run(args, **kwargs):
+            nonlocal stream_bytes
+            self.assertLess(time.monotonic() - started, 300)
+            self.assertLess(len(calls), 64)
+            self.assertEqual(str(backend), args[0])
+            kwargs.update(cwd=consumer, env=environment, timeout=30)
+            response = real_run(args, **kwargs)
+            stream_bytes += sum(len(s.encode("utf-8")) for s in
+                                (response.stdout, response.stderr) if s is not None)
+            self.assertLess(stream_bytes, 4 * 1024 * 1024)
+            calls.append(dict(argv=list(args), cwd=str(consumer), exit_code=response.returncode,
+                              stdout=response.stdout, stderr=response.stderr))
+            return response
+        fixture = consumer / "fixture-install-source"
+        self.assertFalse(fixture.exists())
+        import shutil
+        shutil.copytree(modsets.FIXTURE_INSTALL, fixture)
+        result = dict(schema="facman.windows_delivered_joined_gui.v1", package=str(package),
+            gui_sha256=hashes["bin/FacMan.WinForms.exe"], backend_sha256=hashes["bin/facman.exe"],
+            qualification=qualification, build_info=build_info,
+            environment=dict(PATH="", source_backend_provider_overrides=[],
+                workspace=str(consumer / "workspace")), package_file_count=len(actual),
+            calls=calls, sessions=sessions, snapshots=snapshots, result="FAIL")
+        active = None
+        try:
+            with patch.dict(os.environ, FACMAN_CLI_EXE=str(backend)), \
+                 patch.object(native_cli, "ROOT", consumer), \
+                 patch.object(subprocess, "run", delivered_run), \
+                 patch.object(builtin, "FIXTURE_INSTALL", fixture):
+                workspace = consumer / "workspace"
+                self.assertFalse(workspace.exists())
+                instance, original, expected = existing.ExistingConfigurationTests.prepare(
+                    self, workspace, "load_save", raw=True, crlf=True)
+                config = instance / "config/config.ini"
+                identity = joined.file_identity(config)
+                preserved = self.preserved_inputs(instance)
+                snapshots.append(dict(stage="prepared fixture", inventory=inventory(workspace)))
+                active = OwnedControls(gui, consumer, workspace, environment, started + 300)
+                sessions.append(dict(events=active.events))
+                main = active.window("FacMan")
+                active.selected_observation(main)
+                frozen = inventory(workspace)
+                def input_queries(stage):
+                    entry = dict(stage=stage, scopes={})
+                    result.setdefault("input_boundary_observations", []).append(entry)
+                    before_queries = inventory(workspace)
+                    for scope in ("instances", "launch_deck"):
+                        entry["scopes"][scope] = self.query(workspace, scope, "load_save")
+                    after_queries = inventory(workspace)
+                    entry["inventory_before"] = before_queries
+                    entry["inventory_after"] = after_queries
+                    self.assertEqual(before_queries, after_queries)
+                    return entry
+                boundary = input_queries("immediately before first input click")
+                launch_revision = boundary["scopes"]["launch_deck"]["revision"]
+                expected_revision = int(launch_revision[:7], 16)
+                boundary["expected_display_revision"] = expected_revision
+                active.wait(lambda: active.revision(main).split("\n", 1)[0].strip().endswith(
+                    "(revision " + str(expected_revision) + ")"),
+                    "displayed launch-deck revision before first input click")
+                boundary["displayed_revision"] = active.revision(main)
+                active.input_boundary(main, "before first input click")
+                try:
+                    dialog = active.inputs(main)
+                except Exception:
+                    # Preserve the original failed dialog assertion even if the
+                    # additional read-only diagnostics fail independently.
+                    for observe in (lambda: input_queries("first input failure"),
+                            lambda: active.input_boundary(main, "first input failure")):
+                        try:
+                            observe()
+                        except Exception:
+                            result.setdefault("input_boundary_diagnostic_errors", []).append(
+                                traceback.format_exc())
+                    raise
+                active.click(active.control(dialog, "Cancel"))
+                active.wait(lambda: dialog not in active.enumerate(), "input cancellation")
+                self.assertEqual(frozen, inventory(workspace))
+                dialog = active.inputs(main)
+                active.click(active.control(dialog, "Continue"))
+                confirm = active.window("Make Ready with current settings", "Apply Make Ready")
+                active.frame(confirm, "explicit confirmation cancelled")
+                active.click(active.control(confirm, "Cancel"))
+                active.wait(lambda: confirm not in active.enumerate(), "confirmation cancellation")
+                self.assertEqual(frozen, inventory(workspace))
+                snapshots.append(dict(stage="both cancellation routes unchanged", inventory=frozen))
+                dialog = active.inputs(main)
+                active.click(active.control(dialog, "Continue"))
+                confirm = active.window("Make Ready with current settings", "Apply Make Ready")
+                metadata = workspace / "fixture-install/data/base/info.json"
+                metadata_original = metadata.read_bytes()
+                metadata.write_bytes(metadata_original + b"\n")
+                stale = inventory(workspace)
+                active.frame(confirm, "stale confirmation")
+                active.click(active.control(confirm, "OK"))
+                refusal = active.window("Make Ready with current settings refused", "stale_snapshot_revision")
+                active.frame(refusal, "actual backend stale refusal")
+                self.assertEqual(stale, inventory(workspace))
+                active.click(active.control(refusal, "OK"))
+                active.finish()
+                sessions[-1]["terminal"] = active.terminal
+                metadata.write_bytes(metadata_original)
+                snapshots.append(dict(stage="stale refused before effects", inventory=stale))
+                active = OwnedControls(gui, consumer, workspace, environment, started + 300)
+                sessions.append(dict(events=active.events))
+                main = active.window("FacMan")
+                active.selected_observation(main)
+                before = self.query(workspace, "instances", "load_save")
+                before_files = inventory(workspace)
+                dialog = active.inputs(main)
+                active.click(active.control(dialog, "Continue"))
+                confirm = active.window("Make Ready with current settings", "Apply Make Ready")
+                active.frame(confirm, "explicit confirmation accepted")
+                active.click(active.control(confirm, "OK"))
+                final = active.window("Make Ready with current settings", "Review the remaining readiness checks")
+                active.frame(final, "actual completed joined result")
+                receipts = [json.loads(p.read_bytes()) for p in
+                            (workspace / ".facman/action-receipts-v2").glob("*.v2.json")]
+                matching = [r for r in receipts if r["action_id"] == "readiness.prepare_joined"]
+                self.assertEqual(1, len(matching))
+                outcome = json.loads(matching[0]["result_json"])
+                self.assertEqual("completed", outcome["outcome"])
+                self.assert_effects(workspace, outcome,
+                    ["readiness.prepare_configuration", "readiness.prepare_selected_save"])
+                request = json.loads(matching[0]["request_json"])
+                self.assertEqual(before["revision"], request["expected_snapshot_revision"])
+                self.assertEqual("load_save", request["launch_intent"])
+                self.assertEqual("selected.zip", request["save"])
+                self.assertEqual("explicit", request["confirmation"])
+                self.assertEqual(expected, config.read_bytes())
+                self.assertEqual(identity, joined.file_identity(config))
+                self.assertEqual(preserved, self.preserved_inputs(instance))
+                current = self.query(workspace, "instances", "load_save")
+                self.assertEqual("satisfied", current["readiness"]["selected_save"]["state"])
+                self.assertFalse(current["readiness"]["execution_available"])
+                after_files = inventory(workspace)
+                effects = {"instances/main/config/config.ini",
+                           "instances/main/metadata/save-refs/selected.zip.save-ref.v1.json"}
+                for name, observed in before_files.items():
+                    if name not in effects:
+                        self.assertEqual(observed, after_files[name], "Preserved original input: " + name)
+                new = set(after_files) - set(before_files)
+                allowed = effects | {".facman/action-receipts-v2/workspace-admission.v1.json"}
+                allowed.update("transactions/" + c["transaction_id"] + ".transaction.v1.json"
+                    for c in outcome["action_payload"]["completed_components"])
+                allowed.add(".facman/action-receipts-v2/" + matching[0]["key_digest"] + ".v2.json")
+                self.assertEqual(new, new & allowed)
+                snapshots.append(dict(stage="joined completion independently verified", inventory=after_files))
+                result.update(receipt=matching[0], outcome=outcome, observation=current)
+                active.click(active.control(final, "OK"))
+                active.finish()
+                sessions[-1]["terminal"] = active.terminal
+                self.assertEqual(actual, {p.relative_to(package).as_posix() for p in
+                                          package.rglob("*") if p.is_file()})
+                for name, digest in hashes.items():
+                    self.assertEqual(digest, hashlib.sha256((package / name).read_bytes()).hexdigest(), name)
+                self.assertEqual(manifest_digest,
+                    hashlib.sha256((package / "manifest/hashes.sha256").read_bytes()).hexdigest())
+                result["package_closure_unchanged"] = True
+                result["result"] = "PASS"
+        except Exception:
+            result.update(result="FAIL", exception=traceback.format_exc())
+            raise
+        finally:
+            try:
+                if active is not None:
+                    try:
+                        active.finish()
+                    except Exception:
+                        result.update(result="FAIL", cleanup_exception=traceback.format_exc())
+                        raise
+                    finally:
+                        sessions[-1]["terminal"] = active.terminal
+                        sessions[-1]["observed_backend_processes"] = active.job.records
+                        sessions[-1]["launch"] = active.job.launch
+            finally:
+                objects = custody / "objects"
+                objects.mkdir(exist_ok=True)
+                for digest, data in files.items():
+                    (objects / digest).write_bytes(data)
+                result["elapsed_seconds"] = time.monotonic() - started
+                record = json.dumps(result, indent=2).encode("utf-8")
+                self.assertLess(len(record), 4 * 1024 * 1024)
+                self.assertFalse((custody / "result.json").exists(), "Evidence cannot overwrite an earlier run")
+                (custody / "result.json").write_bytes(record)
+                if result["result"] in ("PASS", "FAIL"):
+                    raw = {"result.json": record, **{"objects/" + k: v for k, v in files.items()}}
+                    manifest = {name: dict(size_bytes=len(data), sha256=hashlib.sha256(data).hexdigest(),
+                        bytes_base64=base64.b64encode(data).decode("ascii")) for name, data in raw.items()}
+                    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                    self.assertLess(len(canonical), 12 * 1024 * 1024)
+                    compressed = zlib.compress(canonical, 9)
+                    encoded = base64.b64encode(compressed).decode("ascii")
+                    self.assertLess(len(encoded), 512 * 1024)
+                    print("delivered-windows-gui-custody " + json.dumps(dict(
+                        schema="facman.windows_delivered_gui_custody.v1", file_count=len(raw),
+                        canonical_sha256=hashlib.sha256(canonical).hexdigest(),
+                        compressed_sha256=hashlib.sha256(compressed).hexdigest(),
+                        payload_base64=encoded), sort_keys=True))
+                    print("delivered-windows-gui-result " + json.dumps(dict(result=result["result"],
+                        qualification=qualification, source=build_info["source_commit"],
+                        gui_sha256=result["gui_sha256"], backend_sha256=result["backend_sha256"],
+                        result_sha256=hashlib.sha256(record).hexdigest(),
+                        custody_sha256=hashlib.sha256(canonical).hexdigest()), sort_keys=True))
+        # The completed GUI oracle keeps its original custody and budget. Exercise
+        # the three portable-environment journeys against this same factory output
+        # with separate call, ownership, time and whole-scenario custody bounds.
+        import delivered_environment_reconstruction as reconstruction
+        for scenario in reconstruction.SCENARIOS:
+            reconstruction.exercise(self, scenario, package=package, consumer=consumer,
+                fixture=fixture, evidence_root=custody,
+                binding=dict(schema="facman.windows_delivered_environment_result.v1",
+                    qualification=qualification, build_info=build_info,
+                    backend_sha256=hashes["bin/facman.exe"],
+                    closure_sha256=manifest_digest, package_readonly=True))

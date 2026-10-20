@@ -1,0 +1,56 @@
+{
+  "behavior": "Each of seven independent save-context galleries passes through the actual compiled WinForms harness separately, within the unchanged 1 MiB fixture limit. One compilation, seven exact behavioral cases; workspace and sidecar bytes remain unchanged.",
+  "boundaries": {
+    "beta_qualified": false,
+    "human_ui_qualification": false,
+    "new_head_required_ci_pending": true,
+    "produced_package_qualification": false,
+    "real_game_effects": false,
+    "source_fixture_only": true,
+    "whole_workunit_closed": false
+  },
+  "existing_qualification_ref": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/make-ready-composition.v1.json",
+  "historical_source_ci_failure": {
+    "diagnosis": "Aggregate seven-case fixture exceeded harness maxJsonLength; individual gallery remained below its unchanged limit.",
+    "failed": 1,
+    "head": "df9ae3515fd8906bbe124b11466e7a0eccdc8b26",
+    "job": "https://github.com/Julesc013/factorio-launcher/actions/runs/37567331846/job/112617933531",
+    "log_sha256": "52d84f8447e1bc7108772eb1723349444b8d043a5d1a137c12ad95910d11a283",
+    "skipped": 51,
+    "suite_methods": 1947
+  },
+  "limits": {
+    "gallery_fixture_characters": 1048576,
+    "product_parser_and_transport_limits_unchanged": true
+  },
+  "local_green": {
+    "actual_winforms_cases": 7,
+    "binary_identities": {
+      "FacMan.SaveContext.Harness.exe": "6ba19296fcd030174759c0fcc5bf73137e7cb9ddf5812d77e00c94ace24fd0fc",
+      "FacMan.exe": "afa30f27e726b5edd4b7b815c8b4835ba97d8dfb24efbd4d11312815f8e52b9e"
+    },
+    "full_workspace_and_sidecar_bytes_unchanged": true,
+    "qualification_sha256": "d089b5f6d93e283aaa4a6b67bf7a00d14632503d2c63495a15c40fc26d43c801",
+    "run_log_sha256": "38ee307c9492ed5a2dda960493b2fdac6eaa90c19c89c412b6c1932608b1066f",
+    "skipped": 0,
+    "strict": true,
+    "unittest_methods": 1
+  },
+  "local_red": {
+    "aggregate_bytes": 1420328,
+    "case_count": 7,
+    "receipt_sha256": "94c4edb05319b786791f7a62da8cd5a4b2ccd2eef41ec80665c8687953918b80",
+    "unittest_log_sha256": "be882cfc4f013d1c53cbf151ce5d6734cab7800d26e8c2fd9e87214f0046e1b5"
+  },
+  "modified_test_sha256": "b9bb542528fee096b61b31f3dd1379bc1ba3f6b87089c3bd46f85787ed972bad",
+  "resources": {
+    "native_rebuilds": 0,
+    "new_clones": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "product_candidates_dispatched": 0
+  },
+  "schema": "facman.make_ready_save_context_ci_fix.v1",
+  "source_parent": "df9ae3515fd8906bbe124b11466e7a0eccdc8b26",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}

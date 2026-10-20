@@ -13,6 +13,7 @@ import os
 import re
 import shutil
 import stat
+import struct
 import subprocess
 import sys
 import time
@@ -47,6 +48,8 @@ CURRENT_KEYS = {
 }
 MAX_IDENTITY_BYTES = 64 * 1024
 GIT_COMMAND = ("git", "-c", "core.longpaths=true")
+WINDOWS_PROVIDER_FILE_LIMIT = 259
+CURRENT_GENERATION_DIRECTORY = "FacMan.generation." + "0" * 64
 
 
 def git_command(*arguments: str) -> list[str]:
@@ -60,6 +63,114 @@ def sha256_file(path: Path) -> str:
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(chunk)
+    return digest.hexdigest()
+
+
+def candidate_payload_path_capacity(package: Path, fixture_root: Path) -> dict[str, object]:
+    """Bind both flat and real-epoch package paths before the transition."""
+
+    target_roots = (
+        fixture_root / "Programs" / CURRENT_GENERATION_DIRECTORY,
+        fixture_root / "e" / "Programs" / CURRENT_GENERATION_DIRECTORY,
+    )
+    longest: tuple[int, str, str] | None = None
+    with zipfile.ZipFile(package) as archive:
+        for entry in archive.infolist():
+            if entry.is_dir():
+                continue
+            parts = entry.filename.split("/")
+            if (
+                len(parts) < 2 or parts[0] != "facman"
+                or any(part in ("", ".", "..") for part in parts)
+            ):
+                raise ValueError(
+                    "candidate setup overlay contains a noncanonical payload path"
+                )
+            relative = "/".join(parts[1:])
+            for target_root in target_roots:
+                target = target_root.joinpath(*parts[1:])
+                units = len(str(target).encode("utf-16-le")) // 2
+                if longest is None or units > longest[0]:
+                    longest = (units, relative, str(target))
+    if longest is None:
+        raise ValueError("candidate setup overlay contains no payload files")
+    units, relative, target = longest
+    result = {
+        "schema": "facman.candidate_payload_path_capacity.v1",
+        "limit_utf16_units": WINDOWS_PROVIDER_FILE_LIMIT,
+        "maximum_utf16_units": units,
+        "headroom_utf16_units": WINDOWS_PROVIDER_FILE_LIMIT - units,
+        "relative_path": relative,
+        "target_path": target,
+    }
+    if units > WINDOWS_PROVIDER_FILE_LIMIT:
+        raise ValueError(
+            "candidate transition fixture exceeds the Windows provider file limit: "
+            f"{units} > {WINDOWS_PROVIDER_FILE_LIMIT}: {target}"
+        )
+    return result
+
+
+def setup_overlay_sha256(path: Path) -> str:
+    """Hash the exact ZIP overlay materialized by the Windows setup runtime."""
+
+    observed = exact_regular(path, "setup overlay")
+    metadata = observed.lstat()
+    identity = (
+        metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns,
+    )
+    maximum_tail = 22 + 65535
+    tail_size = min(metadata.st_size, maximum_tail)
+    if tail_size < 22:
+        raise ValueError("setup overlay is too small to contain a ZIP payload")
+    with observed.open("rb") as source:
+        opened = os.fstat(source.fileno())
+        if (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns) != identity:
+            raise ValueError("setup overlay changed before it was read")
+        source.seek(metadata.st_size - tail_size)
+        tail = source.read(tail_size)
+        eocd = next((
+            position for position in range(len(tail) - 22, -1, -1)
+            if tail[position:position + 4] == b"PK\x05\x06"
+            and position + 22 + struct.unpack_from("<H", tail, position + 20)[0]
+            == len(tail)
+        ), None)
+        if eocd is None:
+            raise ValueError("setup overlay has no bounded ZIP end record")
+        disk, central_disk, disk_entries, total_entries, central_size, central_offset = \
+            struct.unpack_from("<HHHHII", tail, eocd + 4)
+        if (
+            disk != 0 or central_disk != 0 or disk_entries != total_entries
+            or total_entries in (0, 0xffff)
+            or central_size == 0xffffffff or central_offset == 0xffffffff
+        ):
+            raise ValueError("setup overlay uses an unsupported split or ZIP64 payload")
+        absolute_eocd = metadata.st_size - tail_size + eocd
+        relative_span = central_size + central_offset
+        if relative_span > absolute_eocd:
+            raise ValueError("setup overlay ZIP offsets are inconsistent")
+        archive_start = absolute_eocd - relative_span
+        source.seek(archive_start)
+        if source.read(4) != b"PK\x03\x04":
+            raise ValueError("setup overlay has no ZIP local header at its payload boundary")
+        source.seek(archive_start + central_offset)
+        if source.read(4) != b"PK\x01\x02":
+            raise ValueError("setup overlay has no ZIP central directory at its payload boundary")
+        source.seek(archive_start)
+        digest = hashlib.sha256()
+        remaining_bytes = metadata.st_size - archive_start
+        while remaining_bytes:
+            chunk = source.read(min(1024 * 1024, remaining_bytes))
+            if not chunk:
+                raise ValueError("setup overlay ended before its declared payload boundary")
+            digest.update(chunk)
+            remaining_bytes -= len(chunk)
+        closed = os.fstat(source.fileno())
+        if (closed.st_dev, closed.st_ino, closed.st_size, closed.st_mtime_ns) != identity:
+            raise ValueError("setup overlay changed while it was read")
+    final = observed.lstat()
+    if (final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns) != identity:
+        raise ValueError("setup overlay pathname changed while it was read")
     return digest.hexdigest()
 
 
@@ -279,6 +390,51 @@ def identity_from_overlay(path: Path, portable: Path | None = None) -> dict[str,
     }
 
 
+def identity_from_predecessor_outputs(
+    predecessor: dict[str, object],
+) -> dict[str, str]:
+    """Bind produced package names to their hash-identical retained copies."""
+
+    produced_setup = predecessor.get("setup")
+    produced_portable = predecessor.get("portable")
+    staged = predecessor.get("staged")
+    if (
+        not isinstance(produced_setup, Path)
+        or not isinstance(produced_portable, Path)
+        or not isinstance(staged, dict)
+    ):
+        raise ValueError("predecessor outputs have no exact produced and retained paths")
+    for label, produced in (
+        ("setup", produced_setup), ("portable", produced_portable),
+    ):
+        record = staged.get(label)
+        if not isinstance(record, dict):
+            raise ValueError(f"predecessor outputs have no retained {label} record")
+        retained_value = record.get("path")
+        recorded_bytes = record.get("bytes")
+        recorded_sha256 = record.get("sha256")
+        if (
+            not isinstance(retained_value, str)
+            or not isinstance(recorded_bytes, int)
+            or isinstance(recorded_bytes, bool)
+            or not isinstance(recorded_sha256, str)
+            or not HEX_DIGEST.fullmatch(recorded_sha256)
+        ):
+            raise ValueError(f"predecessor retained {label} record is invalid")
+        produced = exact_regular(produced, f"produced predecessor {label}")
+        retained = exact_regular(Path(retained_value), f"retained predecessor {label}")
+        produced_sha256 = sha256_file(produced)
+        retained_sha256 = sha256_file(retained)
+        if (
+            produced.stat().st_size != recorded_bytes
+            or retained.stat().st_size != recorded_bytes
+            or produced_sha256 != recorded_sha256
+            or retained_sha256 != recorded_sha256
+        ):
+            raise ValueError(f"produced and retained predecessor {label} differ")
+    return identity_from_overlay(produced_setup, produced_portable)
+
+
 def _semver_parts(value: str) -> tuple[tuple[int, int, int], tuple[tuple[int, object], ...] | None]:
     if not re.fullmatch(SEMVER_PATTERN, value):
         raise ValueError(f"invalid semantic version: {value!r}")
@@ -316,8 +472,45 @@ def provider_lock_bytes(root: Path) -> bytes:
     return (root / "release/index/providers.lock.v2.toml").read_bytes()
 
 
-def locked_provider_revision(root: Path, provider_id: str) -> str:
-    value = tomllib.loads(provider_lock_bytes(root).decode("utf-8"))
+def preflight_baseline_ref(value: str, root: Path = ROOT) -> None:
+    """Reject an incompatible optional predecessor before platform builds."""
+
+    if not value:
+        return
+    if not HEX_REVISION.fullmatch(value):
+        raise ValueError("maintenance baseline must be an exact lowercase revision")
+
+    def git_bytes(*arguments: str) -> bytes:
+        return subprocess.run(
+            git_command(*arguments), cwd=root, check=True,
+            capture_output=True, timeout=30,
+        ).stdout
+
+    resolved = git_bytes("rev-parse", "--verify", f"{value}^{{commit}}")
+    if resolved.decode("ascii").strip() != value:
+        raise ValueError("maintenance baseline did not resolve to itself")
+    ancestor = subprocess.run(
+        git_command("merge-base", "--is-ancestor", value, "HEAD"),
+        cwd=root, check=False, timeout=30,
+    )
+    if ancestor.returncode:
+        raise ValueError("maintenance baseline is not an ancestor")
+    baseline_lock = tomllib.loads(git_bytes(
+        "show", f"{value}:release/index/providers.lock.v2.toml"
+    ).decode("utf-8"))
+    for provider_id in ("universal_launcher", "universal_setup"):
+        provider_revision_from_lock(baseline_lock, provider_id)
+    baseline_version = tomllib.loads(git_bytes(
+        "show", f"{value}:release/index/version.v2.toml"
+    ).decode("utf-8"))["semver"]
+    if semver_order(baseline_version, version_at(root)) >= 0:
+        raise ValueError("maintenance baseline must precede candidate version")
+    git_bytes("cat-file", "-e",
+              f"{value}:runtime/self_setup/facman_self_maintenance_package.cpp")
+    print(f"maintenance baseline preflight: {value} ({baseline_version})")
+
+
+def provider_revision_from_lock(value: dict[str, object], provider_id: str) -> str:
     matches = [
         item.get("source_revision") for item in value.get("provider", [])
         if isinstance(item, dict) and item.get("id") == provider_id
@@ -325,6 +518,12 @@ def locked_provider_revision(root: Path, provider_id: str) -> str:
     if len(matches) != 1 or not isinstance(matches[0], str) or not HEX_REVISION.fullmatch(matches[0]):
         raise ValueError(f"provider lock has no exact {provider_id} revision")
     return matches[0]
+
+
+def locked_provider_revision(root: Path, provider_id: str) -> str:
+    return provider_revision_from_lock(
+        tomllib.loads(provider_lock_bytes(root).decode("utf-8")), provider_id
+    )
 
 
 def require_external_new(path: Path, label: str) -> Path:
@@ -383,6 +582,62 @@ def predecessor_roots(task_root: Path, baseline_revision: str) -> tuple[Path, Pa
     return checkout_root, output_root
 
 
+def predecessor_environment(
+    source: Path, output_root: Path, universal_launcher_root: Path,
+    universal_setup_root: Path, source_revision: str,
+) -> dict[str, str]:
+    """Bind predecessor subprocesses to output owned by that checkout."""
+
+    owned_output = development_layout.ensure_task_root(
+        output_root, source, development_layout.current_task_id(source)
+    )
+    environment = dict(os.environ)
+    environment["FACMAN_TASK_ROOT"] = str(owned_output)
+    environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(universal_launcher_root)
+    environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(universal_setup_root)
+    environment["PYTHONPATH"] = str(source)
+    environment["FACMAN_CI_SOURCE_SHA"] = source_revision
+    environment["FACMAN_WINFORMS_OUTPUT_ROOT"] = str(
+        owned_output / "winforms-product" / "Release"
+    )
+    return environment
+
+
+def predecessor_audit_environment(
+    producer_environment: dict[str, str],
+) -> dict[str, str]:
+    """Use current qualification code without changing predecessor production."""
+
+    environment = dict(producer_environment)
+    environment["PYTHONPATH"] = str(ROOT)
+    return environment
+
+
+def build_predecessor_winforms(
+    source: Path, output_root: Path, environment: dict[str, str],
+    *, deadline: float,
+) -> Path:
+    """Build the predecessor GUI through that checkout's owned helper."""
+
+    script = (
+        "from pathlib import Path\n"
+        "import subprocess\n"
+        "import sys\n"
+        "from tools import winforms_build\n"
+        "def invoke(command):\n"
+        "    subprocess.run(command, check=True)\n"
+        "winforms_build.build(Path(sys.argv[1]), invoke)\n"
+    )
+    run(
+        [sys.executable, "-c", script, str(output_root)],
+        cwd=source, env=environment, deadline=deadline,
+    )
+    return exact_regular(
+        output_root / "winforms-product/Release/FacMan.exe",
+        "baseline WinForms product",
+    )
+
+
 def build_predecessor(
     args: argparse.Namespace, checkout_root: Path, output_root: Path, baseline_revision: str,
     *, deadline: float, evidence_root: Path,
@@ -395,18 +650,46 @@ def build_predecessor(
     dist = output_root / "dist"
     setup = output_root / "setup"
     clone_clean_detached(ROOT, source, baseline_revision, deadline=deadline)
-    if provider_lock_bytes(source) != provider_lock_bytes(ROOT):
-        raise ValueError("baseline provider lock differs from the candidate provider lock")
     if not (source / "runtime/self_setup/facman_self_maintenance_package.cpp").is_file():
         raise ValueError("baseline source cannot produce a self-maintenance package")
-    environment = dict(os.environ)
-    environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(args.universal_launcher_root)
-    environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(args.universal_setup_root)
+    environment = predecessor_environment(
+        source, output_root, args.universal_launcher_root, args.universal_setup_root,
+        baseline_revision,
+    )
     checkout_observation_root = output_root / "source-observation"
     checkout_observation = checkout_observation_root / "current-checkout-observation.v2.json"
     source_observation = output_root / "release-source-observation.v1.json"
     staged: dict[str, dict[str, object]] = {}
     gates = {"payload_equivalence": "not_started"}
+    if provider_lock_bytes(source) != provider_lock_bytes(ROOT):
+        provider_script = (
+            "from pathlib import Path\n"
+            "import sys\n"
+            "from tools import provider_workspace\n"
+            "provider_workspace.prepare(Path(sys.argv[2]), source_root=Path(sys.argv[1]))\n"
+        )
+        run([
+            sys.executable, "-c", provider_script, str(source), str(output_root),
+        ], cwd=ROOT, env=predecessor_audit_environment(environment), deadline=deadline)
+        provider_manifest = exact_regular(
+            output_root / "providers/manifest.v1.json", "baseline provider workspace"
+        )
+        provider_document = json.loads(provider_manifest.read_text(encoding="utf-8"))
+        provider_roots = {
+            item["id"]: exact_directory(Path(item["path"]), "baseline provider root")
+            for item in provider_document["providers"]
+        }
+        if set(provider_roots) != {"universal_launcher", "universal_setup"}:
+            raise ValueError("baseline provider workspace is incomplete")
+        environment = predecessor_environment(
+            source, output_root, provider_roots["universal_launcher"],
+            provider_roots["universal_setup"], baseline_revision,
+        )
+        staged["provider_workspace"] = copy_evidence(
+            provider_manifest,
+            evidence_root / "windows-self-maintenance-baseline-providers.v1.json",
+        )
+        write_baseline_staging(evidence_root, staged, gates)
     candidate_origin = capture(
         git_command("remote", "get-url", "origin"), cwd=ROOT, deadline=deadline,
     )
@@ -419,8 +702,8 @@ def build_predecessor(
     )
     run([
         sys.executable, str(source / "tools/current_checkout_observation.py"),
-        "--provider-root", "universal_launcher=" + str(args.universal_launcher_root),
-        "--provider-root", "universal_setup=" + str(args.universal_setup_root),
+        "--provider-root", "universal_launcher=" + environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"],
+        "--provider-root", "universal_setup=" + environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"],
         "--expected-source-sha", baseline_revision,
         "--line-ending-profile", "windows_checkout",
         "--output-dir", str(checkout_observation_root),
@@ -449,6 +732,9 @@ def build_predecessor(
     ], cwd=source, env=environment, deadline=deadline)
     run(["cmake", "--build", str(build), "--config", "Release", "--parallel"],
         cwd=source, env=environment, deadline=deadline)
+    build_predecessor_winforms(
+        source, output_root, environment, deadline=deadline,
+    )
     run([
         sys.executable, str(source / "tools/package_build.py"),
         "--profile", "windows_product_x64", "--out", str(packages),
@@ -475,15 +761,16 @@ def build_predecessor(
     gates["payload_equivalence"] = "pending"
     write_baseline_staging(evidence_root, staged, gates)
     equivalence = output_root / "evidence/windows-payload-equivalence.v1.json"
+    auditor_environment = predecessor_audit_environment(environment)
     try:
         run([
-            sys.executable, str(source / "tools/package_contract_tck.py"),
+            sys.executable, str(ROOT / "tools/package_contract_tck.py"),
             "--profile", "windows_product_x64", "--canonical-stage",
             str(packages / "windows_product_x64"), "--payload-zip", str(result),
             "--canonical-artifact", str(portable), "--payload-artifact", str(result),
             "--adapter", "windows_setup_overlay_v1", "--version", baseline_version,
             "--receipt", str(equivalence),
-        ], cwd=source, env=environment, deadline=deadline)
+        ], cwd=ROOT, env=auditor_environment, deadline=deadline)
     except BaseException:
         gates["payload_equivalence"] = "failed"
         write_baseline_staging(evidence_root, staged, gates)
@@ -582,9 +869,13 @@ def execute(args: argparse.Namespace) -> int:
         write_attempt(attempt_path, attempt)
         checkout_root, baseline_root = predecessor_roots(task_root, baseline_revision)
         fixture_root = require_external_new(
-            evidence_root / "real self-maintenance transition", "transition fixture root"
+            evidence_root / "m", "transition fixture root"
         )
         evidence = fixture_root / "windows-real-self-maintenance-transition.v1.json"
+        attempt["candidate_payload_path_capacity"] = candidate_payload_path_capacity(
+            args.candidate_setup, fixture_root
+        )
+        write_attempt(attempt_path, attempt)
         baseline = build_predecessor(
             args, checkout_root, baseline_root, baseline_revision,
             deadline=outer_deadline, evidence_root=evidence_root,
@@ -593,14 +884,14 @@ def execute(args: argparse.Namespace) -> int:
         if not isinstance(staged, dict):
             raise ValueError("baseline evidence staging did not return an exact manifest")
         baseline_setup = Path(str(staged["setup"]["path"]))
-        baseline_portable = Path(str(staged["portable"]["path"]))
-        baseline_identity = identity_from_overlay(baseline_setup, baseline_portable)
+        baseline_identity = identity_from_predecessor_outputs(baseline)
         candidate_identity = identity_from_overlay(args.candidate_setup, args.candidate_portable)
         locked_setup = locked_provider_revision(ROOT, "universal_setup")
+        baseline_setup_revision = locked_provider_revision(checkout_root, "universal_setup")
         if (
             baseline_identity["source_revision"] != baseline_revision
             or candidate_identity["source_revision"] != candidate_revision
-            or baseline_identity["provider_revision"] != locked_setup
+            or baseline_identity["provider_revision"] != baseline_setup_revision
             or candidate_identity["provider_revision"] != locked_setup
             or semver_order(baseline_identity["version"], candidate_identity["version"]) >= 0
         ):

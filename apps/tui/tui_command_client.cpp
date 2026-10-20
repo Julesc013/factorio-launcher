@@ -59,9 +59,16 @@ facman::core::Result<facman::client::CommandResponse> CommandClient::execute(con
 facman::core::Result<facman::frontend::FrontendSessionIdentity> CommandClient::negotiate(
     const std::string& scope,
     const std::string& selected_instance_id,
-    const std::string& search)
+    const std::string& search,
+    const std::string& launch_intent, const std::string& repair_review_id)
 {
-    return session_.negotiate(scope, selected_instance_id, search);
+    facman::frontend::FrontendNegotiationRequest request;
+    request.scope = scope;
+    request.target_instance_id = selected_instance_id;
+    request.search = search;
+    request.launch_intent = launch_intent;
+    request.repair_review_id = repair_review_id;
+    return session_.negotiate(std::move(request));
 }
 
 const char* CommandClient::transport_name() const noexcept

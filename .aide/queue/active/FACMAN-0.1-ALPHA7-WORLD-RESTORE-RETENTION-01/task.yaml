@@ -1,0 +1,55 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01
+title: Restore worlds and apply explicit retention safely
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-09-06
+owner: runtime-maintainer
+canonical_plan: release/index/plan.v1.toml
+admission_workunit: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
+objective: "Restore and import selected world bundles using validated plans, atomic visibility and recoverable journals."
+source_bundles:
+  - "F10"
+allowed_paths:
+  - "todo.md"
+  - "tools/generate_plan_views.py"
+  - "release/index/plan.v1.toml"
+  - ".aide/queue/index.yaml"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/**"
+  - "apps/**"
+  - "content/factorio/strings/en-US.toml"
+  - "README.md"
+  - ".aide/memory/project-state.md"
+  - ".aide/memory/project-state.v2.json"
+  - "release/index/current_state.v1.toml"
+  - "release/index/project_status.v2.toml"
+  - "tools/codegen/generate_metadata.py"
+  - "runtime/**"
+  - "contracts/**"
+  - "tests/**"
+  - "docs/**"
+  - "tools/save_index_check.py"
+  - ".aide/queue/next/FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01/**"
+forbidden_paths:
+  - ".git/**"
+  - ".aide.local/**"
+  - ".aide/history/**"
+acceptance:
+  - "Restore and import selected world bundles using validated plans, atomic visibility and recoverable journals."
+  - "Test damaged sources, stale plans, live-session conflicts and retention restricted to proven owned backups."
+validation_protocol:
+  - "Inspect existing affected native/Python tests and strict validators before implementation; record exact commands and results."
+  - "Exercise applicable positive, refusal, concurrency, fault/recovery and package effects with independent oracles."
+  - "Retain source, base/head/tree, independent review, exact integration and evidence invalidation; source fixtures alone do not qualify real hosts."
+retained_boundaries:
+  - "No direct protected push, force push, self-approval or required-check bypass."
+  - "No production credentials, signing, billing or public publication."
+  - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
+commit_template: .aide/git/commit-template.md
+active_at: 2026-10-04T09:30:35Z
+verified_pending_closeout_at: 2026-10-04T15:23:08Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-10-04T15:23:09Z
+closed_at: 2026-10-04T15:23:09Z

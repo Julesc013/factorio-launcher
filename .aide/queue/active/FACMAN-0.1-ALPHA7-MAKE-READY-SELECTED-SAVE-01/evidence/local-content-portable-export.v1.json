@@ -1,0 +1,150 @@
+{
+  "base": "66a2ee7fc96f23079184273a96e75b81adc7725d",
+  "behavior": [
+    "Portable selected closure includes canonical manifest, exact raw lock and selected archive bytes",
+    "Both fixed settings paths bind exact bytes or explicit absence; empty is distinct",
+    "Source drift and observed foreign stage data refuse and preserve changed state",
+    "Generic recovery cannot recursively discard retained portable-export staging",
+    "Normal source read-only, deterministic ZIP and no-replace publication remain required"
+  ],
+  "native_binaries": {
+    "facman.exe": "dd330619610fa3faa1f59dce6eacaefb8867852cde2290ce8113a9af3ec8e9ad",
+    "facman_content_foundation_smoke.exe": "5e54d97c1285065e1f191074e401e8a8d0510b29c2ee871d1e1997e824efb829",
+    "fl_archive_core_smoke.exe": "ee475384f2ff22ce4582a58b22c294704e40d43f3f512fc8c93d69e80b35cbaa"
+  },
+  "native_cli_sha256": "dd330619610fa3faa1f59dce6eacaefb8867852cde2290ce8113a9af3ec8e9ad",
+  "posix_cleanup_limit": "Recorded leaves are checked then unlinked through held parents; final known-name replacement/write window remains unqualified. New names survive nonrecursive directory removal.",
+  "public_tests": {
+    "count": 43,
+    "seconds": 390.562,
+    "summary": "OK (skipped=4)"
+  },
+  "qualification": [
+    {
+      "check": "engineering",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-engineering.log",
+      "sha256": "4c5931b6335a72854ad13b79a7a9e0a4de695e972a9232583353e156b74eb196"
+    },
+    {
+      "check": "source-format",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-source-format.log",
+      "sha256": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191"
+    },
+    {
+      "check": "test-architecture",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-test-architecture.log",
+      "sha256": "7bac6f674e6208cbe3fed0261481f501dc7137c1174179ec2442b64c8c9a8ade"
+    },
+    {
+      "check": "metadata",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-metadata.log",
+      "sha256": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd"
+    },
+    {
+      "check": "content-foundation",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-content-foundation.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "check": "archive-core",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-archive-core.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "check": "public-tests",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-public-tests.log",
+      "sha256": "edfd8c988fa06ddaac4eddebb293be2896673fa5b60d476527be43b4a72b1792"
+    },
+    {
+      "check": "strict",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-strict.log",
+      "sha256": "12b0c67a068409d2e647d31511963824fe88dafc2bbc07b192a4315911e6beaf"
+    },
+    {
+      "check": "aide-lite",
+      "exit_code": 0,
+      "log": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\portable-pack-aide-lite.log",
+      "sha256": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1"
+    }
+  ],
+  "retained_boundaries": {
+    "beta_or_release_ready": false,
+    "large_archive_runtime_qualification": false,
+    "new_produced_package_acceptance": false,
+    "offline_reconstruction": false,
+    "posix_runtime_qualification": false,
+    "public_pack_import": false,
+    "total_unmanaged_writer_serialization": false,
+    "whole_workunit_closed": false
+  },
+  "schema": "facman.portable_modpack_export_source_evidence.v1",
+  "source_git_blob_oids": {
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "8f9282be2d59d585c9ae96bdb955e35ae6596229",
+    "contracts/schema/factorio/factorio_content_lock.v1.schema.json": "8e458e94fe214842d73b5673b09c6bd2a0de0e3f",
+    "contracts/schema/factorio/factorio_modpack_manifest.v1.schema.json": "1cc91e77884596e747adf5993705449143adccff",
+    "docs/product/local_modset_solver.md": "fe8eca03271fd98e735f3f24b71f3e6c9f5f1f8c",
+    "runtime/archive/fl_archive.h": "dc33ebf14bd651022c89ba09bf6de2849ae97d40",
+    "runtime/archive/fl_archive_writer.cpp": "758da9bf640a54b7f4ae6fba5a91f014efe5090d",
+    "runtime/core/generated/version.h": "426c8b9ede9f8ebcef8722c20abb5fdcbc7035b8",
+    "runtime/factorio/CMakeLists.txt": "1a07866f60e45967b3a0fa311a5f14556620a8f3",
+    "runtime/factorio/modsets/flb_factorio_content_record_types.h": "6a8d18eb74a61340ed18f1b0d990ddf3d275f434",
+    "runtime/factorio/modsets/flb_factorio_content_records.cpp": "0c3528a8eb62e5e3167e9f6ac4f632c4188384e8",
+    "runtime/factorio/modsets/flb_factorio_content_records.h": "be46e92e645b912a420cc24d45d70d9d2131d9f9",
+    "runtime/factorio/modsets/flb_factorio_modpack_export_closure.cpp": "80568ede3865b2e11bc73af981b522eb751ad148",
+    "runtime/factorio/modsets/flb_factorio_modpack_export_closure.h": "456b76f0e7e5510744690cd264abedc8b6df1a39",
+    "runtime/factorio/modsets/flb_factorio_modset_operations.cpp": "74fca9fc178c0195fd2943726f18478a6b024dfb",
+    "runtime/platform/fl_file_io.cpp": "9562d9c9b6adb3b141dd518771137b345d3b9fdc",
+    "runtime/platform/fl_file_io.h": "e742acedfb3de6ee09852964b0b33402be76b913",
+    "runtime/transaction/fl_transaction.cpp": "62721847a91551ad269e5559713173928bc343bc",
+    "tests/native/fl_archive_core_smoke.cpp": "a47871296323d2dd176f32ad4aea5543340776a7",
+    "tests/test_local_modset_solver.py": "1e1e2d30e178a49ce2c8a104cb8cfcd8c9fa099f",
+    "tests/test_modzip_depth.py": "5edd381da8413a64872e82781c826458a3237fa1",
+    "tests/test_portable_modpack_export.py": "8ce68499aaf0ba530fc8c65bc091c68e779e81a5"
+  },
+  "source_hashes": {
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "bca642b0fcbd462d26d48f2e15a98401e789bb636aeacb471350194f907cdee7",
+    "contracts/schema/factorio/factorio_content_lock.v1.schema.json": "9391511fbc18f9b7b1eb9849f132d368c0f4080473cf3d156bf478ad3bd19143",
+    "contracts/schema/factorio/factorio_modpack_manifest.v1.schema.json": "415510e28eaa4c4d06a9c671bbf54aa7c86842bf30522c6f98aaa39ce77707b2",
+    "docs/product/local_modset_solver.md": "3eb49d295d3cbd81ee3f61b3ca1ff8a8aec11cf0949f8c3c67a5e47c2217495c",
+    "runtime/archive/fl_archive.h": "63464f211394c131cfdc0ecc679a68881de1345342cc34ec777697a2d4188026",
+    "runtime/archive/fl_archive_writer.cpp": "8e0491eb1a973e8f364546353ca808cb4ba077f7f2f4f021738bcbb54c7f70e9",
+    "runtime/core/generated/version.h": "e9e98768a785314dba4957127fd521d96daf4895eeccfcf35e8fc19f2cc5548d",
+    "runtime/factorio/CMakeLists.txt": "618d2d0bf1005a5dc41db81760411254cf2fa57bafa7de821eace03488fa9cdd",
+    "runtime/factorio/modsets/flb_factorio_content_record_types.h": "859c791a0b1c81b90f5ac87bf7ed042b6cd48c5939bc820c7630706c4390bd23",
+    "runtime/factorio/modsets/flb_factorio_content_records.cpp": "99de4b65e93ad48592eb803d64312d8c249e42177574642a77d2d03f73970617",
+    "runtime/factorio/modsets/flb_factorio_content_records.h": "23b4ebd2d401fe9eba51b045b2345fa3d690c390a2d676c614c74541a6d1c7d2",
+    "runtime/factorio/modsets/flb_factorio_modpack_export_closure.cpp": "8039850aa149ba917e5f53051a8071d1d8b6e7c12a33d428d9c62c65e6d022c1",
+    "runtime/factorio/modsets/flb_factorio_modpack_export_closure.h": "4face71c27a5b9dd2f08b8fb3e6e2a47caf3440f83376e13f29b1057a01a04f4",
+    "runtime/factorio/modsets/flb_factorio_modset_operations.cpp": "0810de82adaf2974d04069c4d953bc3b09867f4b1143c7739d39cf54e09ed182",
+    "runtime/platform/fl_file_io.cpp": "b0ac38d912b00961d984c08211acbc7d2965bfe5d9c35e7d35a2380e8489a3d7",
+    "runtime/platform/fl_file_io.h": "7fd60953a4741a18180bd8035a478d791c70722ffa089d2aa1e68893a1c78a7b",
+    "runtime/transaction/fl_transaction.cpp": "47bda07d56ab4e2c3aa08464825f94e67cd88c42106a99020f5b57a3599296f1",
+    "tests/native/fl_archive_core_smoke.cpp": "dc397256633915e355a873e556db2f780a6809ea976b0438d525c4a90a969119",
+    "tests/test_local_modset_solver.py": "7ed9f396cc91066a29690e4eb0152ed06da7e2015231506487ad1cb2fc7a8f20",
+    "tests/test_modzip_depth.py": "c90174842a79424c01c567f22398cfb3171529219c22a518cb597b36cb69063c",
+    "tests/test_portable_modpack_export.py": "af58aec1a8e20c86e333217cf1fe3f88ff037e9df49510887924e2ffdef242f3"
+  },
+  "status": "PASS_SCOPED_WINDOWS_NATIVE_FIXTURE",
+  "storage": {
+    "native_build_parallelism": 2,
+    "new_source_clones": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "root": "D:\\Projects\\FacMan\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e"
+  },
+  "test_correction": {
+    "after_sha256": "c90174842a79424c01c567f22398cfb3171529219c22a518cb597b36cb69063c",
+    "before_sha256": "3733b3673c7862a19caab19e630ff61b3652182909b76542a52532e5dc1a8629",
+    "path": "tests/test_modzip_depth.py",
+    "reason": "Independent review caught stale staged-foreign retention assertions and an unintended matching-line edit; fixed before public tests began; compiled sources unchanged"
+  },
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}

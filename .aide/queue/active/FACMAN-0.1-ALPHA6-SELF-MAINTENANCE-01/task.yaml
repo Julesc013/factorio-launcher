@@ -1,8 +1,8 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01
 title: Complete independent FacMan self-maintenance
-status: active
-lifecycle_state: active
+status: blocked
+lifecycle_state: blocked
 planning_state: active
 created_at: 2026-09-06
 owner: runtime-maintainer

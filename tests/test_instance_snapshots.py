@@ -5,8 +5,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import tempfile
+import threading
+import time
 import unittest
 import zipfile
 from pathlib import Path
@@ -51,6 +54,108 @@ def assert_schema(test: unittest.TestCase, document: dict, schema_name: str) -> 
 
 
 class InstanceSnapshotTests(unittest.TestCase):
+    def test_snapshot_create_refuses_run_locks_before_and_at_publication(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman snapshot locked ") as value:
+            workspace = Path(value)
+            instance = fixture(workspace)
+            locks = instance / "locks"
+            locks.mkdir(exist_ok=True)
+            lock = locks / "run.lock"
+            lock.write_text("active\n", encoding="utf-8")
+            refused = refuse(workspace, "snapshots", "create", "main", "locked", "--save", "starter.zip")
+            self.assertEqual("save_locked", refused["refusal"]["code"])
+            self.assertFalse((workspace / "snapshots" / "main" / "locked.zip").exists())
+            lock.unlink()
+
+            environment = dict(os.environ)
+            environment["FACMAN_TEST_SNAPSHOT_BEFORE_PUBLICATION_PAUSE"] = "1"
+            outcome: list[tuple[int, str, str]] = []
+            worker = threading.Thread(target=lambda: outcome.append(invoke([
+                "--workspace", str(workspace), "snapshots", "create", "main", "late",
+                "--save", "starter.zip", "--json",
+            ], env=environment)))
+            worker.start()
+            marker = workspace / ".facman-test-snapshot-before-publication"
+            release = workspace / ".facman-test-snapshot-publication-release"
+            try:
+                for _ in range(100):
+                    if marker.is_file():
+                        break
+                    time.sleep(0.05)
+                self.assertTrue(marker.is_file(), "snapshot did not reach publication boundary")
+                lock.write_text("active\n", encoding="utf-8")
+            finally:
+                release.write_text("continue\n", encoding="utf-8")
+                worker.join(timeout=10)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(1, len(outcome))
+            self.assertNotEqual(0, outcome[0][0])
+            self.assertEqual("snapshot_transaction_recovery_required",
+                             json.loads(outcome[0][1])["refusal"]["code"])
+            self.assertFalse((workspace / "snapshots" / "main" / "late.zip").exists())
+            pending = call(workspace, "workspace", "recovery", "inspect")
+            transaction = next(item for item in pending["transactions"]
+                               if item["command_id"] == "snapshots.create")
+            lock.unlink()
+            recovered = call(workspace, "workspace", "recovery", "apply", transaction["transaction_id"])
+            self.assertEqual("rolled_back", recovered["transactions"][0]["state"])
+
+    def test_snapshot_create_rejects_same_bytes_source_replacement(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman snapshot source swap ") as value:
+            workspace = Path(value)
+            instance = fixture(workspace)
+            source = instance / "saves" / "starter.zip"
+            original = source.read_bytes()
+            environment = dict(os.environ)
+            environment["FACMAN_TEST_SNAPSHOT_SOURCE_HASH_PAUSE"] = "1"
+            outcome: list[tuple[int, str, str]] = []
+            worker = threading.Thread(target=lambda: outcome.append(invoke([
+                "--workspace", str(workspace), "snapshots", "create", "main", "replaced",
+                "--save", "starter.zip", "--json",
+            ], env=environment)))
+            worker.start()
+            marker = instance / ".facman-test-snapshot-source-hashed"
+            release = instance / ".facman-test-snapshot-source-release"
+            preserved = source.with_name("starter.preserved.zip")
+            try:
+                for _ in range(100):
+                    if marker.is_file():
+                        break
+                    time.sleep(0.05)
+                self.assertTrue(marker.is_file(), "snapshot did not reach source identity boundary")
+                source.rename(preserved)
+                source.write_bytes(original)
+            finally:
+                release.write_text("continue\n", encoding="utf-8")
+                worker.join(timeout=10)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(1, len(outcome))
+            self.assertNotEqual(0, outcome[0][0])
+            self.assertEqual("snapshot_source_changed", json.loads(outcome[0][1])["refusal"]["code"])
+            self.assertEqual(original, source.read_bytes())
+            self.assertEqual(original, preserved.read_bytes())
+            self.assertFalse((workspace / "snapshots" / "main" / "replaced.zip").exists())
+            pending = call(workspace, "workspace", "recovery", "inspect")
+            transaction = next(item for item in pending["transactions"]
+                               if item["command_id"] == "snapshots.create")
+            recovered = call(workspace, "workspace", "recovery", "apply", transaction["transaction_id"])
+            self.assertEqual("rolled_back", recovered["transactions"][0]["state"])
+
+    def test_snapshot_create_rejects_malformed_staged_save(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman snapshot invalid save ") as value:
+            workspace = Path(value)
+            instance = fixture(workspace)
+            source = instance / "saves" / "starter.zip"
+            source.write_bytes(b"not a Factorio save archive")
+            refused = refuse(workspace, "snapshots", "create", "main", "invalid", "--save", "starter.zip")
+            self.assertEqual("snapshot_save_invalid", refused["refusal"]["code"])
+            self.assertFalse((workspace / "snapshots" / "main" / "invalid.zip").exists())
+            pending = call(workspace, "workspace", "recovery", "inspect")
+            transaction = next(item for item in pending["transactions"]
+                               if item["command_id"] == "snapshots.create")
+            recovered = call(workspace, "workspace", "recovery", "apply", transaction["transaction_id"])
+            self.assertEqual("rolled_back", recovered["transactions"][0]["state"])
+
     def test_reproducible_portable_snapshot_and_cross_workspace_restore(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman snapshot source ") as source_value, tempfile.TemporaryDirectory(
             prefix="facman snapshot destination "
@@ -80,7 +185,8 @@ class InstanceSnapshotTests(unittest.TestCase):
                     ["config/config.ini", "instance.v1.json", "manifest/snapshot.v1.json", "saves/starter.zip"],
                     archive.namelist(),
                 )
-                manifest = json.loads(archive.read("manifest/snapshot.v1.json"))
+                manifest_bytes = archive.read("manifest/snapshot.v1.json")
+                manifest = json.loads(manifest_bytes)
                 body = b"\n".join(archive.read(name) for name in archive.namelist())
             self.assertEqual("factorio.instance_snapshot.v1", manifest["schema"])
             self.assertEqual("lock_references_only", manifest["mod_policy"])
@@ -98,6 +204,20 @@ class InstanceSnapshotTests(unittest.TestCase):
             assert_schema(self, listed, "factorio_snapshots.v1.schema.json")
             assert_schema(self, inspected, "factorio_snapshot_report.v1.schema.json")
             assert_schema(self, verified, "factorio_snapshot_report.v1.schema.json")
+            self.assertEqual("available", inspected["world_bundle_state"])
+            world_bundle = inspected["world_bundle"]
+            assert_schema(self, world_bundle, "factorio_world_bundle.v1.schema.json")
+            self.assertEqual("portable", world_bundle["bundle_id"])
+            self.assertEqual("main", world_bundle["source_instance_id"])
+            self.assertEqual(["starter.zip"], world_bundle["selected_saves"])
+            self.assertEqual(
+                hashlib.sha256(manifest_bytes).hexdigest(),
+                world_bundle["source_snapshot_manifest_sha256"],
+            )
+            self.assertEqual(
+                hashlib.sha256(FIXTURE_SAVE.read_bytes()).hexdigest(),
+                world_bundle["world_files"][0]["sha256"],
+            )
             self.assertEqual("pass", verified["status"])
 
             live_difference = call(source, "instances", "diff", "main", "snapshot:portable")

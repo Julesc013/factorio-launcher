@@ -11,6 +11,8 @@ executes_process = false
 mutates_workspace = false
 availability = "implemented"
 refusal_codes = [
+  "setup_install_terminal_target_changed",
+  "setup_install_recovery_input_invalid", "setup_install_recovery_response_invalid", "setup_install_recovery_inspection_refused", "install_recovery_projection_conflict",
   "invalid_identifier", "recovery_journal_invalid", "setup_uninstall_recovery_authority_required",
   "uninstall_recovery_projection_conflict", "repair_recovery_projection_conflict",
   "setup_uninstall_recovery_input_invalid", "setup_uninstall_recovery_inspection_refused",

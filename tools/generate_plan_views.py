@@ -99,6 +99,28 @@ def _find_dependency_cycle(workunits: dict[str, dict[str, Any]]) -> list[str] | 
     return None
 
 
+def _programme_engineering_admitted(
+    plan: dict[str, Any], workunit: dict[str, Any], workunits: dict[str, dict[str, Any]],
+) -> bool:
+    programme = plan.get("execution_programme")
+    if not isinstance(programme, dict):
+        return False
+    programme_id = programme.get("id")
+    admission_id = programme.get("admission_workunit")
+    if not isinstance(programme_id, str) or not programme_id or not isinstance(admission_id, str):
+        return False
+    return (
+        workunit.get("status") in ACTIVE_WORK_STATUSES
+        and workunit.get("horizon") == "next"
+        and workunit.get("execution_programme") == programme_id
+        and programme.get("primary_workunit") == workunit.get("id")
+        and programme.get("status") == "implementation_active"
+        and programme.get("engineering_and_normal_integration_authorized") is True
+        and workunit.get("admission_workunit") == admission_id
+        and workunits.get(admission_id, {}).get("status") == "complete"
+    )
+
+
 def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     """Return deterministic validation errors for the canonical plan."""
 
@@ -327,6 +349,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
             epic
             and (status == "ready" or status in ACTIVE_WORK_STATUSES)
             and epic.get("release") != active_release
+            and not _programme_engineering_admitted(plan, workunit, workunits)
         ):
             errors.append(f"{workunit_id} is {status} outside the active release")
 

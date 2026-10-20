@@ -1,0 +1,117 @@
+{
+  "schema": "facman.managed_install_coordination_integrated_checkpoint.v1",
+  "source": "32d68eb74707722b55ff48932b52c9b6a8988895",
+  "pr": 421,
+  "merge": "361da48beaea506b2cff7e48ae5b09353fa5eb0c",
+  "required_checks_all_pass": true,
+  "required_checks": [
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/runs/115988808903",
+      "name": "task-to-dev-promotion-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575991/job/115988656673",
+      "name": "macos-archive-core",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575991/job/115988657453",
+      "name": "windows-native-package",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575800/job/115988654905",
+      "name": "policy-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575991/job/115988657500",
+      "name": "appkit-compile",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575991/job/115988657202",
+      "name": "macos-native-cli",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575831/job/115988655388",
+      "name": "development-only-cross-provider-fixture",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575880/job/115988655588",
+      "name": "csharp",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575880/job/115988655636",
+      "name": "python",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575991/job/115988657046",
+      "name": "linux-coverage",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575991/job/115988657319",
+      "name": "linux-native",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38603575880/job/115988655053",
+      "name": "c-cpp",
+      "state": "SUCCESS"
+    }
+  ],
+  "delivered_verdict": "PASS_SCOPED_DELIVERED_COORDINATION_WITH_RETAINED_HOST_GAP",
+  "actual_cli_commands": 39,
+  "owned_controls": 4,
+  "intentional_checkpoint_deaths": 3,
+  "repair_suspend_revalidate_resume": true,
+  "all_jobs_empty": true,
+  "package_files_unchanged": 598,
+  "manifest_files": 597,
+  "preserved_artifacts_independently_verified": 713,
+  "current_gui": {
+    "sessions": 2,
+    "backend_calls": 68,
+    "fixture_calls": 8,
+    "effects": 2,
+    "normal_exits_empty_jobs": true,
+    "evidence": "current required Windows package check; root-qualified"
+  },
+  "retained_host_gap": "Windows provider path policy refuses before prospective 8192-byte metadata boundary; source invariant only",
+  "metadata_custody": {
+    "path": "managed-install-coordination-integrated-metadata-custody.zip",
+    "sha256": "1490467a28e484cce1c5efdef7edc765c125e0670e48f6fa5c7222850df673e1",
+    "files": {
+      "managed-install-coordination-merge-and-dev-sync-result-01.json": "b837b6a4c69547fdf625805b1d1f606accd84c4b4f517207814ab54504b81b57",
+      "managed-install-coordination-produced-independent-review-01.json": "47a6a5c2dee3bf4e2af2cccc5759539221e61758f93a3c4fd567b4880f9c3ff9",
+      "managed-install-coordination-produced-packet-01.json": "641cf7ee57c3f3e92883e858a190c61634485bd741f1d3b6edc838e62077b4fe"
+    },
+    "scope": "review/merge/author packet metadata; raw artifacts remain external and independently verified"
+  },
+  "default_authority_changed": false,
+  "canonical_installed_desktop": false,
+  "complete_maintenance": false,
+  "real_game": false,
+  "human": false,
+  "workunit_closed": false,
+  "beta": false,
+  "release": false
+}

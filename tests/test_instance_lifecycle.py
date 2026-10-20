@@ -8,6 +8,7 @@ import json
 import os
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 
 from native_cli import invoke
@@ -31,6 +32,11 @@ def snapshot(root: Path) -> dict[str, str]:
     }
 
 
+def snapshot_without_configuration_lock(root: Path) -> dict[str, str]:
+    return {path: digest for path, digest in snapshot(root).items()
+            if path != "locks/configuration.write.lock"}
+
+
 def create_fixture(workspace: Path, instance_id: str = "main") -> Path:
     code, stdout, stderr = invoke([
         "--workspace", str(workspace), "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture", "--json",
@@ -49,7 +55,283 @@ def create_fixture(workspace: Path, instance_id: str = "main") -> Path:
     return root
 
 
+@contextmanager
+def hold_configuration_lock(path: Path):
+    if os.name == "nt":
+        import ctypes
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.CreateFileW.argtypes = [ctypes.c_wchar_p, ctypes.c_uint32, ctypes.c_uint32,
+                                       ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32,
+                                       ctypes.c_void_p]
+        kernel.CreateFileW.restype = ctypes.c_void_p
+        kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+        handle = kernel.CreateFileW(str(path), 0xC0010000, 1, None, 3, 0x00200000, None)
+        if handle in (None, ctypes.c_void_p(-1).value):
+            raise OSError(ctypes.get_last_error(), "Cannot hold instance configuration lock")
+        try:
+            yield
+        finally:
+            kernel.CloseHandle(handle)
+    else:
+        import fcntl
+
+        descriptor = os.open(path, os.O_RDWR | os.O_NOFOLLOW)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            yield
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+            os.close(descriptor)
+
+
 class InstanceLifecycleTests(unittest.TestCase):
+    def test_clone_refuses_an_active_or_changed_source_configuration_lock(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman clone source lock ") as temporary:
+            workspace = Path(temporary)
+            source = create_fixture(workspace)
+            marker = source / "locks" / "configuration.write.lock"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "clone", "main", "main", "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("instance_clone_target_exists", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse(marker.exists())
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "gui", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            original_marker = marker.read_bytes()
+            source_manifest = (source / "instance.v1.json").read_bytes()
+            with hold_configuration_lock(marker):
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "instances", "clone", "main", "copy", "--json",
+                ])
+                self.assertNotEqual(0, code, stderr or stdout)
+                self.assertEqual("instance_configuration_lock_contended", json.loads(stdout)["refusal"]["code"])
+                self.assertFalse((workspace / "instances" / "copy").exists())
+                self.assertEqual(source_manifest, (source / "instance.v1.json").read_bytes())
+
+            marker.write_text("unrecognized lock\n", encoding="utf-8")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "clone", "main", "copy", "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("instance_configuration_lock_unsafe", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse((workspace / "instances" / "copy").exists())
+            marker.write_bytes(original_marker)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "clone", "main", "copy", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("preserved\n", (workspace / "instances" / "copy" / "script-output" / "preserved.txt").read_text())
+            self.assertFalse((workspace / "instances" / "copy" / "locks" / "configuration.write.lock").exists())
+
+    def test_profile_recovery_waits_for_active_instance_configuration_owner(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman profile recovery lock ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "profiles", "create", "quiet",
+                "--audio", "disabled", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            env = os.environ.copy()
+            env["FACMAN_TEST_PROFILE_APPLY_EXIT_AFTER_MANIFEST"] = "1"
+            code, _, _ = invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "quiet", "--json",
+            ], env=env)
+            self.assertEqual(86, code)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "profiles.apply")
+            marker = instance / "locks" / "configuration.write.lock"
+            with hold_configuration_lock(marker):
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "workspace", "recovery", "apply",
+                    transaction["transaction_id"], "--json",
+                ])
+                self.assertNotEqual(0, code, stderr or stdout)
+                self.assertEqual("instance_configuration_lock_contended",
+                                 json.loads(stdout)["refusal"]["code"])
+                self.assertFalse((instance / "instance-overrides.v1.json").exists())
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("complete", json.loads(stdout)["transactions"][0]["state"])
+            self.assertEqual("quiet", json.loads((instance / "instance-overrides.v1.json").read_text())["profile_id"])
+
+    def test_profile_and_rename_refuse_the_same_active_configuration_lock(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman instance config lock ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            marker = instance / "locks" / "configuration.write.lock"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "missing", "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Stale", "--expected-revision", "0" * 64, "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertFalse(marker.exists())
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "profiles", "apply", "main", "gui", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            manifest = (instance / "instance.v1.json").read_bytes()
+            overrides = (instance / "instance-overrides.v1.json").read_bytes()
+            original_marker = marker.read_bytes()
+            self.assertIn(b"facman.instance_configuration_lock.v1", original_marker)
+            with hold_configuration_lock(marker):
+                for command in (("instances", "rename", "main", "--name", "Blocked"),
+                                ("profiles", "apply", "main", "gui")):
+                    code, stdout, stderr = invoke([
+                        "--workspace", str(workspace), *command, "--json",
+                    ])
+                    self.assertNotEqual(0, code, stderr or stdout)
+                    self.assertEqual("instance_configuration_lock_contended",
+                                     json.loads(stdout)["refusal"]["code"])
+                self.assertEqual(manifest, (instance / "instance.v1.json").read_bytes())
+                self.assertEqual(overrides, (instance / "instance-overrides.v1.json").read_bytes())
+            marker.write_text("unrecognized lock\n", encoding="utf-8")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Blocked", "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("instance_configuration_lock_unsafe", json.loads(stdout)["refusal"]["code"])
+            self.assertEqual(manifest, (instance / "instance.v1.json").read_bytes())
+            marker.write_bytes(original_marker)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Allowed", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+
+    def test_rename_staged_interruption_rolls_back_verified_file(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rename staged recovery ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            original = (instance / "instance.v1.json").read_bytes()
+            env = os.environ.copy()
+            env["FACMAN_TEST_TRANSACTION_FAIL_STATE"] = "committing"
+            code, _, _ = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Renamed", "--json",
+            ], env=env)
+            self.assertNotEqual(0, code)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "instances.rename")
+            stage = instance / (".instance.rename." + transaction["transaction_id"] + ".staging")
+            self.assertTrue(stage.is_file())
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("rolled_back", json.loads(stdout)["transactions"][0]["state"])
+            self.assertEqual(original, (instance / "instance.v1.json").read_bytes())
+            self.assertFalse(stage.exists())
+
+    def test_rename_recovery_refuses_changed_stage(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rename changed stage ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            original = (instance / "instance.v1.json").read_bytes()
+            env = os.environ.copy()
+            env["FACMAN_TEST_TRANSACTION_FAIL_STATE"] = "committing"
+            code, _, _ = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Renamed", "--json",
+            ], env=env)
+            self.assertNotEqual(0, code)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "instances.rename")
+            stage = instance / (".instance.rename." + transaction["transaction_id"] + ".staging")
+            stage.write_text('{"unowned":true}\n', encoding="utf-8")
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("recovery_instance_rename_unsafe", json.loads(stdout)["refusal"]["code"])
+            self.assertEqual(original, (instance / "instance.v1.json").read_bytes())
+            self.assertTrue(stage.exists())
+
+    def test_rename_crash_after_journal_rolls_back_without_effect(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rename journal recovery ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            original = (instance / "instance.v1.json").read_bytes()
+            env = os.environ.copy()
+            env["FACMAN_TEST_INSTANCE_RENAME_EXIT_AFTER_JOURNAL"] = "1"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Renamed", "--json",
+            ], env=env)
+            self.assertEqual(84, code, stderr or stdout)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "instances.rename")
+            self.assertEqual("requested", transaction["state"])
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("rolled_back", json.loads(stdout)["transactions"][0]["state"])
+            self.assertEqual(original, (instance / "instance.v1.json").read_bytes())
+            self.assertEqual("preserved\n", (instance / "script-output" / "preserved.txt").read_text())
+
+    def test_rename_crash_after_replace_closes_verified_journal(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rename published recovery ") as temporary:
+            workspace = Path(temporary)
+            instance = create_fixture(workspace)
+            original = (instance / "instance.v1.json").read_bytes()
+            env = os.environ.copy()
+            env["FACMAN_TEST_INSTANCE_RENAME_EXIT_AFTER_REPLACE"] = "1"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "main",
+                "--name", "Renamed", "--json",
+            ], env=env)
+            self.assertEqual(88, code, stderr or stdout)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "inspect", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            transaction = next(item for item in json.loads(stdout)["transactions"]
+                               if item["command_id"] == "instances.rename")
+            self.assertEqual("committing", transaction["state"])
+            self.assertEqual("Renamed", json.loads((instance / "instance.v1.json").read_text())["display_name"])
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "recovery", "apply",
+                transaction["transaction_id"], "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            self.assertEqual("complete", json.loads(stdout)["transactions"][0]["state"])
+            backup = workspace / "backups" / "instances" / (transaction["transaction_id"] + "-main")
+            self.assertEqual(original, (backup / "instance.v1.json").read_bytes())
+            self.assertEqual("preserved\n", (instance / "script-output" / "preserved.txt").read_text())
+
     def test_clone_rename_archive_restore_is_reversible_and_id_immutable(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman lifecycle ") as temporary:
             workspace = Path(temporary)
@@ -77,7 +359,7 @@ class InstanceLifecycleTests(unittest.TestCase):
             copy = workspace / "instances" / "copy"
             self.assertTrue((copy / "script-output" / "preserved.txt").is_file())
             self.assertFalse((copy / "logs" / "volatile.log").exists())
-            self.assertEqual(source_before, snapshot(source))
+            self.assertEqual(source_before, snapshot_without_configuration_lock(source))
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "verify", "copy", "--json",
@@ -88,14 +370,35 @@ class InstanceLifecycleTests(unittest.TestCase):
             self.assertIn(verified["status"], {"pass", "warning"})
 
             code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "inspect", "copy", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            revision = json.loads(stdout)["manifest_sha256"]
+            before_rename = json.loads((copy / "instance.v1.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                hashlib.sha256((copy / "instance.v1.json").read_bytes()).hexdigest(), revision,
+            )
+
+            code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "rename", "copy",
-                "--name", "Renamed Display", "--json",
+                "--name", "Renamed Display", "--expected-revision", revision, "--json",
             ])
             self.assertEqual(0, code, stderr or stdout)
             manifest = json.loads((copy / "instance.v1.json").read_text(encoding="utf-8"))
             self.assertEqual("copy", manifest["instance_id"])
             self.assertEqual("Renamed Display", manifest["display_name"])
+            before_rename["display_name"] = "Renamed Display"
+            self.assertEqual(before_rename, manifest)
             self.assertTrue(any((workspace / "backups" / "instances").rglob("instance.v1.json")))
+
+            renamed_bytes = (copy / "instance.v1.json").read_bytes()
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "rename", "copy",
+                "--name", "Stale Display", "--expected-revision", revision, "--json",
+            ])
+            self.assertNotEqual(0, code)
+            self.assertIn("instance_manifest_revision_changed", stdout + stderr)
+            self.assertEqual(renamed_bytes, (copy / "instance.v1.json").read_bytes())
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "instances", "diff", "main", "copy", "--json",
@@ -166,7 +469,7 @@ class InstanceLifecycleTests(unittest.TestCase):
                 code, _, _ = invoke(args, env=env)
                 self.assertNotEqual(0, code)
                 self.assertTrue(source.is_dir())
-                self.assertEqual(before, snapshot(source))
+                self.assertEqual(before, snapshot_without_configuration_lock(source) if operation == "clone" else snapshot(source))
                 self.assertFalse((workspace / "instances" / "fault-copy").exists())
                 self.assertFalse(any((workspace / "instances").glob("*.staging")))
 
@@ -269,7 +572,7 @@ class InstanceLifecycleTests(unittest.TestCase):
                 "--workspace", str(workspace), "instances", "clone", "main", "copy", "--json",
             ], env=env)
             self.assertNotEqual(0, code)
-            self.assertEqual(source_before, snapshot(source))
+            self.assertEqual(source_before, snapshot_without_configuration_lock(source))
             destination = workspace / "instances" / "copy"
             self.assertTrue((destination / "instance.v1.json").is_file())
             self.assertTrue((destination / ".facman-staging.v1").is_file())

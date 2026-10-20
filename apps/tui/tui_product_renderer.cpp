@@ -50,17 +50,17 @@ void ProductRenderer::render_linear(std::ostream& output, const TuiRenderModel& 
     output << "\nFocus: " << model.focus << "\n"
            << "Status: " << model.status << "\n"
            << model.footer << "\n"
-           << "Command (1-8, j/k, tab, enter, space, /text, r, help, q): " << std::flush;
+           << "Command (1-8, m/s, j/k, tab, enter, space, /text, r, help, q): " << std::flush;
 }
 
 void ProductRenderer::enter_full_screen(std::ostream& output)
 {
-    output << "\x1b[?1049h\x1b[?25l" << std::flush;
+    output << "\x1b[?2004h\x1b[?1049h\x1b[?25l" << std::flush;
 }
 
 void ProductRenderer::leave_full_screen(std::ostream& output)
 {
-    output << "\x1b[?25h\x1b[?1049l" << std::flush;
+    output << "\x1b[?2004l\x1b[?25h\x1b[?1049l" << std::flush;
 }
 
 void ProductRenderer::render_full_screen(
@@ -87,7 +87,7 @@ void ProductRenderer::render_full_screen(
     lines.push_back(std::string(std::min<std::size_t>(width, 80U), '-'));
     if (height < 20U) {
         std::string compact = "Launch Deck";
-        for (const std::size_t index : {0U, 3U, 5U}) {
+        for (const std::size_t index : {0U, 3U, 5U, 6U}) {
             if (index < model.launch_deck.size()) compact += " | " + model.launch_deck[index];
         }
         lines.push_back(std::move(compact));

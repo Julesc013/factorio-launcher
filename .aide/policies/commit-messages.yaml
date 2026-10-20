@@ -120,6 +120,7 @@ automation:
   range_check: "py -3 .aide/scripts/aide_lite.py commit check --range <base>..HEAD"
   template_command: "py -3 .aide/scripts/aide_lite.py commit template"
   install_hook: "py -3 .aide/scripts/aide_lite.py commit install-hook"
+  managed_create: "py -3 .aide/scripts/aide_lite.py commit create --message-file <path> --expect-message-sha256 <digest> --expect-ref <ref> --expect-head <oid> --expect-tree <oid> --path <path> [--apply]"
   hook_template: ".aide/hooks/commit-msg"
   local_hook_config: "core.hooksPath=.aide/hooks"
   changelog_preview: "py -3 .aide/scripts/aide_lite.py changelog preview"

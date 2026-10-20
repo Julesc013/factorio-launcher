@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-set(FACMAN_PLATFORM_SOURCES fl_file_io.cpp fl_process_supervisor.cpp fl_system_services.cpp)
+set(FACMAN_PLATFORM_SOURCES fl_file_io.cpp fl_directory_publication.cpp fl_process_supervisor.cpp fl_system_services.cpp)
 if(WIN32)
   list(APPEND FACMAN_PLATFORM_SOURCES
     fl_process_supervisor_windows.cpp fl_random_windows.cpp windows/fl_user_paths_windows.cpp)

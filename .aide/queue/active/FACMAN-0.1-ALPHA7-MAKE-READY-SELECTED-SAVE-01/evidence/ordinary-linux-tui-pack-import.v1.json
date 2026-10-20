@@ -1,0 +1,229 @@
+{
+  "schema": "facman.delivered_linux_tui_pack_import_accepted_slice.v1",
+  "verdict": "INDEPENDENTLY_ACCEPTED_SCOPED_DELIVERED_LINUX_LINEAR_TUI_IMPORT_AND_RECOVERY",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "execution": {
+    "head": "8bae82fbed257224164711eb2c57e693e4bf63d6",
+    "tree": "ed24123d835b43b8758de71475261e7c2a333940",
+    "compiled_source": "08d91a32fd41cddfaafa87c8bbd1c943f247526d",
+    "compiled_source_parents": [
+      "2b1e20e916162157145cbd40228f08a43b7e33f8",
+      "c30d9f72cc94d5daa9c774f59341b307fa138f39"
+    ],
+    "admitted_source": "c30d9f72cc94d5daa9c774f59341b307fa138f39",
+    "artifact_id": 12109725963,
+    "producer_run": 39053131459,
+    "original_archive_sha256": "a5538e9ae67827bf741f634e5a9fcb8cf4718c38e479bbe24783d1eadc4c57c6",
+    "original_archive_bytes": 58151456,
+    "original_server_digest_matches": true,
+    "packages": {
+      "cli": {
+        "tar_sha256": "51aa75365b2c5a8cef955703cb6d664e495911d9d9419455a367cea35c2b0ebe",
+        "expanded_bytes": 95311389,
+        "files": 603,
+        "binding": {
+          "backend": {
+            "compiled_source_revision": "08d91a32fd41cddfaafa87c8bbd1c943f247526d",
+            "compiled_source_dirty": false,
+            "contract_set_sha256": "bc05f361c976ad4f3d0965bf689b972c0ba0a7ccfd14835e05a643312df1353f",
+            "backend_sha256": "083d830718b4249b632c23207c8885716f24208b2d7b034e8863fba03a045b48",
+            "package_verified": true
+          },
+          "build_info": {
+            "artifact_level": "built-artifact",
+            "build_identity": "facman=08d91a32fd41cddfaafa87c8bbd1c943f247526d;universal_launcher=5479939ca5cbc9ee0f901608a92012778b4752ae;universal_setup=2749a15b835a6c1c9968598a2b434d85809691ad;provider_mode=source;provider_source_linkage=static;provider_lock_kind=tracked;provider_conformance_only=false;provider_sdk_consumption_candidate=false;provider_candidate_differs_from_tracked=false;provider_consumption_classification=tracked_source;provider_release_identity_coherent=true;ulk_session_consumer_canary=false;msvc_runtime=not_applicable;source_dirty=false",
+            "canonical_version": "facman-0.1.0-alpha.6",
+            "filename_version": "facman-0.1.0-alpha.6",
+            "integration_coherent": true,
+            "package_type": "tarball",
+            "profile_id": "linux_portable_cli_x64",
+            "provider_adoption": false,
+            "published": false,
+            "release_eligible": false,
+            "schema": "facman.package_build_info.v1",
+            "signed": false,
+            "source_commit": "08d91a32fd41cddfaafa87c8bbd1c943f247526d",
+            "source_custody_class": "unpublished_integration",
+            "source_dirty": false,
+            "source_revisions": {
+              "factorio_launcher": "08d91a32fd41cddfaafa87c8bbd1c943f247526d",
+              "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+              "universal_setup": "2749a15b835a6c1c9968598a2b434d85809691ad"
+            },
+            "source_state_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "source_timestamp_policy": "source_commit_utc",
+            "source_timestamp_utc": "2026-10-17T17:17:51Z",
+            "target_arch": "x64",
+            "target_os": "linux",
+            "toolchain": {
+              "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+              "libc": "glibc 2.39",
+              "linker": "GNU ld (GNU Binutils for Ubuntu) 2.42",
+              "machine": "x86_64",
+              "runner": "ubuntu-24.04"
+            }
+          },
+          "closure_sha256": "d930302c77e3f94c3670406ce744ed092222b8207846ae816f49f0629d76f9ed"
+        }
+      },
+      "tui": {
+        "tar_sha256": "6ff37740f7b420a96386010957f7a47aa111af92ed030590ba9e1876ef7d5ace",
+        "expanded_bytes": 92999219,
+        "files": 601,
+        "binding": {
+          "backend": {
+            "compiled_source_revision": "08d91a32fd41cddfaafa87c8bbd1c943f247526d",
+            "compiled_source_dirty": false,
+            "contract_set_sha256": "bc05f361c976ad4f3d0965bf689b972c0ba0a7ccfd14835e05a643312df1353f",
+            "backend_sha256": "083d830718b4249b632c23207c8885716f24208b2d7b034e8863fba03a045b48",
+            "package_verified": true
+          },
+          "build_info": {
+            "artifact_level": "built-artifact",
+            "build_identity": "facman=08d91a32fd41cddfaafa87c8bbd1c943f247526d;universal_launcher=5479939ca5cbc9ee0f901608a92012778b4752ae;universal_setup=2749a15b835a6c1c9968598a2b434d85809691ad;provider_mode=source;provider_source_linkage=static;provider_lock_kind=tracked;provider_conformance_only=false;provider_sdk_consumption_candidate=false;provider_candidate_differs_from_tracked=false;provider_consumption_classification=tracked_source;provider_release_identity_coherent=true;ulk_session_consumer_canary=false;msvc_runtime=not_applicable;source_dirty=false",
+            "canonical_version": "facman-0.1.0-alpha.6",
+            "filename_version": "facman-0.1.0-alpha.6",
+            "integration_coherent": false,
+            "package_type": "tarball",
+            "profile_id": "linux_portable_tui_x64",
+            "provider_adoption": false,
+            "published": false,
+            "release_eligible": false,
+            "schema": "facman.package_build_info.v1",
+            "signed": false,
+            "source_commit": "08d91a32fd41cddfaafa87c8bbd1c943f247526d",
+            "source_custody_class": "release_resolution",
+            "source_dirty": false,
+            "source_revisions": {
+              "factorio_launcher": "08d91a32fd41cddfaafa87c8bbd1c943f247526d",
+              "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+              "universal_setup": "2749a15b835a6c1c9968598a2b434d85809691ad"
+            },
+            "source_state_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "source_timestamp_policy": "source_commit_utc",
+            "source_timestamp_utc": "2026-10-17T17:17:51Z",
+            "target_arch": "x64",
+            "target_os": "linux",
+            "toolchain": {
+              "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+              "libc": "glibc 2.39",
+              "linker": "GNU ld (GNU Binutils for Ubuntu) 2.42",
+              "machine": "x86_64",
+              "runner": "ubuntu-24.04"
+            }
+          },
+          "closure_sha256": "64f862bd1b95b0e81c2531aa4a37efa8da7e52e43277215928fec4f9f2207acb"
+        }
+      }
+    }
+  },
+  "ordinary_journey": {
+    "no_initial_selected_instance": true,
+    "content_input_cancel_preserves_tree": true,
+    "content_confirmation_cancel_preserves_tree": true,
+    "explicit_normal_import_reconstructs": true,
+    "exact_selected_content_binary_settings_provenance_rebound_lock": true,
+    "interrupted_state": "verified",
+    "intentional_backend_loss": "one exact held pidfd SIGKILL",
+    "transaction_id": "tx-2b2d0e2e04f0a785da509ed5e9ed523e",
+    "original_uncertainty_sha256": "f6ae469377dae7ea5fe003b8df0615251d805efb1746255c1e07c79b6cf25907",
+    "fresh_activity_confirmation_cancel_preserves_all_file_bytes_and_directory_file_identities": true,
+    "explicit_activity_recovery_completes_same_journal": true,
+    "home_navigation_selects_reconstructed_instance": true,
+    "producer_installation_foreign_data_preserved": true,
+    "stage_root_and_retained_file_directory_identities_preserved": true,
+    "original_import_replayed": false,
+    "final_inspect_plan_readonly": true
+  },
+  "process_lifetime": {
+    "combined_primary_observations": {
+      "primaries": 31,
+      "cli_primaries": 25,
+      "tui_primaries": 6,
+      "all_exit_zero": true,
+      "normal_wait": true,
+      "uniform_whole_process_lifetime_qualification": false
+    },
+    "normal_subjourney02": {
+      "primaries": 14,
+      "tui_primaries": 3,
+      "all_primary_exit_zero": true,
+      "primary_groups_empty": true,
+      "descendant_custody_not_observed": true,
+      "functional_cancellations_and_reconstruction_only": true,
+      "overall_attempt_remains_rejected": true
+    },
+    "interruption03": {
+      "primaries": 17,
+      "tui_primaries": 3,
+      "all_primary_exit_zero": true,
+      "normal_wait": true,
+      "observed_backends": 6,
+      "all_observed_backends_stopped_via_held_pidfds": true,
+      "descendant_exit_codes_not_claimed": true,
+      "all_recorded_owned_groups_empty": true,
+      "namespace_empty": true,
+      "private_mount_absent": true,
+      "source_bind_absent": true,
+      "validators_bind_absent": true,
+      "mountpoint_empty": true,
+      "safety_termination": false,
+      "owned_job_empty": true
+    }
+  },
+  "independent_actual_review": {
+    "file_in_custody": "evidence/linux-pack-actual-review-01.json",
+    "sha256": "6309b67d6f59e4c0931ee38651877c613589dcce40fa3efd17105b71fcfb9b33",
+    "verdict": "PASS_DELIVERED_LINUX_PACK_IMPORT_AND_ORDINARY_RECOVERY",
+    "reviewer": "/root/tui_content_selection_review; non-author",
+    "findings": []
+  },
+  "custody": {
+    "file": "ordinary-linux-tui-pack-import-custody.v1.zip",
+    "sha256": "491e5c3c9d4feaaa962eee09d62b89f5ff82df9245c83e995700cf8d3301d93d",
+    "bytes": 420191,
+    "entries": 280
+  },
+  "resources": {
+    "task_roots": 8,
+    "task_root_bytes_at_admission": 15400080415,
+    "admitted_peak_bytes": 536870912,
+    "new_original_artifact_downloads": 1,
+    "native_builds": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "new_clones": 0,
+    "new_caches": 0,
+    "source_package_validators_preserved": true
+  },
+  "rejected_attempt": {
+    "attempt": 1,
+    "status": "FAIL_RETAINED",
+    "reason": "Observer queried root-owned PID1 executable before process-group filter",
+    "product_imports": 0,
+    "intentional_import_faults": 0,
+    "first_product_inspect_required_owned_safety_cleanup": true,
+    "not_natural_qualification": true,
+    "source": "evidence/linux-pack-worker-result-01.json"
+  },
+  "second_rejected_attempt": {
+    "attempt": 2,
+    "status": "FAIL_RETAINED",
+    "reason": "Observer assumed backend shared TUI process group; POSIX supervisor creates child group",
+    "normal_cancellations_and_reconstruction_pass": true,
+    "normal_subjourney_only_reused": true,
+    "normal_descendant_custody_not_observed": true,
+    "intentional_loss": null,
+    "interruption_primary_required_owned_safety_cleanup": true,
+    "source": "evidence/linux-pack-worker-result-02.json"
+  },
+  "qualification_attempt": 3,
+  "authority_delta": "none",
+  "limits": [
+    "WSL Ubuntu24.04 private mount/PID/network namespace and tmpfs; no physical ext4 or named-host filesystem qualification",
+    "Linear process-transport TUI only; no fullscreen or human experience qualification",
+    "No separate live-owner or foreign-lock recovery refusal case exercised",
+    "No real Factorio gameplay, canonical Desktop/PR404 acceptance, full F09/F11, Beta, RC or release closure"
+  ],
+  "workunit_closed": false
+}

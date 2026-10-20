@@ -12,6 +12,7 @@
 #include "flb_factorio_instance_lifecycle.h"
 #include "flb_factorio_instance_model.h"
 #include "flb_factorio_local_data_import.h"
+#include "flb_factorio_instance_staging.h"
 
 #include <filesystem>
 #include <utility>
@@ -52,28 +53,7 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
 
 std::string instance_json(const facman::workspace::InstanceRecord& instance)
 {
-    facman::core::json::ObjectBuilder save_policy;
-    save_policy.add_string("mode", "instance-local");
-    facman::core::json::ObjectBuilder concurrency;
-    concurrency.add_bool("single_writer", true);
-    facman::core::json::ObjectBuilder export_policy;
-    export_policy.add_bool("portable", true);
-    export_policy.add_bool("redact_secrets", true);
-    facman::core::json::ObjectBuilder output;
-    output.add_string("schema", "factorio.instance.v1");
-    output.add_string("instance_id", instance.id.str());
-    output.add_string("display_name", instance.display_name);
-    output.add_string("install_ref", instance.install_ref.str());
-    output.add_string("factorio_version", instance.factorio_version);
-    output.add_string("local_data_root", facman::platform::path_to_utf8(instance.root.lexically_normal()));
-    output.add_string("profile", instance.profile);
-    output.add_null("modset");
-    output.add_string("template", instance.template_id);
-    output.add_object("save_policy", save_policy);
-    output.add_null("account_ref");
-    output.add_object("concurrency", concurrency);
-    output.add_object("export_policy", export_policy);
-    return output.serialize();
+    return lifecycle::instance_manifest_json(instance);
 }
 
 ApplicationResult lifecycle_result(const char* operation, facman::core::Result<std::string> result)
@@ -189,8 +169,11 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
     if (!session.staging("owned_staging_created")) return refused(
         safety_refusal("instances.create", "recovery_write_refused", "Instance staging journal update failed", session.detail(), true),
         "recovery_write_refused", session.detail());
-    const char* dirs[] = {"config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "exports", "cache", "locks"};
-    for (const char* dir : dirs) fs::create_directories(staging / dir);
+    if (!lifecycle::prepare_instance_layout(staging, error)) {
+        session.failed(error);
+        return refused(safety_refusal("instances.create", "persistent_write_refused",
+            "Instance layout could not be staged", error, true), "persistent_write_refused", error);
+    }
     if (!source_data_root.empty()) {
         auto imported = lifecycle::import_local_player_data(source_data_root, staging);
         if (!imported) {
@@ -205,20 +188,7 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
                 imported.error().message);
         }
     }
-    launch::InstanceLaunchRef launch_instance;
-    launch_instance.instance_id = instance.id.str();
-    launch_instance.profile_id = instance.profile;
-    launch_instance.local_data_root = instance.root;
-    launch_instance.launch_mode = "gui";
-    launch::InstallLaunchRef launch_install;
-    launch_install.root = install.root;
-    launch_install.executable = install.executable;
-    launch_install.ownership = install.ownership;
-    launch_install.distribution_origin = install.distribution_origin;
-    launch_install.platform_integration = install.platform_integration;
-    launch_install.strict_isolation_eligibility = install.strict_isolation_eligibility;
-    launch_install.external_state_domains = install.external_state_domains;
-    std::string effective_config = launch::effective_config_ini(launch_instance, launch_install);
+    std::string effective_config = lifecycle::instance_effective_config(instance, install);
     if (!source_data_root.empty()) {
         auto merged = lifecycle::merge_imported_config_settings(
             source_data_root / "config" / "config.ini", effective_config);

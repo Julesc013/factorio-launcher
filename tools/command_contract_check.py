@@ -74,6 +74,7 @@ EXPECTED_COMMANDS = {
     "modsets.lock",
     "modsets.verify",
     "modsets.export",
+    "modsets.import",
     "modsets.explain",
     "modsets.plan",
     "modsets.diff",

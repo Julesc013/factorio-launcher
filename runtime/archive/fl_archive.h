@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+namespace facman::platform { class StableDirectoryObject; }
+
 namespace facman::archive {
 
 enum class CompressionMethod {
@@ -153,6 +155,22 @@ Status extract_verified_to_new_retained_staging(
     const ExtractionCheckpoint& checkpoint = {},
     ExtractionObservation* observation = nullptr);
 
+// The caller supplies a held, independently ownership-verified directory and
+// exact mandatory additional files, including authenticated ownership markers.
+// Every additional file must already exist and remain present. Missing archive
+// entries are optional until final completion. Existing files are pinned before
+// any missing file is created. Namespace audits follow callbacks and precede
+// creates; final verification detects visible unknown or changed state. All
+// failure state is retained. No atomic namespace absence lease is claimed.
+// This grants no transaction ownership or hostile POSIX namespace-writer lease.
+Status extract_verified_missing_to_retained_staging(
+    const Plan& plan, facman::platform::StableDirectoryObject& staging_root,
+    const Limits& limits, const std::vector<VerifiedEntry>& expected,
+    const std::vector<VerifiedEntry>& retained_files,
+    const std::vector<std::string>& allowed_directories,
+    const ExtractionCheckpoint& checkpoint = {},
+    ExtractionObservation* observation = nullptr);
+
 struct WriteEntry {
     std::string archive_path;
     std::filesystem::path source_path;
@@ -165,6 +183,9 @@ struct WriteOptions {
     bool force_zip64 = false;
     Limits limits;
     WriteCheckpoint checkpoint;
+    // A caller with an identity-aware cleanup policy retains failed staging.
+    // Shared writer behavior stays unchanged unless this is explicitly enabled.
+    bool preserve_staging_on_failure = false;
 };
 
 struct WriteResult {

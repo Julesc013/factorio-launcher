@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_selected_save_preparation_plan.v1.schema.json",
+  "title": "Selected save declared context preparation component",
+  "type": "object",
+  "required": ["schema", "instance_id", "launch_intent", "selected_save", "profile_id", "component", "composition", "inputs_sha256", "parent_before_identity", "target", "preparation_available", "mutation_executed", "execution_started", "permit_issued", "factorio_support_claim", "plan_sha256"],
+  "properties": {
+    "schema": {"const": "factorio.selected_save_preparation_plan.v1"},
+    "instance_id": {"type": "string", "minLength": 1},
+    "launch_intent": {"const": "load_save"},
+    "selected_save": {"type": "string", "minLength": 1, "maxLength": 255},
+    "profile_id": {"type": "string", "minLength": 1},
+    "component": {"const": "selected_save_declared_context"},
+    "composition": {"const": "partial"},
+    "inputs_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "parent_before_identity": {"type": "string", "minLength": 1},
+    "target": {"type": "string", "minLength": 1},
+    "refresh": {
+      "type": "object",
+      "required": ["source_transaction_id", "source_journal_sha256", "source_journal_file_identity", "sidecar_identity", "sidecar_before_sha256", "sidecar_metadata_sha256", "selected_save_sha256"],
+      "properties": {
+        "source_transaction_id": {"type": "string", "minLength": 1},
+        "source_journal_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_journal_file_identity": {"type": "string", "minLength": 1},
+        "sidecar_identity": {"type": "string", "minLength": 1},
+        "sidecar_before_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "sidecar_metadata_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "selected_save_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "preparation_available": {"const": true},
+    "mutation_executed": {"const": false},
+    "execution_started": {"const": false},
+    "permit_issued": {"const": false},
+    "factorio_support_claim": {"const": "unclaimed"},
+    "plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "additionalProperties": false
+}

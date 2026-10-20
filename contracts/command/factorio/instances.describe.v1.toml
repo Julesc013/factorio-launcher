@@ -1,5 +1,5 @@
 command_id = "instances.describe"
-cli = "facman instances describe <instance-id> [--intent menu] --json"
+cli = "facman instances describe <instance-id> [--intent menu|load_save] --json"
 effects = ["workspace_read"]
 request_schema = "contracts/schema/command/instances.describe.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_instance_view.v1.schema.json"

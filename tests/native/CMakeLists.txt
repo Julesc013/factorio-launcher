@@ -4,6 +4,51 @@
 find_package(Threads REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
+if(TARGET facman_cli)
+  add_test(NAME facman_save_transfer_product
+    COMMAND ${Python3_EXECUTABLE} -m unittest discover
+      -s ${PROJECT_SOURCE_DIR}/tests -p test_save_transfer.py)
+  set_tests_properties(facman_save_transfer_product PROPERTIES
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    ENVIRONMENT "FACMAN_CLI_EXE=$<TARGET_FILE:facman_cli>"
+    LABELS "integration;filesystem;transaction;package-runtime"
+    TIMEOUT 120)
+  add_test(NAME facman_retention_recovery_product
+    COMMAND ${Python3_EXECUTABLE} -m unittest discover
+      -s ${PROJECT_SOURCE_DIR}/tests -p test_save_index_retention.py)
+  set_tests_properties(facman_retention_recovery_product PROPERTIES
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    ENVIRONMENT "FACMAN_CLI_EXE=$<TARGET_FILE:facman_cli>"
+    LABELS "integration;filesystem;transaction;recovery;package-runtime"
+    TIMEOUT 120)
+  add_test(NAME facman_workspace_recovery_product
+    COMMAND ${Python3_EXECUTABLE} -m unittest discover
+      -s ${PROJECT_SOURCE_DIR}/tests -p test_recovery.py)
+  set_tests_properties(facman_workspace_recovery_product PROPERTIES
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    ENVIRONMENT "FACMAN_CLI_EXE=$<TARGET_FILE:facman_cli>"
+    LABELS "integration;filesystem;transaction;recovery;package-runtime"
+    TIMEOUT 120)
+  add_test(NAME facman_snapshot_consistency_product
+    COMMAND ${Python3_EXECUTABLE} -m unittest discover
+      -s ${PROJECT_SOURCE_DIR}/tests -p test_instance_snapshots.py)
+  set_tests_properties(facman_snapshot_consistency_product PROPERTIES
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    ENVIRONMENT "FACMAN_CLI_EXE=$<TARGET_FILE:facman_cli>"
+    LABELS "integration;filesystem;transaction;recovery;package-runtime"
+    TIMEOUT 120)
+  add_test(NAME facman_modpack_import_product
+    COMMAND ${Python3_EXECUTABLE} -m unittest discover -v
+      -s ${PROJECT_SOURCE_DIR}/tests -p test_portable_modpack_import.py)
+  set_tests_properties(facman_modpack_import_product PROPERTIES
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    ENVIRONMENT "FACMAN_CLI_EXE=$<TARGET_FILE:facman_cli>"
+    LABELS "integration;filesystem;transaction;recovery;package-runtime"
+    # The expanded loss/recovery matrix exceeds three minutes on Windows.
+    # Keep all product cases required under a bounded ten-minute allowance.
+    TIMEOUT 600)
+endif()
+
 if(WIN32 AND TARGET facman_setup)
   add_test(NAME facman_self_setup_lifecycle
     COMMAND ${Python3_EXECUTABLE}
@@ -12,7 +57,8 @@ if(WIN32 AND TARGET facman_setup)
       --epoch-fixture-exe $<TARGET_FILE:facman_self_maintenance_smoke>)
   set_tests_properties(facman_self_setup_lifecycle PROPERTIES
     LABELS "integration;filesystem;transaction;setup;package-runtime"
-    TIMEOUT 180)
+    # Debug CI exercises the full synthetic lifecycle and can exceed three minutes.
+    TIMEOUT 360)
 endif()
 
 function(facman_native_test target source labels)
@@ -69,7 +115,17 @@ facman_native_test(facman_self_maintenance_smoke
   facman_self_maintenance_smoke.cpp "fast-unit;setup;security;recovery")
 target_compile_features(facman_self_maintenance_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_self_maintenance_smoke PRIVATE facman_self_setup_static)
-set_tests_properties(facman_self_maintenance_smoke PROPERTIES TIMEOUT 60)
+if(MSVC)
+  # This single smoke aggregates the full epoch fixture and many recovery
+  # scenarios in one main function. Keep its test stack separate from Setup.
+  target_link_options(facman_self_maintenance_smoke PRIVATE /STACK:8388608)
+endif()
+set_tests_properties(facman_self_maintenance_smoke PROPERTIES TIMEOUT 90)
+facman_native_test(facman_self_maintenance_authority_smoke
+  facman_self_maintenance_authority_smoke.cpp "setup;security;recovery")
+target_compile_features(facman_self_maintenance_authority_smoke PRIVATE cxx_std_17)
+target_link_libraries(facman_self_maintenance_authority_smoke PRIVATE facman_self_setup_static)
+set_tests_properties(facman_self_maintenance_authority_smoke PROPERTIES TIMEOUT 60)
 facman_native_test(facman_self_maintenance_provider_smoke
   facman_self_maintenance_provider_smoke.cpp "fast-unit;setup;security")
 target_compile_features(facman_self_maintenance_provider_smoke PRIVATE cxx_std_17)
@@ -477,6 +533,11 @@ endif()
 facman_native_test(fl_platform_io_smoke fl_platform_io_smoke.cpp "filesystem;platform")
 target_compile_features(fl_platform_io_smoke PRIVATE cxx_std_17)
 target_link_libraries(fl_platform_io_smoke PRIVATE facman_platform_static)
+if(UNIX)
+  facman_native_test(fl_retained_rewrite_smoke fl_retained_rewrite_smoke.cpp "filesystem;platform")
+  target_compile_features(fl_retained_rewrite_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_retained_rewrite_smoke PRIVATE facman_platform_static)
+endif()
 facman_native_test(facman_preferences_smoke facman_preferences_smoke.cpp "filesystem;transaction;integration")
 target_compile_features(facman_preferences_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_preferences_smoke PRIVATE facman_preferences_static)
@@ -560,8 +621,14 @@ if(TARGET facman_cli)
     endforeach()
   endif()
   set(_facman_resource_fixture_timeout 30)
+  set(_facman_resource_cli_timeout 30)
+  set(_facman_resource_product_timeout 600)
   if(FACMAN_ENABLE_SANITIZERS OR FACMAN_ENABLE_COVERAGE)
     set(_facman_resource_fixture_timeout 60)
+  endif()
+  if(FACMAN_ENABLE_COVERAGE)
+    set(_facman_resource_cli_timeout 60)
+    set(_facman_resource_product_timeout 960)
   endif()
   add_test(NAME facman_resource_product_cli
     COMMAND ${Python3_EXECUTABLE}
@@ -570,12 +637,13 @@ if(TARGET facman_cli)
       --fixture $<TARGET_FILE:facman_resource_identity_smoke>
       ${_facman_resource_runtime_args}
       --fixture-timeout-seconds ${_facman_resource_fixture_timeout}
+      --cli-timeout-seconds ${_facman_resource_cli_timeout}
       --work-root ${CMAKE_CURRENT_BINARY_DIR}/resource-cli-runs)
-  # POSIX runs serialize one fixture child with a 60-second instrumented
-  # allowance and thirteen CLI children with 30-second allowances. Keep the
-  # parent bounded while allowing that complete semantic matrix to finish.
+  # Coverage runs serialize one fixture and fourteen CLI children with bounded
+  # 60-second allowances. Allow the complete matrix plus filesystem overhead;
+  # ordinary CLI and sanitizer allowances remain 30 seconds per CLI child.
   set_tests_properties(facman_resource_product_cli PROPERTIES
-    LABELS "contract;filesystem;package-runtime;security" TIMEOUT 600)
+    LABELS "contract;filesystem;package-runtime;security" TIMEOUT ${_facman_resource_product_timeout})
 endif()
 
 

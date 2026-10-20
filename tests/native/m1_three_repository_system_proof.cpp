@@ -7,11 +7,13 @@
 #include "application_context.h"
 #include "command_admission.h"
 #include "fl_json.h"
+#include "fl_file_io.h"
 #include "fl_local_operation_lock.h"
 #include "fl_sha256.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 #include "flb_factorio_discovery.h"
+#include "flb_factorio_launch_plan.h"
 #include "flb_factorio_setup_recipe.h"
 #include "handlers/instances.h"
 #include "handlers/launch.h"
@@ -22,12 +24,17 @@
 #include "usk_transaction_session.h"
 
 #include <algorithm>
+#include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <future>
+#include <chrono>
+#include <thread>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <variant>
+#include <utility>
 
 namespace fs = std::filesystem;
 namespace application = facman::factorio::application;
@@ -43,6 +50,20 @@ std::string json_string(const facman::core::json::Value& object, const char* key
     if (value == nullptr || !value->is_string()) return {};
     auto text = value->string_value();
     return text ? text.take_value() : std::string();
+}
+
+fs::path managed_operation_lock_path(const proof::Fixture& fixture, const std::string& install_id)
+{
+    facman::platform::StableDirectoryObject parent;
+    if (!parent.open_no_follow(fixture.root.parent_path()).ok()) {
+        throw std::runtime_error("managed lease oracle parent could not be retained");
+    }
+    const auto& identity = parent.identity();
+    std::string key = std::to_string(identity.device) + ":" + std::to_string(identity.object) +
+        "\n" + fixture.root.filename().generic_string() + "\n" + install_id;
+    for (char& character : key) if (character >= 'A' && character <= 'Z') character += 'a' - 'A';
+    return fixture.root.parent_path() / (".facman-managed-install-" +
+        facman::base::sha256_hex_bytes(reinterpret_cast<const unsigned char*>(key.data()), key.size()) + ".lock");
 }
 
 std::string recovery_provider_response(
@@ -514,6 +535,219 @@ discovery::InstallRef managed_facman_reference(
     return install;
 }
 
+void prove_facman_move_preview(
+    proof::Fixture& fixture, application::ApplicationContext& context,
+    const proof::LauncherReference& reference, const fs::path& target,
+    const fs::path& record_path)
+{
+    // The oracle covers every fixture file, directory and provider audit/state,
+    // including source archive and foreign bytes, independently of plan content.
+    const fs::path destination = fixture.root / "move-preview-destination";
+    const fs::path foreign = target / "foreign-move-preview.txt";
+    proof::write_text(foreign, "foreign bytes remain foreign\n");
+    const fs::path empty_directory = target / "empty-move-preview";
+    fs::create_directory(empty_directory);
+    const std::string record_before = read_text(record_path);
+    application::ServiceOperationRequest request;
+    request.install_id = reference.install_id;
+    request.target_root = destination.generic_string();
+    const auto invoke = [&]() {
+        const std::string all_before = tree_signature(fixture.root);
+        const std::string workspace_before = tree_signature(fixture.workspace);
+        const std::string source_before = tree_signature(target);
+        const auto result = application::handlers::plan_move_install(context, request);
+        if (tree_signature(fixture.root) != all_before || tree_signature(fixture.workspace) != workspace_before ||
+            tree_signature(target) != source_before || fs::exists(destination))
+            throw std::runtime_error("managed move preview changed fixture bytes or created destination");
+        return result;
+    };
+    const auto planned = invoke();
+    if (planned.status != ULK_STATUS_OK || !std::holds_alternative<std::string>(planned.output))
+        throw std::runtime_error("actual pinned-provider move preview failed: " + planned.error_code + ": " + planned.error_message);
+    auto document = facman::core::json::parse(std::get<std::string>(planned.output));
+    const auto* provider = document ? document.value().find("provider_plan") : nullptr;
+    if (!document || !provider || json_string(document.value(), "schema") != "facman.managed_move_plan.v1" ||
+        json_string(document.value(), "copy_scope") != "complete_source_files_including_foreign" ||
+        json_string(document.value(), "empty_directory_preservation") != "not_promised" ||
+        document.value().find("grants_ownership")->bool_value().value() ||
+        !document.value().find("apply_available")->bool_value().value() ||
+        document.value().find("observation_atomic")->bool_value().value() ||
+        json_string(*provider, "operation") != "move" || json_string(*provider, "status") != "planned" ||
+        provider->serialize().find("foreign-move-preview.txt") == std::string::npos)
+        throw std::runtime_error("managed move preview lost provider or limitation truth");
+    const auto* roots = provider->find("roots");
+    std::size_t staging_roots = 0;
+    for (std::size_t index = 0; roots && index < roots->size(); ++index) {
+        const auto* root = roots->at(index);
+        if (root && json_string(*root, "role") == "staging") {
+            ++staging_roots;
+            if (fs::path(json_string(*root, "root")) != destination.parent_path() ||
+                json_string(*root, "classification") != "setup_owned")
+                throw std::runtime_error("pinned move provider staging root is not the destination parent");
+        }
+    }
+    if (staging_roots != 1) throw std::runtime_error("pinned move provider staging root is missing or repeated");
+    application::MovePlanRequest typed;
+    typed.installed.request_id = typed.installed.plan_id = json_string(*provider, "plan_id");
+    typed.installed.install_id = reference.install_id;
+    typed.installed.created_at = json_string(*provider, "created_at");
+    typed.installed.target = target;
+    typed.installed.setup_state_ref = reference.setup_state_ref;
+    typed.installed.last_verification_identity = reference.verification_identity;
+    typed.installed.state_revision = reference.state_revision;
+    typed.installed.lifecycle_status = "active";
+    typed.destination = destination;
+    typed.install_record_sha256 = json_string(document.value(), "install_record_sha256");
+    const auto envelope = [](const std::string& payload) {
+        return "{\"schema\":\"usk.command_response.v1\",\"status\":\"ok\",\"error\":null,\"payload\":" + payload + "}";
+    };
+    const std::string installed_response = envelope(read_text(fs::path(reference.setup_state_ref)));
+    const std::string raw = provider->serialize();
+    auto decoded = application::decode_move_provider_plan(envelope(raw), typed, installed_response, context.configuration().setup());
+    if (!decoded || decoded.value().provider_response != raw ||
+        decoded.value().public_response != std::get<std::string>(planned.output) ||
+        decoded.value().plan_digest != json_string(*provider, "plan_digest"))
+        throw std::runtime_error("managed move decoder did not preserve exact provider plan/digest");
+    const auto replace_first = [](std::string text, const std::string& from, const std::string& to) {
+        const auto offset = text.find(from);
+        if (offset == std::string::npos) throw std::runtime_error("move codec mutation is absent");
+        text.replace(offset, from.size(), to); return text;
+    };
+    std::vector<std::string> malformed {
+        "{}", raw + " trailing",
+        replace_json_string_field(raw, "operation", "uninstall"),
+        replace_json_string_field(raw, "plan_id", "drifted-plan"),
+        replace_json_string_field(raw, "plan_digest", std::string(64, '0')),
+        replace_json_string_field(raw, "provider_revision", "provider-drift"),
+        replace_json_string_field(raw, "installed_state_digest", std::string(64, '0')),
+        replace_json_string_field(raw, "ownership_manifest_digest", std::string(64, '0')),
+        replace_json_string_field(raw, "policy_digest", std::string(64, '0')),
+        replace_json_string_field(raw, "pre_target_digest", std::string(64, '0')),
+        replace_first(raw, "\"must_not_exist\":true", "\"must_not_exist\":false"),
+        replace_first(raw, "\"kind\":\"copy_owned_file\"", "\"kind\":\"delete_owned_file\""),
+        replace_first(raw, "\"ownership_required\":true", "\"ownership_required\":false"),
+        replace_first(raw, "\"kind\":\"write_state\"", "\"kind\":\"write_journal\""),
+        replace_first(raw, "\"relative_path\":\"", "\"relative_path\":\"../"),
+        replace_first(raw, "\"role\":\"destination\"", "\"role\":\"current\""),
+        replace_first(raw, "\"invalidate_on\":[", "\"invalidate_on\":[\"target\","),
+        replace_first(raw, "{", "{\"unexpected\":true,")
+    };
+    const auto* effects = provider->find("effects");
+    const auto edit_effects = [&](const char* omit_path, bool duplicate_foreign, bool change_foreign_hash, bool add_foreign) {
+        facman::core::json::ObjectBuilder result;
+        for (const auto& key : provider->object_keys()) {
+            if (key != "effects") { result.add_value(key, *provider->find(key)); continue; }
+            facman::core::json::ArrayBuilder rows;
+            for (std::size_t index = 0; index < effects->size(); ++index) {
+                const auto* effect = effects->at(index);
+                if (json_string(*effect, "relative_path") == omit_path) continue;
+                std::string text = effect->serialize();
+                if (change_foreign_hash && json_string(*effect, "relative_path") == "foreign-move-preview.txt")
+                    text = replace_json_string_field(text, "expected_sha256", std::string(64, '0'));
+                auto row = facman::core::json::parse(text);
+                rows.add_value(row.value());
+                if (duplicate_foreign && json_string(*effect, "relative_path") == "foreign-move-preview.txt") rows.add_value(row.value());
+                if (add_foreign && json_string(*effect, "relative_path") == "foreign-move-preview.txt") {
+                    text = replace_json_string_field(text, "relative_path", "invented-foreign.txt");
+                    text = replace_json_string_field(text, "effect_id", "effect.invented");
+                    auto added = facman::core::json::parse(text); rows.add_value(added.value());
+                }
+            }
+            result.add_array(key, rows);
+        }
+        return result.serialize();
+    };
+    facman::core::json::ObjectBuilder wrong_staging_plan;
+    for (const auto& key : provider->object_keys()) {
+        if (key != "roots") { wrong_staging_plan.add_value(key, *provider->find(key)); continue; }
+        facman::core::json::ArrayBuilder wrong_roots;
+        for (std::size_t index = 0; index < roots->size(); ++index) {
+            const auto* root = roots->at(index);
+            if (json_string(*root, "role") == "staging") {
+                auto wrong = facman::core::json::parse(replace_json_string_field(root->serialize(), "root",
+                    (fixture.root / "staging").generic_string()));
+                wrong_roots.add_value(wrong.value());
+            } else wrong_roots.add_value(*root);
+        }
+        wrong_staging_plan.add_array(key, wrong_roots);
+    }
+    malformed.push_back(wrong_staging_plan.serialize());
+    malformed.push_back(edit_effects("foreign-move-preview.txt", false, false, false));
+    malformed.push_back(edit_effects("", true, false, false));
+    malformed.push_back(edit_effects("", false, true, false));
+    malformed.push_back(edit_effects("", false, false, true));
+    malformed.push_back(replace_first(raw, "operator_selected_owned_target", "managed_install"));
+    for (const auto& bad : malformed) {
+        const std::string before = tree_signature(fixture.root);
+        const auto refused = application::decode_move_provider_plan(envelope(bad), typed, installed_response, context.configuration().setup());
+        if (refused || refused.error().code != "setup_move_plan_response_invalid" || tree_signature(fixture.root) != before)
+            throw std::runtime_error("malformed/drifted move provider response was admitted or changed bytes");
+    }
+    const auto expect_refusal = [&]() {
+        if (invoke().status == ULK_STATUS_OK) throw std::runtime_error("unsafe or stale managed move preview was admitted");
+    };
+    for (const fs::path& bad : {target, fixture.workspace, fs::path("relative-destination"),
+            fixture.root / ".." / "escaped-move", fixture.root.parent_path().parent_path() / "outside-move"}) {
+        request.target_root = bad.generic_string(); expect_refusal();
+    }
+    request.target_root = destination.generic_string();
+    for (const auto& bad : std::vector<std::pair<std::string, std::string>> {
+            {"last_verification_identity", std::string(64, '0')},
+            {"state_revision", "stale:" + std::string(64, '0')},
+            {"setup_state_ref", (fixture.setup_roots.state_root / "installed/stale.json").generic_string()},
+            {"root", (fixture.root / "wrong-current-root").generic_string()},
+            {"provider_id", "foreign-provider"}, {"source", "foreign-source"},
+            {"ownership", "reference"}, {"lifecycle_status", "verification_failed"},
+            {"lifecycle_status", "removed"}}) {
+        write_text_exact(record_path, replace_json_string_field(record_before, bad.first.c_str(), bad.second));
+        expect_refusal(); write_text_exact(record_path, record_before);
+    }
+    const fs::path executable(reference.entrypoint);
+    const std::string healthy = read_text(executable);
+    write_text_exact(executable, "damaged closure"); expect_refusal();
+    write_text_exact(executable, healthy);
+    const std::string state_before = read_text(fs::path(reference.setup_state_ref));
+    write_text_exact(fs::path(reference.setup_state_ref), "{}"); expect_refusal();
+    write_text_exact(fs::path(reference.setup_state_ref), state_before);
+    // Deterministic current-observation races; expected signatures include only
+    // the test actor's deliberate effect, and never any effect by the planner.
+    for (const std::string change : {"destination", "record", "provider", "foreign"}) {
+        bool observed = false;
+        std::string expected_root, expected_workspace;
+        auto previous = application::testing::exchange_move_plan_revalidation_observer([&]() {
+            observed = true;
+            if (change == "destination") fs::create_directory(destination);
+            if (change == "record") write_text_exact(record_path, record_before + "\n");
+            if (change == "provider") write_text_exact(fs::path(reference.setup_state_ref), "{}");
+            if (change == "foreign") write_text_exact(foreign, "changed foreign closure\n");
+            expected_root = tree_signature(fixture.root);
+            expected_workspace = tree_signature(fixture.workspace);
+        });
+        application::ApplicationResult result;
+        try { result = application::handlers::plan_move_install(context, request); }
+        catch (...) {
+            application::testing::exchange_move_plan_revalidation_observer(std::move(previous)); throw;
+        }
+        application::testing::exchange_move_plan_revalidation_observer(std::move(previous));
+        if (!observed || result.status == ULK_STATUS_OK || tree_signature(fixture.root) != expected_root ||
+            tree_signature(fixture.workspace) != expected_workspace)
+            throw std::runtime_error("detected move input race was admitted or changed extra bytes");
+        if (change == "destination") fs::remove(destination);
+        if (change == "record") write_text_exact(record_path, record_before);
+        if (change == "provider") write_text_exact(fs::path(reference.setup_state_ref), state_before);
+        if (change == "foreign") write_text_exact(foreign, "foreign bytes remain foreign\n");
+    }
+    // A successful fresh preview remains possible after all independent refusals.
+    if (invoke().status != ULK_STATUS_OK) throw std::runtime_error("move refusals poisoned later read-only planning");
+    const std::string all_before = tree_signature(fixture.root);
+    const auto apply = application::handlers::apply_move_install(context, request);
+    if (apply.status == ULK_STATUS_OK || apply.error_code != "setup_move_apply_input_invalid" ||
+        tree_signature(fixture.root) != all_before || fs::exists(destination))
+        throw std::runtime_error("incomplete move handoff escaped its strict input gate");
+    fs::remove(foreign);
+    fs::remove(empty_directory);
+}
+
 void prove_facman_consumption(
     proof::Fixture& fixture,
     const proof::LauncherReference& reference,
@@ -610,6 +844,8 @@ void prove_facman_consumption(
         tree_signature(fixture.root) != public_setup_before) {
         throw std::runtime_error("stale managed evidence fixture did not restore its workspace record");
     }
+
+    prove_facman_move_preview(fixture, context, reference, target, record_path);
 
     application::CreateInstanceRequest create;
     create.display_name = "M1 synthetic managed instance";
@@ -715,6 +951,25 @@ proof::LauncherReference prove_move_and_repair(
         throw std::runtime_error("Launcher move refresh did not stale prior launch identity");
     }
     current = refreshed.reference;
+
+    // This historical repair fixture explicitly uses the private provider repair
+    // to establish verified state. FacMan must never inflate a pending move to active.
+    const auto retained_before_fixture_repair = tree_signature(moved.retained_old_root);
+    proof::write_text(moved_target / "data/base/info.json", "deliberate drift for private repair fixture");
+    const auto verified_plan = usk::lifecycle::plan_repair(fixture.setup_roots, current.install_id,
+        "plan.m1.repair.fixture", "2026-07-14T01:00:05Z", archive.payload);
+    const auto verified_fixture = usk::lifecycle::apply_repair(verified_plan, verified_plan.plan_digest,
+        "tx.m1.repair.fixture", "2026-07-14T01:00:06Z");
+    if (verified_fixture.before.status != "fail" || verified_fixture.after.status != "pass" ||
+        verified_fixture.repaired_files != std::vector<std::string>{"data/base/info.json"} ||
+        verified_fixture.installed_state.lifecycle_status != "verified" ||
+        tree_signature(moved.retained_old_root) != retained_before_fixture_repair) {
+        throw std::runtime_error("private repair fixture failed verification or changed the retained old root");
+    }
+    auto verified_state = project_state(verified_fixture.installed_state, fixture);
+    current = proof::project_completed(ULK_SETUP_OPERATION_REPAIR, verified_plan.plan_id,
+        verified_plan.plan_digest, verified_plan.installed_state_digest,
+        current.install_id, &current, &verified_state).reference;
 
     configure_public_setup(fixture);
     const fs::path repair_workspace = fixture.root / "facman-repair-workspace";
@@ -836,6 +1091,21 @@ proof::LauncherReference prove_move_and_repair(
     apply_request.plan_digest = json_string(plan.value(), "plan_digest");
     apply_request.plan_created_at = json_string(plan.value(), "created_at");
     apply_request.install_record_sha256 = json_string(plan.value(), "install_record_sha256");
+    apply_request.transaction_id = "tx-m1-facman-repair-protected-inputs";
+    apply_request.applied_at = "2098-01-01T01:00:06Z";
+    apply_request.confirmation = "APPLY";
+    apply_request.plan_digest = json_string(plan.value(), "plan_digest");
+    bool protected_inputs_observed_under_lease = false;
+    const auto joined_refused = application::handlers::apply_repair_install(context, apply_request, [&]() {
+        protected_inputs_observed_under_lease = true;
+        return facman::core::Result<std::string>::failure({"make_ready_inputs_changed",
+            "Generated protected-input drift at the actual owner boundary", {}, facman::core::OutcomeKind::refused});
+    });
+    if (!protected_inputs_observed_under_lease || joined_refused.status == ULK_STATUS_OK ||
+        joined_refused.error_code != "make_ready_inputs_changed" || tree_signature(moved_target) != target_before_plan ||
+        read_text(loaded_before.value().source_path) != record_before) {
+        throw std::runtime_error("Joined protected-input refusal reached provider effects or changed the managed reference");
+    }
     apply_request.transaction_id = "tx-m1-facman-repair";
     apply_request.applied_at = "2098-01-01T01:00:06Z";
     apply_request.confirmation = "APPLY";
@@ -998,6 +1268,197 @@ void prove_repair_interruption_recovery(
         read_text(before.value().source_path) != record_before) {
         throw std::runtime_error("provable no-effect provider repair refusal did not close safely");
     }
+
+    // A requested coordinator locates the shared lease even if no provider-entry
+    // checkpoint was reached. A second workspace must observe the same guard.
+    apply.transaction_id = "tx-m1-facman-repair-lease-window";
+    set_environment("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE", "1");
+    const auto lease_window = application::handlers::apply_repair_install(context, apply);
+    clear_environment("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE");
+    if (lease_window.status == ULK_STATUS_OK || lease_window.error_code != "transaction_recovery_required" ||
+        tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before) {
+        throw std::runtime_error("shared lease creation window did not retain a no-entry operation");
+    }
+    const auto shared_lock = managed_operation_lock_path(fixture, launcher.install_id);
+    const std::string shared_lock_before = read_text(shared_lock);
+    if (shared_lock_before.empty()) throw std::runtime_error("shared lease locator omitted its owned sibling");
+    application::ApplicationContext competing(fixture.root / "facman-competing-workspace");
+    if (!competing.workspace_repository().ensure() ||
+        !competing.installs().create(record, record_before)) {
+        throw std::runtime_error("cross-workspace coordination fixture could not be created");
+    }
+    auto competing_repair = apply;
+    competing_repair.transaction_id = "tx-m1-facman-competing-repair";
+    const auto repair_contended = application::handlers::apply_repair_install(competing, competing_repair);
+    application::ServiceOperationRequest competing_uninstall;
+    competing_uninstall.install_id = launcher.install_id;
+    const auto competing_uninstall_plan = application::handlers::plan_uninstall_install(competing, competing_uninstall);
+    const auto competing_plan = std::holds_alternative<std::string>(competing_uninstall_plan.output)
+        ? facman::core::json::parse(std::get<std::string>(competing_uninstall_plan.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (!competing_plan || competing_uninstall_plan.status != ULK_STATUS_OK) {
+        throw std::runtime_error("cross-workspace read-only uninstall planning was blocked by the lease");
+    }
+    competing_uninstall.plan_id = json_string(competing_plan.value(), "plan_id");
+    competing_uninstall.plan_digest = json_string(competing_plan.value(), "plan_digest");
+    competing_uninstall.plan_created_at = json_string(competing_plan.value(), "created_at");
+    competing_uninstall.transaction_id = "tx-m1-facman-competing-uninstall";
+    competing_uninstall.applied_at = "2099-01-01T01:10:03Z";
+    competing_uninstall.confirmation = "APPLY";
+    const auto uninstall_contended = application::handlers::apply_uninstall_install(competing, competing_uninstall);
+    for (const auto* result : {&repair_contended, &uninstall_contended}) {
+        if (result->status == ULK_STATUS_OK || result->error_code != "recovery_lock_contended") {
+            throw std::runtime_error("different FacMan operation/workspace bypassed the shared installation lease");
+        }
+    }
+    if (tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before || read_text(shared_lock) != shared_lock_before) {
+        throw std::runtime_error("cross-operation contention entered provider or changed the FacMan preimage");
+    }
+    for (const auto& id : {competing_repair.transaction_id, competing_uninstall.transaction_id}) {
+        const auto parsed = facman::core::TransactionId::parse(id);
+        const auto journal = competing.transactions().load_journal(parsed.value());
+        if (!journal || journal.value().find("\"state\":\"refused\"") == std::string::npos ||
+            journal.value().find("provider_entry_started") != std::string::npos ||
+            fs::exists(fixture.setup_roots.state_root / "transactions" / (id + ".journal.json"))) {
+            throw std::runtime_error("contending operation did not close its no-entry coordinator exactly");
+        }
+    }
+    application::ServiceOperationRequest lease_recovery;
+    lease_recovery.transaction_id = apply.transaction_id;
+    const auto lease_inspection = application::handlers::inspect_install_recovery(context, lease_recovery);
+    const auto lease_plan = std::holds_alternative<std::string>(lease_inspection.output)
+        ? facman::core::json::parse(std::get<std::string>(lease_inspection.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (!lease_plan || lease_inspection.status != ULK_STATUS_OK ||
+        json_string(lease_plan.value(), "classification") != "no_provider_effect") {
+        throw std::runtime_error("shared lease before revalidation was not recoverable through ordinary inspection");
+    }
+    lease_recovery.plan_id = json_string(lease_plan.value(), "plan_id");
+    lease_recovery.plan_digest = json_string(lease_plan.value(), "plan_digest");
+    lease_recovery.confirmation = "APPLY";
+    const auto lease_closed = application::handlers::apply_install_recovery(context, lease_recovery);
+    if (lease_closed.status != ULK_STATUS_OK || tree_signature(target) != target_before_no_effect ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect ||
+        read_text(before.value().source_path) != record_before || fs::exists(shared_lock)) {
+        throw std::runtime_error("exact owner could not close and release the no-entry shared lease");
+    }
+    lease_recovery.plan_digest = std::string(64, '0');
+    const auto stale_terminal = application::handlers::apply_install_recovery(context, lease_recovery);
+    if (stale_terminal.status == ULK_STATUS_OK || stale_terminal.error_code != "stale_plan" || fs::exists(shared_lock)) {
+        throw std::runtime_error("invalid terminal recovery poisoned a previously released installation lease");
+    }
+
+#ifndef _WIN32
+    // POSIX advisory locking cannot prevent an uncooperative same-inode edit.
+    // It must refuse before provider entry and preserve those foreign bytes.
+    apply.transaction_id = "tx-m1-facman-repair-altered-held-metadata";
+    struct ScopedPauseEnvironment {
+        ScopedPauseEnvironment() { set_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE", "1"); }
+        ~ScopedPauseEnvironment() { clear_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE"); }
+    } pause_environment;
+    std::promise<void> entered_pause;
+    auto entered = entered_pause.get_future();
+    std::promise<void> release_pause;
+    auto release = release_pause.get_future().share();
+    std::atomic<bool> abort_proof {false};
+    auto held_operation = std::async(std::launch::async, [&]() {
+        struct ScopedObserver {
+            application::handlers::testing::ManagedInstallPauseObserver previous;
+            explicit ScopedObserver(application::handlers::testing::ManagedInstallPauseObserver observer)
+                : previous(application::handlers::testing::exchange_managed_install_pause_observer(std::move(observer))) {}
+            ~ScopedObserver() { application::handlers::testing::exchange_managed_install_pause_observer(std::move(previous)); }
+            ScopedObserver(const ScopedObserver&) = delete;
+            ScopedObserver& operator=(const ScopedObserver&) = delete;
+        } observer([&](const char* hook) {
+            if (std::string(hook) != "FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE")
+                throw std::runtime_error("held-metadata proof observed another pause hook");
+            entered_pause.set_value();
+            if (release.wait_for(std::chrono::seconds(5)) != std::future_status::ready || abort_proof.load())
+                throw std::runtime_error("held-metadata proof handshake aborted before provider entry");
+            release.get();
+        });
+        return application::handlers::apply_repair_install(context, apply);
+    });
+    bool released = false;
+    const auto release_worker = [&]() {
+        if (!released) { release_pause.set_value(); released = true; }
+    };
+    const auto journal_diagnostic = [&]() {
+        facman::transaction::Record retained;
+        std::string detail;
+        if (!facman::transaction::read_record(context.workspace(), apply.transaction_id, retained, detail))
+            return std::string("journal_error=") + detail;
+        std::string summary = std::string("journal_state=") + facman::transaction::state_name(retained.state) + " steps=";
+        for (const auto& step : retained.completed_steps) summary += step + ",";
+        return summary;
+    };
+    try {
+        if (entered.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
+            throw std::runtime_error("post-acquisition held-metadata pause was not observed: " + journal_diagnostic());
+        entered.get();
+        facman::transaction::Record checkpoint;
+        std::string checkpoint_detail;
+        if (!facman::transaction::read_record(context.workspace(), apply.transaction_id, checkpoint, checkpoint_detail) ||
+            checkpoint.transaction_id != apply.transaction_id || checkpoint.command_id != "installs.repair.apply" ||
+            checkpoint.state != facman::transaction::State::requested ||
+            std::find(checkpoint.completed_steps.begin(), checkpoint.completed_steps.end(), "provider_entry_started") !=
+                checkpoint.completed_steps.end())
+            throw std::runtime_error("held-metadata checkpoint did not bind requested/no-entry ownership: " + journal_diagnostic());
+        const std::string held_metadata = read_text(shared_lock);
+        if (held_metadata.empty()) throw std::runtime_error("post-acquisition held metadata was absent");
+        facman::platform::PathIdentity held_identity;
+        if (!facman::platform::inspect_path_no_follow(shared_lock, held_identity).ok() ||
+            !held_identity.exists || held_identity.reparse_or_link ||
+            held_identity.kind != facman::platform::PathObjectKind::regular_file)
+            throw std::runtime_error("post-acquisition held metadata identity was invalid");
+        std::cout << "held-metadata post-acquisition checkpoint: " << journal_diagnostic() << '\n';
+        const std::string foreign_metadata = held_metadata + "foreign same-inode edit\n";
+        proof::write_text(shared_lock, foreign_metadata);
+        facman::platform::PathIdentity altered_identity;
+        if (!facman::platform::inspect_path_no_follow(shared_lock, altered_identity).ok() ||
+            altered_identity.reparse_or_link || !held_identity.same_object(altered_identity))
+            throw std::runtime_error("held metadata edit did not retain the exact original inode");
+        release_worker();
+        const auto altered = held_operation.get();
+        clear_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+        std::cout << "held-metadata apply error=" << altered.error_code << " " << journal_diagnostic() << '\n';
+        if (altered.status == ULK_STATUS_OK || altered.error_code != "recovery_write_refused" ||
+            read_text(shared_lock) != foreign_metadata ||
+            tree_signature(target) != target_before_no_effect ||
+            tree_signature(fixture.setup_roots.state_root) != provider_before_no_effect) {
+            throw std::runtime_error("held metadata edit was deleted or entered the provider");
+        }
+        proof::write_text(shared_lock, held_metadata); // Restore only the exact owned test preimage.
+    } catch (...) {
+        abort_proof.store(true);
+        release_worker();
+        if (held_operation.valid()) {
+            try { (void)held_operation.get(); } catch (...) {}
+        }
+        clear_environment("FACMAN_TEST_MANAGED_INSTALL_PAUSE_AFTER_LEASE");
+        throw;
+    }
+    application::ServiceOperationRequest altered_recovery;
+    altered_recovery.transaction_id = apply.transaction_id;
+    const auto altered_inspect = application::handlers::inspect_install_recovery(context, altered_recovery);
+    const auto altered_plan = std::holds_alternative<std::string>(altered_inspect.output)
+        ? facman::core::json::parse(std::get<std::string>(altered_inspect.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (!altered_plan || altered_inspect.status != ULK_STATUS_OK)
+        throw std::runtime_error("no-entry altered metadata operation was not inspectable: inspector_status=" +
+            std::to_string(altered_inspect.status) + " inspector_error=" + altered_inspect.error_code +
+            ":" + altered_inspect.error_message + " " + journal_diagnostic());
+    std::cout << "held-metadata recovery inspection error=" << altered_inspect.error_code << " " << journal_diagnostic() << '\n';
+    altered_recovery.plan_id = json_string(altered_plan.value(), "plan_id");
+    altered_recovery.plan_digest = json_string(altered_plan.value(), "plan_digest");
+    altered_recovery.confirmation = "APPLY";
+    if (application::handlers::apply_install_recovery(context, altered_recovery).status != ULK_STATUS_OK ||
+        fs::exists(shared_lock)) throw std::runtime_error("restored exact owner metadata could not recover no entry");
+#endif
 
     apply.transaction_id = "tx-m1-facman-repair-pre-provider";
     set_environment("FACMAN_TEST_REPAIR_INTERRUPT_BEFORE_PROVIDER", "1");
@@ -1693,6 +2154,31 @@ void prove_no_effect_uninstall_recovery(
         !fs::is_directory(target)) {
         throw std::runtime_error("no-provider-effect uninstall recovery did not close safely");
     }
+    const std::string target_before_lease = tree_signature(target);
+    const std::string provider_before_lease = tree_signature(fixture.setup_roots.state_root);
+    apply_request.transaction_id = "tx-m1-uninstall-requested-lease-window";
+    set_environment("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE", "1");
+    const auto lease_window = application::handlers::apply_uninstall_install(context, apply_request);
+    clear_environment("FACMAN_TEST_MANAGED_INSTALL_INTERRUPT_AFTER_LEASE");
+    inspect_request.transaction_id = apply_request.transaction_id;
+    const auto lease_inspected = application::handlers::inspect_install_recovery(context, inspect_request);
+    const auto lease_plan = std::holds_alternative<std::string>(lease_inspected.output)
+        ? facman::core::json::parse(std::get<std::string>(lease_inspected.output))
+        : facman::core::Result<facman::core::json::Value>::failure({"invalid", "invalid", ""});
+    if (lease_window.status == ULK_STATUS_OK || lease_inspected.status != ULK_STATUS_OK ||
+        !lease_plan || json_string(lease_plan.value(), "classification") != "no_provider_effect") {
+        throw std::runtime_error("requested uninstall shared lease window was not inspectable without provider entry");
+    }
+    recover_request.transaction_id = apply_request.transaction_id;
+    recover_request.plan_id = json_string(lease_plan.value(), "plan_id");
+    recover_request.plan_digest = json_string(lease_plan.value(), "plan_digest");
+    if (application::handlers::apply_install_recovery(context, recover_request).status != ULK_STATUS_OK ||
+        tree_signature(target) != target_before_lease ||
+        tree_signature(fixture.setup_roots.state_root) != provider_before_lease ||
+        read_text(before.value().source_path) != record_before ||
+        fs::exists(managed_operation_lock_path(fixture, launcher_reference.install_id))) {
+        throw std::runtime_error("requested uninstall shared lease recovery changed effects or retained ownership after closure");
+    }
 }
 
 void prove_blocked_uninstall_recovery(
@@ -1924,8 +2410,297 @@ void prove_incomplete_provider_uninstall_is_indeterminate(
     }
 }
 
+void prove_facman_managed_move_apply(const std::string& fault)
+{
+    proof::Fixture fixture;
+    configure_public_setup(fixture);
+    const auto archive = proof::make_factorio_archive(fixture.root);
+    const fs::path target = fixture.root / "targets/move-source";
+    const fs::path destination = fixture.root / "targets/move-destination";
+    fs::create_directories(target.parent_path());
+    const auto assessment = application::make_setup_gateway()->inspect_install_archive({"2.0.77", archive.path});
+    if (!assessment) throw std::runtime_error("move fixture archive assessment failed");
+    const auto install_plan = usk::lifecycle::plan_install("plan.move.fixture.install", "managed-move-fixture",
+        "2026-07-14T03:00:00Z", target, fixture.setup_roots,
+        proof::factorio_recipe(std::string(64, '6'), assessment.value().archive_sha256), archive.payload);
+    const auto installed = usk::lifecycle::apply_install(install_plan, install_plan.plan_digest,
+        "tx.move.fixture.install", "2026-07-14T03:00:01Z");
+    auto projection = project_state(installed.installed_state, fixture);
+    const auto reference = proof::project_completed(ULK_SETUP_OPERATION_INSTALL,
+        install_plan.plan_id, install_plan.plan_digest, assessment.value().entry_set_digest, "", nullptr, &projection).reference;
+    configure_public_setup(fixture);
+    const fs::path workspace = fixture.root / "facman-move-workspace";
+    application::ApplicationContext context(workspace);
+    if (!context.workspace_repository().ensure()) throw std::runtime_error("move fixture workspace failed");
+    auto managed = managed_facman_reference(reference, target);
+    managed.source_ref = "retained-original-archive-reference";
+    facman::workspace::InstallRecord initial;
+    initial.id = facman::core::InstallId::parse(reference.install_id).value();
+    if (!context.installs().create(initial, discovery::install_ref_json(managed)))
+        throw std::runtime_error("move fixture reference failed");
+    const auto stored = context.installs().load(initial.id).value();
+    proof::write_text(target / "foreign-user.txt", "foreign bytes must stay foreign\n");
+    proof::write_text(target / facman::transaction::transaction_staging_marker_name(), "foreign marker-shaped sentinel\n");
+    fs::create_directory(target / "empty-user-directory");
+    const std::string source_before = tree_signature(target);
+    const std::string archive_before = read_text(archive.path);
+    const std::string record_before = read_text(stored.source_path);
+    application::ServiceOperationRequest preview;
+    preview.install_id = reference.install_id; preview.target_root = destination.generic_string();
+    auto rendered = application::handlers::plan_move_install(context, preview);
+    if (rendered.status != ULK_STATUS_OK || !std::holds_alternative<std::string>(rendered.output))
+        throw std::runtime_error("move apply fresh preview failed: " + rendered.error_code);
+    auto plan = facman::core::json::parse(std::get<std::string>(rendered.output));
+    const auto* provider = plan.value().find("provider_plan");
+    application::ServiceOperationRequest request;
+    request.install_id = reference.install_id; request.target_root = destination.generic_string();
+    request.plan_id = json_string(*provider, "plan_id");
+    request.plan_digest = json_string(*provider, "plan_digest");
+    request.plan_created_at = json_string(*provider, "created_at");
+    request.install_record_sha256 = json_string(plan.value(), "install_record_sha256");
+    request.applied_at = "2099-01-01T01:00:00Z";
+    request.transaction_id = "tx-move-native"; request.confirmation = "APPLY";
+    if (fault.empty()) {
+        const auto refuse_unchanged = [&](const char* label) {
+            const auto before = tree_signature(fixture.root);
+            const auto refused = application::handlers::apply_move_install(context, request);
+            if (refused.status == ULK_STATUS_OK || tree_signature(fixture.root) != before)
+                throw std::runtime_error(std::string("stale move admission mutated fixture: ") + label);
+        };
+        proof::write_text(target / "foreign-user.txt", "drifted foreign bytes");
+        refuse_unchanged("source"); proof::write_text(target / "foreign-user.txt", "foreign bytes must stay foreign\n");
+        fs::create_directory(destination); refuse_unchanged("destination"); fs::remove(destination);
+        write_text_exact(stored.source_path, record_before + " "); refuse_unchanged("record");
+        write_text_exact(stored.source_path, record_before);
+        const fs::path overbudget = target / "oversized-foreign.bin";
+        { std::ofstream output(overbudget, std::ios::binary); output.seekp(256U * 1024U * 1024U); output.put('x'); }
+        const auto state_before = tree_signature(fixture.setup_roots.state_root);
+        const auto audit_before = tree_signature(fixture.setup_roots.audit_root);
+        const auto workspace_before = tree_signature(workspace);
+        unsigned provider_plan_observed = 0;
+        auto previous_observer = application::testing::exchange_move_plan_revalidation_observer(
+            [&]() { ++provider_plan_observed; });
+        auto resource = application::handlers::plan_move_install(context, preview);
+        application::testing::exchange_move_plan_revalidation_observer(std::move(previous_observer));
+        if (provider_plan_observed != 0 || resource.status == ULK_STATUS_OK || resource.error_code != "move_resource_admission_refused" ||
+            fs::exists(destination) || read_text(stored.source_path) != record_before ||
+            tree_signature(fixture.setup_roots.state_root) != state_before ||
+            tree_signature(fixture.setup_roots.audit_root) != audit_before || tree_signature(workspace) != workspace_before)
+            throw std::runtime_error("foreign-byte resource refusal reached effects/provider plan or mutated evidence");
+        fs::remove(overbudget);
+        // Foreign growth after first decode must be refused before repeated materialization.
+        unsigned checkpoints = 0;
+        auto before_growth = application::testing::exchange_move_plan_revalidation_observer([&]() {
+            ++checkpoints;
+            std::ofstream output(overbudget, std::ios::binary);
+            output.seekp(256U * 1024U * 1024U); output.put('x');
+            if (!output) throw std::runtime_error("cannot grow foreign resource-race fixture");
+        });
+        auto grown = application::handlers::plan_move_install(context, preview);
+        application::testing::exchange_move_plan_revalidation_observer(std::move(before_growth));
+        std::ifstream grown_file(overbudget, std::ios::binary);
+        grown_file.seekg(256U * 1024U * 1024U);
+        if (checkpoints != 1 || grown.status == ULK_STATUS_OK || grown.error_code != "move_resource_admission_refused" ||
+            fs::file_size(overbudget) != (256ull << 20) + 1 || grown_file.get() != 'x' || fs::exists(destination) ||
+            tree_signature(fixture.setup_roots.state_root) != state_before ||
+            tree_signature(fixture.setup_roots.audit_root) != audit_before || tree_signature(workspace) != workspace_before)
+            throw std::runtime_error("repeated provider planning reused stale foreign-inclusive resource admission");
+        grown_file.close(); fs::remove(overbudget);
+        if (tree_signature(target) != source_before)
+            throw std::runtime_error("resource-race refusal changed source beyond the deliberate actor file");
+    }
+    const char* variable = fault == "early" ? "FACMAN_TEST_MOVE_INTERRUPT_AFTER_LEASE" :
+        (fault == "ambiguous" || fault == "entry") ? "FACMAN_TEST_MOVE_INTERRUPT_BEFORE_PROVIDER" :
+        fault == "projected" ? "FACMAN_TEST_MOVE_INTERRUPT_AFTER_PROJECTION" : "FACMAN_TEST_MOVE_INTERRUPT_AFTER_PROVIDER";
+    if (!fault.empty()) set_environment(variable, "1");
+    auto applied = application::handlers::apply_move_install(context, request);
+    if (!fault.empty()) clear_environment(variable);
+    if (fault.empty() && applied.status != ULK_STATUS_OK)
+        throw std::runtime_error("bounded managed move apply failed: " + applied.error_code + ":" + applied.error_message);
+    if (!fault.empty() && (applied.status == ULK_STATUS_OK || applied.error_code != "transaction_recovery_required"))
+        throw std::runtime_error("move fault was not a durable recovery-required outcome");
+    if (tree_signature(target) != source_before || read_text(archive.path) != archive_before)
+        throw std::runtime_error("move changed old source/empty directories/foreign marker/original archive");
+    application::ApplicationContext fresh(workspace);
+    if (fault == "ambiguous") {
+        facman::transaction::Record journal;
+        std::string detail;
+        if (!facman::transaction::read_record(workspace, request.transaction_id, journal, detail))
+            throw std::runtime_error("ambiguous move coordinator missing");
+        application::ManagedMoveCoordinator coordinator;
+        if (!application::decode_managed_move_context(journal.operation_context, coordinator, detail))
+            throw std::runtime_error("ambiguous move coordinator invalid");
+        auto private_plan = facman::core::json::parse(coordinator.apply.private_plan);
+        const auto actual = usk::lifecycle::plan_move(fixture.setup_roots, request.install_id,
+            request.plan_id, request.plan_created_at, destination, json_string(private_plan.value(), "policy_digest"));
+        if (actual.plan_digest != request.plan_digest) throw std::runtime_error("partial move fixture lost exact private digest");
+        bool interrupted = false;
+        try {
+            (void)usk::lifecycle::apply_move(actual, actual.plan_digest, request.transaction_id, request.applied_at,
+                [](const std::string&, const std::string& point) {
+                    if (point == "after_destination_commit") throw std::runtime_error("actual partial move commit");
+                });
+        } catch (const std::runtime_error& error) {
+            if (std::string(error.what()) != "actual partial move commit") throw;
+            interrupted = true;
+        }
+        if (!interrupted || !fs::exists(destination)) throw std::runtime_error("partial move commit fault not reached");
+    }
+    if (!fault.empty()) {
+        const auto provider_before = tree_signature(fixture.setup_roots.state_root);
+        const auto audit_before = tree_signature(fixture.setup_roots.audit_root);
+        application::ServiceOperationRequest recover;
+        recover.transaction_id = request.transaction_id;
+        auto inspected = application::handlers::inspect_install_recovery(fresh, recover);
+        if (inspected.status != ULK_STATUS_OK || !std::holds_alternative<std::string>(inspected.output))
+            throw std::runtime_error("move recovery inspection [" + fault + "] failed: " +
+                inspected.error_code + ": " + inspected.error_message + "; output=" +
+                (std::holds_alternative<std::string>(inspected.output) ? std::get<std::string>(inspected.output) : "<none>"));
+        auto recovery = facman::core::json::parse(std::get<std::string>(inspected.output));
+        const std::string expected = fault == "early" ? "no_provider_effect" :
+            (fault == "ambiguous" || fault == "entry") ? "indeterminate" : "provider_move_completed";
+        if (json_string(recovery.value(), "classification") != expected)
+            throw std::runtime_error("move recovery confused pre-entry/completed/incomplete provider states");
+        recover.plan_id = json_string(recovery.value(), "plan_id");
+        recover.plan_digest = json_string(recovery.value(), "plan_digest"); recover.confirmation = "APPLY";
+        if (fault == "completed") {
+            // A valid newer installed state must defeat recovery of an older completed move.
+            usk::state::StateRepository repository(fixture.setup_roots.state_root);
+            auto newer = repository.read_installed(request.install_id);
+            newer.transaction_id = "tx-newer-move-state";
+            newer.created_at = "2099-01-02T01:00:00Z";
+            repository.write_installed(newer);
+            const auto before = tree_signature(fixture.root);
+            if (application::handlers::apply_install_recovery(fresh, recover).status == ULK_STATUS_OK ||
+                tree_signature(fixture.root) != before)
+                throw std::runtime_error("move recovery accepted a superseded provider CURRENT state or mutated refusal");
+            fs::remove(fixture.setup_roots.state_root / "installed" /
+                (request.install_id + "." + newer.transaction_id + ".json"));
+            for (const auto& evidence : {
+                    fixture.setup_roots.state_root / newer.ownership_manifest_ref,
+                    fs::directory_iterator(fixture.setup_roots.audit_root / "chains" / newer.audit_chain_id)->path()}) {
+                const fs::path path = evidence;
+                const auto original = read_text(path);
+                write_text_exact(path, original + "corrupt");
+                const auto unchanged = tree_signature(fixture.root);
+                if (application::handlers::apply_install_recovery(fresh, recover).status == ULK_STATUS_OK ||
+                    tree_signature(fixture.root) != unchanged)
+                    throw std::runtime_error("move recovery accepted damaged ownership/audit or mutated refusal");
+                write_text_exact(path, original);
+            }
+        }
+        const auto before_recovery = tree_signature(fixture.root);
+        auto recovered = application::handlers::apply_install_recovery(fresh, recover);
+        if (fault == "ambiguous" || fault == "entry") {
+            if (json_string(recovery.value(), "action") != "none" || json_string(recovery.value(), "status") != "blocked" ||
+                (fault == "entry" && (fs::exists(destination) || fs::exists(fixture.setup_roots.state_root /
+                    "transactions" / (request.transaction_id + ".journal.json")))))
+                throw std::runtime_error("unproved entry claimed a no-effect abort or created provider paths");
+            if (recovered.status == ULK_STATUS_OK || recovered.error_code != "move_recovery_indeterminate" ||
+                tree_signature(fixture.root) != before_recovery || read_text(stored.source_path) != record_before)
+                throw std::runtime_error("ambiguous after-destination commit was repaired or mutated");
+            return;
+        }
+        if (recovered.status != ULK_STATUS_OK || tree_signature(fixture.setup_roots.state_root) != provider_before ||
+            tree_signature(fixture.setup_roots.audit_root) != audit_before || tree_signature(target) != source_before)
+            throw std::runtime_error("move recovery [" + fault + "] changed provider/source or failed exact projection: " +
+                recovered.error_code + ": " + recovered.error_message + "; output=" +
+                (std::holds_alternative<std::string>(recovered.output) ? std::get<std::string>(recovered.output) : "<none>"));
+        const auto before_retry = tree_signature(fixture.root);
+        if (application::handlers::apply_install_recovery(fresh, recover).status != ULK_STATUS_OK ||
+            tree_signature(fixture.root) != before_retry) throw std::runtime_error("move recovery retry was not read-only/idempotent");
+        if (fault == "early") {
+            if (fs::exists(destination) || read_text(stored.source_path) != record_before)
+                throw std::runtime_error("proved pre-entry abort changed reference or created destination");
+            return;
+        }
+    }
+    auto terminal = fresh.installs().load(initial.id);
+    if (!terminal || terminal.value().root != destination || terminal.value().lifecycle_status != "move_pending_acceptance" ||
+        read_text(destination / "foreign-user.txt") != "foreign bytes must stay foreign\n" ||
+        read_text(destination / facman::transaction::transaction_staging_marker_name()) != "foreign marker-shaped sentinel\n" ||
+        tree_signature(target) != source_before)
+        throw std::runtime_error("move reference/source/foreign retention or pending lifecycle incorrect");
+    auto old_json = facman::core::json::parse(record_before);
+    auto new_json = facman::core::json::parse(read_text(stored.source_path));
+    if (fs::path(json_string(new_json.value(), "root")) != destination ||
+        fs::path(json_string(new_json.value(), "app_dir")) != destination ||
+        fs::path(json_string(new_json.value(), "executable")) != destination / "bin/x64/factorio.exe" ||
+        json_string(old_json.value(), "source_ref") != json_string(new_json.value(), "source_ref") ||
+        json_string(new_json.value(), "source") != "universal-setup" ||
+        new_json.value().find("safe_actions")->find("repair")->bool_value().value() ||
+        new_json.value().find("safe_actions")->find("uninstall")->bool_value().value())
+        throw std::runtime_error("move rewrote source custody or advertised fully accepted maintenance");
+    facman::transaction::Record completed_journal;
+    std::string projection_detail;
+    application::ManagedMoveCoordinator replay;
+    if (!facman::transaction::read_record(workspace, request.transaction_id, completed_journal, projection_detail) ||
+        !application::decode_managed_move_context(completed_journal.operation_context, replay, projection_detail))
+        throw std::runtime_error("completed move projection custody is unavailable");
+    auto projection_evidence = fresh.setup().inspect_move_recovery(replay.apply);
+    if (!projection_evidence) throw std::runtime_error("completed move projection evidence is unavailable");
+    const auto projection_before = tree_signature(fixture.root);
+    for (const char* field : {"root", "app_dir"}) {
+        auto conflicting = replay;
+        conflicting.pre_record = replace_json_string_field(record_before, field,
+            (fixture.root / "wrong-original-root").generic_string());
+        conflicting.apply.plan_request.install_record_sha256 = facman::base::sha256_hex_bytes(
+            reinterpret_cast<const unsigned char*>(conflicting.pre_record.data()), conflicting.pre_record.size());
+        application::ManagedMoveCoordinator decoded;
+        if (application::decode_managed_move_context(application::encode_managed_move_context(conflicting), decoded, projection_detail) ||
+            !application::project_moved_install_record(conflicting.pre_record, conflicting.apply, projection_evidence.value()).empty() ||
+            tree_signature(fixture.root) != projection_before)
+            throw std::runtime_error("inconsistent authoritative root/app_dir admitted by move custody or projection");
+    }
+    const auto pending_record = read_text(stored.source_path);
+    application::ServiceOperationRequest next_move;
+    next_move.install_id = request.install_id;
+    next_move.target_root = (fixture.root / "targets/next-destination").generic_string();
+    const auto pending_before = tree_signature(fixture.root);
+    if (application::handlers::plan_move_install(fresh, next_move).status == ULK_STATUS_OK ||
+        tree_signature(fixture.root) != pending_before)
+        throw std::runtime_error("explicit pending move entered active maintenance or changed evidence");
+    write_text_exact(stored.source_path, replace_json_string_field(pending_record, "lifecycle_status", "active"));
+    const auto active_before = tree_signature(fixture.root);
+    const auto inflated = application::handlers::plan_move_install(fresh, next_move);
+    if (inflated.status == ULK_STATUS_OK || inflated.error_code != "setup_installed_state_response_invalid" ||
+        tree_signature(fixture.root) != active_before)
+        throw std::runtime_error("active FacMan lifecycle admitted provider pending-acceptance state");
+    write_text_exact(stored.source_path, pending_record);
+    facman::factorio::launch::InstallLaunchRef launch_reference;
+    launch_reference.root = terminal.value().root;
+    launch_reference.lifecycle_status = terminal.value().lifecycle_status;
+    launch_reference.exact_product_version = "2.0.77";
+    facman::factorio::launch::InstanceLaunchRef launch_instance;
+    launch_instance.local_data_root = fixture.root / "uncreated-launch-instance";
+    const auto blocked = facman::factorio::launch::build_launch_plan(launch_instance, launch_reference, "launch.gui");
+    if (blocked.strict_execution_eligible || blocked.strict_refusal_code != "launcher_install_not_active")
+        throw std::runtime_error("pending move became launch eligible or lost its explicit lifecycle refusal");
+    const auto before_retry = tree_signature(fixture.root);
+    if (application::handlers::apply_move_install(fresh, request).status != ULK_STATUS_OK ||
+        tree_signature(fixture.root) != before_retry || fresh.installs().load(initial.id).value().root != destination ||
+        fs::path(json_string(facman::core::json::parse(read_text(stored.source_path)).value(), "root")) != destination)
+        throw std::runtime_error("completed move handoff retry was not exact read-only/idempotent");
+}
+
+void prove_move_resource_observation_policy()
+{
+    const std::uint64_t plenty = 4ull << 30;
+    if (!application::testing::move_resource_observations_admit(256ull << 20, plenty, plenty) ||
+        application::testing::move_resource_observations_admit(~std::uint64_t(0), plenty, plenty) ||
+        application::testing::move_resource_observations_admit((256ull << 20) + 1, plenty, plenty) ||
+        application::testing::move_resource_observations_admit(1, std::nullopt, plenty) ||
+        application::testing::move_resource_observations_admit(1, plenty, std::nullopt) ||
+        application::testing::move_resource_observations_admit(256ull << 20, 512ull << 20, plenty) ||
+        application::testing::move_resource_observations_admit(256ull << 20, plenty, 512ull << 20))
+        throw std::runtime_error("complete-closure resource admission did not fail closed at real trust boundaries");
+}
+
 int run()
 {
+    prove_move_resource_observation_policy();
+    for (const std::string fault : {"", "early", "completed", "projected", "entry", "ambiguous"})
+        prove_facman_managed_move_apply(fault);
     prove_repair_gateway_decoding();
     prove_uninstall_recovery_gateway_decoding();
     proof::Fixture fixture;

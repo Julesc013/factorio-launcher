@@ -79,7 +79,8 @@ def write_json(path: Path, value: dict) -> None:
 
 def command(command: list[str], *, cwd: Path, environment: dict[str, str] | None = None,
             timeout: float = 30.0, budget: Budget | None = None, directory: Path | None = None,
-            input_bytes: bytes = b"", output_limit: int = MAX_OUTPUT_BYTES) -> Result:
+            input_bytes: bytes = b"", output_limit: int = MAX_OUTPUT_BYTES,
+            wait_for_job_empty_after_primary: bool = False) -> Result:
     limit = seconds(timeout, "command deadline")
     if os.name != "nt":
         raise ValueError("owned canary execution is qualified on Windows only")
@@ -125,7 +126,9 @@ def command(command: list[str], *, cwd: Path, environment: dict[str, str] | None
         receipt["effective_seconds"] = effective
         if effective > 0:
             native = windows.run(selected, cwd, env, (source, stdout, stderr), seconds=effective,
-                                 cleanup_seconds=CLEANUP_SECONDS, output_limit=output_limit)
+                                 cleanup_seconds=CLEANUP_SECONDS, output_limit=output_limit,
+                                 wait_for_job_empty_after_primary=
+                                 wait_for_job_empty_after_primary)
             receipt.update(native)
             if native["termination"] == "timed_out":
                 receipt["termination"] = "overall_timeout" if budget is not None and remaining <= limit else "command_timeout"

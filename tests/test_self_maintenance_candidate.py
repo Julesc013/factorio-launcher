@@ -12,6 +12,7 @@ import time
 import unittest
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 from tools import development_layout
 from tools import self_maintenance_candidate as candidate
@@ -19,6 +20,251 @@ from tests.integration import facman_self_setup_lifecycle as lifecycle
 
 
 class SelfMaintenanceCandidateTests(unittest.TestCase):
+    def test_external_handoff_observes_real_long_terminal_without_apply_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            state = root / "SetupState"
+            epochs = root / "setup-coordinator.v1/epochs"
+            operation = "maint.downgrade.12345678." + "b" * 20 + "." + "c" * 16
+            terminal = epochs / ("a" * 64) / "maintenance" / operation / "80-registration-cutover.v2.json"
+            # Create actual filesystem bytes with the supported Windows API
+            # spelling; this must work independently of LongPathsEnabled.
+            if lifecycle.utf16_units(terminal) <= 260:
+                root = root / ("long-" + "x" * (261 - lifecycle.utf16_units(terminal)))
+                state = root / "SetupState"
+                epochs = root / "setup-coordinator.v1/epochs"
+                terminal = epochs / ("a" * 64) / "maintenance" / operation / terminal.name
+            observed_path = lifecycle.observation_path(terminal)
+            observed_path.parent.mkdir(parents=True)
+            observed_path.write_bytes(b"real filesystem observation marker\n")
+            self.assertGreater(lifecycle.utf16_units(terminal), 260)
+            if os.name == "nt":
+                self.assertTrue(str(observed_path).startswith("\\\\?\\"))
+            self.assertEqual([observed_path], lifecycle.external_handoff_terminals(epochs, operation))
+            self.assertEqual(hashlib.sha256(observed_path.read_bytes()).hexdigest(),
+                             lifecycle.sha256_path(terminal))
+            self.assertEqual({"80-registration-cutover.v2.json": lifecycle.sha256_path(terminal)},
+                             lifecycle.tree_snapshot(terminal.parent)["files"])
+
+            class TerminalObserved(Exception):
+                pass
+
+            # Stop at the actual read-only product dispatch instead of
+            # fabricating a successful SDK/product response for this test.
+            with mock.patch.object(lifecycle, "invoke", side_effect=TerminalObserved) as invoke:
+                with self.assertRaises(TerminalObserved):
+                    lifecycle.await_external_handoff(
+                        root / "unused.exe", {"phase": "handoff_launched", "operation_id": operation},
+                        "downgrade", ("--state-root", state, "--root", root / "Programs/FacMan"),
+                        shell_integration=True, noninteractive=True,
+                    )
+                self.assertNotIn("--yes", invoke.call_args.args)
+                self.assertNotIn("--apply", invoke.call_args.args)
+            duplicate = epochs / ("d" * 64) / "maintenance" / operation / terminal.name
+            lifecycle.observation_path(duplicate.parent).mkdir(parents=True)
+            lifecycle.observation_path(duplicate).write_bytes(b"second real terminal marker\n")
+            with mock.patch.object(lifecycle, "invoke") as invoke:
+                with self.assertRaisesRegex(AssertionError, "duplicate terminal records"):
+                    lifecycle.await_external_handoff(
+                        root / "unused.exe", {"phase": "handoff_launched", "operation_id": operation},
+                        "downgrade", ("--state-root", state), shell_integration=True, noninteractive=True,
+                    )
+                invoke.assert_not_called()
+            with mock.patch.object(lifecycle, "REAL_DEADLINE", time.monotonic() - 1), \
+                    mock.patch.object(lifecycle, "invoke") as invoke:
+                with self.assertRaisesRegex(AssertionError, "did not complete in time"):
+                    lifecycle.await_external_handoff(
+                        root / "unused.exe", {"phase": "handoff_launched", "operation_id": operation},
+                        "downgrade", ("--state-root", state), shell_integration=True, noninteractive=True,
+                    )
+                invoke.assert_not_called()
+
+    def test_epoch_record_observation_binds_original_archive_and_distinct_creator(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            logical, state = root / "Programs/FacMan", root / "SetupState"
+            epoch_id, archive_sha = "a" * 64, "b" * 64
+            identity = {"version": "0.1.0-alpha.5", "source_revision": "c" * 40,
+                        "provider_revision": "d" * 40}
+            creator = "e" * 40
+            generation_id = lifecycle.generation_identity(identity, archive_sha)
+            logical_id = hashlib.sha256((
+                "facman.self.logical-root.v1\n" + str(logical) + "\n"
+            ).encode()).hexdigest()
+            physical_id = hashlib.sha256((
+                "facman.self.physical-generation-root.v2\n" + logical_id + "\n" +
+                epoch_id + "\n" + generation_id + "\n"
+            ).encode()).hexdigest()
+            physical = logical.parent / ("FacMan.generation." + physical_id)
+            generation = {
+                "schema": "facman.self_generation.v2", "product_id": "facman", "epoch_id": epoch_id,
+                "generation_id": generation_id, "product_version": identity["version"],
+                "package_sha256": archive_sha, "facman_source_revision": identity["source_revision"],
+                "universal_setup_revision": identity["provider_revision"],
+                "install_id": "facman.self.eg." + hashlib.sha256((
+                    "facman.self.epoch-generation-install.v1\n" + epoch_id + "\n" + generation_id + "\n"
+                ).encode()).hexdigest(),
+                "install_root": str(physical), "logical_root": str(logical), "state_root": str(state),
+                "acceptance_root": str(root),
+                "gui": str(physical / "generations" / identity["version"] / "FacMan.exe"),
+                "maintenance_launcher": str(physical / "maintenance/FacManSetup.exe"),
+                "creating_provider_revision": creator,
+            }
+            path = (root / "setup-coordinator.v1/epochs" / epoch_id / "generations" /
+                    f"generation.{generation_id}.v2.json")
+            observed_path = lifecycle.observation_path(path)
+            observed_path.parent.mkdir(parents=True)
+
+            def check(value: dict[str, object], expected_creator: str = creator) -> dict[str, object]:
+                observed_path.write_text(json.dumps(value) + "\n", encoding="utf-8")
+                return lifecycle.require_epoch_generation_record(
+                    epoch_id, identity, archive_sha, expected_creator, logical, state, root,
+                )
+
+            self.assertEqual(generation, check(generation))
+            operation = "maint.downgrade.12345678." + "b" * 20 + "." + "c" * 16
+            activation_path = path.parent.parent / "activations" / f"activation.{operation}.v2.json"
+            lifecycle.observation_path(activation_path.parent).mkdir()
+            predecessor_path = activation_path.parent / "activation.fixture.v2.json"
+            lifecycle.observation_path(predecessor_path).write_text(json.dumps({
+                "schema": "facman.self_activation.v2", "product_id": "facman", "epoch_id": epoch_id,
+                "operation": "genesis", "operation_id": "epoch.genesis." + "f" * 64,
+                "generation_id": "f" * 64, "generation_record_sha256": "c" * 64,
+                "previous": {"name": "", "sha256": ""},
+            }) + "\n")
+            activation = {
+                "schema": "facman.self_activation.v2", "product_id": "facman", "epoch_id": epoch_id,
+                "operation": "downgrade", "operation_id": operation,
+                "source_generation_id": "f" * 64, "target_generation_id": generation_id,
+                "generation_record_sha256": lifecycle.sha256_path(path),
+                "previous": {"name": predecessor_path.name, "sha256": lifecycle.sha256_path(predecessor_path)},
+            }
+            lifecycle.observation_path(activation_path).write_text(json.dumps(activation) + "\n")
+            # Fixture records exercise the observer's receipt checks; no SDK
+            # or product command is dispatched or given a successful response.
+            receipt = {
+                "schema": "facman.self_maintenance_cli.v1", "status": "ok", "operation": "downgrade",
+                "phase": "shell_cutover_complete", "operation_id": operation,
+                "generation_id": generation_id, "product_version": identity["version"],
+                "install_id": generation["install_id"], "install_root": str(physical),
+                "generation_record": str(path), "activation_record": str(activation_path),
+            }
+            self.assertEqual(physical, lifecycle.require_epoch_transition_receipt(
+                receipt, "downgrade", epoch_id, identity, archive_sha, creator, logical, state, root,
+            ))
+            for altered in (dict(receipt, install_id="facman.self.eg." + "f" * 64),
+                            dict(receipt, generation_record=str(root / path.name)),
+                            dict(receipt, activation_record=str(root / activation_path.name)),
+                            dict(receipt, phase="handoff_launched")):
+                with self.assertRaises(AssertionError):
+                    lifecycle.require_epoch_transition_receipt(
+                        altered, "downgrade", epoch_id, identity, archive_sha, creator, logical, state, root,
+                    )
+            lifecycle.observation_path(activation_path).write_text(json.dumps(dict(
+                activation, generation_record_sha256="f" * 64)) + "\n")
+            with self.assertRaisesRegex(AssertionError, "exact generation bytes"):
+                lifecycle.require_epoch_transition_receipt(
+                    receipt, "downgrade", epoch_id, identity, archive_sha, creator, logical, state, root,
+                )
+            legacy_creator = dict(generation)
+            del legacy_creator["creating_provider_revision"]
+            self.assertEqual(legacy_creator, check(legacy_creator, identity["provider_revision"]))
+            for field, value in (
+                    ("creating_provider_revision", None), ("creating_provider_revision", ""),
+                    ("creating_provider_revision", identity["provider_revision"]),
+                    ("creating_provider_revision", "f" * 40), ("universal_setup_revision", creator),
+                    ("facman_source_revision", "f" * 40), ("package_sha256", "f" * 64),
+                    ("generation_id", "f" * 64), ("install_id", "facman.self.eg." + "f" * 64)):
+                with self.subTest(field=field, value=value), self.assertRaises(AssertionError):
+                    check(dict(generation, **{field: value}))
+            with self.assertRaises(AssertionError):
+                check(legacy_creator)
+            with self.assertRaises(AssertionError):
+                check(dict(generation, unknown_creator=creator))
+            with self.assertRaises(AssertionError):
+                check(generation, identity["provider_revision"])
+
+    def test_real_ancestor_with_distinct_provider_lock_passes_baseline_admission(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary)
+            (source / "release/index").mkdir(parents=True)
+            (source / "runtime/self_setup").mkdir(parents=True)
+            (source / "runtime/self_setup/facman_self_maintenance_package.cpp").write_text(
+                "// self-maintenance package producer\n"
+            )
+
+            def git(*arguments: str) -> str:
+                return subprocess.run(
+                    ["git", "-c", "user.name=FacMan Fixture",
+                     "-c", "user.email=fixture@example.invalid", *arguments],
+                    cwd=source, check=True, capture_output=True, text=True,
+                ).stdout.strip()
+
+            def write_inputs(version: str, setup_revision: str) -> None:
+                (source / "release/index/version.v2.toml").write_text(
+                    f'semver = "{version}"\n'
+                )
+                (source / "release/index/providers.lock.v2.toml").write_text(
+                    '[[provider]]\nid = "universal_launcher"\n'
+                    f'source_revision = "{"a" * 40}"\n'
+                    '[[provider]]\nid = "universal_setup"\n'
+                    f'source_revision = "{setup_revision}"\n'
+                )
+
+            git("init")
+            write_inputs("0.1.0-alpha.5", "b" * 40)
+            git("add", ".")
+            git("commit", "-m", "Produced baseline source")
+            baseline = git("rev-parse", "HEAD")
+            write_inputs("0.1.0-alpha.6", "c" * 40)
+            git("commit", "-am", "Candidate source and provider successor")
+            candidate.preflight_baseline_ref(baseline, source)
+            self.assertEqual("b" * 40, candidate.provider_revision_from_lock(
+                {"provider": [{"id": "universal_setup", "source_revision": "b" * 40}]},
+                "universal_setup",
+            ))
+            with self.assertRaisesRegex(ValueError, "must precede"):
+                candidate.preflight_baseline_ref(git("rev-parse", "HEAD"), source)
+            with self.assertRaisesRegex(ValueError, "no exact"):
+                candidate.provider_revision_from_lock(
+                    {"provider": [{"id": "universal_setup", "source_revision": "floating"}]},
+                    "universal_setup",
+                )
+
+    def test_candidate_payload_capacity_binds_exact_fixture_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package = root / "candidate.zip"
+            with zipfile.ZipFile(package, "w") as archive:
+                archive.writestr("facman/bin/facman.exe", b"facman\n")
+                archive.writestr("facman/release/" + "x" * 40, b"record\n")
+            capacity = candidate.candidate_payload_path_capacity(
+                package, root / "m"
+            )
+            self.assertEqual(
+                candidate.WINDOWS_PROVIDER_FILE_LIMIT,
+                capacity["limit_utf16_units"],
+            )
+            self.assertEqual("release/" + "x" * 40, capacity["relative_path"])
+            self.assertGreaterEqual(capacity["headroom_utf16_units"], 0)
+            self.assertTrue(Path(str(capacity["target_path"])).is_relative_to(
+                root / "m" / "e" / "Programs"
+            ))
+
+            with self.assertRaisesRegex(ValueError, "provider file limit"):
+                candidate.candidate_payload_path_capacity(
+                    package, root / ("overlong-" + "y" * 300)
+                )
+
+    def test_candidate_payload_capacity_refuses_noncanonical_members(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package = root / "candidate.zip"
+            with zipfile.ZipFile(package, "w") as archive:
+                archive.writestr("other/bin/facman.exe", b"facman\n")
+            with self.assertRaisesRegex(ValueError, "noncanonical payload path"):
+                candidate.candidate_payload_path_capacity(package, root / "fixture")
+
     def test_predecessor_checkout_is_a_disjoint_task_root_sibling(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             parent = Path(temporary)
@@ -30,6 +276,104 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             self.assertFalse(checkout.is_relative_to(task_root))
             self.assertFalse(task_root.is_relative_to(checkout))
             self.assertIn(".owned-task.predecessor.aaaaaaaaaaaa", checkout.name)
+
+    def test_predecessor_environment_rebinds_inherited_candidate_task_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            candidate_task = development_layout.ensure_task_root(
+                root / "candidate-task", candidate.ROOT, "candidate-test",
+            )
+            source = root / "predecessor-source"
+            source.mkdir()
+            output = candidate_task / "predecessor-output"
+            launcher = root / "universal-launcher"
+            setup = root / "universal-setup"
+
+            predecessor_revision = "a" * 40
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "FACMAN_TASK_ROOT": str(candidate_task),
+                    "GITHUB_SHA": "b" * 40,
+                    "FACMAN_CI_SOURCE_SHA": "c" * 40,
+                },
+                clear=False,
+            ):
+                with self.assertRaisesRegex(ValueError, "repository_key"):
+                    development_layout.ensure_task_root(
+                        development_layout.default_task_root(source),
+                        source,
+                        development_layout.current_task_id(source),
+                    )
+                environment = candidate.predecessor_environment(
+                    source, output, launcher, setup, predecessor_revision,
+                )
+
+            self.assertEqual(str(output.resolve()), environment["FACMAN_TASK_ROOT"])
+            self.assertEqual(str(launcher), environment["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"])
+            self.assertEqual(str(setup), environment["FLAUNCH_UNIVERSAL_SETUP_ROOT"])
+            self.assertEqual(str(source), environment["PYTHONPATH"])
+            self.assertEqual(
+                predecessor_revision, environment["FACMAN_CI_SOURCE_SHA"],
+            )
+            self.assertEqual("b" * 40, environment["GITHUB_SHA"])
+            self.assertEqual(
+                str(output / "winforms-product" / "Release"),
+                environment["FACMAN_WINFORMS_OUTPUT_ROOT"],
+            )
+            audit_environment = candidate.predecessor_audit_environment(environment)
+            self.assertIsNot(environment, audit_environment)
+            self.assertEqual(str(candidate.ROOT), audit_environment["PYTHONPATH"])
+            self.assertEqual(
+                predecessor_revision, audit_environment["FACMAN_CI_SOURCE_SHA"],
+            )
+            self.assertEqual(str(source), environment["PYTHONPATH"])
+            marker = development_layout.read_marker(output, source)
+            self.assertEqual(
+                development_layout.repository_key(source), marker["repository_key"],
+            )
+            self.assertEqual(
+                development_layout.current_task_id(source), marker["task_id"],
+            )
+            with mock.patch.dict(os.environ, environment, clear=False):
+                self.assertEqual(
+                    output.resolve(),
+                    development_layout.ensure_task_root(
+                        development_layout.default_task_root(source),
+                        source,
+                        development_layout.current_task_id(source),
+                    ),
+                )
+            with self.assertRaisesRegex(ValueError, "repository_key"):
+                development_layout.read_marker(output, candidate.ROOT)
+
+    def test_predecessor_winforms_uses_its_checkout_and_owned_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "predecessor-source"
+            output = root / "predecessor-output"
+            source.mkdir()
+            output.mkdir()
+            environment = {"PYTHONPATH": str(source)}
+            executable = output / "winforms-product/Release/FacMan.exe"
+
+            def build(command: list[str], **kwargs: object) -> None:
+                self.assertEqual(candidate.sys.executable, command[0])
+                self.assertEqual("-c", command[1])
+                self.assertIn("from tools import winforms_build", command[2])
+                self.assertEqual(str(output), command[3])
+                self.assertEqual(source, kwargs["cwd"])
+                self.assertIs(environment, kwargs["env"])
+                executable.parent.mkdir(parents=True)
+                executable.write_bytes(b"predecessor WinForms")
+
+            with mock.patch.object(candidate, "run", side_effect=build) as invoked:
+                result = candidate.build_predecessor_winforms(
+                    source, output, environment, deadline=time.monotonic() + 30,
+                )
+
+            self.assertEqual(executable, result)
+            invoked.assert_called_once()
 
     def test_clone_clean_detached_materializes_long_path_and_persists_setting(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -147,6 +491,23 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             self.assertEqual("0.1.0-alpha.6", identity["version"])
             self.assertEqual(source, identity["source_revision"])
 
+    def test_setup_overlay_digest_binds_only_the_materialized_zip_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package, _ = self.overlay(
+                root, version="0.1.0-alpha.6", source="b" * 40,
+            )
+            expected = candidate.sha256_file(package)
+            prefixed = root / "FacMan-0.1.0-alpha.6-windows-x64-setup.exe"
+            prefixed.write_bytes(b"MZ\x00bounded bootstrap\n" + package.read_bytes())
+
+            self.assertEqual(expected, candidate.setup_overlay_sha256(package))
+            self.assertEqual(expected, candidate.setup_overlay_sha256(prefixed))
+
+            prefixed.write_bytes(prefixed.read_bytes() + b"foreign trailing byte")
+            with self.assertRaisesRegex(ValueError, "ZIP end record"):
+                candidate.setup_overlay_sha256(prefixed)
+
     def test_identity_refuses_cross_record_source_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             package, _ = self.overlay(Path(temporary), version="0.1.0-alpha.6", source="b" * 40,
@@ -169,6 +530,36 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             portable.write_bytes(b"substituted")
             with self.assertRaisesRegex(ValueError, "does not bind"):
                 candidate.identity_from_overlay(package, portable)
+
+    def test_predecessor_identity_preserves_produced_name_and_retained_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = "b" * 40
+            package, portable = self.overlay(
+                root, version="0.1.0-alpha.5", source=source,
+            )
+            retained_setup = candidate.copy_evidence(
+                package, root / "windows-self-maintenance-baseline-setup.exe",
+            )
+            retained_portable = candidate.copy_evidence(
+                portable, root / "windows-self-maintenance-baseline-portable.zip",
+            )
+            predecessor = {
+                "setup": package,
+                "portable": portable,
+                "staged": {
+                    "setup": retained_setup,
+                    "portable": retained_portable,
+                },
+            }
+
+            identity = candidate.identity_from_predecessor_outputs(predecessor)
+            self.assertEqual(portable.name, identity["portable_name"])
+            self.assertEqual(source, identity["source_revision"])
+
+            Path(str(retained_portable["path"])).write_bytes(b"changed evidence")
+            with self.assertRaisesRegex(ValueError, "predecessor portable differ"):
+                candidate.identity_from_predecessor_outputs(predecessor)
 
     def test_semver_gate_accepts_alpha_successor_and_refuses_same_or_reverse(self) -> None:
         self.assertLess(candidate.semver_order("0.1.0-alpha.5", "0.1.0-alpha.6"), 0)
@@ -259,6 +650,15 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             activation_path = activations / f"activation.{operation_id}.v1.json"
             activation_path.write_text(json.dumps(activation) + "\n", encoding="utf-8")
             generation_path = generations / f"generation.{generation_id}.v1.json"
+            if os.name == "nt":
+                generation = dict(generation)
+                generation["gui"] = (
+                    str(physical / "generations") + "/" + identity["version"]
+                    + "\\FacMan.exe"
+                )
+                generation["maintenance_launcher"] = (
+                    str(physical / "maintenance") + "/FacManSetup.exe"
+                )
             generation_path.write_text(json.dumps(generation) + "\n", encoding="utf-8")
             response = {
                 "schema": "facman.self_maintenance_cli.v1",
@@ -405,11 +805,11 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             generation = physical / "generations" / version
             gui = generation / "FacMan.exe"
             uninstall = (
-                f'"{maintenance}" uninstall --root "{logical}" --state-root "{state}" '
+                f'"{maintenance}" uninstall --root "{physical}" --state-root "{state}" '
                 f'--acceptance-root "{root}" --yes --noninteractive --shell-integration'
             )
             modify = (
-                f'"{maintenance}" repair --package "{active_source}" --root "{logical}" '
+                f'"{maintenance}" repair --package "{active_source}" --root "{physical}" '
                 f'--state-root "{state}" --acceptance-root "{root}" '
                 f'--yes --noninteractive --shell-integration'
             )
@@ -417,7 +817,7 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
                 "DisplayName": ("FacMan", 1),
                 "DisplayVersion": (version, 1),
                 "Publisher": ("Jules C", 1),
-                "InstallLocation": (str(logical), 1),
+                "InstallLocation": (str(physical), 1),
                 "DisplayIcon": (f'"{gui}"', 1),
                 "UninstallString": (uninstall, 1),
                 "QuietUninstallString": (uninstall + " --json", 1),
@@ -560,6 +960,7 @@ class SelfMaintenanceCandidateTests(unittest.TestCase):
             source_text = (candidate.ROOT / "tools/self_maintenance_candidate.py").read_text(
                 encoding="utf-8"
             )
-            gate_call = source_text.index('str(source / "tools/package_contract_tck.py")')
+            gate_call = source_text.index('str(ROOT / "tools/package_contract_tck.py")')
             self.assertLess(source_text.index('staged["portable"]'), gate_call)
             self.assertLess(source_text.index('staged["setup"]'), gate_call)
+            self.assertIn("cwd=ROOT, env=auditor_environment", source_text)

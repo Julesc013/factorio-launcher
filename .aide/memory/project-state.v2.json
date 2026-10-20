@@ -287,6 +287,20 @@
     },
     {
       "commands": [
+        "installs.move.apply"
+      ],
+      "description": "Apply a resource-bounded reviewed move through pinned Setup, verify and project the new root, and retain the old source pending acceptance under existing explicit Setup authority.",
+      "domain": "installs",
+      "id": "install.managed.move.apply",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "setup_mutation"
+      ],
+      "status": "conditional"
+    },
+    {
+      "commands": [
         "installs.install.plan"
       ],
       "description": "Produce an immutable plan for a new FacMan-managed standalone installation.",
@@ -721,11 +735,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428",
-    "contracts": 131,
-    "refusal_codes": 290,
-    "registered_routes": 129,
-    "schemas": 436
+    "catalog_digest": "f7ee0fa96928cd61bfc59e31efe4c758968e409e582bc680360ab88de78cb9f5",
+    "contracts": 132,
+    "refusal_codes": 320,
+    "registered_routes": 130,
+    "schemas": 460
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
@@ -749,7 +763,7 @@
     "runtime_candidate": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "truth_closeout": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
-    "universal_setup": "4c766b342e68656a2d4e26a14cfe51ab2209ad41"
+    "universal_setup": "2749a15b835a6c1c9968598a2b434d85809691ad"
   },
   "execution": {
     "current_gate_status": "alpha6_workspace_migration_recovery_active",
@@ -794,23 +808,23 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-06",
+      "as_of_time": "2026-09-22",
       "authority_class": "planning_only",
       "freshness": "current_queue_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
+      "value": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
     },
     "current_active_workunits": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-06",
+      "as_of_time": "2026-09-22",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
-        "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
-        "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01"
+        "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+        "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
       ]
     },
     "current_origin_observation": {
@@ -823,11 +837,11 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-06",
+      "as_of_time": "2026-09-22",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
+      "value": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
@@ -2683,9 +2697,9 @@
     "universal_launcher_consumed_pin": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
     "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
-    "universal_setup_consumed_pin": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
+    "universal_setup_consumed_pin": "2749a15b835a6c1c9968598a2b434d85809691ad",
     "universal_setup_dev_revision": "a7dc307fe9c2e2c7b783223edd1bc6da8dafef17",
-    "universal_setup_main_revision": "4c766b342e68656a2d4e26a14cfe51ab2209ad41"
+    "universal_setup_main_revision": "2749a15b835a6c1c9968598a2b434d85809691ad"
   },
   "provider_pins": {
     "factorio_binding": {
@@ -2709,7 +2723,7 @@
       "reachability": "required_for_source_closure",
       "remote": "https://github.com/Julesc013/universal-setup.git",
       "required_ref": "refs/heads/main",
-      "revision": "4c766b342e68656a2d4e26a14cfe51ab2209ad41",
+      "revision": "2749a15b835a6c1c9968598a2b434d85809691ad",
       "source": "universal-setup"
     }
   },
@@ -2729,20 +2743,26 @@
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
       "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
-      "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
-      "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01"
+      "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+      "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
     ],
     "archived_task_count": 96,
     "counts": {
       "active": 3,
       "active_automated": 1,
-      "blocked": 2,
-      "closed": 29,
-      "planned": 34,
+      "blocked": 3,
+      "closed": 32,
+      "planned": 31,
       "superseded": 7
     },
-    "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+    "current": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
     "records": [
+      {
+        "id": "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
+      },
       {
         "id": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "lifecycle_state": "active_automated",
@@ -2787,9 +2807,9 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "blocked",
         "queue": "active",
-        "status": "active"
+        "status": "blocked"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
@@ -2814,6 +2834,24 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "closed"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
       },
       {
         "id": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
@@ -2984,12 +3022,6 @@
         "status": "planned"
       },
       {
-        "id": "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
         "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
         "lifecycle_state": "planned",
         "queue": "next",
@@ -2997,12 +3029,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"
@@ -3057,12 +3083,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"
@@ -3134,12 +3154,6 @@
         "status": "planned"
       },
       {
-        "id": "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
         "id": "FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01",
         "lifecycle_state": "planned",
         "queue": "next",
@@ -3183,6 +3197,12 @@
       },
       {
         "id": "FACMAN-0.1-FEATURE-FREEZE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-AIDE-LITE-UPGRADE-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

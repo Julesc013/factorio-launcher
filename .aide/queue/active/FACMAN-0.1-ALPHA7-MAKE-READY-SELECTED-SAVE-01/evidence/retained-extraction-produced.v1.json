@@ -1,0 +1,123 @@
+{
+  "schema": "facman.retained_extraction_produced_acceptance.v1",
+  "status": "INDEPENDENTLY_ACCEPTED_SUPPORTED_PRODUCED_WINDOWS_CLI",
+  "source": "1f517c39f91810d693e0f2c5c08ae3f97b9045e1",
+  "merge": "f0a68de840f8ae5f2f082f996c4e8660950283d6",
+  "pull_request": "https://github.com/Julesc013/factorio-launcher/pull/402",
+  "producer": "https://github.com/Julesc013/factorio-launcher/actions/runs/38030958977/job/114151673044",
+  "artifact": {
+    "artifact_id": 11663685722,
+    "producer_run": 38030958977,
+    "producer_job": 114151673044,
+    "artifact_sha256": "72c6b31c2c939c07dd38af5d99f12638b561151c563d3db450adfa9258818973",
+    "artifact_bytes": 10806919,
+    "payload_sha256": "db754eea538ea40a71a8fe0a7c7f0b83cfe679dd13bfb97487341673538eb0b8",
+    "payload_tree_digest": "9a095e654e1cb0eead6c96d903be974b3945bcd89f67476ac20acf9d3d7131f7",
+    "payload_files": 597,
+    "delivery_files": 594,
+    "manifest_covered_files": 593,
+    "executable_sha256": "2733d5d06e1aa8aaa64227ad90a2569c52d78ea560368eabb5b163a9b7b2eb9e",
+    "source_dirty": false,
+    "actual_loaded_shared_modules": [
+      {
+        "name": "ulk.dll",
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\produced-retained-extraction-01\\facman\\generations\\0.1.0-alpha.6\\bin\\ulk.dll",
+        "sha256": "43100075f8b104d7873416218a249c133d2053fe14634a10b9a0fe4ac43b2a16"
+      },
+      {
+        "name": "usk.dll",
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\t\\produced-retained-extraction-01\\facman\\generations\\0.1.0-alpha.6\\bin\\usk.dll",
+        "sha256": "c06d68413d4521cdfa0e27b8b1e01847bdd7335a4d591bfebac52cde9d3395fa"
+      }
+    ],
+    "provider_revisions": {
+      "factorio_launcher": "1f517c39f91810d693e0f2c5c08ae3f97b9045e1",
+      "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "universal_setup": "2749a15b835a6c1c9968598a2b434d85809691ad"
+    },
+    "factorio_application_linkage": "static_in_produced_cli",
+    "Factorio_shared_DLL_execution_qualified": false
+  },
+  "outcomes": {
+    "supported_tests_run": 17,
+    "full_methods": 16,
+    "foreign_marker_cells": [
+      {
+        "point": "published",
+        "substitution": "foreign_bytes"
+      },
+      {
+        "point": "committed",
+        "substitution": "foreign_bytes"
+      }
+    ],
+    "supported_suite_skips": 0,
+    "primary_CLI_calls": 322,
+    "legacy_direct_children": 18,
+    "verified_child_raw_streams": 680,
+    "verified_child_raw_bytes": 882408,
+    "verified_module_audit_streams": 2,
+    "primary_exit_counts": {
+      "0": 278,
+      "1": 38,
+      "3": 3,
+      "4": 3
+    },
+    "legacy_exit_counts": {
+      "0": 1,
+      "1": 15,
+      "3": 2
+    },
+    "primary_max_seconds": 2.671,
+    "legacy_max_seconds": 1.39,
+    "raw_streams_complete": true,
+    "deadline_failures": 0,
+    "cleanup_failures": 0,
+    "source_required_checks": 12,
+    "merge_required_checks": 11,
+    "automatic_same_SHA_push_campaigns_passed": 6
+  },
+  "boundaries": {
+    "original_all17_zero_skip_qualification": false,
+    "dangling_symlink_cells_qualified": false,
+    "retained_host_gaps": [
+      "published dangling_symlink",
+      "committed dangling_symlink"
+    ],
+    "POSIX_adversarial_namespace_qualified": false,
+    "partial_extraction_resume_qualified": false,
+    "compiled_control_qualified": false,
+    "live_GUI_or_click_to_backend_qualified": false,
+    "game_qualified": false,
+    "human_qualified": false,
+    "opaque_SACL_or_general_power_loss_qualified": false,
+    "full_F09_closed": false,
+    "full_F11_closed": false,
+    "beta_qualified": false,
+    "old_SDK_q02_timeout_resolved": false,
+    "CI63_attribution_confirmed": false,
+    "source_edits_by_reviewer": false,
+    "tests_or_builds_executed_by_reviewer": false
+  },
+  "proof_sha256": "35ff6046e8ea50da043de9cba83d3d05ea9b227b626e37ad5874cc101493bc96",
+  "admission_sha256": "482ed801f31b64079c03f52bec4bd6e0430b04e11b6b1e2d45ffa87a398bda03",
+  "independent_review_sha256": "8784750dea9e601400370e8cb2aafaf391f945a42f71be341f0cf2925aea4eca",
+  "custody": {
+    "file": "retained-extraction-produced-custody.zip",
+    "sha256": "20b9fd5cd29b65d3c1557b0ddcd2896ad99db0bd1c9692418c9214001f5c997d",
+    "bytes": 547839,
+    "files": 693,
+    "includes_original_child_streams": true,
+    "includes_artifact_or_workspace_copy": false
+  },
+  "qualification_scope": "Actual supported Windows produced CLI archive owner/ordinary Content import compatibility with synthetic offline packs; independently accepted terminal evidence only. No new product, build, CI, network, source or ref operation performed by this reviewer.",
+  "retained_host_gaps": [
+    "published dangling_symlink",
+    "committed dangling_symlink"
+  ],
+  "prepared_at": "2026-10-11T13:51:08.804046+00:00",
+  "checkout_mutated": false,
+  "new_roots": 0,
+  "new_clones": 0,
+  "new_builds": 0
+}

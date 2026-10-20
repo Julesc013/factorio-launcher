@@ -40,6 +40,7 @@ EXPECTED_OPTIONAL = {
     "modsets.lock",
     "modsets.verify",
     "modsets.export",
+    "modsets.import",
     "modsets.plan",
     "modsets.diff",
     "modsets.explain",

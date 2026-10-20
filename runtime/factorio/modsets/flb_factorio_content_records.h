@@ -5,84 +5,14 @@
 #define FLB_FACTORIO_CONTENT_RECORDS_H
 
 #include "fl_result.h"
+#include "flb_factorio_content_record_types.h"
 
-#include <cstdint>
-#include <string>
-#include <vector>
 
 namespace facman::factorio::modsets::solver {
 struct Request;
 }
 
 namespace facman::factorio::content {
-
-// These records are additive, portable projections over the implemented
-// modset and snapshot records. They do not replace either persistence model.
-struct ContentRequirement {
-    std::string name;
-    std::string desired_state;
-    std::string version_constraint;
-};
-
-struct ContentSetSpec {
-    std::string instance_id;
-    std::string factorio_version_requirement;
-    std::string compatibility_policy;
-    std::vector<ContentRequirement> requirements;
-};
-
-struct ContentLockEntry {
-    std::string name;
-    std::string version;
-    std::string file_name;
-    std::string sha256;
-    std::string source;
-    bool enabled = true;
-    bool virtual_package = false;
-    std::vector<std::string> required_dependencies;
-};
-
-struct ContentLock {
-    std::string instance_id;
-    std::string factorio_version;
-    std::string startup_settings_sha256;
-    std::string source_lock_sha256;
-    std::vector<ContentLockEntry> entries;
-};
-
-struct BlobIdentity {
-    std::string sha256;
-    std::uint64_t size = 0;
-};
-
-struct ModpackArtifact {
-    std::string name;
-    std::string file_name;
-    BlobIdentity blob;
-};
-
-struct ModpackManifest {
-    std::string name;
-    ContentLock content_lock;
-    std::vector<ModpackArtifact> artifacts;
-};
-
-struct WorldFile {
-    std::string path;
-    std::uint64_t size = 0;
-    std::string sha256;
-};
-
-struct WorldBundle {
-    std::string bundle_id;
-    std::string source_instance_id;
-    std::string factorio_version;
-    std::string content_lock_blob_sha256;
-    std::string source_snapshot_manifest_sha256;
-    std::vector<std::string> selected_saves;
-    std::vector<WorldFile> world_files;
-    std::vector<WorldFile> support_files;
-};
 
 facman::core::Result<ContentSetSpec> content_set_spec_from_modset_request(
     const facman::factorio::modsets::solver::Request& request,

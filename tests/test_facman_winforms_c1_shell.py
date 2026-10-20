@@ -89,6 +89,8 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
             '"saves.inspect"',
             '"saves.associate"',
             '"saves.backup"',
+            '"saves.restore"',
+            '"snapshots.restore"',
         ):
             self.assertIn(action, shell)
         self.assertIn('"content", "mods.inspect"', shell)
@@ -121,7 +123,8 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
         self.assertIn("FormClosing += delegate { lifetime.Cancel(); };", shell)
         self.assertIn("UseWaitCursor = true;", shell)
         self.assertIn("UseWaitCursor = false;", shell)
-        self.assertNotIn("Enabled = false;", shell)
+        self.assertNotIn("this.Enabled = false;", shell)
+        self.assertNotIn("Enabled = false;", shell.replace("observation.Enabled = false;", ""))
 
     def test_optional_cli_is_packaged_beside_shell(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

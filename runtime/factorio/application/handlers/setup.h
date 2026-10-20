@@ -6,6 +6,7 @@
 
 #include "application_context.h"
 #include "application_types.h"
+#include <functional>
 
 namespace facman::factorio::application::handlers {
 bool is_setup_command(CommandId command) noexcept;
@@ -18,7 +19,8 @@ ApplicationResult apply_install(ApplicationContext& context, const ServiceOperat
 ApplicationResult verify_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult plan_repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
-ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest& request,
+    const std::function<facman::core::Result<std::string>()>& protected_inputs = {});
 ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult apply_move_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request);
@@ -26,5 +28,12 @@ ApplicationResult plan_uninstall_install(ApplicationContext& context, const Serv
 ApplicationResult apply_uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult inspect_install_recovery(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult apply_install_recovery(ApplicationContext& context, const ServiceOperationRequest& request);
+
+namespace testing {
+// Internal C++ proof instrumentation; scoped to the calling worker thread.
+using ManagedInstallPauseObserver = std::function<void(const char*)>;
+ManagedInstallPauseObserver exchange_managed_install_pause_observer(
+    ManagedInstallPauseObserver observer) noexcept;
+}
 }
 #endif

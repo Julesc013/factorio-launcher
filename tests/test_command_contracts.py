@@ -13,6 +13,29 @@ from tools import command_contract_check
 
 
 class CommandContractTests(unittest.TestCase):
+    def test_move_recovery_unproved_entry_is_schema_valid_indeterminate(self) -> None:
+        root = command_contract_check.ROOT / "contracts/schema/factorio"
+        observed = {
+            "schema": "facman.managed_move_recovery.v1", "operation": "move", "status": "blocked",
+            "transaction_id": "tx-move-entry", "install_id": "managed-test", "plan_id": "move-recovery.tx-move-entry",
+            "plan_digest": "1" * 64, "classification": "indeterminate", "action": "none",
+            "facman_journal_sha256": "2" * 64, "pre_record_sha256": "3" * 64,
+            "current_record_sha256": "3" * 64, "projected_record_sha256": "3" * 64,
+            "provider_observed_state": "", "provider_journal_snapshot_sha256": "",
+            "provider_installed_state_sha256": "4" * 64, "provider_audit_chain_digest": "",
+            "old_root": "D:/owned/source", "new_root": "D:/owned/destination", "old_root_status": "retained",
+            "old_root_removal_available": False, "grants_ownership": False,
+            "empty_directory_preservation": "not_promised", "observation_atomic": False,
+        }
+        for name in ("facman_managed_move_recovery.v1.schema.json", "facman_managed_install_recovery.v1.schema.json"):
+            validator = jsonschema.Draft202012Validator(json.loads((root / name).read_bytes()))
+            validator.validate(observed)
+            falsely_proved = {**observed, "classification": "no_provider_effect"}
+            self.assertTrue(list(validator.iter_errors(falsely_proved)))
+            proved_pre_entry = {**observed, "classification": "no_provider_effect", "action": "close_no_provider_effect",
+                                "status": "planned"}
+            validator.validate(proved_pre_entry)
+
     def test_command_contract_check(self) -> None:
         self.assertEqual(command_contract_check.main(), 0)
 
@@ -56,6 +79,56 @@ class CommandContractTests(unittest.TestCase):
         for document in invalid_documents:
             with self.subTest(document=document):
                 self.assertTrue(list(validator.iter_errors(document)))
+
+    def test_move_preview_contract_keeps_provider_and_limitations_strict(self) -> None:
+        root = command_contract_check.ROOT
+        schema = json.loads((root / "contracts/schema/factorio/facman_managed_move_plan.v1.schema.json").read_text())
+        provider_schema = json.loads((root / "contracts/schema/factorio/usk_move_plan.v1.schema.json").read_text())
+        self.assertEqual(schema["$defs"]["provider_plan"], provider_schema)
+        golden = json.loads((root / "tests/golden/commands/installs.move.plan.success.json").read_text())
+        validator = jsonschema.Draft202012Validator(schema)
+        validator.validate(golden)
+        for field, value in (("grants_ownership", True), ("apply_available", False),
+                             ("observation_atomic", True), ("copy_scope", "owned_files_only"),
+                             ("empty_directory_preservation", "guaranteed")):
+            bad = copy.deepcopy(golden)
+            bad[field] = value
+            self.assertTrue(list(validator.iter_errors(bad)), field)
+        for path, value in (("relative_path", "../foreign"), ("kind", "delete_owned_file"),
+                            ("root_role", "current"), ("ownership_required", False)):
+            bad = copy.deepcopy(golden)
+            bad["provider_plan"]["effects"][0][path] = value
+            self.assertTrue(list(validator.iter_errors(bad)), path)
+        for kind in ("write_state", "write_journal", "write_audit"):
+            bad = copy.deepcopy(golden)
+            bad["provider_plan"]["effects"] = [row for row in bad["provider_plan"]["effects"] if row["kind"] != kind]
+            self.assertTrue(list(validator.iter_errors(bad)), kind)
+        for field, value in (("must_not_exist", False), ("classification", "managed_install"),
+                             ("root", "relative/destination")):
+            bad = copy.deepcopy(golden)
+            bad["provider_plan"]["roots"][-1][field] = value
+            self.assertTrue(list(validator.iter_errors(bad)), field)
+
+    def test_managed_move_apply_handoff_and_pending_projection_are_explicit(self) -> None:
+        root = command_contract_check.ROOT
+        request = json.loads((root / "contracts/schema/command/installs.move.apply.request.v1.schema.json").read_text())
+        required = {"install_id", "target_root", "plan_id", "plan_digest", "plan_created_at",
+                    "install_record_sha256", "transaction_id", "applied_at", "confirmation"}
+        self.assertEqual(set(request["required"]), required)
+        schema = json.loads((root / "contracts/schema/factorio/facman_managed_move_apply_result.v1.schema.json").read_text())
+        provider = json.loads((root / "contracts/schema/factorio/usk_move_report.v1.schema.json").read_text())
+        self.assertEqual(schema["$defs"]["provider_report"], provider)
+        golden = json.loads((root / "tests/golden/commands/installs.move.apply.success.json").read_text())
+        validator = jsonschema.Draft202012Validator(schema)
+        validator.validate(golden)
+        for field, value in (("lifecycle_status", "active"), ("old_root_status", "removed"),
+                             ("grants_ownership", True), ("old_root_removal_available", True),
+                             ("status", "completed"), ("empty_directory_preservation", "guaranteed")):
+            invalid = copy.deepcopy(golden)
+            invalid[field] = value
+            self.assertTrue(list(validator.iter_errors(invalid)), field)
+        self.assertTrue(list(jsonschema.Draft202012Validator(request).iter_errors({
+            "plan_id": "old-plan", "plan_digest": "0" * 64, "confirmation": "APPLY"})))
 
     def test_uninstall_report_schema_rejects_runtime_invalid_shapes(self) -> None:
         schema = json.loads(

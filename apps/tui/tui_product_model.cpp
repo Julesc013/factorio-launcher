@@ -86,7 +86,19 @@ std::string readiness_text(const json::Value* readiness)
     if (!readiness->is_object()) return "Invalid readiness projection";
     const std::string value = first_string(
         *readiness, {"status", "state", "configuration_state", "outcome"});
-    return value.empty() ? "Available" : value;
+    std::string summary = value.empty() ? "Available" : value;
+    const json::Value* preview = readiness->find("preparation_preview");
+    if (preview != nullptr && preview->is_object()) {
+        summary += "; Preparation preview: " + string_member(*preview, "composition_state") + "; apply unavailable";
+        for (const char* name : {"installation", "profile"}) {
+            const json::Value* owner = preview->find(name);
+            if (owner == nullptr || !owner->is_object()) continue;
+            summary += "; " + std::string(name) + ": " + string_member(*owner, "disposition");
+            const std::string refusal = string_member(*owner, "refusal");
+            if (!refusal.empty()) summary += "; " + refusal;
+        }
+    }
+    return summary;
 }
 
 std::string last_run_text(const json::Value* last_run)
@@ -120,9 +132,11 @@ std::string item_title(const json::Value& item)
 std::string item_detail(const json::Value& item)
 {
     std::vector<std::string> values;
+    const std::string save_bytes = string_member(item, "association_status");
+    if (!save_bytes.empty()) values.push_back("Save bytes: " + save_bytes);
     for (const char* key : {"factorio_version", "version", "profile", "ownership",
          "installation_layout", "distribution_origin", "strict_isolation_eligibility",
-         "verification_status", "association_status", "backup_status", "kind",
+         "verification_status", "backup_status", "kind",
          "status", "value", "root", "identity", "sha256"}) {
         const std::string value = string_member(item, key);
         if (!value.empty() && std::find(values.begin(), values.end(), value) == values.end()) {
@@ -245,6 +259,19 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
 {
     TuiState next = state;
     switch (event.kind) {
+    case TuiEventKind::observe_launch_intent:
+        if (event.value != "menu" && event.value != "load_save") {
+            next.status = "Unsupported observation; choose Menu or Selected Save";
+            break;
+        }
+        if (next.launch_intent == event.value) break;
+        next.launch_intent = event.value;
+        next.pending_action.clear();
+        next.form = {};
+        next.snapshot.revision.clear();
+        next.refresh_requested = true;
+        next.status = "Observation changed; refreshing authoritative state";
+        break;
     case TuiEventKind::navigate:
         next.page = event.page;
         next.focus_region = TuiFocusRegion::navigation;
@@ -292,6 +319,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.status = event.name.empty() ? "No action available" : "Action selected: " + event.name;
         break;
     case TuiEventKind::edit_field:
+        if (next.form.values[event.name] != event.value) next.pending_action.clear();
         next.form.values[event.name] = event.value;
         next.form.problems = validate_form(next.form);
         break;
@@ -395,6 +423,8 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
             ? (state.snapshot.active_operation.empty() ? "None" : state.snapshot.active_operation)
             : state.operation_status),
         "Last Run: " + (state.snapshot.last_run.empty() ? "Unavailable" : state.snapshot.last_run),
+        std::string("Observation: ") + (state.snapshot.launch_intent == "menu" ? "Menu"
+            : state.snapshot.launch_intent == "load_save" ? "Selected Save" : "Unavailable"),
     };
     model.page_title = tui_page_name(state.page);
     if (!state.snapshot.summary.empty()) model.body.push_back(state.snapshot.summary);
@@ -409,11 +439,17 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
         line += item.title.empty() ? item.id : item.title;
         if (!item.detail.empty()) line += " - " + item.detail;
         model.body.push_back(std::move(line));
+        if (state.page == TuiPage::saves && index == state.selected_item && !item.save_context_status.empty()) {
+            model.body.push_back("  Declared context: " + item.save_context_status);
+            model.body.push_back("    Version: " + item.save_context_version);
+            model.body.push_back("    Content: " + item.save_context_content);
+        }
     }
     if (state.page == TuiPage::content) {
         model.body.push_back("Content is projected by the backend from shared profile and modset authority.");
     } else if (state.page == TuiPage::saves) {
         model.body.push_back("Save inventory is read from the selected instance without frontend joins.");
+        model.body.push_back("Declared context observes recorded inputs; gameplay compatibility is unclaimed.");
     } else if (state.page == TuiPage::settings) {
         model.body.push_back("Preferences, support, and runtime identity come from one backend snapshot.");
         model.body.push_back("Workspace: " + (state.snapshot.workspace_path.empty()
@@ -435,7 +471,7 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
             model.body.push_back("  " + field.id + "=" + value +
                 (field.required ? " (required)" : ""));
         }
-        model.body.push_back("Enter field=value, then activate the action again.");
+        model.body.push_back("Linear: enter field=value; fullscreen: press : to edit. Then activate again.");
     }
     if (model.body.empty()) model.body.push_back("No records in this authoritative snapshot.");
     model.problems = state.snapshot.blockers;
@@ -477,7 +513,8 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
         break;
     }
     model.status = state.status;
-    model.footer = "F1 Help | Tab Actions | Space Run | 1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
+    model.footer = "m Menu | s Selected Save | F1 Help | Tab Actions | Space Run | "
+        "1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
     return model;
 }
 
@@ -491,6 +528,10 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
     const json::Value* selected = root.find("selected_context");
     if (selected != nullptr && selected->is_object()) {
         snapshot.selected_instance_id = string_member(*selected, "instance_id");
+        snapshot.selected_instance_name = string_member(*selected, "display_name");
+        snapshot.factorio_version = string_member(*selected, "factorio_version");
+        snapshot.profile = string_member(*selected, "profile");
+        snapshot.launch_intent = string_member(*selected, "launch_intent");
     }
     const json::Value* page = root.find("page");
     if (page != nullptr && page->is_object()) {
@@ -506,11 +547,30 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
                 item.title = item_title(*value);
                 item.detail = item_detail(*value);
                 item.selected = bool_member(*value, "selected");
-                if (item.selected) {
-                    snapshot.selected_instance_id = item.id;
-                    snapshot.selected_instance_name = item.title;
-                    snapshot.factorio_version = string_member(*value, "factorio_version");
-                    snapshot.profile = string_member(*value, "profile");
+                if (snapshot.scope == "saves") {
+                    item.save_context_status = "Not observed";
+                    item.save_context_version = item.save_context_content = "not observed";
+                    const json::Value* context = value->find("association_context");
+                    if (context != nullptr && context->is_object()) {
+                        const std::string status = string_member(*context, "status");
+                        if (!status.empty()) item.save_context_status = status;
+                        const json::Value* version = context->find("factorio_version");
+                        const json::Value* content = context->find("modset_lock");
+                        if (version != nullptr && version->is_object()) {
+                            const std::string observed = string_member(*version, "status");
+                            if (!observed.empty()) item.save_context_version = observed;
+                        }
+                        if (content != nullptr && content->is_object()) {
+                            const std::string observed = string_member(*content, "status");
+                            if (!observed.empty()) item.save_context_content = observed;
+                        }
+                    }
+                }
+                if (item.selected && !snapshot.selected_instance_id.empty() &&
+                    string_member(*value, "instance_id") == snapshot.selected_instance_id) {
+                    if (snapshot.selected_instance_name.empty()) snapshot.selected_instance_name = item.title;
+                    if (snapshot.factorio_version.empty()) snapshot.factorio_version = string_member(*value, "factorio_version");
+                    if (snapshot.profile.empty()) snapshot.profile = string_member(*value, "profile");
                 }
                 snapshot.items.push_back(std::move(item));
             }

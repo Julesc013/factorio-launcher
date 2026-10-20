@@ -385,6 +385,7 @@ facman::core::Result<FrontendQueryResult> FrontendSession::query(
         payload.add_string("selected_instance_id", request.target_instance_id);
     }
     if (!request.search.empty()) payload.add_string("search", request.search);
+    if (!request.launch_intent.empty()) payload.add_string("launch_intent", request.launch_intent);
     if (!request.known_revision.empty()) {
         if (!sha256_text(request.known_revision)) {
             return facman::core::Result<FrontendQueryResult>::failure(frontend_error(
@@ -393,6 +394,7 @@ facman::core::Result<FrontendQueryResult> FrontendSession::query(
         }
         payload.add_string("known_revision", request.known_revision);
     }
+    if (!request.repair_review_id.empty()) payload.add_string("repair_review_id", request.repair_review_id);
     FrontendInvocation invocation;
     invocation.command = "presentation.query";
     invocation.payload = payload.serialize();
@@ -419,6 +421,8 @@ facman::core::Result<FrontendSessionIdentity> FrontendSession::negotiate(
     query_request.target_instance_id = std::move(request.target_instance_id);
     query_request.search = std::move(request.search);
     query_request.known_revision = std::move(request.known_revision);
+    query_request.repair_review_id = std::move(request.repair_review_id);
+    query_request.launch_intent = std::move(request.launch_intent);
     query_request.deadline = request.deadline;
     query_request.cancellation = std::move(request.cancellation);
     query_request.progress = std::move(request.progress);
@@ -503,7 +507,7 @@ FrontendActionExecution FrontendSession::act(FrontendActionRequest request)
     static const std::set<std::string> allowed_inputs {
         "selected_instance_id", "installation_id", "installation_path",
         "new_instance_id", "display_name", "template_id", "profile_id",
-        "mod_identity", "save", "output_path", "source_data_root",
+        "mod_identity", "save", "output_path", "source_data_root", "source_path",
         "transaction_id"};
     for (const auto& item : request.inputs) {
         if (allowed_inputs.count(item.first) == 0U) {

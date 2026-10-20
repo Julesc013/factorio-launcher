@@ -1,0 +1,98 @@
+{
+  "author_receipt_sha256": "c396b0a3d082999eebf062dae184fb9b0e90ea1910ed8d22d498b03ce88cf5e8",
+  "behavior": "Explicit load_save readiness/describe inspects only the exact selected ZIP; unrelated unsafe archives no longer invalidate its evidence. Public save commands retain whole-index filename/stem/hash semantics.",
+  "boundaries": {
+    "beta_qualified": false,
+    "execution_available": false,
+    "gameplay_compatibility": "unclaimed",
+    "other_hosts_qualified": false,
+    "permit_issued": false,
+    "preparation_available": false,
+    "produced_package_qualification": false,
+    "real_play_gate": "not_passed",
+    "whole_workunit_closed": false
+  },
+  "changed_paths_raw_sha256": {
+    "docs/architecture/instance_model_and_readiness.md": "be239153f2456628a620c37a18126ad875b23132a3e46f5f814d9a464252ef12",
+    "docs/product/save_intelligence.md": "ddd2997057c6739d322ec80b4ad115f16a002cdd3a8783b3eae139b3e58fea2a",
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "49aa0af2018fe46069737b15e8e24ee3fd0147d395609952f53d354238957499",
+    "runtime/factorio/saves/flb_factorio_save_index.cpp": "20ce3b57d7c5ed7553e4ea6e96fdb21b5f1cb27c8cfc564ac78e7f4f6dfed171",
+    "runtime/factorio/saves/flb_factorio_save_index.h": "e429ef5bd875e274be4116fd1e6e77b63e71be841da76e2efb8e91ea4c32b752",
+    "tests/test_profiles_templates.py": "416c85f979ac975e91def0ebd257c81d23d859db56f23a56777ce5d9a24311d5",
+    "tools/instance_model_check.py": "24e9fab3e338a350442e22edb995091710b53b04ef98c20b5b80b1ef910e8ebc"
+  },
+  "historical_receipts_unchanged": true,
+  "independent_source_review_sha256": "f5635f6583f7985f13106960ec5778bd1e2fa51d513d1d2143c81a0469d8881e",
+  "native_executable_sha256": "98b767635f6537d8a81a743bbd376fe1fd30e5814126091724d98b68c1ce8f83",
+  "observed_baseline_failure_sha256": "34153426aa48a668be823d9d776071753635ff6d211bfb90a796ab252d9c7768",
+  "operating_scope": {
+    "existing_cache_reused": true,
+    "native_workers": 2,
+    "new_clones": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "product_candidates_dispatched": 0,
+    "source_fixture_only": true
+  },
+  "oracles": [
+    "exact selected path/hash/structure/context and stable repeated read-only projection",
+    "unselected multiply-linked malformed ZIP isolation; legacy public refusal remains",
+    "selected hardlink, missing exact filename with stem lookalike, nonregular selected path refusal",
+    "existing malformed/context drift, linked ancestor, default menu and instance projection regressions",
+    "existing association/context and owned backup retention compatibility"
+  ],
+  "public_cli_tests": {
+    "methods": 13,
+    "passed": 12,
+    "skipped": 1
+  },
+  "qualification": [
+    {
+      "exit_code": 0,
+      "log_sha256": "a30b3d2f49cdb67b49295fea1e78872b94f1598d0385b2f53b8fffeccacc7500",
+      "name": "strict"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "a3ccba8508efcc320c53f084fdbf20abd013ba729f2451d39483686696ae8f92",
+      "name": "configure"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "e9a7dffda6e55deeffea468bb0332be28a9478a883236d13391c5194433e792a",
+      "name": "build"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "241c2fe5c6daafacbaf616b5cd63ac6e132218efca233510d09ce97b2d92c8e8",
+      "name": "native-smoke"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "f4fa1559688751a1be7454aeadaa7e05fe8b1977945004dafa2b46dcb89546a8",
+      "name": "focused-cli"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "29a108b79cc15e0b108c3d505a543714d9ba8f1f176d6a96ff5439f2585ea326",
+      "name": "diff"
+    }
+  ],
+  "qualification_sha256": "652e431857c1b00d5a6f9a73826d46ae469b8652e7000fc65248d6a27e4c48ca",
+  "required_host_cell_not_run": {
+    "log_sha256": "f4fa1559688751a1be7454aeadaa7e05fe8b1977945004dafa2b46dcb89546a8",
+    "qualification": "not_passed",
+    "reason": "Windows denied symlink creation: WinError 1314",
+    "test": "test_save_association_context.SaveAssociationContextTests.test_final_broken_and_parent_links_are_unavailable"
+  },
+  "retained_review_finding": "SO-01: legacy diff refusal expectation corrected before native qualification; initial receipt/review retained externally",
+  "schema": "facman.selected_save_exact_selection.scoped_qualification.v1",
+  "selected_filename_cells": [
+    "ASCII",
+    "spaces",
+    "Unicode"
+  ],
+  "source_parent": "fa087f97fdcc0e6be4c930e63587b3c023050007",
+  "verdict": "PASS",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}

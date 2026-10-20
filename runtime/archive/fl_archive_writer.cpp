@@ -77,6 +77,7 @@ Status abort_writer(
     mz_zip_archive& zip,
     SequentialOutputFile& output,
     const std::filesystem::path& staging_root,
+    const WriteOptions& options,
     Status failure)
 {
     if (zip.m_zip_mode != MZ_ZIP_MODE_INVALID) {
@@ -84,7 +85,7 @@ Status abort_writer(
     }
     std::string ignored;
     output.flush_and_close(ignored);
-    const Status cleanup = cleanup_owned_staging_root(staging_root);
+    const Status cleanup = options.preserve_staging_on_failure ? Status::success() : cleanup_owned_staging_root(staging_root);
     if (!cleanup.ok()) {
         failure.detail += "; cleanup: " + cleanup.detail;
     }
@@ -123,7 +124,7 @@ Status write_to_new_owned_staging(
     SequentialOutputFile output;
     status = output.create(output_path, options.limits.maximum_archive_bytes);
     if (!status.ok()) {
-        const Status cleanup = cleanup_owned_staging_root(staging_root);
+        const Status cleanup = options.preserve_staging_on_failure ? Status::success() : cleanup_owned_staging_root(staging_root);
         if (!cleanup.ok()) status.detail += "; cleanup: " + cleanup.detail;
         return status;
     }
@@ -137,6 +138,7 @@ Status write_to_new_owned_staging(
             zip,
             output,
             staging_root,
+            options,
             Status::failure("archive_writer_init_failed", mz_zip_get_error_string(zip.m_last_error)));
     }
 
@@ -163,6 +165,7 @@ Status write_to_new_owned_staging(
                     zip,
                     output,
                     staging_root,
+                    options,
                     Status::failure("archive_writer_add_directory_failed", entry.archive_path));
             }
             continue;
@@ -175,6 +178,7 @@ Status write_to_new_owned_staging(
                 zip,
                 output,
                 staging_root,
+                options,
                 Status::failure("archive_writer_source_changed", entry.archive_path));
         }
         const mz_uint level = options.method == CompressionMethod::stored ?
@@ -197,11 +201,12 @@ Status write_to_new_owned_staging(
                 zip,
                 output,
                 staging_root,
+                options,
                 Status::failure("archive_writer_add_file_failed", entry.archive_path));
         }
         status = source.revalidate();
         if (!status.ok()) {
-            return abort_writer(zip, output, staging_root, status);
+            return abort_writer(zip, output, staging_root, options, status);
         }
     }
     if (!mz_zip_writer_finalize_archive(&zip)) {
@@ -209,6 +214,7 @@ Status write_to_new_owned_staging(
             zip,
             output,
             staging_root,
+            options,
             Status::failure("archive_writer_finalize_failed", mz_zip_get_error_string(zip.m_last_error)));
     }
     if (!mz_zip_writer_end(&zip)) {
@@ -216,11 +222,12 @@ Status write_to_new_owned_staging(
             zip,
             output,
             staging_root,
+            options,
             Status::failure("archive_writer_close_failed", "Miniz writer cleanup failed"));
     }
     std::string flush_detail;
     if (!output.flush_and_close(flush_detail)) {
-        const Status cleanup = cleanup_owned_staging_root(staging_root);
+        const Status cleanup = options.preserve_staging_on_failure ? Status::success() : cleanup_owned_staging_root(staging_root);
         if (!cleanup.ok()) flush_detail += "; cleanup: " + cleanup.detail;
         return Status::failure("archive_writer_flush_failed", flush_detail);
     }
@@ -228,13 +235,13 @@ Status write_to_new_owned_staging(
     Plan verified;
     status = inspect_archive(output_path, options.limits, verified);
     if (!status.ok()) {
-        const Status cleanup = cleanup_owned_staging_root(staging_root);
+        const Status cleanup = options.preserve_staging_on_failure ? Status::success() : cleanup_owned_staging_root(staging_root);
         if (!cleanup.ok()) status.detail += "; cleanup: " + cleanup.detail;
         return status;
     }
     status = verify_all(verified, options.limits);
     if (!status.ok()) {
-        const Status cleanup = cleanup_owned_staging_root(staging_root);
+        const Status cleanup = options.preserve_staging_on_failure ? Status::success() : cleanup_owned_staging_root(staging_root);
         if (!cleanup.ok()) status.detail += "; cleanup: " + cleanup.detail;
         return status;
     }

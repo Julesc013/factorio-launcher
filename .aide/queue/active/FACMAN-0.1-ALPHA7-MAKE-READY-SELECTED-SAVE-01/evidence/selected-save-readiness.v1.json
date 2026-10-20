@@ -1,0 +1,84 @@
+{
+  "schema": "facman.selected_save_readiness.scoped_qualification.v1",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "verdict": "PASS",
+  "source_parent": "3c87cbbf42393bd6a3ae845ba4c92e3e600adb7a",
+  "reviewed_source_snapshot_sha256": "956eeff4b41225949f98783934e10d40b85735f7ae6b3875f3e2445cb763bb5c",
+  "source_scope": "Existing describe/readiness explicit load_save query; selected archive/declared context participates in digests; unknown context degrades, invalid or drifted evidence blocks, linked ancestors refuse",
+  "native_executable_sha256": "7ad072311f26c0dbae1b63e10b783f205feaf09db0d9bb07fc2f01a09578bee2",
+  "source_qualification_sha256": "ca09cb745cf5605711f5470810113b95607d2f8f0ee31287b9668c0949c8dec8",
+  "independent_review_sha256": "f77411bd04688d2af9912d00f3a835d864da56d37b9565fa9a6c4271f71dca2f",
+  "qualification": [
+    {
+      "name": "strict",
+      "exit_code": 0,
+      "log_sha256": "a30b3d2f49cdb67b49295fea1e78872b94f1598d0385b2f53b8fffeccacc7500"
+    },
+    {
+      "name": "configure",
+      "exit_code": 0,
+      "log_sha256": "9b5618087bd07074d2929a3fd23da8cbfc70a74d0b4e889b68b892ed7c0bf325"
+    },
+    {
+      "name": "build",
+      "exit_code": 0,
+      "log_sha256": "cb64b0ee48051ca329f6d06e2657a2e63c1c3e4808fa7405904c03c0bdd51341"
+    },
+    {
+      "name": "native-smoke",
+      "exit_code": 0,
+      "log_sha256": "850c185160bf1f63a87052167e7ed0a5dd8769e414d03de6d88113c64d48502d"
+    },
+    {
+      "name": "focused-cli",
+      "exit_code": 0,
+      "log_sha256": "9159a5ba52ea4449ff94486aa71656584f1c17c8825fc0ae5c3dc4e3bd841315"
+    },
+    {
+      "name": "portable",
+      "exit_code": 0,
+      "log_sha256": "a3eeb86bc16478f3144bbe2cfe25a25d6e5f38441c7cdbdd652f6fcadcd27224"
+    },
+    {
+      "name": "diff",
+      "exit_code": 0,
+      "log_sha256": "bee7e674ab396628ebcc8ac6c75850bcd21753c8cf300ca4c7000d8adb8760ce"
+    }
+  ],
+  "public_cli_tests": 4,
+  "public_link_refusal_cells": [
+    "saves",
+    "mods",
+    "metadata/save-refs",
+    "backups"
+  ],
+  "retained_failures": [
+    "attempt-01: native missing-save-library include refusal",
+    "attempt-02: stale command-catalog strict refusal after native/CLI PASS",
+    "attempt-03: stale derived target catalog digest refused before native work"
+  ],
+  "operating_scope": {
+    "new_task_roots": 0,
+    "new_clones": 0,
+    "new_worktrees": 0,
+    "native_workers": 2,
+    "product_candidates_dispatched": 0,
+    "source_fixture_only": true,
+    "existing_cache_reused": true
+  },
+  "boundaries": {
+    "preparation_available": false,
+    "execution_available": false,
+    "permit_issued": false,
+    "gameplay_compatibility": "unclaimed",
+    "real_play_gate": "not_passed",
+    "workunit_closed": false,
+    "beta_qualified": false
+  },
+  "limits": [
+    "Windows native source/fixture qualification only; hosted exact commit checks still required",
+    "Save inspector retains its inherited all-save traversal; projection binds the exact selected record",
+    "Query-only point-in-time evidence requires revalidation before any later effect; no lifetime lease",
+    "No actual game, host, human or produced-package acceptance claim"
+  ]
+}

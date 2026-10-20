@@ -1,0 +1,362 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
+#include "report_text.h"
+
+#include "fl_json.h"
+
+#include <sstream>
+
+namespace facman::cli {
+namespace json = facman::core::json;
+namespace {
+
+std::string text_field(const json::Value& object, const char* key)
+{
+    const json::Value* value = object.find(key);
+    if (value == nullptr) return "(missing)";
+    if (value->is_null()) return "(none)";
+    auto string = value->string_value();
+    return string ? string.take_value() : value->serialize();
+}
+
+std::string guidance_field(const json::Value& object, const char* key)
+{
+    const json::Value* value = object.find(key);
+    if (value == nullptr) return {};
+    auto string = value->string_value();
+    return string ? string.take_value() : std::string();
+}
+
+} // namespace
+
+std::string guidance_text(const json::Value& report)
+{
+    std::ostringstream output;
+    output << guidance_field(report, "command") << "\nStatus: " << guidance_field(report, "status") << '\n';
+    const json::Value* reasons = report.find("reasons");
+    if (reasons != nullptr && reasons->is_array()) {
+        for (std::size_t index = 0; index < reasons->size(); ++index) {
+            const json::Value* reason = reasons->at(index);
+            if (reason == nullptr || !reason->is_object()) continue;
+            output << "- [" << guidance_field(*reason, "code") << "] " << guidance_field(*reason, "summary")
+                   << "\n  Evidence: " << guidance_field(*reason, "evidence") << '\n';
+        }
+    }
+    output << "No steps were executed. Use --json for the complete typed report.\n";
+    return output.str();
+}
+
+std::optional<std::string> effective_profile_text(const json::Value& report)
+{
+    const json::Value* settings = report.find("settings");
+    const json::Value* provenance = report.find("provenance");
+    const json::Value* sources = provenance == nullptr ? nullptr : provenance->find("setting_sources");
+    const json::Value* arguments = provenance == nullptr ? nullptr : provenance->find("additional_argument_sources");
+    if (settings == nullptr || !settings->is_object() || sources == nullptr || !sources->is_object() ||
+        arguments == nullptr || !arguments->is_array()) return std::nullopt;
+    const std::string command = text_field(report, "command");
+    if (command != "profiles.plan" && command != "profiles.apply") return std::nullopt;
+    const bool applied = command == "profiles.apply";
+    std::ostringstream output;
+    output << (applied ? "Applied" : "Planned") << " profile " << text_field(report, "profile_id")
+           << " for instance " << text_field(report, "instance_id")
+           << " (template " << text_field(report, "template_id") << ")\n";
+    for (const char* key : {"window_mode", "graphics_quality", "audio", "selection_mode",
+             "selection", "launch_mode", "benchmark_ticks"}) {
+        const std::string source = text_field(*sources, key);
+        if (source != "profile" && source != "request_override") return std::nullopt;
+        output << "  " << key << ": " << text_field(*settings, key) << " ["
+               << (source == "request_override" ? "request override" : "profile") << "]\n";
+    }
+    output << "  additional_arguments: " << arguments->size() << '\n';
+    for (std::size_t index = 0; index < arguments->size(); ++index) {
+        const json::Value* item = arguments->at(index);
+        if (item == nullptr || !item->is_object()) return std::nullopt;
+        const std::string source = text_field(*item, "source");
+        if (source != "profile" && source != "request_override") return std::nullopt;
+        output << "    " << text_field(*item, "value") << " ["
+               << (source == "request_override" ? "request override" : "profile") << "]\n";
+    }
+    output << "Source manifest SHA-256: " << text_field(report, "source_manifest_sha256") << '\n';
+    const json::Value* identity = report.find("plan_sha256");
+    if (identity != nullptr) output << "Preparation plan SHA-256: " << text_field(report, "plan_sha256") << '\n';
+    if (!applied) output << "No files changed.\n";
+    return output.str();
+}
+
+std::optional<std::string> instance_readiness_text(const json::Value& report)
+{
+    const json::Value* readiness = report.find("instance_readiness");
+    if (readiness == nullptr) readiness = &report;
+    if (!readiness->is_object() || text_field(*readiness, "schema") != "factorio.instance_readiness.v1") {
+        return std::nullopt;
+    }
+    const json::Value* dimensions = readiness->find("dimensions");
+    const json::Value* blockers = readiness->find("blockers");
+    const json::Value* actions = readiness->find("safe_next_actions");
+    if (dimensions == nullptr || !dimensions->is_array() || blockers == nullptr || !blockers->is_array() ||
+        actions == nullptr || !actions->is_array()) return std::nullopt;
+    std::ostringstream output;
+    output << "Instance " << text_field(*readiness, "instance_id") << " ("
+           << text_field(*readiness, "launch_intent") << " readiness)\n";
+    output << "  Overall: " << text_field(*readiness, "overall_state")
+           << "\n  Configuration: " << text_field(*readiness, "configuration_state")
+           << "\n  Preparation: " << text_field(*readiness, "preparation_state")
+           << "\n  Play authority: " << text_field(*readiness, "play_authority_state") << '\n';
+    const json::Value* preview = readiness->find("preparation_preview");
+    if (preview != nullptr && preview->is_object()) {
+        output << "  Preparation preview: " << text_field(*preview, "composition_state") << "; apply unavailable\n";
+        for (const char* name : {"installation", "profile"}) {
+            const json::Value* owner = preview->find(name);
+            if (owner == nullptr || !owner->is_object()) continue;
+            output << "    " << name << ": " << text_field(*owner, "disposition");
+            const std::string refusal = text_field(*owner, "refusal");
+            if (!refusal.empty()) output << " (" << refusal << ')';
+            output << '\n';
+        }
+    }
+    output << "Dimensions:\n";
+    for (std::size_t index = 0; index < dimensions->size(); ++index) {
+        const json::Value* item = dimensions->at(index);
+        if (item == nullptr || !item->is_object()) return std::nullopt;
+        output << "  " << text_field(*item, "id") << ": " << text_field(*item, "state")
+               << " - " << text_field(*item, "summary") << '\n';
+    }
+    if (blockers->size() != 0U) output << "Blockers:\n";
+    for (std::size_t index = 0; index < blockers->size(); ++index) {
+        const json::Value* item = blockers->at(index);
+        if (item == nullptr || !item->is_object()) return std::nullopt;
+        output << "  [" << text_field(*item, "code") << "] " << text_field(*item, "reason")
+               << "\n    " << text_field(*item, "detail")
+               << "\n    Next action: " << text_field(*item, "safe_next_action") << '\n';
+    }
+    if (actions->size() != 0U) output << "Next actions:\n";
+    for (std::size_t index = 0; index < actions->size(); ++index) {
+        const json::Value* item = actions->at(index);
+        if (item == nullptr || !item->is_object()) return std::nullopt;
+        output << "  [" << text_field(*item, "id") << "] " << text_field(*item, "label") << '\n';
+        const json::Value* command = item->find("command");
+        if (command != nullptr && !command->is_null()) output << "    " << text_field(*item, "command") << '\n';
+    }
+    return output.str();
+}
+
+std::optional<std::string> save_intelligence_text(const json::Value& report)
+{
+    if (text_field(report, "schema") != "factorio.save_intelligence.v1") return std::nullopt;
+    const json::Value* saves = report.find("saves");
+    if (saves == nullptr || !saves->is_array()) return std::nullopt;
+    std::ostringstream output;
+    output << text_field(report, "command") << " for instance " << text_field(report, "instance_id")
+           << "\nReport status: " << text_field(report, "status") << "\nSaves: " << saves->size() << '\n';
+    for (std::size_t index = 0; index < saves->size(); ++index) {
+        const json::Value* save = saves->at(index);
+        if (save == nullptr || !save->is_object()) return std::nullopt;
+        const json::Value* association = save->find("association");
+        if (association == nullptr || !association->is_object()) return std::nullopt;
+        output << text_field(*save, "filename") << "\n  Save bytes: " << text_field(*association, "status")
+               << "\n  SHA-256: " << text_field(*save, "sha256") << '\n';
+        const json::Value* context = association->find("context");
+        if (context == nullptr || !context->is_object()) {
+            output << "  Declared context: Not observed\n";
+            continue;
+        }
+        const json::Value* version = context->find("factorio_version");
+        const json::Value* content = context->find("modset_lock");
+        if (version == nullptr || !version->is_object() || content == nullptr || !content->is_object()) {
+            return std::nullopt;
+        }
+        output << "  Declared context: " << text_field(*context, "status")
+               << "\n    Version: " << text_field(*version, "status")
+               << " (recorded " << text_field(*version, "recorded")
+               << "; current " << text_field(*version, "current") << ")"
+               << "\n    Content: " << text_field(*content, "status")
+               << "\n      Recorded lock SHA-256: " << text_field(*content, "recorded_sha256")
+               << "\n      Current lock SHA-256: " << text_field(*content, "current_sha256")
+               << " (" << text_field(*content, "current_presence") << ")\n";
+        for (const json::Value* dimension : {version, content}) {
+            const std::string diagnostic = guidance_field(*dimension, "diagnostic");
+            if (!diagnostic.empty()) output << "    Observation: " << diagnostic << '\n';
+        }
+        output << "  Gameplay compatibility: " << text_field(*context, "gameplay_compatibility") << '\n';
+    }
+    output << "Deep Factorio save metadata: " << text_field(report, "deep_factorio_save_metadata") << '\n';
+    return output.str();
+}
+
+std::optional<std::string> local_content_text(const json::Value& report)
+{
+    const std::string schema = text_field(report, "schema");
+    std::ostringstream output;
+    output << text_field(report, "command") << ": " << text_field(report, "status") << '\n';
+    if (schema == "factorio.mod_inventory.v1" || schema == "factorio.mod_inventory_record.v1") {
+        const json::Value* records = report.find("records");
+        const json::Value* record = report.find("record");
+        if (schema == "factorio.mod_inventory.v1" && (records == nullptr || !records->is_array())) return std::nullopt;
+        if (schema == "factorio.mod_inventory_record.v1" && (record == nullptr || !record->is_object())) return std::nullopt;
+        if (records != nullptr) output << "Records: " << text_field(report, "record_count") << '\n';
+        const std::size_t count = record != nullptr ? 1U : records->size();
+        for (std::size_t index = 0; index < count; ++index) {
+            const json::Value* item = record != nullptr ? record : records->at(index);
+            if (item == nullptr || !item->is_object()) return std::nullopt;
+            output << "  " << text_field(*item, "name") << " " << text_field(*item, "version")
+                   << " [" << text_field(*item, "validation_status") << "] " << text_field(*item, "file_name")
+                   << "\n    Source: " << text_field(*item, "source") << " (" << text_field(*item, "source_path") << ")"
+                   << "\n    Metadata: " << text_field(*item, "metadata_source")
+                   << "; built-in: " << text_field(*item, "virtual_package")
+                   << "\n    SHA-256: " << text_field(*item, "sha256")
+                   << "\n    Dependencies: " << text_field(*item, "dependencies") << '\n';
+            const json::Value* refusal = item->find("refusal");
+            if (refusal != nullptr) output << "    Refusal: " << text_field(*refusal, "code") << ": " << text_field(*refusal, "reason") << '\n';
+        }
+    } else if (schema == "factorio.modset_plan.v1" || schema == "factorio.modset_apply.v1") {
+        const json::Value* desired = report.find("desired_mods");
+        const json::Value* changes = report.find("changes");
+        const json::Value* explanation = report.find("explanation");
+        if (desired == nullptr || !desired->is_array() || changes == nullptr || !changes->is_array() ||
+            explanation == nullptr || !explanation->is_array()) return std::nullopt;
+        output << "Instance: " << text_field(report, "instance_id") << "\nPlan SHA-256: " << text_field(report, "plan_id")
+               << "\nCurrent state SHA-256: " << text_field(report, "current_state_sha256") << '\n';
+        if (schema == "factorio.modset_apply.v1") output << "Rollback transaction: " << text_field(report, "transaction_id") << '\n';
+        output << "Selected packages: " << desired->size() << '\n';
+        for (std::size_t index = 0; index < desired->size(); ++index) {
+            const json::Value* item = desired->at(index);
+            if (item == nullptr || !item->is_object()) return std::nullopt;
+            output << "  " << text_field(*item, "name") << " " << text_field(*item, "version")
+                   << " (" << text_field(*item, "file_name") << "; " << text_field(*item, "source")
+                   << "; built-in: " << text_field(*item, "virtual_package") << ")\n";
+        }
+        output << "Changes:\n";
+        for (std::size_t index = 0; index < changes->size(); ++index) {
+            const json::Value* item = changes->at(index);
+            if (item == nullptr || !item->is_object()) return std::nullopt;
+            output << "  " << text_field(*item, "action") << ": " << text_field(*item, "name")
+                   << " " << text_field(*item, "from_version") << " -> " << text_field(*item, "to_version") << '\n';
+        }
+        output << "Explanation:\n";
+        for (std::size_t index = 0; index < explanation->size(); ++index) {
+            const json::Value* item = explanation->at(index);
+            if (item == nullptr || !item->string_value()) return std::nullopt;
+            output << "  " << item->string_value().value() << '\n';
+        }
+        output << "Budget usage: " << text_field(report, "budget_usage") << '\n';
+    } else if (schema == "factorio.modset_rollback.v1") {
+        output << "Instance: " << text_field(report, "instance_id")
+               << "\nRollback transaction: " << text_field(report, "transaction_id") << '\n';
+    } else return std::nullopt;
+    output << "Portal access: " << text_field(report, "portal_access")
+           << "\nMutation executed: " << text_field(report, "mutation_executed") << '\n';
+    return output.str();
+}
+
+std::optional<std::string> managed_move_apply_text(const json::Value& report)
+{
+    if (guidance_field(report, "schema") != "facman.managed_move_apply_result.v1" ||
+        guidance_field(report, "status") != "reference_projected_old_retained_pending_acceptance" ||
+        guidance_field(report, "lifecycle_status") != "move_pending_acceptance" ||
+        guidance_field(report, "old_root_status") != "retained") return std::nullopt;
+    std::ostringstream output;
+    output << "Managed move: new root verified; FacMan reference projected\nInstall: "
+        << guidance_field(report, "install_id") << "\nOld source (retained): " << guidance_field(report, "old_root")
+        << "\nNew root: " << guidance_field(report, "new_root")
+        << "\nStatus: move_pending_acceptance; launch remains ineligible.\n"
+        << "Foreign copied content remains foreign. No old-root removal or acceptance was performed.\n"
+        << "Empty-directory preservation is not promised; observations are not atomic.\n";
+    return output.str();
+}
+
+std::optional<std::string> managed_move_plan_text(const json::Value& report)
+{
+    const auto* plan = report.find("provider_plan");
+    const auto* available = report.find("apply_available");
+    const auto false_field = [&](const char* key) {
+        const auto* value = report.find(key);
+        return value && value->is_bool() && !value->bool_value().value();
+    };
+    if (guidance_field(report, "schema") != "facman.managed_move_plan.v1" ||
+        guidance_field(report, "copy_scope") != "complete_source_files_including_foreign" ||
+        guidance_field(report, "empty_directory_preservation") != "not_promised" ||
+        !available || !available->is_bool() || !available->bool_value().value() ||
+        !false_field("grants_ownership") || !false_field("observation_atomic") ||
+        guidance_field(report, "apply_scope") != "verified_new_root_old_retained_pending_acceptance" ||
+        !plan || guidance_field(*plan, "operation") != "move" || guidance_field(*plan, "status") != "planned") return std::nullopt;
+    const auto* roots = plan->find("roots");
+    const auto* effects = plan->find("effects");
+    if (!roots || !roots->is_array() || !effects || !effects->is_array()) return std::nullopt;
+    std::string source, destination;
+    std::size_t copies = 0;
+    for (std::size_t index = 0; index < roots->size(); ++index) {
+        const auto* root = roots->at(index);
+        if (!root) return std::nullopt;
+        if (guidance_field(*root, "role") == "current") source = guidance_field(*root, "root");
+        if (guidance_field(*root, "role") == "destination") destination = guidance_field(*root, "root");
+    }
+    for (std::size_t index = 0; index < effects->size(); ++index) {
+        const auto* effect = effects->at(index);
+        if (!effect) return std::nullopt;
+        if (guidance_field(*effect, "kind") == "copy_owned_file") ++copies;
+    }
+    if (source.empty() || destination.empty() || copies == 0) return std::nullopt;
+    std::ostringstream output;
+    output << "Read-only managed move preview: planned\nInstall: " << guidance_field(*plan, "install_id")
+        << "\nSource: " << source << "\nDestination (must be absent): " << destination
+        << "\nProposed file copies: " << copies << "\nPlan: " << guidance_field(*plan, "plan_id")
+        << "\nDigest: " << guidance_field(*plan, "plan_digest")
+        << "\nCopies include foreign files; provider copy labels grant no ownership.\n"
+        << "Empty-directory preservation is not promised. Bounded apply verifies the new root, projects the FacMan reference, and retains the old source pending acceptance.\n"
+        << "This pinned alpha path admits at most256MiB/4096files including foreign content.\n"
+        << "Record digest: " << guidance_field(report, "install_record_sha256") << "\n"
+        << "No move was executed. Observations are not an atomic snapshot.\n";
+    return output.str();
+}
+
+std::optional<std::string> managed_install_verification_text(const json::Value& report)
+{
+    const std::string status = guidance_field(report, "status");
+    const std::string install_id = guidance_field(report, "install_id");
+    const auto* summary = report.find("summary");
+    const auto* files = report.find("files");
+    const auto* directories = report.find("directories");
+    const auto* unknown = report.find("unknown_paths");
+    if (guidance_field(report, "schema") != "usk.verification_report.v1" || install_id.empty() ||
+        (status != "pass" && status != "warn" && status != "fail") ||
+        !summary || !summary->is_object() || !files || !files->is_array() ||
+        !directories || !directories->is_array() || !unknown || !unknown->is_array()) return std::nullopt;
+    for (const auto* key : {"owned_files", "missing_files", "modified_files", "unknown_paths"}) {
+        const auto* value = summary->find(key);
+        if (!value || !value->unsigned_integer_value()) return std::nullopt;
+    }
+    std::ostringstream damaged;
+    std::size_t damaged_count = 0;
+    for (const auto* rows : {files, directories}) {
+        for (std::size_t index = 0; index < rows->size(); ++index) {
+            const auto* row = rows->at(index);
+            if (!row || !row->is_object()) return std::nullopt;
+            const auto path = guidance_field(*row, "relative_path");
+            const auto observed = guidance_field(*row, "status");
+            if (path.empty() || (observed != "present" && observed != "missing" && observed != "modified" &&
+                observed != "wrong_type" && observed != "unreadable")) return std::nullopt;
+            if (observed != "present") {
+                ++damaged_count;
+                damaged << "  - " << path << ": " << observed << '\n';
+            }
+        }
+    }
+    std::ostringstream output;
+    output << "Verification: " << status << "\nInstall: " << install_id << "\nOwned files: "
+           << text_field(*summary, "owned_files") << "; missing: " << text_field(*summary, "missing_files")
+           << "; changed: " << text_field(*summary, "modified_files") << '\n';
+    output << "Damaged owned paths: " << (damaged_count == 0 ? "none\n" : "\n") << damaged.str();
+    output << "Preserved unknown paths (" << text_field(*summary, "unknown_paths") << "):"
+           << (unknown->size() == 0 ? " none\n" : "\n");
+    for (std::size_t index = 0; index < unknown->size(); ++index) {
+        const auto* path = unknown->at(index);
+        if (!path || !path->is_string()) return std::nullopt;
+        output << "  - " << path->string_value().value() << '\n';
+    }
+    output << "Read-only verification; no files or installed state changed.\n";
+    return output.str();
+}
+
+} // namespace facman::cli

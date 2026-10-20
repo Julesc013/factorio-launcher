@@ -47,6 +47,21 @@ The inspection and planning commands do not execute tasks, apply repair plans, r
 
 `task status` summarizes known queue items and writes the task status report. `task classify` classifies the latest task packet into the X-OS-00 lifecycle vocabulary and records blockers or warnings as report data.
 
+In a newly imported target with no queue WorkUnits, `task status` reports zero
+tasks, `latest_task_id: none`, and `No queued WorkUnit selected`. It continues
+to exit 1 for an empty queue. A generated packet's contextual references do
+not create task identity; an explicit packet `task_id` or a leading PHASE/GOAL
+identity is required. New work must be admitted through the target's own
+intake and queue before these reports can name a next WorkUnit.
+
+After the target admits project-owned WorkUnits, `task status` and `task
+next-plan` direct the operator to inspect that target queue's status and
+evidence. A target profile takes precedence even if a queue ID happens to
+match an AIDE source phase. Target next-plan reports omit AIDE source
+readiness fields and do not authorize task execution. The AIDE self-hosting
+profile retains its existing X-OS phase routing. Legacy fixtures without a
+profile use exact source queue IDs to retain their historical routing.
+
 `blocker status` and `blocker classify` convert visible blocked, review-gated, or deferred state into typed report records. A repairable marker means "candidate for a future reviewed repair WorkUnit"; it is not proof that a repair was executed.
 
 `task repair-plan`, `task requeue-plan`, and `task resume-plan` are planning aids. They may name suggested repair or resume paths, but they always record that no queue mutation, repair execution, target resume, or target mutation was applied.

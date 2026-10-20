@@ -12,6 +12,7 @@
     "install_ref": {"type": "string"},
     "install_status": {"enum": ["registered", "missing"]},
     "instance_id": {"type": "string"},
+    "manifest_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
     "last_modification_evidence": {
       "additionalProperties": false,
       "properties": {"file_time_ticks": {"pattern": "^-?[0-9]+$", "type": "string"}, "path": {"type": "string"}},
@@ -35,7 +36,7 @@
     "status": {"const": "ok"},
     "template": {"type": "string"}
   },
-  "required": ["schema", "command", "status", "instance_id", "display_name", "install_ref", "factorio_version", "profile", "template", "effective_paths", "effective_config_status", "modset_status", "save_count", "snapshot_count", "archive_status", "pending_transactions", "run_authority_state", "size_summary", "last_modification_evidence", "mutation_executed"],
+  "required": ["schema", "command", "status", "instance_id", "display_name", "install_ref", "factorio_version", "profile", "template", "manifest_sha256", "effective_paths", "effective_config_status", "modset_status", "save_count", "snapshot_count", "archive_status", "pending_transactions", "run_authority_state", "size_summary", "last_modification_evidence", "mutation_executed"],
   "title": "Factorio instance inspection",
   "type": "object"
 }

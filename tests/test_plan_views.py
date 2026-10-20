@@ -19,6 +19,69 @@ class PlanViewTests(unittest.TestCase):
     def test_canonical_plan_is_valid(self) -> None:
         self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
 
+    def programme_engineering_plan(self) -> dict:
+        plan = copy.deepcopy(self.plan)
+        unit = next(item for item in plan["workunit"]
+                    if item["id"] == "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01")
+        programme = plan["execution_programme"]
+        # Replace the current admitted primary in this copied fixture; do not
+        # accidentally add a second one when the programme advances.
+        for previous in plan["workunit"]:
+            if (previous["id"] == programme.get("primary_workunit")
+                    and previous["id"] != unit["id"] and previous["status"] == "active"):
+                previous["status"] = "planned"
+        programme.update(primary_workunit=unit["id"], status="implementation_active",
+                         engineering_and_normal_integration_authorized=True)
+        unit.update(status="active", horizon="next", execution_programme=programme["id"],
+                    admission_workunit=programme["admission_workunit"])
+        return plan
+
+    def test_admitted_primary_engineering_preserves_release_and_epic(self) -> None:
+        plan = self.programme_engineering_plan()
+        unit = next(item for item in plan["workunit"]
+                    if item["id"] == "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01")
+        self.assertEqual(unit["status"], "active")
+        self.assertEqual(unit["epic"], "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS")
+        self.assertEqual(self.plan["active_release"], "FACMAN-0.1.0-ALPHA.6")
+        self.assertEqual(generate_plan_views.validate_plan(plan), [])
+
+    def test_cross_release_engineering_requires_exact_programme_admission(self) -> None:
+        unit_id = "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+        mutations = (
+            ("missing programme", lambda p, u: p.pop("execution_programme")),
+            ("missing leaf selection", lambda p, u: u.pop("execution_programme")),
+            ("foreign programme", lambda p, u: u.update(execution_programme="other")),
+            ("inactive programme", lambda p, u: p["execution_programme"].update(status="paused")),
+            ("missing authority", lambda p, u: p["execution_programme"].pop("engineering_and_normal_integration_authorized")),
+            ("false authority", lambda p, u: p["execution_programme"].update(engineering_and_normal_integration_authorized=False)),
+            ("non-primary", lambda p, u: p["execution_programme"].update(primary_workunit="other")),
+            ("foreign admission", lambda p, u: u.update(admission_workunit="other")),
+            ("incomplete admission", lambda p, u: next(item for item in p["workunit"] if item["id"] == u["admission_workunit"]).update(status="planned")),
+            ("ordinary readiness", lambda p, u: u.update(status="ready")),
+        )
+        for name, mutate in mutations:
+            with self.subTest(name=name):
+                plan = self.programme_engineering_plan()
+                unit = next(item for item in plan["workunit"] if item["id"] == unit_id)
+                mutate(plan, unit)
+                self.assertIn(f"{unit_id} is {unit['status']} outside the active release",
+                              generate_plan_views.validate_plan(plan))
+
+    def test_programme_admission_preserves_dependency_horizon_and_wip_guards(self) -> None:
+        unit_id = "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+        for horizon in ("backlog", "now"):
+            with self.subTest(horizon=horizon):
+                plan = self.programme_engineering_plan()
+                next(item for item in plan["workunit"] if item["id"] == unit_id)["horizon"] = horizon
+                self.assertTrue(any("horizon" in error for error in generate_plan_views.validate_plan(plan)))
+        plan = self.programme_engineering_plan()
+        next(item for item in plan["workunit"] if item["id"] == "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01")["status"] = "planned"
+        self.assertTrue(any(f"{unit_id} is active with incomplete dependencies" in error
+                            for error in generate_plan_views.validate_plan(plan)))
+        plan = self.programme_engineering_plan()
+        plan["wip_limit"] = 3
+        self.assertTrue(any("WIP limit exceeded" in error for error in generate_plan_views.validate_plan(plan)))
+
     def test_phase0_governance_is_closed_with_alpha6_next(
         self,
     ) -> None:
@@ -105,7 +168,14 @@ class PlanViewTests(unittest.TestCase):
         self.assertLessEqual(len(in_flight) + active_gates, self.plan["wip_limit"])
         epics = {item["id"]: item for item in self.plan["epic"]}
         for item in in_flight:
-            self.assertEqual(epics[item["epic"]]["release"], self.plan["active_release"])
+            if epics[item["epic"]]["release"] != self.plan["active_release"]:
+                programme = self.plan["execution_programme"]
+                self.assertEqual(item["id"], programme["primary_workunit"])
+                self.assertEqual(item["execution_programme"], programme["id"])
+                self.assertEqual(programme["status"], "implementation_active")
+                self.assertIs(programme["engineering_and_normal_integration_authorized"], True)
+                self.assertEqual(item["admission_workunit"], programme["admission_workunit"])
+                self.assertEqual(workunits[item["admission_workunit"]]["status"], "complete")
             self.assertEqual(item.get("horizon", "next"), "next")
             for dependency in item.get("depends_on", []):
                 self.assertEqual(workunits[dependency]["status"], "complete")
@@ -149,6 +219,30 @@ class PlanViewTests(unittest.TestCase):
                 "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
                 "FACMAN-0.1-FEATURE-FREEZE-01",
             ),
+            (
+                "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01",
+                "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01",
+                "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01",
+                "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01",
+                "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01",
+                "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01",
+            ),
+            (
+                "FACMAN-0.1-SUCCESSOR-PUBLICATION-SERVICING-ACTIVATION-01",
+                "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01",
+            ),
         ]
         for workunit_id, dependency_id in graph:
             workunit = workunits[workunit_id]
@@ -158,6 +252,32 @@ class PlanViewTests(unittest.TestCase):
             if workunit["status"] == "complete":
                 self.assertTrue(workunit.get("evidence"), workunit_id)
                 self.assertEqual(workunits[dependency_id]["status"], "complete")
+
+        successors = [workunit_id for workunit_id, _ in graph[-6:]]
+        for workunit_id in successors:
+            self.assertEqual(workunits[workunit_id]["status"], "planned")
+            self.assertEqual(workunits[workunit_id]["horizon"], "backlog")
+
+        releases = {item["id"]: item for item in self.plan["release"]}
+        for release_id in (
+            "FACMAN-0.1-BETA-CONVERGENCE",
+            "FACMAN-0.1-RC",
+            "FACMAN-0.1.0-STABLE",
+        ):
+            self.assertEqual(releases[release_id]["status"], "planned")
+            self.assertTrue(releases[release_id]["planning_label"])
+            self.assertFalse(releases[release_id]["version_allocated"])
+
+    def test_beta_candidate_inventory_is_derived_from_admitted_profiles(self) -> None:
+        releases = {item["id"]: item for item in self.plan["release"]}
+        beta = releases["FACMAN-0.1.0-BETA.1"]
+        beta_text = " ".join(
+            [beta["objective"], *beta["cut_line"], *beta["exit"]]
+        )
+        self.assertIn("profile-derived", beta_text)
+        self.assertIn("Terminal/Desktop", beta_text)
+        self.assertNotIn("six-product", beta_text)
+        self.assertNotIn("six products", beta_text)
 
     def test_feature_freeze_is_qualification_not_a_catch_all_implementation_workunit(self) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}

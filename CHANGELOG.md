@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Allow ordinary fullscreen Content forms to edit exact local versions and
+  rollback history through a bounded ASCII selector editor with explicit review.
 - Allocated `0.1.0-alpha.6` as the current development product identity for
   managed-install and lifecycle work. It is unqualified, unsigned, untagged,
   unpublished, and carries no candidate, support, or release claim.

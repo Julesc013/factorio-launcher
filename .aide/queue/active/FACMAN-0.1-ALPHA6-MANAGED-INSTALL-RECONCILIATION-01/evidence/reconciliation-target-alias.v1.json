@@ -1,0 +1,51 @@
+{
+  "schema": "facman.reconciliation_target_alias.qualified_source.v1",
+  "base_head": "361da48beaea506b2cff7e48ae5b09353fa5eb0c",
+  "base_tree": "be5f394ea56a35775bf913185e9df2099510175c",
+  "author_packet_sha256": "dfcfeae74531bbffe8f1f13bccc6aa7988edb2d6f5a688e9111afdd8dd791acd",
+  "independent_review_sha256": "8850625eda8dc7abadec9338be850fb37c8a513179d4e56db03363b2e22b970a",
+  "authored_files_sha256": {
+    "runtime/factorio/installation/flb_factorio_install_model.cpp": "da9a634e04f7fc2e7088f23230d28f5e63f6e64f955136c2a78b189280ef89a8",
+    "tests/native/flb_factorio_install_model_smoke.cpp": "29678eb5240b13a58750b75070e6b2de85d767e81d03f3a2c62af3314bbe09b6",
+    "tests/test_cli.py": "e7f2c513cc6c049a53a1d8998eae76a8c4f1491b5489bb9459f39817598b9395",
+    "docs/architecture/installation_model_and_reconciliation.md": "a89d148bfc58652a0c91e51b1b1f5b50ff0c9e63632e9a5386bc6480ebbcad36",
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/ExecPlan.md": "66eebd30d9fe1944161de0a04e170d7f2be0c84b212681298e3691144206e8ca",
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/managed-install-coordination-integrated.v1.json": "3fa83f2ff78caa67416121472e0bf024c5d165c9d93c3f5d8bbec58c16d8864d",
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01/evidence/managed-install-coordination-integrated-metadata-custody.zip": "1490467a28e484cce1c5efdef7edc765c125e0670e48f6fa5c7222850df673e1"
+  },
+  "native_tests_passed": 1,
+  "actual_owned_cli_commands": 22,
+  "actual_captured_validation_commands": 30,
+  "original_same_root_missing_blockers_reproduced": true,
+  "windows_dot_parent_case_short_aliases": true,
+  "windows_directory_link_qualified": false,
+  "retained_host_link_error": 1314,
+  "existing_and_missing_distinct_targets": true,
+  "malformed_file_ancestor_blocked": true,
+  "original_target_bytes_preserved": true,
+  "source_unverified": true,
+  "apply_available": false,
+  "mutation_executed": false,
+  "all_member_natural_exit_claimed": false,
+  "custody": "reconciliation-target-alias-custody.v1.zip",
+  "custody_sha256": "e7e670ec77153fd0e451a9aa69e6471530ea3e47a0205b83634424c29f09ed33",
+  "custody_files": 166,
+  "provider_images_sha256": {
+    "ulk.dll": "d96d05b33b0df2ee2659104125d8e0f70fbc6e48b82dc302b7eb0eb8ac6b6c31",
+    "usk.dll": "99231fbff824df9446159cd91c2dfe01bb439a9f0c3138c9d9625e512696b873"
+  },
+  "binary_images_sha256": {
+    "facman.exe": "3c7bbbb559379fc7e8ee4ba1f422e1732f682011d3cbfd1768fb191823088961",
+    "flb_factorio_install_model_smoke.exe": "a4f98f26d8eac859c59e37a9eeafa8004734434da1274a6b8797a5d72435c4e5"
+  },
+  "required_checks_pending": true,
+  "produced_package_qualified": false,
+  "workunit_closed": false,
+  "real_game_qualified": false,
+  "human_qualified": false,
+  "beta": false,
+  "rc": false,
+  "new_roots": 0,
+  "new_clones": 0,
+  "new_worktrees": 0
+}

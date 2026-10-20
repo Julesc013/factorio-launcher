@@ -1,0 +1,152 @@
+{
+  "schema": "facman.windows_live_joined_gui_accepted_slice.v1",
+  "reviewed_source": "a4bed76234360a3f127ccad22742587daa6bb9cf",
+  "integration": "cb97d8cff22b400dbfdf8a24b9659fbb7adb9605",
+  "pr": 418,
+  "windows_actual": {
+    "status": "PASS_INDEPENDENT_ACTUAL_GUI_CUSTODY",
+    "source": "a4bed76234360a3f127ccad22742587daa6bb9cf",
+    "qualification": "factory-produced Windows legacy WinForms portable file closure",
+    "profile": "windows_legacy_winforms_x64",
+    "result_sha256": "942a1288603974305f05ad812b93ff36d2132afc3902c4c0653b2c35be9e8db6",
+    "custody_canonical_sha256": "d10be21a6469fd97b3768efe2572a4a6e732c21d1faf16bf29877744de314fcd",
+    "actual_GUI_sessions": 2,
+    "observed_packaged_backend_processes": 68,
+    "complete_owner_effects": 2,
+    "fixture_CLI_calls": 8,
+    "decoded_files": 31,
+    "decoded_bytes": 677925,
+    "GUI_sha256": "4b5d4bed57a40e67aa9762a65904bf3d4a5b694792262c9f6cffa8ec4634df1e",
+    "backend_sha256": "7277c0017c5f744b0015b60250b4baf7d4476ab52c9a4c08263e10c8623ea495",
+    "package_file_count": 598,
+    "all_owned_jobs_empty": true,
+    "ordinary_cancellations_and_stale_refusal": true,
+    "whole_workspace_inputs_preserved": true,
+    "canonical_installed_desktop": false,
+    "real_game": false,
+    "human": false,
+    "full_make_ready": false,
+    "beta": false,
+    "rc": false,
+    "run_id": 38489874950,
+    "job_id": 115612281890,
+    "job_conclusion": "success",
+    "runner_name": "GitHub Actions 1000097941",
+    "log_path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\windows-delivered-joined-windows-job-115612281890.log",
+    "log_sha256": "35a677034626d43013d76b07321679886133c0eafa368efb1398f49267e222f6",
+    "native_builds_passed": 4,
+    "native_tests_per_build": 55,
+    "actual_GUI_method": "tests.test_windows_delivered_joined_gui.WindowsDeliveredJoinedGuiTests.test_actual_joined_controls_dispatch_production_packaged_backend"
+  },
+  "actual_GUI_method_skips": 0,
+  "required_checks": [
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/runs/115612365571",
+      "name": "task-to-dev-promotion-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874861/job/115612282507",
+      "name": "c-cpp",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874950/job/115612281664",
+      "name": "appkit-compile",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874950/job/115612281636",
+      "name": "macos-archive-core",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874877/job/115612280997",
+      "name": "development-only-cross-provider-fixture",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874861/job/115612282344",
+      "name": "python",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874950/job/115612281890",
+      "name": "windows-native-package",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874861/job/115612282179",
+      "name": "csharp",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874950/job/115612281387",
+      "name": "macos-native-cli",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874933/job/115612282432",
+      "name": "task-to-dev-promotion-check",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874950/job/115612281630",
+      "name": "linux-coverage",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874950/job/115612281942",
+      "name": "linux-native",
+      "state": "SUCCESS"
+    },
+    {
+      "bucket": "pass",
+      "link": "https://github.com/Julesc013/factorio-launcher/actions/runs/38489874847/job/115612281120",
+      "name": "policy-check",
+      "state": "SUCCESS"
+    }
+  ],
+  "required_checks_all_pass": true,
+  "observer_sha256": "24e6e107f4618c1c3d0ae953ead02c0f0dff72a9f41d597ef0fe2240b6c403af",
+  "source_review_sha256": "9928938b6c9bc6f9d4264862081aab92030135347b3d2abbb3ff426ef3b5a086",
+  "retained_mac_package_methods_passed": 11,
+  "retained_mac_method_skips": 0,
+  "retained_mac_native_tests": 57,
+  "retained_mac_owner_methods": 41,
+  "retained_mac_joined_source_methods": 12,
+  "retained_mac_source": "41bd8bef44c8fe3eba456a3b5a9a3d0a7c12e106",
+  "retained_mac_tree": "74c58e940ea8e3944f4bb2743b51fa50c5f525fe",
+  "retained_mac_parents": [
+    "3b12f8e36786ef8cdb5c3bb897440d1566b91c51",
+    "a4bed76234360a3f127ccad22742587daa6bb9cf"
+  ],
+  "custody": "produced-windows-live-joined-gui-custody.v1.zip",
+  "custody_sha256": "00b488e6a8e6cddc6ac33c4a59972a15a270b6b65d27dc1dfb1d45d20cdc7711",
+  "custody_files": 683,
+  "actual_factory_portable_file_closure": true,
+  "original_portable_ZIP_acceptance": false,
+  "previous_reconstructed_local_proof_retained": true,
+  "installed_generation_refusal_retained": true,
+  "canonical_installed_desktop_owner_dependency": "PR404 protected control owner authorization",
+  "no_runtime_provider_policy_changes": true,
+  "minimum_or_named_physical_host": false,
+  "real_game": false,
+  "human": false,
+  "whole_workunit": false,
+  "full_make_ready": false,
+  "beta": false,
+  "rc": false
+}

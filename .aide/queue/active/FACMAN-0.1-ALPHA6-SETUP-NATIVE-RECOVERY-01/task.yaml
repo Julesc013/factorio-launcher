@@ -22,6 +22,7 @@ allowed_paths:
   - "apps/**"
   - "contracts/**"
   - "tests/**"
+  - "tools/linux_self_setup.py"
   - "docs/**"
   - ".github/workflows/product-candidate.yml"
   - "release/packaging/windows/facman_installer.v1.toml"

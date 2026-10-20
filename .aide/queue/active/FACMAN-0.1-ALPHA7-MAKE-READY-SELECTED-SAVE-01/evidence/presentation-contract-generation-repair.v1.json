@@ -1,0 +1,111 @@
+{
+  "schema": "facman.presentation_contract_generation_repair.v1",
+  "status": "SCOPED_GENERATOR_REPAIR_REQUIRED_CURRENT_HEAD_CI_PENDING",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "parent_source": "b4becdf2e6f0963edf9943a239c591029fe670b7",
+  "integration_base": "1c8638bb0d7cc484963c4324fe6e564a0748b468",
+  "PR": 380,
+  "source_hashes": {
+    "apps/gui/windows/winforms/GeneratedPresentationContracts.cs": "70c157f036c0064a97a4dc7c2822c063b708cb1319c1869bea88062abd788a24",
+    "contracts/generated-index/presentation_contracts.v1.bundle.json": "3c62f9113892b8aa7a47ec2036918aadb676dbda0e0a247f60a482d314037903",
+    "docs/generated/contracts/presentation-foundation.md": "c8306b6fe7cf7b7d9f48e590d20d1fb4c2f8dc3105e06506a923a4b5a02ab8d0",
+    "runtime/core/generated/presentation_contracts.v1.h": "dceb6095d528e258cca25f99f0bf0819e243163133e7f88d469b8e9b9c152bf6",
+    "tests/generated/presentation_contracts.py": "35c4d56f2bcd3eb59614d4b2c83a2d15a7745e7f243eb972d78d634cff984964"
+  },
+  "prior_digest": "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200",
+  "current_digest": "d1cf4f23ddc35592f60727b92958ff23fec4ed69f1ab446f0a25f2d1612ef669",
+  "failed_run": 37248518777,
+  "failed_job": 111571169898,
+  "failed_log_sha256": "8480808685e29e3d144d20001007b589b4c3869c8371f7ff7efd484a3f1bf1d5",
+  "diagnostic": "Separate presentation contract compiler outputs were not regenerated after the optional profile_preparation schema addition",
+  "correction": "Regenerate the five deterministic compiler outputs from unchanged schema; language model outputs change only their source digest",
+  "local_QA_sha256": "41d6ba3c2ef64a433738013ca700e178e1a78bdc314e2f0eaf01e0041d7d7674",
+  "local_checks": [
+    {
+      "check": "compiler-tests",
+      "exit_code": 0,
+      "log_sha256": "07cd73753329e8e7b034964455dde757964c49f734468f8522dd53da1fd6d5de"
+    },
+    {
+      "check": "compiler-check",
+      "exit_code": 0,
+      "log_sha256": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8"
+    },
+    {
+      "check": "metadata-check",
+      "exit_code": 0,
+      "log_sha256": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd"
+    },
+    {
+      "check": "command-contracts",
+      "exit_code": 0,
+      "log_sha256": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037"
+    },
+    {
+      "check": "strict",
+      "exit_code": 0,
+      "log_sha256": "fe7f33a4fb1cb1769fd9c7b1828558c97b22bd2d611f9f0595c56276081ee12e"
+    },
+    {
+      "check": "format",
+      "exit_code": 0,
+      "log_sha256": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191"
+    },
+    {
+      "check": "plan",
+      "exit_code": 0,
+      "log_sha256": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31"
+    },
+    {
+      "check": "state",
+      "exit_code": 0,
+      "log_sha256": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd"
+    },
+    {
+      "check": "task-inspect",
+      "exit_code": 0,
+      "log_sha256": "01c3768b84bd94e5bfe546ab00f136d37238bd3d21b32286b80716ef8a8a53b3"
+    },
+    {
+      "check": "task-noop",
+      "exit_code": 0,
+      "log_sha256": "5aa5f829377d6c1e6f915d0e9420e0ad519d403efc9aa87b845aa3b81756819e"
+    },
+    {
+      "check": "task-recover",
+      "exit_code": 0,
+      "log_sha256": "0e421e796e3e36b610e641255f8e9c239ffc11be0c9da9633b4bff366da08098"
+    },
+    {
+      "check": "diff",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "preserved_prior_qualification": {
+    "receipt": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/presentation-profile-preparation.v1.json",
+    "sha256": "85814dba5aac389d250088e3bf0d0bf28d955c07dedba6b2ca899ad3c123d8d5",
+    "source": "b4becdf2e6f0963edf9943a239c591029fe670b7",
+    "public_windows_tests": 25,
+    "observed_public_commands": 273,
+    "native_windows_tests": 1,
+    "state_tests": 89,
+    "exact_current_source_native_build": false
+  },
+  "qualification": {
+    "required_current_head_CI_pending": true,
+    "produced_package": false,
+    "actual_Factorio": false,
+    "human_experience": false,
+    "whole_workunit": false,
+    "full_programme": false
+  },
+  "native_builds": 0,
+  "CI_reruns": 0,
+  "candidate_dispatches": 0,
+  "new_roots": 0,
+  "new_worktrees": 0,
+  "original_observer_consumed": true,
+  "original_observer_rearmed": false,
+  "finished_at_utc": "2026-10-05T01:08:11.757376+00:00"
+}

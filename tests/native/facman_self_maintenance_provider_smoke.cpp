@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -71,6 +72,9 @@ struct Provider final : facman::self_setup::ProviderEffects {
   std::string ownership_digest = std::string(64, '2');
   std::string last_verification_digest = std::string(64, '1');
   std::string last_verification_status = "pass";
+  std::string installed_provider_revision;
+  std::uint64_t installed_abi_major = 1U;
+  std::uint64_t installed_abi_minor = 0U;
   std::vector<std::string> commands;
 
   std::string recipe_digest() const {
@@ -79,7 +83,7 @@ struct Provider final : facman::self_setup::ProviderEffects {
     identity.add_string("product_id", "facman");
     identity.add_string("product_version", expected.target.product_version);
     identity.add_string("provider_revision",
-                        facman::self_setup::provider_revision());
+                        expected.target.universal_setup_revision);
     identity.add_string("source_sha256", expected.target.package_sha256);
     identity.add_string("target_layout",
                         "versioned_generation_with_maintenance_v1");
@@ -112,10 +116,12 @@ struct Provider final : facman::self_setup::ProviderEffects {
     verification.add_string("status", last_verification_status);
     verification.add_string("verified_at", "2026-09-16T00:00:00Z");
     json::ObjectBuilder abi;
-    abi.add_unsigned_integer("major", 1U);
-    abi.add_unsigned_integer("minor", 0U);
+    abi.add_unsigned_integer("major", installed_abi_major);
+    abi.add_unsigned_integer("minor", installed_abi_minor);
     abi.add_string("provider_revision",
-                   facman::self_setup::provider_revision());
+                   installed_provider_revision.empty()
+                       ? expected.target.universal_setup_revision
+                       : installed_provider_revision);
     json::ObjectBuilder value;
     value.add_string("audit_chain_id", "audit.maintenance");
     value.add_array("component_selection", components);
@@ -357,6 +363,64 @@ bool require(bool condition, const char *message) {
   return condition;
 }
 
+bool historical_installed_state_checks(const fs::path &root,
+                                       const maintenance::Plan &current) {
+  auto historical = current;
+  historical.target.universal_setup_revision = std::string(40, 'd');
+  historical.target.install_root = root / "historical-generation";
+  historical.target.gui = historical.target.install_root / "generations" /
+      historical.target.product_version / "FacMan.exe";
+  historical.target.maintenance_launcher =
+      historical.target.install_root / "maintenance" / "FacManSetup.exe";
+  fs::create_directory(historical.target.install_root);
+  Provider effects;
+  effects.expected = historical;
+  Clock clock;
+  maintenance::ProviderBridge bridge(root / "state", root, &effects, &clock);
+  const auto identity = bridge.inspect_identity(historical.target.install_id);
+  bool ok = require(identity && identity.value().provider_revision ==
+                                   historical.target.universal_setup_revision &&
+                        bridge.inspect_candidate(historical) ==
+                            maintenance::CandidateState::exact &&
+                        bridge.inspect_retained_installed(historical).ok &&
+                        bridge.verify_installed(historical).ok,
+                    "historical ABI1.0 generation was not inspected and verified");
+  Provider write_effects;
+  write_effects.expected = historical;
+  maintenance::ProviderBridge write_bridge(root / "state", root, &write_effects, &clock);
+  ok &= require(!write_bridge.review_install_local(historical).ok &&
+                    write_effects.commands.empty(),
+                "historical inspection granted current-kernel install authority");
+  Provider mismatched;
+  mismatched.expected = historical;
+  mismatched.installed_provider_revision = facman::self_setup::provider_revision();
+  maintenance::ProviderBridge mismatch_bridge(root / "state", root, &mismatched, &clock);
+  ok &= require(mismatch_bridge.inspect_identity(historical.target.install_id) &&
+                    mismatch_bridge.inspect_candidate(historical) ==
+                        maintenance::CandidateState::foreign &&
+                    !mismatch_bridge.inspect_retained_installed(historical).ok,
+                "installed provider pin did not bind the recorded generation");
+  for (const std::string &pin : {std::string(39, 'd'), std::string(40, 'x'),
+                                  std::string(40, 'D')}) {
+    Provider malformed;
+    malformed.expected = historical;
+    malformed.installed_provider_revision = pin;
+    maintenance::ProviderBridge invalid(root / "state", root, &malformed, &clock);
+    ok &= require(!invalid.inspect_identity(historical.target.install_id),
+                  "malformed historical provider revision was accepted");
+  }
+  for (bool major : {false, true}) {
+    Provider unsupported;
+    unsupported.expected = historical;
+    unsupported.installed_abi_major = major ? 2U : 1U;
+    unsupported.installed_abi_minor = major ? 0U : 1U;
+    maintenance::ProviderBridge invalid(root / "state", root, &unsupported, &clock);
+    ok &= require(!invalid.inspect_identity(historical.target.install_id),
+                  "unsupported installed-state ABI was accepted");
+  }
+  return ok;
+}
+
 } // namespace
 
 int main() {
@@ -393,7 +457,7 @@ int main() {
   effects.expected = plan;
   Clock clock;
   maintenance::ProviderBridge bridge(root / "state", root, &effects, &clock);
-  bool ok = true;
+  bool ok = historical_installed_state_checks(root, plan);
   const auto prepared = bridge.review_install_local(plan);
   const auto prepared_retry = bridge.review_install_local(plan);
   Provider restarted_effects;

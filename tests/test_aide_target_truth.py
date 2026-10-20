@@ -184,7 +184,7 @@ native_direction:
             text,
         )
 
-    def test_current_roadmap_uses_the_alpha6_to_beta1_dependency_chain(self) -> None:
+    def test_current_roadmap_uses_the_alpha6_to_stable_dependency_chain(self) -> None:
         text = project_state.roadmap_status(project_state.collect())
         for work_unit in (
             "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
@@ -192,6 +192,12 @@ native_direction:
             "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
             "FACMAN-0.1-FEATURE-FREEZE-01",
             "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+            "FACMAN-0.1-SUCCESSOR-BETA-FINDINGS-CONVERGENCE-01",
+            "FACMAN-0.1-SUCCESSOR-COMPATIBILITY-MIGRATION-FREEZE-01",
+            "FACMAN-0.1-SUCCESSOR-FINAL-DELIVERY-PIPELINE-01",
+            "FACMAN-0.1-SUCCESSOR-RC-LIFECYCLE-REHEARSAL-01",
+            "FACMAN-0.1-SUCCESSOR-SUPPORT-WITHDRAWAL-READINESS-01",
+            "FACMAN-0.1-SUCCESSOR-PUBLICATION-SERVICING-ACTIVATION-01",
         ):
             self.assertIn(work_unit, text)
         self.assertNotIn("FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01", text)

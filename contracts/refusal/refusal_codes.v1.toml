@@ -1,6 +1,15 @@
 schema = "facman.refusal_codes.v1"
 
 required_codes = [
+  "lifecycle_refused",
+  "setup_move_apply_input_invalid",
+  "setup_move_apply_refused",
+  "setup_move_evidence_invalid",
+  "setup_move_closure_invalid",
+  "move_resource_admission_refused",
+  "move_recovery_indeterminate",
+  "move_recovery_projection_conflict",
+
   "invalid_identifier",
   "unsafe_managed_path",
   "persistent_target_exists",
@@ -1580,6 +1589,41 @@ retryable = false
 message = "The transaction staging root does not carry its expected ownership marker."
 
 [[code]]
+id = "recovery_profile_pair_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The profile manifest and overrides cannot be reconciled from verified transaction evidence."
+
+[[code]]
+id = "recovery_instance_rename_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The instance rename cannot be reconciled from verified transaction evidence."
+
+[[code]]
+id = "instance_configuration_lock_contended"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Another operation owns the instance configuration lock."
+
+[[code]]
+id = "instance_configuration_lock_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The instance configuration lock is unsafe or has unexpected identity."
+
+[[code]]
+id = "instance_manifest_revision_changed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance manifest changed after inspection; retry from its current revision."
+
+[[code]]
 id = "recovery_write_refused"
 severity = "blocked"
 effect = "workspace_write"
@@ -1830,6 +1874,13 @@ severity = "blocked"
 effect = "none"
 retryable = true
 message = "A modset request enables and disables the same package."
+
+[[code]]
+id = "modset_exact_selection_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The reviewed selected-instance content artifact is unavailable or ambiguous."
 
 [[code]]
 id = "modset_archive_changed"
@@ -2250,3 +2301,171 @@ severity = "blocked"
 effect = "none"
 retryable = true
 message = "The presentation snapshot changed and must be refreshed before retrying."
+
+[[code]]
+id = "setup_plan_path_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed install source or target path cannot be normalized safely."
+
+[[code]]
+id = "setup_platform_recipe_unavailable"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "No admitted managed install recipe is available on this platform."
+
+[[code]]
+id = "setup_install_terminal_state_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Provider installation does not match the reviewed durable identity."
+
+[[code]]
+id = "setup_install_apply_input_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed installation apply inputs are invalid."
+
+[[code]]
+id = "setup_install_apply_refused"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Provider refused managed installation apply."
+
+[[code]]
+id = "setup_install_terminal_state_inspection_refused"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Installed terminal state cannot be inspected."
+
+[[code]]
+id = "setup_install_terminal_state_changed"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Installed terminal state changed before verification."
+
+[[code]]
+id = "setup_install_recovery_input_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed installation recovery inputs are invalid."
+
+[[code]]
+id = "setup_install_recovery_response_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Provider installation recovery evidence is invalid."
+
+[[code]]
+id = "setup_install_recovery_inspection_refused"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Provider installation recovery cannot be inspected."
+
+[[code]]
+id = "install_recovery_projection_conflict"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Install reference differs from the prepared recovery postimage."
+
+[[code]]
+id = "install_recovery_indeterminate"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Installation recovery has no verified disposition."
+
+[[code]]
+id = "setup_install_terminal_target_changed"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Installed bytes no longer reproduce verified managed ownership."
+
+[[code]]
+id = "move_lifecycle_ineligible"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Move planning requires an active, verification_failed, or recovery_required managed install."
+
+[[code]]
+id = "setup_move_plan_response_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup returned an invalid managed move plan."
+
+[[code]]
+id = "setup_move_plan_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Universal Setup refused the managed move plan."
+
+[[code]]
+id = "lifecycle_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup refused the lifecycle request because its current managed closure is not eligible."
+
+[[code]]
+id = "setup_move_apply_input_invalid"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Managed move apply requires the exact reviewed handoff and stable replay identities."
+
+[[code]]
+id = "setup_move_apply_refused"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Provider move entry did not prove an exact completed projection; retain evidence for recovery."
+
+[[code]]
+id = "setup_move_evidence_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Managed move evidence failed exact source, destination, provider or ownership binding."
+
+[[code]]
+id = "setup_move_closure_invalid"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "The complete move closure is unsafe, changed or exceeds the bounded materializing path."
+
+[[code]]
+id = "move_resource_admission_refused"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Complete foreign-inclusive closure, available RAM or destination capacity exceeds bounded alpha move admission."
+
+[[code]]
+id = "move_recovery_indeterminate"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Move recovery preserves incomplete or ambiguous provider effects; no move finalizer is available."
+
+[[code]]
+id = "move_recovery_projection_conflict"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "Managed move reference differs from the exact retained preimage or prepared postimage."

@@ -1,0 +1,188 @@
+{
+  "schema": "facman.darwin_preparation_publication_reviewed_candidate.v1",
+  "base_head": "af29d1c1e409939240bc557c035bb40b924ffeed",
+  "files_sha256": {
+    "docs/development/make-ready-preparation.md": "59936cb5875f3186394b07816e13e9e9ad538ec7eef6966cbd728047271c4937",
+    "runtime/factorio/instance/flb_factorio_configuration_preparation.cpp": "d2d2658591be6e937d38f986903a95678cd05011e09505ed9167793bc4058a47",
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "f78bbb387c486e2e61c4bcaccfa48e43cd7e87761da92fa6cc39040c70ac5b44",
+    "runtime/factorio/saves/flb_factorio_selected_context.cpp": "19284928f05bf7f7c21a44a151be9007c049c5bd816acb3b709c32008cd1a5c1",
+    "runtime/platform/fl_file_io.cpp": "4bdccf04a98de9b9a82886826ffcbfd8e9d0ca24efebfe4ce91dd36d3ed0fd4f",
+    "runtime/platform/fl_file_io.h": "45d6b9ff5e994c7ed872bfeae47bc34013cda8ec9fdcc4d9aaf509690e44f4ef",
+    "tests/native/fl_platform_io_smoke.cpp": "babe7569332cef6e27ece42f0e99bbe5eb6a547ba9b305fe67019306010ab734",
+    "tests/test_configuration_preparation.py": "360a7339b7991bc2dbb5b65cef2219369d236c20860622fbc16e47a9afb3e0b7",
+    "tests/test_posix_preparation_publication.py": "88b8669d93c3c370f3eaa51c77e50c1bcb7e83b87af3337618536adb1ee7fc2c",
+    "tests/test_posix_retained_rewrite_admission.py": "459e4adf8b8566075bd3effae65a92e875d917cbc6a91f36fcf49955d8f14d4c",
+    "tests/test_selected_save_preparation.py": "43d5889b3c8a77eeb6f146cfff73dda35b19a9ea8c692de6cfbd22336f508d7b"
+  },
+  "independent_review_sha256": "1fa9c68faa91a473c2c94ad79484ae722927d3ff4a771fffdea59f9ee585c0bd",
+  "consequential_decision_sha256": "6b62582735f8809be8ed5b49b28a03765dc65b79fef18f5040ab7319cf285fdb",
+  "nonmac_summary_sha256": "c10cacf6f7357aa6c785787440d24f812d6edc6fc62c25b4ac59f21c334de83f",
+  "actual_full_tu_proofs": [
+    {
+      "platform": "linux",
+      "path": "runtime/platform/fl_file_io.cpp",
+      "token_count": 363806,
+      "token_sha256": "11f3e1a5b7c09c580ebdddb2d04fbf5eeabac1316d089d6675578d1a8da6625b",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "windows",
+      "path": "runtime/platform/fl_file_io.cpp",
+      "token_count": 791884,
+      "token_sha256": "8b6332c6c1c8a83727fa946809b2245ae1a49ddc33eb0245ba9066e0fc07aafd",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "linux",
+      "path": "runtime/factorio/instance/flb_factorio_instance_model.cpp",
+      "token_count": 412821,
+      "token_sha256": "72f0f91e0aa3dd230bb4fa30b213d8af09924a13f7b33ba1cbcc94a475cbecbe",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "windows",
+      "path": "runtime/factorio/instance/flb_factorio_instance_model.cpp",
+      "token_count": 653132,
+      "token_sha256": "b7742464bd11d486764edf8625ca08c360325d7ee658077588b08a2fb3409bf6",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "linux",
+      "path": "runtime/factorio/instance/flb_factorio_configuration_preparation.cpp",
+      "token_count": 379665,
+      "token_sha256": "cda32a05c399f004a6a05149d983e8e9303ae9a74cb3c0a581bb07921a843976",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "windows",
+      "path": "runtime/factorio/instance/flb_factorio_configuration_preparation.cpp",
+      "token_count": 646250,
+      "token_sha256": "3379dd768c2546876ee55fed35fa1ae4f41a148d7107c6f966afd5adf2276e0a",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "linux",
+      "path": "runtime/factorio/saves/flb_factorio_selected_context.cpp",
+      "token_count": 372486,
+      "token_sha256": "b9d16c33840059ba2225830e2ef54195b46ff123b2cadc8f86ef745877fbd5b6",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "windows",
+      "path": "runtime/factorio/saves/flb_factorio_selected_context.cpp",
+      "token_count": 615020,
+      "token_sha256": "927b7a926f87414c98404385e6f08b4375cb26c4da0745be20a6b3758ed8ecc8",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "linux",
+      "path": "tests/native/fl_platform_io_smoke.cpp",
+      "token_count": 371897,
+      "token_sha256": "ac1ced8c7fccdf1b7e3327a716ce8926750ded172b675ed9cdd7d42efda632e1",
+      "tokens_unchanged": true
+    },
+    {
+      "platform": "windows",
+      "path": "tests/native/fl_platform_io_smoke.cpp",
+      "token_count": 609824,
+      "token_sha256": "2fdc9eebdc08fc90702df6ac3f11dcabc1cd0f2653a55a27f7f10568e2320f74",
+      "tokens_unchanged": true
+    }
+  ],
+  "fresh_linux_methods_passed": 6,
+  "explicit_mac_unsupported_skips_counted_as_acceptance": 0,
+  "nonmac_runtime_native_images_unchanged": true,
+  "no_native_build": true,
+  "actual_mac_methods_required": {
+    "tests/test_configuration_preparation.py": [
+      "ConfigurationPreparationTests.test_readonly_query_advertises_exact_missing_component_and_host_boundary",
+      "ConfigurationPreparationTests.test_ordinary_repair_preserves_absent_and_raw_overrides_content_and_selected_context",
+      "ConfigurationPreparationTests.test_interruption_recovers_owned_effect_and_preserves_unbound_creation",
+      "ConfigurationPreparationTests.test_existing_custom_wrong_routing_and_legacy_configuration_are_preserved",
+      "ConfigurationPreparationTests.test_foreign_same_byte_objects_directories_and_strategy_drift_are_preserved",
+      "ConfigurationPreparationTests.test_terminal_missing_effect_is_never_recreated",
+      "ConfigurationPreparationTests.test_configuration_lock_custody_preserves_unfamiliar_and_compatible_files",
+      "ConfigurationPreparationTests.test_late_context_drift_preserves_unpublished_or_published_effect_and_changed_inputs",
+      "ConfigurationPreparationTests.test_stale_snapshot_and_missing_confirmation_refuse_before_effects",
+      "ConfigurationPreparationTests.test_immutable_reload_drift_refuses_under_the_original_recovery_lock",
+      "ConfigurationPreparationTests.test_same_path_new_parent_object_invalidates_the_snapshot_without_effects"
+    ],
+    "tests/test_selected_save_preparation.py": [
+      "SelectedSavePreparationTests.test_query_is_read_only_and_host_capability_is_explicit",
+      "SelectedSavePreparationTests.test_ordinary_selected_context_and_fresh_process_replay_preserve_all_selected_inputs",
+      "SelectedSavePreparationTests.test_process_loss_resumes_exact_owned_effect_and_preserves_ambiguous_creation",
+      "SelectedSavePreparationTests.test_same_byte_foreign_objects_and_mismatched_strategy_are_preserved",
+      "SelectedSavePreparationTests.test_unsupported_selected_filenames_refuse_during_read_only_admission",
+      "SelectedSavePreparationTests.test_terminal_invalid_or_missing_owned_effect_never_creates_directories_or_republishes",
+      "SelectedSavePreparationTests.test_shared_configuration_lock_preserves_empty_unfamiliar_and_borrowed_compatible_objects",
+      "SelectedSavePreparationTests.test_stale_inputs_confirmation_and_late_context_drift_do_not_claim_completion"
+    ],
+    "tests/test_posix_preparation_publication.py": [
+      "PosixPreparationPublicationTests.test_ordinary_make_ready_prepares_missing_ini_then_selected_context_with_fresh_revision",
+      "PosixPreparationPublicationTests.test_existing_ini_reconciliation_plan_requires_explicit_confirmation_before_effects",
+      "PosixPreparationPublicationTests.test_interrupted_link_pair_finishes_exact_inode_and_fresh_recovery_is_read_only",
+      "PosixPreparationPublicationTests.test_foreign_objects_extra_links_symlinks_and_changed_bytes_are_preserved",
+      "PosixPreparationPublicationTests.test_actual_target_substitution_or_write_during_final_observation_refuses",
+      "PosixPreparationPublicationTests.test_darwin_actual_sigkill_and_recovery_loss_preserve_bound_effect_and_unknown_request",
+      "PosixPreparationPublicationTests.test_darwin_live_recovery_lock_contention_preserves_exact_published_pair"
+    ],
+    "tests/test_posix_retained_rewrite_admission.py": [
+      "PosixRetainedRewriteAdmissionTests.test_existing_ini_owner_host_boundary_and_unsafe_target_refusal"
+    ],
+    "tests/test_macos_configuration_reconciliation.py": [
+      "MacOSExistingConfigurationTests.test_ordinary_scopes_intents_lengths_line_endings_and_readable_metadata",
+      "MacOSExistingConfigurationTests.test_confirmation_and_current_revision_required_before_effects",
+      "MacOSExistingConfigurationTests.test_unsafe_original_is_refused_during_readonly_planning",
+      "MacOSExistingConfigurationTests.test_missing_routing_keys_and_ambiguous_syntax",
+      "MacOSExistingConfigurationTests.test_all_durable_boundaries_and_repeated_recovery_interruption",
+      "MacOSExistingConfigurationTests.test_actual_cli_sigkill_at_prefix_write_and_truncate_then_recovery",
+      "MacOSExistingConfigurationTests.test_unsafe_objects_metadata_drift_and_flock_preserve_owned_inputs",
+      "MacOSExistingConfigurationTests.test_invalid_journal_authority_ids_and_foreign_root_remain_readonly",
+      "MacOSExistingConfigurationTests.test_verified_audited_complete_states_never_rewrite_torn_or_foreign_objects",
+      "MacOSExistingConfigurationTests.test_current_install_profile_content_settings_and_save_context_drift",
+      "MacOSExistingConfigurationTests.test_live_post_admission_drift_refuses_before_first_write",
+      "MacOSExistingConfigurationTests.test_unreadable_original_under_unprivileged_owner_is_preserved",
+      "MacOSExistingConfigurationTests.test_unreadable_acl_and_xattrs_under_unprivileged_owner_are_preserved",
+      "MacOSExistingConfigurationTests.test_checkpoint_parent_permission_denial_preserves_actual_durable_journal"
+    ]
+  },
+  "legitimate_windows_only_mac_skips": {
+    "tests/test_configuration_preparation.py": [
+      "ConfigurationPreparationTests.test_final_observation_holds_exact_published_target_against_replacement_and_write",
+      "ConfigurationPreparationTests.test_compiled_fixed_control_dispatches_ordinary_owner_and_keeps_captured_intent"
+    ],
+    "tests/test_selected_save_preparation.py": [
+      "SelectedSavePreparationTests.test_finalization_retains_pinned_target_against_same_byte_replacement_and_write",
+      "SelectedSavePreparationTests.test_compiled_fixed_control_preserves_selected_intent_and_uncertain_request"
+    ],
+    "tests/test_posix_preparation_publication.py": [],
+    "tests/test_posix_retained_rewrite_admission.py": [],
+    "tests/test_macos_configuration_reconciliation.py": []
+  },
+  "actual_mac_methods_pending": 41,
+  "actual_mac_full_native_suite_pending": true,
+  "actual_mac_runtime_qualified": false,
+  "required_checks_pending": true,
+  "custody": "darwin-preparation-publication-candidate-custody.v1.zip",
+  "custody_sha256": "bbd0be59ac4e21f25cb5ef5160e14893ad9547300432cc1ef8b2cdcd2bc09672",
+  "custody_members": 40,
+  "authority_delta": "Darwin missing-INI and selected-context owners opt in to observed-staging-name no-replace link with prebound same-inode recovery",
+  "explicit_platform_limits": [
+    "Darwin source final compare/link interval; no atomic FD-source claim for this opt-in",
+    "POSIX final compare/unlink cleanup interval",
+    "advisory/cooperative-writer policy, no malicious uncooperative namespace exclusion",
+    "no new orchestration, workflows, provider pins, public commands or release authority",
+    "declared minimum macOS13 API flags checked in primary 13.0 source; actual minimum-host runtime remains unqualified",
+    "linkat flags zero filesystem support required; unsupported operation preserves bound staging, no following fallback"
+  ],
+  "default_descriptor_source_publication_unchanged": true,
+  "minimum_mac13_physical_host_qualified": false,
+  "named_apfs_host": false,
+  "power_loss": false,
+  "produced_package": false,
+  "game": false,
+  "human": false,
+  "full_make_ready": false,
+  "beta": false,
+  "rc": false
+}

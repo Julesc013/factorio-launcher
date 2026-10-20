@@ -1,0 +1,146 @@
+{
+  "author_receipt_sha256": "340bc01d43f8c6d89b736fb1ae50fcf56b186301af113ca7a78e7b25537c33d0",
+  "behavior": "Read-only readiness composes actual installation reconciliation and current-profile owner reports, preserving the exact stored Patch and explicit absence. Both observation intents reobserve and replan before publication. CLI and frontend summaries disclose advisory-only preparation.",
+  "boundaries": {
+    "beta_qualified": false,
+    "combined_rollback_available": false,
+    "human_ui_qualification": false,
+    "new_execution_authority": false,
+    "new_public_commands": false,
+    "other_hosts_qualified": false,
+    "permit_issued": false,
+    "preparation_apply_available": false,
+    "produced_package_qualification": false,
+    "real_game_effects": false,
+    "whole_workunit_closed": false
+  },
+  "changed_paths_raw_sha256": {
+    ".aide/memory/project-state.md": "d4d1d370641739b1cf695801f078bf6168426f0528e8eef102f8da9bb9407312",
+    ".aide/memory/project-state.v2.json": "d088d760154837d24096a74837e228398c19b7010233fd3aaa280c74310f57c5",
+    "README.md": "7a414a7e7d2c76fafe0c1cc49af9d43b3bbbb40a0bd5bb9e9c7edaad4960e21b",
+    "apps/cli/report_text.cpp": "81f1f759b0e715e01804a0bb9caa4d5c74f31194bd63578df583fe922af86998",
+    "apps/gui/windows/winforms/C1SnapshotProjection.cs": "84278cb7689d316b3e46e5412e006e52a63060528d46c7050e31a056288a5042",
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "17f609d6cb4ee11215f85e82c0cfb8f030d022ccfb3c5ca6f129ffa26b90394f",
+    "apps/gui/windows/winforms/PresentationModels.cs": "e3a81d8415409178cd03d7407710af1f06bc641a40a1db7227605d8b058bb9d0",
+    "apps/tui/tui_product_model.cpp": "0dd483fca3ef7c831b92802e357512319f95c10edfef6a8e7287de41aa4e37d5",
+    "contracts/schema/factorio/factorio_instance_readiness.v1.schema.json": "a5fb627da48dabba93cbefc62d53eeb63d0cad613d1a796daf4802daa86e0cf1",
+    "contracts/schema/factorio/factorio_preparation_preview.v1.schema.json": "5e7c2c63f57c2b734663ae1e7df98d00c4832e42ad5ae2289539298689184b6d",
+    "docs/architecture/instance_model_and_readiness.md": "3b242b4f8e9574a9b7f14bcbbb0675937bc52c29636292d153c049ccba0e32f3",
+    "runtime/core/generated/version.h": "5a66f54895eadd0749db7ef656c10d6d4261a823436bce858a14a81a960a42e0",
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "f731ac8b9e8828e1679f8526c4eff5b8eb8d277a7022a967cf5bb720b7929deb",
+    "runtime/factorio/profiles/flb_factorio_profiles.cpp": "32176031dacb9226f0b754395c5c812a8569fc97e590b4fadfd667a446617739",
+    "runtime/factorio/profiles/flb_factorio_profiles.h": "cf509df6bc4b852f545b62874e7dd9c38c1cdfd35e078671836c7481a2019799",
+    "tests/native/facman_tui_product_model_smoke.cpp": "405fb17129ca7805e8565fbae20c14cb87f335c02a582dcdcf73643230209f7b",
+    "tests/native/flb_factorio_instance_model_smoke.cpp": "e5ede4e716d21aaf80bde355678df9bec481659b61163f3833f420e42adba53a",
+    "tests/test_presentation_profile_preparation.py": "7100d7dbb727db507e687824abe2d6f2a32e239afc71ea129689944dbaad2d0d",
+    "tests/winforms_control_gallery/ObservationIntentHarness.cs": "dc1e61fba4cea7d3d1a3736f5f90cd8c3a98f9f4660e86c125eb0ee1bb7bc973"
+  },
+  "concurrency_oracle": "Bounded public-query/external atomic-writer stress plus full second observation and owner replan. Deterministic exact late-boundary scheduling, atomic snapshot guarantees and ABA immunity remain unproved.",
+  "frontend_oracle": "Compiled headless actual WinForms projection/state harness and native TUI product smoke; advisory owner/refusal state with apply unavailable. No visible UI or real-host effects.",
+  "historical_qualification_unchanged": true,
+  "independent_source_review_sha256": "022efe73ce32f6775d27d4cd2ba69106e6e7a8034f8c68df6f96ae01340b591b",
+  "legacy_oracle": {
+    "absent_and_explicit_menu_exact_result_replay": true,
+    "changed_intent_idempotency_conflict": true,
+    "fingerprint": "18c675c681bfed33d1484f7a54f6a01cac5a2f5f452ae2ce58916202b71602af",
+    "historical_embedded_readiness": "Preserved immutable historical records may predate preview; current standalone query schema is not retroactively applied to their embedded readiness",
+    "receipt_sha256": "4eb747c09a58844b702a90d12b18460fe6918d8f5cdc29f2d604b79357f8c610",
+    "whole_workspace_and_receipt_bytes_unchanged": true
+  },
+  "legacy_replay_sha256": "2c6969ff3340dbb7523f2afe1c8f08e13be6a9b6eaef4cbffbeb08c2a7e22dac",
+  "native_executable_sha256": "64c5d904937ac4ac629ac7e83901d68e4ea92ace4a2811c8ca8b219af38611a4",
+  "native_smoke_tests": {
+    "methods": 4,
+    "passed": 4,
+    "skipped": 0
+  },
+  "operating_scope": {
+    "existing_cache_reused": true,
+    "native_workers": 2,
+    "new_clones": 0,
+    "new_task_roots": 0,
+    "new_worktrees": 0,
+    "product_candidates_dispatched": 0,
+    "source_fixture_only": true
+  },
+  "owner_plan_boundaries": {
+    "installation_mutation_owner": "Universal Setup",
+    "installation_planning_owner": "FacMan factorio.installation_model.v2",
+    "profile_request_preserves_stored_patch": true,
+    "provider_plan_available": false,
+    "root_configuration_modset_and_world": "Observations with explicit unavailable plans; no invented owner apply"
+  },
+  "public_cli_tests": {
+    "methods": 19,
+    "passed": 19,
+    "skipped": 0
+  },
+  "qualification": [
+    {
+      "exit_code": 0,
+      "log_sha256": "37cd1960b4cb848db1a66c136cd72ac6db1d4007cc18b218c49380ca5fc503cb",
+      "name": "strict"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "8897b6e01663349c8ac355cfb87c9d58aa20da5cc24347b0be6aab1fc0e3cc87",
+      "name": "configure"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "36a442b4b4233dcf9755e239f93c241f98bda83f47b915a8b435a97260453837",
+      "name": "build"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "4f156a68e7810e6053ce8d80e2eacb2b66d5c1a347e1155da24bb804842a7973",
+      "name": "native-smoke"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "992fdfa88501c28b3b326c47d9d62fae89fdf4df7005a460fd6095a1f612ce65",
+      "name": "focused-cli"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "f3eead1b6f0541f865d94cb2dd8fd8e717f01fb5398445b76fe43d6fe92db4f4",
+      "name": "legacy-replay"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "b99967f727a5edcfb2a5e4414f742dce60a9ed055f854d2b11c22c9bf71ce450",
+      "name": "winforms-build"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "3034a0b162c932b59739c892457c5e3a4c8daeceb93739552e9421e1c0b32ca8",
+      "name": "winforms-harness-build"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "5ef19c826b916965d13853b0aa8c238b047a6e067596cd7c2bc0b0b376538e77",
+      "name": "winforms-harness"
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "f0fd87bd7c35ac038c622ed2801d901b0bc65a160d66c9ada92146066a4ece36",
+      "name": "diff"
+    }
+  ],
+  "qualification_sha256": "3d7a2707bf5ffc378629a44adaa34dddfc834e6870aecc4ce299960cde0e38de",
+  "retained_findings": [
+    "Original generator drift and mistaken nonexistent source-budget invocation retained in author evidence",
+    "Pre-freeze owner semantic mismatch, two-direction override presence and digest comparison, separate-assembly harness access, and closed selected-save dependency-state correction retained",
+    "Independent source review found a profile refusal could clear an already detected installation mismatch; detected-change latch made monotonic before native qualification",
+    "Independent source review found artifact hashing preceded the ancestor-link guard; stable artifact observation now guards ancestors before opening and after reading, with an external-ancestor public regression"
+  ],
+  "retained_qualification_failure": "Original pre-build strict refusal retained: target-local generated state required regeneration and unsupported-link skip required the existing host-obligation classification. No native build had started.",
+  "retained_runtime_failure": "q02 native build and four smokes passed; focused CLI run retained two unresolved installation-plan schema references and one omitted local-lock identity failure. Neither that failed campaign nor the unexecuted linked-parent subcase is represented as accepted proof.",
+  "schema": "facman.make_ready_composition.scoped_qualification.v1",
+  "source_parent": "aaa704d2f12f3138589f55e5a53024268f4dbb83",
+  "test_selection_sha256": "e5bf9d0bb42c3b5e4090a502afbcbcbaa3082154431fc8e87636223ff421bd49",
+  "verdict": "PASS",
+  "winforms_executable_sha256": "fde253a5d7c7528f0196b03c3caae57d47571ed76f0ecb7bc76e86f832fc63c5",
+  "winforms_harness_sha256": "ec9962102ab9d30f25ad952db0bc9bc3589e7c95b955a4afa44f464066843f06",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}

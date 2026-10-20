@@ -27,6 +27,15 @@ int main()
     using namespace facman::factorio::application;
     ApplicationRequest request;
     std::string detail;
+    if (!decode_request(CommandId::snapshots_restore,
+            "{\"snapshot_ref\":\"world.zip\",\"target_instance_id\":\"restored\",\"install_id\":\"local\"}",
+            false, request, detail) || std::get<RestoreSnapshotRequest>(request.payload).install_id != "local") return 24;
+    if (!decode_request(CommandId::snapshots_restore,
+            "{\"snapshot_ref\":\"world.zip\",\"target_instance_id\":\"restored\"}",
+            false, request, detail) || !std::get<RestoreSnapshotRequest>(request.payload).install_id.empty()) return 25;
+    if (decode_request(CommandId::snapshots_restore,
+            "{\"snapshot_ref\":\"world.zip\",\"target_instance_id\":\"restored\",\"install_id\":\"../local\"}",
+            false, request, detail)) return 26;
     if (!decode_request(
             CommandId::run_execute,
             "{\"instance_id\":\"space-age-main\"}",
@@ -102,7 +111,10 @@ int main()
                 "install.managed.uninstall.recover") == recovery_policy.capabilities.end() ||
             recovery_policy.capabilities.size() != 1U ||
             recovery_policy.effects.size() !=
-                (recovery_command == CommandId::installs_recovery_apply ? 3U : 2U) ||
+                (recovery_command == CommandId::installs_recovery_apply ? 4U : 2U) ||
+            (std::find(recovery_policy.effects.begin(), recovery_policy.effects.end(),
+                "setup_mutation") != recovery_policy.effects.end()) !=
+                (recovery_command == CommandId::installs_recovery_apply) ||
             (std::find(recovery_policy.effects.begin(), recovery_policy.effects.end(),
                 "workspace_write") != recovery_policy.effects.end()) !=
                 (recovery_command == CommandId::installs_recovery_apply)) return 16;

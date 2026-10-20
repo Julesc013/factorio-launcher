@@ -15,7 +15,10 @@
     "manifest_path": { "type": "string", "minLength": 1 },
     "created_at": { "type": "string", "minLength": 1 },
     "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "workspace_id": { "type": "string", "minLength": 1 },
+    "source_size": { "type": "integer", "minimum": 0 },
+    "consistency_policy": { "const": "pinned_source_two_pass_sha256_v1" }
   },
   "additionalProperties": true
 }

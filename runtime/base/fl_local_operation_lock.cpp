@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_local_operation_lock.h"
+#include "fl_local_filesystem.h"
 
 #include "fl_path_safety.h"
 #include "fl_windows_path.h"
@@ -66,7 +67,7 @@ StableLockResult supported_local_filesystem(const fs::path& path)
         return {StableLockCode::unsupported_filesystem,
             system_error_text("cannot classify lock filesystem")};
     }
-    if ((value.f_flags & MNT_LOCAL) == 0) {
+    if (!facman::platform::detail::supported_posix_local_filesystem(value)) {
         return {StableLockCode::unsupported_filesystem,
             "lock path is not on a local macOS filesystem"};
     }
@@ -78,25 +79,14 @@ StableLockResult supported_local_filesystem(const fs::path& path)
             system_error_text("cannot classify lock filesystem")};
     }
     const unsigned long type = static_cast<unsigned long>(value.f_type);
-    switch (type) {
-    case 0xEF53UL:      // ext2/3/4
-    case 0x58465342UL:  // XFS
-    case 0x9123683EUL:  // Btrfs
-    case 0x01021994UL:  // tmpfs
-    case 0x858458F6UL:  // ramfs
-    case 0x794C7630UL:  // overlayfs
-    case 0x2FC12FC1UL:  // ZFS
-    case 0xF2F52010UL:  // F2FS
-    case 0xCA451A4EUL:  // bcachefs
+    if (facman::platform::detail::supported_posix_local_filesystem(value))
         return {StableLockCode::acquired, {}};
-    default:
-        return {StableLockCode::unsupported_filesystem,
-            "lock path uses an unreviewed Linux filesystem type 0x" + [&]() {
-                std::ostringstream out;
-                out << std::hex << type;
-                return out.str();
-            }()};
-    }
+    return {StableLockCode::unsupported_filesystem,
+        "lock path uses an unreviewed Linux filesystem type 0x" + [&]() {
+            std::ostringstream out;
+            out << std::hex << type;
+            return out.str();
+        }()};
 #endif
 }
 

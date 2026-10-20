@@ -1,0 +1,388 @@
+{
+  "applied_files": [
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide.local.example/execution.json",
+      "proposed_sha256": "2fe117804e450758b243c1f3ae32ff6ac616b0940e56398c4121583acd1e618b"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/capabilities/capability-evidence-bindings.schema.json",
+      "proposed_sha256": "855fb0d7bb4dbe4530465f0d326931e4e6885847e5f79c0b6fa24e878e2e4c05"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/commands/catalog.yaml",
+      "proposed_sha256": "6a80938cd764fc49832c32936b76ee999502e57b7c86c27b1e0290c5d55ab7a4"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/git/commit-message-disposition.schema.json",
+      "proposed_sha256": "b2858200e3e699682ce366f887673785c62446f2bb50f662d38950139fc4af08"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/policies/commit-message-dispositions.yaml",
+      "proposed_sha256": "8d8b00e406860ea17ee1ce127a11dbe4ceb987f411c692cd6c55b62274637315"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/policies/commit-messages.yaml",
+      "proposed_sha256": "85fa6e874adf83d41779a40a0c2a8fecad2e80240bfba1aad10bd0eec7929390"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/policies/release-publication-boundary.yaml",
+      "proposed_sha256": "0826d00bd2b15bd469d500961f446a5671e82ef7afcc91f24d138ddf2c5ce705"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/policies/release-versioning.yaml",
+      "proposed_sha256": "b81235640cbca552826a1bb212f5e451a9dd0af8c8ab27e65765446324ab1253"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/prompts/compact-task.md",
+      "proposed_sha256": "b09467f8c47a4f8d90341e94a978104f982b6ecea7e1a9e051ba41b289b9ff9f"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/reports/aide-commit-message-standard.md",
+      "proposed_sha256": "e71240abb88b1e17852cbb77c70ea957cf9666c981db92ac8df49339548b1804"
+    },
+    {
+      "action": "three_way_merge_reviewed",
+      "path": ".aide/scripts/aide_lite.py",
+      "proposed_sha256": "e08dee24203b38c8a67f7a37a3344fdaab13258834687232c02109c203547c79"
+    },
+    {
+      "action": "three_way_merge",
+      "path": ".aide/scripts/tests/test_aide_lite.py",
+      "proposed_sha256": "687132df6ae321710fe879e5efa31f444d1cf7646157613d8e60b0689800c7df"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/scripts/tests/test_efficiency_wait.py",
+      "proposed_sha256": "db8bae54e7fdb1fe7c01959ee4384844ead80f598ca7dd701f91a7e3752bf3e6"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/scripts/tests/test_export_import.py",
+      "proposed_sha256": "0ca410215666799013f038b2b25657aab68973e25a4e46ed9ed647ea46a3b349"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/scripts/tests/test_managed_commit_create.py",
+      "proposed_sha256": "e407b3efd3e4f83fdf5523384643821ff490002b2dec1939c4e0311d5fe59ca3"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/scripts/tests/test_public_archive_fixture.py",
+      "proposed_sha256": "2949b827a2ceeaccda25d641d8eca3e5bd5566ae757893905f3bb8380b025e84"
+    },
+    {
+      "action": "three_way_merge",
+      "path": ".aide/scripts/tests/test_q27_commit_recovery.py",
+      "proposed_sha256": "d47538ed0c8526477b063af1b81ed1c13f3f8824d687bd1c0b4dd2cda3d90ee6"
+    },
+    {
+      "action": "three_way_merge",
+      "path": ".aide/scripts/tests/test_q34_changelog_release.py",
+      "proposed_sha256": "9d167a40af31e442e92c27cc06f3d7094ef12ad8fe2334336a63f2de89c2106c"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/scripts/tests/test_q47_release_bundle.py",
+      "proposed_sha256": "e0412edef9877fc369c7b2c39fbdcfac8582ed858940cd7e78dea2eac49f95f7"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/scripts/tests/test_q48_github_release_draft.py",
+      "proposed_sha256": "9e64617635d1edfa34e8162415f5f51651a2ce65bb91474b67fab02384659b79"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/scripts/tests/test_stable_release_admission.py",
+      "proposed_sha256": "f0ff7e6e5d0cbf847ebb384a53f3b5b8e4e318e714dab90317c2e675a69eb3a5"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/scripts/tests/test_x_os_01_task_os_commands.py",
+      "proposed_sha256": "481bf251a92b44a6867c5580e83ab69394980ed83e2983dfb04c522ca922990a"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": ".aide/scripts/tests/test_x_os_02_capability_reality.py",
+      "proposed_sha256": "519619d370bc98255d1eb41c8db031a910ad51adbfb9bf523dd9709bd5140a7d"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/templates/portable-apply/README.md",
+      "proposed_sha256": "041f26d7e0c40537c2caa9aac51df4ac348b1cc4bdc4f29fe2b0062b47c1e192"
+    },
+    {
+      "action": "add_new_portable_file",
+      "path": ".aide/templates/portable-apply/__init__.py",
+      "proposed_sha256": "d9f1cb35bdf8557ef871410aba60c9982f34a9bea2a9381eef17b00ab1b13ac8"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": "docs/reference/aide-lite-release-bundle.md",
+      "proposed_sha256": "c4797c496859e63fae83a4a29a20401aeaf2e02f26513a1daa07019dd1b8ae11"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": "docs/reference/aide-lite-test-runner.md",
+      "proposed_sha256": "8ef11d64dd800552b20732b947a0f4eefd222e4f8c2570949cbe0d41a7b32c1b"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": "docs/reference/capability-reality-ledger.md",
+      "proposed_sha256": "1533b4122dc1666e92058643cc167070a3defab64a57c078fde4574082b7c51e"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": "docs/reference/commit-discipline.md",
+      "proposed_sha256": "9e6974e720fcd6ef31a35bde64d8a0b2c474da50b188e0cd145a2ea8e5637be3"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": "docs/reference/cross-repo-pack-export-import.md",
+      "proposed_sha256": "33609c73ec98953286f551fbd71cc2a3ea21cd8cb33fd8a0d0a94b4f62bad54a"
+    },
+    {
+      "action": "update_unchanged_portable_file",
+      "path": "docs/reference/github-release-draft.md",
+      "proposed_sha256": "847a5660cd23ec834ededd6c23504911c697a7685d8b1eaaccf0d0744c1efac7"
+    },
+    {
+      "action": "three_way_merge",
+      "path": "docs/reference/task-os-report-only-commands.md",
+      "proposed_sha256": "aee520475d13a1a86f5dcd9106c1435e87f25706b7931e0e85ec90dc73e0197d"
+    },
+    {
+      "action": "add_portable_helper_exact_upstream_bytes",
+      "path": ".aide/scripts/aide_managed_commit.py",
+      "proposed_sha256": "e3ef99000a466e60ae6d56d6a77fda6501a10a195f70eb6990a97ea99e1c6dcf"
+    }
+  ],
+  "base_commit": "09eb0fa9eabb47274c3687c0261de3beaf5e6605",
+  "earlier_optional_campaign": {
+    "log_sha256": "eadbe85cd21cc1f61914301ddac4f7d3ff349e6a971c498e04150098b0b4dfb5",
+    "qualification_scope": {
+      "preserved_deadline": "portable-script-tests-deadline.log",
+      "scope_sha256": "62daa82cd68744f42f440912a46cb388df66595b6d741e06723663a67a522876",
+      "selected": [
+        "test_aide_lite.AideLiteWorkflowTests.test_pack_records_product_workunit_as_machine_readable_active_task",
+        "test_aide_lite.AideLiteWorkflowTests.test_portable_apply_descriptions_match_shipped_modules",
+        "test_aide_lite.AideLiteWorkflowTests.test_canonical_target_queue_remains_authoritative_over_context_packet",
+        "test_aide_lite.AideLiteWorkflowTests.test_missing_target_lifecycle_tooling_refuses_before_queue_mutation",
+        "test_aide_lite.AideLiteWorkflowTests.test_portable_pack_excludes_source_only_runtime_tests",
+        "test_efficiency_wait.EfficiencyWaitTests.test_portable_cli_without_source_checkout",
+        "test_efficiency_wait.EfficiencyWaitTests.test_timeout_is_pending_and_does_not_remove_active",
+        "test_export_import.ExportImportTests.test_source_checkout_missing_queue_index_cannot_bypass_job_guard",
+        "test_export_import.ExportImportTests.test_imported_aide_lite_doctor_snapshot_and_pack_run",
+        "test_export_import.ExportImportTests.test_export_excludes_source_state_and_generated_artifacts",
+        "test_export_import.ExportImportTests.test_export_checksums_match_and_are_deterministic",
+        "test_export_import.ExportImportTests.test_local_edits_and_unknown_ownership_refuse_before_any_payload_write",
+        "test_export_import.ExportImportTests.test_tampered_predecessor_pack_is_rejected_before_target_writes",
+        "test_export_import.ExportImportTests.test_redigested_receipt_cannot_relabel_direct_edit_as_owned_update",
+        "test_export_import.ExportImportTests.test_import_payload_does_not_clobber_a_racing_leaf",
+        "test_export_import.ExportImportTests.test_explicit_partial_recovery_finishes_fresh_and_predecessor_update",
+        "test_export_import.ExportImportTests.test_removal_apply_requires_exact_plan_and_preserves_authored_state",
+        "test_export_import.ExportImportTests.test_exact_predecessor_rollback_restores_owned_bytes_and_receipt",
+        "test_export_import.ExportImportTests.test_owned_repair_rejects_edits_stale_plan_and_tampered_pack",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_facman_overlay_loads_after_imported_policy",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_commit_range_baseline_does_not_waive_new_bad_commits",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_git_replacement_cannot_change_checked_message_or_traversal",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_range_disposition_preserves_raw_failure_and_requires_acceptance",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_disposition_rejects_tampered_evidence_duplicate_and_unknown_fields",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_acceptance_requires_exact_structured_authority_and_current_date",
+        "test_q34_changelog_release.Q34ChangelogReleaseTests.test_preview_source_head_follows_selected_revision",
+        "test_q34_changelog_release.Q34ChangelogReleaseTests.test_exact_immutable_baseline_is_excluded_from_changelog_debt",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_release_asset_index_binds_exact_hashes_and_sizes",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_stale_preview_is_blocked_in_release_bundle",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_release_validator_refuses_unsafe_members_before_extraction",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_release_validator_refuses_oversized_pax_before_metadata_parse",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_stable_cli_refuses_portable_consumer_without_managed_source_runner",
+        "test_q48_github_release_draft.Q48GitHubReleaseDraftTests.test_publication_boundary_is_false_and_advisory_only",
+        "test_q48_github_release_draft.Q48GitHubReleaseDraftTests.test_draft_validate_rejects_implied_published_state",
+        "test_x_os_01_task_os_commands.XOS01TaskOSCommandTests.test_latest_task_parser_preserves_aide_fix_os_identity",
+        "test_x_os_01_task_os_commands.XOS01TaskOSCommandTests.test_nonempty_target_queue_does_not_select_aide_source_phase",
+        "test_x_os_01_task_os_commands.XOS01TaskOSCommandTests.test_target_profile_overrides_colliding_aide_source_task_id",
+        "test_x_os_02_capability_reality.XOS02CapabilityRealityTests.test_portable_public_cli_stale_validation_and_refresh",
+        "test_x_os_02_capability_reality.XOS02CapabilityRealityTests.test_explicit_refresh_and_unrelated_changes",
+        "test_managed_commit_create",
+        "test_stable_release_admission",
+        "test_public_archive_fixture",
+        "test_export_import.ExportImportTests.test_pack_provenance_allows_only_artifact_commit_changes"
+      ],
+      "whole_optional_suite_complete": false
+    },
+    "result": "INCOMPLETE_DEADLINE"
+  },
+  "earlier_overbroad_discovery": {
+    "interpretation": "Preserved source-only tests and missing runner path; updated portable module suite qualified separately",
+    "log_sha256": "ddb8db68ba883136362fa54f9b6776ef9f0ce7d587a35c1359688dbd34b8d989",
+    "result": "FAIL"
+  },
+  "installation": "reviewed_legacy_three_way_portable_update",
+  "limitations": [
+    "Source-only host execution modules and tests remain excluded",
+    "Managed commit creation is preview-only on FacMan; use existing classified commit-plan process",
+    "Owner authorization and required current-head CI remain integration gates",
+    "No product, provider, Beta, release or network authority changed"
+  ],
+  "ownership_receipt_fabricated": false,
+  "preservation": {
+    "existing_files_at_apply": 2030,
+    "later_intentional_state_change": "Add this tooling task to the local queue index and regenerate its two state projections",
+    "mismatches_at_apply": []
+  },
+  "preservation_after": {
+    "intentional_existing_state_changes": [
+      ".aide/queue/index.yaml",
+      ".aide/memory/project-state.v2.json",
+      "release/index/current_state.v1.toml"
+    ],
+    "mismatches": [],
+    "preserved_existing_noncandidate_files": 2028,
+    "queue_index_after_sha256": "d1fbea2c8abda54eb8557a99ee68b514d934109abcc2aab36a493a4d28003e64",
+    "queue_index_before_sha256": "5246f2626f17f78a36dc3dbce903c07f4379bd6be187e17a079a99348feb4eae"
+  },
+  "schema": "facman.aide-portable-upgrade.v1",
+  "source_checkout_written": false,
+  "source_refs": {
+    "new": "1402003782ee9e23d3892065f3b4e4dc329ccbfe",
+    "old": "7d8bf19d878fd9ad29859a6cba4b7de64ad80ecc"
+  },
+  "status": "LOCAL_QUALIFIED_PENDING_PROTECTED_OWNER_AUTHORIZATION_AND_CI",
+  "validation": [
+    {
+      "argv": [
+        "py",
+        "-3",
+        "-B",
+        ".aide/scripts/aide_lite.py",
+        "test"
+      ],
+      "cwd": "D:\\Projects\\Factorio\\factorio-launcher",
+      "duration_seconds": 9.226,
+      "exit_code": 0,
+      "log": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\aide-upgrade\\canonical-portable-selftest.log",
+      "log_sha256": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+      "name": "canonical-portable-selftest",
+      "source_changes_during_check": []
+    },
+    {
+      "argv": [
+        "py",
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "-f",
+        "test_aide_lite.AideLiteWorkflowTests.test_pack_records_product_workunit_as_machine_readable_active_task",
+        "test_aide_lite.AideLiteWorkflowTests.test_portable_apply_descriptions_match_shipped_modules",
+        "test_aide_lite.AideLiteWorkflowTests.test_canonical_target_queue_remains_authoritative_over_context_packet",
+        "test_aide_lite.AideLiteWorkflowTests.test_missing_target_lifecycle_tooling_refuses_before_queue_mutation",
+        "test_aide_lite.AideLiteWorkflowTests.test_portable_pack_excludes_source_only_runtime_tests",
+        "test_efficiency_wait.EfficiencyWaitTests.test_portable_cli_without_source_checkout",
+        "test_efficiency_wait.EfficiencyWaitTests.test_timeout_is_pending_and_does_not_remove_active",
+        "test_export_import.ExportImportTests.test_source_checkout_missing_queue_index_cannot_bypass_job_guard",
+        "test_export_import.ExportImportTests.test_imported_aide_lite_doctor_snapshot_and_pack_run",
+        "test_export_import.ExportImportTests.test_export_excludes_source_state_and_generated_artifacts",
+        "test_export_import.ExportImportTests.test_export_checksums_match_and_are_deterministic",
+        "test_export_import.ExportImportTests.test_local_edits_and_unknown_ownership_refuse_before_any_payload_write",
+        "test_export_import.ExportImportTests.test_tampered_predecessor_pack_is_rejected_before_target_writes",
+        "test_export_import.ExportImportTests.test_redigested_receipt_cannot_relabel_direct_edit_as_owned_update",
+        "test_export_import.ExportImportTests.test_import_payload_does_not_clobber_a_racing_leaf",
+        "test_export_import.ExportImportTests.test_explicit_partial_recovery_finishes_fresh_and_predecessor_update",
+        "test_export_import.ExportImportTests.test_removal_apply_requires_exact_plan_and_preserves_authored_state",
+        "test_export_import.ExportImportTests.test_exact_predecessor_rollback_restores_owned_bytes_and_receipt",
+        "test_export_import.ExportImportTests.test_owned_repair_rejects_edits_stale_plan_and_tampered_pack",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_facman_overlay_loads_after_imported_policy",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_commit_range_baseline_does_not_waive_new_bad_commits",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_git_replacement_cannot_change_checked_message_or_traversal",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_range_disposition_preserves_raw_failure_and_requires_acceptance",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_disposition_rejects_tampered_evidence_duplicate_and_unknown_fields",
+        "test_q27_commit_recovery.Q27CommitRecoveryTests.test_acceptance_requires_exact_structured_authority_and_current_date",
+        "test_q34_changelog_release.Q34ChangelogReleaseTests.test_preview_source_head_follows_selected_revision",
+        "test_q34_changelog_release.Q34ChangelogReleaseTests.test_exact_immutable_baseline_is_excluded_from_changelog_debt",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_release_asset_index_binds_exact_hashes_and_sizes",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_stale_preview_is_blocked_in_release_bundle",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_release_validator_refuses_unsafe_members_before_extraction",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_release_validator_refuses_oversized_pax_before_metadata_parse",
+        "test_q47_release_bundle.Q47ReleaseBundleTests.test_stable_cli_refuses_portable_consumer_without_managed_source_runner",
+        "test_q48_github_release_draft.Q48GitHubReleaseDraftTests.test_publication_boundary_is_false_and_advisory_only",
+        "test_q48_github_release_draft.Q48GitHubReleaseDraftTests.test_draft_validate_rejects_implied_published_state",
+        "test_x_os_01_task_os_commands.XOS01TaskOSCommandTests.test_latest_task_parser_preserves_aide_fix_os_identity",
+        "test_x_os_01_task_os_commands.XOS01TaskOSCommandTests.test_nonempty_target_queue_does_not_select_aide_source_phase",
+        "test_x_os_01_task_os_commands.XOS01TaskOSCommandTests.test_target_profile_overrides_colliding_aide_source_task_id",
+        "test_x_os_02_capability_reality.XOS02CapabilityRealityTests.test_portable_public_cli_stale_validation_and_refresh",
+        "test_x_os_02_capability_reality.XOS02CapabilityRealityTests.test_explicit_refresh_and_unrelated_changes",
+        "test_managed_commit_create",
+        "test_stable_release_admission",
+        "test_public_archive_fixture",
+        "test_export_import.ExportImportTests.test_pack_provenance_allows_only_artifact_commit_changes"
+      ],
+      "cwd": "D:\\Projects\\Factorio\\factorio-launcher",
+      "duration_seconds": 767.261,
+      "exit_code": 0,
+      "log": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\aide-upgrade\\portable-script-tests.log",
+      "log_sha256": "a941cbfbdf02637139b2e5f2ce0efd02665322b4e7bac27ef7a453375201b195",
+      "name": "portable-script-tests",
+      "source_changes_during_check": []
+    },
+    {
+      "argv": [
+        "py",
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "tests.test_aide_target_truth",
+        "tests.test_aide_compaction",
+        "tests.test_aide_evidence"
+      ],
+      "cwd": "D:\\Projects\\Factorio\\factorio-launcher",
+      "duration_seconds": 2.055,
+      "exit_code": 0,
+      "log": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\aide-upgrade\\facman-aide-regressions.log",
+      "log_sha256": "babf6425d897a39ceae73a584f3171088fd583e7963a349a345d75a932af8364",
+      "name": "facman-aide-regressions",
+      "source_changes_during_check": []
+    },
+    {
+      "argv": [
+        "py",
+        "-3",
+        "-B",
+        "tools/strict_check.py"
+      ],
+      "cwd": "D:\\Projects\\Factorio\\factorio-launcher",
+      "duration_seconds": 11.014,
+      "exit_code": 0,
+      "log": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\aide-upgrade\\strict.log",
+      "log_sha256": "eeeeec212ecad393af531e1cf51783f78a0346a2b43d013f74476ed0cd88c365",
+      "name": "strict",
+      "source_changes_during_check": []
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "D:\\Projects\\Factorio\\factorio-launcher",
+      "duration_seconds": 0.099,
+      "exit_code": 0,
+      "log": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\aide-upgrade\\diff-check.log",
+      "log_sha256": "d6e58be2d5866edeb71e13baef00f4caf791274ebb8576e41b650cd280624862",
+      "name": "diff-check",
+      "source_changes_during_check": []
+    }
+  ],
+  "work_item": "FACMAN-AIDE-LITE-UPGRADE-01"
+}

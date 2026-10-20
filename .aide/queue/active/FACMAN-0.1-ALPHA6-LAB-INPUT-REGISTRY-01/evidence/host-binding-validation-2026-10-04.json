@@ -1,0 +1,54 @@
+{
+  "schema": "facman.lab-host-binding-validation.v1",
+  "base": "af9bcaaa39188ee8d734580da364e047ee4b1cde",
+  "branch": "task/facman-lab-host-binding-01",
+  "work_item": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+  "observation": "20:48UTC 3October2026 /4OctoberSydney; point-in-time inventory only",
+  "source_files": [
+    {
+      "path": "release/index/lab_input_registry.v1.json",
+      "sha256": "709bc572cc0bce359f72b0b6b28fc7069f22a9f5378fada0913f618c270efd51"
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/host-observation-2026-10-04.json",
+      "sha256": "ac9cfd0c80a46ba6e5a570f3d8856397afba1bbbac8ba8767feaa0c3e58a13d4"
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/ExecPlan.md",
+      "sha256": "948a4f7eb376dc8e08186a7e63825a668c4333cb63327d81ee60eb674440ff21"
+    }
+  ],
+  "retained_historical_files": [
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/host-observation.json",
+      "sha256": "dbaeebd3b9781ad07b86cc7a3e90245f3e0e952474c1984dceb56128c53201a4"
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-machine-fixture-cells.v1.json",
+      "sha256": "4cb98db64c96c9fea0315fa3af756ce69e819106795c127eaa54809121e1a8a2"
+    }
+  ],
+  "source_validation": {
+    "mapped_tests": 35,
+    "skips": 0,
+    "registry": "PASS",
+    "strict": "PASS",
+    "format": "PASS",
+    "diff": "PASS",
+    "logs_custody": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/host-binding-validation-2026-10-04.zip",
+      "sha256": "e01966cbe897c85f15c827d3e69ca1f8afac9b9d11a86ee98c67357d9e6794cd"
+    }
+  },
+  "matrix_cells": 123,
+  "preparation_available": 52,
+  "new_cell_acceptances": 0,
+  "execution_authorized": false,
+  "qualification_granted": false,
+  "external_gates": [
+    "approved game inputs and specific effect permits",
+    "retained Intel macOS scenario host",
+    "genuine candidate-bound human observations"
+  ],
+  "independent_review_and_checked_integration": "Required after this source validation; not claimed by this receipt"
+}

@@ -16,9 +16,9 @@ Generate that fail-closed observation after checkout with
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-0-1-alpha6-workspace-migration-recovery`;
-- active WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
-- all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`;
-- next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
+- active WorkUnit: `FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01`;
+- all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`, `FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`;
+- next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01`;
 - next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
 - truth scope: `phase0_governance_integrated_alpha6_workspace_migration_recovery_historical_alpha5_candidate_revision_exact_current_alpha6_unqualified_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
 - alpha.5 exact candidate: source `4683ecd9a1b9ead5eb84be152760d12583da0f0e` (tree `c07938618bc0f533fd12756cba123f54b8592048`), run `33603385303` attempt `1`;
@@ -89,7 +89,7 @@ Generate that fail-closed observation after checkout with
 ## Capability snapshot
 
 - available: `install.discover, install.model.inspect, install.reconciliation.plan, install.reference.register, launch.preflight, launch.preview`;
-- conditional: `install.managed.plan, install.managed.uninstall.apply, install.managed.uninstall.recover, process.execute`;
+- conditional: `install.managed.move.apply, install.managed.plan, install.managed.uninstall.apply, install.managed.uninstall.recover, process.execute`;
 - backlog: `install.existing.adoption.plan, install.existing.inspect`;
 - unavailable: `credential.factorio.read, install.existing.adoption.apply, install.managed.apply, launch.execute.hermetic, launch.execute.instance_isolated, network.mod_portal.read, network.mod_portal.write, release.publish, release.sign`;
 
@@ -99,7 +99,7 @@ Generate that fail-closed observation after checkout with
 - last closed WorkUnit: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`;
 - accepted FacMan integration: `c5262596483a5a9767b4c66d4d5ef51b8086cfdc`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
-- Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `4c766b342e68656a2d4e26a14cfe51ab2209ad41`;
+- Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `2749a15b835a6c1c9968598a2b434d85809691ad`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 
@@ -109,9 +109,9 @@ work or promote execution, network, credential, signing, or publication authorit
 
 ## Contract and validation identity
 
-- commands / registered routes: `131` / `129`;
-- schemas / refusal codes: `436` / `290`;
-- command catalog digest: `26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428`;
+- commands / registered routes: `132` / `130`;
+- schemas / refusal codes: `460` / `320`;
+- command catalog digest: `f7ee0fa96928cd61bfc59e31efe4c758968e409e582bc680360ab88de78cb9f5`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 

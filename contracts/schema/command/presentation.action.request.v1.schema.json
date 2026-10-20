@@ -41,6 +41,13 @@
     "installation_path": {
       "type": "string"
     },
+    "launch_intent": {
+      "enum": [
+        "menu",
+        "load_save"
+      ],
+      "type": "string"
+    },
     "mod_identity": {
       "type": "string"
     },
@@ -53,6 +60,11 @@
     },
     "profile_id": {
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "repair_review_id": {
+      "maxLength": 256,
+      "minLength": 1,
       "type": "string"
     },
     "request_id": {
@@ -87,7 +99,14 @@
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
     },
+    "snapshot_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
     "source_data_root": {
+      "type": "string"
+    },
+    "source_path": {
       "type": "string"
     },
     "template_id": {

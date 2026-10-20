@@ -9,6 +9,12 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#if defined(__APPLE__)
+#include <mach/mach.h>
+#include <unistd.h>
+#elif defined(__linux__)
+#include <unistd.h>
+#endif
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -17,6 +23,33 @@
 #endif
 
 namespace facman::platform {
+
+facman::core::Result<std::uint64_t> available_physical_memory_bytes()
+{
+    using Result = facman::core::Result<std::uint64_t>;
+#ifdef _WIN32
+    MEMORYSTATUSEX memory {};
+    memory.dwLength = sizeof(memory);
+    if (GlobalMemoryStatusEx(&memory)) return Result::success(memory.ullAvailPhys);
+#elif defined(__APPLE__)
+    vm_statistics64_data_t memory {};
+    mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
+    const mach_port_t host = mach_host_self();
+    const kern_return_t status = host_statistics64(host, HOST_VM_INFO64,
+        reinterpret_cast<host_info64_t>(&memory), &count);
+    mach_port_deallocate(mach_task_self(), host);
+    const long page = sysconf(_SC_PAGESIZE);
+    if (status == KERN_SUCCESS && page > 0)
+        return Result::success(static_cast<std::uint64_t>(memory.free_count) * static_cast<std::uint64_t>(page));
+#elif defined(__linux__)
+    const long pages = sysconf(_SC_AVPHYS_PAGES);
+    const long page = sysconf(_SC_PAGESIZE);
+    if (pages >= 0 && page > 0)
+        return Result::success(static_cast<std::uint64_t>(pages) * static_cast<std::uint64_t>(page));
+#endif
+    return Result::failure({"resource_observation_unavailable",
+        "Available physical memory could not be observed", ""});
+}
 
 std::string RealClock::now_utc() const
 {

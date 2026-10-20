@@ -21,6 +21,8 @@ allowed_paths:
   - "tools/alpha_vertical_slice_check.py"
   - "tools/command_contract_check.py"
   - "tools/setup_workflow_check.py"
+  - "tools/package/pipeline.py"
+  - "tools/package/provider_canary.py"
   - "tools/codegen/generate_metadata.py"
   - "tools/capability_policy_check.py"
   - "release/generated/technical_preview_command_api_conformance.v1.json"

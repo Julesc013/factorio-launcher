@@ -9,10 +9,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import tempfile
 import tomllib
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -20,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INSTALLED_APP = "/Applications/FacMan.app"
 INTERNAL_TERMINAL = "Contents/Helpers/facman"
 PUBLIC_TERMINAL = "/usr/local/bin/facman"
+PACKAGE_IDENTIFIER = "io.github.julesc013.facman"
 
 
 def sha256(path: Path) -> str:
@@ -30,9 +33,35 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def version_truth() -> str:
+def version_truth() -> dict[str, object]:
     with (ROOT / "release/index/version.v2.toml").open("rb") as stream:
-        return str(tomllib.load(stream)["semver"])
+        return tomllib.load(stream)
+
+
+def native_package_version(semver: str, package_revision: str) -> str:
+    """Map the allocated SemVer train to an ordered numeric Installer version.
+
+    Installer compares packages by identifier and package version, while
+    prerelease SemVer is retained in the artifact name and evidence. The last
+    numeric component reserves decimal places for phase, train number, and
+    package revision, so later phases and patch releases sort after earlier ones.
+    """
+    match = re.fullmatch(
+        r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+        r"(?:-(alpha|beta|rc)\.(0|[1-9]\d*))?"
+        r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?",
+        semver,
+    )
+    if match is None or re.fullmatch(r"0|[1-9]\d*", package_revision) is None:
+        raise ValueError("macOS package version requires allocated SemVer and numeric package revision")
+    major, minor, patch, phase, serial = match.groups()
+    number = int(serial or 0)
+    revision = int(package_revision)
+    if number > 99 or revision > 99:
+        raise ValueError("macOS package version train or package revision exceeds reserved range")
+    phase_rank = {"alpha": 1, "beta": 2, "rc": 3, None: 4}[phase]
+    native_patch = int(patch) * 100000 + phase_rank * 10000 + number * 100 + revision
+    return f"{major}.{minor}.{native_patch}"
 
 
 def git(*arguments: str) -> str:
@@ -79,9 +108,21 @@ def validate_app_payload(app: Path) -> None:
         folded[key] = relative
 
 
+def verify_native_package_info(package_info: Path, package_version: str) -> None:
+    actual = ET.parse(package_info).getroot()
+    if (
+        actual.tag != "pkg-info"
+        or actual.attrib.get("identifier") != PACKAGE_IDENTIFIER
+        or actual.attrib.get("version") != package_version
+    ):
+        raise ValueError("macOS Installer package identity differs from canonical version truth")
+
+
 def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
     app = app.resolve(strict=True)
-    version = version_truth()
+    version_record = version_truth()
+    version = str(version_record["semver"])
+    package_version = native_package_version(version, str(version_record["package_revision"]))
     if app.name != "FacMan.app":
         raise ValueError("macOS setup input must be the canonical FacMan.app")
     validate_app_payload(app)
@@ -101,21 +142,32 @@ def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
             newline="\n",
         )
         shim.chmod(0o755)
-        subprocess.run(
-            [
-                "pkgbuild",
-                "--root", str(payload),
-                "--identifier", "io.github.julesc013.facman",
-                "--version", "0.1.0",
-                "--install-location", "/",
-                str(package),
-            ],
-            check=True,
-        )
+        try:
+            subprocess.run(
+                [
+                    "pkgbuild",
+                    "--root", str(payload),
+                    "--identifier", PACKAGE_IDENTIFIER,
+                    "--version", package_version,
+                    "--install-location", "/",
+                    str(package),
+                ],
+                check=True,
+            )
+            subprocess.run(
+                ["xar", "-x", "-f", str(package.resolve()), "PackageInfo"],
+                cwd=temporary,
+                check=True,
+            )
+            verify_native_package_info(Path(temporary) / "PackageInfo", package_version)
+        except Exception:
+            package.unlink(missing_ok=True)
+            raise
     record = {
         "schema": "facman.macos_self_setup.v1",
         "status": "pass",
         "version": version,
+        "package_version": package_version,
         "platform": "macos",
         "architecture": "x64",
         "source_revision": git("rev-parse", "HEAD"),
@@ -123,6 +175,7 @@ def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
         "runtime_stage": {"app_digest": app_digest(app)},
         "setup": {
             "filename": package.name,
+            "identifier": PACKAGE_IDENTIFIER,
             "bytes": package.stat().st_size,
             "sha256": sha256(package),
             "format": "pkg",
@@ -139,13 +192,37 @@ def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
     return record
 
 
+def verify_package_info(package_info: Path, evidence: Path) -> None:
+    record = json.loads(evidence.read_text(encoding="utf-8"))
+    version = version_truth()
+    expected = native_package_version(str(version["semver"]), str(version["package_revision"]))
+    if (
+        record.get("schema") != "facman.macos_self_setup.v1"
+        or record.get("version") != version["semver"]
+        or record.get("package_version") != expected
+        or not isinstance(record.get("setup"), dict)
+        or record["setup"].get("identifier") != PACKAGE_IDENTIFIER
+    ):
+        raise ValueError("macOS setup evidence differs from canonical version truth")
+    verify_native_package_info(package_info, expected)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--app", type=Path, required=True)
-    parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--evidence", type=Path, required=True)
+    parser.add_argument("--app", type=Path)
+    parser.add_argument("--out", type=Path)
+    parser.add_argument("--evidence", type=Path)
+    parser.add_argument("--verify-package-info", type=Path)
     parser.add_argument("--allow-dirty", action="store_true")
     args = parser.parse_args()
+    if args.verify_package_info is not None:
+        if args.evidence is None:
+            parser.error("--verify-package-info requires --evidence")
+        verify_package_info(args.verify_package_info, args.evidence)
+        print("macOS Installer package version verified")
+        return 0
+    if args.app is None or args.out is None or args.evidence is None:
+        parser.error("building macOS setup requires --app, --out and --evidence")
     if git("status", "--porcelain") and not args.allow_dirty:
         raise SystemExit("refusing macOS setup from a dirty source tree")
     record = build(args.app, args.out.resolve(), args.evidence.resolve())

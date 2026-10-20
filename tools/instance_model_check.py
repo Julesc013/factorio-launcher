@@ -123,8 +123,8 @@ def validate() -> list[str]:
 
     readiness_schema = _load_json(SCHEMA_ROOT / "factorio_instance_readiness.v1.schema.json")
     readiness_properties = readiness_schema.get("properties", {})
-    if readiness_properties.get("launch_intent", {}).get("const") != "menu":
-        problems.append("Gate 2 readiness must remain menu-intent only")
+    if readiness_properties.get("launch_intent", {}).get("enum") != ["menu", "load_save"]:
+        problems.append("Readiness must accept exactly menu and load_save query intents")
     for field in (
         "mutation_executed",
         "preparation_executed",
@@ -145,7 +145,14 @@ def validate() -> list[str]:
             problems.append(f"InstanceView omits canonical component: {field}")
 
     for anchor in (
-        'request.launch_intent != "menu"',
+        'request.launch_intent != "menu" && request.launch_intent != "load_save"',
+        'saves::index::inspect_exact_filename(workspace, request)',
+        '"gameplay_compatibility", "unclaimed"',
+        '"instance_projection_inputs_changed"',
+        'path_crosses_link_or_reparse_point(path, detail)',
+        '"instance_selected_save_path_unsafe"',
+        '"preparation_available", false',
+        '"execution_available", false',
         '"unsupported_launch_intent"',
         '"factorio.instance_spec.v1"',
         '"factorio.instance_binding.v1"',

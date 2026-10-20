@@ -1,0 +1,73 @@
+{
+  "schema": "facman.tui_selected_save_native_acceptance.v1",
+  "status": "PASS_SCOPED_SOURCE_NATIVE_ORDINARY_TUI",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base": "7ab7f73ed28ad1ef3ec65c886df8025d8dee606a",
+  "branch": "task/facman-tui-selected-save-01",
+  "source_files_sha256": {
+    "apps/tui/tui_command_client.cpp": "431878afc5876cd4ad0c35b61033ab5f17a2277801b75cccbb0dbdb1430b489c",
+    "apps/tui/tui_command_client.hpp": "0a4820940b362b3c6b56b2b2c8c80e42e562a5a4892580ed7b5b8135537e162c",
+    "apps/tui/tui_product_model.cpp": "54e8f973383be61f24d00b39fdcbc5280cca5298965f14a38fc334b52173223e",
+    "apps/tui/tui_product_model.hpp": "f61bec255279548305472112799bab44d76f4803635f8034214f554c8c686871",
+    "apps/tui/tui_product_renderer.cpp": "1f3cd5def2565252771527d35e5371ac4b664895658fc69830342fc766d3321e",
+    "apps/tui/tui_product_shell.cpp": "834bd4ca9b322668ec9bfe6a8d9a3ff451e8a065da1df71fc4a05b292351d941",
+    "runtime/frontend/frontend_session.cpp": "21c45db47c80d7eff4d5eceec92d8b2bea708a1b4e606551e07b6ce3c72c0306",
+    "runtime/frontend/frontend_session.h": "ce4e8ffe0509e76b157f7793575aedcda041251b4f5a48dce516d1b6213fbbf1",
+    "tests/native/facman_frontend_session_smoke.cpp": "afb56bb767634fdbf592234bd31255576f2cfaba12bcf6821c00aae930fc82c8",
+    "tests/native/facman_tui_product_model_smoke.cpp": "919e51469ba9494377983d170d912ada4988206c4b03d8adea95d1ee5f33fd87",
+    "tests/test_tui_conpty.py": "d0d5d50f2365011c32df26fab1cc211cdbc3af530c04f13b08a7c9a476684979",
+    "tests/test_tui_product.py": "589414a58780ecef04368e077e856b905cdddc407bfebc1152a2c392f7b2e94a",
+    "docs/product/tui.md": "680701e63e75704716253b1f779a97cb7afeb0a1d2b9a911cfe2e7649590d53a",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": "b1f882535c77e05b6edc61ebcbc32fba0612bf944c967f768c72773fbc37e846",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/make-ready-delivered-gui.v1.json": "7d6b526c342fe70218014bfc5aba741205dc095be2d811e80966e48140c67b89",
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/make-ready-delivered-gui-custody.v1.zip": "efa536dc2658476c412437f9dd22b577edd8ca08ff7e812f212e0a8d58698bfd"
+  },
+  "cli_sha256": "5971757ced6529032c04b12d28128494d26ba5fadc8852f7f2ec0cf81922bf8e",
+  "provider_sha256": {
+    "ulk.dll": "d96d05b33b0df2ee2659104125d8e0f70fbc6e48b82dc302b7eb0eb8ac6b6c31",
+    "usk.dll": "99231fbff824df9446159cd91c2dfe01bb439a9f0c3138c9d9625e512696b873"
+  },
+  "source_review": {
+    "reviewer": "/root",
+    "author": "/root/tui_selected_save_impl",
+    "independent": true,
+    "non_authoring": true,
+    "assurance_sha256": "fd70b592e41637cb4689da993550ee48ffb3dc3b16171d90cab14a88e3017a3d"
+  },
+  "observations": [
+    "Ordinary linear and fullscreen m/s controls select Menu/Selected Save; typed frontend query and action carry exact backend observation/revision.",
+    "Changing observation clears form, revision and pending confirmation. Returning to Selected Save requires another explicit confirmation.",
+    "Actual ordinary Selected Save MakeReady completes routing then context in fresh sessions. Requests, receipts and complete owner journals bind intent/revision/plan/operation/attempt; config bytes/inode and save/profile/version/lock match, other input bytes preserved.",
+    "Menu still permits routing repair and then refuses selected-save preparation. Empty-workspace observation/navigation does not create workspace.",
+    "Three native frontend/TUI smokes, three focused ordinary tests, both ConPTY navigation/resize/cancel/no-color tests, strict and AIDE pass."
+  ],
+  "qualification": {
+    "native_result_sha256": "1133d13ad09b3c7bf4688a3344612163877706bc99624bfb76fe477c08ed8993",
+    "repository_result_sha256": "624d77de443a0e7d9c83761f662d5f74534b3fc0937ace2eeb3b70ccfd56d36b",
+    "native_smokes": 3,
+    "ordinary_methods": 3,
+    "conpty_methods": 2,
+    "additional_builds_after_label_only_fix": 0
+  },
+  "failures": [
+    "Source review corrected test navigation from Refresh to actual MakeReady and fixed Menu oracle before build.",
+    "Three root runner preflights failed before native dispatch (PowerShell argument binding/retained output name); all records preserved.",
+    "First header-safe consumer build failed sole C2110 in observation text; one std::string conversion corrected, successful backend/frontend libraries reused.",
+    "First strict gate rejected unlabeled platform skip; only unsupported label corrected, identical condition and passing native/function/ConPTY evidence reused."
+  ],
+  "compatibility": "Experimental static C++ FrontendSession request layout extended; all current consumers rebuilt. Existing string negotiation/default Menu and normative CLI/RPC/provider ABI/pins preserved.",
+  "limitations": [
+    "Source-native synthetic engineering acceptance only; corrected produced TUI package, exact Linux/Intelmac packages/PTY hosts, human and game acceptance remain open.",
+    "Configuration and selected-context owner effects remain Windows qualified. POSIX publication identity/recovery and existing-INI behavior remain missing; no gate simply enabled.",
+    "Full readiness, Play/permit, complete MakeReady WorkUnit and Beta remain unqualified."
+  ],
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/tui-selected-save-native-custody.v1.zip",
+    "sha256": "cbc973b5baeba21e97b6264e144656b6d702ca2e83435b15e9bd49dafb1f3e52",
+    "bytes": 136247,
+    "members": 102
+  },
+  "workunit_closed": false,
+  "beta_qualified": false,
+  "release_qualified": false
+}

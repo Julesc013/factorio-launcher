@@ -19,6 +19,9 @@ namespace facman::platform::detail {
 
 struct PipeTransfer { ssize_t count = -1; int error = 0; };
 struct PipePoll { int count = -1; int error = 0; };
+// Child and parent share this private, fixed-width pipe protocol. The child
+// sends this frame only after setpgid succeeds; positive frames remain errno.
+inline constexpr int kChildGroupSetupAcknowledgement = -1;
 
 // Stdin is a local stream socket. Suppression belongs to this socket/send,
 // never to the caller's process/thread signal disposition, mask or pending set.
@@ -194,6 +197,7 @@ public:
     }
 
     bool exec_ready() const { return exec_ready_; }
+    bool group_setup_acknowledged() const { return group_setup_acknowledged_; }
     bool exec_failed() const { return exec_failed_; }
     bool has_io_failure() const { return io_failure_; }
     int reliable_exec_error() const {
@@ -204,12 +208,18 @@ public:
     const std::string& error() const { return error_text_; }
     void close_input() { close_endpoint(input_); }
     // The exec-status endpoint is nonblocking. One direct read observes only
-    // the close-on-exec proof or bounded errno frame without advancing any
-    // caller stream or waiting for a child that has not yet executed.
+    // a bounded setup/errno frame or close-on-exec EOF without advancing any
+    // caller stream or waiting for a child that has not yet executed. A newly
+    // decoded setup frame permits one immediate nonblocking follow-up so
+    // already buffered EOF/errno is observed before caller cancellation.
     bool observe_exec_status()
     {
-        if (exec_status_ >= 0 && !exec_ready_ && !exec_failed_ && error_text_.empty())
+        if (exec_status_ >= 0 && !exec_ready_ && !exec_failed_ && error_text_.empty()) {
+            const bool had_setup = group_setup_acknowledged_;
             read_exec_status();
+            if (!had_setup && group_setup_acknowledged_ && exec_status_ >= 0 &&
+                !exec_ready_ && !exec_failed_ && error_text_.empty()) read_exec_status();
+        }
         return error_text_.empty();
     }
 
@@ -262,18 +272,27 @@ private:
             }
             exec_size_ += count;
             if (exec_size_ == exec_bytes_.size()) {
-                exec_failed_ = true;
                 std::memcpy(&exec_error_, exec_bytes_.data(), sizeof(exec_error_));
+                if (exec_error_ == kChildGroupSetupAcknowledgement &&
+                    !group_setup_acknowledged_) {
+                    group_setup_acknowledged_ = true;
+                    exec_size_ = 0;
+                    exec_error_ = 0;
+                    return;
+                }
+                exec_failed_ = true;
                 close_endpoint(exec_status_);
                 if (exec_error_ > 0) fail("process child setup or execve failed", false);
-                else fail("process exec error frame is not a positive errno");
+                else fail("process exec status frame is malformed or repeats group setup");
             }
         } else if (read.count == 0) {
             close_endpoint(exec_status_);
-            if (exec_size_ == 0) exec_ready_ = true;
+            if (exec_size_ == 0 && group_setup_acknowledged_) exec_ready_ = true;
             else {
                 exec_failed_ = true;
-                fail("process exec status ended with a partial error frame");
+                fail(exec_size_ == 0 ?
+                    "process exec status closed without child group setup acknowledgement" :
+                    "process exec status ended with a partial frame");
             }
         } else if (!retry_later(read.error)) {
             exec_failed_ = true;
@@ -307,6 +326,7 @@ private:
     std::array<unsigned char, sizeof(int)> exec_bytes_ {};
     std::size_t exec_size_ = 0;
     int exec_error_ = 0;
+    bool group_setup_acknowledged_ = false;
     bool exec_ready_ = false;
     bool exec_failed_ = false;
     bool overflow_ = false;

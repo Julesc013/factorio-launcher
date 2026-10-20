@@ -183,7 +183,6 @@ namespace FacMan.WinForms
             item.Click += delegate { SelectEvidenceState(state); };
             return item;
         }
-
         private TabPage BuildInstancesPage()
         {
             TabPage page = Page("Instances", "Instances page");
@@ -240,6 +239,13 @@ namespace FacMan.WinForms
             planningActions.Controls.Add(ActionButton("Select p&rofile", "Select launch profile", "profile.select"));
             planningActions.Controls.Add(ActionButton("E&xplain config", "Explain effective configuration", "configuration.explain_effective"));
             planningActions.Controls.Add(ActionButton("Preview &menu", "Preview menu launch", "launch.menu_plan"));
+            Button makeReadyJoined = ActionButton("Make Ready with current &settings", "Make Ready with the current profile, content and selected world", "readiness.prepare_joined");
+            makeReadyJoined.Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold);
+            planningActions.Controls.Add(makeReadyJoined);
+            planningActions.Controls.Add(ActionButton("Review installation &repair", "Review installation repair from a local archive without changing the installation", "readiness.review_install_repair"));
+            planningActions.Controls.Add(ActionButton("Make &Ready", "Prepare this instance", "readiness.prepare"));
+            planningActions.Controls.Add(ActionButton("Record selected &save context", "Record selected save context", "readiness.prepare_selected_save"));
+            planningActions.Controls.Add(ActionButton("Prepare &configuration", "Prepare routing configuration", "readiness.prepare_configuration"));
             actions.Controls.Add(planningActions, 0, 1);
             actions.SetColumnSpan(planningActions, 3);
             refusalDetail = new TextBox();
@@ -325,6 +331,10 @@ namespace FacMan.WinForms
             FlowLayoutPanel actions = ActionRow();
             actions.AccessibleName = "Instance-local content actions";
             actions.Controls.Add(ScopedActionButton(
+                "&Import offline pack", "Import offline pack", "content", "modsets.import"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Export offline pack", "Export offline pack", "content", "modsets.export"));
+            actions.Controls.Add(ScopedActionButton(
                 "&Inspect mod", "Inspect local mod", "content", "mods.inspect"));
             actions.Controls.Add(ScopedActionButton(
                 "&Plan modset", "Plan instance-local modset", "content", "modsets.plan"));
@@ -345,7 +355,7 @@ namespace FacMan.WinForms
             page.Controls.Add(layout);
             layout.Controls.Add(Heading(
                 "Saves",
-                "Discover, inspect, associate, and back up saves for the selected instance."), 0, 0);
+                "Discover, inspect, associate, back up, and restore saves for the selected instance."), 0, 0);
             savesSummary = BodyLabel("Save inventory summary");
             layout.Controls.Add(savesSummary, 0, 1);
             savesList = new ListView();
@@ -357,21 +367,27 @@ namespace FacMan.WinForms
             savesList.MultiSelect = false;
             savesList.AccessibleName = "Selected instance saves";
             savesList.AccessibleDescription =
-                "Structurally inspected local saves with association and backup status.";
+                "Structurally inspected local saves with save-byte, declared context and backup observations.";
             savesList.Columns.Add("Save", 250);
             savesList.Columns.Add("Status", 140);
-            savesList.Columns.Add("Association", 140);
+            savesList.Columns.Add("Save bytes", 140);
+            savesList.Columns.Add("Declared context", 330);
             savesList.Columns.Add("Backup", 120);
             savesList.Columns.Add("SHA-256", 330);
             layout.Controls.Add(savesList, 0, 2);
             FlowLayoutPanel actions = ActionRow();
             actions.AccessibleName = "Save inspection and backup actions";
+            actions.Controls.Add(ScopedActionButton("Create s&napshot", "Create instance snapshot", "saves", "snapshots.create"));
             actions.Controls.Add(ScopedActionButton(
                 "&Inspect", "Inspect selected local save", "saves", "saves.inspect"));
             actions.Controls.Add(ScopedActionButton(
                 "&Associate", "Associate selected local save", "saves", "saves.associate"));
             actions.Controls.Add(ScopedActionButton(
                 "&Back up", "Back up selected local save", "saves", "saves.backup"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Restore", "Restore a verified owned backup to a new save", "saves", "saves.restore"));
+            actions.Controls.Add(ScopedActionButton(
+                "Restore &snapshot", "Restore snapshot into new instance", "saves", "snapshots.restore"));
             layout.Controls.Add(actions, 0, 3);
             return page;
         }
@@ -542,6 +558,36 @@ namespace FacMan.WinForms
             primaryAction.Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold);
             primaryAction.MinimumSize = new Size(150, 38);
             secondaryAction = ActionButton("&Rescan readiness", "Launch Deck secondary action", "instance.readiness.refresh");
+            ComboBox observation = new ComboBox();
+            observation.DropDownStyle = ComboBoxStyle.DropDownList;
+            observation.AccessibleName = "Readiness observation";
+            observation.Items.AddRange(new object[] { "Menu", "Selected Save" });
+            observation.SelectedIndex = 0;
+            observation.Enabled = gallery == null && !evidenceMode;
+            observation.SelectedIndexChanged += async delegate
+            {
+                if (liveStore == null || rendering) return;
+                string intent = observation.SelectedIndex == 1 ? "load_save" : "menu";
+                Task<bool> refresh = liveStore.SelectObservationIntentAsync(intent, lifetime.Token);
+                observation.Enabled = false;
+                RenderPresentation();
+                try { await refresh; }
+                finally
+                {
+                    if (CanUpdateWindow)
+                    {
+                        rendering = true;
+                        try
+                        {
+                            observation.SelectedIndex = liveStore.ObservationIntent == "load_save" ? 1 : 0;
+                        }
+                        finally { rendering = false; }
+                        observation.Enabled = true;
+                        RenderPresentation();
+                    }
+                }
+            };
+            actions.Controls.Add(observation);
             actions.Controls.Add(primaryAction);
             actions.Controls.Add(secondaryAction);
             layout.Controls.Add(actions, 3, 1);
@@ -652,6 +698,7 @@ namespace FacMan.WinForms
                     save.Tag = RecordText(item, "id");
                     save.SubItems.Add(RecordText(item, "status"));
                     save.SubItems.Add(RecordText(item, "association_status"));
+                    save.SubItems.Add(FirstRecordText(item, "association_context_summary", "association_context_status"));
                     save.SubItems.Add(RecordText(item, "backup_status"));
                     save.SubItems.Add(RecordText(item, "sha256"));
                     savesList.Items.Add(save);
@@ -1051,11 +1098,17 @@ namespace FacMan.WinForms
             CommandResult result = await liveStore.ExecuteDescriptorActionAsync(
                 scope, actionId, input, CancellationToken.None);
             if (!CanUpdateWindow) return true;
-            ShowResultIfRefused(result, descriptor.Label + " refused");
+            if (result.Refused && actionId == "readiness.prepare_joined" &&
+                !String.IsNullOrWhiteSpace(liveStore.LastActionSummary))
+                MessageBox.Show(this, liveStore.LastActionSummary, descriptor.Label,
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else ShowResultIfRefused(result, descriptor.Label + " refused");
             if (result.Success &&
                 !String.IsNullOrWhiteSpace(liveStore.LastActionPayload))
             {
                 string detail = liveStore.LastActionPayload;
+                if (actionId == "readiness.prepare_joined" &&
+                    !String.IsNullOrWhiteSpace(liveStore.LastActionSummary)) detail = liveStore.LastActionSummary;
                 if (detail.Length > 6000) detail = detail.Substring(0, 6000) + "...";
                 MessageBox.Show(this, detail, descriptor.Label,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);

@@ -1,0 +1,248 @@
+{
+  "schema": "facman.profile_preparation_revision.v1",
+  "status": "PASS_SCOPED_WINDOWS_SOURCE_FIXTURE",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "base": "e01a0d2bbf372dc030c8c2fe9565342cdb6f4891",
+  "behavior": "Reviewed profile preparation binds manifest, profile source, existing overrides and requested values; late input changes retain explicit domain recovery.",
+  "source_hashes": {
+    "apps/cli/command_dispatch.cpp": "7b6c33f7ee0fa06797c6a863bb67efbdc14d24275e6178927aae984510b16afe",
+    "apps/cli/completions/FacMan.ps1": "9763825894acb8be91451efade7a8e4f2ab3d89ccdc62ef870f894eeb3da0b8d",
+    "apps/cli/completions/_facman": "d27e43fea3f145e82c5c475ae0a1f0b02f5c59fb613548c1d65cab8a0686e0ea",
+    "apps/cli/completions/facman.bash": "58ef763cbe8d7511b20ae6a359d1eb4b56b498bda1078fec84c8fea7177aa7ad",
+    "apps/cli/completions/facman.fish": "277a70c0082f2052fa2d7fe775b98d11ddd148f650ea1ecb3a7dfa2498c97f6c",
+    "apps/cli/generated/command_help.inc": "9b8fe0df3b4094b10f2bd5dd114e9a4f0192a97877ec49daf92da8ea35f39cc3",
+    "apps/cli/report_text.cpp": "ca8ad3b3dbe2a9b80aff863a4d8a839e237a44c8a88f39e7a0e1c07ae4c99805",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h": "5daa25e735aef6d42cea59e0b59912bd3a5b1634ad50b6b5c168296546036263",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m": "7c35fa809f541345f1ecb803321785370946ea40a73f00eb554c95e641b6902f",
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "90d6a1b6cac8136d36bdac278b501739d864b2fecb3175ff1891c3ee5ede2aae",
+    "apps/tui/generated_command_catalog.hpp": "05e124d579e2186885ee4c9bdc1125359f88a957261a542a98d141394022dd0f",
+    "content/factorio/strings/en-US.toml": "7f2045e7032d5553570f6c61b5474e4e7a0fa73d38ffdf328abd46cd291836c0",
+    "contracts/command/factorio/profiles.apply.v1.toml": "a710ae115d9946068647e3a02cbcbab524e6c33977ca02ef9774ea7ae4109096",
+    "contracts/command/factorio/profiles.plan.v1.toml": "b977f3a6c385cd88a5d8ef0bfb6db32df1d81fdf1b35c9cfbcb41ac4ab5ef4f4",
+    "contracts/command/request_fields.v1.json": "a302348572705e840e3d2775a90e1c8bc3885c6d6d935c8f1499f38304fca794",
+    "contracts/generated-index/command_catalog.v2.json": "18ab10139779b6e52ad8b2b30217c2fdf2f3ff5998c2ded196e2bff3ae9baa12",
+    "contracts/generated-index/command_cli_grammar.v2.json": "9ae7a63b433288d76f083c283aabd5b486412a81d84e617f8274dd3ee485cf23",
+    "contracts/generated-index/frontend_command_catalog.v1.json": "8b9060d3b6432f21704930b667b6c82f023aaa938ff911e5991cc84e8531c941",
+    "contracts/schema/command/profiles.apply.request.v1.schema.json": "a559149f9250b9a9f51fe41f61115f096a5912dee1cfe197e2a05d583f159b64",
+    "contracts/schema/command/profiles.plan.request.v1.schema.json": "0f6e5d22f9a24d00010bb7bb25607c1d1a148d6909ff8289043ccfd466306e6f",
+    "contracts/schema/factorio/factorio_effective_profile.v1.schema.json": "2985302aa7b1558a4e87730275382054064ff3238da9c439eaeb7b0e7d44ca8c",
+    "docs/product/launch_profiles.md": "a04391adf8fa0a94d7ef152fc151a13beda2b992227a138daa79714f24162da5",
+    "runtime/core/generated/command_catalog.h": "5060fe19e1f23d9a759ceaa93b3be7d47a263ddd68454ec3c3a2e66853fd8585",
+    "runtime/core/generated/version.h": "22f11284c1bc04c7926e7ae4fb97edb966ef820a788b0bf3633602033afbf908",
+    "runtime/factorio/application/command_dispatch.cpp": "a8ddf06e383294ca7433060a7e7ee7eea07d9dad2140addc0d20ebb47d27542c",
+    "runtime/factorio/application/generated/command_ids.inc": "454f6e1c82efe7ef1450b635d0574dc8d5dc3b35f878a3a1ccb0c26a01af77d4",
+    "runtime/factorio/application/generated/command_lookup.inc": "8f60fa61c8921ec6b4924539fbc9fb2943dd44f00a575bddfcaebaab2fa432f0",
+    "runtime/factorio/application/generated/command_names.inc": "6b0eaae914fd73b763096450e0149328bebe81569fd3f941b61566d30ffd39c7",
+    "runtime/factorio/application/generated/command_writes.inc": "7a927f3b6b3b7d2745acba6dbb6a78ca09b7d2726bb4f5fe1a9e1fc9e71d351e",
+    "runtime/factorio/application/generated/request_contracts.inc": "2658400b73e0ef0ae155b29b17de3860c9e4890aa6586bdf4d03e67550efa24d",
+    "runtime/factorio/profiles/flb_factorio_profiles.cpp": "046c497feaca9e0a3593ad163d018bec892f314c1ccc7290087fa17b2a3d7dd4",
+    "runtime/factorio/profiles/flb_factorio_profiles.h": "002ba2eb2b67d44c13dac62bec9f7ef55df4fb53f48bf6a7d9982f2b28fc9044",
+    "tests/test_profiles_templates.py": "7d552b7f8001423e90d2b39177e0112a3c6b892b1a43afd9ed4a9045a8cc580b"
+  },
+  "CLI_sha256": "cf91509fa9a649cd717eba2b2449907b45450f80664131b04ce52d4f3bd3bebc",
+  "acceptance_scope": {
+    "public_profile_and_query_tests": 15,
+    "native_instance_model_tests": 1,
+    "early_changed_input_cases": 3,
+    "override_absence_distinct": true,
+    "stale_plan_and_apply_refused_without_workspace_changes": true,
+    "late_profile_change_refused_before_effect": true,
+    "ordinary_recovery_rolls_back_owned_stages": true,
+    "changed_profile_preserved": true,
+    "fresh_reviewed_apply_succeeds": true,
+    "legacy_expected_revision_semantics_preserved": true
+  },
+  "verification": {
+    "format": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-01-format.log",
+      "sha256": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191"
+    },
+    "metadata": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-01-metadata.log",
+      "sha256": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd"
+    },
+    "contracts": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-01-contracts.log",
+      "sha256": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037"
+    },
+    "strict": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-01-strict.log",
+      "sha256": "19b02c6dc5cdd1e2f040660ef0e1d73a2a8117f3532497f553486f35650cf98d"
+    },
+    "state-check": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-01-state-check.log",
+      "sha256": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd"
+    },
+    "plan-check": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-01-plan-check.log",
+      "sha256": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31"
+    },
+    "portable": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-01-portable.log",
+      "sha256": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1"
+    },
+    "diff": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-01-diff.log",
+      "sha256": "7a7ff4919c5aab57d8e8138d53f5b9f91a80836a7cd2995f833c7ed26875db14"
+    },
+    "build": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-02-build.log",
+      "sha256": "87701c03eee617d4a03969e4e153449fd5e12650afa6a88a2046cf9a11aaaf35"
+    },
+    "native-model": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-02-native-model.log",
+      "sha256": "a7918500ff794af20064d3a1142c523789f6d72f4aaa63a6e6a86b134b54ec2c"
+    },
+    "profiles-and-query": {
+      "exit_code": 0,
+      "log_member": "make-ready-profile-revision-source-proof-02-profiles-and-query.log",
+      "sha256": "171800b145699c8c4ff5b80da44fe97a5fa9eaca1d144b480ca3433881df666c"
+    }
+  },
+  "source_review": {
+    "member": "make-ready-profile-revision-source-review-01.json",
+    "sha256": "409ac179fe5f56e0af53b05cabee4c48cc5a23050a1f2abcbe9f2338a5799808"
+  },
+  "late_source_review": {
+    "member": "make-ready-profile-revision-late-source-review-01.json",
+    "sha256": "82db1c179c19154e03422c95defc8e535bc4f0be2e180ea74dd611b8a0c12de1"
+  },
+  "runtime_review": {
+    "member": "make-ready-profile-revision-runtime-review-01.json",
+    "sha256": "8d96a7ff4da9c0c8d748fcc1ce64b155908397ee37ccf3ba76a2c510b5c4daee"
+  },
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/profile-preparation-custody.zip",
+    "sha256": "400d21668a5570a910e8fcf61a7639c08bb9e0585ade9e6e18ddb7334870d5e5",
+    "members": {
+      "make-ready-profile-revision-admission-01-doctor.json": "2547694bfac1f39e2e4275b27abaac652ae0d5085e360ccca6840aa6be1a6625",
+      "make-ready-profile-revision-admission-01-git-detect.log": "45a66512e2a315415f9c80bf298548eda234778772b610d3d4472e2682707405",
+      "make-ready-profile-revision-admission-01-git-plan.log": "e37a1d350f25b7df7ed6d32d8c7312a72187f8ed1ddc4682ffe7ab35bff2d862",
+      "make-ready-profile-revision-admission-01-git-policy.log": "71ce5018e4abc2321cd3962f0b6c32fe1c00f85a9026b82e8130a7013700ba71",
+      "make-ready-profile-revision-admission-01-paths.json": "ef8d26829ebf621a61f34c075a75d6e0b7121ec5457defba1fbac4ae857635a9",
+      "make-ready-profile-revision-admission-01-plan.json": "b02a22d61ddf3563fba840e9cda126adeab0fbae04e0797b45c951d5acd46a4b",
+      "make-ready-profile-revision-admission-01-task-inspect.log": "5fa1c6f5ff59ec66d60e13dfbd69e2e7091c33d420bd9cbc5d1b4f2b1a7bd89a",
+      "make-ready-profile-revision-admission-01-task-noop-check.log": "5aa5f829377d6c1e6f915d0e9420e0ad519d403efc9aa87b845aa3b81756819e",
+      "make-ready-profile-revision-admission-01-task-recover.log": "0e421e796e3e36b610e641255f8e9c239ffc11be0c9da9633b4bff366da08098",
+      "make-ready-profile-revision-admission-01.claim.json": "570b81c891e8fe0452bbb8624b44f209ffd7a15227f41b7c3a3710d1b6fddf72",
+      "make-ready-profile-revision-admission-01.json": "5aa4b168ad308bedbc44e5fc071386d7402434aa1ad9b3e7407138cde875e770",
+      "make-ready-profile-revision-baseline-01-commands.jsonl": "a8fc1add9850442fc94443ed8e8ab0490f173ad7ff986d620e598f61c1a23f08",
+      "make-ready-profile-revision-baseline-01.json": "94cca8d4df1a62b83f0d266dde537feadfa980d9230162e1ea416a3c418c66aa",
+      "make-ready-profile-revision-baseline-01.py": "07fb23a753a1b51ca6ff926a9a684058a1c8757eb49a3cb9bedf70c480d6c7a6",
+      "make-ready-profile-revision-late-source-review-01.json": "82db1c179c19154e03422c95defc8e535bc4f0be2e180ea74dd611b8a0c12de1",
+      "make-ready-profile-revision-preflight-01-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-profile-revision-preflight-01-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-profile-revision-preflight-01-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-profile-revision-preflight-01-strict.log": "4d88c270768cab604f31f83a127cc786e29f485772d0edb557f9de3aae3e9540",
+      "make-ready-profile-revision-preflight-01.json": "9da887430af5cef0b357871454fa2900bc99495b9c94db58f9be935362c1f973",
+      "make-ready-profile-revision-runtime-review-01.json": "8d96a7ff4da9c0c8d748fcc1ce64b155908397ee37ccf3ba76a2c510b5c4daee",
+      "make-ready-profile-revision-source-proof-01-contracts.log": "61dd4cd0650085e0ba749f573fec9411fd7cf3c44a900d068ff78a77bd1de037",
+      "make-ready-profile-revision-source-proof-01-diff.log": "7a7ff4919c5aab57d8e8138d53f5b9f91a80836a7cd2995f833c7ed26875db14",
+      "make-ready-profile-revision-source-proof-01-format.log": "b69a31f2806c070cac6f8b165ef9749659b6fdc74478a05e9f6b5d8cc632a191",
+      "make-ready-profile-revision-source-proof-01-metadata.log": "3dc1a098683a4df150bfbfbc39a55ad0d8bd92af1e1940cd1abb2804d892d7fd",
+      "make-ready-profile-revision-source-proof-01-plan-check.log": "1e52b10a880a025b75330ad95fecd2b3846e5dcc59567c97be85567ec94abb31",
+      "make-ready-profile-revision-source-proof-01-portable.log": "51fcf29bcd1bbbf8831276c26fa94ca767349e6126c4abf6f104e18e49a49ac1",
+      "make-ready-profile-revision-source-proof-01-state-check.log": "e4fd90ad26475986e416e58788c4d33390218f7d1795414a3afa60a8d5ed03bd",
+      "make-ready-profile-revision-source-proof-01-strict.log": "19b02c6dc5cdd1e2f040660ef0e1d73a2a8117f3532497f553486f35650cf98d",
+      "make-ready-profile-revision-source-proof-01.claim.json": "f20cedbd4cb16e52337b364ce17a475efcc56dff72d198840d63c135d5e2124b",
+      "make-ready-profile-revision-source-proof-01.json": "a615a0673807ecf26322a159c53d4764e8c8de14b3f4808f0fb59a993a6e5673",
+      "make-ready-profile-revision-source-proof-01.py": "c12bf042713260be41f5cf66f0df2616e22d914f056049424d25b8feddcb58ce",
+      "make-ready-profile-revision-source-proof-02-build.log": "87701c03eee617d4a03969e4e153449fd5e12650afa6a88a2046cf9a11aaaf35",
+      "make-ready-profile-revision-source-proof-02-doctor.json": "b995e3edb37d27cf362ae858b73968b059e3cfa89f6dd769654b16657f0701aa",
+      "make-ready-profile-revision-source-proof-02-native-model.log": "a7918500ff794af20064d3a1142c523789f6d72f4aaa63a6e6a86b134b54ec2c",
+      "make-ready-profile-revision-source-proof-02-paths.json": "6a14c517c97614c504f53e9fe66b143f07a4bc56dfe833e7173f667c0008c60f",
+      "make-ready-profile-revision-source-proof-02-profiles-and-query.log": "171800b145699c8c4ff5b80da44fe97a5fa9eaca1d144b480ca3433881df666c",
+      "make-ready-profile-revision-source-proof-02.claim.json": "92e9cfb5c1f24c6b602ad9018b0bee430e93c11a59a3c3047ceff35394cc8f39",
+      "make-ready-profile-revision-source-proof-02.json": "f537b4c62cb79639b572d7b26881767780c4263a835b5360391b1b9f842eb2cd",
+      "make-ready-profile-revision-source-proof-02.py": "81e91185eab22cac6bbd200f5495596a0953b1084027596e8ed50071a1ed31a8",
+      "make-ready-profile-revision-source-review-01.json": "409ac179fe5f56e0af53b05cabee4c48cc5a23050a1f2abcbe9f2338a5799808",
+      "source__apps__cli__command_dispatch.cpp": "7b6c33f7ee0fa06797c6a863bb67efbdc14d24275e6178927aae984510b16afe",
+      "source__apps__cli__completions__FacMan.ps1": "9763825894acb8be91451efade7a8e4f2ab3d89ccdc62ef870f894eeb3da0b8d",
+      "source__apps__cli__completions___facman": "d27e43fea3f145e82c5c475ae0a1f0b02f5c59fb613548c1d65cab8a0686e0ea",
+      "source__apps__cli__completions__facman.bash": "58ef763cbe8d7511b20ae6a359d1eb4b56b498bda1078fec84c8fea7177aa7ad",
+      "source__apps__cli__completions__facman.fish": "277a70c0082f2052fa2d7fe775b98d11ddd148f650ea1ecb3a7dfa2498c97f6c",
+      "source__apps__cli__generated__command_help.inc": "9b8fe0df3b4094b10f2bd5dd114e9a4f0192a97877ec49daf92da8ea35f39cc3",
+      "source__apps__cli__report_text.cpp": "ca8ad3b3dbe2a9b80aff863a4d8a839e237a44c8a88f39e7a0e1c07ae4c99805",
+      "source__apps__gui__macos__appkit__FacManGeneratedCommandCatalog.h": "5daa25e735aef6d42cea59e0b59912bd3a5b1634ad50b6b5c168296546036263",
+      "source__apps__gui__macos__appkit__FacManGeneratedCommandCatalog.m": "7c35fa809f541345f1ecb803321785370946ea40a73f00eb554c95e641b6902f",
+      "source__apps__gui__windows__winforms__GeneratedCommandCatalog.cs": "90d6a1b6cac8136d36bdac278b501739d864b2fecb3175ff1891c3ee5ede2aae",
+      "source__apps__tui__generated_command_catalog.hpp": "05e124d579e2186885ee4c9bdc1125359f88a957261a542a98d141394022dd0f",
+      "source__content__factorio__strings__en-US.toml": "7f2045e7032d5553570f6c61b5474e4e7a0fa73d38ffdf328abd46cd291836c0",
+      "source__contracts__command__factorio__profiles.apply.v1.toml": "a710ae115d9946068647e3a02cbcbab524e6c33977ca02ef9774ea7ae4109096",
+      "source__contracts__command__factorio__profiles.plan.v1.toml": "b977f3a6c385cd88a5d8ef0bfb6db32df1d81fdf1b35c9cfbcb41ac4ab5ef4f4",
+      "source__contracts__command__request_fields.v1.json": "a302348572705e840e3d2775a90e1c8bc3885c6d6d935c8f1499f38304fca794",
+      "source__contracts__generated-index__command_catalog.v2.json": "18ab10139779b6e52ad8b2b30217c2fdf2f3ff5998c2ded196e2bff3ae9baa12",
+      "source__contracts__generated-index__command_cli_grammar.v2.json": "9ae7a63b433288d76f083c283aabd5b486412a81d84e617f8274dd3ee485cf23",
+      "source__contracts__generated-index__frontend_command_catalog.v1.json": "8b9060d3b6432f21704930b667b6c82f023aaa938ff911e5991cc84e8531c941",
+      "source__contracts__schema__command__profiles.apply.request.v1.schema.json": "a559149f9250b9a9f51fe41f61115f096a5912dee1cfe197e2a05d583f159b64",
+      "source__contracts__schema__command__profiles.plan.request.v1.schema.json": "0f6e5d22f9a24d00010bb7bb25607c1d1a148d6909ff8289043ccfd466306e6f",
+      "source__contracts__schema__factorio__factorio_effective_profile.v1.schema.json": "2985302aa7b1558a4e87730275382054064ff3238da9c439eaeb7b0e7d44ca8c",
+      "source__docs__product__launch_profiles.md": "a04391adf8fa0a94d7ef152fc151a13beda2b992227a138daa79714f24162da5",
+      "source__runtime__core__generated__command_catalog.h": "5060fe19e1f23d9a759ceaa93b3be7d47a263ddd68454ec3c3a2e66853fd8585",
+      "source__runtime__core__generated__version.h": "22f11284c1bc04c7926e7ae4fb97edb966ef820a788b0bf3633602033afbf908",
+      "source__runtime__factorio__application__command_dispatch.cpp": "a8ddf06e383294ca7433060a7e7ee7eea07d9dad2140addc0d20ebb47d27542c",
+      "source__runtime__factorio__application__generated__command_ids.inc": "454f6e1c82efe7ef1450b635d0574dc8d5dc3b35f878a3a1ccb0c26a01af77d4",
+      "source__runtime__factorio__application__generated__command_lookup.inc": "8f60fa61c8921ec6b4924539fbc9fb2943dd44f00a575bddfcaebaab2fa432f0",
+      "source__runtime__factorio__application__generated__command_names.inc": "6b0eaae914fd73b763096450e0149328bebe81569fd3f941b61566d30ffd39c7",
+      "source__runtime__factorio__application__generated__command_writes.inc": "7a927f3b6b3b7d2745acba6dbb6a78ca09b7d2726bb4f5fe1a9e1fc9e71d351e",
+      "source__runtime__factorio__application__generated__request_contracts.inc": "2658400b73e0ef0ae155b29b17de3860c9e4890aa6586bdf4d03e67550efa24d",
+      "source__runtime__factorio__profiles__flb_factorio_profiles.cpp": "046c497feaca9e0a3593ad163d018bec892f314c1ccc7290087fa17b2a3d7dd4",
+      "source__runtime__factorio__profiles__flb_factorio_profiles.h": "002ba2eb2b67d44c13dac62bec9f7ef55df4fb53f48bf6a7d9982f2b28fc9044",
+      "source__tests__test_profiles_templates.py": "7d552b7f8001423e90d2b39177e0112a3c6b892b1a43afd9ed4a9045a8cc580b"
+    }
+  },
+  "retained_failures": [
+    "Initial strict preflight: generated project state stale and CLI line limit exceeded; corrected without raising limits.",
+    "Authoritative optional request-field registry missing: reviewer found and author corrected before build.",
+    "Initial late-test refusal oracle could accept pause timeout: corrected specific input-change diagnostic before runtime.",
+    "Source proof01 runner read verdict as status and stopped before native build; exact passed source preflight reused by proof02."
+  ],
+  "resource_use": {
+    "native_builds": 1,
+    "maximum_native_workers": 2,
+    "optional_candidate_dispatches": 0,
+    "CI_reruns": 0,
+    "new_roots": 0,
+    "new_worktrees": 0,
+    "model_wait_calls": 0,
+    "old_qualified_images_preserved_externally": true
+  },
+  "original_acceptance": [
+    "Make one typed readiness plan reconcile install, instance, content and selected world before launch.",
+    "Exercise stale inputs, recoverable partial preparation and selected-save mismatch through ordinary workflows."
+  ],
+  "close_after": [
+    "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+    "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+    "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+    "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+    "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01"
+  ],
+  "qualification": {
+    "source_fixture": true,
+    "produced_package": false,
+    "actual_Factorio": false,
+    "human_experience": false,
+    "hostile_concurrent_writer": false,
+    "release": false,
+    "whole_workunit": false,
+    "full_programme": false
+  },
+  "external_gates_preserved": [
+    "PR343 protected control owner authorization",
+    "Genuine distinct-version Linux Setup A5 update/rollback",
+    "MakeReady five original close-after prerequisites"
+  ],
+  "next_acceptance": "Compose typed multi-domain Make Ready progress and selected-save Play through ordinary workflows.",
+  "finished_at_utc": "2026-10-04T20:39:10.426822+00:00"
+}

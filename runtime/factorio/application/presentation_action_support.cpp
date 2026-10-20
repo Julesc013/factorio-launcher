@@ -1,0 +1,1110 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
+#include "presentation_action_support.h"
+#include "flb_factorio_instance_model.h"
+
+#include "command_result.h"
+#include "application_context.h"
+#include "fl_json.h"
+#include "fl_path_safety.h"
+#include "fl_transaction.h"
+#include "flb_factorio_profiles.h"
+#include "handlers/snapshots.h"
+#include "handlers/modsets.h"
+#include "handlers/setup.h"
+#include "command_admission.h"
+#include "presentation_service.h"
+#include "fl_sha256.h"
+#include "fl_file_io.h"
+#include "fl_workspace_store.h"
+
+#include <algorithm>
+#include <iterator>
+#include <map>
+#include <utility>
+#include <variant>
+
+namespace facman::factorio::application {
+namespace json = facman::core::json;
+namespace fs = std::filesystem;
+namespace {
+
+std::string string_field(const json::Value& value, const char* key)
+{
+    const auto* field = value.find(key);
+    if (field == nullptr || !field->is_string()) return {};
+    auto text = field->string_value();
+    return text ? text.take_value() : std::string();
+}
+
+std::string json_string(const json::Value& value)
+{
+    auto text = value.string_value();
+    return text ? text.take_value() : std::string();
+}
+
+std::string repair_review_digest(const std::string& value)
+{
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(value.data()), value.size());
+}
+
+} // namespace
+
+std::vector<std::filesystem::path> local_modset_maintenance_paths(
+    const std::vector<facman::factorio::mods::ModRef>& inventory,
+    const std::vector<facman::workspace::InstanceRecord>& instances,
+    const std::string& instance_id)
+{
+    const auto selected = std::find_if(instances.begin(), instances.end(), [&](const auto& value) {
+        return value.id.str() == instance_id;
+    });
+    const auto candidate = [&](const auto& mod) {
+        return selected != instances.end() && !mod.virtual_package && mod.valid &&
+            mod.file_path == selected->root / "mods" / mod.file_name &&
+            facman::factorio::mods::factorio_versions_compatible(mod.factorio_version, selected->factorio_version);
+    };
+    std::map<std::string, std::size_t> counts;
+    for (const auto& mod : inventory) if (candidate(mod)) ++counts[mod.name + "@" + mod.version];
+    std::vector<std::filesystem::path> paths;
+    for (const auto& mod : inventory) if (candidate(mod) && counts[mod.name + "@" + mod.version] == 1U) {
+        paths.push_back(mod.file_path);
+    }
+    return paths;
+}
+
+std::string append_modset_maintenance_choice(const facman::factorio::mods::ModRef& mod,
+    const std::vector<std::filesystem::path>& paths, std::vector<std::string>& choices)
+{
+    if (std::find(paths.begin(), paths.end(), mod.file_path) == paths.end()) return {};
+    const std::string identity = mod.name + "@" + mod.version;
+    choices.push_back(identity);
+    return identity;
+}
+
+ApplicationResult dispatch_content_modset(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot)
+{
+    const bool applying = request.action_id == "modsets.apply";
+    ModsetSolverRequest modset;
+    modset.instance_id = request.selected_instance_id;
+    if (request.mod_identity.find('@') == std::string::npos) {
+        modset.enabled_mods.push_back(request.mod_identity);
+    } else {
+        // Bind the full artifact from the already freshness-checked snapshot,
+        // never from a second unconfirmed inventory observation.
+        auto document = json::parse(snapshot);
+        const auto* page = document ? document.value().find("page") : nullptr;
+        const auto* items = page ? page->find("items") : nullptr;
+        if (items && items->is_array()) for (std::size_t index = 0; index < items->size(); ++index) {
+            const auto* item = items->at(index);
+            if (item && string_field(*item, "maintenance_identity") == request.mod_identity) {
+                modset.exact_selection = {request.mod_identity.substr(0, request.mod_identity.find('@')),
+                    string_field(*item, "version"), string_field(*item, "file_name"),
+                    string_field(*item, "source"), string_field(*item, "sha256")};
+                break;
+            }
+        }
+        if (modset.exact_selection.name.empty()) {
+            const std::string code = "modset_exact_selection_unavailable";
+            const std::string message = "The exact local version is unavailable or ambiguous";
+            return refused(safety_refusal(applying ? "modsets.apply" : "modsets.plan", code, message, {}, true), code, message);
+        }
+    }
+    ApplicationRequest domain;
+    domain.command = applying ? CommandId::modsets_apply : CommandId::modsets_plan;
+    domain.payload = std::move(modset);
+    domain.dry_run = !applying;
+    return handlers::dispatch_modset_solver(context, domain);
+}
+
+json::ObjectBuilder action_descriptor(
+    const char* action_id,
+    const char* command_id,
+    const char* label,
+    const char* role,
+    const char* effect,
+    bool available,
+    const char* refusal_code,
+    const char* confirmation,
+    const char* input_contract,
+    const std::vector<ActionInputField>& input_fields)
+{
+    json::ObjectBuilder action;
+    action.add_string("action_id", action_id);
+    action.add_string("command_id", command_id);
+    action.add_string("label", label);
+    action.add_string("accessibility_label", label);
+    action.add_string("role", role);
+    action.add_string("availability", available ? "available" : "refused");
+    json::ArrayBuilder effects;
+    effects.add_string(effect);
+    if (std::string(effect) == "setup_preview" || std::string(effect) == "setup_mutation") effects.add_string("workspace_write");
+    action.add_array("effects", effects);
+    action.add_string("confirmation", confirmation);
+    action.add_string("input_contract", input_contract);
+    json::ArrayBuilder fields;
+    for (const auto& field : input_fields) {
+        json::ObjectBuilder item;
+        item.add_string("field_id", field.id);
+        item.add_string("label", field.label);
+        item.add_string("type", field.type);
+        item.add_bool("required", field.required);
+        if (field.default_value.empty()) item.add_null("default");
+        else item.add_string("default", field.default_value);
+        json::ArrayBuilder choices;
+        for (const auto& choice : field.choices) choices.add_string(choice);
+        item.add_array("choices", choices);
+        fields.add_object(item);
+    }
+    action.add_array("input_fields", fields);
+    action.add_bool("backend_owned", true);
+    if (available) action.add_null("refusal");
+    else {
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", refusal_code == nullptr ? "action_unavailable" : refusal_code);
+        refusal.add_string("reason", "The backend has not admitted this action");
+        refusal.add_bool("recoverable", true);
+        action.add_object("refusal", refusal);
+    }
+    return action;
+}
+
+std::string action_request_json(const SemanticActionRequest& request)
+{
+    json::ObjectBuilder input;
+    input.add_string("action_id", request.action_id);
+    input.add_string("scope", request.scope);
+    input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
+    input.add_string("request_id", request.request_id);
+    input.add_string("selected_instance_id", request.selected_instance_id);
+    input.add_string("durable_operation_id", request.durable_operation_id);
+    input.add_string("attempt_id", request.attempt_id);
+    input.add_string("confirmation", request.confirmation);
+    input.add_string("installation_id", request.installation_id);
+    input.add_string("installation_path", request.installation_path);
+    input.add_string("new_instance_id", request.new_instance_id);
+    input.add_string("display_name", request.display_name);
+    input.add_string("template_id", request.template_id);
+    input.add_string("profile_id", request.profile_id);
+    input.add_string("mod_identity", request.mod_identity);
+    input.add_string("save", request.save);
+    input.add_string("output_path", request.output_path);
+    input.add_string("source_data_root", request.source_data_root);
+    input.add_string("transaction_id", request.transaction_id);
+    json::ArrayBuilder roots;
+    for (const auto& root : request.roots) roots.add_string(root);
+    input.add_array("roots", roots);
+    if (request.launch_intent == "load_save") input.add_string("launch_intent", request.launch_intent);
+    // Preserve the immutable legacy fingerprint when the new input is absent.
+    if (!request.source_path.empty()) input.add_string("source_path", request.source_path);
+    if (!request.snapshot_id.empty()) input.add_string("snapshot_id", request.snapshot_id);
+    if (!request.repair_review_id.empty()) input.add_string("repair_review_id", request.repair_review_id);
+    return input.serialize();
+}
+
+std::string snapshot_create_input_problem(const SemanticActionRequest& request)
+{
+    if (request.action_id != "snapshots.create") return {};
+    std::string detail;
+    if (request.scope != "saves" || request.selected_instance_id.empty() ||
+        !facman::base::validate_identifier(request.snapshot_id, detail)) {
+        return "selected_instance_id and a valid snapshot_id are required; save is optional";
+    }
+    return {};
+}
+
+ApplicationResult dispatch_snapshot_create(ApplicationContext& context, const SemanticActionRequest& request)
+{
+    CreateSnapshotRequest create {request.selected_instance_id, request.snapshot_id, {}};
+    if (!request.save.empty()) create.saves.push_back(request.save);
+    ApplicationResult result = handlers::dispatch_snapshots(
+        context, ApplicationRequest{CommandId::snapshots_create, std::move(create), false});
+    // This is a conservative workspace recovery signal, not attribution of
+    // another controller's pending transaction to this create. Owner bytes stay exact.
+    if (result.status != ULK_STATUS_OK && facman::transaction::incomplete_count(context.workspace()) != 0U)
+        result.outcome_kind = facman::core::OutcomeKind::recovery_required;
+    return result;
+}
+
+bool recorded_action_request_shape(const json::Value& request)
+{
+    if (!request.is_object()) return false;
+    std::vector<std::string> expected = {
+        "action_id", "scope", "expected_snapshot_revision", "request_id",
+        "selected_instance_id", "durable_operation_id", "attempt_id", "confirmation",
+        "installation_id", "installation_path", "new_instance_id", "display_name",
+        "template_id", "profile_id", "mod_identity", "save", "output_path",
+        "source_data_root", "transaction_id", "roots",
+    };
+    // Optional extensions leave immutable legacy request bytes unchanged.
+    if (request.find("repair_review_id") != nullptr) {
+        const auto key = string_field(request, "repair_review_id");
+        if (key.empty() || key.size() > 256U) return false;
+        expected.emplace_back("repair_review_id");
+    }
+    if (request.find("launch_intent") != nullptr) {
+        if (string_field(request, "launch_intent") != "load_save") return false;
+        expected.emplace_back("launch_intent");
+    }
+    if (request.find("source_path") != nullptr) {
+        if (string_field(request, "source_path").empty()) return false;
+        expected.emplace_back("source_path");
+    }
+    if (request.find("snapshot_id") != nullptr) {
+        const std::string id = string_field(request, "snapshot_id");
+        const auto alphanumeric = [](unsigned char c) {
+            return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+        };
+        if (id.empty() || id.size() > 128U || !alphanumeric(static_cast<unsigned char>(id.front())) ||
+            !std::all_of(id.begin() + 1, id.end(), [&](unsigned char c) {
+                return alphanumeric(c) || c == '.' || c == '_' || c == '-';
+            })) return false;
+        expected.emplace_back("snapshot_id");
+    }
+    auto actual = request.object_keys();
+    std::sort(actual.begin(), actual.end());
+    std::sort(expected.begin(), expected.end());
+    return actual == expected;
+}
+
+bool lower_hex_digest(const std::string& value)
+{
+    return value.size() == 64U && std::all_of(value.begin(), value.end(), [](char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+    });
+}
+
+std::string snapshot_revision(const std::string& snapshot)
+{
+    auto document = json::parse(snapshot);
+    if (!document || !document.value().is_object()) return {};
+    return decode_json_string_field(snapshot, "revision");
+}
+
+std::string profile_preparation_json(
+    const std::filesystem::path& workspace,
+    const std::string& instance_id,
+    std::vector<std::string> profile_ids)
+{
+    std::sort(profile_ids.begin(), profile_ids.end());
+    profile_ids.erase(std::unique(profile_ids.begin(), profile_ids.end()), profile_ids.end());
+    json::ArrayBuilder identities;
+    for (const auto& profile_id : profile_ids) {
+        profiles::EffectiveRequest request;
+        request.instance_id = instance_id;
+        request.profile_id = profile_id;
+        auto planned = profiles::profiles_plan(workspace, request);
+        std::string sha;
+        if (planned) {
+            auto document = json::parse(planned.value());
+            if (document && document.value().is_object()) sha = string_field(document.value(), "plan_sha256");
+        }
+        json::ObjectBuilder identity;
+        identity.add_string("instance_id", instance_id);
+        identity.add_string("profile_id", profile_id);
+        if (lower_hex_digest(sha)) {
+            identity.add_string("plan_sha256", sha);
+            identity.add_null("refusal");
+        } else {
+            identity.add_null("plan_sha256");
+            json::ObjectBuilder refusal;
+            refusal.add_string("code", planned ? "profile_preparation_revision_invalid" : planned.error().code);
+            refusal.add_string("detail", planned ? "Owner plan did not provide a valid preparation digest" : planned.error().message);
+            identity.add_object("refusal", refusal);
+        }
+        identities.add_object(identity);
+    }
+    return identities.serialize();
+}
+
+facman::core::Result<std::string> snapshot_profile_plan(
+    const std::string& snapshot,
+    const std::string& instance_id,
+    const std::string& profile_id)
+{
+    using Result = facman::core::Result<std::string>;
+    const auto invalid = []() {
+        return Result::failure({"profile_preparation_revision_invalid",
+            "Snapshot does not bind one valid owner plan for the selected profile", {},
+            facman::core::OutcomeKind::refused});
+    };
+    auto document = json::parse(snapshot);
+    if (!document || !document.value().is_object()) return invalid();
+    const auto* dependencies = document.value().find("dependency_identities");
+    const auto* identities = dependencies != nullptr && dependencies->is_object()
+        ? dependencies->find("profile_preparation") : nullptr;
+    if (identities == nullptr || !identities->is_array()) return invalid();
+    const json::Value* selected = nullptr;
+    for (std::size_t index = 0U; index < identities->size(); ++index) {
+        const auto* entry = identities->at(index);
+        if (entry == nullptr || !entry->is_object() ||
+            string_field(*entry, "instance_id") != instance_id ||
+            string_field(*entry, "profile_id") != profile_id) continue;
+        if (selected != nullptr) return invalid();
+        selected = entry;
+    }
+    if (selected == nullptr) return invalid();
+    const auto* refusal = selected->find("refusal");
+    const auto* sha = selected->find("plan_sha256");
+    if (refusal == nullptr || sha == nullptr) return invalid();
+    if (refusal->is_object() && sha->is_null()) {
+        const std::string code = string_field(*refusal, "code");
+        const std::string detail = string_field(*refusal, "detail");
+        if (!code.empty() && !detail.empty()) return Result::failure(
+            {code, detail, {}, facman::core::OutcomeKind::refused});
+    }
+    const std::string value = string_field(*selected, "plan_sha256");
+    if (!refusal->is_null() || !lower_hex_digest(value)) return invalid();
+    return Result::success(value);
+}
+
+std::string selected_save_preparation_json(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    auto planned = instance::selected_save_preparation_plan(workspace, {instance_id, launch_intent});
+    json::ObjectBuilder identity;
+    identity.add_string("instance_id", instance_id);
+    identity.add_string("launch_intent", launch_intent);
+    if (planned) {
+        add_json(identity, "plan", planned.value());
+        identity.add_null("refusal");
+    } else {
+        identity.add_null("plan");
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", planned.error().code);
+        refusal.add_string("detail", planned.error().message);
+        identity.add_object("refusal", refusal);
+    }
+    return identity.serialize();
+}
+
+json::ObjectBuilder selected_save_action_descriptor(const std::string& preparation, const std::string& instance_id)
+{
+    auto document = json::parse(preparation);
+    const auto* refusal = document ? document.value().find("refusal") : nullptr;
+    const bool available = refusal && refusal->is_null();
+    const std::string code = refusal ? string_field(*refusal, "code") : "selected_context_plan_invalid";
+    const std::vector<ActionInputField> fields {{"selected_instance_id", "Selected instance", "enum", true,
+        instance_id, instance_id.empty() ? std::vector<std::string>() : std::vector<std::string> {instance_id}}};
+    const auto* plan = document ? document.value().find("plan") : nullptr;
+    const bool refresh = plan && plan->find("refresh");
+    return action_descriptor("readiness.prepare_selected_save", "presentation.action",
+        refresh ? "Refresh selected save context" : "Record selected save context",
+        "manage", "workspace_write", available, available ? nullptr : code.c_str(), "explicit",
+        "facman.semantic_action_input.v1", fields);
+}
+
+facman::core::Result<std::string> snapshot_selected_save_plan(const std::string& snapshot,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    using Result = facman::core::Result<std::string>;
+    auto document = json::parse(snapshot);
+    const auto* dependencies = document ? document.value().find("dependency_identities") : nullptr;
+    const auto* identity = dependencies ? dependencies->find("selected_save_preparation") : nullptr;
+    if (!identity || string_field(*identity, "instance_id") != instance_id ||
+        string_field(*identity, "launch_intent") != launch_intent) return Result::failure({
+            "selected_context_plan_invalid", "Snapshot does not bind this selected context component", {}});
+    const auto* refusal = identity->find("refusal");
+    const auto* plan = identity->find("plan");
+    if (refusal && refusal->is_object()) return Result::failure({string_field(*refusal, "code"), string_field(*refusal, "detail"), {}});
+    const std::string sha = plan ? string_field(*plan, "plan_sha256") : std::string();
+    if (!refusal || !refusal->is_null() || !lower_hex_digest(sha)) return Result::failure({
+        "selected_context_plan_invalid", "Selected context owner plan is invalid", {}});
+    return Result::success(sha);
+}
+
+std::string configuration_preparation_json(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    auto planned = instance::configuration_preparation_plan(workspace, {instance_id, launch_intent});
+    json::ObjectBuilder identity;
+    identity.add_string("instance_id", instance_id);
+    identity.add_string("launch_intent", launch_intent);
+    if (planned) {
+        add_json(identity, "plan", planned.value());
+        identity.add_null("refusal");
+    } else {
+        identity.add_null("plan");
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", planned.error().code);
+        refusal.add_string("detail", planned.error().message);
+        identity.add_object("refusal", refusal);
+    }
+    return identity.serialize();
+}
+
+json::ObjectBuilder configuration_action_descriptor(const std::string& preparation, const std::string& instance_id)
+{
+    auto document = json::parse(preparation);
+    const auto* refusal = document ? document.value().find("refusal") : nullptr;
+    const bool available = refusal && refusal->is_null();
+    const std::string code = refusal ? string_field(*refusal, "code") : "configuration_plan_invalid";
+    const std::vector<ActionInputField> fields {{"selected_instance_id", "Selected instance", "enum", true,
+        instance_id, instance_id.empty() ? std::vector<std::string>() : std::vector<std::string> {instance_id}}};
+    return action_descriptor("readiness.prepare_configuration", "presentation.action", "Prepare routing configuration",
+        "manage", "workspace_write", available, available ? nullptr : code.c_str(), "explicit",
+        "facman.semantic_action_input.v1", fields);
+}
+
+facman::core::Result<std::string> snapshot_configuration_plan(const std::string& snapshot,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    using Result = facman::core::Result<std::string>;
+    auto document = json::parse(snapshot);
+    const auto* dependencies = document ? document.value().find("dependency_identities") : nullptr;
+    const auto* identity = dependencies ? dependencies->find("configuration_preparation") : nullptr;
+    if (!identity || string_field(*identity, "instance_id") != instance_id ||
+        string_field(*identity, "launch_intent") != launch_intent) return Result::failure({
+            "configuration_plan_invalid", "Snapshot does not bind this configuration component", {}});
+    const auto* refusal = identity->find("refusal");
+    const auto* plan = identity->find("plan");
+    if (refusal && refusal->is_object()) return Result::failure({string_field(*refusal, "code"), string_field(*refusal, "detail"), {}});
+    const std::string sha = plan ? string_field(*plan, "plan_sha256") : std::string();
+    if (!refusal || !refusal->is_null() || !lower_hex_digest(sha)) return Result::failure({
+        "configuration_plan_invalid", "Configuration owner plan is invalid", {}});
+    return Result::success(sha);
+}
+
+facman::core::Result<MakeReadyStage> snapshot_make_ready_stage(const std::string& snapshot,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    using Result = facman::core::Result<MakeReadyStage>;
+    auto configuration = snapshot_configuration_plan(snapshot, instance_id, launch_intent);
+    if (configuration) return Result::success(
+        {MakeReadyComponent::routing_configuration, configuration.take_value()});
+    // Only a satisfied routing observation permits selected-context admission.
+    // Every other owner refusal remains a refusal, including missing repair support.
+    if (configuration.error().code != "configuration_already_current")
+        return Result::failure(configuration.error());
+    auto selected = snapshot_selected_save_plan(snapshot, instance_id, launch_intent);
+    if (!selected) return Result::failure(selected.error());
+    return Result::success({MakeReadyComponent::selected_save_declared_context, selected.take_value()});
+}
+
+json::ObjectBuilder make_ready_action_descriptor(const std::string& configuration,
+    const std::string& selected_save, const std::string& instance_id, const std::string& launch_intent)
+{
+    // These reports are the same reports bound into the presentation revision.
+    json::ObjectBuilder dependencies;
+    add_json(dependencies, "configuration_preparation", configuration);
+    add_json(dependencies, "selected_save_preparation", selected_save);
+    json::ObjectBuilder snapshot;
+    snapshot.add_object("dependency_identities", dependencies);
+    auto stage = snapshot_make_ready_stage(snapshot.serialize(), instance_id, launch_intent);
+    const std::vector<ActionInputField> fields {{"selected_instance_id", "Selected instance", "enum", true,
+        instance_id, instance_id.empty() ? std::vector<std::string>() : std::vector<std::string> {instance_id}}};
+    return action_descriptor("readiness.prepare", "presentation.action", "Make Ready",
+        "manage", "workspace_write", stage.ok(), stage ? nullptr : stage.error().code.c_str(), "explicit",
+        "facman.semantic_action_input.v1", fields);
+}
+
+facman::core::Result<std::string> make_ready_stage_result(const MakeReadyStage& stage,
+    const std::string& instance_id, const std::string& launch_intent, const std::string& owner_result)
+{
+    using Result = facman::core::Result<std::string>;
+    const bool configuration = stage.component == MakeReadyComponent::routing_configuration;
+    const char* owner_command = configuration ? "readiness.prepare_configuration" : "readiness.prepare_selected_save";
+    const char* owner_schema = configuration ? "factorio.configuration_preparation_result.v1"
+        : "factorio.selected_save_preparation_result.v1";
+    auto owner = json::parse(owner_result);
+    const auto false_field = [&](const char* name) {
+        const auto* field = owner ? owner.value().find(name) : nullptr;
+        auto value = field ? field->bool_value() : facman::core::Result<bool>::failure({"missing", "missing", {}});
+        return value && !value.value();
+    };
+    if (!owner || !owner.value().is_object() || string_field(owner.value(), "schema") != owner_schema ||
+        string_field(owner.value(), "command") != owner_command ||
+        string_field(owner.value(), "instance_id") != instance_id ||
+        string_field(owner.value(), "transaction_id").empty() ||
+        string_field(owner.value(), "composition") != "partial" ||
+        !false_field("execution_started") || !false_field("permit_issued") || !lower_hex_digest(stage.plan_sha256))
+        return Result::failure({"make_ready_owner_result_unknown",
+            "The owner may have committed; inspect its journal before any retry", {},
+            facman::core::OutcomeKind::recovery_required});
+    json::ObjectBuilder completed;
+    completed.add_string("component", configuration ? "routing_configuration" : "selected_save_declared_context");
+    completed.add_string("owner_command", owner_command);
+    completed.add_string("transaction_id", string_field(owner.value(), "transaction_id"));
+    completed.add_string("plan_sha256", stage.plan_sha256);
+    completed.add_value("owner_result", owner.value());
+    json::ArrayBuilder effects;
+    effects.add_object(completed);
+    json::ArrayBuilder deferred;
+    if (configuration && launch_intent == "load_save") {
+        json::ObjectBuilder next;
+        next.add_string("component", "selected_save_declared_context");
+        next.add_string("reason", "fresh_revision_required");
+        deferred.add_object(next);
+    }
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.make_ready_preparation_result.v1");
+    output.add_string("command", "readiness.prepare");
+    output.add_string("instance_id", instance_id);
+    output.add_string("launch_intent", launch_intent);
+    output.add_string("composition", "partial");
+    output.add_array("completed_components", effects);
+    output.add_array("deferred_components", deferred);
+    output.add_bool("fresh_revision_required", true);
+    output.add_bool("readiness_complete", false);
+    output.add_bool("execution_started", false);
+    output.add_bool("permit_issued", false);
+    output.add_string("factorio_support_claim", "unclaimed");
+    return Result::success(output.serialize());
+}
+
+bool has_preparation_plan(const std::string& action_id)
+{
+    return action_id == "readiness.prepare_joined" || action_id == "profile.select" || action_id == "readiness.prepare_selected_save" ||
+        action_id == "readiness.prepare_configuration" || action_id == "readiness.prepare";
+}
+
+facman::core::Result<std::string> snapshot_action_preparation_plan(const std::string& snapshot,
+    const SemanticActionRequest& request, MakeReadyStage& make_ready_stage)
+{
+    using Result = facman::core::Result<std::string>;
+    if (request.action_id == "readiness.prepare_joined") return snapshot_joined_plan(snapshot, request);
+    if (request.action_id != "readiness.prepare")
+        return request.action_id == "profile.select"
+            ? snapshot_profile_plan(snapshot, request.selected_instance_id, request.profile_id)
+            : request.action_id == "readiness.prepare_configuration"
+                ? snapshot_configuration_plan(snapshot, request.selected_instance_id, request.launch_intent)
+                : snapshot_selected_save_plan(snapshot, request.selected_instance_id, request.launch_intent);
+    auto bound = snapshot_make_ready_stage(snapshot, request.selected_instance_id, request.launch_intent);
+    if (!bound) return Result::failure(bound.error());
+    make_ready_stage = bound.take_value();
+    return Result::success(make_ready_stage.plan_sha256);
+}
+
+bool effectful_semantic_action(const std::string& action_id)
+{
+    return action_id == "readiness.review_install_repair" || action_id == "readiness.prepare_joined" ||
+        action_id == "readiness.prepare" || action_id == "readiness.prepare_configuration" ||
+        action_id == "readiness.prepare_selected_save" || action_id == "workspace.initialize" ||
+        action_id == "installation.register_read_only" ||
+        action_id == "instance.create_isolated" ||
+        action_id == "profile.create" ||
+        action_id == "profile.select" ||
+        action_id == "modsets.apply" ||
+        action_id == "modsets.import" ||
+        action_id == "modsets.export" ||
+        action_id == "modsets.rollback" ||
+        action_id == "saves.associate" ||
+        action_id == "saves.backup" ||
+        action_id == "saves.restore" ||
+        action_id == "snapshots.create" ||
+        action_id == "snapshots.restore" ||
+        action_id == "support.export_redacted_bundle" ||
+        action_id == "recovery.apply_supported" ||
+        action_id == "launch.play" ||
+        action_id == "sessions.stop";
+}
+
+bool terminal_session_state(const std::string& state)
+{
+    static const char* const terminal_states[] = {
+        "cancelled",
+        "completed",
+        "failed",
+        "outcome_unknown",
+        "recovery_required",
+        "refused",
+    };
+    return std::find(std::begin(terminal_states), std::end(terminal_states), state) !=
+        std::end(terminal_states);
+}
+
+std::string result_string(const ApplicationResult& result)
+{
+    if (std::holds_alternative<std::string>(result.output)) {
+        return std::get<std::string>(result.output);
+    }
+    if (std::holds_alternative<transactions::RecoveryResult>(result.output)) {
+        return std::get<transactions::RecoveryResult>(result.output).json;
+    }
+    if (std::holds_alternative<transactions::Refusal>(result.output)) {
+        return transactions::to_json(std::get<transactions::Refusal>(result.output), "workspace.recovery.apply");
+    }
+    if (std::holds_alternative<modsets::VerifyResult>(result.output)) {
+        return modsets::to_json(std::get<modsets::VerifyResult>(result.output));
+    }
+    if (std::holds_alternative<modsets::ExportResult>(result.output)) {
+        return modsets::to_json(std::get<modsets::ExportResult>(result.output));
+    }
+    if (std::holds_alternative<modsets::Refusal>(result.output)) {
+        return modsets::to_json(std::get<modsets::Refusal>(result.output));
+    }
+    if (std::holds_alternative<saves::BackupResult>(result.output)) {
+        return saves::to_json(std::get<saves::BackupResult>(result.output));
+    }
+    if (std::holds_alternative<saves::CloneResult>(result.output)) {
+        return saves::to_json(std::get<saves::CloneResult>(result.output));
+    }
+    if (std::holds_alternative<saves::Refusal>(result.output)) {
+        return saves::to_json(std::get<saves::Refusal>(result.output));
+    }
+    if (std::holds_alternative<diagnostics::ExportResult>(result.output)) {
+        return diagnostics::to_json(std::get<diagnostics::ExportResult>(result.output));
+    }
+    if (std::holds_alternative<diagnostics::Refusal>(result.output)) {
+        return diagnostics::to_json(std::get<diagnostics::Refusal>(result.output));
+    }
+    return {};
+}
+
+void add_json(json::ObjectBuilder& output, const char* key, const std::string& source)
+{
+    auto value = json::parse(source);
+    if (value) output.add_value(key, value.value());
+    else output.add_null(key);
+}
+
+void add_problem(
+    json::ArrayBuilder& problems,
+    const std::string& code,
+    const std::string& summary,
+    const std::string& detail)
+{
+    json::ObjectBuilder problem;
+    problem.add_string("code", code);
+    problem.add_string("summary", summary);
+    if (detail.empty()) problem.add_null("detail");
+    else problem.add_string("detail", detail);
+    problems.add_object(problem);
+}
+
+std::string action_result_json(
+    const SemanticActionRequest& request,
+    const char* outcome,
+    const std::string& replacement_snapshot,
+    const std::string& action_payload,
+    const std::string& problem_code,
+    const std::string& problem_summary,
+    bool invalidated,
+    std::initializer_list<const char*> declared_effects)
+{
+    json::ObjectBuilder operation;
+    operation.add_string("request_id", request.request_id);
+    if (request.durable_operation_id.empty()) {
+        operation.add_null("operation_id");
+        operation.add_null("durable_operation_id");
+    } else {
+        operation.add_string("operation_id", request.durable_operation_id);
+        operation.add_string("durable_operation_id", request.durable_operation_id);
+    }
+    if (request.attempt_id.empty()) operation.add_null("attempt_id");
+    else operation.add_string("attempt_id", request.attempt_id);
+    const std::string& target_instance = request.new_instance_id.empty()
+        ? request.selected_instance_id : request.new_instance_id;
+    if (target_instance.empty()) operation.add_null("target_instance_id");
+    else operation.add_string("target_instance_id", target_instance);
+    if (request.installation_id.empty()) operation.add_null("target_installation_id");
+    else operation.add_string("target_installation_id", request.installation_id);
+    operation.add_string("outcome", outcome);
+
+    json::ArrayBuilder effects;
+    for (const char* effect : declared_effects) effects.add_string(effect);
+    const bool writes_workspace = std::any_of(declared_effects.begin(), declared_effects.end(),
+        [](const char* effect) { return std::string(effect) == "workspace_write"; });
+    if (writes_workspace && request.action_id == "readiness.review_install_repair") effects.add_string("setup_preview");
+    if (writes_workspace && request.action_id == "readiness.prepare_joined" && !request.repair_review_id.empty()) effects.add_string("setup_mutation");
+    json::ArrayBuilder diagnostics;
+    json::ArrayBuilder problems;
+    if (!problem_code.empty()) add_problem(problems, problem_code, problem_summary);
+    json::ObjectBuilder output;
+    output.add_string("schema", "facman.semantic_action_result.v1");
+    output.add_string("command", "presentation.action");
+    output.add_string("action_id", request.action_id);
+    output.add_string("request_id", request.request_id);
+    output.add_string("outcome", outcome);
+    output.add_object("operation", operation);
+    output.add_array("effects", effects);
+    output.add_array("diagnostics", diagnostics);
+    output.add_array("problems", problems);
+    if (replacement_snapshot.empty()) output.add_null("replacement_snapshot");
+    else add_json(output, "replacement_snapshot", replacement_snapshot);
+    if (action_payload.empty()) output.add_null("action_payload");
+    else add_json(output, "action_payload", action_payload);
+    if (!invalidated) output.add_null("invalidation");
+    else {
+        json::ObjectBuilder invalidation;
+        invalidation.add_bool("required", true);
+        invalidation.add_string("reason", "explicit_installation_scan_completed");
+        output.add_object("invalidation", invalidation);
+    }
+    return output.serialize();
+}
+
+std::string joined_preparation_json(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& launch_intent)
+{
+    auto planned = instance::joined_preparation_plan(workspace, {instance_id, launch_intent});
+    json::ObjectBuilder report;
+    if (planned) {
+        add_json(report, "plan", planned.value());
+        report.add_null("refusal");
+    } else {
+        report.add_null("plan");
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", planned.error().code);
+        refusal.add_string("detail", planned.error().message);
+        report.add_object("refusal", refusal);
+    }
+    return report.serialize();
+}
+
+json::ObjectBuilder joined_preparation_descriptor(const std::string& preparation)
+{
+    auto report = json::parse(preparation);
+    const auto* plan = report ? report.value().find("plan") : nullptr;
+    const auto* refusal = report ? report.value().find("refusal") : nullptr;
+    const auto* desired = plan ? plan->find("desired_state") : nullptr;
+    const bool available = plan && plan->is_object() && desired && refusal && refusal->is_null();
+    std::vector<ActionInputField> fields;
+    if (available) {
+        const auto add = [&](const char* id, const char* label, const std::string& value) {
+            fields.push_back({id, label, "enum", true, value, {value}});
+        };
+        add("selected_instance_id", "Instance", string_field(*plan, "instance_id"));
+        add("installation_id", "Registered installation", string_field(*desired, "installation_id"));
+        add("profile_id", "Current profile", string_field(*desired, "profile_id"));
+        if (string_field(*plan, "launch_intent") == "load_save")
+            add("save", "Exact selected save", string_field(*desired, "selected_save"));
+        if (string_field(*plan, "schema") == "factorio.make_ready_joined_plan.v3") {
+            add("repair_review_id", "Reviewed managed installation repair", string_field(*plan, "repair_review_id"));
+            add("installation_path", "Registered installation repair target", string_field(*plan, "installation_root"));
+            const auto* installation = plan->find("installation_plan");
+            const auto* native_request = installation ? installation->find("plan_request") : nullptr;
+            const auto* archive = native_request ? native_request->find("archive") : nullptr;
+            add("source_path", "Reviewed exact local repair archive", archive ? string_field(*archive, "path") : "");
+        }
+    }
+    const auto code = refusal ? string_field(*refusal, "code") : "make_ready_plan_invalid";
+    const bool repair = available && string_field(*plan, "schema") == "factorio.make_ready_joined_plan.v3";
+    return action_descriptor("readiness.prepare_joined", "presentation.action", repair ?
+        "Repair registered installation executable and prepare current content, configuration and selected world" : "Make Ready with current settings",
+        "primary", repair ? "setup_mutation" : "workspace_write", available, available ? nullptr : code.c_str(),
+        "explicit", "facman.semantic_action_input.v1", fields);
+}
+
+facman::core::Result<std::string> snapshot_joined_plan(const std::string& snapshot,
+    const SemanticActionRequest& request)
+{
+    using Result = facman::core::Result<std::string>;
+    auto document = json::parse(snapshot);
+    const auto* dependencies = document ? document.value().find("dependency_identities") : nullptr;
+    const auto* report = dependencies ? dependencies->find("joined_preparation") : nullptr;
+    const auto* plan = report ? report->find("plan") : nullptr;
+    const auto* desired = plan ? plan->find("desired_state") : nullptr;
+    if (plan && string_field(*plan, "schema") == "factorio.make_ready_joined_plan.v3") {
+        const auto* owner = plan->find("installation_plan");
+        const auto* native = owner ? owner->find("plan_request") : nullptr;
+        const auto* archive = native ? native->find("archive") : nullptr;
+        if (!archive || request.source_path != string_field(*archive, "path") ||
+            request.installation_path != string_field(*plan, "installation_root"))
+            return Result::failure({"make_ready_desired_state_mismatch",
+                "Confirm the exact reviewed archive and registered installation repair target", {}, facman::core::OutcomeKind::refused});
+    }
+    if (!desired || !request.new_instance_id.empty() || string_field(*plan, "instance_id") != request.selected_instance_id ||
+        string_field(*plan, "launch_intent") != request.launch_intent ||
+        string_field(*desired, "installation_id") != request.installation_id ||
+        string_field(*desired, "profile_id") != request.profile_id ||
+        string_field(*desired, "selected_save") != request.save ||
+        string_field(*plan, "repair_review_id") != request.repair_review_id ||
+        !lower_hex_digest(string_field(*plan, "plan_sha256")))
+        return Result::failure({"make_ready_desired_state_mismatch",
+            "Desired installation, current profile and selected save must match the reviewed plan and its locked content", {}, facman::core::OutcomeKind::refused});
+    return Result::success(plan->serialize());
+}
+
+std::string joined_content_preparation_result(const std::string& source,
+    const std::string& content_receipt, const std::string& joined_result,
+    const std::string& continuation, bool content_verified, bool effects_verified)
+{
+    auto plan = json::parse(source);
+    auto content = json::parse(content_receipt);
+    auto nested = json::parse(joined_result);
+    const auto* readiness = nested ? nested.value().find("readiness_observation") : nullptr;
+    const auto* prepared = nested ? nested.value().find("preparation_complete") : nullptr;
+    auto ready = prepared ? prepared->bool_value() : facman::core::Result<bool>::success(false);
+    const bool complete = content_verified && effects_verified && ready && ready.value();
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.make_ready_joined_result.v2");
+    result.add_string("command", "readiness.prepare_joined");
+    add_json(result, "plan", source);
+    result.add_string("plan_sha256", plan ? string_field(plan.value(), "plan_sha256") : "");
+    json::ArrayBuilder completed;
+    if (content && string_field(content.value(), "schema") == "factorio.locked_content_activation_result.v1" &&
+        !string_field(content.value(), "transaction_id").empty()) {
+        json::ObjectBuilder effect;
+        effect.add_string("component", "locked_content_activation");
+        effect.add_string("owner_command", "modsets.apply");
+        effect.add_string("transaction_id", string_field(content.value(), "transaction_id"));
+        effect.add_string("plan_sha256", string_field(content.value(), "plan_sha256"));
+        effect.add_value("owner_result", content.value());
+        completed.add_object(effect);
+    }
+    const auto* nested_effects = nested ? nested.value().find("completed_components") : nullptr;
+    if (nested_effects && nested_effects->is_array())
+        for (std::size_t index = 0; index < nested_effects->size(); ++index) completed.add_value(*nested_effects->at(index));
+    result.add_array("completed_components", completed);
+    add_json(result, "joined_result", joined_result);
+    result.add_bool("content_effect_verified", content_verified);
+    result.add_bool("completed_effects_verified", effects_verified);
+    result.add_string("continuation", continuation);
+    result.add_bool("remaining_effects_blocked_before_effects", continuation == "fresh_request_after_input_correction");
+    if (readiness) result.add_value("readiness_observation", *readiness);
+    else result.add_null("readiness_observation");
+    result.add_bool("preparation_complete", complete);
+    result.add_bool("fresh_revision_required", !complete);
+    result.add_bool("readiness_complete", false);
+    result.add_bool("execution_started", false);
+    result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return result.serialize();
+}
+
+std::string joined_preparation_result(const std::string& source,
+    const std::vector<std::string>& components, const std::string& readiness,
+    const std::string& continuation, bool effects_verified)
+{
+    auto plan = json::parse(source);
+    if (plan && string_field(plan.value(), "schema") == "factorio.make_ready_joined_plan.v3")
+        return joined_installation_preparation_result(source, {}, {}, continuation, false, false);
+    if (plan && string_field(plan.value(), "schema") == "factorio.make_ready_joined_plan.v2")
+        return joined_content_preparation_result(source, {}, {}, continuation, false, false);
+    auto observed = json::parse(readiness);
+    const bool complete = observed && string_field(observed.value(), "configuration_state") == "ready" &&
+        string_field(observed.value(), "preparation_state") == "already_prepared";
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.make_ready_joined_result.v1");
+    result.add_string("command", "readiness.prepare_joined");
+    add_json(result, "plan", source);
+    result.add_string("plan_sha256", plan ? string_field(plan.value(), "plan_sha256") : "");
+    json::ArrayBuilder completed;
+    for (const auto& component : components) {
+        auto receipt = json::parse(component);
+        const auto* effects = receipt ? receipt.value().find("completed_components") : nullptr;
+        if (effects && effects->size() == 1U) completed.add_value(*effects->at(0));
+    }
+    result.add_array("completed_components", completed);
+    result.add_string("continuation", continuation);
+    result.add_bool("completed_effects_verified", effects_verified);
+    result.add_bool("remaining_effects_blocked_before_effects", continuation == "fresh_request_after_input_correction");
+    add_json(result, "readiness_observation", readiness);
+    result.add_bool("preparation_complete", complete);
+    result.add_bool("fresh_revision_required", !complete);
+    result.add_bool("readiness_complete", false);
+    result.add_bool("execution_started", false);
+    result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return result.serialize();
+}
+
+std::string joined_installation_preparation_result(const std::string& source,
+    const std::string& receipt, const std::string& remaining, const std::string& continuation,
+    bool installation_verified, bool effects_verified)
+{
+    auto plan = json::parse(source), owner = json::parse(receipt), nested = json::parse(remaining);
+    json::ObjectBuilder result;
+    result.add_string("schema", "factorio.make_ready_joined_result.v3");
+    result.add_string("command", "readiness.prepare_joined");
+    add_json(result, "plan", source);
+    result.add_string("plan_sha256", plan ? string_field(plan.value(), "plan_sha256") : "");
+    json::ArrayBuilder completed;
+    if (owner && string_field(owner.value(), "schema") == "factorio.managed_repair_apply_result.v1") {
+        json::ObjectBuilder effect;
+        effect.add_string("component", "managed_installation_repair");
+        effect.add_string("owner_command", "installs.repair.apply");
+        effect.add_string("transaction_id", string_field(owner.value(), "transaction_id"));
+        effect.add_string("plan_digest", string_field(owner.value(), "plan_digest"));
+        effect.add_value("owner_result", owner.value());
+        completed.add_object(effect);
+    }
+    const auto* nested_effects = nested ? nested.value().find("completed_components") : nullptr;
+    if (nested_effects && nested_effects->is_array())
+        for (std::size_t index = 0; index < nested_effects->size(); ++index) completed.add_value(*nested_effects->at(index));
+    result.add_array("completed_components", completed);
+    add_json(result, "joined_result", remaining);
+    result.add_bool("installation_effect_verified", installation_verified);
+    result.add_bool("completed_effects_verified", effects_verified);
+    result.add_string("continuation", continuation);
+    result.add_bool("remaining_effects_blocked_before_effects", continuation == "fresh_request_after_input_correction");
+    const auto* readiness = nested ? nested.value().find("readiness_observation") : nullptr;
+    if (readiness) result.add_value("readiness_observation", *readiness); else result.add_null("readiness_observation");
+    const auto* prepared = nested ? nested.value().find("preparation_complete") : nullptr;
+    auto ready = prepared ? prepared->bool_value() : facman::core::Result<bool>::success(false);
+    const bool complete = installation_verified && effects_verified && ready && ready.value();
+    result.add_bool("preparation_complete", complete);
+    result.add_bool("fresh_revision_required", !complete);
+    result.add_bool("readiness_complete", false);
+    result.add_bool("execution_started", false);
+    result.add_bool("permit_issued", false);
+    result.add_string("factorio_support_claim", "unclaimed");
+    return result.serialize();
+}
+
+AdvertisedAction advertised_action(const std::string& snapshot, const std::string& action_id)
+{
+    AdvertisedAction result;
+    auto document = json::parse(snapshot);
+    if (!document || !document.value().is_object()) return result;
+    const json::Value* actions = document.value().find("available_semantic_actions");
+    if (actions == nullptr || !actions->is_array()) return result;
+    for (std::size_t index = 0; index < actions->size(); ++index) {
+        const json::Value* action = actions->at(index);
+        if (action == nullptr || !action->is_object()) continue;
+        const json::Value* id = action->find("action_id");
+        if (id == nullptr || json_string(*id) != action_id) continue;
+        result.found = true;
+        const json::Value* availability = action->find("availability");
+        result.available = availability != nullptr && json_string(*availability) == "available";
+        const json::Value* refusal = action->find("refusal");
+        if (refusal != nullptr && refusal->is_object()) {
+            const json::Value* code = refusal->find("code");
+            const json::Value* reason = refusal->find("reason");
+            if (code != nullptr) result.refusal_code = json_string(*code);
+            if (reason != nullptr) result.refusal_reason = json_string(*reason);
+        }
+        return result;
+    }
+    return result;
+}
+
+facman::core::Result<std::string> verified_repair_review_binding(const std::filesystem::path& workspace,
+    const std::string& instance_id, const std::string& source, const std::string& request_source)
+{
+    using Result = facman::core::Result<std::string>;
+    const auto invalid = [](const std::string& detail) {
+        return Result::failure({"make_ready_repair_review_invalid", detail, {}, facman::core::OutcomeKind::refused});
+    };
+    auto receipt = json::parse(source);
+    auto input = json::parse(request_source);
+    const auto* operation = receipt ? receipt.value().find("operation") : nullptr;
+    const auto* payload = receipt ? receipt.value().find("action_payload") : nullptr;
+    const auto* owner_plan = payload ? payload->find("owner_plan") : nullptr;
+    facman::workspace::WorkspaceRepository repository {facman::workspace::WorkspaceLayout(workspace)};
+    const auto workspace_record = repository.load();
+    if (!receipt || !input || string_field(input.value(), "scope") != "instances" ||
+        string_field(input.value(), "selected_instance_id") != instance_id ||
+        string_field(receipt.value(), "action_id") != "readiness.review_install_repair" ||
+        string_field(receipt.value(), "outcome") != "completed" || !operation || !payload ||
+        string_field(*operation, "target_instance_id") != instance_id ||
+        string_field(*payload, "schema") != "factorio.managed_repair_review.v1" || !workspace_record || !owner_plan ||
+        string_field(*payload, "workspace_id") != workspace_record.value().id.str() ||
+        string_field(*payload, "workspace_root_digest") != repair_review_digest(facman::platform::path_to_utf8(fs::weakly_canonical(workspace))) ||
+        string_field(*owner_plan, "schema") != "factorio.managed_repair_plan.v1" ||
+        string_field(*operation, "target_installation_id") != string_field(*owner_plan, "install_id"))
+        return invalid("The selected review does not name this instance and registered installation");
+    const auto* native_request = owner_plan->find("plan_request");
+    const auto* archive = native_request ? native_request->find("archive") : nullptr;
+    std::error_code error;
+    const auto selected_archive = fs::absolute(fs::u8path(string_field(input.value(), "source_path")), error).lexically_normal();
+    if (!archive || error || selected_archive != fs::u8path(string_field(*archive, "path")))
+        return invalid("The selected review archive does not match its original explicit input");
+    return Result::success(payload->serialize());
+}
+
+std::string reviewed_repair_preparation_json(const std::filesystem::path& workspace,
+    const PresentationQueryRequest& request, const facman::core::Result<std::string>& repair)
+{
+    const auto reviewed = repair ? json::parse(repair.value()) : json::parse("null");
+    const auto* owner = reviewed ? reviewed.value().find("owner_plan") : nullptr;
+    auto planned = repair && owner ? facman::factorio::instance::joined_repair_plan(workspace,
+        {request.selected_instance_id, request.launch_intent}, owner->serialize(), request.repair_review_id,
+        string_field(reviewed.value(), "archive_source_identity")) : repair;
+    json::ObjectBuilder report;
+    if (planned) { add_json(report, "plan", planned.value()); report.add_null("refusal"); }
+    else {
+        report.add_null("plan");
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", planned.error().code);
+        refusal.add_string("detail", planned.error().message);
+        report.add_object("refusal", refusal);
+    }
+    return report.serialize();
+}
+
+json::ObjectBuilder installation_repair_review_descriptor(const std::vector<facman::workspace::InstanceRecord>& instances,
+    const std::string& instance_id, const std::string& default_instance)
+{
+    const auto selected = std::find_if(instances.begin(), instances.end(), [&](const auto& item) {
+        return item.id.str() == instance_id;
+    });
+    const std::string install = selected == instances.end() ? std::string() : selected->install_ref.str();
+    return action_descriptor("readiness.review_install_repair", "presentation.action",
+        "Review installation repair from local archive", "manage", "setup_preview", !install.empty(),
+        install.empty() ? "no_installation_selected" : nullptr, "explicit", "facman.semantic_action_input.v1", {
+            {"selected_instance_id", "Instance", "enum", true, default_instance, {default_instance}},
+            {"installation_id", "Registered installation", "enum", true, install, {install}},
+            {"source_path", "Exact local installation archive (.zip)", "path", true, {}, {}}});
+}
+
+std::string dispatch_installation_repair_review(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot)
+{
+    std::string output;
+    const auto instance_id = facman::core::InstanceId::parse_legacy(request.selected_instance_id);
+    const auto instance = instance_id ? context.instances().load(instance_id.value()) :
+        facman::core::Result<facman::workspace::InstanceRecord>::failure(instance_id.error());
+    if (!instance || request.scope != "instances" || request.source_path.empty() || !fs::u8path(request.source_path).is_absolute() ||
+        instance.value().install_ref.str() != request.installation_id) {
+        output = action_result_json(request, "refused_before_effects", snapshot, {},
+            "make_ready_repair_selection_invalid", "Select the current instance installation and an explicit local repair archive", false, {"workspace_write"});
+    } else {
+        ServiceOperationRequest review;
+        review.install_id = request.installation_id;
+        review.archive = request.source_path;
+        auto before = facman::factorio::instance::joined_repair_archive_identity(fs::u8path(review.archive));
+        if (!before) output = action_result_json(request, "refused_before_effects", snapshot, {},
+            before.error().code, before.error().message, false, {"workspace_write"});
+        else {
+            auto planned = handlers::plan_repair_install(context, review);
+            auto after = facman::factorio::instance::joined_repair_archive_identity(fs::u8path(review.archive));
+            if (planned.status == ULK_STATUS_OK && (!after || before.value() != after.value()))
+                output = action_result_json(request, "refused_before_effects", snapshot, {},
+                    "make_ready_repair_source_changed", "The explicit local archive changed during repair review", false, {"workspace_write"});
+            else {
+                json::ObjectBuilder reviewed;
+                reviewed.add_string("schema", "factorio.managed_repair_review.v1");
+                const auto workspace_record = context.workspace_repository().load();
+                reviewed.add_string("workspace_id", workspace_record ? workspace_record.value().id.str() : "");
+                reviewed.add_string("workspace_root_digest", repair_review_digest(facman::platform::path_to_utf8(fs::weakly_canonical(context.workspace()))));
+                reviewed.add_string("archive_source_identity", before.value());
+                add_json(reviewed, "owner_plan", result_string(planned));
+                output = action_result_json(request, planned.status == ULK_STATUS_OK ? "completed" : "refused_before_effects",
+                    snapshot, planned.status == ULK_STATUS_OK ? reviewed.serialize() : result_string(planned),
+                    planned.error_code, planned.error_message, false, {"workspace_write"});
+            }
+        }
+    }
+    return output;
+}
+
+std::string joined_preparation_json(const std::filesystem::path& workspace,
+    const PresentationQueryRequest& request, const PresentationActionLedger& ledger)
+{
+    std::string preparation = joined_preparation_json(workspace, request.selected_instance_id, request.launch_intent);
+    if (!request.repair_review_id.empty()) {
+        auto repair = ledger.repair_review(workspace, request.repair_review_id, request.selected_instance_id);
+        preparation = reviewed_repair_preparation_json(workspace, request, repair);
+    }
+    return preparation;
+}
+
+std::optional<ApplicationResult> installation_repair_admission(ApplicationContext& context,
+    const SemanticActionRequest& request, const std::string& snapshot)
+{
+    if (request.action_id == "readiness.review_install_repair" ||
+        (request.action_id == "readiness.prepare_joined" && !request.repair_review_id.empty())) {
+        const auto admission = admit_command(context.configuration(), request.action_id == "readiness.review_install_repair" ?
+            CommandId::installs_repair_plan : CommandId::installs_repair_apply);
+        if (!admission.admitted)
+            return refused(action_result_json(request, "refused_before_effects", snapshot, {}, admission.code, admission.reason,
+                false, {"workspace_write"}), admission.code, admission.reason, facman::core::OutcomeKind::refused);
+    }
+    return std::nullopt;
+}
+
+} // namespace facman::factorio::application

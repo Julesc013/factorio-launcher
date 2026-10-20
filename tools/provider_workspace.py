@@ -48,8 +48,9 @@ def capture(command: list[str], cwd: Path) -> str:
     return completed.stdout.strip()
 
 
-def locked_components() -> dict[str, dict[str, str]]:
-    with LOCK.open("rb") as stream:
+def locked_components(source_root: Path = ROOT) -> dict[str, dict[str, str]]:
+    lock = source_root / "release/index/workspace_lock.v1.toml"
+    with lock.open("rb") as stream:
         document = tomllib.load(stream)
     components = {
         str(item["id"]): {str(key): str(value) for key, value in item.items()}
@@ -101,15 +102,17 @@ def verify_checkout(path: Path, component: dict[str, str]) -> None:
         )
 
 
-def prepare(task_root: Path) -> dict[str, Path]:
+def prepare(task_root: Path, *, source_root: Path = ROOT) -> dict[str, Path]:
+    source_root = source_root.resolve(strict=True)
+    lock = source_root / "release/index/workspace_lock.v1.toml"
     task_root = development_layout.ensure_task_root(
-        task_root, ROOT, development_layout.current_task_id(ROOT)
+        task_root, source_root, development_layout.current_task_id(source_root)
     )
     provider_root = task_root / "providers"
     provider_root.mkdir(parents=True, exist_ok=True)
     roots: dict[str, Path] = {}
     records: list[dict[str, str]] = []
-    for provider_id, component in sorted(locked_components().items()):
+    for provider_id, component in sorted(locked_components(source_root).items()):
         destination = provider_root / f"{component['source']}-{component['pin'][:12]}"
         if not destination.exists():
             source = source_checkout(component)
@@ -126,7 +129,7 @@ def prepare(task_root: Path) -> dict[str, Path]:
                         str(source),
                         str(temporary),
                     ),
-                    cwd=ROOT,
+                    cwd=source_root,
                     check=True,
                 )
                 subprocess.run(
@@ -164,7 +167,7 @@ def prepare(task_root: Path) -> dict[str, Path]:
         )
     manifest = {
         "schema": "facman.exact_provider_workspace.v1",
-        "workspace_lock": str(LOCK),
+        "workspace_lock": str(lock),
         "providers": records,
     }
     (provider_root / "manifest.v1.json").write_text(

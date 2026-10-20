@@ -88,6 +88,42 @@ std::string path_string(const fs::path& path)
     return facman::platform::path_to_utf8(path.lexically_normal());
 }
 
+enum class TargetRelation { same, distinct, unresolved };
+
+TargetRelation target_relation(const fs::path& current, const fs::path& requested)
+{
+    if (requested == current) return TargetRelation::same;
+    std::error_code error;
+    const bool equivalent = fs::equivalent(current, requested, error);
+    if (!error) return equivalent ? TargetRelation::same : TargetRelation::distinct;
+
+    // Existing object identity takes precedence over lexical spelling, including
+    // case, short names and links. Resolve an absent target through its existing
+    // ancestors; normalizing before resolution would misinterpret link/.. paths.
+    if (!fs::is_directory(current, error) || error) return TargetRelation::unresolved;
+    const fs::path current_identity = fs::canonical(current, error);
+    if (error) return TargetRelation::unresolved;
+    fs::path ancestor = fs::absolute(requested, error);
+    if (error) return TargetRelation::unresolved;
+    while (!ancestor.empty()) {
+        const fs::file_status status = fs::symlink_status(ancestor, error);
+        if (error && error != std::errc::no_such_file_or_directory &&
+            error != std::errc::not_a_directory) return TargetRelation::unresolved;
+        if (!error && fs::exists(status)) {
+            if (!fs::is_directory(ancestor, error) || error) return TargetRelation::unresolved;
+            break;
+        }
+        const fs::path parent = ancestor.parent_path();
+        if (parent == ancestor) return TargetRelation::unresolved;
+        ancestor = parent;
+    }
+    if (ancestor.empty()) return TargetRelation::unresolved;
+    const fs::path requested_identity = fs::weakly_canonical(requested, error);
+    if (error || requested_identity.empty()) return TargetRelation::unresolved;
+    return requested_identity == current_identity
+        ? TargetRelation::same : TargetRelation::distinct;
+}
+
 bool contains(const std::vector<std::string>& values, std::string_view value)
 {
     return std::any_of(values.begin(), values.end(), [value](const std::string& text) {
@@ -751,10 +787,6 @@ facman::core::Result<std::string> reconciliation_plan_json(
         return facman::core::Result<std::string>::failure(decoded.error());
     }
     const TypedDesiredInstallationState& typed = decoded.value();
-    const std::string current_root = path_string(model.install.root);
-    const std::string effective_target_root = typed.target_root.empty()
-        ? current_root
-        : typed.target_root;
     const bool management_change = typed.management_mode != ManagementMode::preserve &&
         to_string(typed.management_mode) != model.management_class;
     const bool deployment_change = typed.deployment_style != DeploymentStyle::preserve &&
@@ -765,7 +797,10 @@ facman::core::Result<std::string> reconciliation_plan_json(
         to_string(typed.integration_mode) != model.integration_kind;
     const bool version_change = !typed.version.empty() &&
         typed.version != model.install.version;
-    const bool target_change = effective_target_root != current_root;
+    const TargetRelation target = typed.target_root.empty()
+        ? TargetRelation::same
+        : target_relation(model.install.root, facman::platform::path_from_utf8(typed.target_root));
+    const bool target_change = target != TargetRelation::same;
     const bool update_policy_change = typed.update_policy != UpdatePolicy::preserve;
     const bool source_selected = typed.source_trust_status != SourceTrustStatus::unselected;
     const bool managed_materialisation = management_change &&
@@ -784,6 +819,9 @@ facman::core::Result<std::string> reconciliation_plan_json(
 
     std::vector<std::string> blockers;
     std::vector<std::string> risks;
+    if (target == TargetRelation::unresolved) {
+        blockers.push_back("target_identity_unresolved");
+    }
     if (source_required && !source_selected) {
         blockers.push_back("source_candidate_required_for_materialisation");
     } else if (source_required &&
@@ -791,7 +829,7 @@ facman::core::Result<std::string> reconciliation_plan_json(
         blockers.push_back("source_inspection_required_for_materialisation");
     }
     if (management_change && typed.management_mode == ManagementMode::managed &&
-        model.management_class == "external" && !target_change) {
+        model.management_class == "external" && target != TargetRelation::distinct) {
         blockers.push_back("external_root_requires_distinct_managed_target");
     }
     if (integration_change && typed.integration_mode == IntegrationMode::facman_owned &&
@@ -799,7 +837,7 @@ facman::core::Result<std::string> reconciliation_plan_json(
         blockers.push_back("facman_integration_requires_managed_desired_state");
     }
     if (management_change && typed.management_mode == ManagementMode::managed &&
-        effective_target_root == current_root) {
+        target != TargetRelation::distinct) {
         blockers.push_back("in_place_authority_conversion_refused");
     }
     if (model.install.side_by_side_safety ==

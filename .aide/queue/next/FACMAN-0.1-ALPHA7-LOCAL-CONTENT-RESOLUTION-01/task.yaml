@@ -16,6 +16,7 @@ allowed_paths:
   - "contracts/**"
   - "tests/**"
   - "docs/**"
+  - "tools/modset_route_check.py"
   - ".aide/queue/next/FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01/**"
 forbidden_paths:
   - ".git/**"

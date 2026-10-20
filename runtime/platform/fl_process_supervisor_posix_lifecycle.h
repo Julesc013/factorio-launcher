@@ -94,6 +94,15 @@ public:
     {
         return group_cleanup_ == GroupCleanup::pending_eperm;
     }
+    // A complete child setup frame retains proof that may no longer be
+    // available through numeric lookup of a short-lived Darwin child. It
+    // cannot reacquire signal authority after consuming wait has started.
+    bool confirm_group_setup(bool acknowledged) noexcept
+    {
+        if (!acknowledged || !can_signal()) return false;
+        group_established_ = true;
+        return true;
+    }
 
     ChildObservation observe()
     {

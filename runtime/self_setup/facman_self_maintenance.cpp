@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_self_maintenance.h"
+#include "facman_self_setup.h"
 
 #include "fl_json.h"
 #include "fl_local_operation_lock.h"
@@ -411,6 +412,14 @@ bool exact_keys(const json::Value &value,
   if (!value.is_object() || value.size() != keys.size()) return false;
   return std::all_of(keys.begin(), keys.end(),
                      [&](const char *key) { return value.find(key) != nullptr; });
+}
+
+bool exact_keys_with_creator(const json::Value &value,
+                            std::initializer_list<const char *> keys) {
+  const bool creator = value.find("creating_provider_revision") != nullptr;
+  return value.is_object() && value.size() == keys.size() + (creator ? 1U : 0U) &&
+      std::all_of(keys.begin(), keys.end(),
+          [&](const char *key) { return value.find(key) != nullptr; });
 }
 
 bool activation_operation(const std::string &value) {
@@ -877,6 +886,68 @@ struct Lock {
   }
 };
 
+facman::core::Result<void> require_flat_retirement_epoch_absence(
+    const Lock &lock) {
+  std::string detail;
+  if (!lock.admission.revalidate(detail))
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator authority changed during flat retirement", detail));
+  const fs::path epochs = lock.admission.root / "epochs";
+  const auto descendant =
+      lock.admission.coordinator.validate_descendant(epochs, true);
+  facman::platform::PathIdentity identity;
+  const auto observed = facman::platform::inspect_path_no_follow(epochs, identity);
+  if (!descendant.ok() || !observed.ok())
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_epoch_recovery_required",
+        "lifecycle epoch namespace could not be excluded before flat retirement",
+        !descendant.ok() ? descendant.detail : observed.detail));
+  if (identity.exists)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_epoch_recovery_required",
+        "lifecycle epoch namespace blocks flat retirement"));
+  const fs::path epoch_retirements =
+      lock.admission.root / "epoch-retirements";
+  const auto retirement_descendant =
+      lock.admission.coordinator.validate_descendant(epoch_retirements, true);
+  facman::platform::PathIdentity retirement_identity;
+  const auto retirement_observed = facman::platform::inspect_path_no_follow(
+      epoch_retirements, retirement_identity);
+  if (!retirement_descendant.ok() || !retirement_observed.ok() ||
+      retirement_identity.exists)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_epoch_recovery_required",
+        "epoch retirement namespace blocks flat retirement"));
+  const fs::path handoff = lock.admission.root / "authority-handoff.v1.json";
+  const auto handoff_descendant =
+      lock.admission.coordinator.validate_descendant(handoff, true);
+  facman::platform::PathIdentity handoff_identity;
+  const auto handoff_observed = facman::platform::inspect_path_no_follow(
+      handoff, handoff_identity);
+  if (!handoff_descendant.ok() || !handoff_observed.ok() ||
+      handoff_identity.exists)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_epoch_recovery_required",
+        "compatibility authority handoff blocks flat maintenance"));
+  const fs::path bootstrap = lock.admission.root / "authority-bootstrap.v1";
+  const auto bootstrap_descendant =
+      lock.admission.coordinator.validate_descendant(bootstrap, true);
+  facman::platform::PathIdentity bootstrap_identity;
+  const auto bootstrap_observed = facman::platform::inspect_path_no_follow(
+      bootstrap, bootstrap_identity);
+  if (!bootstrap_descendant.ok() || !bootstrap_observed.ok() ||
+      bootstrap_identity.exists)
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_epoch_recovery_required",
+        "compatibility bootstrap journal blocks flat maintenance"));
+  if (!lock.admission.revalidate(detail))
+    return facman::core::Result<void>::failure(failure(
+        "self_maintenance_lock_unsafe",
+        "coordinator authority changed after epoch absence inspection", detail));
+  return facman::core::Result<void>::success();
+}
+
 facman::core::Result<Lock> acquire(CoordinatorAdmission admission,
                                    const std::string &operation_id) {
   if (!admission.coordinator_exists)
@@ -964,7 +1035,8 @@ bool phase_semantics(const Plan &plan, const std::string &phase,
   const bool provider_phase = phase == "10-provider-entered" ||
       phase == "20-provider-receipt" || phase == "30-candidate-verified";
   const bool receipt_phase = phase == "20-provider-receipt" ||
-      phase == "30-candidate-verified" || phase == "70-activation-recorded";
+      phase == "30-candidate-verified" || phase == "70-activation-recorded" ||
+      phase == "80-shortcut-backup-retired";
   if (rollback) {
     if (plan.provider_operation != "none" || !plan.package_sha256.empty() ||
         provider_phase) return false;
@@ -1000,7 +1072,7 @@ facman::core::Result<void> validate_operation_records(
       "00-intent", "10-provider-entered", "20-provider-receipt",
       "30-candidate-verified", "40-generation-recorded",
       "50-shortcut-cutover", "60-registration-cutover",
-      "70-activation-recorded"};
+      "70-activation-recorded", "80-shortcut-backup-retired"};
   std::error_code status;
   std::size_t count = 0;
   for (fs::directory_iterator iterator(directory, status), end;
@@ -1064,12 +1136,14 @@ std::string retirement_chain_digest(const ActivationChain &chain) {
 std::vector<RetirementStep> retirement_steps(const ActivationChain &chain) {
   std::vector<RetirementStep> result;
   if (chain.generations.empty()) return result;
-  const std::string active = chain.generations.back().generation_id;
+  const Generation &active = chain.generations.back();
   for (const auto &generation : chain.generations) {
-    if (generation.generation_id == active) continue;
+    if (generation.install_id == active.install_id &&
+        same_path(generation.install_root, active.install_root)) continue;
     const auto duplicate = std::find_if(result.begin(), result.end(),
         [&](const RetirementStep &step) {
-          return step.generation.generation_id == generation.generation_id;
+          return step.generation.install_id == generation.install_id &&
+              same_path(step.generation.install_root, generation.install_root);
         });
     if (duplicate == result.end()) result.push_back({generation, false});
   }
@@ -1179,6 +1253,7 @@ facman::core::Result<void> validate_retirement_directory(
       "retirement journal is missing its immutable intent"));
   std::vector<std::string> allowed{"00-intent.v1.json",
       "99-completed.v1.json"};
+  bool unfinished_predecessor = false;
   for (std::size_t index = 0; index < steps.size(); ++index) {
     allowed.push_back(retirement_step_path(directory, index, "entered").filename().string());
     allowed.push_back(retirement_step_path(directory, index, "completed").filename().string());
@@ -1191,6 +1266,11 @@ facman::core::Result<void> validate_retirement_directory(
     if (done.value() && !entered.value()) return facman::core::Result<void>::failure(failure(
         "self_maintenance_retirement_recovery_required",
         "retirement step completed without an entered marker"));
+    if (unfinished_predecessor && (entered.value() || done.value()))
+      return facman::core::Result<void>::failure(failure(
+          "self_maintenance_retirement_recovery_required",
+          "retirement steps are not in durable execution order"));
+    if (!done.value()) unfinished_predecessor = true;
   }
   for (fs::directory_iterator it(directory, status), end; !status && it != end;
        it.increment(status)) {
@@ -1274,6 +1354,49 @@ std::string compatibility_manifest_bytes(const ActivationChain &chain) {
   object.add_string("epoch_id", kCompatibilityEpochId);
   object.add_string("product_id", "facman");
   object.add_string("schema", "facman.self_lifecycle_epoch_v1_compat.v1");
+  return object.serialize() + "\n";
+}
+
+// Relinquishing the flat chain's authority does not mean its provider files or
+// native objects were uninstalled. This record has a distinct schema and path
+// from the destructive retirement receipt, while binding the same exact head.
+std::string compatibility_authority_handoff_bytes(
+    const ActivationChain &chain) {
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_compatibility_authority_handoff.v1");
+  object.add_string("product_id", "facman");
+  object.add_string("head_name", chain.activation_name);
+  object.add_string("head_sha256", chain.activation_sha256);
+  object.add_string("chain_digest", retirement_chain_digest(chain));
+  object.add_string("source_generation_id", chain.generations.back().generation_id);
+  object.add_string("source_package_sha256", chain.generations.back().package_sha256);
+  return object.serialize() + "\n";
+}
+
+std::string compatibility_bootstrap_entered_bytes(
+    const ActivationChain &chain, const LifecycleEpoch &epoch,
+    const Generation &target, bool shell_integration) {
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_compatibility_bootstrap_entered.v1");
+  object.add_string("source_head_name", chain.activation_name);
+  object.add_string("source_head_sha256", chain.activation_sha256);
+  object.add_string("source_generation_id", chain.generations.back().generation_id);
+  object.add_string("source_package_sha256", chain.generations.back().package_sha256);
+  object.add_string("epoch_id", epoch.epoch_id);
+  object.add_string("target_install_id", target.install_id);
+  object.add_string("target_install_root", facman::platform::path_to_utf8(target.install_root));
+  object.add_bool("shell_integration", shell_integration);
+  return object.serialize() + "\n";
+}
+
+std::string compatibility_bootstrap_phase_bytes(
+    const char *phase, const std::string &entered_sha256,
+    const std::string &receipt_sha256) {
+  json::ObjectBuilder object;
+  object.add_string("schema", "facman.self_compatibility_bootstrap_phase.v1");
+  object.add_string("phase", phase);
+  object.add_string("entered_sha256", entered_sha256);
+  object.add_string("receipt_sha256", receipt_sha256);
   return object.serialize() + "\n";
 }
 
@@ -1382,6 +1505,8 @@ std::string epoch_generation_bytes(const LifecycleEpoch &epoch,
   object.add_string("acceptance_root", facman::platform::path_to_utf8(generation.acceptance_root));
   object.add_string("gui", facman::platform::path_to_utf8(generation.gui));
   object.add_string("maintenance_launcher", facman::platform::path_to_utf8(generation.maintenance_launcher));
+  if (!generation.creating_provider_revision.empty())
+    object.add_string("creating_provider_revision", generation.creating_provider_revision);
   return object.serialize() + "\n";
 }
 
@@ -1548,7 +1673,7 @@ facman::core::Result<Generation> parse_epoch_generation(
       "generation_id", "product_version", "package_sha256", "facman_source_revision",
       "universal_setup_revision", "install_id", "install_root", "logical_root", "state_root",
       "acceptance_root", "gui", "maintenance_launcher"};
-  if (!document || !exact_keys(document.value(), keys) ||
+  if (!document || !exact_keys_with_creator(document.value(), keys) ||
       !lifecycle_string_fields(document.value(), keys) ||
       string_field(document.value(), "schema") != "facman.self_generation.v2" ||
       string_field(document.value(), "product_id") != "facman" ||
@@ -1562,6 +1687,7 @@ facman::core::Result<Generation> parse_epoch_generation(
   result.package_sha256 = string_field(document.value(), "package_sha256");
   result.facman_source_revision = string_field(document.value(), "facman_source_revision");
   result.universal_setup_revision = string_field(document.value(), "universal_setup_revision");
+  result.creating_provider_revision = string_field(document.value(), "creating_provider_revision");
   result.install_id = string_field(document.value(), "install_id");
   result.install_root = facman::platform::path_from_utf8(string_field(document.value(), "install_root"));
   result.logical_root = facman::platform::path_from_utf8(string_field(document.value(), "logical_root"));
@@ -1572,6 +1698,9 @@ facman::core::Result<Generation> parse_epoch_generation(
   Semver version;
   if (!digest(result.package_sha256) || !revision(result.facman_source_revision) ||
       !revision(result.universal_setup_revision) || !semver(result.product_version, version) ||
+      (document.value().find("creating_provider_revision") != nullptr &&
+       (!revision(result.creating_provider_revision) ||
+        result.creating_provider_revision == result.universal_setup_revision)) ||
       generation_identity(generation_descriptor(result), result.package_sha256) != generation_id ||
       !exact_epoch_generation_paths(epoch, result) || bytes != epoch_generation_bytes(epoch, result))
     return facman::core::Result<Generation>::failure(epoch_recovery(
@@ -1602,12 +1731,151 @@ struct CompletedEpochShellCutover {
   std::string source_activation_sha256;
   std::string source_generation_id;
   std::string generation_id;
+  bool reactivation = false;
   std::vector<fs::path> operation_names;
   std::vector<fs::path> record_names;
   facman::platform::StableDirectoryObject maintenance;
   facman::platform::StableDirectoryObject operation;
   std::vector<HeldPublicationRecord> records;
 };
+
+struct EpochReactivationIntent {
+  std::string epoch_id;
+  std::string epoch_manifest_sha256;
+  std::string operation;
+  std::string operation_id;
+  std::string source_generation_id;
+  std::string source_activation_name;
+  std::string source_activation_sha256;
+  std::string target_generation_id;
+  std::string target_generation_sha256;
+  std::string target_package_sha256;
+  std::string target_installed_identity_sha256;
+  std::string target_activation_name;
+  std::string target_activation_sha256;
+  bool shell_integration = true;
+};
+
+std::string epoch_reactivation_intent_bytes(const EpochReactivationIntent &intent) {
+  json::ObjectBuilder record;
+  record.add_string("schema", "facman.self_epoch_reactivation_intent.v1");
+  record.add_string("product_id", "facman");
+  record.add_string("epoch_id", intent.epoch_id);
+  record.add_string("epoch_manifest_sha256", intent.epoch_manifest_sha256);
+  record.add_string("operation", intent.operation);
+  record.add_string("operation_id", intent.operation_id);
+  record.add_string("source_generation_id", intent.source_generation_id);
+  record.add_string("source_activation_name", intent.source_activation_name);
+  record.add_string("source_activation_sha256", intent.source_activation_sha256);
+  record.add_string("target_generation_id", intent.target_generation_id);
+  record.add_string("target_generation_sha256", intent.target_generation_sha256);
+  record.add_string("target_package_sha256", intent.target_package_sha256);
+  record.add_string("target_installed_identity_sha256",
+                    intent.target_installed_identity_sha256);
+  record.add_string("target_activation_name", intent.target_activation_name);
+  record.add_string("target_activation_sha256", intent.target_activation_sha256);
+  record.add_bool("shell_integration", intent.shell_integration);
+  return record.serialize() + "\n";
+}
+
+facman::core::Result<EpochReactivationIntent> parse_epoch_reactivation_intent(
+    const std::string &bytes, const LifecycleEpoch &epoch,
+    const fs::path &operation_name) {
+  auto document = json::parse(bytes);
+  if (!document || !exact_keys(document.value(), {"schema", "product_id", "epoch_id",
+          "epoch_manifest_sha256", "operation", "operation_id",
+          "source_generation_id", "source_activation_name", "source_activation_sha256",
+          "target_generation_id", "target_generation_sha256", "target_package_sha256",
+          "target_installed_identity_sha256",
+          "target_activation_name", "target_activation_sha256", "shell_integration"}))
+    return facman::core::Result<EpochReactivationIntent>::failure(epoch_recovery(
+        "epoch reactivation intent has a foreign schema"));
+  const json::Value *shell = document.value().find("shell_integration");
+  auto shell_value = shell && shell->is_bool() ? shell->bool_value()
+      : facman::core::Result<bool>::failure(epoch_recovery(
+          "epoch reactivation shell choice is invalid"));
+  if (!shell_value) return facman::core::Result<EpochReactivationIntent>::failure(
+      shell_value.error());
+  EpochReactivationIntent intent;
+  intent.epoch_id = string_field(document.value(), "epoch_id");
+  intent.epoch_manifest_sha256 = string_field(document.value(), "epoch_manifest_sha256");
+  intent.operation = string_field(document.value(), "operation");
+  intent.operation_id = string_field(document.value(), "operation_id");
+  intent.source_generation_id = string_field(document.value(), "source_generation_id");
+  intent.source_activation_name = string_field(document.value(), "source_activation_name");
+  intent.source_activation_sha256 = string_field(document.value(), "source_activation_sha256");
+  intent.target_generation_id = string_field(document.value(), "target_generation_id");
+  intent.target_generation_sha256 = string_field(document.value(), "target_generation_sha256");
+  intent.target_package_sha256 = string_field(document.value(), "target_package_sha256");
+  intent.target_installed_identity_sha256 =
+      string_field(document.value(), "target_installed_identity_sha256");
+  intent.target_activation_name = string_field(document.value(), "target_activation_name");
+  intent.target_activation_sha256 = string_field(document.value(), "target_activation_sha256");
+  intent.shell_integration = shell_value.value();
+  std::string identifier_detail;
+  if (string_field(document.value(), "schema") !=
+          "facman.self_epoch_reactivation_intent.v1" ||
+      string_field(document.value(), "product_id") != "facman" ||
+      intent.epoch_id != epoch.epoch_id ||
+      intent.epoch_manifest_sha256 != epoch.manifest_sha256 ||
+      intent.operation_id != operation_name.string() ||
+      !facman::base::validate_identifier(intent.operation_id, identifier_detail) ||
+      (intent.operation != "update" && intent.operation != "downgrade" &&
+       intent.operation != "rollback") ||
+      !digest(intent.source_generation_id) || !digest(intent.source_activation_sha256) ||
+      !digest(intent.target_generation_id) || !digest(intent.target_generation_sha256) ||
+      !digest(intent.target_package_sha256) || !digest(intent.target_activation_sha256) ||
+      !digest(intent.target_installed_identity_sha256) ||
+      intent.source_activation_name.empty() ||
+      fs::path(intent.source_activation_name) !=
+          fs::path(intent.source_activation_name).filename() ||
+      intent.target_activation_name !=
+          "activation." + intent.operation_id + ".v2.json" ||
+      bytes != epoch_reactivation_intent_bytes(intent))
+    return facman::core::Result<EpochReactivationIntent>::failure(epoch_recovery(
+        "epoch reactivation intent does not bind an exact lifecycle operation"));
+  return facman::core::Result<EpochReactivationIntent>::success(std::move(intent));
+}
+
+std::string epoch_reactivation_cutover_bytes(
+    const EpochReactivationIntent &intent, const std::string &phase,
+    const std::string &previous_record_sha256, const std::string &effect) {
+  const std::string ownership_receipt = hash(
+      "facman.self_epoch_reactivation_ownership.v1\n" + intent.epoch_id + "\n" +
+      intent.operation_id + "\n" + intent.source_activation_sha256 + "\n" +
+      intent.target_activation_sha256 + "\n" + effect + "\nnew_exact\n");
+  json::ObjectBuilder record;
+  record.add_string("schema", "facman.self_epoch_reactivation_cutover.v1");
+  record.add_string("product_id", "facman");
+  record.add_string("phase", phase);
+  record.add_string("epoch_id", intent.epoch_id);
+  record.add_string("operation_id", intent.operation_id);
+  record.add_string("intent_sha256", hash(epoch_reactivation_intent_bytes(intent)));
+  record.add_string("previous_record_sha256", previous_record_sha256);
+  record.add_string("effect", effect);
+  record.add_string("target_generation_id", intent.target_generation_id);
+  record.add_string("target_activation_name", intent.target_activation_name);
+  record.add_string("target_activation_sha256", intent.target_activation_sha256);
+  record.add_string("ownership", "new_exact");
+  record.add_string("ownership_receipt_sha256", ownership_receipt);
+  return record.serialize() + "\n";
+}
+
+bool epoch_reactivation_record_names(const std::vector<fs::path> &names) {
+  const std::vector<fs::path> finals = {
+      "00-reactivation-intent.v1.json", "10-shortcut-cutover.v1.json",
+      "20-registration-cutover.v1.json"};
+  const std::vector<fs::path> staging = {
+      "00-reactivation-intent.staging.v1.json",
+      "10-shortcut-cutover.staging.v1.json",
+      "20-registration-cutover.staging.v1.json"};
+  if (names.empty() || names.size() > finals.size()) return false;
+  for (std::size_t index = 0; index < names.size(); ++index)
+    if (names[index] != finals[index] &&
+        !(index + 1U == names.size() && names[index] == staging[index]))
+      return false;
+  return true;
+}
 
 // Defined with the phase-70/80 record parsers below.  Ordinary discovery may
 // pass a maintenance directory only after the complete, immutable shell
@@ -1624,7 +1892,8 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
     const LifecycleEpoch &epoch, const PinnedLifecycleEpochScope &scope,
     const Generation *expected = nullptr, bool allow_incomplete = false,
     const std::string *allowed_maintenance_operation = nullptr,
-    const PendingEpochTransitionState *pending_transition = nullptr) {
+    const PendingEpochTransitionState *pending_transition = nullptr,
+    std::vector<Generation> *validated_history = nullptr) {
   std::vector<CompletedEpochShellCutover> completed_shell_cutovers;
   std::vector<fs::path> children;
   if (!scope.epoch.list_child_names_bounded(4U, children).ok())
@@ -1646,7 +1915,7 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
           return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
               "epoch maintenance recovery history is oversized or unsafe"));
         const std::vector<fs::path> finals = {
-            "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
+            "00-handoff-ready.v3.json", "10-provider-apply-bound.v2.json",
             "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
             "40-provider-verified.v2.json", "50-generation-published.v2.json",
             "60-activation-published.v2.json", "70-shortcut-cutover.v2.json",
@@ -1666,9 +1935,21 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
               !operation.list_child_names_bounded(10U, records).ok() || records.size() > 9U)
             return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
                 "epoch maintenance recovery state is not the exact targeted handoff"));
+          if (!records.empty() && (records.front() ==
+                  fs::path("00-reactivation-intent.v1.json") ||
+              records.front() ==
+                  fs::path("00-reactivation-intent.staging.v1.json"))) {
+            if (pending_transition == nullptr ||
+                !epoch_reactivation_record_names(records))
+              return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+                  "targeted epoch reactivation has foreign or out-of-order records"));
+            continue;
+          }
           for (std::size_t i = 0; i < records.size(); ++i) {
-            const fs::path staging = finals[i].string().substr(
-                0, finals[i].string().size() - 7U) + "staging.v2.json";
+            const std::string final_text = finals[i].string();
+            const std::size_t version = final_text.rfind(".v");
+            const fs::path staging = final_text.substr(0, version) + ".staging" +
+                final_text.substr(version);
             if (records[i] != finals[i] &&
                 !(i + 1U == records.size() && records[i] == staging))
               return facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
@@ -1893,7 +2174,8 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
         ? string_field(document.value(), "generation_record_sha256") : std::string();
     const std::string previous_name = previous != nullptr ? string_field(*previous, "name") : std::string();
     const std::string previous_sha = previous != nullptr ? string_field(*previous, "sha256") : std::string();
-    const bool linked_operation = operation == "update" || operation == "downgrade";
+    const bool linked_operation = operation == "update" || operation == "downgrade" ||
+        operation == "rollback";
     Generation genesis_target;
     genesis_target.generation_id = target_id;
     if (!shape || !previous_shape || string_field(document.value(), "schema") !=
@@ -2059,9 +2341,25 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
     for (std::size_t index = 1U; index < ordered.size(); ++index) {
       const auto matches = std::count_if(completed_shell_cutovers.begin(),
           completed_shell_cutovers.end(), [&](const CompletedEpochShellCutover &completed) {
+            const bool appeared_earlier = std::any_of(ordered.begin(),
+                ordered.begin() + index,
+                [&](const Node *node) {
+                  return node->target_generation_id == completed.generation_id;
+                });
             return ordered[index]->name == completed.activation_name &&
                 ordered[index]->digest == completed.activation_sha256 &&
-                ordered[index]->target_generation_id == completed.generation_id;
+                ordered[index]->target_generation_id == completed.generation_id &&
+                ordered[index - 1U]->name == completed.source_activation_name &&
+                ordered[index - 1U]->digest == completed.source_activation_sha256 &&
+                ordered[index - 1U]->target_generation_id ==
+                    completed.source_generation_id &&
+                (completed.reactivation
+                    ? index >= 2U &&
+                      ordered[index - 2U]->target_generation_id ==
+                          completed.generation_id &&
+                      epoch_generation_bytes(epoch, ordered[index - 2U]->target) ==
+                          epoch_generation_bytes(epoch, ordered[index]->target)
+                    : !appeared_earlier);
           });
       const bool pending_match = targeted_activation &&
           ordered[index]->name == pending_transition->activation_name &&
@@ -2080,6 +2378,12 @@ facman::core::Result<std::optional<ActiveState>> discover_epoch_genesis_state(
         "completed epoch shell cutover changed during active discovery"));
   ActiveState state{cursor->target, {}, cursor->name, cursor->digest};
   if (ordered.size() > 1U) state.previous = ordered[ordered.size() - 2U]->target;
+  if (validated_history != nullptr) {
+    validated_history->clear();
+    validated_history->reserve(ordered.size());
+    for (const Node *node : ordered)
+      validated_history->push_back(node->target);
+  }
   return facman::core::Result<std::optional<ActiveState>>::success(
       std::optional<ActiveState>(std::move(state)));
 }
@@ -2171,6 +2475,29 @@ facman::core::Result<void> publish_epoch_record(
   return facman::core::Result<void>::success();
 }
 
+facman::core::Result<std::optional<std::string>> read_optional_bootstrap_record(
+    const facman::platform::StableDirectoryObject &directory,
+    const std::string &name) {
+  const fs::path path = directory.path() / name;
+  facman::platform::PathIdentity identity;
+  if (!directory.validate_descendant(path, true).ok() ||
+      !facman::platform::inspect_path_no_follow(path, identity).ok())
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("bootstrap record could not be safely observed", name));
+  if (!identity.exists)
+    return facman::core::Result<std::optional<std::string>>::success({});
+  if (identity.reparse_or_link ||
+      identity.kind != facman::platform::PathObjectKind::regular_file)
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("bootstrap record is not a plain file", name));
+  auto bytes = read_epoch_relative_bounded(
+      directory, name, kMaximumEpochGenesisRecordBytes);
+  return bytes
+      ? facman::core::Result<std::optional<std::string>>::success(
+            std::optional<std::string>(bytes.take_value()))
+      : facman::core::Result<std::optional<std::string>>::failure(bytes.error());
+}
+
 facman::core::Result<void> validate_epoch_history(LifecycleEpoch &epoch,
                                                    const fs::path &root,
                                                    bool compatibility) {
@@ -2208,8 +2535,80 @@ facman::core::Result<void> validate_epoch_history(LifecycleEpoch &epoch,
   auto active = discover_active(root);
   if (!active) return facman::core::Result<void>::failure(
       compatibility ? active.error() : epoch_recovery("epoch retirement is incomplete",
-                                                       active.error().message));
-  if (active.value().has_value()) return facman::core::Result<void>::success();
+                                                        active.error().message));
+  if (compatibility) {
+    facman::platform::StableDirectoryObject coordinator;
+    const fs::path marker = root / "authority-handoff.v1.json";
+    facman::platform::PathIdentity identity;
+    const auto opened = coordinator.open_no_follow(root);
+    if (!opened.ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "compatibility authority handoff could not be safely observed"));
+    const auto admitted = coordinator.validate_descendant(marker, true);
+    const auto inspected = admitted.ok()
+        ? facman::platform::inspect_path_no_follow(marker, identity)
+        : admitted;
+    if (!admitted.ok() || !inspected.ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "compatibility authority handoff could not be safely observed"));
+    if (identity.exists) {
+      if (!active.value().has_value() || identity.reparse_or_link ||
+          identity.kind != facman::platform::PathObjectKind::regular_file)
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility authority handoff conflicts with flat retirement or an unsafe object"));
+      auto bytes = read_epoch_relative_bounded(coordinator,
+          "authority-handoff.v1.json", kMaximumEpochGenesisRecordBytes);
+      if (!bytes || bytes.value() != compatibility_authority_handoff_bytes(history) ||
+          !coordinator.revalidate().ok())
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility authority handoff is foreign, incomplete, or changed"));
+      LifecycleEpoch successor;
+      successor.acceptance_root = epoch.acceptance_root;
+      successor.genesis_generation_id = history.generations.back().generation_id;
+      successor.logical_root = epoch.logical_root;
+      successor.predecessor_epoch_id = kCompatibilityEpochId;
+      successor.predecessor_manifest_sha256 = hash(compatibility_manifest_bytes(history));
+      successor.predecessor_retirement_sha256 = hash(bytes.value());
+      successor.state_root = epoch.state_root;
+      successor.epoch_id = hash(lifecycle_identity_bytes(successor));
+      const Generation &source = history.generations.back();
+      auto target = make_epoch_genesis_generation(successor,
+          generation_descriptor(source), source.package_sha256);
+      facman::platform::StableDirectoryObject bootstrap;
+      if (!target || !coordinator.open_child_directory_no_follow(
+              "authority-bootstrap.v1", bootstrap).ok())
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility authority handoff lacks its exact bootstrap journal"));
+      auto entered = read_epoch_relative_bounded(bootstrap,
+          "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
+      if (!entered ||
+          (entered.value() != compatibility_bootstrap_entered_bytes(
+              history, successor, target.value(), true) &&
+           entered.value() != compatibility_bootstrap_entered_bytes(
+              history, successor, target.value(), false)))
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility bootstrap entry does not bind the exact epoch clone"));
+      auto verified = read_epoch_relative_bounded(bootstrap,
+          "20-clone-verified.v1.json", kMaximumEpochGenesisRecordBytes);
+      auto document = verified ? json::parse(verified.value())
+          : facman::core::Result<json::Value>::failure(verified.error());
+      const std::string receipt = document
+          ? string_field(document.value(), "receipt_sha256") : std::string();
+      if (!digest(receipt) || !verified ||
+          verified.value() != compatibility_bootstrap_phase_bytes(
+              "clone_verified", hash(entered.value()), receipt) ||
+          !bootstrap.revalidate().ok())
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "compatibility authority handoff lacks exact clone verification"));
+      epoch.retirement_sha256 = hash(bytes.value());
+      epoch.compatibility_handoff = true;
+      return facman::core::Result<void>::success();
+    }
+  }
+  if (active.value().has_value()) {
+    epoch.compatibility_active = std::move(*active.value());
+    return facman::core::Result<void>::success();
+  }
   const auto steps = retirement_steps(history);
   const fs::path complete = retirement_directory(root, history) / "99-completed.v1.json";
   auto marker = read_exact(complete);
@@ -2218,6 +2617,107 @@ facman::core::Result<void> validate_epoch_history(LifecycleEpoch &epoch,
     return facman::core::Result<void>::failure(epoch_recovery(
         "completed epoch retirement marker is unavailable or changed"));
   epoch.retirement_sha256 = hash(marker.value());
+  return facman::core::Result<void>::success();
+}
+
+facman::core::Result<void> validate_real_epoch_retirement(
+    LifecycleEpoch &epoch, const fs::path &coordinator_root,
+    const ActiveState &active, const std::vector<Generation> &history,
+    const LifecycleEpoch *compatibility) {
+  if (history.empty() || epoch.compatibility_epoch)
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "real epoch retirement has no validated activation history"));
+  ActivationChain combined;
+  if (epoch.predecessor_epoch_id == kCompatibilityEpochId) {
+    if (compatibility == nullptr || !compatibility->compatibility_epoch)
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "real epoch retirement has no compatibility predecessor"));
+    if (compatibility->compatibility_handoff) {
+      auto flat = discover_activation_chain(coordinator_root);
+      if (!flat || !flat.value().has_value())
+        return facman::core::Result<void>::failure(!flat ? flat.error() :
+            epoch_recovery("retained compatibility history is unavailable"));
+      combined.generations = flat.value()->generations;
+    } else if (compatibility->retirement_sha256.empty() ||
+               compatibility->compatibility_active.has_value()) {
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "compatibility predecessor is active or incompletely retired"));
+    }
+  }
+  combined.generations.insert(combined.generations.end(),
+      history.begin(), history.end());
+  for (std::size_t index = 0; index < combined.generations.size(); ++index) {
+    const Generation &generation = combined.generations[index];
+    if (!same_path(generation.logical_root, epoch.logical_root) ||
+        !same_path(generation.state_root, epoch.state_root) ||
+        !same_path(generation.acceptance_root, epoch.acceptance_root))
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "real epoch retirement generations have different roots"));
+    for (std::size_t earlier = 0; earlier < index; ++earlier)
+      if (combined.generations[earlier].install_id == generation.install_id &&
+          (combined.generations[earlier].generation_id != generation.generation_id ||
+           !same_path(combined.generations[earlier].install_root,
+                      generation.install_root)))
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "real epoch retirement has a conflicting provider identity"));
+  }
+  combined.activation_name = "epoch." + epoch.epoch_id + "." +
+      active.activation_name;
+  combined.activation_sha256 = hash("facman.epoch.retirement-head.v1\n" +
+      epoch.epoch_id + "\n" + epoch.manifest_sha256 + "\n" +
+      active.activation_name + "\n" + active.activation_sha256 + "\n");
+  const fs::path root = coordinator_root / "epoch-retirements";
+  facman::platform::PathIdentity root_identity;
+  const auto observed_root = facman::platform::inspect_path_no_follow(
+      root, root_identity);
+  if (!observed_root.ok() ||
+      (root_identity.exists &&
+       (root_identity.reparse_or_link ||
+        root_identity.kind != facman::platform::PathObjectKind::directory)))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "real epoch retirement root is unsafe"));
+  if (!root_identity.exists) return facman::core::Result<void>::success();
+  const fs::path journal = root /
+      ("retirement." + combined.activation_sha256.substr(0, 32) + ".v1");
+  facman::platform::PathIdentity journal_identity;
+  const auto observed_journal = facman::platform::inspect_path_no_follow(
+      journal, journal_identity);
+  if (!observed_journal.ok() ||
+      (journal_identity.exists &&
+       (journal_identity.reparse_or_link ||
+        journal_identity.kind != facman::platform::PathObjectKind::directory)))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "real epoch retirement journal is unsafe"));
+  if (!journal_identity.exists) return facman::core::Result<void>::success();
+  epoch.retirement_journal_name = journal.filename().string();
+  facman::platform::StableDirectoryObject pinned_root, pinned_journal;
+  if (!pinned_root.open_no_follow(root).ok() ||
+      !pinned_root.open_child_directory_no_follow(
+          journal.filename().string(), pinned_journal).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "real epoch retirement journal could not be pinned"));
+  std::error_code status;
+  const auto first = fs::directory_iterator(journal, status);
+  if (status)
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "real epoch retirement journal cannot be enumerated", status.message()));
+  if (first == fs::directory_iterator()) {
+    if (!pinned_journal.revalidate().ok() || !pinned_root.revalidate().ok())
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "empty real epoch retirement journal changed during validation"));
+    return facman::core::Result<void>::success();
+  }
+  const auto steps = retirement_steps(combined);
+  bool completed = false;
+  auto validated = validate_retirement_directory(journal, combined, steps,
+                                                 &completed);
+  if (!validated) return validated;
+  if (!pinned_journal.revalidate().ok() || !pinned_root.revalidate().ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "real epoch retirement journal changed during validation"));
+  if (completed)
+    epoch.retirement_sha256 = hash(retirement_completed_json(combined,
+                                                            steps.size()));
   return facman::core::Result<void>::success();
 }
 
@@ -2232,7 +2732,8 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
     const Generation *recovery_generation = nullptr,
     const std::string &allowed_maintenance_operation = {},
     const std::string &allowed_maintenance_epoch_id = {},
-    const PendingEpochTransitionState *pending_transition = nullptr) {
+    const PendingEpochTransitionState *pending_transition = nullptr,
+    const std::string &ignored_unpublished_epoch_id = {}) {
   if (!coordinator_root.is_absolute())
     return facman::core::Result<LifecycleEpochChain>::failure(failure(
         "self_maintenance_input_invalid", "coordinator root must be absolute"));
@@ -2266,12 +2767,17 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
     sentinel.manifest_sha256 = hash(compatibility_manifest_bytes(*flat.value()));
     result.epochs.push_back(std::move(sentinel));
   } else {
-    for (const char *name : {"generations", "retirements", "maintenance"}) {
-      if (fs::exists(coordinator_root / name, status) && !status)
+    for (const char *name : {"generations", "retirements", "maintenance",
+                             "authority-handoff.v1.json", "authority-bootstrap.v1"}) {
+      facman::platform::PathIdentity identity;
+      if (!coordinator.validate_descendant(coordinator_root / name, true).ok() ||
+          !facman::platform::inspect_path_no_follow(
+              coordinator_root / name, identity).ok())
+        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+            "flat coordinator state could not be safely observed"));
+      if (identity.exists)
         return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
             "flat coordinator has state without a valid activation history"));
-      if (status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
-          "flat coordinator state could not be observed", status.message()));
     }
   }
 
@@ -2279,6 +2785,12 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
   if (!fs::exists(epochs_path, status)) {
     if (status) return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
         "epoch root could not be observed", status.message()));
+    facman::platform::PathIdentity orphan_retirements;
+    const auto orphan = facman::platform::inspect_path_no_follow(
+        coordinator_root / "epoch-retirements", orphan_retirements);
+    if (!orphan.ok() || orphan_retirements.exists)
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "epoch retirement state exists without an epoch namespace"));
     return facman::core::Result<LifecycleEpochChain>::success(std::move(result));
   }
   facman::platform::StableDirectoryObject epochs;
@@ -2289,6 +2801,7 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
   if (!epochs.list_child_names_bounded(kMaximumLifecycleEpochs, epoch_names).ok())
     return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
         "epoch root exceeds its entry limit or changed during enumeration"));
+  bool ignored_unpublished_epoch = false;
   for (const fs::path &entry : epoch_names) {
     const std::string name = entry.string();
     if (!digest(name) || name == kCompatibilityEpochId)
@@ -2298,6 +2811,20 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
     if (!epochs.open_child_directory_no_follow(name, epoch_directory).ok())
       return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
           "epoch directory could not be pinned"));
+    if (!ignored_unpublished_epoch_id.empty() &&
+        name == ignored_unpublished_epoch_id) {
+      std::vector<fs::path> partial_names;
+      if (ignored_unpublished_epoch ||
+          !epoch_directory.list_child_names_bounded(2U, partial_names).ok() ||
+          partial_names.size() > 1U ||
+          (!partial_names.empty() &&
+           partial_names.front() != fs::path("epoch.staging.v1.json")) ||
+          !epoch_directory.revalidate().ok())
+        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+            "unpublished successor epoch contains foreign or changed state"));
+      ignored_unpublished_epoch = true;
+      continue;
+    }
     PinnedLifecycleEpochScope scope;
     auto pinned = scope.open(coordinator_root, name);
     if (!pinned) return facman::core::Result<LifecycleEpochChain>::failure(pinned.error());
@@ -2306,12 +2833,24 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
     auto epoch = parse_lifecycle_manifest(bytes.value(), name);
     if (!epoch) return facman::core::Result<LifecycleEpochChain>::failure(epoch.error());
     const bool recovery_tail = !recovery_epoch_id.empty() && name == recovery_epoch_id;
+    std::vector<Generation> epoch_history;
     auto genesis = discover_epoch_genesis_state(epoch.value(), scope,
         recovery_tail ? recovery_generation : nullptr, recovery_tail,
         (!allowed_maintenance_operation.empty() && name == allowed_maintenance_epoch_id)
             ? &allowed_maintenance_operation : nullptr,
-        name == allowed_maintenance_epoch_id ? pending_transition : nullptr);
+        name == allowed_maintenance_epoch_id ? pending_transition : nullptr,
+        &epoch_history);
     if (!genesis) return facman::core::Result<LifecycleEpochChain>::failure(genesis.error());
+    if (genesis.value().has_value()) {
+      const LifecycleEpoch *compatibility = !result.epochs.empty() &&
+          result.epochs.front().compatibility_epoch
+          ? &result.epochs.front() : nullptr;
+      auto retirement = validate_real_epoch_retirement(epoch.value(),
+          coordinator_root, *genesis.value(), epoch_history, compatibility);
+      if (!retirement)
+        return facman::core::Result<LifecycleEpochChain>::failure(
+            retirement.error());
+    }
     if (!epoch_directory.revalidate().ok())
       return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
           "epoch state changed while its pinned children were validated"));
@@ -2320,6 +2859,42 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain_impl(
   if (!epochs.revalidate().ok() || !coordinator.revalidate().ok())
     return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
         "epoch directories changed during discovery"));
+  if (!ignored_unpublished_epoch_id.empty() && !ignored_unpublished_epoch)
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "requested unpublished successor epoch is unavailable"));
+
+  facman::platform::PathIdentity retirement_identity;
+  const fs::path retirement_root = coordinator_root / "epoch-retirements";
+  const auto retirement_observed = facman::platform::inspect_path_no_follow(
+      retirement_root, retirement_identity);
+  if (!retirement_observed.ok() ||
+      (retirement_identity.exists &&
+       (retirement_identity.reparse_or_link ||
+        retirement_identity.kind != facman::platform::PathObjectKind::directory)))
+    return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+        "epoch retirement root is unsafe during lifecycle discovery"));
+  if (retirement_identity.exists) {
+    facman::platform::StableDirectoryObject retirements;
+    std::vector<fs::path> names;
+    if (!coordinator.open_child_directory_no_follow(
+            "epoch-retirements", retirements).ok() ||
+        !retirements.list_child_names_bounded(kMaximumLifecycleEpochs, names).ok())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "epoch retirement history cannot be pinned or is oversized"));
+    for (const fs::path &name : names) {
+      const auto matching = std::count_if(result.epochs.begin(),
+          result.epochs.end(), [&](const LifecycleEpoch &epoch) {
+            return !epoch.compatibility_epoch &&
+                epoch.retirement_journal_name == name.string();
+          });
+      if (matching != 1U)
+        return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+            "epoch retirement root contains foreign or conflicting history"));
+    }
+    if (!retirements.revalidate().ok() || !coordinator.revalidate().ok())
+      return facman::core::Result<LifecycleEpochChain>::failure(epoch_recovery(
+          "epoch retirement history changed during discovery"));
+  }
 
   std::vector<const LifecycleEpoch *> real;
   for (const LifecycleEpoch &epoch : result.epochs)
@@ -2410,7 +2985,21 @@ fs::path global_lock_path(const fs::path &coordinator_root) {
 }
 
 std::string generation_record_bytes(const Generation &generation) {
-  return serialize_generation(generation);
+  const std::string original = serialize_generation(generation);
+  if (generation.creating_provider_revision.empty()) return original;
+  // This is an internal binding projection, not an admitted flat-v1 record.
+  return "facman.self_generation_binding.v2\n" + original +
+      generation.creating_provider_revision + "\n";
+}
+
+const std::string &generation_creating_provider_revision(
+    const Generation &generation) {
+  return generation.creating_provider_revision.empty()
+      ? generation.universal_setup_revision : generation.creating_provider_revision;
+}
+
+bool CoordinatorLockToken::binds_generation(const Generation &generation) const {
+  return generation_sha256_ == hash(generation_record_bytes(generation));
 }
 
 facman::core::Result<Generation> make_generation(
@@ -2692,22 +3281,84 @@ facman::core::Result<LifecycleEpochChain> discover_lifecycle_epoch_chain(
   return discover_lifecycle_epoch_chain_impl(coordinator_root);
 }
 
-facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
-    const fs::path &coordinator_root) {
+facman::core::Result<Generation> discover_lifecycle_epoch_genesis_generation(
+    const fs::path &coordinator_root, const std::string &epoch_id) {
   auto chain = discover_lifecycle_epoch_chain_impl(coordinator_root);
-  if (!chain) return facman::core::Result<EpochActiveState>::failure(chain.error());
-  if (chain.value().epochs.empty())
+  std::optional<EpochPendingTransition> pending;
+  if (!chain) {
+    // A validated external handoff deliberately withholds ordinary epoch
+    // discovery. Its pending scanner admits the exact tail and custody while
+    // the target generation and activation are still being published.
+    auto scanned = discover_lifecycle_epoch_pending_transition(
+        coordinator_root);
+    if (!scanned || !scanned.value().has_value())
+      return facman::core::Result<Generation>::failure(
+          !scanned ? scanned.error() : chain.error());
+    pending = scanned.take_value();
+  }
+  if ((chain && (chain.value().epochs.empty() ||
+                 chain.value().epochs.back().compatibility_epoch ||
+                 chain.value().epochs.back().epoch_id != epoch_id)) ||
+      (pending.has_value() && pending->epoch_id != epoch_id))
+    return facman::core::Result<Generation>::failure(epoch_recovery(
+        "requested real epoch is not the validated lifecycle tail"));
+  const std::string manifest_sha256 = pending.has_value()
+      ? pending->epoch_manifest_sha256
+      : chain.value().epochs.back().manifest_sha256;
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(coordinator_root, epoch_id);
+  if (!opened) return facman::core::Result<Generation>::failure(opened.error());
+  auto manifest = scope.read("epoch.v1.json");
+  auto epoch = manifest
+      ? parse_lifecycle_manifest(manifest.value(), epoch_id)
+      : facman::core::Result<LifecycleEpoch>::failure(manifest.error());
+  if (!epoch || epoch.value().manifest_sha256 != manifest_sha256)
+    return facman::core::Result<Generation>::failure(!epoch ? epoch.error() :
+        epoch_recovery("epoch manifest changed before genesis controller selection"));
+  if (!pending.has_value()) {
+    auto active = discover_epoch_genesis_state(epoch.value(), scope);
+    if (!active || !active.value().has_value())
+      return facman::core::Result<Generation>::failure(!active ? active.error() :
+          epoch_recovery("real epoch genesis is not committed"));
+  }
+  auto genesis = parse_epoch_generation(
+      epoch.value(), scope, epoch.value().genesis_generation_id);
+  if (!genesis || !scope.epoch.revalidate().ok() ||
+      !scope.epochs.revalidate().ok() || !scope.coordinator.revalidate().ok())
+    return facman::core::Result<Generation>::failure(!genesis ? genesis.error() :
+        epoch_recovery("epoch genesis controller changed during discovery"));
+  if (pending.has_value()) {
+    auto rechecked = discover_lifecycle_epoch_pending_transition(
+        coordinator_root);
+    if (!rechecked || !rechecked.value().has_value() ||
+        rechecked.value()->epoch_id != pending->epoch_id ||
+        rechecked.value()->epoch_manifest_sha256 != manifest_sha256 ||
+        rechecked.value()->operation_id != pending->operation_id ||
+        rechecked.value()->source_activation_sha256 !=
+            pending->source_activation_sha256 ||
+        rechecked.value()->journal_sha256 != pending->journal_sha256)
+      return facman::core::Result<Generation>::failure(!rechecked
+          ? rechecked.error() : epoch_recovery(
+              "epoch handoff changed during genesis controller selection"));
+  }
+  return genesis;
+}
+
+namespace {
+
+facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active_from_chain(
+    const fs::path &coordinator_root, const LifecycleEpochChain &chain) {
+  if (chain.epochs.empty())
     return facman::core::Result<EpochActiveState>::failure(epoch_recovery(
         "lifecycle epoch discovery has no active epoch"));
-  LifecycleEpoch epoch = chain.value().epochs.back();
+  LifecycleEpoch epoch = chain.epochs.back();
   if (epoch.compatibility_epoch) {
-    auto active = discover_active(coordinator_root);
-    if (!active) return facman::core::Result<EpochActiveState>::failure(active.error());
-    if (!active.value().has_value())
+    if (!epoch.compatibility_active.has_value())
       return facman::core::Result<EpochActiveState>::failure(epoch_recovery(
           "compatibility lifecycle epoch has no active generation"));
+    ActiveState active = std::move(*epoch.compatibility_active);
     return facman::core::Result<EpochActiveState>::success(
-        {std::move(epoch), std::move(*active.value())});
+        {std::move(epoch), std::move(active)});
   }
   PinnedLifecycleEpochScope scope;
   auto opened = scope.open(coordinator_root, epoch.epoch_id);
@@ -2728,6 +3379,350 @@ facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
       {pinned_epoch.take_value(), std::move(*active.value())});
 }
 
+facman::core::Result<ActivationChain> discover_epoch_retirement_chain(
+    const fs::path &coordinator_root) {
+  auto epochs = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  if (!epochs || epochs.value().epochs.empty() ||
+      epochs.value().epochs.back().compatibility_epoch)
+    return facman::core::Result<ActivationChain>::failure(!epochs
+        ? epochs.error() : epoch_recovery(
+            "epoch retirement requires one authoritative real lifecycle tail"));
+  const LifecycleEpoch &tail = epochs.value().epochs.back();
+  auto selected = discover_lifecycle_epoch_active_from_chain(
+      coordinator_root, epochs.value());
+  if (!selected) return facman::core::Result<ActivationChain>::failure(
+      selected.error());
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(coordinator_root, tail.epoch_id);
+  if (!opened) return facman::core::Result<ActivationChain>::failure(opened.error());
+  std::vector<Generation> epoch_history;
+  auto active = discover_epoch_genesis_state(tail, scope, nullptr, false,
+      nullptr, nullptr, &epoch_history);
+  if (!active || !active.value().has_value() || epoch_history.empty() ||
+      active.value()->activation_sha256 !=
+          selected.value().active.activation_sha256)
+    return facman::core::Result<ActivationChain>::failure(!active
+        ? active.error() : epoch_recovery(
+            "epoch retirement lineage changed during discovery"));
+  ActivationChain combined;
+  if (tail.predecessor_epoch_id == kCompatibilityEpochId &&
+      epochs.value().epochs.front().compatibility_epoch) {
+    const LifecycleEpoch &compatibility = epochs.value().epochs.front();
+    if (compatibility.compatibility_handoff) {
+      auto flat = discover_activation_chain(coordinator_root);
+      if (!flat || !flat.value().has_value())
+        return facman::core::Result<ActivationChain>::failure(!flat
+            ? flat.error() : epoch_recovery(
+                "epoch retirement lacks its retained compatibility lineage"));
+      combined.generations = flat.value()->generations;
+    } else if (compatibility.retirement_sha256.empty() ||
+               compatibility.compatibility_active.has_value()) {
+      return facman::core::Result<ActivationChain>::failure(epoch_recovery(
+          "epoch retirement has an active or incomplete compatibility predecessor"));
+    }
+  }
+  combined.generations.insert(combined.generations.end(),
+      epoch_history.begin(), epoch_history.end());
+  for (std::size_t index = 0; index < combined.generations.size(); ++index) {
+    const Generation &generation = combined.generations[index];
+    if (!same_path(generation.logical_root, tail.logical_root) ||
+        !same_path(generation.state_root, tail.state_root) ||
+        !same_path(generation.acceptance_root, tail.acceptance_root))
+      return facman::core::Result<ActivationChain>::failure(epoch_recovery(
+          "epoch retirement generations do not share one exact authority"));
+    for (std::size_t earlier = 0; earlier < index; ++earlier)
+      if (combined.generations[earlier].install_id == generation.install_id &&
+          (combined.generations[earlier].generation_id != generation.generation_id ||
+           !same_path(combined.generations[earlier].install_root,
+                      generation.install_root)))
+        return facman::core::Result<ActivationChain>::failure(epoch_recovery(
+            "epoch retirement contains a conflicting provider installation identity"));
+  }
+  combined.activation_name = "epoch." + tail.epoch_id + "." +
+      active.value()->activation_name;
+  combined.activation_sha256 = hash("facman.epoch.retirement-head.v1\n" +
+      tail.epoch_id + "\n" + tail.manifest_sha256 + "\n" +
+      active.value()->activation_name + "\n" +
+      active.value()->activation_sha256 + "\n");
+  return facman::core::Result<ActivationChain>::success(std::move(combined));
+}
+
+fs::path epoch_retirement_directory(const fs::path &coordinator_root,
+                                    const ActivationChain &chain) {
+  return coordinator_root / "epoch-retirements" /
+      ("retirement." + chain.activation_sha256.substr(0, 32) + ".v1");
+}
+
+facman::core::Result<std::optional<bool>> epoch_retirement_status(
+    const fs::path &coordinator_root, const ActivationChain &chain,
+    const std::vector<RetirementStep> &steps,
+    const LifecycleEpochChain &epochs) {
+  const fs::path root = coordinator_root / "epoch-retirements";
+  const fs::path journal = epoch_retirement_directory(coordinator_root, chain);
+  std::error_code status;
+  if (!fs::exists(root, status)) {
+    if (status) return facman::core::Result<std::optional<bool>>::failure(
+        epoch_recovery("epoch retirement root could not be observed", status.message()));
+    return facman::core::Result<std::optional<bool>>::success({});
+  }
+  if (status || fs::symlink_status(root, status).type() !=
+                    fs::file_type::directory || status)
+    return facman::core::Result<std::optional<bool>>::failure(epoch_recovery(
+        "epoch retirement root is not a plain directory"));
+  bool found = false;
+  for (fs::directory_iterator it(root, status), end; !status && it != end;
+       it.increment(status)) {
+    const bool current = it->path().lexically_normal() ==
+        journal.lexically_normal();
+    const bool historical = std::any_of(epochs.epochs.begin(),
+        epochs.epochs.end(), [&](const LifecycleEpoch &epoch) {
+          return !epoch.compatibility_epoch &&
+              !epoch.retirement_sha256.empty() &&
+              epoch.retirement_journal_name == it->path().filename().string();
+        });
+    if (it->symlink_status(status).type() != fs::file_type::directory ||
+        status || (!current && !historical) || (current && found))
+      return facman::core::Result<std::optional<bool>>::failure(epoch_recovery(
+          "epoch retirement root contains foreign or conflicting history"));
+    if (current) found = true;
+  }
+  if (status) return facman::core::Result<std::optional<bool>>::failure(
+      epoch_recovery("epoch retirement root changed during enumeration",
+                     status.message()));
+  if (!found)
+    return facman::core::Result<std::optional<bool>>::success({});
+  const auto first = fs::directory_iterator(journal, status);
+  if (status) return facman::core::Result<std::optional<bool>>::failure(
+      epoch_recovery("epoch retirement journal could not be enumerated",
+                     status.message()));
+  if (first == fs::directory_iterator())
+    return facman::core::Result<std::optional<bool>>::success(false);
+  bool completed = false;
+  auto checked = validate_retirement_directory(journal, chain, steps,
+                                               &completed);
+  if (!checked) return facman::core::Result<std::optional<bool>>::failure(
+      checked.error());
+  return facman::core::Result<std::optional<bool>>::success(completed);
+}
+
+} // namespace
+
+facman::core::Result<EpochActiveState> discover_lifecycle_epoch_active(
+    const fs::path &coordinator_root) {
+  auto selected = resolve_authoritative_active_state(coordinator_root);
+  if (!selected || !selected.value().has_value())
+    return facman::core::Result<EpochActiveState>::failure(!selected
+        ? selected.error() : epoch_recovery(
+            "no authoritative lifecycle epoch is active"));
+  if (selected.value()->epoch.has_value())
+    return facman::core::Result<EpochActiveState>::success(
+        {*selected.value()->epoch, selected.value()->active});
+  // Preserve the public compatibility-epoch view when flat history is still
+  // authoritative. Resolver failure above continues to withhold it during
+  // an entered or incomplete bootstrap.
+  auto chain = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  if (!chain || chain.value().epochs.size() != 1U ||
+      !chain.value().epochs.front().compatibility_epoch ||
+      !chain.value().epochs.front().compatibility_active.has_value())
+    return facman::core::Result<EpochActiveState>::failure(!chain
+        ? chain.error() : epoch_recovery(
+            "authoritative compatibility epoch changed during discovery"));
+  const LifecycleEpoch &compatibility = chain.value().epochs.front();
+  if (compatibility.compatibility_active->activation_sha256 !=
+          selected.value()->active.activation_sha256 ||
+      compatibility.compatibility_active->active.install_id !=
+          selected.value()->active.active.install_id)
+    return facman::core::Result<EpochActiveState>::failure(epoch_recovery(
+        "compatibility activation changed during epoch discovery"));
+  return facman::core::Result<EpochActiveState>::success(
+      {compatibility, selected.value()->active});
+}
+
+facman::core::Result<ActivationChain> discover_lifecycle_epoch_activation_chain(
+    const fs::path &coordinator_root) {
+  auto selected = discover_lifecycle_epoch_active(coordinator_root);
+  if (!selected) return facman::core::Result<ActivationChain>::failure(
+      selected.error());
+  if (selected.value().epoch.compatibility_epoch)
+    return facman::core::Result<ActivationChain>::failure(epoch_recovery(
+        "no authoritative real lifecycle epoch is active"));
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(coordinator_root, selected.value().epoch.epoch_id);
+  if (!opened) return facman::core::Result<ActivationChain>::failure(opened.error());
+  auto manifest = scope.read("epoch.v1.json");
+  auto epoch = manifest
+      ? parse_lifecycle_manifest(manifest.value(), selected.value().epoch.epoch_id)
+      : facman::core::Result<LifecycleEpoch>::failure(manifest.error());
+  if (!epoch || epoch.value().manifest_sha256 !=
+                    selected.value().epoch.manifest_sha256)
+    return facman::core::Result<ActivationChain>::failure(!epoch ? epoch.error() :
+        epoch_recovery("epoch manifest changed during lineage discovery"));
+  std::vector<Generation> history;
+  auto active = discover_epoch_genesis_state(epoch.value(), scope, nullptr,
+      false, nullptr, nullptr, &history);
+  if (!active || !active.value().has_value() || history.empty() ||
+      active.value()->activation_name != selected.value().active.activation_name ||
+      active.value()->activation_sha256 != selected.value().active.activation_sha256 ||
+      history.back().install_id != selected.value().active.active.install_id)
+    return facman::core::Result<ActivationChain>::failure(!active ? active.error() :
+        epoch_recovery("authoritative epoch lineage changed during discovery"));
+  return facman::core::Result<ActivationChain>::success(
+      {std::move(history), active.value()->activation_name,
+       active.value()->activation_sha256});
+}
+
+facman::core::Result<std::optional<AuthoritativeActiveState>>
+resolve_authoritative_active_state(const fs::path &coordinator_root) {
+  auto chain = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  if (!chain)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        chain.error());
+  if (chain.value().epochs.empty()) {
+    auto flat = discover_active(coordinator_root);
+    if (!flat)
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          flat.error());
+    if (!flat.value().has_value())
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::success({});
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::success(
+        AuthoritativeActiveState{{}, std::move(*flat.value())});
+  }
+  const LifecycleEpoch &tail = chain.value().epochs.back();
+  if (tail.compatibility_epoch) {
+    facman::platform::PathIdentity bootstrap;
+    const auto observed = facman::platform::inspect_path_no_follow(
+        coordinator_root / "authority-bootstrap.v1", bootstrap);
+    if (!observed.ok() || bootstrap.exists)
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("compatibility bootstrap requires recovery"));
+  }
+  if (tail.compatibility_epoch && tail.compatibility_handoff)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        epoch_recovery("compatibility authority handoff awaits its real epoch genesis"));
+  if (tail.compatibility_epoch && !tail.compatibility_active.has_value() &&
+      !tail.retirement_sha256.empty())
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::success({});
+  auto epoch = discover_lifecycle_epoch_active_from_chain(
+      coordinator_root, chain.value());
+  if (!epoch)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        epoch.error());
+  if (!epoch.value().epoch.compatibility_epoch &&
+      epoch.value().epoch.predecessor_epoch_id == kCompatibilityEpochId &&
+      chain.value().epochs.front().compatibility_handoff) {
+    auto flat = discover_activation_chain(coordinator_root);
+    PinnedLifecycleEpochScope genesis_scope;
+    auto opened = genesis_scope.open(coordinator_root, epoch.value().epoch.epoch_id);
+    auto manifest = opened ? genesis_scope.read("epoch.v1.json")
+        : facman::core::Result<std::string>::failure(opened.error());
+    auto pinned_epoch = manifest ? parse_lifecycle_manifest(
+        manifest.value(), epoch.value().epoch.epoch_id)
+        : facman::core::Result<LifecycleEpoch>::failure(manifest.error());
+    std::vector<Generation> history;
+    auto selected = pinned_epoch && pinned_epoch.value().manifest_sha256 ==
+            epoch.value().epoch.manifest_sha256
+        ? discover_epoch_genesis_state(pinned_epoch.value(), genesis_scope,
+            nullptr, false, nullptr, nullptr, &history)
+        : facman::core::Result<std::optional<ActiveState>>::failure(epoch_recovery(
+            "bootstrap epoch manifest changed during completion review"));
+    facman::platform::StableDirectoryObject coordinator, bootstrap;
+    if (!flat || !flat.value().has_value() || !selected ||
+        !selected.value().has_value() || history.empty() ||
+        history.front().generation_id != epoch.value().epoch.genesis_generation_id ||
+        selected.value()->activation_name != epoch.value().active.activation_name ||
+        selected.value()->activation_sha256 != epoch.value().active.activation_sha256 ||
+        !coordinator.open_no_follow(coordinator_root).ok() ||
+        !coordinator.open_child_directory_no_follow(
+            "authority-bootstrap.v1", bootstrap).ok())
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap completion cannot be safely observed"));
+    // The bootstrap journal binds the immutable genesis clone. Later epoch
+    // activations change the selected head but cannot rewrite that handoff.
+    const Generation &target = history.front();
+    std::string genesis_generation_bytes;
+    auto genesis_generation = parse_epoch_generation(pinned_epoch.value(),
+        genesis_scope, target.generation_id, &genesis_generation_bytes);
+    if (!genesis_generation || genesis_generation_bytes !=
+            epoch_generation_bytes(pinned_epoch.value(), target))
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap genesis generation changed during completion review"));
+    const std::string genesis_activation_sha256 = hash(epoch_activation_bytes(
+        pinned_epoch.value(), target, hash(genesis_generation_bytes)));
+    auto entered = read_epoch_relative_bounded(bootstrap,
+        "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
+    const std::string enabled = compatibility_bootstrap_entered_bytes(
+        *flat.value(), epoch.value().epoch, target, true);
+    const std::string disabled = compatibility_bootstrap_entered_bytes(
+        *flat.value(), epoch.value().epoch, target, false);
+    if (!entered || (entered.value() != enabled && entered.value() != disabled))
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap completion has a different entered identity"));
+    const bool shell = entered.value() == enabled;
+    const std::string entered_sha256 = hash(entered.value());
+    const std::string genesis_bytes = compatibility_bootstrap_phase_bytes(
+        "genesis_activated", entered_sha256, genesis_activation_sha256);
+    const std::string shortcut_receipt = hash("facman.bootstrap.shortcut.v1\n" +
+        target.install_id + "\n" + (shell ? "cutover\n" : "disabled\n"));
+    const std::string registration_receipt = hash(
+        "facman.bootstrap.registration.v1\n" + target.install_id + "\n" +
+        (shell ? "cutover\n" : "disabled\n"));
+    const std::string registration_bytes = compatibility_bootstrap_phase_bytes(
+        "registration_cutover", entered_sha256, registration_receipt);
+    const std::vector<std::pair<std::string, std::string>> required = {
+        {"30-genesis-activated.v1.json", genesis_bytes},
+        {"40-shortcut-cutover.v1.json", compatibility_bootstrap_phase_bytes(
+            "shortcut_cutover", entered_sha256, shortcut_receipt)},
+        {"50-registration-cutover.v1.json", registration_bytes},
+        {"60-complete.v1.json", compatibility_bootstrap_phase_bytes(
+            "complete", entered_sha256, hash(registration_bytes))}};
+    for (const auto &record : required) {
+      auto bytes = read_epoch_relative_bounded(
+          bootstrap, record.first, kMaximumEpochGenesisRecordBytes);
+      if (!bytes || bytes.value() != record.second)
+        return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+            epoch_recovery("bootstrap native cutover is incomplete or changed",
+                           record.first));
+    }
+    std::vector<fs::path> names;
+    const std::vector<fs::path> complete_names = {
+        "10-clone-entered.v1.json", "20-clone-verified.v1.json",
+        "30-genesis-activated.v1.json", "40-shortcut-cutover.v1.json",
+        "50-registration-cutover.v1.json", "60-complete.v1.json"};
+    if (!bootstrap.list_child_names_bounded(6U, names).ok() ||
+        names != complete_names)
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap completion journal has an unexpected entry"));
+    if (!bootstrap.revalidate().ok() || !coordinator.revalidate().ok() ||
+        !genesis_scope.epoch.revalidate().ok() ||
+        !genesis_scope.epochs.revalidate().ok() ||
+        !genesis_scope.coordinator.revalidate().ok())
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+          epoch_recovery("bootstrap completion changed during selection"));
+  }
+  if (epoch.value().epoch.compatibility_epoch)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::success(
+        AuthoritativeActiveState{{}, std::move(epoch.value().active)});
+  auto retirement = discover_epoch_retirement_chain(coordinator_root);
+  if (!retirement)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        retirement.error());
+  auto retirement_state = epoch_retirement_status(coordinator_root,
+      retirement.value(), retirement_steps(retirement.value()), chain.value());
+  if (!retirement_state)
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        retirement_state.error());
+  if (retirement_state.value().has_value()) {
+    if (*retirement_state.value())
+      return facman::core::Result<std::optional<AuthoritativeActiveState>>::success({});
+    return facman::core::Result<std::optional<AuthoritativeActiveState>>::failure(
+        failure("self_maintenance_retirement_recovery_required",
+                "epoch retirement is incomplete and must be resumed"));
+  }
+  return facman::core::Result<std::optional<AuthoritativeActiveState>>::success(
+      AuthoritativeActiveState{std::move(epoch.value().epoch),
+                               std::move(epoch.value().active)});
+}
+
 namespace {
 
 struct EpochHandoff {
@@ -2742,11 +3737,14 @@ struct EpochHandoff {
   RetainedMaintenanceInputs inputs;
   std::string provider_plan_sha256;
   std::string nonce;
+  bool shell_integration = true;
+  std::uint64_t deadline_utc_ms = 0;
+  std::string creating_provider_revision = {};
 };
 
 std::string epoch_handoff_bytes(const EpochHandoff &value) {
   json::ObjectBuilder object;
-  object.add_string("schema", "facman.self_epoch_handoff.v2");
+  object.add_string("schema", "facman.self_epoch_handoff.v3");
   object.add_string("product_id", "facman");
   object.add_string("epoch_id", value.epoch_id);
   object.add_string("epoch_manifest_sha256", value.manifest_sha256);
@@ -2758,10 +3756,15 @@ std::string epoch_handoff_bytes(const EpochHandoff &value) {
   object.add_string("target_generation_id", value.target_generation_id);
   object.add_string("retained_package", facman::platform::path_to_utf8(value.inputs.package));
   object.add_string("retained_package_sha256", value.inputs.package_sha256);
-  object.add_string("retained_helper", facman::platform::path_to_utf8(value.inputs.helper));
-  object.add_string("retained_helper_sha256", value.inputs.helper_sha256);
+  object.add_string("continuation_helper", facman::platform::path_to_utf8(value.inputs.helper));
+  object.add_string("continuation_helper_sha256", value.inputs.helper_sha256);
   object.add_string("provider_plan_sha256", value.provider_plan_sha256);
   object.add_string("nonce", value.nonce);
+  object.add_string("shell_integration", value.shell_integration ? "enabled" : "disabled");
+  if (value.deadline_utc_ms != 0)
+    object.add_string("deadline_utc_ms", std::to_string(value.deadline_utc_ms));
+  if (!value.creating_provider_revision.empty())
+    object.add_string("creating_provider_revision", value.creating_provider_revision);
   return object.serialize() + "\n";
 }
 
@@ -2770,10 +3773,20 @@ facman::core::Result<EpochHandoff> parse_epoch_handoff(const std::string &bytes)
   const std::initializer_list<const char *> keys = {"schema", "product_id", "epoch_id",
       "epoch_manifest_sha256", "operation", "operation_id", "source_generation_id",
       "source_activation_name", "source_activation_sha256", "target_generation_id",
-      "retained_package", "retained_package_sha256", "retained_helper",
-      "retained_helper_sha256", "provider_plan_sha256", "nonce"};
-  if (!document || !exact_keys(document.value(), keys) ||
-      !lifecycle_string_fields(document.value(), keys))
+      "retained_package", "retained_package_sha256", "continuation_helper",
+      "continuation_helper_sha256", "provider_plan_sha256", "nonce",
+      "shell_integration"};
+  const std::initializer_list<const char *> deadline_keys = {"schema", "product_id", "epoch_id",
+      "epoch_manifest_sha256", "operation", "operation_id", "source_generation_id",
+      "source_activation_name", "source_activation_sha256", "target_generation_id",
+      "retained_package", "retained_package_sha256", "continuation_helper",
+      "continuation_helper_sha256", "provider_plan_sha256", "nonce",
+      "shell_integration", "deadline_utc_ms"};
+  const bool has_deadline = document && document.value().find("deadline_utc_ms") != nullptr;
+  if (!document || !(has_deadline ? exact_keys_with_creator(document.value(), deadline_keys)
+                                   : exact_keys_with_creator(document.value(), keys)) ||
+      !(has_deadline ? lifecycle_string_fields(document.value(), deadline_keys)
+                     : lifecycle_string_fields(document.value(), keys)))
     return facman::core::Result<EpochHandoff>::failure(epoch_recovery(
         "epoch handoff journal has an incompatible exact schema"));
   EpochHandoff result;
@@ -2787,12 +3800,28 @@ facman::core::Result<EpochHandoff> parse_epoch_handoff(const std::string &bytes)
   result.target_generation_id = string_field(document.value(), "target_generation_id");
   result.inputs.package = facman::platform::path_from_utf8(string_field(document.value(), "retained_package"));
   result.inputs.package_sha256 = string_field(document.value(), "retained_package_sha256");
-  result.inputs.helper = facman::platform::path_from_utf8(string_field(document.value(), "retained_helper"));
-  result.inputs.helper_sha256 = string_field(document.value(), "retained_helper_sha256");
+  result.inputs.helper = facman::platform::path_from_utf8(string_field(document.value(), "continuation_helper"));
+  result.inputs.helper_sha256 = string_field(document.value(), "continuation_helper_sha256");
   result.provider_plan_sha256 = string_field(document.value(), "provider_plan_sha256");
   result.nonce = string_field(document.value(), "nonce");
+  result.creating_provider_revision = string_field(document.value(), "creating_provider_revision");
+  const std::string shell_integration = string_field(document.value(), "shell_integration");
+  result.shell_integration = shell_integration == "enabled";
+  if (has_deadline) {
+    const std::string deadline = string_field(document.value(), "deadline_utc_ms");
+    try {
+      result.deadline_utc_ms = std::stoull(deadline);
+      if (result.deadline_utc_ms == 0 ||
+          std::to_string(result.deadline_utc_ms) != deadline)
+        return facman::core::Result<EpochHandoff>::failure(epoch_recovery(
+            "epoch handoff deadline is not canonical"));
+    } catch (...) {
+      return facman::core::Result<EpochHandoff>::failure(epoch_recovery(
+          "epoch handoff deadline is not canonical"));
+    }
+  }
   std::string detail;
-  if (string_field(document.value(), "schema") != "facman.self_epoch_handoff.v2" ||
+  if (string_field(document.value(), "schema") != "facman.self_epoch_handoff.v3" ||
       string_field(document.value(), "product_id") != "facman" || !digest(result.epoch_id) ||
       !digest(result.manifest_sha256) || (result.operation != "update" &&
       result.operation != "downgrade") || !facman::base::validate_identifier(result.operation_id, detail) ||
@@ -2802,7 +3831,10 @@ facman::core::Result<EpochHandoff> parse_epoch_handoff(const std::string &bytes)
       !digest(result.target_generation_id) || !result.inputs.package.is_absolute() ||
       !digest(result.inputs.package_sha256) || !result.inputs.helper.is_absolute() ||
       !digest(result.inputs.helper_sha256) || !digest(result.provider_plan_sha256) ||
+      (document.value().find("creating_provider_revision") != nullptr &&
+       !revision(result.creating_provider_revision)) ||
       !facman::base::validate_identifier(result.nonce, detail) ||
+      (shell_integration != "enabled" && shell_integration != "disabled") ||
       bytes != epoch_handoff_bytes(result))
     return facman::core::Result<EpochHandoff>::failure(epoch_recovery(
         "epoch handoff journal identity or canonical bytes are invalid"));
@@ -2835,7 +3867,8 @@ bool exact_retained_operation_names(
     const facman::platform::StableDirectoryObject &operation) {
   std::vector<fs::path> names;
   return operation.list_child_names_bounded(3U, names).ok() && names.size() == 2U &&
-      names[0] == fs::path("FacManSetup.exe") && names[1] == fs::path("package.zip");
+      names[0] == fs::path("FacManContinuation.exe") &&
+      names[1] == fs::path("package.zip");
 }
 
 bool revalidate_retained_inputs(HeldRetainedInputs &held) {
@@ -2864,7 +3897,7 @@ facman::core::Result<HeldRetainedInputs> validate_retained_inputs(
     const RetainedMaintenanceInputs &inputs) {
   const fs::path retained_root = retained_handoff_directory(epoch, operation_id);
   if (inputs.package != retained_root / "package.zip" ||
-      inputs.helper != retained_root / "FacManSetup.exe")
+      inputs.helper != retained_root / "FacManContinuation.exe")
     return facman::core::Result<HeldRetainedInputs>::failure(epoch_recovery(
         "retained handoff inputs do not use the canonical custody paths"));
   if (inputs.package == inputs.helper || !state_descendant(epoch.state_root, inputs.package) ||
@@ -2878,12 +3911,12 @@ facman::core::Result<HeldRetainedInputs> validate_retained_inputs(
       !held.state.open_child_directory_no_follow("epoch-handoff", held.handoff_root).ok() ||
       !held.handoff_root.open_child_directory_no_follow(operation_id, held.operation).ok() ||
       !held.operation.list_child_names_bounded(3U, names).ok() || names.size() != 2U ||
-      names[0] != fs::path("FacManSetup.exe") || names[1] != fs::path("package.zip") ||
+      names[0] != fs::path("FacManContinuation.exe") || names[1] != fs::path("package.zip") ||
       !held.operation.open_child_file_no_follow_pinned("package.zip", held.package).ok())
     return facman::core::Result<HeldRetainedInputs>::failure(epoch_recovery(
         "retained handoff input is missing, linked, or outside the held state root"));
   notify_epoch_handoff_operation_pinned(held.operation.path());
-  if (!held.operation.open_child_file_no_follow_pinned("FacManSetup.exe", held.helper).ok())
+  if (!held.operation.open_child_file_no_follow_pinned("FacManContinuation.exe", held.helper).ok())
     return facman::core::Result<HeldRetainedInputs>::failure(epoch_recovery(
         "retained handoff helper is missing, linked, or outside the held state root"));
   auto package_hash = stable_digest(held.package);
@@ -2896,8 +3929,10 @@ facman::core::Result<HeldRetainedInputs> validate_retained_inputs(
 }
 
 facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoch,
-    const ActiveState &active, const EpochTransitionRequest &request) {
-  if ((request.operation != Operation::update && request.operation != Operation::downgrade) ||
+    const ActiveState &active, const EpochTransitionRequest &request,
+    const std::optional<std::string> &frozen_creator = std::nullopt) {
+  if ((request.operation != Operation::update && request.operation != Operation::downgrade &&
+       request.operation != Operation::rollback) ||
       request.package.package.empty() || !digest(request.package.package_sha256))
     return facman::core::Result<Plan>::failure(failure(
         "self_maintenance_input_invalid", "epoch transition request is incomplete"));
@@ -2909,26 +3944,483 @@ facman::core::Result<Plan> make_epoch_transition_plan(const LifecycleEpoch &epoc
       epoch.logical_root, epoch.logical_root, epoch.state_root, epoch.acceptance_root);
   if (!base) return facman::core::Result<Plan>::failure(base.error());
   Generation target = base.take_value();
+  const std::string creating_provider_revision = frozen_creator.has_value()
+      ? *frozen_creator : self_setup::provider_revision();
+  if (!creating_provider_revision.empty()) {
+    if (!revision(creating_provider_revision) ||
+        (frozen_creator.has_value() &&
+         creating_provider_revision == target.universal_setup_revision))
+      return facman::core::Result<Plan>::failure(epoch_recovery(
+          "epoch creating provider revision is invalid"));
+    if (creating_provider_revision != target.universal_setup_revision)
+      target.creating_provider_revision = creating_provider_revision;
+  }
   target.install_id = epoch_generation_install_id(epoch.epoch_id,
                                                    target.generation_id);
   target.install_root = epoch_generation_install_root(epoch.logical_root, epoch.epoch_id,
-                                                       target.generation_id);
+                                                        target.generation_id);
   target.gui = target.install_root / "generations" / target.product_version / "FacMan.exe";
   target.maintenance_launcher = target.install_root / "maintenance" / "FacManSetup.exe";
+  const bool retained_predecessor = active.previous.has_value() &&
+      active.previous->generation_id == target.generation_id;
+  if (retained_predecessor) {
+    if (!same_descriptor(generation_descriptor(*active.previous), request.package.descriptor) ||
+        active.previous->package_sha256 != target.package_sha256 ||
+        !exact_epoch_generation_paths(epoch, *active.previous))
+      return facman::core::Result<Plan>::failure(failure(
+          "self_maintenance_retained_target_invalid",
+          "epoch package does not match the exact immediate retained predecessor"));
+    target = *active.previous;
+  }
   Semver source_version, target_version;
   if (!exact_epoch_generation_paths(epoch, target) ||
       !semver(active.active.product_version, source_version) ||
       !semver(target.product_version, target_version) ||
       (request.operation == Operation::update && compare(target_version, source_version) <= 0) ||
-      (request.operation == Operation::downgrade && compare(target_version, source_version) >= 0))
+      (request.operation == Operation::downgrade && compare(target_version, source_version) >= 0) ||
+      (request.operation == Operation::rollback &&
+       (!retained_predecessor || target.generation_id == active.active.generation_id)))
     return facman::core::Result<Plan>::failure(failure(
         "self_maintenance_version_direction_invalid", "epoch transition direction is invalid"));
   return facman::core::Result<Plan>::success({operation_name(request.operation), request.operation_id,
-      active.active, target, request.package.package, request.package.package_sha256, "install_local",
+      active.active, target, request.package.package, request.package.package_sha256,
+      retained_predecessor ? "reactivate" : "install_local",
       active.activation_name, active.activation_sha256});
 }
 
 } // namespace
+
+facman::core::Result<Plan> review_lifecycle_epoch_reactivation(
+    const EpochTransitionRequest &request, EpochContinuationEffects &effects) {
+  std::string detail;
+  if (request.apply || !request.coordinator_root.is_absolute() ||
+      !digest(request.epoch_id) ||
+      !facman::base::validate_identifier(request.operation_id, detail) ||
+      (request.operation != Operation::update && request.operation != Operation::downgrade &&
+       request.operation != Operation::rollback))
+    return facman::core::Result<Plan>::failure(failure(
+        "self_maintenance_input_invalid", "epoch reactivation review identifiers are invalid"));
+  auto chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root);
+  if (!chain || chain.value().epochs.empty() ||
+      chain.value().epochs.back().compatibility_epoch ||
+      chain.value().epochs.back().epoch_id != request.epoch_id)
+    return facman::core::Result<Plan>::failure(!chain ? chain.error() :
+        epoch_recovery("reactivation requires the authoritative real lifecycle tail"));
+  const LifecycleEpoch &epoch = chain.value().epochs.back();
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(request.coordinator_root, epoch.epoch_id);
+  if (!opened) return facman::core::Result<Plan>::failure(opened.error());
+  auto active = discover_epoch_genesis_state(epoch, scope);
+  if (!active || !active.value().has_value())
+    return facman::core::Result<Plan>::failure(!active ? active.error() :
+        epoch_recovery("reactivation has no committed active generation"));
+  auto inspected = inspect_package(request.package.package);
+  if (!inspected || inspected.value().package_sha256 != request.package.package_sha256 ||
+      inspected.value().maintenance_launcher_sha256 !=
+          request.package.maintenance_launcher_sha256 ||
+      !same_descriptor(inspected.value().descriptor, request.package.descriptor))
+    return facman::core::Result<Plan>::failure(!inspected ? inspected.error() :
+        failure("self_maintenance_package_changed",
+                "reactivation source package changed after caller inspection"));
+  auto planned = make_epoch_transition_plan(epoch, *active.value(), request);
+  if (!planned || planned.value().provider_operation != "reactivate")
+    return facman::core::Result<Plan>::failure(!planned ? planned.error() :
+        failure("self_maintenance_retained_target_invalid",
+                "package does not identify the exact immediate retained predecessor"));
+  const CandidateState candidate = effects.inspect_candidate(planned.value());
+  if (candidate != CandidateState::exact)
+    return facman::core::Result<Plan>::failure(failure(
+        "self_maintenance_candidate_unsafe",
+        "retained epoch installation is absent, foreign, or unreadable"));
+  const EffectResult installed =
+      effects.inspect_retained_installed(planned.value());
+  if (!installed.ok || installed.outcome_unknown ||
+      !digest(installed.receipt_sha256))
+    return facman::core::Result<Plan>::failure(effect_error(
+        "self_maintenance_verify_failed",
+        "retained epoch installed identity is not exact", installed).error());
+  const EffectResult verified = effects.verify_installed(planned.value());
+  if (!verified.ok || verified.outcome_unknown || !digest(verified.receipt_sha256))
+    return facman::core::Result<Plan>::failure(effect_error(
+        "self_maintenance_verify_failed",
+        "retained epoch installation did not verify exactly", verified).error());
+  if (effects.inspect_candidate(planned.value()) != CandidateState::exact)
+    return facman::core::Result<Plan>::failure(epoch_recovery(
+        "retained epoch installation changed during verification"));
+  const EffectResult final_installed =
+      effects.inspect_retained_installed(planned.value());
+  if (!final_installed.ok || final_installed.outcome_unknown ||
+      final_installed.receipt_sha256 != installed.receipt_sha256)
+    return facman::core::Result<Plan>::failure(epoch_recovery(
+        "retained epoch installed identity changed during review"));
+  auto final_package = inspect_package(request.package.package);
+  if (!final_package || final_package.value().package_sha256 !=
+          request.package.package_sha256)
+    return facman::core::Result<Plan>::failure(!final_package ? final_package.error() :
+        failure("self_maintenance_package_changed",
+                "reactivation source package changed during verification"));
+  auto latest = discover_epoch_genesis_state(epoch, scope);
+  if (!latest || !latest.value().has_value() ||
+      latest.value()->activation_name != active.value()->activation_name ||
+      latest.value()->activation_sha256 != active.value()->activation_sha256)
+    return facman::core::Result<Plan>::failure(!latest ? latest.error() :
+        epoch_recovery("reactivation source changed during read-only review"));
+  return planned;
+}
+
+facman::core::Result<EpochShellCutoverResponse> execute_lifecycle_epoch_reactivation(
+    const EpochTransitionRequest &request, EpochContinuationEffects &provider_effects,
+    EpochShellCutoverEffects &shell_effects) {
+  using Result = facman::core::Result<EpochShellCutoverResponse>;
+  std::string identifier_detail;
+  if (!request.coordinator_root.is_absolute() || !digest(request.epoch_id) ||
+      !facman::base::validate_identifier(request.operation_id,
+                                          identifier_detail) ||
+      (request.operation != Operation::update &&
+       request.operation != Operation::downgrade &&
+       request.operation != Operation::rollback) ||
+      !request.package.package.is_absolute() ||
+      !digest(request.package.package_sha256))
+    return Result::failure(failure("self_maintenance_input_invalid",
+        "epoch reactivation request is incomplete"));
+  auto pending = discover_lifecycle_epoch_pending_transition(request.coordinator_root);
+  if (!pending) return Result::failure(pending.error());
+  if (pending.value().has_value() &&
+      pending.value()->phase != "pre_handoff" &&
+      pending.value()->phase != "reactivation_pending")
+    return Result::failure(epoch_recovery(
+        "a different epoch maintenance transition requires recovery"));
+  if (pending.value().has_value() &&
+      (pending.value()->epoch_id != request.epoch_id ||
+       (!pending.value()->operation_id.empty() &&
+        pending.value()->operation_id != request.operation_id)))
+    return Result::failure(epoch_recovery(
+        "epoch reactivation request does not match the pending operation"));
+  if (!request.apply && pending.value().has_value() &&
+      pending.value()->phase == "reactivation_pending") {
+    if (pending.value()->operation != request.operation ||
+        pending.value()->retained_package.package_sha256 !=
+            request.package.package_sha256 ||
+        pending.value()->shell_integration != request.shell_integration)
+      return Result::failure(epoch_recovery(
+          "reactivation preview differs from its pending intent"));
+    return Result::success({"reactivation_pending", pending.value()->target,
+        request.coordinator_root / "epochs" / request.epoch_id / "maintenance" /
+        request.operation_id / "00-reactivation-intent.v1.json"});
+  }
+  if (!request.apply && !pending.value().has_value()) {
+    auto terminal = discover_lifecycle_epoch_terminal_transition(
+        request.coordinator_root);
+    if (!terminal) return Result::failure(terminal.error());
+    if (terminal.value().has_value() &&
+        terminal.value()->phase == "reactivation_complete" &&
+        terminal.value()->epoch_id == request.epoch_id &&
+        terminal.value()->operation_id == request.operation_id &&
+        terminal.value()->operation == request.operation &&
+        terminal.value()->retained_package.package_sha256 ==
+            request.package.package_sha256 &&
+        terminal.value()->shell_integration == request.shell_integration)
+      return Result::success({"reactivation_complete",
+          terminal.value()->target,
+          request.coordinator_root / "epochs" / request.epoch_id / "maintenance" /
+          request.operation_id / "00-reactivation-intent.v1.json"});
+  }
+  LifecycleEpoch epoch;
+  if (pending.value().has_value() &&
+      pending.value()->phase == "reactivation_pending") {
+    PinnedLifecycleEpochScope pending_scope;
+    auto opened_pending = pending_scope.open(request.coordinator_root,
+                                             request.epoch_id);
+    if (!opened_pending) return Result::failure(opened_pending.error());
+    auto bytes = pending_scope.read("epoch.v1.json");
+    auto parsed = bytes ? parse_lifecycle_manifest(bytes.value(), request.epoch_id)
+        : facman::core::Result<LifecycleEpoch>::failure(bytes.error());
+    if (!parsed || parsed.value().manifest_sha256 !=
+            pending.value()->epoch_manifest_sha256)
+      return Result::failure(!parsed ? parsed.error() : epoch_recovery(
+          "pending reactivation epoch manifest changed"));
+    epoch = parsed.take_value();
+  } else {
+    auto chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root);
+    if (!chain || chain.value().epochs.empty() ||
+        chain.value().epochs.back().compatibility_epoch ||
+        chain.value().epochs.back().epoch_id != request.epoch_id)
+      return Result::failure(!chain ? chain.error() : epoch_recovery(
+          "reactivation does not name the authoritative real epoch"));
+    epoch = chain.value().epochs.back();
+  }
+  if (!request.apply) {
+    auto reviewed = review_lifecycle_epoch_reactivation(request, provider_effects);
+    if (!reviewed) return Result::failure(reviewed.error());
+    return Result::success({"plan", reviewed.value().target, {}});
+  }
+  auto authority = admit_coordinator(request.coordinator_root,
+                                     epoch.acceptance_root, false);
+  if (!authority) return Result::failure(authority.error());
+  auto lock = acquire(authority.take_value(), request.operation_id);
+  if (!lock) return Result::failure(lock.error());
+  auto locked_pending = discover_lifecycle_epoch_pending_transition(
+      request.coordinator_root);
+  if (!locked_pending) return Result::failure(locked_pending.error());
+  if (locked_pending.value().has_value() &&
+      (locked_pending.value()->epoch_id != request.epoch_id ||
+       (!locked_pending.value()->operation_id.empty() &&
+        locked_pending.value()->operation_id != request.operation_id) ||
+       (locked_pending.value()->phase != "pre_handoff" &&
+        locked_pending.value()->phase != "reactivation_pending")))
+    return Result::failure(epoch_recovery(
+        "epoch reactivation pending identity changed under coordinator lock"));
+  PinnedLifecycleEpochScope scope;
+  auto opened = scope.open(request.coordinator_root, request.epoch_id, true);
+  if (!opened) return Result::failure(opened.error());
+  auto maintenance = open_or_create_epoch_child(scope.epoch, "maintenance");
+  if (!maintenance) return Result::failure(maintenance.error());
+  auto operation = open_or_create_epoch_child(maintenance.value(),
+      request.operation_id.c_str());
+  if (!operation) return Result::failure(operation.error());
+  const fs::path journal = operation.value().path() /
+      "00-reactivation-intent.v1.json";
+  std::vector<fs::path> names;
+  if (!operation.value().list_child_names_bounded(4U, names).ok() ||
+      (!names.empty() && !epoch_reactivation_record_names(names)))
+    return Result::failure(epoch_recovery(
+        "reactivation operation contains foreign or out-of-order records"));
+  EpochReactivationIntent intent;
+  Plan transition;
+  if (names.empty()) {
+    auto preview = request;
+    preview.apply = false;
+    auto reviewed = review_lifecycle_epoch_reactivation(preview, provider_effects);
+    if (!reviewed) return Result::failure(reviewed.error());
+    transition = reviewed.take_value();
+    if (provider_effects.inspect_candidate(transition) != CandidateState::exact)
+      return Result::failure(epoch_recovery(
+          "retained provider ownership changed before reactivation intent"));
+    const EffectResult installed =
+        provider_effects.inspect_retained_installed(transition);
+    if (!installed.ok || installed.outcome_unknown ||
+        !digest(installed.receipt_sha256))
+      return Result::failure(effect_error("self_maintenance_verify_failed",
+          "retained installed identity changed before reactivation intent",
+          installed).error());
+    const EffectResult verified = provider_effects.verify_installed(transition);
+    if (!verified.ok || verified.outcome_unknown ||
+        !digest(verified.receipt_sha256) ||
+        provider_effects.inspect_candidate(transition) != CandidateState::exact)
+      return Result::failure(effect_error("self_maintenance_verify_failed",
+          "retained generation changed before reactivation intent", verified).error());
+    const ShellState shortcut = shell_effects.inspect_shortcut(transition);
+    const ShellState registration = shell_effects.inspect_registration(transition);
+    if (request.shell_integration
+            ? (shortcut != ShellState::old_exact ||
+               registration != ShellState::old_exact)
+            : (shortcut != ShellState::new_exact ||
+               registration != ShellState::new_exact))
+      return Result::failure(epoch_recovery(
+          "reactivation native ownership is not the exact source before intent"));
+    intent.epoch_id = epoch.epoch_id;
+    intent.epoch_manifest_sha256 = epoch.manifest_sha256;
+    intent.operation = transition.operation;
+    intent.operation_id = request.operation_id;
+    intent.source_generation_id = transition.source.generation_id;
+    intent.source_activation_name = transition.previous_activation_name;
+    intent.source_activation_sha256 = transition.previous_activation_sha256;
+    intent.target_generation_id = transition.target.generation_id;
+    intent.target_generation_sha256 = hash(epoch_generation_bytes(epoch,
+        transition.target));
+    intent.target_package_sha256 = transition.target.package_sha256;
+    intent.target_installed_identity_sha256 = installed.receipt_sha256;
+    intent.target_activation_name = "activation." + request.operation_id +
+        ".v2.json";
+    intent.target_activation_sha256 = hash(epoch_link_activation_bytes(epoch,
+        intent.operation, intent.operation_id, intent.source_generation_id,
+        intent.target_generation_id, intent.target_generation_sha256,
+        intent.source_activation_name, intent.source_activation_sha256));
+    intent.shell_integration = request.shell_integration;
+    auto written = publish_epoch_record(operation.value(),
+        "00-reactivation-intent.staging.v1.json",
+        "00-reactivation-intent.v1.json",
+        epoch_reactivation_intent_bytes(intent), 3U);
+    if (!written) return Result::failure(written.error());
+  } else {
+    auto bytes = read_epoch_relative_bounded(operation.value(), names.front(),
+                                             kMaximumEpochGenesisRecordBytes);
+    auto parsed = bytes ? parse_epoch_reactivation_intent(bytes.value(), epoch,
+        request.operation_id) :
+        facman::core::Result<EpochReactivationIntent>::failure(bytes.error());
+    if (!parsed) return Result::failure(parsed.error());
+    intent = parsed.take_value();
+    if (intent.operation != operation_name(request.operation) ||
+        intent.target_package_sha256 != request.package.package_sha256 ||
+        intent.shell_integration != request.shell_integration)
+      return Result::failure(epoch_recovery(
+          "reactivation retry does not match its immutable intent"));
+    auto source = parse_epoch_generation(epoch, scope,
+        intent.source_generation_id);
+    std::string target_bytes;
+    auto target = parse_epoch_generation(epoch, scope,
+        intent.target_generation_id, &target_bytes);
+    if (!source || !target || hash(target_bytes) !=
+            intent.target_generation_sha256 ||
+        target.value().package_sha256 != intent.target_package_sha256)
+      return Result::failure(!source ? source.error() : !target ? target.error() :
+          epoch_recovery("reactivation generation changed after intent"));
+    transition = {intent.operation, intent.operation_id, source.take_value(),
+        target.take_value(), request.package.package, request.package.package_sha256,
+        "reactivate", intent.source_activation_name,
+        intent.source_activation_sha256};
+    auto inspected = inspect_package(request.package.package);
+    if (!inspected || inspected.value().package_sha256 !=
+            intent.target_package_sha256 ||
+        inspected.value().maintenance_launcher_sha256 !=
+            request.package.maintenance_launcher_sha256 ||
+        !same_descriptor(inspected.value().descriptor,
+                         request.package.descriptor) ||
+        !same_descriptor(inspected.value().descriptor,
+                         generation_descriptor(transition.target)))
+      return Result::failure(!inspected ? inspected.error() : epoch_recovery(
+          "reactivation retry package changed after intent"));
+    auto written = publish_epoch_record(operation.value(),
+        "00-reactivation-intent.staging.v1.json",
+        "00-reactivation-intent.v1.json",
+        epoch_reactivation_intent_bytes(intent), 3U);
+    if (!written) return Result::failure(written.error());
+  }
+  const auto exact_custody = [&]() {
+    auto current = read_epoch_relative_bounded(operation.value(),
+        "00-reactivation-intent.v1.json", kMaximumEpochGenesisRecordBytes);
+    std::vector<fs::path> current_names;
+    const std::string expected_shortcut = epoch_reactivation_cutover_bytes(
+        intent, "10-shortcut-cutover", hash(epoch_reactivation_intent_bytes(intent)),
+        "shortcut");
+    const std::string expected_registration = epoch_reactivation_cutover_bytes(
+        intent, "20-registration-cutover", hash(expected_shortcut), "registration");
+    if (!operation.value().list_child_names_bounded(4U, current_names).ok() ||
+        !epoch_reactivation_record_names(current_names)) return false;
+    if (current_names.size() >= 2U) {
+      auto marker = read_epoch_relative_bounded(operation.value(), current_names[1],
+          kMaximumEpochGenesisRecordBytes);
+      if (!marker || marker.value() != expected_shortcut) return false;
+    }
+    if (current_names.size() >= 3U) {
+      auto marker = read_epoch_relative_bounded(operation.value(), current_names[2],
+          kMaximumEpochGenesisRecordBytes);
+      if (!marker || marker.value() != expected_registration) return false;
+    }
+    if (!current || current.value() != epoch_reactivation_intent_bytes(intent) ||
+        provider_effects.inspect_candidate(transition) != CandidateState::exact)
+      return false;
+    const EffectResult installed =
+        provider_effects.inspect_retained_installed(transition);
+    if (!installed.ok || installed.outcome_unknown ||
+        installed.receipt_sha256 != intent.target_installed_identity_sha256)
+      return false;
+    const EffectResult verified = provider_effects.verify_installed(transition);
+    return verified.ok && !verified.outcome_unknown &&
+        digest(verified.receipt_sha256) &&
+        provider_effects.inspect_candidate(transition) == CandidateState::exact &&
+        operation.value().revalidate().ok() && maintenance.value().revalidate().ok() &&
+        scope.epoch.revalidate().ok() && scope.epochs.revalidate().ok() &&
+        scope.coordinator.revalidate().ok();
+  };
+  if (!exact_custody()) return Result::failure(epoch_recovery(
+      "reactivation provider or intent custody changed before native cutover"));
+  const std::string shortcut_bytes = epoch_reactivation_cutover_bytes(intent,
+      "10-shortcut-cutover", hash(epoch_reactivation_intent_bytes(intent)),
+      "shortcut");
+  const std::string registration_bytes = epoch_reactivation_cutover_bytes(intent,
+      "20-registration-cutover", hash(shortcut_bytes), "registration");
+  auto refreshed = operation.value().list_child_names_bounded(4U, names);
+  if (!refreshed.ok() || !epoch_reactivation_record_names(names))
+    return Result::failure(epoch_recovery(
+        "reactivation records changed before native cutover"));
+  if (names.size() < 2U || names[1] != fs::path("10-shortcut-cutover.v1.json")) {
+    const ShellState shell = shell_effects.inspect_shortcut(transition);
+    if (!exact_custody()) return Result::failure(epoch_recovery(
+        "reactivation custody changed before shortcut cutover"));
+    if (shell == ShellState::old_exact) {
+      const EffectResult changed = shell_effects.cutover_shortcut(transition);
+      if (!changed.ok || changed.outcome_unknown || !exact_custody())
+        return Result::failure(effect_error("self_maintenance_shortcut_failed",
+            "reactivation shortcut cutover failed", changed).error());
+    } else if (shell != ShellState::new_exact) {
+      return Result::failure(epoch_recovery(
+          "reactivation shortcut is not exactly source or target owned"));
+    }
+    if (shell_effects.inspect_shortcut(transition) != ShellState::new_exact ||
+        !exact_custody())
+      return Result::failure(epoch_recovery(
+          "reactivation shortcut did not reach exact target ownership"));
+    auto written = publish_epoch_record(operation.value(),
+        "10-shortcut-cutover.staging.v1.json",
+        "10-shortcut-cutover.v1.json", shortcut_bytes, 3U);
+    if (!written) return Result::failure(written.error());
+  }
+  if (shell_effects.inspect_shortcut(transition) != ShellState::new_exact ||
+      !exact_custody())
+    return Result::failure(epoch_recovery(
+        "reactivation shortcut changed before registration cutover"));
+  if (!operation.value().list_child_names_bounded(4U, names).ok() ||
+      !epoch_reactivation_record_names(names))
+    return Result::failure(epoch_recovery(
+        "reactivation records changed before registration cutover"));
+  if (names.size() < 3U || names[2] !=
+          fs::path("20-registration-cutover.v1.json")) {
+    const ShellState shell = shell_effects.inspect_registration(transition);
+    if (!exact_custody()) return Result::failure(epoch_recovery(
+        "reactivation custody changed before registration cutover"));
+    if (shell == ShellState::old_exact) {
+      const EffectResult changed = shell_effects.cutover_registration(transition);
+      if (!changed.ok || changed.outcome_unknown || !exact_custody())
+        return Result::failure(effect_error("self_maintenance_registration_failed",
+            "reactivation registration cutover failed", changed).error());
+    } else if (shell != ShellState::new_exact) {
+      return Result::failure(epoch_recovery(
+          "reactivation registration is not exactly source or target owned"));
+    }
+    if (shell_effects.inspect_registration(transition) != ShellState::new_exact ||
+        !exact_custody())
+      return Result::failure(epoch_recovery(
+          "reactivation registration did not reach exact target ownership"));
+    auto written = publish_epoch_record(operation.value(),
+        "20-registration-cutover.staging.v1.json",
+        "20-registration-cutover.v1.json", registration_bytes, 3U);
+    if (!written) return Result::failure(written.error());
+  }
+  if (shell_effects.inspect_shortcut(transition) != ShellState::new_exact ||
+      shell_effects.inspect_registration(transition) != ShellState::new_exact ||
+      !exact_custody())
+    return Result::failure(epoch_recovery(
+        "reactivation native ownership changed before activation"));
+  auto activations = open_or_create_epoch_child(scope.epoch, "activations");
+  if (!activations) return Result::failure(activations.error());
+  const std::string activation_bytes = epoch_link_activation_bytes(epoch,
+      intent.operation, intent.operation_id, intent.source_generation_id,
+      intent.target_generation_id, intent.target_generation_sha256,
+      intent.source_activation_name, intent.source_activation_sha256);
+  if (hash(activation_bytes) != intent.target_activation_sha256)
+    return Result::failure(epoch_recovery(
+        "reactivation activation bytes changed after native cutover"));
+  auto written = publish_epoch_record(activations.value(),
+      "activation." + intent.operation_id + ".staging.v2.json",
+      intent.target_activation_name, activation_bytes,
+      kMaximumEpochActivationRecords);
+  if (!written) return Result::failure(written.error());
+  auto active = discover_lifecycle_epoch_active(request.coordinator_root);
+  if (!active || active.value().active.activation_name !=
+          intent.target_activation_name ||
+      active.value().active.activation_sha256 != intent.target_activation_sha256 ||
+      active.value().active.active.generation_id != intent.target_generation_id)
+    return Result::failure(!active ? active.error() : epoch_recovery(
+        "reactivation did not publish an exact active head"));
+  const EffectResult retired = shell_effects.retire_shortcut_backup(transition);
+  if (!retired.ok || retired.outcome_unknown || !digest(retired.receipt_sha256) ||
+      !exact_custody())
+    return Result::failure(effect_error(
+        "self_maintenance_shortcut_backup_retirement_failed",
+        "reactivation shortcut backup retirement failed", retired).error());
+  return Result::success({"reactivation_complete", transition.target, journal});
+}
 
 facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transition(
     const EpochTransitionRequest &request, EpochPreparationEffects &effects) {
@@ -2938,6 +4430,11 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
       (request.operation != Operation::update && request.operation != Operation::downgrade))
     return facman::core::Result<EpochTransitionPreparation>::failure(failure(
         "self_maintenance_input_invalid", "epoch transition identifiers are invalid"));
+  if (request.apply && (!request.continuation_helper.is_absolute() ||
+      !digest(request.continuation_helper_sha256)))
+    return facman::core::Result<EpochTransitionPreparation>::failure(failure(
+        "self_maintenance_input_invalid",
+        "epoch transition requires an exact current continuation helper"));
   const auto exact_request_package = [&](const PackageInspection &value) {
     return value.package == request.package.package.lexically_normal() &&
         value.package_sha256 == request.package.package_sha256 &&
@@ -2968,6 +4465,10 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
               "caller package inspection does not match the exact source package"));
     auto transition = make_epoch_transition_plan(epoch, *active.value(), request);
     if (!transition) return facman::core::Result<EpochTransitionPreparation>::failure(transition.error());
+    if (transition.value().provider_operation != "install_local")
+      return facman::core::Result<EpochTransitionPreparation>::failure(failure(
+          "self_maintenance_candidate_unsafe",
+          "retained predecessor requires verified reactivation, not provider installation"));
     if (effects.inspect_candidate(transition.value()) != CandidateState::absent)
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(
           "self_maintenance_candidate_unsafe", "epoch target generation is not absent"));
@@ -3005,8 +4506,8 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
   auto operation = maintenance ? open_or_create_epoch_child(maintenance.value(), request.operation_id.c_str())
                                : facman::core::Result<facman::platform::StableDirectoryObject>::failure(maintenance.error());
   if (!operation) return facman::core::Result<EpochTransitionPreparation>::failure(operation.error());
-  const std::string final_name = "00-handoff-ready.v2.json";
-  const std::string staging_name = "00-handoff-ready.staging.v2.json";
+  const std::string final_name = "00-handoff-ready.v3.json";
+  const std::string staging_name = "00-handoff-ready.staging.v3.json";
   std::vector<fs::path> names;
   if (!operation.value().list_child_names_bounded(2U, names).ok() || names.size() > 1U ||
       (!names.empty() && names.front() != final_name && names.front() != staging_name))
@@ -3025,19 +4526,23 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
     auto checked = validate_retained_inputs(epoch, request.operation_id, handoff.inputs);
     if (!checked) return facman::core::Result<EpochTransitionPreparation>::failure(checked.error());
     auto retained_inspection = inspect_package(handoff.inputs.package);
-    if (!retained_inspection || retained_inspection.value().package_sha256 != handoff.inputs.package_sha256 ||
-        retained_inspection.value().maintenance_launcher_sha256 != handoff.inputs.helper_sha256)
+    if (!retained_inspection ||
+        retained_inspection.value().package_sha256 != handoff.inputs.package_sha256)
       return facman::core::Result<EpochTransitionPreparation>::failure(!retained_inspection ?
-          retained_inspection.error() : epoch_recovery("retained package helper provenance changed"));
+          retained_inspection.error() : epoch_recovery("retained package provenance changed"));
     notify_retained_inputs_after_initial_validation(checked.value());
     if (!revalidate_retained_inputs(checked.value()))
       return facman::core::Result<EpochTransitionPreparation>::failure(epoch_recovery(
           "retained handoff input changed during preparation"));
     EpochTransitionRequest retained_request{request.coordinator_root, epoch.epoch_id, request.operation,
-        request.operation_id, retained_inspection.take_value(), false};
-    auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request);
+        request.operation_id, retained_inspection.take_value(), false, {}, {}, true};
+    auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request,
+        handoff.creating_provider_revision);
     if (!planned) return facman::core::Result<EpochTransitionPreparation>::failure(planned.error());
     transition = planned.take_value();
+    if (transition.provider_operation != "install_local")
+      return facman::core::Result<EpochTransitionPreparation>::failure(epoch_recovery(
+          "retained handoff changed into a reactivation request"));
     if (effects.inspect_candidate(transition) != CandidateState::absent)
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(
           "self_maintenance_candidate_unsafe", "epoch target generation is not absent"));
@@ -3054,6 +4559,10 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
               "source package inspection changed under coordinator lock"));
     auto source_plan = make_epoch_transition_plan(epoch, *locked_active.value(), request);
     if (!source_plan) return facman::core::Result<EpochTransitionPreparation>::failure(source_plan.error());
+    if (source_plan.value().provider_operation != "install_local")
+      return facman::core::Result<EpochTransitionPreparation>::failure(failure(
+          "self_maintenance_candidate_unsafe",
+          "retained predecessor requires verified reactivation, not provider installation"));
     if (effects.inspect_candidate(source_plan.value()) != CandidateState::absent)
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(
           "self_maintenance_candidate_unsafe", "epoch target generation is not absent"));
@@ -3062,16 +4571,17 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(
           "self_maintenance_plan_failed", "provider review did not return an exact plan receipt",
           source_review.detail));
-    auto retained = effects.retain_handoff_inputs(source_plan.value());
+    auto retained = effects.retain_handoff_inputs(source_plan.value(),
+        request.continuation_helper, request.continuation_helper_sha256);
     if (!retained) return facman::core::Result<EpochTransitionPreparation>::failure(retained.error());
     auto checked = validate_retained_inputs(epoch, request.operation_id, retained.value());
     if (!checked || retained.value().package_sha256 != source_plan.value().package_sha256 ||
-        retained.value().helper_sha256 != request.package.maintenance_launcher_sha256)
+        retained.value().helper_sha256 != request.continuation_helper_sha256)
       return facman::core::Result<EpochTransitionPreparation>::failure(!checked ? checked.error() :
           epoch_recovery("retained package does not match the reviewed package identity"));
     auto retained_inspection = inspect_package(retained.value().package);
-    if (!retained_inspection || retained_inspection.value().package_sha256 != retained.value().package_sha256 ||
-        retained_inspection.value().maintenance_launcher_sha256 != retained.value().helper_sha256 ||
+    if (!retained_inspection ||
+        retained_inspection.value().package_sha256 != retained.value().package_sha256 ||
         !same_descriptor(retained_inspection.value().descriptor, request.package.descriptor))
       return facman::core::Result<EpochTransitionPreparation>::failure(!retained_inspection ?
           retained_inspection.error() : epoch_recovery("retained package provenance is not exact"));
@@ -3080,10 +4590,14 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
       return facman::core::Result<EpochTransitionPreparation>::failure(epoch_recovery(
           "retained handoff input changed during preparation"));
     EpochTransitionRequest retained_request{request.coordinator_root, epoch.epoch_id, request.operation,
-        request.operation_id, retained_inspection.take_value(), false};
-    auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request);
+        request.operation_id, retained_inspection.take_value(), false, {}, {}, true};
+    auto planned = make_epoch_transition_plan(epoch, *locked_active.value(), retained_request,
+        source_plan.value().target.creating_provider_revision);
     if (!planned) return facman::core::Result<EpochTransitionPreparation>::failure(planned.error());
     transition = planned.take_value();
+    if (transition.provider_operation != "install_local")
+      return facman::core::Result<EpochTransitionPreparation>::failure(epoch_recovery(
+          "retained package changed into a reactivation request"));
     reviewed = effects.review_install_local(transition);
     if (!reviewed.ok || reviewed.outcome_unknown || !digest(reviewed.receipt_sha256))
       return facman::core::Result<EpochTransitionPreparation>::failure(failure(
@@ -3094,7 +4608,8 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
         transition.operation_id, transition.source.generation_id,
         transition.previous_activation_name, transition.previous_activation_sha256,
         transition.target.generation_id, retained.take_value(), reviewed.receipt_sha256,
-        generator.next("epoch")};
+        generator.next("epoch"), request.shell_integration,
+        request.deadline_utc_ms, transition.target.creating_provider_revision};
   }
   if (handoff.epoch_id != epoch.epoch_id || handoff.manifest_sha256 != epoch.manifest_sha256 ||
       handoff.operation != transition.operation || handoff.operation_id != request.operation_id ||
@@ -3102,7 +4617,9 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
       handoff.source_activation_name != transition.previous_activation_name ||
       handoff.source_activation_sha256 != transition.previous_activation_sha256 ||
       handoff.target_generation_id != transition.target.generation_id ||
-      handoff.provider_plan_sha256 != reviewed.receipt_sha256)
+      handoff.creating_provider_revision != transition.target.creating_provider_revision ||
+      handoff.provider_plan_sha256 != reviewed.receipt_sha256 ||
+      handoff.shell_integration != request.shell_integration)
     return facman::core::Result<EpochTransitionPreparation>::failure(epoch_recovery(
         "epoch handoff journal does not bind the exact current preparation"));
   auto checked = validate_retained_inputs(epoch, request.operation_id, handoff.inputs);
@@ -3134,6 +4651,7 @@ facman::core::Result<EpochTransitionPreparation> prepare_lifecycle_epoch_transit
   response.journal_sha256 = hash(journal);
   response.inputs = std::move(handoff.inputs);
   response.nonce = std::move(handoff.nonce);
+  response.deadline_utc_ms = handoff.deadline_utc_ms;
   return facman::core::Result<EpochTransitionPreparation>::success(std::move(response));
 }
 
@@ -3165,7 +4683,7 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation_impl(
         !maintenance.open_child_directory_no_follow(operation_id, operation).ok())
       continue;
     facman::platform::StableInputFile final_record;
-    if (operation.open_child_file_no_follow_pinned("00-handoff-ready.v2.json", final_record).ok()) {
+    if (operation.open_child_file_no_follow_pinned("00-handoff-ready.v3.json", final_record).ok()) {
       if (!journal_epoch_id.empty()) return facman::core::Result<Plan>::failure(epoch_recovery(
           "more than one lifecycle epoch exposes the requested continuation handoff"));
       journal_epoch_id = name.string();
@@ -3206,7 +4724,7 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation_impl(
       !maintenance.open_child_directory_no_follow(operation_id, operation).ok())
     return facman::core::Result<Plan>::failure(epoch_recovery("epoch handoff journal is unavailable"));
   facman::platform::StableInputFile final_journal;
-  if (!operation.open_child_file_no_follow_pinned("00-handoff-ready.v2.json", final_journal).ok() ||
+  if (!operation.open_child_file_no_follow_pinned("00-handoff-ready.v3.json", final_journal).ok() ||
       final_journal.size() == 0 || final_journal.size() > kMaximumEpochGenesisRecordBytes)
     return facman::core::Result<Plan>::failure(epoch_recovery(
         "epoch continuation handoff journal is unavailable or unsafe"));
@@ -3216,7 +4734,7 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation_impl(
     return facman::core::Result<Plan>::failure(epoch_recovery(
         "epoch continuation handoff journal changed while read"));
   notify_epoch_record_pinned(scope.epoch.path() / "maintenance" / operation_id /
-                              "00-handoff-ready.v2.json");
+                              "00-handoff-ready.v3.json");
   auto handoff = parse_epoch_handoff(journal_bytes);
   if (!handoff || hash(journal_bytes) != journal_sha256 || handoff.value().nonce != nonce ||
       handoff.value().epoch_id != epoch.epoch_id || handoff.value().manifest_sha256 != epoch.manifest_sha256 ||
@@ -3229,8 +4747,8 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation_impl(
   auto retained = validate_retained_inputs(epoch, operation_id, handoff.value().inputs);
   if (!retained) return facman::core::Result<Plan>::failure(retained.error());
   auto inspected = inspect_package(handoff.value().inputs.package);
-  if (!inspected || inspected.value().package_sha256 != handoff.value().inputs.package_sha256 ||
-      inspected.value().maintenance_launcher_sha256 != handoff.value().inputs.helper_sha256)
+  if (!inspected ||
+      inspected.value().package_sha256 != handoff.value().inputs.package_sha256)
     return facman::core::Result<Plan>::failure(!inspected ? inspected.error() : epoch_recovery(
         "retained package no longer has its journaled identity"));
   notify_retained_inputs_after_initial_validation(retained.value());
@@ -3239,8 +4757,9 @@ facman::core::Result<Plan> admit_lifecycle_epoch_continuation_impl(
         "retained continuation input changed during admission"));
   EpochTransitionRequest request{coordinator_root, epoch.epoch_id,
       handoff.value().operation == "update" ? Operation::update : Operation::downgrade,
-      operation_id, inspected.take_value(), false};
-  auto plan = make_epoch_transition_plan(epoch, *active.value(), request);
+      operation_id, inspected.take_value(), false, {}, {}, true};
+  auto plan = make_epoch_transition_plan(epoch, *active.value(), request,
+      handoff.value().creating_provider_revision);
   if (!plan || plan.value().target.generation_id != handoff.value().target_generation_id)
     return facman::core::Result<Plan>::failure(!plan ? plan.error() : epoch_recovery(
         "epoch continuation target changed from its immutable handoff journal"));
@@ -3368,13 +4887,14 @@ facman::core::Result<void> validate_epoch_continuation_names(
     return facman::core::Result<void>::failure(epoch_recovery(
         "epoch continuation operation contains an unsafe record set"));
   const std::vector<fs::path> allowed = {
-      "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
+      "00-handoff-ready.v3.json", "10-provider-apply-bound.v2.json",
       "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
       "40-provider-verified.v2.json"};
   for (std::size_t index = 0; index < names.size(); ++index) {
     const std::string final_name = allowed[index].string();
-    const std::string staging_name = final_name.substr(0, final_name.size() - 7U) +
-        "staging.v2.json";
+    const std::size_t version = final_name.rfind(".v");
+    const std::string staging_name = final_name.substr(0, version) + ".staging" +
+        final_name.substr(version);
     if (names[index] != allowed[index] &&
         !(index + 1U == names.size() && names[index] == staging_name))
       return facman::core::Result<void>::failure(epoch_recovery(
@@ -3459,7 +4979,7 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
   if (!valid_names) return facman::core::Result<EpochContinuationResponse>::failure(valid_names.error());
   const bool entered_final_at_start = epoch_continuation_has(
       names, "20-provider-apply-entered.v2.json");
-  auto handoff_bytes = read_epoch_relative_bounded(operation, "00-handoff-ready.v2.json",
+  auto handoff_bytes = read_epoch_relative_bounded(operation, "00-handoff-ready.v3.json",
                                                    kMaximumEpochGenesisRecordBytes);
   auto handoff = handoff_bytes ? parse_epoch_handoff(handoff_bytes.value())
       : facman::core::Result<EpochHandoff>::failure(handoff_bytes.error());
@@ -3467,7 +4987,7 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
     return facman::core::Result<EpochContinuationResponse>::failure(!handoff ? handoff.error() :
         epoch_recovery("epoch continuation handoff changed before provider execution"));
   facman::platform::StableInputFile held_handoff;
-  if (!operation.open_child_file_no_follow_pinned("00-handoff-ready.v2.json", held_handoff).ok() ||
+  if (!operation.open_child_file_no_follow_pinned("00-handoff-ready.v3.json", held_handoff).ok() ||
       !held_file_matches_bytes(held_handoff, handoff_bytes.value()))
     return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
         "epoch continuation handoff cannot be held through provider execution"));
@@ -3517,7 +5037,7 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
     if (!validate_epoch_continuation_names(operation, current).ok()) return false;
     std::vector<HeldContinuationRecord> replacement;
     for (const auto &name : current) {
-      if (name == "00-handoff-ready.v2.json") continue;
+      if (name == "00-handoff-ready.v3.json") continue;
       auto bytes = read_epoch_relative_bounded(operation, name, kMaximumEpochGenesisRecordBytes);
       HeldContinuationRecord record;
       if (!bytes || !operation.open_child_file_no_follow_pinned(name, record.file).ok() ||
@@ -3565,7 +5085,7 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
         held_file_matches_bytes(held_handoff, handoff_bytes.value()) &&
         revalidate_retained_inputs(retained.value()) &&
         exact_names.size() == held_records.size() + 1U &&
-        !exact_names.empty() && exact_names.front() == "00-handoff-ready.v2.json" &&
+        !exact_names.empty() && exact_names.front() == "00-handoff-ready.v3.json" &&
         std::equal(held_records.begin(), held_records.end(), exact_names.begin() + 1,
             [](const HeldContinuationRecord &record, const fs::path &name) {
               return record.name == name;
@@ -3578,7 +5098,7 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
         scope.epochs.revalidate().ok() && scope.coordinator.revalidate().ok();
   };
   const fs::path journal = scope.epoch.path() / "maintenance" / request.operation_id /
-      "00-handoff-ready.v2.json";
+      "00-handoff-ready.v3.json";
   if (!request.apply) return facman::core::Result<EpochContinuationResponse>::success(
       {"plan", std::move(transition), journal, {}});
 
@@ -3621,7 +5141,8 @@ execute_lifecycle_epoch_continuation(const EpochContinuationRequest &request,
         epoch_recovery("epoch custody changed during provider binding rehydration"));
     if (!reconstructed)
       return facman::core::Result<EpochContinuationResponse>::failure(epoch_recovery(
-          "provider apply identity could not be rehydrated from its durable binding"));
+          "provider apply identity could not be rehydrated from its durable binding",
+          reconstructed.error().message + ": " + reconstructed.error().detail));
   } else {
     if (!custody_valid() || effects.inspect_candidate(transition) != CandidateState::absent ||
         !custody_valid())
@@ -3921,7 +5442,7 @@ facman::core::Result<void> validate_epoch_publication_names(
     return facman::core::Result<void>::failure(epoch_recovery(
         "epoch publication operation exceeds its exact record bounds"));
   const std::vector<fs::path> finals = {
-      "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
+      "00-handoff-ready.v3.json", "10-provider-apply-bound.v2.json",
       "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
       "40-provider-verified.v2.json", "50-generation-published.v2.json",
       "60-activation-published.v2.json", "70-shortcut-cutover.v2.json",
@@ -3995,7 +5516,7 @@ facman::core::Result<std::string> locate_epoch_publication(
       continue;
     facman::platform::StableInputFile handoff;
     if (!operation.open_child_file_no_follow_pinned(
-            "00-handoff-ready.v2.json", handoff).ok())
+            "00-handoff-ready.v3.json", handoff).ok())
       continue;
     if (!found.empty()) return facman::core::Result<std::string>::failure(
         epoch_recovery("more than one epoch exposes the requested publication"));
@@ -4118,7 +5639,7 @@ facman::core::Result<EpochPublicationAdmission> load_epoch_publication(
         "epoch publication generation or activation set exceeds its bound"));
 
   auto handoff = hold_publication_record(
-      state.operation, "00-handoff-ready.v2.json");
+      state.operation, "00-handoff-ready.v3.json");
   auto parsed_handoff = handoff ? parse_epoch_handoff(handoff.value().bytes)
       : facman::core::Result<EpochHandoff>::failure(handoff.error());
   if (!parsed_handoff ||
@@ -4134,7 +5655,7 @@ facman::core::Result<EpochPublicationAdmission> load_epoch_publication(
   state.handoff_bytes = handoff.value().bytes;
   state.handoff_file = std::move(handoff.value().file);
   state.journal = state.scope.epoch.path() / "maintenance" /
-      request.operation_id / "00-handoff-ready.v2.json";
+      request.operation_id / "00-handoff-ready.v3.json";
 
   auto source = parse_epoch_generation(state.epoch, state.scope,
       state.handoff.source_generation_id, &state.source_generation_bytes);
@@ -4163,9 +5684,7 @@ facman::core::Result<EpochPublicationAdmission> load_epoch_publication(
                           : facman::core::Result<PackageInspection>::failure(
                                 retained.error());
   if (!retained || !package ||
-      package.value().package_sha256 != state.handoff.inputs.package_sha256 ||
-      package.value().maintenance_launcher_sha256 !=
-          state.handoff.inputs.helper_sha256)
+      package.value().package_sha256 != state.handoff.inputs.package_sha256)
     return facman::core::Result<EpochPublicationAdmission>::failure(!retained
         ? retained.error() : (!package ? package.error() : epoch_recovery(
             "epoch publication retained package identity changed")));
@@ -4176,9 +5695,9 @@ facman::core::Result<EpochPublicationAdmission> load_epoch_publication(
       state.epoch.epoch_id,
       state.handoff.operation == "update" ? Operation::update
                                            : Operation::downgrade,
-      request.operation_id, package.take_value(), false};
+      request.operation_id, package.take_value(), false, {}, {}, true};
   auto transition = make_epoch_transition_plan(
-      state.epoch, source_state, transition_request);
+      state.epoch, source_state, transition_request, state.handoff.creating_provider_revision);
   if (!transition ||
       transition.value().target.generation_id !=
           state.handoff.target_generation_id ||
@@ -4367,7 +5886,7 @@ facman::core::Result<EpochPublicationAdmission> load_epoch_publication(
         "epoch publication active head is not the exact source or target phase"));
 
   for (const fs::path &name : state.operation_names) {
-    if (name == "00-handoff-ready.v2.json" ||
+    if (name == "00-handoff-ready.v3.json" ||
         (name >= fs::path("10-provider-apply-bound.v2.json") &&
          name <= fs::path("40-provider-verified.v2.json")))
       continue;
@@ -4694,8 +6213,78 @@ bool completed_epoch_shell_cutover(const LifecycleEpoch &epoch,
           operation_name, candidate.operation).ok() ||
       !candidate.operation.list_child_names_bounded(
           10U, candidate.record_names).ok()) return false;
+  const std::vector<fs::path> reactivation_names = {
+      "00-reactivation-intent.v1.json", "10-shortcut-cutover.v1.json",
+      "20-registration-cutover.v1.json"};
+  if (candidate.record_names == reactivation_names) {
+    candidate.records.reserve(reactivation_names.size());
+    for (const fs::path &name : reactivation_names) {
+      auto held = hold_publication_record(candidate.operation, name);
+      if (!held) return false;
+      notify_epoch_record_pinned(candidate.operation.path() / name);
+      candidate.records.push_back(held.take_value());
+    }
+    const std::string &intent_bytes = candidate.records[0].bytes;
+    auto intent = parse_epoch_reactivation_intent(intent_bytes, epoch, operation_name);
+    if (!intent) return false;
+    std::string target_bytes;
+    auto target = parse_epoch_generation(epoch, scope,
+        intent.value().target_generation_id, &target_bytes);
+    if (!target || hash(target_bytes) != intent.value().target_generation_sha256 ||
+        target.value().package_sha256 != intent.value().target_package_sha256)
+      return false;
+    std::string source_bytes;
+    auto source = parse_epoch_generation(epoch, scope,
+        intent.value().source_generation_id, &source_bytes);
+    Semver source_version, target_version;
+    if (!source || !semver(source.value().product_version, source_version) ||
+        !semver(target.value().product_version, target_version) ||
+        (intent.value().operation == "update" &&
+            compare(target_version, source_version) <= 0) ||
+        (intent.value().operation == "downgrade" &&
+            compare(target_version, source_version) >= 0) ||
+        (intent.value().operation == "rollback" &&
+            intent.value().source_generation_id == intent.value().target_generation_id))
+      return false;
+    facman::platform::StableDirectoryObject activations;
+    if (!scope.epoch.open_child_directory_no_follow("activations", activations).ok())
+      return false;
+    auto source_activation = read_epoch_relative_bounded(activations,
+        intent.value().source_activation_name, kMaximumEpochGenesisRecordBytes);
+    if (!source_activation || hash(source_activation.value()) !=
+            intent.value().source_activation_sha256) return false;
+    const std::string activation_bytes = epoch_link_activation_bytes(epoch,
+        intent.value().operation, intent.value().operation_id,
+        intent.value().source_generation_id, intent.value().target_generation_id,
+        intent.value().target_generation_sha256,
+        intent.value().source_activation_name,
+        intent.value().source_activation_sha256);
+    auto target_activation = read_epoch_relative_bounded(activations,
+        intent.value().target_activation_name, kMaximumEpochGenesisRecordBytes);
+    if (!target_activation || target_activation.value() != activation_bytes ||
+        hash(activation_bytes) != intent.value().target_activation_sha256 ||
+        !activations.revalidate().ok())
+      return false;
+    const std::string shortcut_bytes = epoch_reactivation_cutover_bytes(
+        intent.value(), "10-shortcut-cutover", hash(intent_bytes), "shortcut");
+    const std::string registration_bytes = epoch_reactivation_cutover_bytes(
+        intent.value(), "20-registration-cutover", hash(shortcut_bytes), "registration");
+    if (candidate.records[1].bytes != shortcut_bytes ||
+        candidate.records[2].bytes != registration_bytes) return false;
+    candidate.operation_id = intent.value().operation_id;
+    candidate.activation_name = intent.value().target_activation_name;
+    candidate.activation_sha256 = intent.value().target_activation_sha256;
+    candidate.source_activation_name = intent.value().source_activation_name;
+    candidate.source_activation_sha256 = intent.value().source_activation_sha256;
+    candidate.source_generation_id = intent.value().source_generation_id;
+    candidate.generation_id = intent.value().target_generation_id;
+    candidate.reactivation = true;
+    if (!revalidate_completed_epoch_shell_cutover(candidate, scope)) return false;
+    completed = std::move(candidate);
+    return true;
+  }
   const std::vector<fs::path> expected_names = {
-      "00-handoff-ready.v2.json", "10-provider-apply-bound.v2.json",
+      "00-handoff-ready.v3.json", "10-provider-apply-bound.v2.json",
       "20-provider-apply-entered.v2.json", "30-provider-outcome.v2.json",
       "40-provider-verified.v2.json", "50-generation-published.v2.json",
       "60-activation-published.v2.json", "70-shortcut-cutover.v2.json",
@@ -4715,7 +6304,7 @@ bool completed_epoch_shell_cutover(const LifecycleEpoch &epoch,
     return facman::core::Result<std::string>::failure(epoch_recovery(
         "completed epoch shell record is unavailable"));
   };
-  auto handoff_bytes = read("00-handoff-ready.v2.json");
+  auto handoff_bytes = read("00-handoff-ready.v3.json");
   auto handoff = handoff_bytes ? parse_epoch_handoff(handoff_bytes.value())
       : facman::core::Result<EpochHandoff>::failure(handoff_bytes.error());
   if (!handoff || handoff.value().epoch_id != epoch.epoch_id ||
@@ -4750,7 +6339,9 @@ bool completed_epoch_shell_cutover(const LifecycleEpoch &epoch,
   std::string generation_bytes;
   auto target = parse_epoch_generation(epoch, scope, handoff.value().target_generation_id,
                                        &generation_bytes);
-  if (!target || hash(generation_bytes).empty()) return false;
+  if (!target || hash(generation_bytes).empty() ||
+      target.value().creating_provider_revision != handoff.value().creating_provider_revision)
+    return false;
   const std::string activation_name = "activation." + handoff.value().operation_id + ".v2.json";
   const std::string activation_bytes = epoch_link_activation_bytes(epoch,
       handoff.value().operation,
@@ -5056,6 +6647,17 @@ execute_lifecycle_epoch_shell_cutover(const EpochShellCutoverRequest &request,
               request.nonce, request.journal_sha256, true}))
     return facman::core::Result<EpochShellCutoverResponse>::failure(epoch_recovery(
         "epoch shell cutover final custody or ownership is not exact"));
+  const EffectResult retired =
+      effects.retire_shortcut_backup(state.publication.transition);
+  auto revalidated = reload_unchanged();
+  if (!revalidated)
+    return facman::core::Result<EpochShellCutoverResponse>::failure(
+        revalidated.error());
+  if (!retired.ok || retired.outcome_unknown ||
+      !digest(retired.receipt_sha256))
+    return facman::core::Result<EpochShellCutoverResponse>::failure(effect_error(
+        "self_maintenance_shortcut_backup_retirement_failed",
+        "epoch shortcut backup retirement failed", retired).error());
   return facman::core::Result<EpochShellCutoverResponse>::success(
       {"shell_cutover_complete", state.publication.transition.target, state.publication.journal});
 }
@@ -5218,6 +6820,142 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
         held_unfinished_records.push_back(std::move(snapshot));
         continue;
       }
+    if (records.front() == fs::path("00-reactivation-intent.v1.json") ||
+        records.front() == fs::path("00-reactivation-intent.staging.v1.json")) {
+      if (!epoch_reactivation_record_names(records))
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            epoch_recovery("epoch reactivation records are foreign or out of order"));
+      std::vector<HeldPublicationRecord> held_records;
+      for (const fs::path &record_name : records) {
+        auto held = hold_publication_record(operation, record_name);
+        if (!held)
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              held.error());
+        notify_epoch_record_pinned(operation.path() / record_name);
+        held_records.push_back(held.take_value());
+      }
+      auto intent = parse_epoch_reactivation_intent(held_records.front().bytes,
+          epoch.value(), operation_name);
+      if (!intent)
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            intent.error());
+      const std::string shortcut_bytes = epoch_reactivation_cutover_bytes(
+          intent.value(), "10-shortcut-cutover", hash(held_records.front().bytes),
+          "shortcut");
+      const std::string registration_bytes = epoch_reactivation_cutover_bytes(
+          intent.value(), "20-registration-cutover", hash(shortcut_bytes),
+          "registration");
+      if ((held_records.size() >= 2U && held_records[1].bytes != shortcut_bytes) ||
+          (held_records.size() >= 3U && held_records[2].bytes != registration_bytes) ||
+          !std::all_of(held_records.begin(), held_records.end(),
+              [](HeldPublicationRecord &held) {
+                return held_file_matches_bytes(held.file, held.bytes);
+              }))
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            epoch_recovery("epoch reactivation cutover records changed or are foreign"));
+      std::string target_bytes;
+      auto target = parse_epoch_generation(epoch.value(), scope,
+          intent.value().target_generation_id, &target_bytes);
+      if (!target || hash(target_bytes) !=
+              intent.value().target_generation_sha256 ||
+          target.value().package_sha256 != intent.value().target_package_sha256)
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            !target ? target.error() : epoch_recovery(
+                "reactivation target generation changed after intent"));
+      const fs::path repair_package = epoch.value().state_root / "repair-sources" /
+          (intent.value().target_package_sha256 + ".zip");
+      auto retained_package = inspect_package(repair_package);
+      if (!retained_package || retained_package.value().package_sha256 !=
+              intent.value().target_package_sha256 ||
+          !same_descriptor(retained_package.value().descriptor,
+                           generation_descriptor(target.value())))
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            !retained_package ? retained_package.error() : epoch_recovery(
+                "reactivation retained package changed after intent"));
+      const std::string activation_bytes = epoch_link_activation_bytes(
+          epoch.value(), intent.value().operation, intent.value().operation_id,
+          intent.value().source_generation_id,
+          intent.value().target_generation_id,
+          intent.value().target_generation_sha256,
+          intent.value().source_activation_name,
+          intent.value().source_activation_sha256);
+      if (hash(activation_bytes) != intent.value().target_activation_sha256)
+        return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+            epoch_recovery("reactivation intent does not bind its activation"));
+      EpochPendingTransition candidate;
+      candidate.epoch_id = epoch.value().epoch_id;
+      candidate.epoch_manifest_sha256 = epoch.value().manifest_sha256;
+      candidate.operation = intent.value().operation == "update"
+          ? Operation::update : intent.value().operation == "rollback"
+              ? Operation::rollback : Operation::downgrade;
+      candidate.operation_id = intent.value().operation_id;
+      candidate.journal_sha256 = hash(held_records.front().bytes);
+      candidate.retained_package = retained_package.take_value();
+      candidate.shell_integration = intent.value().shell_integration;
+      candidate.source_activation_name = intent.value().source_activation_name;
+      candidate.source_activation_sha256 = intent.value().source_activation_sha256;
+      candidate.target = target.take_value();
+      candidate.target_activation_name = intent.value().target_activation_name;
+      candidate.target_activation_sha256 = intent.value().target_activation_sha256;
+      const bool cutover_final = records.size() == 3U &&
+          records.back() == fs::path("20-registration-cutover.v1.json");
+      if (cutover_final) {
+        // A historical completion belongs to its recorded source activation,
+        // not necessarily to today's head. The completed record and final
+        // activation are checked here; chain discovery checks their order.
+        CompletedEpochShellCutover completed;
+        if (!completed_epoch_shell_cutover(epoch.value(), scope,
+                                           operation_name, completed))
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              epoch_recovery("completed epoch reactivation is not exact"));
+        candidate.completed = true;
+        candidate.phase = "reactivation_complete";
+        held_completed_records.push_back(std::move(completed));
+        completions.push_back(std::move(candidate));
+      } else {
+        PendingEpochTransitionState pending_state{candidate.target,
+            epoch_generation_staging_name(candidate.target.generation_id),
+            intent.value().target_activation_name,
+            "activation." + intent.value().operation_id + ".staging.v2.json",
+            activation_bytes};
+        auto active = discover_epoch_genesis_state(epoch.value(), scope, nullptr,
+            false, &intent.value().operation_id, &pending_state);
+        if (!active || !active.value().has_value() ||
+            active.value()->activation_name != intent.value().source_activation_name ||
+            active.value()->activation_sha256 != intent.value().source_activation_sha256 ||
+            !active.value()->previous.has_value() ||
+            active.value()->previous->generation_id !=
+                intent.value().target_generation_id)
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              !active ? active.error() : epoch_recovery(
+                  "pending reactivation is not the immediate predecessor transition"));
+        candidate.phase = "reactivation_pending";
+        if (unfinished.has_value())
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              epoch_recovery("more than one unfinished epoch transition exists"));
+        ScanOperationSnapshot snapshot;
+        if (!scope.epoch.open_child_directory_no_follow("maintenance",
+                snapshot.maintenance).ok() ||
+            !snapshot.maintenance.list_child_names_bounded(
+                kMaximumEpochActivationRecords + 1U,
+                snapshot.operation_names).ok() ||
+            snapshot.operation_names != operations ||
+            !snapshot.maintenance.open_child_directory_no_follow(operation_name,
+                snapshot.operation).ok() ||
+            !snapshot.operation.list_child_names_bounded(
+                kMaximumEpochPublicationRecords + 1U,
+                snapshot.record_names).ok() ||
+            snapshot.record_names != records)
+          return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
+              epoch_recovery("pending reactivation custody changed"));
+        snapshot.operation_present = true;
+        snapshot.records = std::move(held_records);
+        held_unfinished_records.push_back(std::move(snapshot));
+        unfinished_pending_state = std::move(pending_state);
+        unfinished = std::move(candidate);
+      }
+      continue;
+    }
     const bool continuation_records = records.size() <= kMaximumEpochContinuationRecords;
     const auto valid_records = continuation_records
         ? validate_epoch_continuation_names(operation, records)
@@ -5226,7 +6964,7 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
       return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
           valid_records.error());
     const bool handoff_staged = records.front() ==
-        fs::path("00-handoff-ready.staging.v2.json");
+        fs::path("00-handoff-ready.staging.v3.json");
     auto handoff_bytes = read_epoch_relative_bounded(operation, records.front(),
                                                      kMaximumEpochGenesisRecordBytes);
     auto handoff = handoff_bytes ? parse_epoch_handoff(handoff_bytes.value())
@@ -5286,14 +7024,17 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
                                            retained.error());
     if (!retained || !retained_package ||
         retained_package.value().package_sha256 != handoff.value().inputs.package_sha256 ||
-        retained_package.value().maintenance_launcher_sha256 !=
-            handoff.value().inputs.helper_sha256 ||
+        (!handoff.value().creating_provider_revision.empty() &&
+         handoff.value().creating_provider_revision ==
+             retained_package.value().descriptor.universal_setup_revision) ||
         !revalidate_retained_inputs(retained.value()))
       return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
           !retained ? retained.error() : (!retained_package ? retained_package.error() :
               epoch_recovery("pending epoch retained package identity changed")));
     candidate.retained_package = retained_package.take_value();
     candidate.retained_inputs = handoff.value().inputs;
+    candidate.shell_integration = handoff.value().shell_integration;
+    candidate.deadline_utc_ms = handoff.value().deadline_utc_ms;
     held_retained_inputs.push_back(std::move(retained.take_value()));
     candidate.source_activation_name = handoff.value().source_activation_name;
     candidate.source_activation_sha256 = handoff.value().source_activation_sha256;
@@ -5327,9 +7068,10 @@ discover_epoch_transition_scan(const fs::path &coordinator_root) {
         return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
             epoch_recovery("pending epoch handoff does not bind the exact source head"));
       EpochTransitionRequest target_request{coordinator_root, epoch.value().epoch_id,
-          candidate.operation, candidate.operation_id, candidate.retained_package, false};
+          candidate.operation, candidate.operation_id, candidate.retained_package,
+          false, {}, {}, true};
       auto target_plan = make_epoch_transition_plan(
-          epoch.value(), *source.value(), target_request);
+          epoch.value(), *source.value(), target_request, handoff.value().creating_provider_revision);
       if (!target_plan || target_plan.value().target.generation_id !=
               handoff.value().target_generation_id)
         return facman::core::Result<std::optional<EpochPendingTransition>>::failure(
@@ -5560,8 +7302,10 @@ facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
 
   LifecycleEpoch next = proposed;
   next.compatibility_epoch = false;
+  next.compatibility_active.reset();
   next.manifest_sha256.clear();
   next.retirement_sha256.clear();
+  next.retirement_journal_name.clear();
   const std::string submitted_id = hash(lifecycle_identity_bytes(next));
   if (!next.epoch_id.empty() && next.epoch_id != submitted_id)
     return facman::core::Result<LifecycleEpochChain>::failure(failure(
@@ -5699,9 +7443,651 @@ facman::core::Result<LifecycleEpochChain> publish_lifecycle_epoch(
   return discover_lifecycle_epoch_chain_impl(coordinator_root);
 }
 
+// An interruption between creating the first epoch directory and publishing
+// its manifest leaves discovery deliberately fail-closed. Only the exact
+// bootstrap that durably verified the clone may finish that publication.
+facman::core::Result<void> recover_bootstrap_epoch_manifest(
+    const fs::path &coordinator_root, const LifecycleEpoch &epoch,
+    const ActivationChain &reviewed_flat) {
+  auto admission = admit_coordinator(coordinator_root, epoch.acceptance_root, false);
+  if (!admission) return facman::core::Result<void>::failure(admission.error());
+  auto lock = acquire(admission.take_value(), "compatibility.bootstrap.manifest");
+  if (!lock) return facman::core::Result<void>::failure(lock.error());
+  facman::platform::StableDirectoryObject epochs;
+  const auto opened_epochs = lock.value().admission.coordinator
+      .open_child_directory_no_follow_for_relative_writes("epochs", epochs);
+  if (!opened_epochs.ok()) {
+    facman::platform::PathIdentity identity;
+    if (!facman::platform::inspect_path_no_follow(
+            coordinator_root / "epochs", identity).ok() || identity.exists)
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "bootstrap epoch root is unsafe during manifest recovery"));
+    return facman::core::Result<void>::success();
+  }
+  std::vector<fs::path> epoch_names;
+  if (!epochs.list_child_names_bounded(kMaximumLifecycleEpochs, epoch_names).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap epoch root changed during manifest recovery"));
+  if (epoch_names.empty()) return facman::core::Result<void>::success();
+  if (epoch_names.size() != 1U || epoch_names.front() != fs::path(epoch.epoch_id))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap manifest recovery found an ambiguous epoch namespace"));
+  facman::platform::StableDirectoryObject epoch_directory;
+  if (!epochs.open_child_directory_no_follow_for_relative_writes(
+          epoch.epoch_id, epoch_directory).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap epoch directory is unsafe during manifest recovery"));
+  std::vector<fs::path> names;
+  if (!epoch_directory.list_child_names_bounded(8U, names).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap epoch directory changed during manifest recovery"));
+  if (std::find(names.begin(), names.end(), fs::path("epoch.v1.json")) !=
+      names.end()) {
+    auto existing = read_epoch_manifest(epoch_directory, "epoch.v1.json");
+    if (!existing || existing.value() != lifecycle_manifest_bytes(epoch))
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "bootstrap epoch manifest has different immutable bytes"));
+    return facman::core::Result<void>::success();
+  }
+  if (names.size() > 1U ||
+      (!names.empty() && names.front() != fs::path("epoch.staging.v1.json") &&
+       names.front() != fs::path("epoch.v1.json")))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap epoch directory contains unexpected state before its manifest"));
+
+  auto flat = discover_activation_chain(coordinator_root);
+  if (!flat || !flat.value().has_value() ||
+      retirement_chain_digest(*flat.value()) !=
+          retirement_chain_digest(reviewed_flat))
+    return facman::core::Result<void>::failure(!flat ? flat.error() : epoch_recovery(
+        "flat authority changed before bootstrap manifest recovery"));
+  LifecycleEpoch compatibility;
+  compatibility.epoch_id = kCompatibilityEpochId;
+  compatibility.compatibility_epoch = true;
+  compatibility.genesis_generation_id = flat.value()->generations.front().generation_id;
+  compatibility.acceptance_root = epoch.acceptance_root;
+  compatibility.logical_root = epoch.logical_root;
+  compatibility.state_root = epoch.state_root;
+  auto validated = validate_epoch_history(compatibility, coordinator_root, true);
+  if (!validated || !compatibility.compatibility_handoff ||
+      compatibility.retirement_sha256 != epoch.predecessor_retirement_sha256 ||
+      hash(compatibility_manifest_bytes(*flat.value())) !=
+          epoch.predecessor_manifest_sha256)
+    return facman::core::Result<void>::failure(!validated ? validated.error() :
+        epoch_recovery("partial epoch manifest lacks its exact verified authority handoff"));
+  std::string lock_detail;
+  if (!lock.value().admission.revalidate(lock_detail) ||
+      !epochs.revalidate().ok() || !epoch_directory.revalidate().ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "bootstrap authority changed before manifest recovery", lock_detail));
+  const std::string bytes = lifecycle_manifest_bytes(epoch);
+  auto published = publish_epoch_record(epoch_directory,
+      "epoch.staging.v1.json", "epoch.v1.json", bytes, 1U);
+  if (!published || !epoch_directory.flush_metadata().ok() ||
+      !epochs.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return facman::core::Result<void>::failure(!published ? published.error() :
+        epoch_recovery("recovered bootstrap epoch manifest was not flushed"));
+  return facman::core::Result<void>::success();
+}
+
+facman::core::Result<CompatibilityAuthorityBootstrapResponse>
+bootstrap_compatibility_authority(
+    const CompatibilityAuthorityBootstrapRequest &request,
+    CompatibilityAuthorityBootstrapEffects &effects) {
+  using Result = facman::core::Result<CompatibilityAuthorityBootstrapResponse>;
+  const auto fail = [](facman::core::Error error) {
+    return Result::failure(std::move(error));
+  };
+  if (!request.coordinator_root.is_absolute() ||
+      !digest(request.package_sha256))
+    return fail(failure("self_maintenance_input_invalid",
+        "compatibility bootstrap inputs are incomplete"));
+  auto flat = discover_activation_chain(request.coordinator_root);
+  auto active = flat ? discover_active(request.coordinator_root)
+      : facman::core::Result<std::optional<ActiveState>>::failure(flat.error());
+  if (!active || !flat.value().has_value() || !active.value().has_value())
+    return fail(!active ? active.error() : epoch_recovery(
+        "bootstrap requires one active compatibility activation history"));
+  const Generation source = active.value()->active;
+  if (source.generation_id != flat.value()->generations.back().generation_id ||
+      source.package_sha256 != request.package_sha256 ||
+      !same_descriptor(generation_descriptor(source), request.package_descriptor))
+    return fail(failure("self_maintenance_package_incompatible",
+        "bootstrap package does not exactly match the active flat generation"));
+  const std::string handoff_bytes =
+      compatibility_authority_handoff_bytes(*flat.value());
+  LifecycleEpoch epoch;
+  epoch.acceptance_root = source.acceptance_root;
+  epoch.genesis_generation_id = source.generation_id;
+  epoch.logical_root = source.logical_root;
+  epoch.predecessor_epoch_id = kCompatibilityEpochId;
+  epoch.predecessor_manifest_sha256 =
+      hash(compatibility_manifest_bytes(*flat.value()));
+  epoch.predecessor_retirement_sha256 = hash(handoff_bytes);
+  epoch.state_root = source.state_root;
+  epoch.epoch_id = hash(lifecycle_identity_bytes(epoch));
+  auto target = make_epoch_genesis_generation(epoch,
+      request.package_descriptor, request.package_sha256);
+  if (!target) return fail(target.error());
+  // The provider owns the Windows path limit and recipe admission. Run its
+  // read-only plan before publishing even the first bootstrap reservation.
+  // An exact clone on retry has already crossed that boundary and must not
+  // be asked to plan a second install over its existing provider identity.
+  const EffectResult preexisting_clone = effects.inspect_epoch_clone(
+      source, target.value());
+  if (preexisting_clone.outcome_unknown)
+    return fail(epoch_recovery("epoch clone identity is ambiguous before bootstrap",
+                               preexisting_clone.detail));
+  if (!preexisting_clone.ok) {
+    const EffectResult reviewed = effects.review_epoch_clone(
+        source, target.value());
+    if (!reviewed.ok || reviewed.outcome_unknown ||
+        !digest(reviewed.receipt_sha256))
+      return fail(failure("self_maintenance_plan_failed",
+                          "epoch clone provider plan was refused",
+                          reviewed.detail));
+  }
+  if (request.apply) {
+    auto recovered = recover_bootstrap_epoch_manifest(
+        request.coordinator_root, epoch, *flat.value());
+    if (!recovered) return fail(recovered.error());
+  }
+  auto chain = discover_lifecycle_epoch_chain_impl(request.coordinator_root);
+  if (!chain || chain.value().epochs.empty() ||
+      !chain.value().epochs.front().compatibility_epoch ||
+      chain.value().epochs.front().manifest_sha256 !=
+          epoch.predecessor_manifest_sha256)
+    return fail(!chain ? chain.error() : epoch_recovery(
+        "bootstrap requires one active compatibility activation history"));
+  if (chain.value().epochs.size() > 2U ||
+      (chain.value().epochs.size() == 2U &&
+       chain.value().epochs.back().epoch_id != epoch.epoch_id))
+    return fail(epoch_recovery("a different real lifecycle epoch is already present"));
+  const fs::path journal_path = request.coordinator_root / "authority-bootstrap.v1";
+  const std::string entered_bytes = compatibility_bootstrap_entered_bytes(
+      *flat.value(), epoch, target.value(), request.shell_integration);
+  const std::string entered_sha256 = hash(entered_bytes);
+  ActiveState preview{target.value(), {},
+      epoch_activation_name(target.value().generation_id), {}};
+  if (!request.apply)
+    return Result::success({"planned", epoch, std::move(preview), journal_path});
+  if (chain.value().epochs.size() == 2U) {
+    auto selected = resolve_authoritative_active_state(request.coordinator_root);
+    if (selected && selected.value().has_value() &&
+        selected.value()->epoch.has_value() &&
+        selected.value()->epoch->epoch_id == epoch.epoch_id) {
+      // Legacy completion records predate bootstrap-backup retirement. Recheck
+      // authority under the coordinator lock before retiring that exact backup;
+      // do not replay native cutover over a later active generation.
+      auto admission = admit_coordinator(request.coordinator_root,
+                                         source.acceptance_root, false);
+      if (!admission) return fail(admission.error());
+      auto lock = acquire(admission.take_value(), "compatibility.bootstrap.retire");
+      if (!lock) return fail(lock.error());
+      auto current = resolve_authoritative_active_state(request.coordinator_root);
+      if (!current || !current.value().has_value() ||
+          !current.value()->epoch.has_value() ||
+          current.value()->epoch->epoch_id != epoch.epoch_id ||
+          current.value()->active.activation_name != selected.value()->active.activation_name ||
+          current.value()->active.activation_sha256 != selected.value()->active.activation_sha256)
+        return fail(!current ? current.error() : epoch_recovery(
+            "bootstrap authority changed before backup retirement"));
+      facman::platform::StableDirectoryObject journal;
+      if (!lock.value().admission.coordinator.open_child_directory_no_follow_for_relative_writes(
+              "authority-bootstrap.v1", journal).ok())
+        return fail(epoch_recovery("bootstrap journal changed before backup retirement"));
+      auto entered = read_epoch_relative_bounded(
+          journal, "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
+      if (!entered || entered.value() != entered_bytes)
+        return fail(!entered ? entered.error() : epoch_recovery(
+            "bootstrap backup retirement has a different entered identity"));
+      std::string detail;
+      if (!lock.value().admission.revalidate(detail) || !journal.revalidate().ok())
+        return fail(epoch_recovery("bootstrap authority changed before backup retirement", detail));
+      if (request.shell_integration) {
+        const auto retired = effects.retire_epoch_shortcut_backup(source, target.value());
+        if (!retired.ok || retired.outcome_unknown)
+          return fail(epoch_recovery("completed bootstrap shortcut backup retirement is unresolved",
+                                     retired.detail));
+      }
+      if (!lock.value().admission.revalidate(detail) || !journal.revalidate().ok())
+        return fail(epoch_recovery("bootstrap authority changed during backup retirement", detail));
+      return Result::success({"complete", epoch,
+          current.value()->active, journal_path});
+    }
+  }
+
+  {
+    auto admission = admit_coordinator(request.coordinator_root,
+                                       source.acceptance_root, false);
+    if (!admission) return fail(admission.error());
+    auto lock = acquire(admission.take_value(), "compatibility.bootstrap");
+    if (!lock) return fail(lock.error());
+    auto current = discover_activation_chain(request.coordinator_root);
+    if (!current || !current.value().has_value() ||
+        current.value()->activation_name != flat.value()->activation_name ||
+        current.value()->activation_sha256 != flat.value()->activation_sha256)
+      return fail(!current ? current.error() : epoch_recovery(
+          "flat activation head changed before bootstrap entry"));
+    auto current_active = discover_active(request.coordinator_root);
+    auto current_epochs = current_active
+        ? discover_lifecycle_epoch_chain_impl(request.coordinator_root)
+        : facman::core::Result<LifecycleEpochChain>::failure(current_active.error());
+    if (!current_epochs || !current_active.value().has_value() ||
+        current_active.value()->active.install_id != source.install_id ||
+        current_epochs.value().epochs.empty() ||
+        current_epochs.value().epochs.size() > 2U ||
+        (current_epochs.value().epochs.size() == 2U &&
+         current_epochs.value().epochs.back().epoch_id != epoch.epoch_id))
+      return fail(!current_epochs ? current_epochs.error() : epoch_recovery(
+          "compatibility authority changed before bootstrap entry"));
+    auto journal = open_or_create_epoch_child(
+        lock.value().admission.coordinator, "authority-bootstrap.v1");
+    if (!journal) return fail(journal.error());
+    std::vector<fs::path> names;
+    if (!journal.value().list_child_names_bounded(7U, names).ok())
+      return fail(epoch_recovery("bootstrap journal exceeds its record bound"));
+    const std::vector<std::string> phases = {
+        "10-clone-entered.v1.json", "20-clone-verified.v1.json",
+        "30-genesis-activated.v1.json", "40-shortcut-cutover.v1.json",
+        "50-registration-cutover.v1.json", "60-complete.v1.json"};
+    for (std::size_t index = 0; index < names.size(); ++index) {
+      if (index >= phases.size())
+        return fail(epoch_recovery("bootstrap journal exceeds its phase bound"));
+      const std::string staging = phases[index].substr(
+          0, phases[index].size() - 8U) + ".staging.v1.json";
+      if (names[index] != phases[index] &&
+          !(index + 1U == names.size() && names[index] == staging))
+        return fail(epoch_recovery(
+            "bootstrap journal contains a foreign or out-of-order entry"));
+    }
+    auto entered = read_optional_bootstrap_record(
+        journal.value(), phases[0]);
+    if (!entered) return fail(entered.error());
+    if (entered.value().has_value() && *entered.value() != entered_bytes)
+      return fail(epoch_recovery("bootstrap entry belongs to another authority"));
+    if (!entered.value().has_value()) {
+      const EffectResult preexisting = effects.inspect_epoch_clone(
+          source, target.value());
+      if (preexisting.ok || preexisting.outcome_unknown)
+        return fail(epoch_recovery(
+            "epoch clone already exists without a durable bootstrap entry",
+            preexisting.detail));
+      const EffectResult reviewed = effects.review_epoch_clone(
+          source, target.value());
+      if (!reviewed.ok || reviewed.outcome_unknown ||
+          !digest(reviewed.receipt_sha256))
+        return fail(failure("self_maintenance_plan_failed",
+                            "epoch clone provider plan changed before entry",
+                            reviewed.detail));
+      const auto published = publish_epoch_record(journal.value(),
+          "10-clone-entered.staging.v1.json", phases[0], entered_bytes, 6U);
+      if (!published) return fail(published.error());
+      const EffectResult cloned = effects.clone_epoch(source, target.value());
+      if (!cloned.ok || cloned.outcome_unknown)
+        return fail(epoch_recovery("epoch clone entered but its outcome is unknown",
+                                   cloned.detail));
+    }
+    std::string lock_detail;
+    if (!lock.value().admission.revalidate(lock_detail))
+      return fail(epoch_recovery("bootstrap authority changed during clone",
+                                 lock_detail));
+    const EffectResult inspected = effects.inspect_epoch_clone(
+        source, target.value());
+    if (!inspected.ok || inspected.outcome_unknown ||
+        !digest(inspected.receipt_sha256))
+      return fail(epoch_recovery("entered epoch clone is not exactly installed",
+                                 inspected.detail));
+    if (!lock.value().admission.revalidate(lock_detail) ||
+        !journal.value().revalidate().ok())
+      return fail(epoch_recovery("bootstrap authority changed during clone inspection",
+                                 lock_detail));
+    const std::string verified_bytes = compatibility_bootstrap_phase_bytes(
+        "clone_verified", entered_sha256, inspected.receipt_sha256);
+    const auto verified = publish_epoch_record(journal.value(),
+        "20-clone-verified.staging.v1.json", phases[1], verified_bytes, 6U);
+    if (!verified) return fail(verified.error());
+    const auto handoff = publish_epoch_record(
+        lock.value().admission.coordinator,
+        "authority-handoff.staging.v1.json", "authority-handoff.v1.json",
+        handoff_bytes, 256U);
+    if (!handoff) return fail(handoff.error());
+    if (!journal.value().flush_metadata().ok() ||
+        !lock.value().admission.coordinator.flush_metadata().ok())
+      return fail(epoch_recovery("bootstrap handoff directory was not flushed"));
+  }
+
+  auto published = publish_lifecycle_epoch(request.coordinator_root, epoch, true);
+  if (!published) return fail(published.error());
+  auto genesis = activate_lifecycle_epoch_genesis(
+      {request.coordinator_root, epoch.epoch_id, target.value(), true});
+  if (!genesis) return fail(genesis.error());
+
+  auto admission = admit_coordinator(request.coordinator_root,
+                                     source.acceptance_root, false);
+  if (!admission) return fail(admission.error());
+  auto lock = acquire(admission.take_value(), "compatibility.bootstrap.cutover");
+  if (!lock) return fail(lock.error());
+  facman::platform::StableDirectoryObject journal;
+  if (!lock.value().admission.coordinator.open_child_directory_no_follow_for_relative_writes(
+          "authority-bootstrap.v1", journal).ok())
+    return fail(epoch_recovery("bootstrap journal changed before native cutover"));
+  const std::string genesis_bytes = compatibility_bootstrap_phase_bytes(
+      "genesis_activated", entered_sha256, genesis.value().activation_sha256);
+  auto recorded = publish_epoch_record(journal,
+      "30-genesis-activated.staging.v1.json", "30-genesis-activated.v1.json",
+      genesis_bytes, 6U);
+  if (!recorded) return fail(recorded.error());
+  const std::string shortcut_receipt = hash("facman.bootstrap.shortcut.v1\n" +
+      target.value().install_id + "\n" +
+      (request.shell_integration ? "cutover\n" : "disabled\n"));
+  const std::string shortcut_bytes = compatibility_bootstrap_phase_bytes(
+      "shortcut_cutover", entered_sha256, shortcut_receipt);
+  auto prior_shortcut = read_optional_bootstrap_record(
+      journal, "40-shortcut-cutover.v1.json");
+  if (!prior_shortcut || (prior_shortcut.value().has_value() &&
+                          *prior_shortcut.value() != shortcut_bytes))
+    return fail(!prior_shortcut ? prior_shortcut.error() : epoch_recovery(
+        "durable shortcut cutover belongs to another bootstrap"));
+  std::string cutover_detail;
+  if (!lock.value().admission.revalidate(cutover_detail) ||
+      !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed before shortcut cutover",
+                               cutover_detail));
+  const auto shortcut = effects.inspect_epoch_shortcut(source, target.value());
+  if (request.shell_integration) {
+    if (shortcut == ShellState::old_exact || shortcut == ShellState::absent) {
+      if (prior_shortcut.value().has_value())
+        return fail(epoch_recovery("completed epoch shortcut is no longer exact"));
+      auto changed = effects.cutover_epoch_shortcut(source, target.value());
+      if (!changed.ok || changed.outcome_unknown)
+        return fail(epoch_recovery("epoch shortcut cutover is unresolved", changed.detail));
+    } else if (shortcut != ShellState::new_exact) {
+      return fail(epoch_recovery("epoch shortcut is foreign or unreadable"));
+    }
+    if (effects.inspect_epoch_shortcut(source, target.value()) != ShellState::new_exact)
+      return fail(epoch_recovery("epoch shortcut cutover was not verified"));
+  }
+  if (!lock.value().admission.revalidate(cutover_detail) ||
+      !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed during shortcut cutover",
+                               cutover_detail));
+  recorded = publish_epoch_record(journal,
+      "40-shortcut-cutover.staging.v1.json", "40-shortcut-cutover.v1.json",
+      shortcut_bytes, 6U);
+  if (!recorded) return fail(recorded.error());
+  const std::string registration_receipt = hash("facman.bootstrap.registration.v1\n" +
+      target.value().install_id + "\n" +
+      (request.shell_integration ? "cutover\n" : "disabled\n"));
+  const std::string registration_bytes = compatibility_bootstrap_phase_bytes(
+      "registration_cutover", entered_sha256, registration_receipt);
+  auto prior_registration = read_optional_bootstrap_record(
+      journal, "50-registration-cutover.v1.json");
+  if (!prior_registration || (prior_registration.value().has_value() &&
+                              *prior_registration.value() != registration_bytes))
+    return fail(!prior_registration ? prior_registration.error() : epoch_recovery(
+        "durable registration cutover belongs to another bootstrap"));
+  if (!lock.value().admission.revalidate(cutover_detail) ||
+      !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed before registration cutover",
+                               cutover_detail));
+  const auto registration = effects.inspect_epoch_registration(source, target.value());
+  if (request.shell_integration) {
+    if (registration == ShellState::old_exact || registration == ShellState::absent) {
+      if (prior_registration.value().has_value())
+        return fail(epoch_recovery("completed epoch registration is no longer exact"));
+      auto changed = effects.cutover_epoch_registration(source, target.value());
+      if (!changed.ok || changed.outcome_unknown)
+        return fail(epoch_recovery("epoch registration cutover is unresolved", changed.detail));
+    } else if (registration != ShellState::new_exact) {
+      return fail(epoch_recovery("epoch registration is foreign or unreadable"));
+    }
+    if (effects.inspect_epoch_registration(source, target.value()) != ShellState::new_exact)
+      return fail(epoch_recovery("epoch registration cutover was not verified"));
+  }
+  if (!lock.value().admission.revalidate(cutover_detail) ||
+      !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed during registration cutover",
+                               cutover_detail));
+  recorded = publish_epoch_record(journal,
+      "50-registration-cutover.staging.v1.json", "50-registration-cutover.v1.json",
+      registration_bytes, 6U);
+  if (!recorded) return fail(recorded.error());
+  // The operation-bound old shortcut is needed only until the genesis and
+  // native cutover records are durable. Completion must not strand it.
+  if (!journal.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return fail(epoch_recovery("bootstrap cutover was not flushed before backup retirement"));
+  if (!lock.value().admission.revalidate(cutover_detail) || !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed before backup retirement", cutover_detail));
+  if (request.shell_integration) {
+    const auto retired = effects.retire_epoch_shortcut_backup(source, target.value());
+    if (!retired.ok || retired.outcome_unknown)
+      return fail(epoch_recovery("bootstrap shortcut backup retirement is unresolved", retired.detail));
+  }
+  if (!lock.value().admission.revalidate(cutover_detail) || !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed during backup retirement", cutover_detail));
+  const std::string complete_bytes = compatibility_bootstrap_phase_bytes(
+      "complete", entered_sha256, hash(registration_bytes));
+  recorded = publish_epoch_record(journal,
+      "60-complete.staging.v1.json", "60-complete.v1.json",
+      complete_bytes, 6U);
+  if (!recorded || !journal.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return fail(recorded ? epoch_recovery("bootstrap completion was not flushed")
+                         : recorded.error());
+  return Result::success({"complete", epoch, genesis.take_value(), journal_path});
+}
+
+namespace {
+
+facman::core::Result<std::optional<std::string>>
+find_unpublished_successor_directory(const fs::path &coordinator_root) {
+  facman::platform::StableDirectoryObject coordinator, epochs;
+  if (!coordinator.open_no_follow(coordinator_root).ok() ||
+      !coordinator.open_child_directory_no_follow("epochs", epochs).ok())
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("unpublished successor epoch root cannot be pinned"));
+  std::vector<fs::path> names;
+  if (!epochs.list_child_names_bounded(kMaximumLifecycleEpochs, names).ok())
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("unpublished successor epoch namespace is oversized"));
+  std::optional<std::string> missing;
+  for (const fs::path &name : names) {
+    if (!digest(name.string()))
+      return facman::core::Result<std::optional<std::string>>::failure(
+          epoch_recovery("epoch namespace contains a foreign entry"));
+    facman::platform::StableDirectoryObject epoch;
+    if (!epochs.open_child_directory_no_follow(name.string(), epoch).ok())
+      return facman::core::Result<std::optional<std::string>>::failure(
+          epoch_recovery("epoch namespace contains an unsafe directory"));
+    facman::platform::PathIdentity manifest;
+    const auto inspected = facman::platform::inspect_path_no_follow(
+        coordinator_root / "epochs" / name / "epoch.v1.json", manifest);
+    if (!inspected.ok() ||
+        (manifest.exists && (manifest.reparse_or_link ||
+                             manifest.kind !=
+                                 facman::platform::PathObjectKind::regular_file)))
+      return facman::core::Result<std::optional<std::string>>::failure(
+          epoch_recovery("epoch manifest is unsafe during successor recovery"));
+    if (!manifest.exists) {
+      if (missing.has_value())
+        return facman::core::Result<std::optional<std::string>>::failure(
+            epoch_recovery("more than one unpublished successor directory exists"));
+      missing = name.string();
+    }
+    if (!epoch.revalidate().ok())
+      return facman::core::Result<std::optional<std::string>>::failure(
+          epoch_recovery("epoch directory changed during successor inspection"));
+  }
+  if (!epochs.revalidate().ok() || !coordinator.revalidate().ok())
+    return facman::core::Result<std::optional<std::string>>::failure(
+        epoch_recovery("epoch namespace changed during successor inspection"));
+  return facman::core::Result<std::optional<std::string>>::success(
+      std::move(missing));
+}
+
+} // namespace
+
+facman::core::Result<RetiredEpochSuccessorPlan> plan_retired_epoch_successor(
+    const fs::path &coordinator_root, const PackageDescriptor &descriptor,
+    const std::string &package_sha256) {
+  using Result = facman::core::Result<RetiredEpochSuccessorPlan>;
+  if (!coordinator_root.is_absolute() || !digest(package_sha256))
+    return Result::failure(failure("self_maintenance_input_invalid",
+        "retired epoch successor inputs are incomplete"));
+  auto discovered = discover_lifecycle_epoch_chain_impl(coordinator_root);
+  std::optional<std::string> staging_epoch_id;
+  if (!discovered &&
+      discovered.error().code == "self_maintenance_epoch_recovery_required") {
+    auto partial = find_unpublished_successor_directory(coordinator_root);
+    if (!partial) return Result::failure(partial.error());
+    if (partial.value().has_value()) {
+      staging_epoch_id = *partial.value();
+      discovered = discover_lifecycle_epoch_chain_impl(
+          coordinator_root, {}, nullptr, {}, {}, nullptr, *staging_epoch_id);
+    }
+  }
+  if (!discovered || discovered.value().epochs.empty())
+    return Result::failure(!discovered ? discovered.error() : epoch_recovery(
+        "successor install requires a completed real lifecycle epoch"));
+  LifecycleEpochChain predecessor_chain = discovered.value();
+  const LifecycleEpoch tail = predecessor_chain.epochs.back();
+  bool published = false;
+  if (tail.retirement_sha256.empty()) {
+    if (tail.compatibility_epoch || predecessor_chain.epochs.size() < 2U)
+      return Result::failure(epoch_recovery(
+          "successor install has no completed real-epoch predecessor"));
+    predecessor_chain.epochs.pop_back();
+    published = true;
+  }
+  const LifecycleEpoch &predecessor = predecessor_chain.epochs.back();
+  if (predecessor.compatibility_epoch ||
+      predecessor.retirement_sha256.empty())
+    return Result::failure(epoch_recovery(
+        "successor install predecessor is active or incompletely retired"));
+  auto source = discover_lifecycle_epoch_active_from_chain(
+      coordinator_root, predecessor_chain);
+  if (!source || source.value().epoch.epoch_id != predecessor.epoch_id)
+    return Result::failure(!source ? source.error() : epoch_recovery(
+        "retired predecessor activation changed during successor planning"));
+  auto seed = make_generation(descriptor, package_sha256, "facman.self",
+      predecessor.logical_root, predecessor.logical_root,
+      predecessor.state_root, predecessor.acceptance_root);
+  if (!seed) return Result::failure(seed.error());
+  LifecycleEpoch epoch;
+  epoch.acceptance_root = predecessor.acceptance_root;
+  epoch.genesis_generation_id = seed.value().generation_id;
+  epoch.logical_root = predecessor.logical_root;
+  epoch.predecessor_epoch_id = predecessor.epoch_id;
+  epoch.predecessor_manifest_sha256 = predecessor.manifest_sha256;
+  epoch.predecessor_retirement_sha256 = predecessor.retirement_sha256;
+  epoch.state_root = predecessor.state_root;
+  epoch.epoch_id = hash(lifecycle_identity_bytes(epoch));
+  epoch.manifest_sha256 = hash(lifecycle_manifest_bytes(epoch));
+  if (staging_epoch_id.has_value() && *staging_epoch_id != epoch.epoch_id)
+    return Result::failure(epoch_recovery(
+        "unpublished successor directory does not bind the supplied package"));
+  if (published &&
+      (tail.epoch_id != epoch.epoch_id ||
+       tail.manifest_sha256 != epoch.manifest_sha256))
+    return Result::failure(epoch_recovery(
+        "published successor epoch does not match the supplied exact package"));
+  auto target = make_epoch_genesis_generation(epoch, descriptor,
+                                              package_sha256);
+  if (!target) return Result::failure(target.error());
+  if (target.value().install_id == source.value().active.active.install_id)
+    return Result::failure(epoch_recovery(
+        "successor provider identity collides with its retired predecessor"));
+  return Result::success({std::move(epoch),
+      source.value().active.active, target.take_value(), published,
+      staging_epoch_id.has_value()});
+}
+
+facman::core::Result<void> recover_retired_successor_manifest(
+    const fs::path &coordinator_root,
+    const RetiredEpochSuccessorPlan &plan) {
+  if (!plan.manifest_staging || plan.manifest_published ||
+      !digest(plan.epoch.epoch_id) ||
+      !same_path(plan.epoch.acceptance_root, plan.target.acceptance_root))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest recovery requires one exact unpublished epoch"));
+  auto admission = admit_coordinator(
+      coordinator_root, plan.epoch.acceptance_root, false);
+  if (!admission) return facman::core::Result<void>::failure(admission.error());
+  auto lock = acquire(admission.take_value(), "successor.epoch.manifest");
+  if (!lock) return facman::core::Result<void>::failure(lock.error());
+  auto rechecked = plan_retired_epoch_successor(coordinator_root,
+      generation_descriptor(plan.target), plan.target.package_sha256);
+  if (!rechecked ||
+      rechecked.value().epoch.epoch_id != plan.epoch.epoch_id ||
+      rechecked.value().epoch.manifest_sha256 != plan.epoch.manifest_sha256 ||
+      rechecked.value().target.install_id != plan.target.install_id ||
+      !same_path(rechecked.value().target.install_root,
+                 plan.target.install_root))
+    return facman::core::Result<void>::failure(!rechecked ? rechecked.error() :
+        epoch_recovery("successor predecessor changed before manifest recovery"));
+  if (rechecked.value().manifest_published)
+    return facman::core::Result<void>::success();
+  if (!rechecked.value().manifest_staging)
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest staging disappeared before recovery"));
+  facman::platform::StableDirectoryObject epochs, epoch_directory;
+  if (!lock.value().admission.coordinator
+           .open_child_directory_no_follow_for_relative_writes(
+               "epochs", epochs).ok() ||
+      !epochs.open_child_directory_no_follow_for_relative_writes(
+          plan.epoch.epoch_id, epoch_directory).ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest directory cannot be pinned for recovery"));
+  std::vector<fs::path> names;
+  if (!epoch_directory.list_child_names_bounded(2U, names).ok() ||
+      names.size() > 1U ||
+      (!names.empty() &&
+       names.front() != fs::path("epoch.staging.v1.json")))
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest directory contains foreign state"));
+  const std::string bytes = lifecycle_manifest_bytes(plan.epoch);
+  if (hash(bytes) != plan.epoch.manifest_sha256 ||
+      !lock.value().admission.coordinator.revalidate().ok() ||
+      !epochs.revalidate().ok() || !epoch_directory.revalidate().ok())
+    return facman::core::Result<void>::failure(epoch_recovery(
+        "successor manifest identity changed before recovery"));
+  auto published = publish_epoch_record(epoch_directory,
+      "epoch.staging.v1.json", "epoch.v1.json", bytes, 1U);
+  if (!published || !epoch_directory.flush_metadata().ok() ||
+      !epochs.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return facman::core::Result<void>::failure(!published ? published.error() :
+        epoch_recovery("successor manifest recovery was not flushed"));
+  return facman::core::Result<void>::success();
+}
+
 facman::core::Result<RetirementResponse> retire_active(
     const RetirementRequest &request, RetirementEffects &effects) {
-  auto reviewed = discover_activation_chain(request.coordinator_root);
+  if (request.epoch_mode) {
+    auto selected = resolve_authoritative_active_state(request.coordinator_root);
+    if (!selected && selected.error().code !=
+                         "self_maintenance_retirement_recovery_required")
+      return facman::core::Result<RetirementResponse>::failure(selected.error());
+    if (selected && selected.value().has_value() &&
+        !selected.value()->epoch.has_value())
+      return facman::core::Result<RetirementResponse>::failure(epoch_recovery(
+          "epoch retirement cannot consume flat compatibility authority"));
+  }
+  const auto inspect_chain = [&]()
+      -> facman::core::Result<std::optional<ActivationChain>> {
+    if (!request.epoch_mode)
+      return discover_activation_chain(request.coordinator_root);
+    auto epoch = discover_epoch_retirement_chain(request.coordinator_root);
+    if (!epoch)
+      return facman::core::Result<std::optional<ActivationChain>>::failure(
+          epoch.error());
+    return facman::core::Result<std::optional<ActivationChain>>::success(
+        std::optional<ActivationChain>(epoch.take_value()));
+  };
+  auto reviewed = inspect_chain();
   if (!reviewed)
     return facman::core::Result<RetirementResponse>::failure(reviewed.error());
   if (!reviewed.value().has_value())
@@ -5714,6 +8100,17 @@ facman::core::Result<RetirementResponse> retire_active(
         "self_maintenance_retirement_recovery_required",
         "retirement has no validated generation steps"));
   const Generation &active = reviewed_steps.back().generation;
+  if (request.epoch_mode &&
+      (!request.logical_root.is_absolute() ||
+       !request.state_root.is_absolute() ||
+       !request.acceptance_root.is_absolute() ||
+       (!same_path(request.logical_root, active.logical_root) &&
+        !same_path(request.logical_root, active.install_root)) ||
+       !same_path(request.state_root, active.state_root) ||
+       !same_path(request.acceptance_root, active.acceptance_root)))
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_lineage_mismatch",
+        "epoch retirement roots do not bind its authoritative generation"));
   for (const auto &step : reviewed_steps) {
     if (!same_path(step.generation.logical_root, active.logical_root) ||
         !same_path(step.generation.state_root, active.state_root) ||
@@ -5722,8 +8119,9 @@ facman::core::Result<RetirementResponse> retire_active(
           "self_maintenance_retirement_recovery_required",
           "activation chain generations do not share one exact authority"));
   }
-  const fs::path directory = retirement_directory(request.coordinator_root,
-                                                   review);
+  const fs::path directory = request.epoch_mode
+      ? epoch_retirement_directory(request.coordinator_root, review)
+      : retirement_directory(request.coordinator_root, review);
   if (!request.apply)
     return facman::core::Result<RetirementResponse>::success(
         {"planned", directory, reviewed_steps});
@@ -5737,13 +8135,31 @@ facman::core::Result<RetirementResponse> retire_active(
   auto held = acquire(authority.take_value(), lock_operation);
   if (!held)
     return facman::core::Result<RetirementResponse>::failure(held.error());
-  const CoordinatorLockToken coordinator_lock(
-      request.coordinator_root.lexically_normal(), lock_operation);
+  const auto require_authority = [&]() -> facman::core::Result<void> {
+    if (!request.epoch_mode)
+      return require_flat_retirement_epoch_absence(held.value());
+    auto current_epoch = discover_epoch_retirement_chain(request.coordinator_root);
+    if (!current_epoch ||
+        retirement_chain_digest(current_epoch.value()) !=
+            retirement_chain_digest(review))
+      return facman::core::Result<void>::failure(!current_epoch
+          ? current_epoch.error() : epoch_recovery(
+              "authoritative epoch lineage changed during retirement"));
+    std::string detail;
+    if (!held.value().admission.revalidate(detail))
+      return facman::core::Result<void>::failure(epoch_recovery(
+          "epoch retirement authority changed at its effect boundary", detail));
+    return facman::core::Result<void>::success();
+  };
+  auto authority_ready = require_authority();
+  if (!authority_ready)
+    return facman::core::Result<RetirementResponse>::failure(
+        authority_ready.error());
 
   // Re-read the complete chain under the global coordinator lock.  The
   // journal is intentionally bound to this exact head and all ordered
   // generation records, never to an inferred current install root.
-  auto current = discover_activation_chain(request.coordinator_root);
+  auto current = inspect_chain();
   if (!current || !current.value().has_value() ||
       retirement_chain_digest(*current.value()) != retirement_chain_digest(review))
     return facman::core::Result<RetirementResponse>::failure(failure(
@@ -5751,17 +8167,67 @@ facman::core::Result<RetirementResponse> retire_active(
         "activation chain changed before retirement could begin"));
   const ActivationChain chain = *current.value();
   const auto steps = retirement_steps(chain);
-  const fs::path retirement_root = request.coordinator_root / "retirements";
+  std::error_code preflight_status;
+  const bool existing_journal = fs::exists(directory, preflight_status);
+  if (preflight_status)
+    return facman::core::Result<RetirementResponse>::failure(failure(
+        "self_maintenance_retirement_recovery_required",
+        "retirement journal could not be observed before preflight",
+        preflight_status.message()));
+  if (!existing_journal) {
+    // A foreign file in any retained generation must refuse the entire
+    // uninstall before the first durable retirement intent or provider effect.
+    // Per-step inspection below still revalidates at the actual effect edge.
+    for (const auto &step : steps) {
+      auto ready = require_authority();
+      if (!ready)
+        return facman::core::Result<RetirementResponse>::failure(ready.error());
+      const CoordinatorLockToken coordinator_lock(
+          request.coordinator_root.lexically_normal(), lock_operation,
+          hash(generation_record_bytes(step.generation)));
+      auto inspected = effects.inspect_retirement_generation(
+          step.generation, step.active, coordinator_lock);
+      if (!inspected)
+        return facman::core::Result<RetirementResponse>::failure(
+            inspected.error().code == "self_setup_provider_refused"
+                ? inspected.error()
+                : failure("self_maintenance_retirement_recovery_required",
+                    "provider or native identity is ambiguous before retirement",
+                    inspected.error().code + ": " + inspected.error().message));
+    }
+  }
+  const fs::path retirement_root = request.coordinator_root /
+      (request.epoch_mode ? "epoch-retirements" : "retirements");
+  LifecycleEpochChain validated_epochs;
+  if (request.epoch_mode) {
+    auto observed = discover_lifecycle_epoch_chain_impl(request.coordinator_root);
+    if (!observed)
+      return facman::core::Result<RetirementResponse>::failure(
+          observed.error());
+    validated_epochs = observed.take_value();
+  }
   std::error_code status;
   if (fs::exists(retirement_root, status)) {
-    if (status || !fs::is_directory(retirement_root, status) || status)
+    if (status || fs::symlink_status(retirement_root, status).type() !=
+                      fs::file_type::directory || status)
       return facman::core::Result<RetirementResponse>::failure(failure(
           "self_maintenance_retirement_recovery_required",
           "retirement journal root is unavailable"));
     for (fs::directory_iterator it(retirement_root, status), end;
          !status && it != end; it.increment(status)) {
+      const bool current_journal = it->path().lexically_normal() ==
+          directory.lexically_normal();
+      const bool historical = request.epoch_mode &&
+          std::any_of(validated_epochs.epochs.begin(),
+              validated_epochs.epochs.end(),
+              [&](const LifecycleEpoch &epoch) {
+                return !epoch.compatibility_epoch &&
+                    !epoch.retirement_sha256.empty() &&
+                    epoch.retirement_journal_name ==
+                        it->path().filename().string();
+              });
       if (it->symlink_status(status).type() != fs::file_type::directory || status ||
-          it->path().lexically_normal() != directory.lexically_normal())
+          (!current_journal && !historical))
         return facman::core::Result<RetirementResponse>::failure(failure(
             "self_maintenance_retirement_recovery_required",
             "retirement journal root contains a stale, foreign, or unknown chain"));
@@ -5792,6 +8258,100 @@ facman::core::Result<RetirementResponse> retire_active(
                                                  &completed);
   if (!validated)
     return facman::core::Result<RetirementResponse>::failure(validated.error());
+  // Old completed bootstraps can retain their operation-bound shortcut backup
+  // even after every provider generation is retired. The public repeated
+  // uninstall must close that edge using retained authority, without reinstall.
+  if (request.epoch_mode && validated_epochs.epochs.size() >= 2U &&
+      validated_epochs.epochs.front().compatibility_handoff) {
+    const LifecycleEpoch &bootstrap_epoch = validated_epochs.epochs[1];
+    auto flat = discover_activation_chain(request.coordinator_root);
+    auto target = discover_lifecycle_epoch_genesis_generation(
+        request.coordinator_root, bootstrap_epoch.epoch_id);
+    facman::platform::StableDirectoryObject bootstrap;
+    if (bootstrap_epoch.compatibility_epoch ||
+        bootstrap_epoch.predecessor_epoch_id != kCompatibilityEpochId ||
+        !flat || !flat.value().has_value() || flat.value()->generations.empty() ||
+        !target || target.value().generation_id != bootstrap_epoch.genesis_generation_id ||
+        !held.value().admission.coordinator.open_child_directory_no_follow(
+            "authority-bootstrap.v1", bootstrap).ok())
+      return facman::core::Result<RetirementResponse>::failure(epoch_recovery(
+          "retirement cannot bind its original compatibility bootstrap"));
+    const Generation &source = flat.value()->generations.back();
+    auto entered = read_epoch_relative_bounded(bootstrap,
+        "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
+    const std::string enabled = compatibility_bootstrap_entered_bytes(
+        *flat.value(), bootstrap_epoch, target.value(), true);
+    const std::string disabled = compatibility_bootstrap_entered_bytes(
+        *flat.value(), bootstrap_epoch, target.value(), false);
+    if (!entered || (entered.value() != enabled && entered.value() != disabled))
+      return facman::core::Result<RetirementResponse>::failure(epoch_recovery(
+          "retirement bootstrap entry has a different authority"));
+    const bool shell = entered.value() == enabled;
+    const std::string entered_sha256 = hash(entered.value());
+    auto verified = read_epoch_relative_bounded(bootstrap,
+        "20-clone-verified.v1.json", kMaximumEpochGenesisRecordBytes);
+    auto verified_document = verified ? json::parse(verified.value())
+        : facman::core::Result<json::Value>::failure(verified.error());
+    const std::string clone_receipt = verified_document
+        ? string_field(verified_document.value(), "receipt_sha256") : std::string();
+    if (!digest(clone_receipt))
+      return facman::core::Result<RetirementResponse>::failure(epoch_recovery(
+          "retirement bootstrap clone verification is incomplete"));
+    const std::string registration_bytes = compatibility_bootstrap_phase_bytes(
+        "registration_cutover", entered_sha256,
+        hash("facman.bootstrap.registration.v1\n" + target.value().install_id + "\n" +
+             (shell ? "cutover\n" : "disabled\n")));
+    const std::vector<std::pair<std::string, std::string>> required = {
+        {"10-clone-entered.v1.json", entered.value()},
+        {"20-clone-verified.v1.json", compatibility_bootstrap_phase_bytes(
+            "clone_verified", entered_sha256, clone_receipt)},
+        {"30-genesis-activated.v1.json", compatibility_bootstrap_phase_bytes(
+            "genesis_activated", entered_sha256,
+            hash(epoch_activation_bytes(bootstrap_epoch, target.value(),
+                 hash(epoch_generation_bytes(bootstrap_epoch, target.value())))))},
+        {"40-shortcut-cutover.v1.json", compatibility_bootstrap_phase_bytes(
+            "shortcut_cutover", entered_sha256,
+            hash("facman.bootstrap.shortcut.v1\n" + target.value().install_id + "\n" +
+                 (shell ? "cutover\n" : "disabled\n")))},
+        {"50-registration-cutover.v1.json", registration_bytes},
+        {"60-complete.v1.json", compatibility_bootstrap_phase_bytes(
+            "complete", entered_sha256, hash(registration_bytes))}};
+    const auto require_bootstrap = [&]() -> facman::core::Result<void> {
+      auto ready = require_authority();
+      if (!ready) return ready;
+      std::vector<fs::path> names, expected_names;
+      for (const auto &record : required) expected_names.emplace_back(record.first);
+      if (!bootstrap.list_child_names_bounded(6U, names).ok() || names != expected_names)
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "retirement bootstrap has foreign or incomplete phase entries"));
+      for (const auto &record : required) {
+        auto bytes = read_epoch_relative_bounded(
+            bootstrap, record.first, kMaximumEpochGenesisRecordBytes);
+        if (!bytes || bytes.value() != record.second)
+          return facman::core::Result<void>::failure(epoch_recovery(
+              "retirement bootstrap phase changed or is incomplete", record.first));
+      }
+      if (!bootstrap.revalidate().ok())
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "retirement bootstrap directory identity changed"));
+      return facman::core::Result<void>::success();
+    };
+    auto ready = require_bootstrap();
+    if (!ready)
+      return facman::core::Result<RetirementResponse>::failure(ready.error());
+    if (shell) {
+      const CoordinatorLockToken coordinator_lock(
+          request.coordinator_root.lexically_normal(), lock_operation,
+          hash(generation_record_bytes(target.value())));
+      auto retired = effects.retire_bootstrap_shortcut_backup(
+          source, target.value(), coordinator_lock);
+      if (!retired)
+        return facman::core::Result<RetirementResponse>::failure(retired.error());
+    }
+    ready = require_bootstrap();
+    if (!ready)
+      return facman::core::Result<RetirementResponse>::failure(ready.error());
+  }
   if (completed)
     return facman::core::Result<RetirementResponse>::success(
         {"completed", directory, steps});
@@ -5812,14 +8372,21 @@ facman::core::Result<RetirementResponse> retire_active(
           "self_maintenance_retirement_recovery_required",
           "a retirement step entered its provider/native boundary without a completion receipt",
           steps[index].generation.install_id));
-    current = discover_activation_chain(request.coordinator_root);
+    current = inspect_chain();
     if (!current || !current.value().has_value() ||
         retirement_chain_digest(*current.value()) != retirement_chain_digest(chain))
       return facman::core::Result<RetirementResponse>::failure(failure(
           "self_maintenance_retirement_recovery_required",
           "activation chain changed before a retirement effect"));
+    authority_ready = require_authority();
+    if (!authority_ready)
+      return facman::core::Result<RetirementResponse>::failure(
+          authority_ready.error());
+    const CoordinatorLockToken coordinator_lock(
+        request.coordinator_root.lexically_normal(), lock_operation,
+        hash(generation_record_bytes(steps[index].generation)));
     auto inspected = effects.inspect_retirement_generation(
-        steps[index].generation, steps[index].active);
+        steps[index].generation, steps[index].active, coordinator_lock);
     if (!inspected)
       return facman::core::Result<RetirementResponse>::failure(failure(
           "self_maintenance_retirement_recovery_required",
@@ -5830,6 +8397,10 @@ facman::core::Result<RetirementResponse> retire_active(
         retirement_step_json(steps[index], index, "entered"));
     if (!marked)
       return facman::core::Result<RetirementResponse>::failure(marked.error());
+    authority_ready = require_authority();
+    if (!authority_ready)
+      return facman::core::Result<RetirementResponse>::failure(
+          authority_ready.error());
     auto removed = effects.uninstall_generation(
         steps[index].generation, steps[index].active, coordinator_lock);
     if (!removed)
@@ -5870,6 +8441,7 @@ facman::core::Result<ActiveState> adopt_legacy(
       !digest(legacy.generation_id) || !digest(legacy.package_sha256) ||
       !revision(legacy.facman_source_revision) ||
       !revision(legacy.universal_setup_revision) ||
+      !legacy.creating_provider_revision.empty() ||
       generation_identity(generation_descriptor(legacy),
                           legacy.package_sha256) != legacy.generation_id ||
       !exact_generation_paths(legacy))
@@ -5899,6 +8471,11 @@ facman::core::Result<ActiveState> adopt_legacy(
     return facman::core::Result<ActiveState>::failure(created.error());
   auto held = acquire(authority.take_value(), operation_id);
   if (!held) return facman::core::Result<ActiveState>::failure(held.error());
+  // A direct legacy-adoption caller must not write flat history after an
+  // epoch namespace has appeared, even if it bypasses the public Setup route.
+  auto epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<ActiveState>::failure(epochs_absent.error());
   const fs::path activation_directory = coordinator_root / "activations";
   std::error_code status;
   bool has_activation = false;
@@ -5968,6 +8545,7 @@ facman::core::Result<Plan> plan(const Request &request) {
       !digest(request.active.generation_id) || !digest(request.active.package_sha256) ||
       !revision(request.active.facman_source_revision) ||
       !revision(request.active.universal_setup_revision) ||
+      !request.active.creating_provider_revision.empty() ||
       (request.active.install_id != "facman.self" &&
        request.active.install_id !=
             generation_install_id(request.active.generation_id)) ||
@@ -5998,6 +8576,7 @@ facman::core::Result<Plan> plan(const Request &request) {
         !digest(result.target.package_sha256) ||
         !revision(result.target.facman_source_revision) ||
         !revision(result.target.universal_setup_revision) ||
+        !result.target.creating_provider_revision.empty() ||
         !exact_generation_paths(result.target) ||
         same_path(result.target.install_root, result.source.install_root) ||
         (result.target.install_id != "facman.self" &&
@@ -6144,6 +8723,11 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
         "coordinator root remains absent after plan admission"));
   auto held = acquire(authority.take_value(), request.operation_id);
   if (!held) return facman::core::Result<Response>::failure(held.error());
+  // Public routing selects the real epoch first, but this older flat entry
+  // point is callable directly. Fence it under the same coordinator lock.
+  auto epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<Response>::failure(epochs_absent.error());
   const std::string activation = activation_json(transition);
   const fs::path activation_record = request.coordinator_root / "activations" /
       ("activation." + transition.operation_id + ".v1.json");
@@ -6198,8 +8782,23 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
       return facman::core::Result<Response>::failure(failure(
           "self_maintenance_activation_changed",
           "completed activation shell state is no longer exact"));
+    epochs_absent = require_flat_retirement_epoch_absence(held.value());
+    if (!epochs_absent)
+      return facman::core::Result<Response>::failure(epochs_absent.error());
     auto final_phase = record_phase(request, transition,
                                     "70-activation-recorded", hash(activation));
+    if (!final_phase)
+      return facman::core::Result<Response>::failure(final_phase.error());
+    const auto retired = effects.retire_shortcut_backup(transition);
+    if (!retired.ok || retired.outcome_unknown ||
+        !digest(retired.receipt_sha256))
+      return facman::core::Result<Response>::failure(effect_error(
+          "self_maintenance_shortcut_backup_retirement_failed",
+          "completed activation shortcut backup retirement failed",
+          retired).error());
+    final_phase = record_phase(request, transition,
+                               "80-shortcut-backup-retired",
+                               retired.receipt_sha256);
     if (!final_phase)
       return facman::core::Result<Response>::failure(final_phase.error());
     const fs::path existing_generation = request.coordinator_root /
@@ -6245,6 +8844,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
             "self_maintenance_provider_recovery_required",
             "provider entry was recorded without an exact installed candidate"));
       }
+      epochs_absent = require_flat_retirement_epoch_absence(held.value());
+      if (!epochs_absent)
+        return facman::core::Result<Response>::failure(epochs_absent.error());
       const auto prepared_provider = effects.prepare_install_local(transition);
       if (!prepared_provider.ok)
         return facman::core::Result<Response>::failure(effect_error(
@@ -6253,6 +8855,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
             prepared_provider).error());
       recorded = record_phase(request, transition, "10-provider-entered");
       if (!recorded) return facman::core::Result<Response>::failure(recorded.error());
+      epochs_absent = require_flat_retirement_epoch_absence(held.value());
+      if (!epochs_absent)
+        return facman::core::Result<Response>::failure(epochs_absent.error());
       const auto installed = effects.install_local(transition);
       if (!installed.ok)
         return facman::core::Result<Response>::failure(effect_error(
@@ -6310,6 +8915,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
           "self_maintenance_verify_failed",
           "rollback target verification failed", verified).error());
   } else {
+    epochs_absent = require_flat_retirement_epoch_absence(held.value());
+    if (!epochs_absent)
+      return facman::core::Result<Response>::failure(epochs_absent.error());
     recorded = ensure_immutable(generation_record,
                                 serialize_generation(transition.target));
   }
@@ -6344,6 +8952,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
           "self_maintenance_rollback_invalid",
           "rollback target identity changed before shell cutover"));
   }
+  epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<Response>::failure(epochs_absent.error());
 
   ShellState shortcut = effects.inspect_shortcut(transition);
   if (shortcut == ShellState::foreign || shortcut == ShellState::unreadable ||
@@ -6351,6 +8962,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_shell_unsafe", "Start Menu shortcut is not the exact old or new FacMan object"));
   if (shortcut == ShellState::old_exact) {
+    epochs_absent = require_flat_retirement_epoch_absence(held.value());
+    if (!epochs_absent)
+      return facman::core::Result<Response>::failure(epochs_absent.error());
     const auto changed = effects.cutover_shortcut(transition);
     if (!changed.ok)
       return facman::core::Result<Response>::failure(effect_error(
@@ -6368,6 +8982,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_shell_unsafe", "uninstall registration is not the exact old or new FacMan object"));
   if (registration == ShellState::old_exact) {
+    epochs_absent = require_flat_retirement_epoch_absence(held.value());
+    if (!epochs_absent)
+      return facman::core::Result<Response>::failure(epochs_absent.error());
     const auto changed = effects.cutover_registration(transition);
     if (!changed.ok)
       return facman::core::Result<Response>::failure(effect_error(
@@ -6389,6 +9006,9 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_identity_changed",
         "generation or activation identity changed before activation commit"));
+  epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<Response>::failure(epochs_absent.error());
   recorded = ensure_immutable(activation_record, activation);
   if (!recorded) return facman::core::Result<Response>::failure(recorded.error());
   recorded = record_phase(request, transition, "70-activation-recorded",
@@ -6404,6 +9024,21 @@ facman::core::Result<Response> execute(const Request &request, Effects &effects)
     return facman::core::Result<Response>::failure(failure(
         "self_maintenance_activation_changed",
         "committed activation is not the unique current generation head"));
+  epochs_absent = require_flat_retirement_epoch_absence(held.value());
+  if (!epochs_absent)
+    return facman::core::Result<Response>::failure(epochs_absent.error());
+  const auto retired = effects.retire_shortcut_backup(transition);
+  if (!retired.ok || retired.outcome_unknown ||
+      !digest(retired.receipt_sha256))
+    return facman::core::Result<Response>::failure(effect_error(
+        "self_maintenance_shortcut_backup_retirement_failed",
+        "shortcut backup retirement failed after activation commit",
+        retired).error());
+  recorded = record_phase(request, transition,
+                          "80-shortcut-backup-retired",
+                          retired.receipt_sha256);
+  if (!recorded)
+    return facman::core::Result<Response>::failure(recorded.error());
   return facman::core::Result<Response>::success(
       {transition.operation, "completed", transition.operation_id,
        transition.target, generation_record, activation_record});

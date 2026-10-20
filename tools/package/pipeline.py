@@ -38,6 +38,10 @@ from tools.package import platform_proof as package_platform_proof
 from tools.package import profile as package_profile
 from tools.package import provenance as package_provenance
 from tools.package import staging as package_staging
+from tools.package.provider_canary import (
+    repaired_provider_canary_revisions as repaired_provider_canary_revisions,
+    select_provider_revisions,
+)
 from tools.release_compiler.compiler import load_inputs as load_release_inputs
 from tools.release_compiler.compiler import resolve as resolve_release
 from tools.release_compiler.outputs import (
@@ -190,6 +194,11 @@ def main(argv: list[str] | None = None) -> int:
             "engineering canary"
         ),
     )
+    custody.add_argument(
+        "--repaired-provider-canary-usk",
+        metavar="REVISION",
+        help="exact noncanonical USK revision for an unsigned, unpublished engineering canary",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -221,6 +230,7 @@ def main(argv: list[str] | None = None) -> int:
                 else None
             ),
             repaired_provider_canary_ulk=args.repaired_provider_canary_ulk,
+            repaired_provider_canary_usk=args.repaired_provider_canary_usk,
         )
     except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
         print(f"package-build: {exc}", file=sys.stderr)
@@ -239,27 +249,25 @@ def build_profile(
     source_observation_path: Path | None = None,
     integration_source_observation_path: Path | None = None,
     repaired_provider_canary_ulk: str | None = None,
+    repaired_provider_canary_usk: str | None = None,
 ) -> Path:
+    if repaired_provider_canary_ulk is not None and repaired_provider_canary_usk is not None:
+        raise ValueError("repaired-provider canary selects exactly one provider revision")
     assert_safe_output_root(out_root)
     validate_output_root_ownership(out_root)
     package_provenance.require_clean(ROOT, allow_dirty)
     tracked_revisions = pinned_source_revisions()
-    source_revisions = dict(tracked_revisions)
-    if repaired_provider_canary_ulk is None:
+    source_revisions, provider_class = select_provider_revisions(
+        tracked_revisions, repaired_provider_canary_ulk, repaired_provider_canary_usk
+    )
+    if provider_class == "canonical":
         require_pinned_dependency_revisions()
-        provider_class = "canonical"
-    else:
-        provider_class = "repaired_provider_canary"
-        source_revisions = repaired_provider_canary_revisions(
-            tracked_revisions,
-            repaired_provider_canary_ulk,
-        )
     profile_path, profile = load_profile(profile_id)
     if profile_id not in SUPPORTED_BUILT_PROFILES:
         raise ValueError(f"{profile_id}: built artifact proof is not enabled for this profile")
     if profile.get("publication") is False:
         raise ValueError(f"{profile_id}: profile is explicitly unpublished")
-    if repaired_provider_canary_ulk is not None and (
+    if provider_class == "repaired_provider_canary" and (
         source_observation_path is not None
         or integration_source_observation_path is not None
     ):
@@ -461,24 +469,6 @@ def package_integration_source_observation(
                 "from package source"
             )
     return observation
-
-
-def repaired_provider_canary_revisions(
-    tracked_revisions: dict[str, str],
-    universal_launcher_revision: str,
-) -> dict[str, str]:
-    revision = universal_launcher_revision.strip().lower()
-    if HEX_REVISION.fullmatch(revision) is None:
-        raise ValueError(
-            "repaired-provider canary ULK revision must be an exact 40-character Git id"
-        )
-    if revision == tracked_revisions["universal_launcher"]:
-        raise ValueError(
-            "repaired-provider canary ULK revision must differ from the tracked canonical pin"
-        )
-    revisions = dict(tracked_revisions)
-    revisions["universal_launcher"] = revision
-    return revisions
 
 
 def repaired_provider_canary_source_bindings(

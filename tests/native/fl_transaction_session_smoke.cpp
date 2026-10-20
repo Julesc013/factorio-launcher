@@ -92,6 +92,7 @@ int prove_transition_table()
         !tx::can_transition(tx::State::requested, tx::State::failed_before_commit) ||
         !tx::can_transition(tx::State::requested, tx::State::rollback_required) ||
         tx::can_transition(tx::State::committing, tx::State::failed_before_commit) ||
+        tx::can_transition(tx::State::committing, tx::State::rollback_required) ||
         tx::can_transition(tx::State::committed, tx::State::rollback_required) ||
         tx::can_transition(tx::State::audited, tx::State::failed_before_commit) ||
         tx::can_transition(tx::State::complete, tx::State::recovery_required) ||
@@ -210,6 +211,32 @@ int prove_marker_substitution_and_raii(const fs::path& workspace)
     return 0;
 }
 
+int prove_precommit_cleanup_recovery(const fs::path& workspace)
+{
+    const fs::path staging = workspace / "recoverable" / ".stage";
+    std::error_code error;
+    fs::create_directories(staging.parent_path(), error);
+    if (error) return 50;
+    tx::Record record;
+    record.command_id = "test.cleanup";
+    record.target = workspace / "recoverable" / "target";
+    record.staging_roots = {staging};
+    auto started = tx::TransactionSession::begin(workspace, std::move(record));
+    if (!started) return 50;
+    tx::TransactionSession session = started.take_value();
+    if (!session.validated() || !session.planned() ||
+        !facman::archive::create_owned_staging_root(staging).ok() ||
+        !session.staging() || !write_file(staging / "payload.txt", "retained")) return 51;
+    const std::string operation = session.record().transaction_id;
+    session.require_recovery("owned staging cleanup failed");
+    const tx::Outcome planned = tx::plan(workspace, operation);
+    if (!std::holds_alternative<tx::RecoveryResult>(planned) ||
+        std::get<tx::RecoveryResult>(planned).json.find("remove_owned_staging") == std::string::npos) return 52;
+    const tx::Outcome recovered = tx::apply(workspace, operation);
+    if (!std::holds_alternative<tx::RecoveryResult>(recovered) || fs::exists(staging)) return 53;
+    return 0;
+}
+
 int prove_commit_strategies_and_retention(const fs::path& workspace)
 {
     const fs::path source = workspace / "copy" / "source.bin";
@@ -219,6 +246,23 @@ int prove_commit_strategies_and_retention(const fs::path& workspace)
     std::string detail;
     if (!digest || !tx::CrossVolumeCopyVerifyCommit::commit(source, target, digest.value(), 12, detail) ||
         read_file(target) != "cross-volume") return 41;
+    const fs::path interrupted = workspace / "copy" / "interrupted.bin";
+    if (tx::CrossVolumeCopyVerifyCommit::commit(
+            source, interrupted, digest.value(), 12, detail, nullptr, true) ||
+        fs::exists(interrupted)) return 47;
+    for (const auto& entry : fs::directory_iterator(source.parent_path())) {
+        if (entry.path().filename().string().rfind(".facman-copy-", 0) == 0)
+            return 48;
+    }
+    facman::platform::StableInputFile pinned_source;
+    if (!pinned_source.open_no_follow(source).ok()) return 45;
+    std::error_code replacement_error;
+    fs::rename(source, workspace / "copy" / "original.bin", replacement_error);
+    if (replacement_error || !write_file(source, "other-source") ||
+        tx::CrossVolumeCopyVerifyCommit::commit(
+            source, workspace / "copy" / "wrong-object.bin", digest.value(),
+            12, detail, &pinned_source.identity()) ||
+        fs::exists(workspace / "copy" / "wrong-object.bin")) return 46;
 
     const fs::path directory_staging = workspace / "directory.stage";
     const fs::path directory_target = workspace / "directory.target";
@@ -230,6 +274,25 @@ int prove_commit_strategies_and_retention(const fs::path& workspace)
     const fs::path archive_root = workspace / "transactions" / "archive";
     if (std::distance(fs::directory_iterator(archive_root), fs::directory_iterator()) == 0 ||
         tx::apply_retention(workspace, {tx::RetentionMode::prune_after_days, 0}, detail)) return 44;
+    return 0;
+}
+
+int prove_selected_context_generic_recovery_refuses(const fs::path& workspace)
+{
+    for (int variant = 0; variant < 3; ++variant) {
+        tx::Record record;
+        record.command_id = variant == 2 ? "saves.associate" : "readiness.prepare_selected_save";
+        record.commit_strategy = variant == 1 ? "durable_sidecar_create_no_save_mutation" : "selected_context_handle_no_replace_v1";
+        record.target = workspace / ("selected-context-target-" + std::to_string(variant));
+        std::string detail;
+        if (!tx::begin(workspace, record, detail) || !write_file(record.target, "preserved foreign bytes")) return 60;
+        const tx::Outcome recovered = tx::apply(workspace, record.transaction_id);
+        const auto* refusal = std::get_if<tx::Refusal>(&recovered);
+        if (!refusal || refusal->code != "operation_specific_recovery_required" ||
+            read_file(record.target) != "preserved foreign bytes") return 61;
+        tx::Record current;
+        if (!tx::read_record(workspace, record.transaction_id, current, detail) || current.state != tx::State::requested) return 62;
+    }
     return 0;
 }
 
@@ -252,8 +315,10 @@ int main()
         facman::workspace::WorkspaceLayout(root)).ensure();
     if (!workspace) return 3;
     if (result == 0) result = prove_session_and_commit(root);
+    if (result == 0) result = prove_precommit_cleanup_recovery(root);
     if (result == 0) result = prove_marker_substitution_and_raii(root);
     if (result == 0) result = prove_commit_strategies_and_retention(root);
+    if (result == 0) result = prove_selected_context_generic_recovery_refuses(root);
     fs::remove_all(root, error);
     if (error && result == 0) result = 2;
     if (result != 0) std::cerr << "transaction-session-smoke-stage-code=" << result << "\n";

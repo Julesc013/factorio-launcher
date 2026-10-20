@@ -21,6 +21,28 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ContractCompilerTests(unittest.TestCase):
+    def test_explicit_repair_review_selection_is_optional_and_bounded(self) -> None:
+        for command in ("query", "action"):
+            schema = self.schema("presentation." + command + ".request.v1.schema.json")
+            self.assertNotIn("repair_review_id", schema["required"])
+            validator = jsonschema.Draft202012Validator(schema["properties"]["repair_review_id"])
+            for valid in ("review-1", "winforms-opaque-review-key"):
+                self.assertTrue(validator.is_valid(valid))
+            for invalid in ("", "x" * 257, None, 1, {}):
+                self.assertFalse(validator.is_valid(invalid))
+
+    def test_presentation_observation_intent_is_optional_and_closed(self) -> None:
+        for command in ("query", "action"):
+            schema = self.schema("presentation." + command + ".request.v1.schema.json")
+            self.assertNotIn("launch_intent", schema["required"])
+            self.assertEqual(["menu", "load_save"], schema["properties"]["launch_intent"]["enum"])
+            validator = jsonschema.Draft202012Validator(schema["properties"]["launch_intent"])
+            for accepted in ("menu", "load_save"):
+                self.assertTrue(validator.is_valid(accepted))
+            for refused in ("", "load-save", "benchmark", None, 1):
+                self.assertFalse(validator.is_valid(refused))
+            self.assertFalse(schema["additionalProperties"])
+
     def bundle(self) -> dict:
         return json.loads(generate_contracts.OUTPUTS["bundle"].read_text(encoding="utf-8"))
 

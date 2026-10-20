@@ -369,8 +369,9 @@ bool decode_service_request(
     case CommandId::package_verify: allowed = {"path"}; break;
     case CommandId::installs_install_version: allowed = {"version", "archive"}; break;
     case CommandId::installs_install_plan: allowed = {"version", "archive", "target_root", "install_id"}; break;
-    case CommandId::installs_install_apply:
-    case CommandId::installs_move_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
+    case CommandId::installs_install_apply: allowed = {"version", "archive", "target_root", "install_id",
+        "plan_id", "plan_digest", "plan_created_at", "transaction_id", "applied_at", "confirmation"}; break;
+    case CommandId::installs_move_apply: allowed = {"install_id", "target_root", "plan_id", "plan_digest", "plan_created_at", "install_record_sha256", "transaction_id", "applied_at", "confirmation"}; break;
     case CommandId::installs_repair_plan: allowed = {"install_id", "archive"}; break;
     case CommandId::installs_repair_apply: allowed = {"install_id", "archive", "plan_id", "plan_digest",
         "plan_created_at", "install_record_sha256", "transaction_id", "applied_at", "confirmation"}; break;
@@ -456,10 +457,23 @@ bool decode_service_request(
         detail = "installs.uninstall.apply requires install_id, reviewed plan identities, transaction_id, and applied_at";
         return false;
     }
+    if (command == CommandId::installs_move_apply &&
+        (typed.install_id.empty() || typed.target_root.empty() || typed.plan_created_at.empty() ||
+            typed.install_record_sha256.empty() || typed.transaction_id.empty() || typed.applied_at.empty())) {
+        detail = "installs.move.apply requires exact destination, reviewed record, transaction and timestamp identities";
+        return false;
+    }
     if (command == CommandId::installs_repair_apply &&
         (typed.install_id.empty() || typed.archive.empty() || typed.plan_created_at.empty() ||
             typed.install_record_sha256.empty() || typed.transaction_id.empty() || typed.applied_at.empty())) {
         detail = "installs.repair.apply requires install, archive, reviewed record, transaction, and timestamp identities";
+        return false;
+    }
+    if (command == CommandId::installs_install_apply &&
+        (typed.version.empty() || typed.archive.empty() || typed.target_root.empty() ||
+            typed.install_id.empty() || typed.plan_created_at.empty() ||
+            typed.transaction_id.empty() || typed.applied_at.empty())) {
+        detail = "installs.install.apply requires exact reviewed source, target, install, transaction, and timestamp identities";
         return false;
     }
     if (command == CommandId::servers_create && (typed.name.empty() || typed.instance_id.empty())) {
@@ -568,11 +582,14 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "scope", typed.scope, detail) ||
             !optional_string(payload, "selected_instance_id", typed.selected_instance_id, detail) ||
             !optional_string(payload, "search", typed.search, detail) ||
-            !optional_string(payload, "known_revision", typed.known_revision, detail)) return false;
+            !optional_string(payload, "known_revision", typed.known_revision, detail) ||
+            !optional_string(payload, "repair_review_id", typed.repair_review_id, detail) ||
+            !optional_string(payload, "launch_intent", typed.launch_intent, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::presentation_action: {
         SemanticActionRequest typed;
+        if (!optional_string(payload, "repair_review_id", typed.repair_review_id, detail)) return false;
         if (!required_string(payload, "action_id", typed.action_id, detail) ||
             !required_string(payload, "scope", typed.scope, detail) ||
             !required_string(payload, "expected_snapshot_revision", typed.expected_snapshot_revision, detail) ||
@@ -592,8 +609,11 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "save", typed.save, detail) ||
             !optional_string(payload, "output_path", typed.output_path, detail) ||
             !optional_string(payload, "source_data_root", typed.source_data_root, detail) ||
+            !optional_string(payload, "source_path", typed.source_path, detail) ||
+            !optional_string(payload, "snapshot_id", typed.snapshot_id, detail) ||
             !optional_string(payload, "transaction_id", typed.transaction_id, detail) ||
-            !optional_string_array(payload, "roots", typed.roots, detail)) return false;
+            !optional_string_array(payload, "roots", typed.roots, detail) ||
+            !optional_string(payload, "launch_intent", typed.launch_intent, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::legacy_setup_operation:
@@ -769,10 +789,11 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         request.payload = std::move(typed); return true;
     }
     case CommandId::instances_rename: {
-        if (!validate_fields(payload, {"instance_id", "display_name"}, detail)) return false;
+        if (!validate_fields(payload, {"instance_id", "display_name", "expected_manifest_sha256"}, detail)) return false;
         RenameInstanceRequest typed;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
-            !required_string(payload, "display_name", typed.display_name, detail)) return false;
+            !required_string(payload, "display_name", typed.display_name, detail) ||
+            !optional_string(payload, "expected_manifest_sha256", typed.expected_manifest_sha256, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::instances_restore: {
@@ -813,10 +834,11 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         request.payload = std::move(typed); return true;
     }
     case CommandId::snapshots_restore: {
-        if (!validate_fields(payload, {"snapshot_ref", "target_instance_id"}, detail)) return false;
+        if (!validate_fields(payload, {"snapshot_ref", "target_instance_id", "install_id"}, detail)) return false;
         RestoreSnapshotRequest typed; std::string path;
         if (!required_string(payload, "snapshot_ref", path, detail) ||
-            !required_string(payload, "target_instance_id", typed.target_instance_id, detail)) return false;
+            !required_string(payload, "target_instance_id", typed.target_instance_id, detail) ||
+            !optional_string(payload, "install_id", typed.install_id, detail)) return false;
         typed.snapshot_ref = path;
         request.payload = std::move(typed); return true;
     }
@@ -877,11 +899,14 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     case CommandId::profiles_plan:
     case CommandId::profiles_apply: {
         const std::set<std::string> allowed = {"instance_id", "profile_id", "window_mode", "graphics_quality", "audio",
-            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments"};
+            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments", "expected_manifest_sha256",
+            "expected_plan_sha256"};
         if (!validate_fields(payload, allowed, detail)) return false;
         EffectiveProfileRequest typed;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
             !required_string(payload, "profile_id", typed.profile_id, detail) ||
+            !optional_string(payload, "expected_manifest_sha256", typed.expected_manifest_sha256, detail) ||
+            !optional_string(payload, "expected_plan_sha256", typed.expected_plan_sha256, detail) ||
             !decode_profile_patch(payload, typed.overrides, detail)) return false;
         request.payload = std::move(typed); return true;
     }
@@ -937,6 +962,16 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
         request.payload = std::move(typed); return true;
     }
+    case CommandId::modsets_import: {
+        if (!validate_fields(payload, {"instance_id", "install_id", "source_path", "display_name"}, detail)) return false;
+        ImportModpackRequest typed; std::string path;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "install_id", typed.install_id, detail) ||
+            !required_string(payload, "source_path", path, detail) ||
+            !optional_string(payload, "display_name", typed.display_name, detail)) return false;
+        typed.source_path = facman::platform::path_from_utf8(path);
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::modsets_export: {
         if (!validate_fields(payload, {"instance_id", "output_path"}, detail)) return false;
         ExportModsetRequest typed; std::string path;
@@ -971,11 +1006,14 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         request.payload = std::move(typed); return true;
     }
     case CommandId::saves_clone: {
-        if (!validate_fields(payload, {"source_instance_id", "target_instance_id", "save"}, detail)) return false;
+        if (!validate_fields(payload, {"source_instance_id", "target_instance_id", "save", "source_kind", "destination_save"}, detail)) return false;
         CloneSaveRequest typed;
         if (!required_string(payload, "source_instance_id", typed.source_instance_id, detail) ||
             !required_string(payload, "target_instance_id", typed.target_instance_id, detail) ||
-            !required_string(payload, "save", typed.save, detail)) return false;
+            !required_string(payload, "save", typed.save, detail) ||
+            !optional_string(payload, "source_kind", typed.source_kind, detail) ||
+            !optional_string(payload, "destination_save", typed.destination_save, detail)) return false;
+        if (typed.source_kind.empty()) typed.source_kind = "live";
         request.payload = std::move(typed); return true;
     }
     case CommandId::instance_export: {

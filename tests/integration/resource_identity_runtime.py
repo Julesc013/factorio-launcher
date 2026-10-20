@@ -119,6 +119,7 @@ def main() -> int:
     parser.add_argument('--runtime-file', type=Path, action='append', default=[])
     parser.add_argument('--work-root', type=Path, required=True)
     parser.add_argument('--fixture-timeout-seconds', type=child_timeout_seconds, default=30.0)
+    parser.add_argument('--cli-timeout-seconds', type=child_timeout_seconds, default=30.0)
     args = parser.parse_args()
     platform = 'windows' if sys.platform == 'win32' else 'macos' if sys.platform == 'darwin' else 'linux'
     parent = args.work_root.resolve()
@@ -138,10 +139,10 @@ def main() -> int:
 
     def run(label: str, command: list[str], *, environment: dict[str, str] | None = None,
             executable: str | None = None, ok: bool = True,
-            timeout_seconds: float = 30.0) -> str:
+            timeout_seconds: float | None = None) -> str:
         record = capture(label, command, records, executable=executable, cwd=foreign_cwd,
                          env=environment or clean_env, capture_output=True,
-                         timeout=timeout_seconds)
+                         timeout=args.cli_timeout_seconds if timeout_seconds is None else timeout_seconds)
         if (record['exit_code'] == 0) != ok:
             raise AssertionError(f'{label}: exit={record["exit_code"]}; stdout={record["stdout"]}; stderr={record["stderr"]}')
         return record['stdout']
@@ -261,6 +262,8 @@ def main() -> int:
         records.append(dict(label='exception', error=str(error)))
     receipt = dict(schema='facman.resource_identity_cli_proof.v1', result=outcome,
                    platform=sys.platform, fixture_only=True, process_image_cli_sha256=sha(args.cli.read_bytes()),
+                   child_timeouts=dict(fixture=args.fixture_timeout_seconds,
+                                       cli=args.cli_timeout_seconds, missing_runtime=8),
                    fixture_executable_sha256=sha(args.fixture.read_bytes()),
                    runtime_inputs=runtime_inputs,
                    seconds=time.monotonic()-started, commands=records,

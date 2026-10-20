@@ -47,6 +47,10 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
         policy.effects.push_back("setup_mutation");
         policy.capabilities.push_back("install.managed.uninstall.apply");
         break;
+    case CommandId::installs_move_apply:
+        policy.effects.push_back("setup_mutation");
+        policy.capabilities.push_back("install.managed.move.apply");
+        break;
     case CommandId::installs_repair_apply:
         policy.effects.push_back("setup_mutation");
         policy.capabilities.push_back("install.managed.repair.apply");
@@ -54,6 +58,7 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
     case CommandId::installs_recovery_inspect:
     case CommandId::installs_recovery_apply:
         policy.effects.push_back("setup_preview");
+        if (command == CommandId::installs_recovery_apply) policy.effects.push_back("setup_mutation");
         policy.capabilities.push_back("install.managed.uninstall.recover");
         break;
     case CommandId::launch_plan_build:
@@ -116,7 +121,12 @@ CommandAdmissionDecision admit_command(
         return {false, "setup_repair_plan_authority_required",
             "managed repair planning requires complete accepted Universal Setup configuration"};
     }
-    if ((command == CommandId::installs_uninstall_apply ||
+    if (command == CommandId::installs_move_apply && !configuration.setup().mutation_configured()) {
+        return {false, configuration.setup().configured() ? "setup_authority_required" : "live_target_acceptance_required",
+            "managed move apply requires the existing complete accepted Setup configuration"};
+    }
+    if ((command == CommandId::installs_install_apply ||
+         command == CommandId::installs_uninstall_apply ||
          command == CommandId::installs_repair_apply) &&
         !configuration.setup().mutation_configured()) {
         return {false, "setup_authority_required",

@@ -1,0 +1,264 @@
+{
+  "schema": "facman.world_backup_low_space_evidence.v1",
+  "status": "PASS",
+  "work_item": "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
+  "source_base": "6668ef2c55f0e59ed40782121b832878c71e40c9",
+  "regression": {
+    "path": "tests/integration/facman_world_backup_low_space.py",
+    "sha256": "8d2375c1464e2f8493306f8bfcd02600b9c3c64df67f88107c520b137dee646f",
+    "result_sha256": "948f36dbfc839489f3e0e6986a62ca31f155052220f8c021e7e811b60fa7d501",
+    "same_target_retry": true,
+    "all_oracles_pass": true
+  },
+  "produced_package": {
+    "workflow_run": 37167358630,
+    "artifact_id": 11289922457,
+    "source_revision": "bd6678ee384af052e2739a814ab6950eb8afdb73",
+    "source_tree": "8a70f7ebb7c1aa74c1b68c521c3ddc452c5db696",
+    "PR_head": "28843ba31aa6f9e83ab370a4a70ae5c8dba34f78",
+    "archive_sha256": "92549e2a4646fe8e655727f6ddff48de23fa6f3d4017c51202679752542ff7a8",
+    "extracted_cli_sha256": "fb8f8e74adaaf446fcaaa92a517ad039b3c43785094ac1b5fbf99a75b6e3f240"
+  },
+  "public_custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/real-low-space-validation-custody.zip",
+    "sha256": "a1393fc58a2fb8791fc8c6848feed47f7127fb1aad0d375b75081a0c76ff744b",
+    "members": [
+      {
+        "path": "facman_world_backup_low_space.py",
+        "sha256": "8d2375c1464e2f8493306f8bfcd02600b9c3c64df67f88107c520b137dee646f",
+        "bytes": 12381
+      },
+      {
+        "path": "world-backup-reusable-regression.json",
+        "sha256": "948f36dbfc839489f3e0e6986a62ca31f155052220f8c021e7e811b60fa7d501",
+        "bytes": 5990
+      },
+      {
+        "path": "world-backup-reusable-regression.review.json",
+        "sha256": "b6e28dfd963ecd824a2ee57aa77095ba5bfaaaf08c72c90b4ad303f70ca4dea6",
+        "bytes": 6001
+      },
+      {
+        "path": "world-backup-reusable-regression-runtime.review.json",
+        "sha256": "6442315800bca31dea359bf6f04e7df1eb13684b76cff11a84f3f0701ef5ff74",
+        "bytes": 8532
+      },
+      {
+        "path": "world-backup-reusable-regression-admission.json",
+        "sha256": "532a66c4c721ed8c1235964d356a215fbd40cccb6b2c5faafbc167ca69dbdeed",
+        "bytes": 1798
+      },
+      {
+        "path": "world-backup-reusable-regression-postcheck.json",
+        "sha256": "8e93e27ee3e821124a9cf297b03cc6adccc2f368cdff8d4645e1c16f53f0912b",
+        "bytes": 385
+      },
+      {
+        "path": "world-backup-reusable-regression.runner.log",
+        "sha256": "2e76382e7435415498c6ae3e703b5b456dd5ab51ee34241b66abb95d13e3608f",
+        "bytes": 2045
+      },
+      {
+        "path": "world-backup-current-linux-source-binding.json",
+        "sha256": "e3bed34de7df792aa075e12b66027c65e4fd563aebec0adc7b9dfcc5f0d3abd4",
+        "bytes": 2965
+      },
+      {
+        "path": "world-backup-current-linux-package-admission.json",
+        "sha256": "4fa34f874b2b8fd9488aee920fa211b85ad2dd23865dddb71bde0df52ac11e29",
+        "bytes": 17003
+      },
+      {
+        "path": "world-backup-current-low-space.py",
+        "sha256": "0f92f3462356d528fe1c13931c6e118f5364e0e9892866c10d089e1919df5238",
+        "bytes": 10881
+      },
+      {
+        "path": "world-backup-current-low-space.json",
+        "sha256": "5140c09f6a3bec5e7eecef21147737037e15fd46efc72ee4f7be57358dc2ee5c",
+        "bytes": 6245
+      },
+      {
+        "path": "world-backup-current-low-space.review.json",
+        "sha256": "dab33e3890a42ab3c5df068a44acef9405aaae6817cbe7f9fa1cd463a1fea97b",
+        "bytes": 5380
+      },
+      {
+        "path": "world-backup-current-low-space-runtime.review.json",
+        "sha256": "133d449f82197d5b15933bdcf59bd1760c11c2229e17036ae1e4a5946ba40c36",
+        "bytes": 7694
+      },
+      {
+        "path": "world-backup-reusable-regression-work/register.stdout",
+        "sha256": "4c79cdc3601755edba62528951d6b843b6236a6950bfdcb1914ac57cb5daa2af",
+        "bytes": 2164
+      },
+      {
+        "path": "world-backup-reusable-regression-work/register.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-reusable-regression-work/instance.stdout",
+        "sha256": "d765d3be1b4746ba3eac58b0ed7554e51084e2fbedb1d40d5f86a19f24ad1315",
+        "bytes": 1089
+      },
+      {
+        "path": "world-backup-reusable-regression-work/instance.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-reusable-regression-work/positive.stdout",
+        "sha256": "d0a60b9bec47858ee86afd909f7672f526e0991fa601e67a79df5437eb074713",
+        "bytes": 1900
+      },
+      {
+        "path": "world-backup-reusable-regression-work/positive.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-reusable-regression-work/refused.stdout",
+        "sha256": "57ae77f8596b99aed0b667577bcf1a885e62683e2b1ac87a9c454df4704d3497",
+        "bytes": 1207
+      },
+      {
+        "path": "world-backup-reusable-regression-work/refused.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-reusable-regression-work/same-target-retry.stdout",
+        "sha256": "e41264514604531cd5cbdedfcc9a276be070fff7ce8a1be8cfbd7f1d715a51e9",
+        "bytes": 1903
+      },
+      {
+        "path": "world-backup-reusable-regression-work/same-target-retry.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-current-low-space/register.stdout",
+        "sha256": "4ab5f61083dcb7d6b4b79e372e28b5d01ad11e93ece6be27c0f961960a1826db",
+        "bytes": 2164
+      },
+      {
+        "path": "world-backup-current-low-space/register.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-current-low-space/instance.stdout",
+        "sha256": "3b0e5bfd9614a05f9a5848888966faffd02904103d722a83a8d1bbc22cf25c63",
+        "bytes": 1073
+      },
+      {
+        "path": "world-backup-current-low-space/instance.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-current-low-space/positive-backup.stdout",
+        "sha256": "34a208844cfcf31d84b58b3c21919dd2ab8f9552cbdca6d40f425a41e9cd3662",
+        "bytes": 1830
+      },
+      {
+        "path": "world-backup-current-low-space/positive-backup.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-current-low-space/real-low-space-refusal.stdout",
+        "sha256": "44a67ffc018a53f78007a6f4df38cc0217418f772fbc61b2e8916c1b99ae8ede",
+        "bytes": 1185
+      },
+      {
+        "path": "world-backup-current-low-space/real-low-space-refusal.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "world-backup-current-low-space/capacity-restored-backup.stdout",
+        "sha256": "46b3b816071d076d739947cf2c1e5da277f152318e3bfbf28eda39d2f07e1d4e",
+        "bytes": 1845
+      },
+      {
+        "path": "world-backup-current-low-space/capacity-restored-backup.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    ],
+    "CRC_and_all_member_bytes_verified": true,
+    "licensed_inputs_or_private_custody": false
+  },
+  "host": {
+    "uname": [
+      "Linux",
+      "BlackGlass-Win10",
+      "6.18.40.1-microsoft-standard-WSL2",
+      "#1 SMP PREEMPT_DYNAMIC Fri Jul 31 22:12:15 UTC 2026",
+      "x86_64"
+    ],
+    "uid": 0,
+    "mount_namespace": "mnt:[4026532222]",
+    "parent_mount_namespace": "mnt:[4026532212]"
+  },
+  "capacity": {
+    "initial": [
+      4194304,
+      0,
+      4194304
+    ],
+    "full": [
+      4194304,
+      4194304,
+      0
+    ],
+    "restored": [
+      4194304,
+      8192,
+      4186112
+    ],
+    "filler_bytes": 4186112
+  },
+  "refusal": {
+    "code": "persistent_write_refused",
+    "reason": "Insufficient space for a complete backup stage",
+    "recoverable": true,
+    "retryable": true,
+    "schema": "common.refusal.v1",
+    "severity": "blocked"
+  },
+  "cleanup": [
+    {
+      "target": "/mnt/d/Development/FacMan/repositories/factorio-launcher-5db2844e2f29/tasks/task-facman-o-38884d9b48/evidence/world-backup-reusable-regression-work/destination-volume",
+      "unmounted": true
+    },
+    {
+      "target": "/mnt/d/Development/FacMan/repositories/factorio-launcher-5db2844e2f29/tasks/task-facman-o-38884d9b48/evidence/world-backup-reusable-regression-work/workspace-volume",
+      "unmounted": true
+    }
+  ],
+  "qualification": {
+    "exact_PR371_tree_CLI_integration_preview_on_WSL": true,
+    "final_combined_head_product_family": false,
+    "physical_supported_host": false,
+    "game": false,
+    "human": false,
+    "release": false,
+    "support": false
+  },
+  "remaining_gates": [
+    "Final combined-head product-family candidate",
+    "Current task-head required checks",
+    "Final source/canonical independent review and exact integration"
+  ],
+  "invalidation": [
+    "Changed regression bytes require review and targeted rerun",
+    "Changed runtime, package source/provenance or applicable fixture invalidates package behavior proof",
+    "WSL preview never supplies physical supported-host, game, human or release authority"
+  ],
+  "preserved_failures": "Earlier diagnostic source/layout/static findings and the original WSL9fs policy refusal remain in the unchanged owned RootO; no failed attempt is promoted to pass.",
+  "recorded_at_utc": "2026-10-04T02:36:13.500678+00:00"
+}

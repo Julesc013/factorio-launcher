@@ -34,6 +34,7 @@ bool ContentApplicationModule::handles(CommandId command) const noexcept
     case CommandId::mods_explain:
     case CommandId::modsets_lock:
     case CommandId::modsets_verify:
+    case CommandId::modsets_import:
     case CommandId::modsets_export:
     case CommandId::modsets_plan:
     case CommandId::modsets_diff:
@@ -102,6 +103,8 @@ ApplicationResult ContentApplicationModule::execute(
     case CommandId::modsets_verify:
         return handlers::verify_modset(
             context, std::get<ModsetInstanceRequest>(request.payload));
+    case CommandId::modsets_import:
+        return handlers::import_modpack(context, std::get<ImportModpackRequest>(request.payload));
     case CommandId::modsets_export:
         return handlers::export_modset(
             context, std::get<ExportModsetRequest>(request.payload));

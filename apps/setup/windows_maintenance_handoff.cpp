@@ -125,6 +125,18 @@ Result launch(const LaunchRequest &request) {
                        TRUE, 0))
     return {false, "Windows could not duplicate the initiating process handle"};
   Handle inherited_owner{inherited};
+  SECURITY_ATTRIBUTES inheritable{};
+  inheritable.nLength = sizeof(inheritable);
+  inheritable.bInheritHandle = TRUE;
+  Handle null_input{CreateFileW(L"NUL", GENERIC_READ,
+      FILE_SHARE_READ | FILE_SHARE_WRITE, &inheritable, OPEN_EXISTING,
+      FILE_ATTRIBUTE_NORMAL, nullptr)};
+  Handle null_output{CreateFileW(L"NUL", GENERIC_WRITE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE, &inheritable, OPEN_EXISTING,
+      FILE_ATTRIBUTE_NORMAL, nullptr)};
+  if (null_input.value == INVALID_HANDLE_VALUE ||
+      null_output.value == INVALID_HANDLE_VALUE)
+    return {false, "Windows could not isolate the external helper's standard handles"};
   FILETIME created{}, exited{}, kernel{}, user{};
   if (!GetProcessTimes(inherited, &created, &exited, &kernel, &user))
     return {false, "Windows could not bind initiating process creation time"};
@@ -134,6 +146,13 @@ Result launch(const LaunchRequest &request) {
   std::vector<unsigned char> attributes(attributes_size);
   STARTUPINFOEXW startup{};
   startup.StartupInfo.cb = sizeof(startup);
+  // The continuation outlives this process.  Explicit null handles prevent it
+  // from retaining redirected caller pipes and turning the asynchronous
+  // handoff into a parent/child I/O wait cycle.
+  startup.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+  startup.StartupInfo.hStdInput = null_input.value;
+  startup.StartupInfo.hStdOutput = null_output.value;
+  startup.StartupInfo.hStdError = null_output.value;
   startup.lpAttributeList = reinterpret_cast<PPROC_THREAD_ATTRIBUTE_LIST>(
       attributes.data());
   if (!InitializeProcThreadAttributeList(startup.lpAttributeList, 1, 0,
@@ -142,8 +161,11 @@ Result launch(const LaunchRequest &request) {
   const auto release_attributes = [&]() {
     DeleteProcThreadAttributeList(startup.lpAttributeList);
   };
+  HANDLE inherited_handles[] = {
+      inherited, null_input.value, null_output.value};
   if (!UpdateProcThreadAttribute(startup.lpAttributeList, 0,
-          PROC_THREAD_ATTRIBUTE_HANDLE_LIST, &inherited, sizeof(inherited),
+          PROC_THREAD_ATTRIBUTE_HANDLE_LIST, inherited_handles,
+          sizeof(inherited_handles),
           nullptr, nullptr)) {
     release_attributes();
     return {false, "Windows could not restrict the inherited handle list"};
@@ -172,7 +194,7 @@ Result launch(const LaunchRequest &request) {
   const BOOL launched = CreateProcessW(
       request.helper.c_str(), mutable_command.data(), nullptr, nullptr, TRUE,
       EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT |
-          CREATE_NEW_PROCESS_GROUP | CREATE_SUSPENDED,
+          CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW | CREATE_SUSPENDED,
       nullptr, request.helper.parent_path().c_str(), &startup.StartupInfo,
       &process);
   release_attributes();

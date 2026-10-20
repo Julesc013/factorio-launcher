@@ -1,0 +1,550 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_preparation_preview.v1.schema.json",
+  "title": "Read-only current-instance preparation composition",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "factorio.preparation_preview.v1"
+    },
+    "canonicalization_version": {
+      "const": "facman.sorted-json.v1"
+    },
+    "mode": {
+      "const": "plan_only"
+    },
+    "composition_state": {
+      "enum": [
+        "partial",
+        "blocked"
+      ]
+    },
+    "instance_id": {
+      "type": "string"
+    },
+    "profile_id": {
+      "type": "string"
+    },
+    "installation_id": {
+      "type": "string"
+    },
+    "required_version": {
+      "type": "string"
+    },
+    "launch_intent": {
+      "enum": [
+        "menu",
+        "load_save"
+      ]
+    },
+    "instance_spec_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "instance_binding_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "dependency_identities": {
+      "type": "array",
+      "items": {
+        "$ref": "factorio_evidence_dependency.v1.schema.json"
+      }
+    },
+    "installation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "planning_owner": {
+          "const": "FacMan factorio.installation_model.v2"
+        },
+        "mutation_owner": {
+          "const": "Universal Setup"
+        },
+        "provider_plan": {
+          "const": "unavailable"
+        },
+        "disposition": {
+          "enum": [
+            "plan",
+            "refusal"
+          ]
+        },
+        "report": {
+          "anyOf": [
+            {
+              "$ref": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_reconciliation_plan.v1.schema.json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "refusal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "refusal_message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "refusal_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "planning_owner",
+        "mutation_owner",
+        "provider_plan",
+        "disposition",
+        "report",
+        "refusal",
+        "refusal_message",
+        "refusal_path"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "plan"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "report": {
+                "type": "object"
+              },
+              "refusal": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "report": {
+                "type": "null"
+              },
+              "refusal": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "planning_owner": {
+          "const": "FacMan profiles"
+        },
+        "disposition": {
+          "enum": [
+            "plan",
+            "refusal"
+          ]
+        },
+        "recovery": {
+          "const": "profile_apply_two_file_v1"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "instance_id": {
+                  "type": "string"
+                },
+                "profile_id": {
+                  "type": "string"
+                },
+                "expected_manifest_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "overrides": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "window_mode": {
+                      "type": "string"
+                    },
+                    "graphics_quality": {
+                      "type": "string"
+                    },
+                    "audio": {
+                      "type": "string"
+                    },
+                    "selection_mode": {
+                      "type": "string"
+                    },
+                    "selection": {
+                      "type": "string"
+                    },
+                    "launch_mode": {
+                      "type": "string"
+                    },
+                    "benchmark_ticks": {
+                      "type": "string"
+                    },
+                    "additional_arguments": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "maxItems": 32
+                    }
+                  }
+                }
+              },
+              "required": [
+                "instance_id",
+                "profile_id",
+                "expected_manifest_sha256",
+                "overrides"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overrides_present": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "overrides_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "report": {
+          "anyOf": [
+            {
+              "$ref": "https://facman.invalid/schema/factorio/factorio_effective_profile.v1.schema.json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "refusal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "refusal_message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "refusal_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "planning_owner",
+        "disposition",
+        "recovery",
+        "request",
+        "overrides_present",
+        "overrides_sha256",
+        "report",
+        "refusal",
+        "refusal_message",
+        "refusal_path"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "plan"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "report": {
+                "type": "object"
+              },
+              "refusal": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "report": {
+                "type": "null"
+              },
+              "refusal": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "root_configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "enum": [
+            "observation_only",
+            "plan_unavailable"
+          ]
+        },
+        "root_identity": {
+          "type": "string"
+        },
+        "routing_preflight": {
+          "enum": [
+            "satisfied",
+            "blocked"
+          ]
+        },
+        "config_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "disposition",
+        "root_identity",
+        "routing_preflight",
+        "config_sha256"
+      ]
+    },
+    "modset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "enum": [
+            "not_required",
+            "observation_only",
+            "plan_unavailable"
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "lock_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artifact_identities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "verification": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "local_lock_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_lock_identity": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "disposition",
+        "status",
+        "lock_sha256",
+        "artifact_identities",
+        "verification",
+        "local_lock_identity",
+        "shared_lock_identity"
+      ]
+    },
+    "selected_world": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "enum": [
+            "not_required",
+            "observation_only",
+            "plan_unavailable"
+          ]
+        },
+        "gameplay_compatibility": {
+          "const": "unclaimed"
+        },
+        "filename": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inspection_identity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "record": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "disposition",
+        "gameplay_compatibility",
+        "filename",
+        "inspection_identity",
+        "record"
+      ]
+    },
+    "recovery_state": {
+      "enum": [
+        "clear",
+        "pending"
+      ]
+    },
+    "rollback": {
+      "const": "no_combined_rollback"
+    },
+    "executed_effects": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "observation_scope": {
+      "const": "query_only_point_in_time"
+    },
+    "revalidate_before_use": {
+      "const": true
+    },
+    "expires_at": {
+      "type": "null"
+    },
+    "preparation_available": {
+      "const": false
+    },
+    "execution_available": {
+      "const": false
+    },
+    "operation_guarantees": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mutation_executed": {
+          "const": false
+        },
+        "preparation_executed": {
+          "const": false
+        },
+        "execution_started": {
+          "const": false
+        },
+        "permit_issued": {
+          "const": false
+        },
+        "credential_accessed": {
+          "const": false
+        },
+        "network_accessed": {
+          "const": false
+        }
+      },
+      "required": [
+        "mutation_executed",
+        "preparation_executed",
+        "execution_started",
+        "permit_issued",
+        "credential_accessed",
+        "network_accessed"
+      ]
+    },
+    "plan_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "schema",
+    "canonicalization_version",
+    "mode",
+    "composition_state",
+    "instance_id",
+    "profile_id",
+    "installation_id",
+    "required_version",
+    "launch_intent",
+    "instance_spec_digest",
+    "instance_binding_digest",
+    "manifest_sha256",
+    "dependency_identities",
+    "installation",
+    "profile",
+    "root_configuration",
+    "modset",
+    "selected_world",
+    "recovery_state",
+    "rollback",
+    "executed_effects",
+    "observation_scope",
+    "revalidate_before_use",
+    "expires_at",
+    "preparation_available",
+    "execution_available",
+    "operation_guarantees",
+    "plan_digest"
+  ]
+}

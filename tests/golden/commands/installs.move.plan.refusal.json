@@ -5,7 +5,7 @@
   "refusal": {
     "schema": "common.refusal.v1",
     "code": "live_target_acceptance_required",
-    "reason": "A human M2 live-target acceptance Pass is required before managed move planning is activated.",
+    "reason": "Managed move planning requires the bounded live-target policy gate.",
     "recoverable": false
   }
 }

@@ -28,7 +28,7 @@ REQUIRED_GOLDENS = {
     "instance.export.success.json": {"command": "instance.export"},
     "instance.import.success.json": {"command": "instance.import"},
     "installs.install.plan.refusal.json": {"command": "installs.install.plan", "refusal_code": "live_target_acceptance_required"},
-    "installs.install.apply.refusal.json": {"command": "installs.install.apply", "refusal_code": "live_target_acceptance_required"},
+    "installs.install.apply.refusal.json": {"command": "installs.install.apply", "refusal_code": "setup_authority_required"},
     "installs.repair.plan.refusal.json": {"command": "installs.repair.plan", "refusal_code": "ownership_denied"},
     "mods.search.refusal.json": {"command": "mods.search", "refusal_code": "network_forbidden"},
     "servers.start.refusal.json": {"command": "servers.start", "refusal_code": "execution_not_enabled"},

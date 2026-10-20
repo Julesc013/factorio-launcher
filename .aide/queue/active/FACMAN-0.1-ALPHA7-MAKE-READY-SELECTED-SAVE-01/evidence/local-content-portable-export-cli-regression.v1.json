@@ -1,0 +1,41 @@
+{
+  "base": "6e77a162abc2024cbda1fb3e9ac8ca3e4cc3ecaf",
+  "beta_or_release_ready": false,
+  "correction": "Assert exact three-member inventory, selected mod ZIP bytes and raw lock digest binding",
+  "failure": "macOS: 1924 tests, one failure: old export count 2 versus rich closure count 3",
+  "failure_job": "https://github.com/Julesc013/factorio-launcher/actions/runs/37453059616/job/112233955328",
+  "failure_log_sha256": "75b4fff23f9ffe7cc25036270b07c77dc63d2a741b83e634e8bc818bac95476d",
+  "focused_tests": {
+    "count": 1,
+    "log_sha256": "5b22cd4b9ab81b8526b20c16bbb653e90ae1668fc4d5c44ebe5cec8c6367d097",
+    "seconds": 4.68,
+    "summary": "OK"
+  },
+  "independent_test_review_sha256": "82b3fc87e76635571b07030c5a9a079dd09da30d4510e981a57d9fb92c0ad1c8",
+  "native_rebuild_reason": "Compiled source is unchanged; focused test used existing qualified binary",
+  "new_builds": 0,
+  "new_clones": 0,
+  "new_worktrees": 0,
+  "offline_reconstruction_complete": false,
+  "previous_reviewed_snapshot_unchanged": true,
+  "previous_source_evidence": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/local-content-portable-export.v1.json",
+  "public_pack_import_complete": false,
+  "quality_checks": {
+    "commands": [
+      "py -3 tools/source_format_check.py",
+      "py -3 tools/engineering_quality_check.py",
+      "py -3 tools/test_architecture_check.py"
+    ],
+    "exit_code": 0,
+    "output": "source-format-check: ok\r\nengineering-quality-check: ok\r\ntest-architecture-check: ok\r\n",
+    "schema": "facman.actual_check_execution.v1",
+    "session_id": 90882
+  },
+  "required_remote_checks_outstanding": true,
+  "schema": "facman.portable_modpack_export_cli_regression.v1",
+  "status": "PASS_SCOPED_TEST_CORRECTION",
+  "test_path": "tests/test_cli.py",
+  "test_sha256": "b70a622d03ffa818cabc74f5949bd073b1b8ea450b29c52af64a93dee8a53b27",
+  "whole_workunit_closed": false,
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01"
+}

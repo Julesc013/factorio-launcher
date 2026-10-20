@@ -64,6 +64,9 @@ struct MaintenanceContext {
   std::filesystem::path state_root;
   std::filesystem::path acceptance_root;
   std::filesystem::path repair_source;
+  // A real epoch keeps its protocol-capable genesis Setup as the registered
+  // maintenance entry point while a retained older package is active.
+  std::filesystem::path maintenance_controller;
 };
 
 struct CutoverContext {
@@ -103,6 +106,15 @@ CutoverOwnership inspect_windows_cutover_effect(
 // preserved for recovery.
 Result apply_windows_cutover_effect(Effect effect,
                                     const CutoverContext &context);
+// Retires only the deterministic operation-bound source-shortcut backup after
+// the caller has durably committed activation. An absent backup is success;
+// any object that is not the exact reviewed source shortcut is preserved.
+Result retire_windows_shortcut_cutover_backup(
+    const CutoverContext &context);
+// Read-only routing probe. Any object, including an unsafe one, keeps the
+// operation on its recovery route. Retirement still verifies exact ownership.
+Result inspect_windows_shortcut_cutover_backup_presence(
+    const std::string &operation_id, bool &present);
 // Native smoke-test helpers bind a shortcut operation to an isolated fixture
 // path; production entry points always resolve the current-user Start Menu.
 Ownership inspect_windows_shortcut_fixture(const std::filesystem::path &shortcut,
@@ -115,6 +127,8 @@ Result apply_windows_shortcut_fixture(const std::filesystem::path &shortcut,
 CutoverOwnership inspect_windows_shortcut_cutover_fixture(
     const std::filesystem::path &shortcut, const CutoverContext &context);
 Result apply_windows_shortcut_cutover_fixture(
+    const std::filesystem::path &shortcut, const CutoverContext &context);
+Result retire_windows_shortcut_cutover_fixture(
     const std::filesystem::path &shortcut, const CutoverContext &context);
 } // namespace facman::setup::integration
 #endif

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_save_operations.h"
+#include "flb_factorio_save_index.h"
 
 #include "fl_archive.h"
 #include "fl_archive_platform.h"
@@ -14,8 +15,10 @@
 #include "flb_factorio_version_family.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
+#include "fl_workspace_root_authority.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -25,6 +28,8 @@
 #include <optional>
 #include <set>
 #include <sstream>
+#include <thread>
+#include <vector>
 
 namespace facman::factorio::saves::operations {
 namespace fs = std::filesystem;
@@ -170,7 +175,28 @@ struct StableCopyResult {
     std::string sha1;
     std::string sha256;
     std::string detail;
+    bool source_changed = true;
 };
+
+std::optional<std::string> stable_input_sha256(
+    facman::platform::StableInputFile& input)
+{
+    if (!input.open() || !input.identity().regular_file ||
+        input.identity().link_count != 1U || !input.revalidate_path().ok())
+        return std::nullopt;
+    facman::base::Sha256Hasher hasher;
+    std::vector<unsigned char> chunk(64U * 1024U);
+    for (std::uint64_t offset = 0; offset < input.size();) {
+        const auto count = static_cast<std::size_t>((std::min)(
+            static_cast<std::uint64_t>(chunk.size()), input.size() - offset));
+        if (input.read_at(offset, chunk.data(), count) != count)
+            return std::nullopt;
+        hasher.update(chunk.data(), count);
+        offset += count;
+    }
+    if (!input.revalidate_path().ok()) return std::nullopt;
+    return hasher.finish();
+}
 
 class OperationJournal {
 public:
@@ -179,7 +205,8 @@ public:
         const std::string& command,
         const fs::path& target,
         const std::vector<fs::path>& sources,
-        const std::vector<fs::path>& staging)
+        const std::vector<fs::path>& staging,
+        const std::string& effect_parent_identity = {})
     {
         tx::Record record;
         record.command_id = command;
@@ -187,6 +214,7 @@ public:
         record.sources = sources;
         record.staging_roots = staging;
         record.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+        record.effect_parent_identity = effect_parent_identity;
         auto started = tx::TransactionSession::begin(workspace, std::move(record));
         if (!started) { detail_ = started.error().message; return false; }
         session_.emplace(started.take_value());
@@ -208,6 +236,14 @@ public:
         if (!ok) detail_ = session_->detail();
         return ok;
     }
+    bool checkpoint(const std::string& completed)
+    {
+        if (!session_ || !session_->checkpoint(completed)) {
+            detail_ = session_ ? session_->detail() : "transaction session is unavailable";
+            return false;
+        }
+        return true;
+    }
     bool finish()
     {
         if (!session_ || !session_->complete()) {
@@ -227,21 +263,42 @@ private:
     std::string detail_;
 };
 
-bool stable_copy(const fs::path& source, const fs::path& destination, StableCopyResult& result)
+bool stable_copy(const fs::path& source, const fs::path& destination,
+    StableCopyResult& result, facman::platform::StableInputFile* held_source = nullptr)
 {
-    std::error_code error;
-    result.size = fs::file_size(source, error);
-    if (error) { result.detail = error.message(); return false; }
-    result.sha256 = facman::base::sha256_hex_file(source);
+    facman::platform::StableInputFile local_source;
+    auto& input = held_source != nullptr ? *held_source : local_source;
+    if (!input.open()) {
+        const auto opened = input.open_no_follow(source);
+        if (!opened.ok()) { result.detail = opened.detail; return false; }
+    }
+    result.size = input.size();
+    auto source_sha256 = stable_input_sha256(input);
+    if (!source_sha256.has_value()) {
+        result.detail = "save source changed during identity hash";
+        return false;
+    }
+    result.sha256 = *source_sha256;
     auto digest = facman::core::Sha256Digest::parse(result.sha256);
     if (!digest) { result.detail = digest.error().message; return false; }
-    if (fault_requested("during_cross_volume_copy")) {
+    const bool interrupt_copy = fault_requested("during_cross_volume_copy");
+    if (interrupt_copy && held_source == nullptr) {
         result.detail = "injected copy interruption";
         return false;
     }
     if (!tx::CrossVolumeCopyVerifyCommit::commit(
-            source, destination, digest.value(), result.size, result.detail)) return false;
+            source, destination, digest.value(), result.size, result.detail,
+            &input.identity(), interrupt_copy)) {
+        result.source_changed = stable_input_sha256(input) != source_sha256;
+        return false;
+    }
+    if (!input.revalidate_path().ok()) {
+        result.detail = "save source identity changed after stable copy";
+        return false;
+    }
+    result.source_changed = false;
     result.sha1 = facman::factorio::modsets::sha1_hex_file(destination);
+    if (result.sha1.empty()) result.detail = "staged save SHA-1 could not be read";
     return !result.sha1.empty();
 }
 
@@ -343,9 +400,21 @@ bool resolve_save(const Instance& instance, const std::string& name, SaveRef& sa
     return true;
 }
 
+std::optional<fs::path> save_lock_path(const Instance& instance)
+{
+    for (const char* name : {"run.lock", "save.write.lock"}) {
+        const fs::path path = instance.root / "locks" / name;
+        std::error_code error;
+        const auto status = fs::symlink_status(path, error);
+        if (error == std::errc::no_such_file_or_directory) continue;
+        if (error || status.type() != fs::file_type::not_found) return path;
+    }
+    return std::nullopt;
+}
+
 bool save_locked(const Instance& instance)
 {
-    return fs::exists(instance.root / "locks" / "save.write.lock");
+    return save_lock_path(instance).has_value();
 }
 
 json::ObjectBuilder save_ref_builder(const SaveRef& save)
@@ -531,30 +600,151 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
     if (!load_instance(workspace, request.instance_id, instance)) {
         return refuse(command, request.instance_id, request.save, "unknown_instance", "Instance is not registered", request.instance_id);
     }
-    if (save_locked(instance)) {
-        return refuse(command, request.instance_id, request.save, "save_locked", "Save writes are locked for this instance", path_string(instance.root / "locks/save.write.lock"));
+    if (const auto lock = save_lock_path(instance)) {
+        return refuse(command, request.instance_id, request.save, "save_locked",
+            "Save writes are locked for this instance", path_string(*lock));
     }
     SaveRef save;
     if (!resolve_save(instance, request.save, save)) {
         return refuse(command, request.instance_id, request.save, "save_not_found", "Save is not present in the instance", "No matching structurally readable .zip save exists.");
     }
-    if (!save.archive_structurally_valid || !save.factorio_save_recognized) {
-        return refuse(command, request.instance_id, save.file_name, "save_malformed", "Save archive is not recognized as a Factorio save", "level-init.dat is absent");
+    auto inspected_workspace = facman::workspace::inspect_workspace_root(workspace);
+    if (!inspected_workspace ||
+        inspected_workspace.value().state != facman::workspace::WorkspaceRootState::facman_owned ||
+        !inspected_workspace.value().mutation_allowed ||
+        !inspected_workspace.value().root_authority) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unowned", "Backup requires an owned workspace root",
+            inspected_workspace ? inspected_workspace.value().detail : inspected_workspace.error().message,
+            false);
     }
+    auto authority = inspected_workspace.take_value();
+    facman::platform::StableInputFile source_pin;
+    if (!source_pin.open_no_follow(save.path).ok() ||
+        !source_pin.identity().regular_file ||
+        source_pin.identity().link_count != 1U ||
+        !source_pin.revalidate_path().ok()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_source_changed", "Save source cannot be pinned for backup",
+            path_string(save.path));
+    }
+    std::error_code source_time_error;
+    const auto source_write_time = fs::last_write_time(save.path, source_time_error);
+    if (source_time_error) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_source_changed", "Save modification time cannot be pinned",
+            source_time_error.message());
+    }
+    const auto source_unchanged = [&]() {
+        std::error_code current_time_error;
+        const auto current_time = fs::last_write_time(save.path, current_time_error);
+        return !current_time_error && current_time == source_write_time &&
+            source_pin.revalidate_path().ok();
+    };
+    SaveRef pinned_save;
+    std::string inspection_detail;
+    const bool inspected_save = inspect_save(save.path, pinned_save, inspection_detail);
+    if (!source_unchanged()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_source_changed", "Save changed during backup inspection",
+            path_string(save.path));
+    }
+    if (!inspected_save || !pinned_save.factorio_save_recognized) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_malformed", "Save archive is not recognized as a Factorio save",
+            inspected_save ? "level-init.dat is absent" : inspection_detail);
+    }
+    save = std::move(pinned_save);
     fs::path destination = request.output_path.empty()
         ? instance.root / "backups" / (save.name + ".backup.zip")
         : request.output_path;
-    if (destination.is_relative()) destination = fs::absolute(destination);
+    if (destination.is_relative()) destination = workspace / destination;
+    std::error_code error;
+    destination = fs::absolute(destination, error).lexically_normal();
+    if (error || destination.filename().empty()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unsafe", "Backup destination is invalid",
+            error ? error.message() : path_string(destination), false);
+    }
     const fs::path manifest = fs::path(path_string(destination) + ".manifest.json");
-    if (fs::exists(destination) || fs::exists(manifest)) {
+    facman::platform::StableDirectoryObject destination_parent;
+    if (request.output_path.empty()) {
+        facman::platform::StableDirectoryObject instance_root;
+        if (!authority.root_authority->validate_descendant(instance.root).ok() ||
+            !instance_root.open_no_follow_for_relative_writes(instance.root).ok()) {
+            return refuse(command, request.instance_id, save.file_name,
+                "save_backup_destination_unsafe", "Instance backup root is not owned",
+                path_string(instance.root), false);
+        }
+        const auto opened = instance_root.open_child_directory_no_follow_for_relative_writes(
+            "backups", destination_parent);
+        if (!opened.ok() &&
+            !instance_root.create_child_directory_exclusive("backups", destination_parent).ok()) {
+            return refuse(command, request.instance_id, save.file_name,
+                "save_backup_destination_unsafe", "Instance backup root is linked or unreadable",
+                path_string(destination.parent_path()), false);
+        }
+    } else if (!destination_parent.open_no_follow_for_relative_writes(
+            destination.parent_path()).ok()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unsafe", "Explicit backup parent must already exist",
+            path_string(destination.parent_path()), false);
+    }
+    // An explicit --to authorizes one new backup in this pinned parent. Paths
+    // inside the workspace also retain workspace root authority checks.
+    const auto safe_destination = [&]() {
+        const fs::path parent = destination.parent_path();
+        const bool root_parent = parent == authority.root_authority->path().lexically_normal();
+        const bool workspace_parent = root_parent ||
+            authority.root_authority->validate_descendant(parent).ok();
+        if (request.output_path.empty() && !workspace_parent) return false;
+        return (!workspace_parent ||
+                (authority.root_authority->validate_descendant(destination, true).ok() &&
+                 authority.root_authority->validate_descendant(manifest, true).ok())) &&
+            destination_parent.revalidate().ok() &&
+            facman::workspace::revalidate_workspace_root(authority).ok();
+    };
+    if (!safe_destination()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unsafe", "Backup destination parent is unsafe or changed",
+            path_string(destination), false);
+    }
+    facman::platform::PathIdentity destination_identity, manifest_identity;
+    const auto destination_status = facman::platform::inspect_path_no_follow(
+        destination, destination_identity);
+    const auto manifest_status = facman::platform::inspect_path_no_follow(
+        manifest, manifest_identity);
+    if (!destination_status.ok() || !manifest_status.ok()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unsafe", "Backup target cannot be safely inspected",
+            path_string(destination), false);
+    }
+    if (destination_identity.exists || manifest_identity.exists) {
         return refuse(command, request.instance_id, save.file_name, "save_backup_target_exists", "Save backup target already exists", path_string(destination));
     }
-    std::error_code error;
-    fs::create_directories(destination.parent_path(), error);
-    if (error) return refuse(command, request.instance_id, save.file_name, "persistent_write_refused", "Backup parent could not be created", error.message());
-    const fs::path staging = unique_staging(destination.parent_path(), ".facman-save-backup-");
+    constexpr std::uint64_t kSidecarAndFilesystemReserve = 128U * 1024U;
+    error.clear();
+    const auto capacity = fs::space(destination.parent_path(), error);
+    if (error || !safe_destination()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unsafe", "Backup destination capacity or ownership changed",
+            error ? error.message() : path_string(destination), false);
+    }
+    if (capacity.available < kSidecarAndFilesystemReserve ||
+        source_pin.size() > capacity.available - kSidecarAndFilesystemReserve) {
+        return refuse(command, request.instance_id, save.file_name,
+            "persistent_write_refused", "Insufficient space for a complete backup stage",
+            path_string(destination.parent_path()));
+    }
+    const fs::path staging = unique_staging(workspace, ".facman-save-backup-");
+    if (staging.empty()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unsafe", "Backup staging name cannot be reserved",
+            path_string(destination.parent_path()));
+    }
     OperationJournal journal;
-    if (!journal.start(workspace, command, destination, {save.path}, {staging})) {
+    if (!journal.start(workspace, command, destination, {save.path}, {staging},
+            tx::directory_effect_identity(destination_parent))) {
         return refuse(command, request.instance_id, save.file_name, "recovery_write_refused", "Backup journal preparation failed", journal.detail());
     }
     facman::archive::Status status = facman::archive::create_owned_staging_root(staging);
@@ -562,10 +752,14 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
     if (!journal.step("staging", "owned_staging_created")) return refuse(command, request.instance_id, save.file_name, "recovery_write_refused", "Backup staging journal update failed", journal.detail());
     const fs::path staged = staging / destination.filename();
     StableCopyResult copied;
-    if (!stable_copy(save.path, staged, copied)) {
+    if (!stable_copy(save.path, staged, copied, &source_pin)) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
         journal.failed(copied.detail);
-        return refuse(command, request.instance_id, save.file_name, "save_source_changed", "Save source could not be read through one stable handle", copied.detail);
+        return refuse(command, request.instance_id, save.file_name,
+            copied.source_changed ? "save_source_changed" : "persistent_write_refused",
+            copied.source_changed ? "Save source changed during backup" :
+                "Backup staging copy could not complete",
+            copied.detail);
     }
     if (!journal.step("staged", "stable_source_copied")) return refuse(command, request.instance_id, save.file_name, "recovery_write_refused", "Backup staged journal update failed", journal.detail());
     SaveRef staged_save;
@@ -574,6 +768,51 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
         (void)facman::archive::cleanup_owned_staging_root(staging);
         journal.failed(detail);
         return refuse(command, request.instance_id, save.file_name, "save_malformed", "Staged backup verification failed", detail);
+    }
+    if (fault_requested("pause_after_staged_copy"))
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    const auto source_after_copy = stable_input_sha256(source_pin);
+    if (!source_after_copy.has_value() || *source_after_copy != copied.sha256 ||
+        !source_unchanged()) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed("save source changed before backup publication");
+        return refuse(command, request.instance_id, save.file_name,
+            "save_source_changed", "Save changed while its backup was staged",
+            path_string(save.path));
+    }
+    if (!safe_destination()) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed("backup destination ownership changed before publication");
+        return refuse(command, request.instance_id, save.file_name,
+            "save_backup_destination_unsafe", "Backup destination changed before publication",
+            path_string(destination), false);
+    }
+    if (const auto lock = save_lock_path(instance)) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed("instance run ownership appeared during backup");
+        return refuse(command, request.instance_id, save.file_name,
+            "save_locked", "Save writes became locked during backup",
+            path_string(*lock));
+    }
+    const BackupResult result {request.instance_id, save, destination, manifest,
+        utc_now(), copied.sha1, copied.sha256, authority.workspace_id, copied.size,
+        "pinned_source_two_pass_sha256_v1"};
+    journal.record().operation_context = to_json(result) + "\n";
+    const auto temporary = tx::RelativePath::parse(
+        ".facman-save-backup-" + journal.record().transaction_id +
+        ".staging.zip");
+    const auto expected_sha256 = facman::core::Sha256Digest::parse(copied.sha256);
+    if (!temporary || !expected_sha256) {
+        return refuse(command, request.instance_id, save.file_name,
+            "recovery_write_refused", "Backup publication identity is invalid",
+            temporary ? expected_sha256.error().message : temporary.error().message);
+    }
+    journal.record().expected_files.push_back(
+        {temporary.value(), expected_sha256.value(), copied.size});
+    if (!journal.checkpoint("backup_manifest_bound")) {
+        return refuse(command, request.instance_id, save.file_name,
+            "recovery_write_refused", "Backup manifest journal update failed",
+            journal.detail());
     }
     if (!journal.step("verified", "staged_save_verified") ||
         !journal.step("committing", "no_clobber_commit_started")) {
@@ -586,15 +825,21 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
             journal.detail());
     }
     std::string commit_detail;
-    if (!tx::StagedFileCommit::commit(staging, staged, destination, commit_detail)) {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
-        journal.failed(commit_detail);
-        return refuse(command, request.instance_id, save.file_name, "persistent_write_refused", "Backup commit failed", commit_detail);
+    if (!tx::publish_save_backup_file(workspace, journal.record(), commit_detail)) {
+        return refuse(command, request.instance_id, save.file_name,
+            "transaction_recovery_required", "Backup publication requires recovery",
+            commit_detail, false);
+    }
+    if (!safe_destination() || !source_unchanged()) {
+        return refuse(command, request.instance_id, save.file_name,
+            "transaction_recovery_required", "Backup committed but source or destination identity changed",
+            path_string(destination), false);
     }
     if (!journal.step("committed", "backup_file_committed")) return refuse(command, request.instance_id, save.file_name, "transaction_recovery_required", "Backup committed but journal update failed", journal.detail(), false);
-    const BackupResult result {request.instance_id, save, destination, manifest, utc_now(), copied.sha1, copied.sha256};
+    if (fault_requested("pause_after_backup_file_committed"))
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     std::string write_detail;
-    if (!facman::base::write_text_new_atomic(manifest, to_json(result) + "\n", write_detail)) {
+    if (!tx::finalize_save_backup_sidecar(journal.record(), write_detail)) {
         return refuse(command, request.instance_id, save.file_name, "transaction_recovery_required", "Backup committed but sidecar requires recovery", write_detail, false);
     }
     status = facman::archive::cleanup_owned_staging_root(staging);
@@ -616,13 +861,38 @@ CloneOutcome clone_save(const fs::path& workspace, const CloneRequest& request)
         return refuse(command, request.source_instance_id, request.save, "save_locked", "Save writes are locked for source or target instance", request.save);
     }
     SaveRef save;
-    if (!resolve_save(source, request.save, save)) {
-        return refuse(command, source.instance_id, request.save, "save_not_found", "Save is not present in the source instance", request.save);
-    }
+    std::string expected_backup_sha256;
+    std::uint64_t expected_backup_size = 0;
+    if (request.source_kind == "owned_backup") {
+        auto backup = facman::factorio::saves::index::resolve_owned_backup(
+            workspace, source.instance_id, request.save);
+        if (!backup) return refuse(command, source.instance_id, request.save,
+            backup.error().code, backup.error().message, backup.error().path);
+        std::string detail;
+        if (!inspect_save(backup.value().path, save, detail)) return refuse(command,
+            source.instance_id, request.save, "save_backup_unproven", "Backup is not a readable save", detail);
+        expected_backup_sha256 = backup.value().sha256;
+        expected_backup_size = backup.value().size;
+    } else if (request.source_kind == "live") {
+        if (!resolve_save(source, request.save, save)) return refuse(command, source.instance_id,
+            request.save, "save_not_found", "Save is not present in the source instance", request.save);
+    } else return refuse(command, source.instance_id, request.save,
+        "save_source_kind_invalid", "Save source kind is not supported", request.source_kind);
     if (!save.archive_structurally_valid || !save.factorio_save_recognized) {
         return refuse(command, source.instance_id, save.file_name, "save_malformed", "Save archive is not recognized as a Factorio save", "level-init.dat is absent");
     }
-    const fs::path destination = target.root / "saves" / save.file_name;
+    const std::string destination_name = request.destination_save.empty()
+        ? save.file_name : request.destination_save;
+    const fs::path destination_filename = fs::u8path(destination_name);
+    std::string destination_detail;
+    if ((request.source_kind == "owned_backup" && request.destination_save.empty()) ||
+        (!request.destination_save.empty() &&
+         !facman::base::validate_identifier(destination_name, destination_detail)) ||
+        destination_filename != destination_filename.filename() ||
+        destination_filename.extension() != ".zip") return refuse(
+        command, target.instance_id, destination_name, "save_clone_target_invalid",
+        "Destination must be an explicit safe .zip filename for backup restoration", destination_name);
+    const fs::path destination = target.root / "saves" / destination_filename;
     if (fs::exists(destination)) return refuse(command, target.instance_id, save.file_name, "save_clone_target_exists", "Save clone target already exists", path_string(destination));
     const fs::path staging = unique_staging(destination.parent_path(), ".facman-save-clone-");
     OperationJournal journal;
@@ -639,22 +909,136 @@ CloneOutcome clone_save(const fs::path& workspace, const CloneRequest& request)
         journal.failed(copied.detail);
         return refuse(command, source.instance_id, save.file_name, "save_source_changed", "Save source could not be read through one stable handle", copied.detail);
     }
+    if ((!expected_backup_sha256.empty() &&
+            (copied.sha256 != expected_backup_sha256 || copied.size != expected_backup_size)) ||
+        save_locked(source) || save_locked(target)) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed("Backup identity or instance lock changed during copy");
+        return refuse(command, source.instance_id, request.save, "save_source_changed",
+            "Backup identity or instance lock changed during copy", path_string(save.path));
+    }
     if (!journal.step("staged", "stable_source_copied") ||
         !journal.step("verified", "staged_hash_verified") ||
         !journal.step("committing", "no_clobber_commit_started")) {
         return refuse(command, source.instance_id, save.file_name, "recovery_write_refused", "Clone journal update failed", journal.detail());
     }
-    std::string commit_detail;
-    if (!tx::StagedFileCommit::commit(staging, staged, destination, commit_detail)) {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
-        journal.failed(commit_detail);
-        return refuse(command, source.instance_id, save.file_name, "persistent_write_refused", "Clone commit failed", commit_detail);
+    if (!expected_backup_sha256.empty()) {
+        auto current = facman::factorio::saves::index::resolve_owned_backup(
+            workspace, source.instance_id, request.save);
+        if (!current || current.value().path != save.path ||
+            current.value().sha256 != copied.sha256 || current.value().size != copied.size ||
+            save_locked(source) || save_locked(target)) {
+            (void)facman::archive::cleanup_owned_staging_root(staging);
+            journal.failed("Backup ownership, content, or instance lock changed before publication");
+            return refuse(command, source.instance_id, request.save, "save_backup_unproven",
+                "Backup ownership, content, or instance lock changed before publication", path_string(save.path));
+        }
+    }
+    const auto published = [&]() {
+        facman::platform::StableDirectoryObject stage_parent;
+        facman::platform::StableDirectoryObject target_parent;
+        auto result = stage_parent.open_no_follow_for_relative_writes(staging);
+        if (result.ok()) result = target_parent.open_no_follow_for_relative_writes(destination.parent_path());
+#ifdef _WIN32
+        facman::platform::DurableOutputFile private_copy;
+        if (result.ok()) result = stage_parent.create_child_file_exclusive(
+            "verified-private.tmp", copied.size, private_copy);
+#else
+        facman::platform::PrivatePublicationFile private_copy;
+        if (result.ok()) result = private_copy.create(stage_parent, target_parent, copied.size);
+#endif
+        {
+            facman::platform::StableInputFile staged_input;
+            if (result.ok()) result = stage_parent.open_child_file_no_follow_pinned(staged.filename(), staged_input);
+            if (result.ok() && (!staged_input.identity().regular_file ||
+                staged_input.identity().link_count != 1U || staged_input.size() != copied.size)) {
+                result = facman::platform::IoStatus::failure(
+                    "save_source_changed", "Staged save identity changed before private copy");
+            }
+            facman::base::Sha256Hasher digest;
+            std::array<unsigned char, 65536> block {};
+            for (std::uint64_t offset = 0; result.ok() && offset < copied.size;) {
+                const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(
+                    block.size(), copied.size - offset));
+                if (staged_input.read_at(offset, block.data(), count) != count ||
+                    private_copy.write_at(offset, block.data(), count) != count) {
+                    result = facman::platform::IoStatus::failure(
+                        "save_source_changed", "Private save copy failed");
+                    break;
+                }
+                digest.update(block.data(), count);
+                offset += count;
+            }
+            if (result.ok() &&
+                (!staged_input.revalidate_path().ok() || digest.finish() != copied.sha256)) {
+                result = facman::platform::IoStatus::failure(
+                    "save_source_changed", "Private save copy differs from verified source");
+            }
+        }
+        const char* pause_private = std::getenv("FACMAN_TEST_SAVE_CLONE_PAUSE_AFTER_PRIVATE_COPY");
+        if (result.ok() && pause_private != nullptr && std::string(pause_private) == "1") {
+            std::string marker_detail;
+            if (!facman::base::write_text_new_atomic(
+                    staging / ".facman-save-clone-private-paused", "copied\n", marker_detail)) {
+                result = facman::platform::IoStatus::failure("persistent_write_refused", marker_detail);
+            }
+            const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+            while (result.ok() &&
+                !fs::exists(staging / ".facman-save-clone-private-release") &&
+                std::chrono::steady_clock::now() < deadline) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
+            if (result.ok() && !fs::exists(staging / ".facman-save-clone-private-release")) {
+                result = facman::platform::IoStatus::failure(
+                    "persistent_write_refused", "Private save copy test pause timed out");
+            }
+        }
+        if (result.ok() && (save_locked(source) || save_locked(target))) {
+            result = facman::platform::IoStatus::failure(
+                "save_locked", "Save writes became locked before publication");
+        }
+        if (result.ok() && !expected_backup_sha256.empty()) {
+            auto current = facman::factorio::saves::index::resolve_owned_backup(
+                workspace, source.instance_id, request.save);
+            if (!current || current.value().path != save.path ||
+                current.value().sha256 != copied.sha256 || current.value().size != copied.size) {
+                result = facman::platform::IoStatus::failure(
+                    "save_backup_unproven", "Backup ownership or content changed before publication");
+            }
+        }
+#ifdef _WIN32
+        if (result.ok()) result = private_copy.publish_in_directory_no_replace(
+            target_parent, destination.filename());
+#else
+        if (result.ok()) result = private_copy.publish_no_replace(destination.filename());
+#endif
+        return result;
+    }();
+    if (!published.ok()) {
+        if (published.code == "output_published_unverified") {
+            journal.failed(published.detail);
+            return refuse(command, source.instance_id, save.file_name,
+                "transaction_recovery_required", "Save publication requires recovery", published.detail, false);
+        }
+        const auto cleaned = facman::archive::cleanup_owned_staging_root(staging);
+        if (!cleaned.ok()) {
+            journal.failed(cleaned.detail);
+            return refuse(command, source.instance_id, save.file_name,
+                "transaction_recovery_required", "Save staging cleanup requires recovery", cleaned.detail, false);
+        }
+        journal.failed(published.detail);
+        return refuse(command, source.instance_id, save.file_name,
+            published.code == "save_source_changed" ? "save_source_changed" :
+            published.code == "save_locked" ? "save_locked" :
+            published.code == "save_backup_unproven" ? "save_backup_unproven" : "persistent_write_refused",
+            "Clone publication refused", published.detail);
     }
     if (!journal.step("committed", "clone_file_committed")) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but journal update failed", journal.detail(), false);
     status = facman::archive::cleanup_owned_staging_root(staging);
     if (!status.ok()) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but staging cleanup requires recovery", status.detail, false);
     if (!journal.finish()) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but journal close requires recovery", journal.detail(), false);
-    return CloneResult {source.instance_id, target.instance_id, save, destination, utc_now(), copied.sha1, copied.sha256};
+    return CloneResult {source.instance_id, target.instance_id, save, destination, utc_now(),
+        copied.sha1, copied.sha256, request.source_kind, destination_name};
 }
 
 ExportOutcome export_instance(const fs::path& workspace, const ExportRequest& request)
@@ -842,6 +1226,26 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
     if (fault_requested("after_target_planning")) {
         return refuse(command, instance.instance_id, "", "transaction_recovery_required", "Injected interruption after target planning", "no output created");
     }
+    if (fault_requested("pause_after_target_planning")) {
+        const char* marker = std::getenv("FACMAN_TEST_SAVE_TRANSFER_PAUSE_MARKER");
+        std::string detail;
+        if (marker == nullptr || *marker == '\0' ||
+            !facman::base::write_text_new_atomic(marker, "planned\n", detail)) {
+            return refuse(command, instance.instance_id, "", "persistent_write_refused",
+                "Import test pause marker could not be created", detail);
+        }
+        const fs::path release = std::string(marker) + ".release";
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+        std::error_code error;
+        while (!fs::exists(release, error) && !error &&
+            std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        if (error || !fs::exists(release, error)) {
+            return refuse(command, instance.instance_id, "", "persistent_write_refused",
+                "Import test pause timed out", error.message());
+        }
+    }
     fs::path install_root;
     if (!load_install_root(workspace, instance.install_ref, install_root)) {
         return refuse(command, instance.instance_id, "", "unknown_install", "Instance pack references an unregistered install", instance.install_ref);
@@ -988,6 +1392,9 @@ std::string to_json(const BackupResult& value)
     output.add_string("created_at", value.created_at);
     output.add_string("sha1", value.sha1);
     output.add_string("sha256", value.sha256);
+    output.add_string("workspace_id", value.workspace_id);
+    (void)output.add_unsigned_integer("source_size", value.source_size);
+    output.add_string("consistency_policy", value.consistency_policy);
     output.add_bool("archive_structurally_valid", true);
     output.add_bool("factorio_save_recognized", true);
     output.add_bool("deep_save_semantics_inspected", false);
@@ -1008,6 +1415,8 @@ std::string to_json(const CloneResult& value)
     output.add_string("created_at", value.created_at);
     output.add_string("sha1", value.sha1);
     output.add_string("sha256", value.sha256);
+    output.add_string("source_kind", value.source_kind);
+    output.add_string("destination_save", value.destination_save);
     output.add_bool("archive_structurally_valid", true);
     output.add_bool("factorio_save_recognized", true);
     output.add_bool("deep_save_semantics_inspected", false);

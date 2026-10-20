@@ -19,7 +19,7 @@ from tests.integration import resource_identity_runtime as proof
 
 class ResourceIdentityRuntimeTests(unittest.TestCase):
     def resource_recreation_boundary(self, label, *, restrictive_umask=False,
-                                     fixture_timeout=None):
+                                     fixture_timeout=None, cli_timeout=None):
         """Run the actual helper flow with inert CLI responses and real private files."""
         observed = []
         observed_timeouts = []
@@ -71,6 +71,8 @@ class ResourceIdentityRuntimeTests(unittest.TestCase):
                          '--work-root', str(root / 'runs')]
             if fixture_timeout is not None:
                 arguments.extend(['--fixture-timeout-seconds', str(fixture_timeout)])
+            if cli_timeout is not None:
+                arguments.extend(['--cli-timeout-seconds', str(cli_timeout)])
             try:
                 with mock.patch.object(proof.sys, 'platform', 'linux'), \
                      mock.patch.object(proof.sys, 'argv', arguments), \
@@ -107,6 +109,18 @@ class ResourceIdentityRuntimeTests(unittest.TestCase):
         self.assertEqual(observed[0], ('prepare_fixture', 60.0))
         self.assertTrue(all(timeout == 30.0 for _, timeout in observed[1:]))
         for value in ('0', '61', 'nan', 'not-a-number'):
+            with self.subTest(value=value), self.assertRaises(argparse.ArgumentTypeError):
+                proof.child_timeout_seconds(value)
+
+    def test_coverage_cli_allowance_reaches_every_command_without_extending_fixture(self):
+        for fixture_timeout in (30, 60):
+            with self.subTest(fixture_timeout=fixture_timeout):
+                observed = self.resource_recreation_boundary(
+                    'portable_truncated', fixture_timeout=fixture_timeout, cli_timeout=60)
+                self.assertEqual(observed[0], ('prepare_fixture', float(fixture_timeout)))
+                self.assertGreater(len(observed), 3)
+                self.assertTrue(all(timeout == 60.0 for _, timeout in observed[1:]))
+        for value in ('-1', '60.1', 'inf'):
             with self.subTest(value=value), self.assertRaises(argparse.ArgumentTypeError):
                 proof.child_timeout_seconds(value)
 

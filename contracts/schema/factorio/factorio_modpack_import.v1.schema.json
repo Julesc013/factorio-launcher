@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_modpack_import.v1.schema.json",
+  "title": "Offline modpack reconstruction provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "factorio.modpack_import.v1"
+    },
+    "command": {
+      "const": "modsets.import"
+    },
+    "offline": {
+      "const": true
+    },
+    "archive_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "instance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "install_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_instance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "archive_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_lock_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "target_lock_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "modpack_manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "schema",
+    "command",
+    "offline",
+    "archive_size",
+    "instance_id",
+    "install_ref",
+    "source_instance_id",
+    "path",
+    "archive_sha256",
+    "source_manifest_sha256",
+    "source_lock_sha256",
+    "target_lock_sha256",
+    "modpack_manifest_sha256"
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "schema": "facman.readiness_builtin_qualification.v1",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "source_parent": "420022e4a7e47518bcac0cbf0e4b789f19c8d6d4",
+  "source_paths_sha256": {
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": "cd14fcf9aba193ca4e24340710d8997a943d67ee59b9bccec829c2fc133341d2",
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "e857ea898ecc114947d3019b7acbb8dfde31f25e651c389eedcf18ad971a29a8",
+    "tests/test_readiness_builtin_content.py": "ab13f38a18a2f51bfdb3976ec8003cfa987a6eb7cc8bfda4b7982e88a4317ac6"
+  },
+  "verdict": "PASS_WINDOWS_SOURCE_FIXTURES",
+  "behavior": "Readiness resolves selected installation built-ins and preserves content-owner verification; binds raw metadata and archive evidence into readiness identities.",
+  "original_failure": {
+    "owner_verification": "PASS",
+    "readiness": "missing_artifacts",
+    "actual_positive_cells_failed": 2,
+    "qualification01_failed_method": "Whole-instance ready oracle overlooked retained degraded environment",
+    "baseline": "readiness-builtin-baseline-02.log",
+    "setup_refusal_retained": "readiness-builtin-baseline-01.log"
+  },
+  "local_qualification": {
+    "receipt_sha256": "db6388d200553d60a5e4ac9f8e637807611507ad7eb07f669575800a8cff7479",
+    "tests": {
+      "native_passed": 2,
+      "focused_passed": 24,
+      "skipped": 0,
+      "new_methods": 5,
+      "retained_passing_methods": 23,
+      "rechecked_failed_methods": 1
+    },
+    "historical_receipt_replays": 3,
+    "binaries": {
+      "facman.exe": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman.exe",
+        "sha256": "f67c2918e203936671684c81228a62fd6245c7e8c00cec716b9f20c4164775f0",
+        "bytes": 5281792
+      },
+      "facman_presentation_service_smoke.exe": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman_presentation_service_smoke.exe",
+        "sha256": "1138b8e611e332aa864da9aa60c9bcc8528a96356f14bd12afedaf540bc9b474",
+        "bytes": 3280384
+      },
+      "facman_process_probe.exe": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\facman_process_probe.exe",
+        "sha256": "c586bf3e2ceabe942a55839a1a21a17f24c2c7d98875bc0871cdb52cd6d76f1d",
+        "bytes": 303616
+      },
+      "flb_factorio_instance_model_smoke.exe": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\flb_factorio_instance_model_smoke.exe",
+        "sha256": "2a2b1eaee3c9c07e334147fbb853a16230020ffc41d83fa154fe22de2161617a",
+        "bytes": 1203712
+      },
+      "ulk.dll": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\ulk.dll",
+        "sha256": "d96d05b33b0df2ee2659104125d8e0f70fbc6e48b82dc302b7eb0eb8ac6b6c31",
+        "bytes": 208384
+      },
+      "usk.dll": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\native-developer\\Release\\usk.dll",
+        "sha256": "99231fbff824df9446159cd91c2dfe01bb439a9f0c3138c9d9625e512696b873",
+        "bytes": 1516544
+      }
+    },
+    "rejected_virtual_entries": [
+      "foreign-source",
+      "archive-as-virtual",
+      "builtin-version",
+      "missing-metadata",
+      "malformed-metadata",
+      "oversized-metadata",
+      "hardlinked-metadata",
+      "linked-package"
+    ],
+    "readonly_bytes_verified": true,
+    "during_query_race_proved": false
+  },
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/readiness-builtin-custody.zip",
+    "sha256": "abba47fd0f9296cd791d113f8caf4b7777ac2b3eb2122243ef26fc221afbbf58",
+    "bytes": 33784,
+    "members": {
+      "readiness-builtin-baseline-01.log": "2f1bbbc02fe4502f523bbf77d88af41980ec7e4230d3b012311c518a24d5d365",
+      "readiness-builtin-baseline-02.log": "6c3fde35430c9937a292ba05da218f92d2035f6c2d30e72e49de0aa53aa4a35c",
+      "readiness-builtin-positive-diagnosis-01.json": "b0e4fd814073b65792c6f0b136d541a5d1e9c976cc8b391a199c7459ff9ed676",
+      "readiness-builtin-q01-build.log": "a9ff722bc9a7af423f18937a5aed59ee648a3531e2d2094ca6e6dd3fed6f28dc",
+      "readiness-builtin-q01-configure.log": "4760d85e658994b828a83422b237a2b016ec58da63ee47b7f1e4ff6a33b5e6b3",
+      "readiness-builtin-q01-doctor.log": "46e49365fa6fab938e40f81e2f7515d1af8dbc29e464d901f396a9cb5640971f",
+      "readiness-builtin-q01-focused.log": "0976170d962ec96a00980a2612ac40b2a7afeba2da78c171c7c0bd7a7b441d1b",
+      "readiness-builtin-q01-native.log": "91ba3243fc322b29f974f9e459e015b222caa931a913828e8f147116a5d2c840",
+      "readiness-builtin-q01-paths.log": "ae07a55faa6f5daa6ec9c0c48b80ebcea30b6991e5cf2c1b0513eba676927b1b",
+      "readiness-builtin-q02-diff.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "readiness-builtin-q02-failed-positive-method.log": "6b8faee56b19d85b9eda5deab0fb3dce1d689b9869ec404c16a14d664d84773c",
+      "readiness-builtin-q02-generated.log": "e2db10b0dd02793c78975d9924d8bcb8bccc693c38c8506532f1e16690467bf8",
+      "readiness-builtin-q02-strict.log": "c2a064b5452cd334103513f6f62c5959a0c8a45c0eda82dcf88b0822f2a0ddcc",
+      "readiness-builtin-qualification-01.json": "fd8e0057aa1fb2b6c73d524f415d5240f792bd04ba26c6e5b78decea0fdfffff",
+      "readiness-builtin-qualification-02.json": "db6388d200553d60a5e4ac9f8e637807611507ad7eb07f669575800a8cff7479",
+      "readiness-builtin-source-freeze-01.json": "2400b56c7b273b8b228248fa787e9d5035004297762f2f5f907990233bffb56f",
+      "readiness-builtin-source-freeze-02.json": "b65ee19ff292bff38a2c8983d0d281cbd7f674ede50aea3ca6dee416065a2ee0",
+      "readiness-builtin-source-freeze-03.json": "e51a2c548b6f33329fc28f304e33194f540d63243dc58a79739844c2c1ae4cb1",
+      "readiness-builtin-source-review-01.json": "0f636d19fe2eaddd095c8c0acccb1422b29586eec4d20af7195f41bc5cc26f5f",
+      "readiness-builtin-source-review-02.json": "b8be5b81182e18a251154c7ec3e90631bc5cef9ad77e1da6082c659374f6d80f",
+      "readiness-builtin-source-review-03.json": "ffaf2d8a817ecdc7a07bac9dca25d9370bedae2d570921bfcd91ca7dd602b2b6"
+    }
+  },
+  "integration_requires_current_required_source_and_merge_CI": true,
+  "boundaries": {
+    "new_roots": 0,
+    "new_clones": 0,
+    "new_worktrees": 0,
+    "new_candidates": 0,
+    "job_reruns": 0,
+    "preparation_execution_available": false,
+    "play_authority": false,
+    "full_workunit_closed": false,
+    "beta_qualified": false,
+    "original_CI63_attribution": "unconfirmed",
+    "prior_q02_publication_timeout_resolved": false
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "facman.tui_edited_confirmation.qualified_source.v1",
+  "base_head": "c51726567dd3bc4becd9afb80546b5a3ef2250bd",
+  "base_tree": "9155a2905afbb2e10ac5a08aaaf1329704dd47af",
+  "author_packet_sha256": "53bab3e7fb12bfbb5d1947baf7e8e990c4e6eea2bd6861276087e8876e8fdc44",
+  "independent_review_sha256": "a0138af676865fb1d955cac378b550179945e4f423acfe9ffaf7a94ab0dd300b",
+  "authored_files": {
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/ExecPlan.md": {
+      "sha256": "2df24c097ab9a83f76166b398ff93e64c59c2404b6ddf976adb3d44d5cd38000",
+      "bytes": 91681
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/snapshot-producer-accepted-ci-projection-01.json": {
+      "sha256": "af465d955f50679dc943e3d8a638b708d394403d6bf8efbb7d5d2e18363537db",
+      "bytes": 14567
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/snapshot-producer-accepted-linux-projection-01.json": {
+      "sha256": "38eda652b9e0be3d2986ae92091bddde45d929accbfdd076a4e46ebe25830ce3",
+      "bytes": 3275
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/snapshot-producer-accepted-projection-hashes-01.json": {
+      "sha256": "118762fe67af83932d91508ec6e826afc6e35dbc49b523d50d77ea0067d3c347",
+      "bytes": 606
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/snapshot-producer-accepted-windows-projection-01.json": {
+      "sha256": "443528188cf788f31261cd18f32b9bbf1c74542920098df92c4adba83ffa1822",
+      "bytes": 4061
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/tui-edited-confirmation.md": {
+      "sha256": "88c917efb461f85b3eee6cb33d563f39bec701bf1280318148551677deb4756c",
+      "bytes": 3712
+    },
+    "apps/tui/tui_product_model.cpp": {
+      "sha256": "51037f614b2ac835c64728e3e74527037777f66f88ddaba2131805b1854f05e6",
+      "bytes": 30543
+    },
+    "docs/product/instance_snapshots.md": {
+      "sha256": "2ce5d27198995e8b88368b65a8f8397bce81e3dc84505b917c1687882c57881d",
+      "bytes": 5108
+    },
+    "tests/native/facman_tui_product_model_smoke.cpp": {
+      "sha256": "fd854c31812583a6f9c167ba38861537014b7dc3ea9143372eff975917c1b15d",
+      "bytes": 27428
+    },
+    "tests/test_tui_product.py": {
+      "sha256": "4964ddce8dd4677c3c99b37d9367bbbdaa8b46fc2dec0320912df23ade392ba1",
+      "bytes": 45289
+    }
+  },
+  "one_product_line": true,
+  "changed_values_invalidate_pending_confirmation": true,
+  "same_or_effective_empty_value_preserves_pending_confirmation": true,
+  "ordinary_passed": 10,
+  "ordinary_platform_skips": 1,
+  "final_native_tui_tests": 2,
+  "legacy_twenty_field_request_and_replay": 1,
+  "new_endurance_runs": 0,
+  "baseline_current_delivered_failure_reproduced": true,
+  "all_controller_failures_retained": true,
+  "closed_owned_jobs": 50,
+  "original_owner_wire_provider_and_golden_inputs_unchanged": true,
+  "prior_PR425_accepted_metadata_only": true,
+  "custody": "tui-edited-confirmation-custody.v1.zip",
+  "custody_sha256": "dcb8104816bcd25eb9c236b29dfea9a7b38f56dcc526144923db2c99ed0c7f40",
+  "custody_files": 224,
+  "required_checks_pending": true,
+  "produced_package_qualified": false,
+  "workunit_closed": false,
+  "real_game_qualified": false,
+  "human_qualified": false,
+  "beta": false,
+  "rc": false,
+  "new_roots": 0,
+  "new_clones": 0,
+  "new_worktrees": 0
+}

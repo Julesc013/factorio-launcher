@@ -35,6 +35,7 @@ enum class TuiEventKind {
     operation_event,
     transport_disconnected,
     snapshot_received,
+    observe_launch_intent,
 };
 
 enum class TuiFocusRegion {
@@ -86,6 +87,9 @@ struct TuiItem {
     std::string title;
     std::string detail;
     bool selected = false;
+    std::string save_context_status;
+    std::string save_context_version;
+    std::string save_context_content;
 };
 
 struct TuiAction {
@@ -117,6 +121,7 @@ struct TuiSnapshot {
     std::vector<std::string> blockers;
     std::vector<TuiAction> actions;
     std::vector<TuiItem> items;
+    std::string launch_intent;
 };
 
 struct TuiEvent {
@@ -131,6 +136,8 @@ struct TuiEvent {
 };
 
 struct TuiState {
+    std::string repair_review_id;
+    std::string repair_review_instance_id;
     TuiPage page = TuiPage::home;
     TuiFocusRegion focus_region = TuiFocusRegion::navigation;
     std::size_t selected_item = 0;
@@ -150,6 +157,7 @@ struct TuiState {
     std::size_t action_sequence = 0U;
     TuiSnapshot snapshot;
     TuiForm form;
+    std::string launch_intent = "menu";
 };
 
 struct TuiActionIdentity {

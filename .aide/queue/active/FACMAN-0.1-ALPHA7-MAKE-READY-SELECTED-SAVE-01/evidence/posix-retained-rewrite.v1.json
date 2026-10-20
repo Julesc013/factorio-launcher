@@ -1,0 +1,73 @@
+{
+  "schema": "facman.posix_retained_rewrite_qualification.v1",
+  "status": "SCOPED_SOURCE_NATIVE_ACCEPTANCE_REQUIRED_CI_PENDING",
+  "qualified_base": "9bb5eef08b3ebf633dd32667e31ab701fed2a122",
+  "source_files_sha256": {
+    "runtime/platform/fl_local_filesystem.h": "67bd92c6cf1d345c4db8c7802a02d16e15719aeff404f128f470d4ef1ce894dd",
+    "runtime/base/fl_local_operation_lock.cpp": "391b0519873bcc18f0f66cceb242c925fb97f0e8baafd7e27700b8979feea676",
+    "runtime/platform/fl_file_io.h": "60c9dc46bcf01a7f69d372bf96995bf9c8f6fe88ba74879fc44aadb5d6f439bb",
+    "runtime/platform/fl_file_io.cpp": "793c6126823f1905858e82433cdffd42ca7c85045583b66cb73b43ecc9495262",
+    "tests/native/fl_retained_rewrite_smoke.cpp": "262bf323d9f72d972322273aabbb0755ef7d877f6628f23a96456eed98dd8440",
+    "tests/native/CMakeLists.txt": "41c47dc0560e4b7f74db8ff5fadca6495d45cf155322cfcf8b6a8ae52af98013",
+    "tests/test_posix_retained_rewrite_admission.py": "559a6959d4347ff7ead18ba64f8ebe3e382d5a86329acf583017f06596571d52",
+    "docs/development/existing-configuration-reconciliation.md": "11cc63a806844aa3812dc6f0d2d413dbd4dbb2786097e801e2ebf896a2a292ba",
+    "tools/local_lock_check.py": "780e2541a32d3e972e4ea6ed12f0958ed998ad237a9501787932720544dce9ec"
+  },
+  "independent_review_sha256": "7fb8c3e3da5de9f425aeed0c1905eb62b304054609aee384bfa660e42bcb159f",
+  "qualification_packet_sha256": "aa7c64bfe06e6151ec4bf79fa53aeb7ca4f5737d3b05bc0505d90f52d28c12d3",
+  "linux_native_tests": 4,
+  "linux_owner_tests_run": 29,
+  "linux_owner_tests_passed": 25,
+  "windows_only_skips": 4,
+  "actual_sigkill_phases": [
+    "after_prefix",
+    "after_write",
+    "after_truncate"
+  ],
+  "windows_preprocessed_runtime_unchanged": true,
+  "windows_scoped_reuse": true,
+  "required_new_source_ci": true,
+  "custody_sha256": "e123d92873fd84936e1282120e6f3f47813a9a7557a7751856fe3e64417e9301",
+  "custody_bytes": 243697,
+  "custody_members": 103,
+  "full_logs_retained_in_managed_evidence": true,
+  "large_artifacts": {
+    "posix-retained-combined-linux02-linux-pp-after.stdout": {
+      "sha256": "8d5b93103454327f956b2b399c5d60256f7d24313705dd1b0b098619a6cd8be3",
+      "bytes": 1890919
+    },
+    "posix-retained-combined-linux02-linux-pp-before.stdout": {
+      "sha256": "c99e95747784330246dfa94017ebaee9fb2909200bcba3caee4322d5b88d3b03",
+      "bytes": 1890902
+    },
+    "posix-retained-combined-windows-pp-fl_file_io-base-execution-03\\stdout.raw": {
+      "sha256": "ef3dec7cae1930973309f57acff019e69f4713270562d2d5ff172d9e91dff79e",
+      "bytes": 5960468
+    },
+    "posix-retained-combined-windows-pp-fl_file_io-current-execution-03\\stdout.raw": {
+      "sha256": "050a9b5f0ce38ba323d384c312f4387cdb26c22cc6fc6ec52ccff543451a49b8",
+      "bytes": 5961019
+    },
+    "posix-retained-combined-windows-pp-fl_local_operation_lock-base-execution-04\\stdout.raw": {
+      "sha256": "bf5f3d477f0ea310abd51c83596d1024f35f0196fb65636867bbc979e669b7af",
+      "bytes": 5663017
+    },
+    "posix-retained-combined-windows-pp-fl_local_operation_lock-current-execution-04\\stdout.raw": {
+      "sha256": "d2d4a8b2db155e3e7561a9329c28f15423955089f8e71414446abfcde1920f77",
+      "bytes": 5663077
+    },
+    "posix-retained-rewrite-linux-build-build-ninja-03.txt": {
+      "sha256": "3070d2250d1997a02643c72d002dfda2d09418db4b25a5a00155016ca8694a17",
+      "bytes": 1007951
+    }
+  },
+  "owner_admitted": false,
+  "new_roots": 0,
+  "new_clones": 0,
+  "new_worktrees": 0,
+  "macos": false,
+  "physical_ext4": false,
+  "power_loss": false,
+  "game": false,
+  "beta": false
+}

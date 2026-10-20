@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "presentation_service.h"
+#include "presentation_action_support.h"
+#include "presentation_joined_preparation.h"
 
 #include "command_result.h"
 #include "facman/build_identity.hpp"
@@ -23,6 +25,7 @@
 #include "handlers/profiles.h"
 #include "handlers/recovery.h"
 #include "handlers/saves.h"
+#include "handlers/snapshots.h"
 
 #include <algorithm>
 #include <atomic>
@@ -41,6 +44,7 @@ namespace transactions = facman::transaction;
 namespace fs = std::filesystem;
 
 namespace {
+thread_local std::function<void()> before_launch_dispatch_observer;
 
 std::string digest(const std::string& value)
 {
@@ -97,48 +101,13 @@ bool semantic_outcome(const std::string& outcome)
         outcome == "recovery_required" || outcome == "outcome_unknown";
 }
 
-bool lower_hex_digest(const std::string& value)
-{
-    return value.size() == 64U && std::all_of(value.begin(), value.end(), [](char ch) {
-        return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
-    });
-}
-
-std::string action_request_json(const SemanticActionRequest& request)
-{
-    json::ObjectBuilder input;
-    input.add_string("action_id", request.action_id);
-    input.add_string("scope", request.scope);
-    input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
-    input.add_string("request_id", request.request_id);
-    input.add_string("selected_instance_id", request.selected_instance_id);
-    input.add_string("durable_operation_id", request.durable_operation_id);
-    input.add_string("attempt_id", request.attempt_id);
-    input.add_string("confirmation", request.confirmation);
-    input.add_string("installation_id", request.installation_id);
-    input.add_string("installation_path", request.installation_path);
-    input.add_string("new_instance_id", request.new_instance_id);
-    input.add_string("display_name", request.display_name);
-    input.add_string("template_id", request.template_id);
-    input.add_string("profile_id", request.profile_id);
-    input.add_string("mod_identity", request.mod_identity);
-    input.add_string("save", request.save);
-    input.add_string("output_path", request.output_path);
-    input.add_string("source_data_root", request.source_data_root);
-    input.add_string("transaction_id", request.transaction_id);
-    json::ArrayBuilder roots;
-    for (const auto& root : request.roots) roots.add_string(root);
-    input.add_array("roots", roots);
-    return input.serialize();
-}
-
 bool read_action_receipt(
     const fs::path& path,
     const SemanticActionRequest& request,
     std::string& fingerprint,
     std::string& receipt_state,
     std::string& result,
-    std::string& detail)
+    std::string& detail, std::string* original_request = nullptr)
 {
     facman::platform::StableInputFile input;
     auto opened = input.open_no_follow(path);
@@ -223,13 +192,9 @@ bool read_action_receipt(
         detail = "presentation action receipt request digest is invalid";
         return false;
     }
+    if (original_request) *original_request = decoded_request.value();
     auto request_document = json::parse(decoded_request.value(), limits);
-    if (!request_document || !exact_keys(request_document.value(), {
-            "action_id", "scope", "expected_snapshot_revision", "request_id",
-            "selected_instance_id", "durable_operation_id", "attempt_id", "confirmation",
-            "installation_id", "installation_path", "new_instance_id", "display_name",
-            "template_id", "profile_id", "mod_identity", "save", "output_path",
-            "source_data_root", "transaction_id", "roots"})) {
+    if (!request_document || !recorded_action_request_shape(request_document.value())) {
         detail = "presentation action receipt request shape is invalid";
         return false;
     }
@@ -477,37 +442,6 @@ bool ensure_workspace_admission_receipt(
     return write_new_durable(path, record.serialize() + "\n", detail);
 }
 
-bool effectful_semantic_action(const std::string& action_id)
-{
-    return action_id == "workspace.initialize" ||
-        action_id == "installation.register_read_only" ||
-        action_id == "instance.create_isolated" ||
-        action_id == "profile.create" ||
-        action_id == "profile.select" ||
-        action_id == "modsets.apply" ||
-        action_id == "modsets.rollback" ||
-        action_id == "saves.associate" ||
-        action_id == "saves.backup" ||
-        action_id == "support.export_redacted_bundle" ||
-        action_id == "recovery.apply_supported" ||
-        action_id == "launch.play" ||
-        action_id == "sessions.stop";
-}
-
-bool terminal_session_state(const std::string& state)
-{
-    static const char* const terminal_states[] = {
-        "cancelled",
-        "completed",
-        "failed",
-        "outcome_unknown",
-        "recovery_required",
-        "refused",
-    };
-    return std::find(std::begin(terminal_states), std::end(terminal_states), state) !=
-        std::end(terminal_states);
-}
-
 bool contains_case_insensitive(const std::string& value, const std::string& search)
 {
     if (search.empty()) return true;
@@ -527,163 +461,14 @@ std::string json_string(const json::Value& value)
     return decoded ? decoded.take_value() : std::string();
 }
 
-void add_json(json::ObjectBuilder& output, const char* key, const std::string& source)
-{
-    auto value = json::parse(source);
-    if (value) output.add_value(key, value.value());
-    else output.add_null(key);
-}
-
-void add_problem(
-    json::ArrayBuilder& problems,
-    const std::string& code,
-    const std::string& summary,
-    const std::string& detail = {})
-{
-    json::ObjectBuilder problem;
-    problem.add_string("code", code);
-    problem.add_string("summary", summary);
-    if (detail.empty()) problem.add_null("detail");
-    else problem.add_string("detail", detail);
-    problems.add_object(problem);
-}
-
-struct ActionInputField {
-    std::string id;
-    std::string label;
-    std::string type;
-    bool required = false;
-    std::string default_value;
-    std::vector<std::string> choices;
-};
-
-json::ObjectBuilder action_descriptor(
-    const char* action_id,
-    const char* command_id,
-    const char* label,
-    const char* role,
-    const char* effect,
-    bool available,
-    const char* refusal_code = nullptr,
-    const char* confirmation = "none",
-    const char* input_contract = "none",
-    const std::vector<ActionInputField>& input_fields = {})
-{
-    json::ObjectBuilder action;
-    action.add_string("action_id", action_id);
-    action.add_string("command_id", command_id);
-    action.add_string("label", label);
-    action.add_string("accessibility_label", label);
-    action.add_string("role", role);
-    action.add_string("availability", available ? "available" : "refused");
-    json::ArrayBuilder effects;
-    effects.add_string(effect);
-    action.add_array("effects", effects);
-    action.add_string("confirmation", confirmation);
-    action.add_string("input_contract", input_contract);
-    json::ArrayBuilder fields;
-    for (const auto& field : input_fields) {
-        json::ObjectBuilder item;
-        item.add_string("field_id", field.id);
-        item.add_string("label", field.label);
-        item.add_string("type", field.type);
-        item.add_bool("required", field.required);
-        if (field.default_value.empty()) item.add_null("default");
-        else item.add_string("default", field.default_value);
-        json::ArrayBuilder choices;
-        for (const auto& choice : field.choices) choices.add_string(choice);
-        item.add_array("choices", choices);
-        fields.add_object(item);
-    }
-    action.add_array("input_fields", fields);
-    action.add_bool("backend_owned", true);
-    if (available) action.add_null("refusal");
-    else {
-        json::ObjectBuilder refusal;
-        refusal.add_string("code", refusal_code == nullptr ? "action_unavailable" : refusal_code);
-        refusal.add_string("reason", "The backend has not admitted this action");
-        refusal.add_bool("recoverable", true);
-        action.add_object("refusal", refusal);
-    }
-    return action;
-}
-
 std::string recovery_json(const std::filesystem::path& workspace)
 {
     const transactions::Outcome outcome = transactions::inspect(workspace);
-    if (std::holds_alternative<transactions::RecoveryResult>(outcome)) {
+    if (std::holds_alternative<transactions::RecoveryResult>(outcome))
         return std::get<transactions::RecoveryResult>(outcome).json;
-    }
-    return transactions::to_json(
-        std::get<transactions::Refusal>(outcome), "workspace.recovery.inspect");
+    return transactions::to_json(std::get<transactions::Refusal>(outcome), "workspace.recovery.inspect");
 }
 
-std::string snapshot_revision(const std::string& snapshot)
-{
-    auto document = json::parse(snapshot);
-    if (!document || !document.value().is_object()) return {};
-    return decode_json_string_field(snapshot, "revision");
-}
-
-struct AdvertisedAction {
-    bool found = false;
-    bool available = false;
-    std::string refusal_code;
-    std::string refusal_reason;
-};
-
-AdvertisedAction advertised_action(const std::string& snapshot, const std::string& action_id)
-{
-    AdvertisedAction result;
-    auto document = json::parse(snapshot);
-    if (!document || !document.value().is_object()) return result;
-    const json::Value* actions = document.value().find("available_semantic_actions");
-    if (actions == nullptr || !actions->is_array()) return result;
-    for (std::size_t index = 0; index < actions->size(); ++index) {
-        const json::Value* action = actions->at(index);
-        if (action == nullptr || !action->is_object()) continue;
-        const json::Value* id = action->find("action_id");
-        if (id == nullptr || json_string(*id) != action_id) continue;
-        result.found = true;
-        const json::Value* availability = action->find("availability");
-        result.available = availability != nullptr && json_string(*availability) == "available";
-        const json::Value* refusal = action->find("refusal");
-        if (refusal != nullptr && refusal->is_object()) {
-            const json::Value* code = refusal->find("code");
-            const json::Value* reason = refusal->find("reason");
-            if (code != nullptr) result.refusal_code = json_string(*code);
-            if (reason != nullptr) result.refusal_reason = json_string(*reason);
-        }
-        return result;
-    }
-    return result;
-}
-
-std::string result_string(const ApplicationResult& result)
-{
-    if (std::holds_alternative<std::string>(result.output)) {
-        return std::get<std::string>(result.output);
-    }
-    if (std::holds_alternative<modsets::VerifyResult>(result.output)) {
-        return modsets::to_json(std::get<modsets::VerifyResult>(result.output));
-    }
-    if (std::holds_alternative<modsets::Refusal>(result.output)) {
-        return modsets::to_json(std::get<modsets::Refusal>(result.output));
-    }
-    if (std::holds_alternative<saves::BackupResult>(result.output)) {
-        return saves::to_json(std::get<saves::BackupResult>(result.output));
-    }
-    if (std::holds_alternative<saves::Refusal>(result.output)) {
-        return saves::to_json(std::get<saves::Refusal>(result.output));
-    }
-    if (std::holds_alternative<diagnostics::ExportResult>(result.output)) {
-        return diagnostics::to_json(std::get<diagnostics::ExportResult>(result.output));
-    }
-    if (std::holds_alternative<diagnostics::Refusal>(result.output)) {
-        return diagnostics::to_json(std::get<diagnostics::Refusal>(result.output));
-    }
-    return {};
-}
 
 ApplicationResult service_refusal(
     const char* action,
@@ -698,64 +483,6 @@ ApplicationResult service_refusal(
         code,
         message,
         kind);
-}
-
-std::string action_result_json(
-    const SemanticActionRequest& request,
-    const char* outcome,
-    const std::string& replacement_snapshot,
-    const std::string& action_payload,
-    const std::string& problem_code,
-    const std::string& problem_summary,
-    bool invalidated,
-    std::initializer_list<const char*> declared_effects = {})
-{
-    json::ObjectBuilder operation;
-    operation.add_string("request_id", request.request_id);
-    if (request.durable_operation_id.empty()) {
-        operation.add_null("operation_id");
-        operation.add_null("durable_operation_id");
-    } else {
-        operation.add_string("operation_id", request.durable_operation_id);
-        operation.add_string("durable_operation_id", request.durable_operation_id);
-    }
-    if (request.attempt_id.empty()) operation.add_null("attempt_id");
-    else operation.add_string("attempt_id", request.attempt_id);
-    const std::string& target_instance = request.new_instance_id.empty()
-        ? request.selected_instance_id : request.new_instance_id;
-    if (target_instance.empty()) operation.add_null("target_instance_id");
-    else operation.add_string("target_instance_id", target_instance);
-    if (request.installation_id.empty()) operation.add_null("target_installation_id");
-    else operation.add_string("target_installation_id", request.installation_id);
-    operation.add_string("outcome", outcome);
-
-    json::ArrayBuilder effects;
-    for (const char* effect : declared_effects) effects.add_string(effect);
-    json::ArrayBuilder diagnostics;
-    json::ArrayBuilder problems;
-    if (!problem_code.empty()) add_problem(problems, problem_code, problem_summary);
-    json::ObjectBuilder output;
-    output.add_string("schema", "facman.semantic_action_result.v1");
-    output.add_string("command", "presentation.action");
-    output.add_string("action_id", request.action_id);
-    output.add_string("request_id", request.request_id);
-    output.add_string("outcome", outcome);
-    output.add_object("operation", operation);
-    output.add_array("effects", effects);
-    output.add_array("diagnostics", diagnostics);
-    output.add_array("problems", problems);
-    if (replacement_snapshot.empty()) output.add_null("replacement_snapshot");
-    else add_json(output, "replacement_snapshot", replacement_snapshot);
-    if (action_payload.empty()) output.add_null("action_payload");
-    else add_json(output, "action_payload", action_payload);
-    if (!invalidated) output.add_null("invalidation");
-    else {
-        json::ObjectBuilder invalidation;
-        invalidation.add_bool("required", true);
-        invalidation.add_string("reason", "explicit_installation_scan_completed");
-        output.add_object("invalidation", invalidation);
-    }
-    return output.serialize();
 }
 
 ApplicationResult replayed_action_result(const std::string& source)
@@ -812,6 +539,30 @@ ApplicationResult replayed_action_result(const std::string& source)
 }
 
 } // namespace
+
+std::function<void()> testing::exchange_before_launch_dispatch_observer(std::function<void()> observer)
+{
+    auto previous = std::move(before_launch_dispatch_observer);
+    before_launch_dispatch_observer = std::move(observer);
+    return previous;
+}
+
+facman::core::Result<std::string> PresentationActionLedger::repair_review(
+    const fs::path& workspace, const std::string& key, const std::string& instance_id) const
+{
+    using Result = facman::core::Result<std::string>;
+    const auto invalid = [](const std::string& detail) {
+        return Result::failure({"make_ready_repair_review_invalid", detail, {}, facman::core::OutcomeKind::refused});
+    };
+    if (key.empty() || key.size() > 256U) return invalid("Select a completed installation repair review");
+    SemanticActionRequest selector;
+    selector.idempotency_key = key;
+    std::string fingerprint, state, source, detail, request_source;
+    if (!read_action_receipt(action_receipt_path(workspace, key), selector,
+            fingerprint, state, source, detail, &request_source) || state != "terminal")
+        return invalid("The selected installation repair review is unavailable: " + detail);
+    return verified_repair_review_binding(workspace, instance_id, source, request_source);
+}
 
 PresentationActionLedger::Lookup PresentationActionLedger::lookup(
     const std::filesystem::path& workspace,
@@ -885,9 +636,16 @@ bool PresentationActionLedger::remember(
         detail.clear();
         return true;
     }
+    return replace_accepted(workspace, request, fingerprint, result, true, detail);
+}
+
+bool PresentationActionLedger::replace_accepted(const fs::path& workspace,
+    const SemanticActionRequest& request, const std::string& fingerprint,
+    const std::string& result, bool terminal, std::string& detail)
+{
     const fs::path path = action_receipt_path(workspace, request.idempotency_key);
     const std::string receipt = action_receipt_json(
-        request, fingerprint, "terminal", result);
+        request, fingerprint, terminal ? "terminal" : "accepted_outcome_unknown", result);
     facman::platform::PathIdentity identity;
     const auto inspected = facman::platform::inspect_path_no_follow(path, identity);
     if (!inspected.ok()) {
@@ -911,6 +669,13 @@ bool PresentationActionLedger::remember(
     return replace_action_receipt(path, receipt, detail);
 }
 
+bool PresentationActionLedger::checkpoint(const fs::path& workspace,
+    const SemanticActionRequest& request, const std::string& fingerprint,
+    const std::string& pending_result, std::string& detail)
+{
+    return replace_accepted(workspace, request, fingerprint, pending_result, false, detail);
+}
+
 PresentationService::PresentationService(
     ApplicationContext& context,
     LastRunProvider& last_run_provider,
@@ -925,6 +690,10 @@ PresentationService::PresentationService(
 
 ApplicationResult PresentationService::query(const PresentationQueryRequest& request) const
 {
+    if (request.launch_intent != "menu" && request.launch_intent != "load_save") {
+        return service_refusal("presentation.query", "unsupported_launch_intent",
+            "Presentation intent must be menu or load_save", {}, facman::core::OutcomeKind::invalid_argument);
+    }
     if (request.scope != "launch_deck" && request.scope != "instances" &&
         request.scope != "installations" && request.scope != "content" &&
         request.scope != "saves" && request.scope != "activity_recovery" &&
@@ -936,6 +705,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     }
     auto installs_result = context_.installs().list();
     auto instances_result = context_.instances().list();
+    json::ArrayBuilder problems;
+    if (!instances_result && request.scope == "activity_recovery") {
+        const auto& error = instances_result.error();
+        add_problem(problems, error.code, error.message, error.path + " " + error.detail);
+        instances_result = decltype(instances_result)::success({});
+    }
     if (!installs_result || !instances_result) {
         return service_refusal(
             "presentation.query", "presentation_repository_unavailable",
@@ -1049,6 +824,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     json::ArrayBuilder content_items;
     std::vector<std::string> profile_choices;
     std::vector<std::string> mod_identity_choices;
+    std::vector<std::string> mod_version_choices;
     std::vector<std::string> mod_name_choices;
     std::vector<std::string> modset_transaction_choices;
     bool selected_modset_locked = false;
@@ -1080,11 +856,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             }
         }
     }
-    auto local_mods = facman::factorio::mods::local_inventory(context_.workspace());
+    auto local_mods = facman::factorio::mods::local_inventory(context_.workspace(), {}, request.selected_instance_id);
     if (!local_mods) {
         if (!content_problem.empty()) content_problem += "; ";
         content_problem += local_mods.error().code + ": " + local_mods.error().message;
     } else {
+        const auto maintenance_paths = local_modset_maintenance_paths(local_mods.value(), instances, request.selected_instance_id);
         for (const auto& mod : local_mods.value()) {
             const std::string identity = mod.name + "@" + mod.version;
             mod_identity_choices.push_back(identity);
@@ -1098,6 +875,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                     request.search)) {
                 continue;
             }
+            const std::string maintenance_identity = append_modset_maintenance_choice(mod, maintenance_paths, mod_version_choices);
             json::ObjectBuilder item;
             item.add_string("id", "mod:" + identity);
             item.add_string("name", mod.title.empty() ? identity : mod.title);
@@ -1108,6 +886,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             item.add_string("identity", identity);
             item.add_string("sha256", mod.sha256);
             item.add_string("source", mod.source);
+            item.add_string("file_name", mod.file_name);
+            item.add_string("maintenance_identity", maintenance_identity);
             item.add_bool("enabled", mod.enabled);
             item.add_bool("selected", mod.enabled);
             item.add_bool("portal_access", false);
@@ -1211,6 +991,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                     item.add_string("status", recognized_value
                         ? "recognized" : "unverified");
                     item.add_string("association_status", association_status);
+                    if (association != nullptr && association->find("context") != nullptr) item.add_value("association_context", *association->find("context"));
                     item.add_string("backup_status", backup);
                     item.add_string("sha256", sha256);
                     item.add_unsigned_integer("size", size_value);
@@ -1245,10 +1026,19 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     if (!request.selected_instance_id.empty()) {
         lifecycle::ProjectionRequest projection;
         projection.instance_id = request.selected_instance_id;
-        projection.launch_intent = "menu";
+        projection.launch_intent = request.launch_intent;
         auto projected = lifecycle::instance_readiness(context_.workspace(), projection);
         if (projected) readiness = projected.take_value();
     }
+    const std::string profile_preparation = profile_preparation_json(
+        context_.workspace(), request.selected_instance_id,
+        selected_exists && (request.scope == "instances" || request.scope == "content")
+            ? profile_choices : std::vector<std::string>());
+    const std::string selected_save_preparation = selected_save_preparation_json(
+        context_.workspace(), request.selected_instance_id, request.launch_intent);
+    const std::string configuration_preparation = configuration_preparation_json(
+        context_.workspace(), request.selected_instance_id, request.launch_intent);
+    const std::string joined_preparation = joined_preparation_json(context_.workspace(), request, action_ledger_);
     const std::string recovery = recovery_json(context_.workspace());
     const LastRunProjection last_run = request.selected_instance_id.empty()
         ? LastRunProjection {LastRunAuthorityState::no_record, last_run_provider_.provider_id(), {}, {}}
@@ -1287,13 +1077,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         }
     }
 
-    json::ArrayBuilder problems;
     if (installs.empty()) add_problem(problems, "no_installations", "No installation is registered");
-    if (request.scope == "launch_deck" && request.selected_instance_id.empty()) {
-        add_problem(problems, "no_instance_selected", "Select an instance to compute readiness");
-    } else if (!request.selected_instance_id.empty() && !selected_exists) {
+    if (request.selected_instance_id.empty()) {
+        if (request.scope == "launch_deck") add_problem(problems, "no_instance_selected", "Select an instance to compute readiness");
+    } else if (!selected_exists) {
         add_problem(problems, "selected_instance_missing", "The selected instance is not registered");
-    } else if (!request.selected_instance_id.empty() && readiness.empty()) {
+    } else if (readiness.empty()) {
         add_problem(problems, "readiness_unavailable", "Readiness could not be computed");
     }
     if (last_run.state == LastRunAuthorityState::provider_unavailable) {
@@ -1329,6 +1118,9 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     const std::vector<ActionInputField> instance_input = {{
         "selected_instance_id", "Instance", "enum", true,
         default_instance, instance_choices}};
+    if (request.scope == "instances" && selected_exists) {
+        actions.add_object(installation_repair_review_descriptor(instances, request.selected_instance_id, default_instance));
+    }
     const std::vector<ActionInputField> profile_create_input = {{
         "profile_id", "New profile ID", "identifier", true,
         "new-profile", {}}};
@@ -1342,12 +1134,17 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         "mod_identity", "Local mod", "enum", true,
         mod_identity_choices.empty() ? std::string() : mod_identity_choices.front(),
         mod_identity_choices}};
+    // Keep the name-only default and its lock-first behavior. Version choices
+    // explicitly constrain one selected-instance artifact instead of upgrading
+    // merely because a newer archive happens to be present.
+    std::vector<std::string> modset_choices = mod_name_choices;
+    modset_choices.insert(modset_choices.end(), mod_version_choices.begin(), mod_version_choices.end());
     const std::vector<ActionInputField> modset_plan_input = {
         {"selected_instance_id", "Instance", "enum", true,
             default_instance, instance_choices},
-        {"mod_identity", "Local mod to enable", "enum", true,
+        {"mod_identity", "Local mod or exact version", "enum", true,
             mod_name_choices.empty() ? std::string() : mod_name_choices.front(),
-            mod_name_choices},
+            modset_choices},
     };
     const std::vector<ActionInputField> modset_rollback_input = {
         {"selected_instance_id", "Instance", "enum", true,
@@ -1370,6 +1167,23 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             save_choices.empty() ? std::string() : save_choices.front(), save_choices},
         {"output_path", "Optional backup destination", "path", false, {}, {}},
     };
+    const std::vector<ActionInputField> save_restore_input = {
+        {"selected_instance_id", "Instance", "enum", true,
+            default_instance, instance_choices},
+        {"save", "Owned backup filename (.zip)", "string", true, {}, {}},
+        {"output_path", "New save filename (.zip)", "string", true, {}, {}},
+    };
+    const std::vector<ActionInputField> snapshot_restore_input = {
+        {"source_path", "Instance snapshot archive (.zip)", "path", true, {}, {}},
+        {"new_instance_id", "New instance ID", "identifier", true, "restored-instance", {}},
+        {"installation_id", "Registered installation", "enum", true,
+            install_choices.empty() ? std::string() : install_choices.front(), install_choices},
+    };
+    const std::vector<ActionInputField> snapshot_create_input = {
+        {"selected_instance_id", "Instance", "enum", true, default_instance, instance_choices},
+        {"snapshot_id", "New snapshot ID", "identifier", true, {}, {}},
+        {"save", "Optional save filename (.zip); blank includes no saves", "string", false, {}, {}},
+    };
     const std::vector<ActionInputField> support_export_input = {
         {"selected_instance_id", "Instance", "enum", true,
             default_instance, instance_choices},
@@ -1391,6 +1205,17 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     };
     const std::vector<ActionInputField> recovery_input = {{
         "transaction_id", "Recovery transaction", "identifier", true, {}, {}}};
+    const std::vector<ActionInputField> pack_import_input = {
+        {"source_path", "Exported offline pack (.zip)", "path", true, {}, {}},
+        {"new_instance_id", "New instance ID", "identifier", true, "imported-instance", {}},
+        {"installation_id", "Installation", "enum", true,
+            install_choices.empty() ? std::string() : install_choices.front(), install_choices},
+        {"display_name", "Display name (optional)", "string", false, {}, {}},
+    };
+    const std::vector<ActionInputField> pack_export_input = {
+        {"selected_instance_id", "Instance", "enum", true, default_instance, instance_choices},
+        {"output_path", "Offline pack destination (.zip)", "path", true, {}, {}},
+    };
     actions.add_object(action_descriptor(
         "presentation.refresh", "presentation.query", "Refresh", "secondary", "read_only", true));
     if (request.scope == "installations") {
@@ -1437,15 +1262,21 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "secondary", "read_only", selected_exists,
             selected_exists ? nullptr : "no_instance_selected",
             "none", "facman.semantic_action_input.v1", instance_input));
-        const bool launch_available = launch_executor_ != nullptr &&
+        const bool launch_recovery_pending = transactions::incomplete_count(context_.workspace()) != 0U;
+        const bool launch_available = !launch_recovery_pending && request.launch_intent == "menu" && launch_executor_ != nullptr &&
             launch_executor_->available(request);
+        actions.add_object(selected_save_action_descriptor(selected_save_preparation, request.selected_instance_id));
+        actions.add_object(configuration_action_descriptor(configuration_preparation, request.selected_instance_id));
+        actions.add_object(make_ready_action_descriptor(configuration_preparation, selected_save_preparation,
+            request.selected_instance_id, request.launch_intent));
+        actions.add_object(joined_preparation_descriptor(joined_preparation));
         actions.add_object(action_descriptor(
             "launch.play", "run.execute",
             last_run.state == LastRunAuthorityState::authoritative_record_available
                 ? "Relaunch" : "Play",
             "primary", "process_execution",
             launch_available,
-            launch_available ? nullptr : "execution_authority_unavailable",
+            launch_available ? nullptr : launch_recovery_pending ? "instance_recovery_required" : "execution_authority_unavailable",
             "explicit", "facman.semantic_action_input.v1", instance_input));
         if (stop_available) {
             actions.add_object(action_descriptor(
@@ -1467,6 +1298,17 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "explicit", "facman.semantic_action_input.v1", profile_select_input));
     }
     if (request.scope == "content") {
+        actions.add_object(action_descriptor(
+            "modsets.import", "presentation.action", "Import offline pack into new instance",
+            "manage", "workspace_write", !installs.empty(),
+            installs.empty() ? "no_installations" : nullptr,
+            "explicit", "facman.semantic_action_input.v1", pack_import_input));
+        actions.add_object(action_descriptor(
+            "modsets.export", "presentation.action", "Export offline pack",
+            "manage", "workspace_write", selected_exists && selected_modset_locked,
+            !selected_exists ? "no_instance_selected" :
+                (!selected_modset_locked ? "no_modset_lock" : nullptr),
+            "explicit", "facman.semantic_action_input.v1", pack_export_input));
         actions.add_object(action_descriptor(
             "mods.inspect", "presentation.action", "Inspect local mod",
             "diagnostic", "read_only", !mod_identity_choices.empty(),
@@ -1499,6 +1341,16 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "explicit", "facman.semantic_action_input.v1", modset_rollback_input));
     }
     if (request.scope == "saves") {
+        actions.add_object(action_descriptor(
+            "snapshots.create", "presentation.action", "Create instance snapshot",
+            "manage", "workspace_write", selected_exists,
+            selected_exists ? nullptr : "no_instance_selected",
+            "explicit", "facman.semantic_action_input.v1", snapshot_create_input));
+        actions.add_object(action_descriptor(
+            "snapshots.restore", "presentation.action", "Restore snapshot into new instance",
+            "manage", "workspace_write", !installs.empty(),
+            installs.empty() ? "no_installations" : nullptr,
+            "explicit", "facman.semantic_action_input.v1", snapshot_restore_input));
         const bool saves_available = selected_exists && !save_choices.empty();
         const char* saves_refusal = !selected_exists
             ? "no_instance_selected" : (save_choices.empty() ? "no_saves" : nullptr);
@@ -1514,6 +1366,11 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "saves.backup", "presentation.action", "Back up local save",
             "manage", "workspace_write", saves_available, saves_refusal,
             "explicit", "facman.semantic_action_input.v1", save_backup_input));
+        actions.add_object(action_descriptor(
+            "saves.restore", "presentation.action", "Restore owned backup",
+            "manage", "workspace_write", selected_exists,
+            selected_exists ? nullptr : "no_instance_selected",
+            "explicit", "facman.semantic_action_input.v1", save_restore_input));
     }
     if (request.scope == "settings_support") {
         actions.add_object(action_descriptor(
@@ -1593,6 +1450,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         "incomplete_transactions", transactions::incomplete_count(context_.workspace()));
 
     json::ObjectBuilder selection;
+    selection.add_string("launch_intent", request.launch_intent);
+    if (!request.repair_review_id.empty()) selection.add_string("repair_review_id", request.repair_review_id);
     if (request.selected_instance_id.empty()) selection.add_null("instance_id");
     else selection.add_string("instance_id", request.selected_instance_id);
     if (!selected_exists) {
@@ -1623,6 +1482,10 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     revision_input.add_object("workspace_health", workspace_health);
     revision_input.add_object("selected_context", selection);
     revision_input.add_object("page", page);
+    add_json(revision_input, "profile_preparation", profile_preparation);
+    add_json(revision_input, "selected_save_preparation", selected_save_preparation);
+    add_json(revision_input, "configuration_preparation", configuration_preparation);
+    add_json(revision_input, "joined_preparation", joined_preparation);
     if (readiness.empty()) revision_input.add_null("readiness");
     else add_json(revision_input, "readiness", readiness);
     add_json(revision_input, "recovery", recovery);
@@ -1640,6 +1503,10 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
 
     json::ObjectBuilder dependencies;
     dependencies.add_string("authoritative_digest", revision);
+    add_json(dependencies, "profile_preparation", profile_preparation);
+    add_json(dependencies, "selected_save_preparation", selected_save_preparation);
+    add_json(dependencies, "configuration_preparation", configuration_preparation);
+    add_json(dependencies, "joined_preparation", joined_preparation);
     dependencies.add_string("workspace_store", "json_toml_v1");
     dependencies.add_string("readiness_owner", "facman.factorio.instance_readiness");
     dependencies.add_string("recovery_owner", "facman.workspace.transactions");
@@ -1679,6 +1546,10 @@ ApplicationResult PresentationService::action(
     const SemanticActionRequest& request,
     bool effectful_action_authorized)
 {
+    if (request.launch_intent != "menu" && request.launch_intent != "load_save") {
+        return service_refusal("presentation.action", "unsupported_launch_intent",
+            "Presentation intent must be menu or load_save", {}, facman::core::OutcomeKind::invalid_argument);
+    }
     const bool durable_action = effectful_semantic_action(request.action_id);
     const std::string canonical_request = action_request_json(request);
     // Durable records need a fixed, externally validated digest. Process-local
@@ -1716,8 +1587,10 @@ ApplicationResult PresentationService::action(
     }
 
     PresentationQueryRequest query_request;
+    query_request.launch_intent = request.launch_intent;
     query_request.scope = request.scope;
     query_request.selected_instance_id = request.selected_instance_id;
+    query_request.repair_review_id = request.repair_review_id;
     ApplicationResult current = query(query_request);
     const std::string current_snapshot = result_string(current);
     if (current.status != ULK_STATUS_OK || current_snapshot.empty()) return current;
@@ -1754,7 +1627,8 @@ ApplicationResult PresentationService::action(
             facman::core::OutcomeKind::refused);
     }
 
-    std::string required_input;
+    const bool reconstruct_instance = request.action_id == "modsets.import" || request.action_id == "snapshots.restore";
+    std::string required_input = snapshot_create_input_problem(request);
     if (request.action_id == "installation.register_read_only" &&
         (request.scope != "installations" || request.installation_id.empty() ||
             request.installation_path.empty())) {
@@ -1779,6 +1653,13 @@ ApplicationResult PresentationService::action(
     } else if (request.action_id == "mods.inspect" &&
         (request.scope != "content" || request.mod_identity.empty())) {
         required_input = "mod_identity is required";
+    } else if (reconstruct_instance &&
+        (request.scope != (request.action_id == "snapshots.restore" ? "saves" : "content") || request.source_path.empty() ||
+            request.new_instance_id.empty() || request.installation_id.empty())) {
+        required_input = "source_path, new_instance_id, and installation_id are required";
+    } else if (request.action_id == "modsets.export" &&
+        (request.scope != "content" || request.selected_instance_id.empty() || request.output_path.empty())) {
+        required_input = "selected_instance_id and output_path are required";
     } else if ((request.action_id == "modsets.plan" ||
             request.action_id == "modsets.apply") &&
         (request.scope != "content" || request.selected_instance_id.empty() ||
@@ -1797,6 +1678,10 @@ ApplicationResult PresentationService::action(
         (request.scope != "saves" || request.selected_instance_id.empty() ||
             request.save.empty())) {
         required_input = "selected_instance_id and save are required";
+    } else if (request.action_id == "saves.restore" &&
+        (request.scope != "saves" || request.selected_instance_id.empty() ||
+            request.save.empty() || request.output_path.empty())) {
+        required_input = "selected_instance_id, owned backup filename, and new save filename are required";
     } else if (request.action_id == "support.export_redacted_bundle" &&
         (request.scope != "settings_support" ||
             request.selected_instance_id.empty() || request.output_path.empty())) {
@@ -1816,6 +1701,23 @@ ApplicationResult PresentationService::action(
             "presentation.action", "semantic_action_input_required", required_input,
             payload, facman::core::OutcomeKind::invalid_argument);
     }
+
+    MakeReadyStage make_ready_stage;
+    std::string profile_plan;
+    if (has_preparation_plan(request.action_id)) {
+        auto bound = snapshot_action_preparation_plan(current_snapshot, request, make_ready_stage);
+        if (!bound) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {},
+                bound.error().code, bound.error().message, false);
+            return service_refusal("presentation.action", bound.error().code,
+                bound.error().message, payload, bound.error().kind);
+        }
+        profile_plan = bound.take_value();
+    }
+    const std::string joined_plan = request.action_id == "readiness.prepare_joined" ? profile_plan : std::string();
+    if (auto repair_refusal = installation_repair_admission(context_, request, current_snapshot))
+        return *repair_refusal;
 
     const char* durable_effect = request.action_id == "launch.play"
         ? "process_execution"
@@ -1861,7 +1763,8 @@ ApplicationResult PresentationService::action(
                 facman::core::OutcomeKind::refused);
         }
         const std::string pending = action_result_json(
-            request, "outcome_unknown", {}, {},
+            request, "outcome_unknown", {}, joined_plan.empty() ? std::string() :
+                joined_preparation_result(joined_plan, {}, {}),
             "semantic_action_dispatch_uncertain",
             "A durable action was accepted; inspect the receipt before retrying if dispatch is interrupted",
             false, {durable_effect});
@@ -1923,6 +1826,21 @@ ApplicationResult PresentationService::action(
         return replayed_action_result(value);
     };
 
+    const auto owner_result = [&](const ApplicationResult& result) {
+        if (result.status != ULK_STATUS_OK) {
+            const bool recovery = result.outcome_kind == facman::core::OutcomeKind::recovery_required;
+            return action_result_json(request, recovery ? "recovery_required" : "refused_before_effects",
+                current_snapshot, result_string(result), result.error_code, result.error_message,
+                false, {"workspace_write"});
+        }
+        const ApplicationResult replacement = query(query_request);
+        return action_result_json(request, "completed",
+            replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+            result_string(result),
+            replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+            replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+            false, {"workspace_write"});
+    };
     std::string output;
     if (request.action_id == "presentation.refresh") {
         output = action_result_json(
@@ -1997,6 +1915,52 @@ ApplicationResult PresentationService::action(
                 request, "completed",
                 replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
                 result_string(imported),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (reconstruct_instance) {
+        ImportModpackRequest import_request;
+        import_request.source_path = facman::platform::path_from_utf8(request.source_path);
+        import_request.instance_id = request.new_instance_id;
+        import_request.install_id = request.installation_id;
+        import_request.display_name = request.display_name;
+        const ApplicationResult imported = request.action_id == "snapshots.restore"
+            ? handlers::dispatch_snapshots(context_, ApplicationRequest{CommandId::snapshots_restore,
+                RestoreSnapshotRequest{request.source_path, request.new_instance_id, request.installation_id}, false})
+            : handlers::import_modpack(context_, import_request);
+        if (imported.status != ULK_STATUS_OK) {
+            const char* outcome = imported.outcome_kind == facman::core::OutcomeKind::recovery_required
+                ? "recovery_required" : "refused_before_effects";
+            output = action_result_json(request, outcome, current_snapshot,
+                result_string(imported), imported.error_code, imported.error_message,
+                false, {"workspace_write"});
+        } else {
+            query_request.selected_instance_id = request.new_instance_id;
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(imported),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "modsets.export" && request.scope == "content") {
+        ExportModsetRequest export_request;
+        export_request.instance_id = request.selected_instance_id;
+        export_request.output_path = facman::platform::path_from_utf8(request.output_path);
+        const ApplicationResult exported = handlers::export_modset(context_, export_request);
+        if (exported.status != ULK_STATUS_OK) {
+            output = action_result_json(request,
+                exported.outcome_kind == facman::core::OutcomeKind::recovery_required
+                    ? "recovery_required" : "refused_before_effects",
+                current_snapshot, result_string(exported), exported.error_code,
+                exported.error_message, false, {"workspace_write"});
+        } else {
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(exported),
                 replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
@@ -2082,12 +2046,15 @@ ApplicationResult PresentationService::action(
         EffectiveProfileRequest select;
         select.instance_id = request.selected_instance_id;
         select.profile_id = request.profile_id;
+        select.expected_plan_sha256 = profile_plan;
         domain.payload = std::move(select);
         domain.dry_run = false;
         const ApplicationResult selected = handlers::dispatch_profiles(context_, domain);
         if (selected.status != ULK_STATUS_OK) {
+            const char* outcome = selected.outcome_kind == facman::core::OutcomeKind::recovery_required
+                ? "recovery_required" : "refused_before_effects";
             output = action_result_json(
-                request, "refused_before_effects", current_snapshot,
+                request, outcome, current_snapshot,
                 result_string(selected), selected.error_code, selected.error_message,
                 false, {"workspace_write"});
         } else {
@@ -2100,6 +2067,46 @@ ApplicationResult PresentationService::action(
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
         }
+    } else if (request.action_id == "readiness.review_install_repair") {
+        output = dispatch_installation_repair_review(context_, request, current_snapshot);
+    } else if (request.action_id == "readiness.prepare_joined") {
+        auto prepared = prepare_joined(context_, request, joined_plan,
+                [&](const std::string& pending, std::string& detail) {
+                    return action_ledger_.checkpoint(context_.workspace(), request, fingerprint, pending, detail);
+                });
+        const auto replacement = query(query_request);
+        output = action_result_json(request, prepared.outcome,
+            replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+            prepared.payload, prepared.problem_code, prepared.problem_detail, false, {"workspace_write"});
+    } else if (request.action_id == "readiness.prepare") {
+        // Dispatch exactly one already reviewed owner. Newly available work must
+        // be admitted against a fresh revision; no combined rollback is promised.
+        const auto owner = make_ready_stage.component == MakeReadyComponent::routing_configuration
+            ? lifecycle::prepare_configuration : lifecycle::prepare_selected_save;
+        auto prepared = owner(context_.workspace(),
+            {request.selected_instance_id, request.launch_intent}, make_ready_stage.plan_sha256,
+            request.durable_operation_id, request.attempt_id);
+        if (prepared) prepared = make_ready_stage_result(make_ready_stage,
+            request.selected_instance_id, request.launch_intent, prepared.value());
+        const ApplicationResult replacement = query(query_request);
+        const auto kind = prepared ? facman::core::OutcomeKind::ok : prepared.error().kind;
+        output = action_result_json(request, prepared ? "completed" :
+            (kind == facman::core::OutcomeKind::recovery_required ? "recovery_required" : "refused_before_effects"),
+            replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+            prepared ? prepared.value() : std::string(), prepared ? std::string() : prepared.error().code,
+            prepared ? std::string() : prepared.error().message, false, {"workspace_write"});
+    } else if (request.action_id == "readiness.prepare_selected_save" || request.action_id == "readiness.prepare_configuration") {
+        const auto owner = request.action_id == "readiness.prepare_configuration"
+            ? lifecycle::prepare_configuration : lifecycle::prepare_selected_save;
+        auto prepared = owner(context_.workspace(),
+            {request.selected_instance_id, request.launch_intent}, profile_plan, request.durable_operation_id, request.attempt_id);
+        const ApplicationResult replacement = query(query_request);
+        const auto kind = prepared ? facman::core::OutcomeKind::ok : prepared.error().kind;
+        output = action_result_json(request, prepared ? "completed" :
+            (kind == facman::core::OutcomeKind::recovery_required ? "recovery_required" : "refused_before_effects"),
+            replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+            prepared ? prepared.value() : std::string(), prepared ? std::string() : prepared.error().code,
+            prepared ? std::string() : prepared.error().message, false, {"workspace_write"});
     } else if (request.action_id == "configuration.explain_effective" &&
                (request.scope == "launch_deck" || request.scope == "instances" ||
                    request.scope == "content")) {
@@ -2170,15 +2177,7 @@ ApplicationResult PresentationService::action(
                    request.action_id == "modsets.apply") &&
                request.scope == "content") {
         const bool applying = request.action_id == "modsets.apply";
-        ApplicationRequest domain;
-        domain.command = applying ? CommandId::modsets_apply : CommandId::modsets_plan;
-        ModsetSolverRequest modset;
-        modset.instance_id = request.selected_instance_id;
-        modset.enabled_mods.push_back(request.mod_identity);
-        domain.payload = std::move(modset);
-        domain.dry_run = !applying;
-        const ApplicationResult resolved =
-            handlers::dispatch_modset_solver(context_, domain);
+        const ApplicationResult resolved = dispatch_content_modset(context_, request, current_snapshot);
         if (resolved.status != ULK_STATUS_OK) {
             const char* outcome = resolved.outcome_kind ==
                     facman::core::OutcomeKind::recovery_required
@@ -2294,6 +2293,8 @@ ApplicationResult PresentationService::action(
                     ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
         }
+    } else if (request.action_id == "snapshots.create") {
+        output = owner_result(dispatch_snapshot_create(context_, request));
     } else if (request.action_id == "saves.backup" &&
                request.scope == "saves") {
         BackupSaveRequest backup;
@@ -2303,27 +2304,17 @@ ApplicationResult PresentationService::action(
             backup.output_path = facman::platform::path_from_utf8(request.output_path);
         }
         const ApplicationResult backed_up = handlers::backup_save(context_, backup);
-        if (backed_up.status != ULK_STATUS_OK) {
-            const char* outcome = backed_up.outcome_kind ==
-                    facman::core::OutcomeKind::recovery_required
-                ? "recovery_required" : "refused_before_effects";
-            output = action_result_json(
-                request, outcome, current_snapshot, result_string(backed_up),
-                backed_up.error_code, backed_up.error_message, false,
-                {"workspace_write"});
-        } else {
-            const ApplicationResult replacement = query(query_request);
-            output = action_result_json(
-                request, "completed",
-                replacement.status == ULK_STATUS_OK
-                    ? result_string(replacement) : std::string(),
-                result_string(backed_up),
-                replacement.status == ULK_STATUS_OK
-                    ? std::string() : "replacement_snapshot_unavailable",
-                replacement.status == ULK_STATUS_OK
-                    ? std::string() : replacement.error_message,
-                false, {"workspace_write"});
-        }
+        output = owner_result(backed_up);
+    } else if (request.action_id == "saves.restore" &&
+               request.scope == "saves") {
+        CloneSaveRequest restore;
+        restore.source_instance_id = request.selected_instance_id;
+        restore.target_instance_id = request.selected_instance_id;
+        restore.save = request.save;
+        restore.source_kind = "owned_backup";
+        restore.destination_save = request.output_path;
+        const ApplicationResult restored = handlers::clone_save(context_, restore);
+        output = owner_result(restored);
     } else if (request.action_id == "support.export_redacted_bundle" &&
                request.scope == "settings_support") {
         ExportDiagnosticRequest export_request;
@@ -2408,10 +2399,19 @@ ApplicationResult PresentationService::action(
                     ? std::string() : replacement.error_message,
                 false, {"process_control"});
         }
-    } else if (request.action_id == "launch.play" &&
+    } else if (request.action_id == "launch.play" && request.launch_intent == "menu" &&
                (request.scope == "launch_deck" || request.scope == "instances") &&
                launch_executor_ != nullptr) {
-        PresentationLaunchExecution execution = launch_executor_->execute(request);
+        // A launch admitted before a repair journal belongs to a published
+        // instance covered by repair's held run-lock census. Later launches
+        // must refuse while that journal is incomplete, including new instances.
+        PresentationLaunchExecution execution;
+        if (before_launch_dispatch_observer) before_launch_dispatch_observer();
+        if (transactions::incomplete_count(context_.workspace()) != 0U) {
+            execution.error_code = "instance_recovery_required";
+            execution.error_message = "An incomplete workspace transaction blocks process dispatch; inspect recovery first";
+            execution.error_kind = facman::core::OutcomeKind::refused;
+        } else execution = launch_executor_->execute(request);
         if (!execution.error_code.empty()) {
             output = action_result_json(
                 request, "refused_before_effects", current_snapshot, execution.payload,

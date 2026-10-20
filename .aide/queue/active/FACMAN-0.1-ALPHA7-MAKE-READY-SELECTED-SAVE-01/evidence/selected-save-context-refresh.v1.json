@@ -1,0 +1,265 @@
+{
+  "schema": "facman.selected_save_context_refresh.author_source_evidence.v1",
+  "base": "b5ec265ca7ea2dd5197c6be529a1dd1e616ae7f1",
+  "branch": "task/facman-selected-save-context-refresh-01",
+  "scope": "F11 explicit existing selected-context owner refresh, followed by a fresh Make Ready request",
+  "behavior": "Exact canonical FacMan-owned stale context can refresh in its retained native file; foreign, ambiguous, changed and pending context remains refused or blocked",
+  "unchanged_boundaries": [
+    "Generic saves.associate remains create-only",
+    "Create plan has no refresh property",
+    "No platform primitive, global transaction schema, request/result codec or execution authority changes",
+    "No automatic adoption, rollback or recreation; completed recovery verifies only"
+  ],
+  "source_files_sha256": {
+    "contracts/schema/factorio/factorio_selected_save_preparation_plan.v1.schema.json": "01fa7e5a793438ee3e81c24f2425ab9adce75128f510a64e61a4cdd62cd9fa62",
+    "runtime/factorio/application/presentation_action_support.cpp": "8518bab650fee34bb14355499a84ee6534a820cac0ccee3918631c1a757976f8",
+    "runtime/factorio/instance/flb_factorio_instance_model.cpp": "ea3ea3bc858a4454947257b326cf8e9e70514875ed25846783fc0a0c407644f8",
+    "runtime/factorio/instance/flb_factorio_instance_model.h": "0d4f8bb17e17cd667af79de163fe25105b6d292a8b4d23cee0210ecdd6eff3fa",
+    "runtime/factorio/instance/flb_factorio_selected_save_preparation.cpp": "674a2afa0eb5b36e69332a18340d91516fc4f1c1b2ba1cb255d400eadf3cd2a5",
+    "runtime/factorio/saves/flb_factorio_save_index.cpp": "9963dbefe1a28f2d0f3b06f2b8a9976e3bf2109644f12ad5bf78051a9268cdfd",
+    "runtime/factorio/saves/flb_factorio_save_index.h": "3a399ee1fa3e6195fcfc25e2f0d58df24b56de5d3a24f2a0ae5650be6fb9abf4",
+    "runtime/factorio/saves/flb_factorio_selected_context.cpp": "b84ac2743fa38c0ef30dd71306dcfed2ebf0480bb31551ff5a6e2923e6c9d7bb",
+    "tests/test_make_ready_joined.py": "d0f8e501d58f5d599965b8b6dce7e43dbf0af8e6ab0fce26d05d2c2ee7d87d1c",
+    "tests/test_selected_context_refresh.py": "90f5d48a3a45de2b9817581bfcf09a33d5db4f49fcd804037cd2531fcd39205a",
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "56c1789623e9fb0e902b3481572481f8897ad96afca909b0382add3e23853803",
+    "runtime/core/generated/version.h": "5805f0cb6856ef59ecee8db9da74a306cc283633983c741e3f4ebc14fd6d6d0c"
+  },
+  "retained_method_cohorts": [
+    {
+      "methods": [
+        "test_selected_context_refresh.SelectedContextRefreshTests.test_foreign_torn_replaced_linked_and_changed_source_context_get_no_refresh",
+        "test_selected_context_refresh.SelectedContextRefreshTests.test_interrupted_refresh_resumes_only_its_retained_object_and_terminal_is_read_only",
+        "test_selected_context_refresh.SelectedContextRefreshTests.test_two_explicit_refreshes_keep_world_file_object_and_original_journals",
+        "test_selected_context_refresh.SelectedContextRefreshTests.test_unadmitted_partial_and_foreign_interrupted_bytes_are_preserved",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_finalization_retains_pinned_target_against_same_byte_replacement_and_write",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_ordinary_selected_context_and_fresh_process_replay_preserve_all_selected_inputs"
+      ],
+      "test_source_hashes": {
+        "contracts/schema/factorio/factorio_selected_save_preparation_plan.v1.schema.json": "01fa7e5a793438ee3e81c24f2425ab9adce75128f510a64e61a4cdd62cd9fa62",
+        "runtime/factorio/application/presentation_action_support.cpp": "8518bab650fee34bb14355499a84ee6534a820cac0ccee3918631c1a757976f8",
+        "runtime/factorio/instance/flb_factorio_instance_model.cpp": "ea3ea3bc858a4454947257b326cf8e9e70514875ed25846783fc0a0c407644f8",
+        "runtime/factorio/instance/flb_factorio_instance_model.h": "0d4f8bb17e17cd667af79de163fe25105b6d292a8b4d23cee0210ecdd6eff3fa",
+        "runtime/factorio/instance/flb_factorio_selected_save_preparation.cpp": "674a2afa0eb5b36e69332a18340d91516fc4f1c1b2ba1cb255d400eadf3cd2a5",
+        "runtime/factorio/saves/flb_factorio_save_index.cpp": "9963dbefe1a28f2d0f3b06f2b8a9976e3bf2109644f12ad5bf78051a9268cdfd",
+        "runtime/factorio/saves/flb_factorio_save_index.h": "3a399ee1fa3e6195fcfc25e2f0d58df24b56de5d3a24f2a0ae5650be6fb9abf4",
+        "runtime/factorio/saves/flb_factorio_selected_context.cpp": "b84ac2743fa38c0ef30dd71306dcfed2ebf0480bb31551ff5a6e2923e6c9d7bb",
+        "tests/test_make_ready_joined.py": "d0f8e501d58f5d599965b8b6dce7e43dbf0af8e6ab0fce26d05d2c2ee7d87d1c",
+        "tests/test_selected_context_refresh.py": "dab1641d74bcb3cb2c0c4f78089fe458d7951eb9c708805fdc3ae4daa62766c0"
+      },
+      "proof": "selected-save-refresh-fixed-tests-02.log",
+      "proof_sha256": "11eb035a9363b4c7fff1e86d3240418bd51d44019786c70cccff6ff49268ecca",
+      "qualification": "Six complete method outcomes retained from the failed aggregate observer attempt; not an all-final-source suite"
+    },
+    {
+      "methods": [
+        "test_selected_context_refresh.SelectedContextRefreshTests.test_paused_world_profile_configuration_source_and_foreign_object_drift_preserve_the_context"
+      ],
+      "test_source_hashes": {
+        "contracts/schema/factorio/factorio_selected_save_preparation_plan.v1.schema.json": "01fa7e5a793438ee3e81c24f2425ab9adce75128f510a64e61a4cdd62cd9fa62",
+        "runtime/factorio/application/presentation_action_support.cpp": "8518bab650fee34bb14355499a84ee6534a820cac0ccee3918631c1a757976f8",
+        "runtime/factorio/instance/flb_factorio_instance_model.cpp": "ea3ea3bc858a4454947257b326cf8e9e70514875ed25846783fc0a0c407644f8",
+        "runtime/factorio/instance/flb_factorio_instance_model.h": "0d4f8bb17e17cd667af79de163fe25105b6d292a8b4d23cee0210ecdd6eff3fa",
+        "runtime/factorio/instance/flb_factorio_selected_save_preparation.cpp": "674a2afa0eb5b36e69332a18340d91516fc4f1c1b2ba1cb255d400eadf3cd2a5",
+        "runtime/factorio/saves/flb_factorio_save_index.cpp": "9963dbefe1a28f2d0f3b06f2b8a9976e3bf2109644f12ad5bf78051a9268cdfd",
+        "runtime/factorio/saves/flb_factorio_save_index.h": "3a399ee1fa3e6195fcfc25e2f0d58df24b56de5d3a24f2a0ae5650be6fb9abf4",
+        "runtime/factorio/saves/flb_factorio_selected_context.cpp": "b84ac2743fa38c0ef30dd71306dcfed2ebf0480bb31551ff5a6e2923e6c9d7bb",
+        "tests/test_make_ready_joined.py": "d0f8e501d58f5d599965b8b6dce7e43dbf0af8e6ab0fce26d05d2c2ee7d87d1c",
+        "tests/test_selected_context_refresh.py": "f25f376ec3eebf9ac260c494f2f55fc531a066949cdc6086fefa36788c50b69f"
+      },
+      "proof": "selected-save-refresh-fixed-result-03.json",
+      "proof_sha256": "5f7af9ff9a7498255be67be666ab3273c005320e6648650cf17650f9882816a2"
+    },
+    {
+      "methods": [
+        "test_selected_context_refresh.SelectedContextRefreshTests.test_pending_refresh_does_not_relabel_other_selected_filename_or_instance",
+        "test_selected_context_refresh.SelectedContextRefreshTests.test_retained_refresh_serializes_competing_owner_and_source_journal_custody",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_process_loss_resumes_exact_owned_effect_and_preserves_ambiguous_creation",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_query_is_read_only_and_host_capability_is_explicit",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_same_byte_foreign_objects_and_mismatched_strategy_are_preserved",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_shared_configuration_lock_preserves_empty_unfamiliar_and_borrowed_compatible_objects",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_stale_inputs_confirmation_and_late_context_drift_do_not_claim_completion",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_terminal_invalid_or_missing_owned_effect_never_creates_directories_or_republishes",
+        "test_selected_save_preparation.SelectedSavePreparationTests.test_unsupported_selected_filenames_refuse_during_read_only_admission",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_changed_selected_save_at_final_receipt_does_not_reuse_readiness",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_one_ordinary_request_prepares_routing_and_exact_world_with_independent_receipts",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_menu_and_already_prepared_paths_follow_owner_observation",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_wrong_desired_inputs_confirmation_and_stale_observation_refuse_before_effects",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_unrelated_drift_and_foreign_targets_after_configuration_stop_with_visible_partial_effects",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_known_partial_correction_uses_a_fresh_request_without_changing_prior_receipts",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_changed_effect_after_final_observation_cannot_manufacture_success",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_unverifiable_owner_result_retains_uncertainty_and_never_starts_another_effect",
+        "test_make_ready_joined.JoinedMakeReadyTests.test_failed_final_receipt_persistence_preserves_foreign_target_and_exposes_no_clearing_directive"
+      ],
+      "test_source_hashes": {
+        "contracts/schema/factorio/factorio_selected_save_preparation_plan.v1.schema.json": "01fa7e5a793438ee3e81c24f2425ab9adce75128f510a64e61a4cdd62cd9fa62",
+        "runtime/factorio/application/presentation_action_support.cpp": "8518bab650fee34bb14355499a84ee6534a820cac0ccee3918631c1a757976f8",
+        "runtime/factorio/instance/flb_factorio_instance_model.cpp": "ea3ea3bc858a4454947257b326cf8e9e70514875ed25846783fc0a0c407644f8",
+        "runtime/factorio/instance/flb_factorio_instance_model.h": "0d4f8bb17e17cd667af79de163fe25105b6d292a8b4d23cee0210ecdd6eff3fa",
+        "runtime/factorio/instance/flb_factorio_selected_save_preparation.cpp": "674a2afa0eb5b36e69332a18340d91516fc4f1c1b2ba1cb255d400eadf3cd2a5",
+        "runtime/factorio/saves/flb_factorio_save_index.cpp": "9963dbefe1a28f2d0f3b06f2b8a9976e3bf2109644f12ad5bf78051a9268cdfd",
+        "runtime/factorio/saves/flb_factorio_save_index.h": "3a399ee1fa3e6195fcfc25e2f0d58df24b56de5d3a24f2a0ae5650be6fb9abf4",
+        "runtime/factorio/saves/flb_factorio_selected_context.cpp": "b84ac2743fa38c0ef30dd71306dcfed2ebf0480bb31551ff5a6e2923e6c9d7bb",
+        "tests/test_make_ready_joined.py": "d0f8e501d58f5d599965b8b6dce7e43dbf0af8e6ab0fce26d05d2c2ee7d87d1c",
+        "tests/test_selected_context_refresh.py": "3d484c006af462a48b5b8fb0db2bac4a5124e6f9c7c0b8c69b89821e07b48138"
+      },
+      "proof": "selected-save-refresh-fixed-result-04.json",
+      "proof_sha256": "597d578bfc53547928e1233de2e8fc48bc6d4e5eaf0c89c25dd3fadf24254c2c"
+    }
+  ],
+  "all_final_source_suite_claim": false,
+  "native_smokes": [
+    {
+      "name": "facman_isolation_lock_smoke",
+      "exit_code": 0,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-smoke-facman_isolation_lock_smoke-02\\receipt.json",
+      "sha256": "1fbb206f3527782e1ea2c0c920286ef0ab3cd9261cd4d5ca679a57ae92378979"
+    },
+    {
+      "name": "flb_factorio_instance_model_smoke",
+      "exit_code": 0,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-smoke-flb_factorio_instance_model_smoke-02\\receipt.json",
+      "sha256": "1ba6b63f935ed5f1c63d9010e72ba2563d00533a908977420cbb4ba2b890ac4c"
+    },
+    {
+      "name": "facman_execution_foundation_smoke",
+      "exit_code": 0,
+      "receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-smoke-facman_execution_foundation_smoke-02\\receipt.json",
+      "sha256": "a628f0423d3c1b095bbb719ed98745e5887700124a1aa379278aafaad2d4841f"
+    }
+  ],
+  "build_lifetime": {
+    "result": "FAILED",
+    "receipt": "selected-save-refresh-build-owned-02/receipt.json",
+    "receipt_sha256": "81e307b4df774d5964d7620bad5326d9b8667482ead066c304dc83dded487deb",
+    "primary_exit": 0,
+    "remaining_job_members_at_primary_exit": 2,
+    "remaining_member_identities": "not recorded",
+    "termination": "command_timeout",
+    "forced_owned_job_cleanup": true,
+    "natural_descendant_drain_proven": false
+  },
+  "qualification": "Developer behavior evidence from the produced build-02 binaries; failed local build lifetime is preserved. Normal required current-head hosted rebuild/tests remain mandatory before source integration.",
+  "cached_developer_build_identity": "Preexisting same-cache generated identity reports d93794d7 and dirty=true; actual source base and exact source/output hashes above bind this developer diagnosis.",
+  "external_evidence": {
+    "selected-save-refresh-baseline-author-packet-01.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-baseline-author-packet-01.json",
+      "sha256": "4f5891559a6b34ed744a78d98a5f190aa2f70ea00e9ee4f0dc68727a2deda32f"
+    },
+    "selected-save-refresh-independent-design-review-01.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-independent-design-review-01.json",
+      "sha256": "7711d9e3b11a26121db77acd98abd5602856d411252af7447ded887fd248da37"
+    },
+    "selected-save-refresh-light-launch-result-06.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-light-launch-result-06.json",
+      "sha256": "127aed36bd861091dd2df52b06bc40230beb6fa1c06b64cfbc0a85948cb16d88"
+    },
+    "selected-save-refresh-light-result-02.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-light-result-02.json",
+      "sha256": "fa60d08d43dd4e1cf87883b8bc6046ac5c98f38ac7116a52432fb687cd9db7f1"
+    },
+    "selected-save-refresh-native-build-result-01.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-native-build-result-01.json",
+      "sha256": "9291854bab6904bd1ec47653480e5b66de3d281e72ad1659dca4dcee1f3f9beb"
+    },
+    "selected-save-refresh-native-build-result-02.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-native-build-result-02.json",
+      "sha256": "3f30f6126d5e0254ece700341e989098ef08b06237c5732412d6a9ae6fe99e9e"
+    },
+    "selected-save-refresh-native-build-02-output-custody-01.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-native-build-02-output-custody-01.json",
+      "sha256": "e1c85c5c9245d45ec2f6a968adf0626e3bd2e6e1229c144cc6cbc426ec088ad7"
+    },
+    "selected-save-refresh-fixed-launch-result-02.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-fixed-launch-result-02.json",
+      "sha256": "da90fe052df64e7501adb76046d41ab4d631ed21e77e48c59e0459d373699a02"
+    },
+    "selected-save-refresh-fixed-launch-result-03.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-fixed-launch-result-03.json",
+      "sha256": "e0ae0205391f977bcc586ea3414b517bf6ec30c25238e502ea7e535ee14fe738"
+    },
+    "selected-save-refresh-fixed-launch-result-04.json": {
+      "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-fixed-launch-result-04.json",
+      "sha256": "f044a0e76b4f84318da0c60a96456248d6f2041281c200803be655d3eaa33b66"
+    }
+  },
+  "required_static_receipt": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-static-result-02.json",
+  "final_external_author_packet": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\selected-save-refresh-author-packet-01.json",
+  "independent_review_pending": true,
+  "current_required_ci_pending": true,
+  "delivered_refresh_acceptance_pending": true,
+  "game_executed": false,
+  "human_qualified": false,
+  "workunit_closed": false,
+  "post_behavior_metadata_delta": {
+    "schema": "facman.selected_save_refresh.final_source_metadata_delta.v1",
+    "source_files_sha256": {
+      "contracts/schema/factorio/factorio_selected_save_preparation_plan.v1.schema.json": "01fa7e5a793438ee3e81c24f2425ab9adce75128f510a64e61a4cdd62cd9fa62",
+      "runtime/factorio/application/presentation_action_support.cpp": "8518bab650fee34bb14355499a84ee6534a820cac0ccee3918631c1a757976f8",
+      "runtime/factorio/instance/flb_factorio_instance_model.cpp": "ea3ea3bc858a4454947257b326cf8e9e70514875ed25846783fc0a0c407644f8",
+      "runtime/factorio/instance/flb_factorio_instance_model.h": "0d4f8bb17e17cd667af79de163fe25105b6d292a8b4d23cee0210ecdd6eff3fa",
+      "runtime/factorio/instance/flb_factorio_selected_save_preparation.cpp": "674a2afa0eb5b36e69332a18340d91516fc4f1c1b2ba1cb255d400eadf3cd2a5",
+      "runtime/factorio/saves/flb_factorio_save_index.cpp": "9963dbefe1a28f2d0f3b06f2b8a9976e3bf2109644f12ad5bf78051a9268cdfd",
+      "runtime/factorio/saves/flb_factorio_save_index.h": "3a399ee1fa3e6195fcfc25e2f0d58df24b56de5d3a24f2a0ae5650be6fb9abf4",
+      "runtime/factorio/saves/flb_factorio_selected_context.cpp": "b84ac2743fa38c0ef30dd71306dcfed2ebf0480bb31551ff5a6e2923e6c9d7bb",
+      "tests/test_make_ready_joined.py": "d0f8e501d58f5d599965b8b6dce7e43dbf0af8e6ab0fce26d05d2c2ee7d87d1c",
+      "tests/test_selected_context_refresh.py": "90f5d48a3a45de2b9817581bfcf09a33d5db4f49fcd804037cd2531fcd39205a",
+      "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "56c1789623e9fb0e902b3481572481f8897ad96afca909b0382add3e23853803",
+      "runtime/core/generated/version.h": "5805f0cb6856ef59ecee8db9da74a306cc283633983c741e3f4ebc14fd6d6d0c"
+    },
+    "behavior_source_admission_sha256": "a39d0a2578795754f514f35f3ee06354bbbe69ba28ad786df55e6d658cab3cbe",
+    "post_behavior_changes": {
+      "test_skip_reason": {
+        "path": "tests/test_selected_context_refresh.py",
+        "before_sha256": "3d484c006af462a48b5b8fb0db2bac4a5124e6f9c7c0b8c69b89821e07b48138",
+        "after_sha256": "90f5d48a3a45de2b9817581bfcf09a33d5db4f49fcd804037cd2531fcd39205a",
+        "only_obligation_class_reason_changed": true
+      },
+      "generated_contract_digest": {
+        "schema": "facman.selected_save_refresh.required_metadata_regeneration.v1",
+        "status": "PASS_ONLY_TWO_REQUIRED_CONTRACT_DIGEST_CONSTANTS_REGENERATED",
+        "contract_set_before": "1983f1e3f28121ec36e8837e8b8474cd7cdff0d5eeebd5a631b12a69608328f7",
+        "contract_set_after": "8b5c4bbed7ca5c4787e67382ed3d1ee5c81a2decbaa5942dffdcd1ff269d3d62",
+        "files": {
+          "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": {
+            "before_sha256": "be4e32a44ebd0e65e7ea748613f4fba653924248123652147026b6e2743855ff",
+            "after_sha256": "b9c0c2c0aa08191fe558db19d1516d4f0fe45a6af6c0926c6f845ee9503c0e6e"
+          },
+          "runtime/core/generated/version.h": {
+            "before_sha256": "9131213f7f5ad722a04fa87ec0f5c1fc7e284c25f35d57bf3e5a1a3f9786da88",
+            "after_sha256": "e7626ad400ca938c767621a26371372762cba0cd3dec651a2eb9b324ee8b037b"
+          }
+        },
+        "receipt_sha256": "fd25199bc22ad8e2d0be8c763ac4f90bc96f55c4b12485d0ae0ddb25bd3813f0",
+        "native_binaries_not_rebuilt": true,
+        "behavior_binary_contract_set_remains": "1983f1e3f28121ec36e8837e8b8474cd7cdff0d5eeebd5a631b12a69608328f7",
+        "final_source_requires_hosted_rebuild": true
+      }
+    },
+    "no_new_native_compile": true,
+    "no_runtime_logic_changed_after_behavior": true,
+    "normal_current_head_hosted_rebuild_required": true,
+    "generated_line_ending_custody": {
+      "schema": "facman.selected_save_refresh.generated_lf_custody.v1",
+      "files": {
+        "runtime/core/generated/version.h": {
+          "before_sha256": "e7626ad400ca938c767621a26371372762cba0cd3dec651a2eb9b324ee8b037b",
+          "after_sha256": "5805f0cb6856ef59ecee8db9da74a306cc283633983c741e3f4ebc14fd6d6d0c",
+          "only_crlf_to_lf": true
+        },
+        "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": {
+          "before_sha256": "b9c0c2c0aa08191fe558db19d1516d4f0fe45a6af6c0926c6f845ee9503c0e6e",
+          "after_sha256": "56c1789623e9fb0e902b3481572481f8897ad96afca909b0382add3e23853803",
+          "only_crlf_to_lf": true
+        }
+      },
+      "prior_generated_record_sha256": "411909819970da25d314c2b8794b18fb65e2b185df67fdd467d3500ef17858e2",
+      "semantic_contract_digest_unchanged": true,
+      "actual_runtime_logic_unchanged": true
+    }
+  },
+  "cached_developer_contract_identity": {
+    "behavior_binary": "1983f1e3f28121ec36e8837e8b8474cd7cdff0d5eeebd5a631b12a69608328f7",
+    "generated_final_source": "8b5c4bbed7ca5c4787e67382ed3d1ee5c81a2decbaa5942dffdcd1ff269d3d62",
+    "hosted_rebuild_required": true
+  }
+}

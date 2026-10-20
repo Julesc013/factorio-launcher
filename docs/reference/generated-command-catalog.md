@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `26561aff492673fafc85f69e1a4d423d37dee8f577ac36ac6f03261f2638e428`.
+Source digest: `f7ee0fa96928cd61bfc59e31efe4c758968e409e582bc680360ab88de78cb9f5`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -21,13 +21,13 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.describe` | `installs.describe` | `installs_describe` | no | - | implemented | workspace_read | `facman installs describe <install-id> --json` |
 | `installs.import` | `install_refs.import` | `install_import` | yes | install-refs.import | available | workspace_read, workspace_write | `facman installs import <factorio-dir> --id <install-id> --json` |
 | `installs.inspect` | `install_refs.inspect` | `install_inspect` | no | install-refs.inspect | available | workspace_read | `facman installs inspect <install-id> --json` |
-| `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs install apply <plan-id> --version <version> --archive <path> --target <path> --id <install-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
 | `installs.install.plan` | `installs.install.plan` | `installs_install_plan` | no | - | implemented | setup_preview | `facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json` |
 | `installs.install_version` | `installs.install_version` | `installs_install_version` | no | installs.install-version | unavailable_until_gateway | setup_preview | `facman installs install-version <version> --archive <path> --json` |
-| `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
-| `installs.move.plan` | `installs.move.plan` | `installs_move_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs move plan <install-id> --target <path> --json` |
+| `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs move apply <install-id> <plan-id> --target <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
+| `installs.move.plan` | `installs.move.plan` | `installs_move_plan` | no | - | implemented | setup_preview | `facman installs move plan <install-id> --target <path> --json` |
 | `installs.reconcile.plan` | `installs.reconcile.plan` | `installs_reconcile_plan` | no | - | implemented | workspace_read | `facman installs reconcile plan <install-id> [--version <v>] [--source-ref <ref>] [--target <path>] [--management <mode>] [--deployment-style <style>] [--data-policy <policy>] [--integration <mode>] [--update-policy <policy>] --json` |
-| `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | implemented | workspace_read, workspace_write, setup_preview | `facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | implemented | workspace_read, workspace_write, setup_preview, setup_mutation | `facman installs recovery apply <transaction-id> <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.recovery.inspect` | `installs.recovery.inspect` | `installs_recovery_inspect` | no | - | implemented | workspace_read, setup_preview | `facman installs recovery inspect <transaction-id> --json` |
 | `installs.repair` | `installs.repair` | `installs_repair` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs repair <install-id> --json` |
 | `installs.repair.apply` | `installs.repair.apply` | `installs_repair_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs repair apply <install-id> <plan-id> --archive <path> --digest <sha256> --plan-created-at <utc> --record-digest <sha256> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
@@ -36,18 +36,18 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.uninstall` | `installs.uninstall` | `installs_uninstall` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs uninstall <install-id> --json` |
 | `installs.uninstall.apply` | `installs.uninstall.apply` | `installs_uninstall_apply` | yes | - | implemented | workspace_read, workspace_write, setup_mutation | `facman installs uninstall apply <install-id> <plan-id> --digest <sha256> --plan-created-at <utc> --transaction-id <id> --applied-at <utc> --confirm <APPLY> --json` |
 | `installs.uninstall.plan` | `installs.uninstall.plan` | `installs_uninstall_plan` | no | - | implemented | setup_preview | `facman installs uninstall plan <install-id> --json` |
-| `installs.verify` | `installs.verify` | `installs_verify` | no | - | unavailable_until_gateway | setup_preview | `facman installs verify <install-id> --json` |
+| `installs.verify` | `installs.verify` | `installs_verify` | no | - | implemented | workspace_read, setup_preview | `facman installs verify <install-id> --json` |
 | `instance.export` | `instance.export` | `instance_export` | yes | - | available | workspace_read, workspace_write | `facman export instance <instance-id> <pack.zip> --json` |
 | `instance.import` | `instance.import` | `instance_import` | yes | - | available | workspace_read, workspace_write | `facman import instance <pack.zip> --json` |
 | `instance.list` | `instance.list` | `instance_list` | no | - | available | workspace_read | `facman instances list --json` |
 | `instances.archive` | `instances.archive` | `instances_archive` | yes | - | available | workspace_read, workspace_write | `facman instances archive <instance-id> --json` |
 | `instances.clone` | `instances.clone` | `instances_clone` | yes | - | available | workspace_read, workspace_write | `facman instances clone <source-id> <destination-id> [--name <display-name>] [--install <install-id>] --json` |
 | `instances.create` | `instance.create` | `instance_create` | yes | - | available | workspace_read, workspace_write | `facman instances create <name> --install <install-id> [--import-data <install-root>] --json` |
-| `instances.describe` | `instances.describe` | `instances_describe` | no | - | implemented | workspace_read | `facman instances describe <instance-id> [--intent menu] --json` |
+| `instances.describe` | `instances.describe` | `instances_describe` | no | - | implemented | workspace_read | `facman instances describe <instance-id> [--intent menu|load_save] --json` |
 | `instances.diff` | `instances.diff` | `instances_diff` | no | - | available | workspace_read | `facman instances diff <left-instance-id> <right-instance-or-snapshot> --json` |
 | `instances.inspect` | `instances.inspect` | `instances_inspect` | no | - | available | workspace_read | `facman instances inspect <instance-id> --json` |
-| `instances.readiness` | `instances.readiness` | `instances_readiness` | no | - | implemented | workspace_read | `facman instances readiness <instance-id> [--intent menu] --json` |
-| `instances.rename` | `instances.rename` | `instances_rename` | yes | - | available | workspace_read, workspace_write | `facman instances rename <instance-id> --name <display-name> --json` |
+| `instances.readiness` | `instances.readiness` | `instances_readiness` | no | - | implemented | workspace_read | `facman instances readiness <instance-id> [--intent menu|load_save] --json` |
+| `instances.rename` | `instances.rename` | `instances_rename` | yes | - | available | workspace_read, workspace_write | `facman instances rename <instance-id> --name <display-name> [--expected-revision <sha256>] --json` |
 | `instances.restore` | `instances.restore` | `instances_restore` | yes | - | available | workspace_read, workspace_write | `facman instances restore <archive-id> [--new-id <instance-id>] --json` |
 | `instances.verify` | `instances.verify` | `instances_verify` | no | - | available | workspace_read | `facman instances verify <instance-id> --json` |
 | `launch.plan` | `launch_plan.build` | `launch_plan_build` | no | launch-plan.build | available | workspace_read | `facman launch plan <instance-id> --json` |
@@ -66,6 +66,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `modsets.diff` | `modsets.diff` | `modsets_diff` | no | - | available | workspace_read | `facman modsets diff <instance-id> [solver options] --json` |
 | `modsets.explain` | `modsets.explain` | `modsets_explain` | no | - | available | workspace_read | `facman modsets explain <instance-id> [solver options] --json` |
 | `modsets.export` | `modsets.export` | `modsets_export` | yes | - | available | workspace_read, workspace_write | `facman modsets export <instance-id> <pack.zip> --json` |
+| `modsets.import` | `modsets.import` | `modsets_import` | yes | - | available | workspace_read, workspace_write | `facman modsets import <pack.zip> --instance <new-id> --install <registered-id> [--name <name>] --json` |
 | `modsets.lock` | `modsets.lock` | `modsets_lock` | yes | - | available | workspace_read, workspace_write | `facman modsets lock <instance-id> --json` |
 | `modsets.plan` | `modsets.plan` | `modsets_plan` | no | - | available | workspace_read | `facman modsets plan <instance-id> [solver options] --json` |
 | `modsets.rollback` | `modsets.rollback` | `modsets_rollback` | yes | - | available | workspace_read, workspace_write | `facman modsets rollback <instance-id> <transaction-id> --json` |
@@ -78,22 +79,22 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `preferences.reset.apply` | `preferences.reset.apply` | `preferences_reset_apply` | yes | - | available | workspace_read, workspace_write | `facman preferences reset apply --json` |
 | `preferences.reset.plan` | `preferences.reset.plan` | `preferences_reset_plan` | no | - | available | workspace_read | `facman preferences reset plan --json` |
 | `preferences.validate` | `preferences.validate` | `preferences_validate` | no | - | available | workspace_read | `facman preferences validate --json` |
-| `presentation.action` | `presentation.action` | `presentation_action` | yes | - | implemented | workspace_read, workspace_write | `facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json` |
-| `presentation.query` | `presentation.query` | `presentation_query` | no | - | implemented | workspace_read | `facman presentation query <scope> [--instance <id>] [--search <text>] [--known-revision <sha256>] --json` |
+| `presentation.action` | `presentation.action` | `presentation_action` | yes | - | implemented | workspace_read, workspace_write, setup_preview, setup_mutation | `facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--intent menu|load_save] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--snapshot-id <id>] [--source-data-root <path>] [--source-path <path>] [--repair-review-id <key>] [--transaction <id>] [--root <path>] --json` |
+| `presentation.query` | `presentation.query` | `presentation_query` | no | - | implemented | workspace_read | `facman presentation query <scope> [--instance <id>] [--intent menu|load_save] [--search <text>] [--known-revision <sha256>] [--repair-review-id <key>] --json` |
 | `product.inspect` | `product.inspect` | `product_inspect` | no | - | available | none | `facman product inspect --json` |
-| `profiles.apply` | `profiles.apply` | `profiles_apply` | yes | - | available | workspace_read, workspace_write | `facman profiles apply <instance-id> <profile-id> [profile options] --json` |
+| `profiles.apply` | `profiles.apply` | `profiles_apply` | yes | - | available | workspace_read, workspace_write | `facman profiles apply <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json` |
 | `profiles.archive` | `profiles.archive` | `profiles_archive` | yes | - | available | workspace_read, workspace_write | `facman profiles archive <profile-id> --json` |
 | `profiles.clone` | `profiles.clone` | `profiles_clone` | yes | - | available | workspace_read, workspace_write | `facman profiles clone <source-id> <destination-id> --json` |
 | `profiles.create` | `profiles.create` | `profiles_create` | yes | - | available | workspace_read, workspace_write | `facman profiles create <profile-id> [profile options] --json` |
 | `profiles.diff` | `profiles.diff` | `profiles_diff` | no | - | available | workspace_read | `facman profiles diff <left-id> <right-id> --json` |
 | `profiles.inspect` | `profiles.inspect` | `profiles_inspect` | no | - | available | workspace_read | `facman profiles inspect <profile-id> --json` |
 | `profiles.list` | `profiles.list` | `profiles_list` | no | - | available | workspace_read | `facman profiles list --json` |
-| `profiles.plan` | `profiles.plan` | `profiles_plan` | no | - | available | workspace_read | `facman profiles plan <instance-id> <profile-id> [profile options] --json` |
+| `profiles.plan` | `profiles.plan` | `profiles_plan` | no | - | available | workspace_read | `facman profiles plan <instance-id> <profile-id> [profile options] [--expected-revision <sha256>] [--expected-plan <sha256>] --json` |
 | `run.execute` | `run.execute` | `run_execute` | yes | - | unavailable_until_isolation_proof | workspace_read, workspace_write, process_execute | `facman play <instance-id> --json` |
 | `run.preview` | `run.preview` | `run_preview` | no | - | available | workspace_read | `facman run <instance-id> --json` |
 | `saves.associate` | `saves.associate` | `saves_associate` | yes | - | available | workspace_read, workspace_write | `facman saves associate <save> --instance <instance-id> [--profile <id>] --json` |
-| `saves.backup` | `saves.backup` | `saves_backup` | yes | - | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> --json` |
-| `saves.clone` | `saves.clone` | `saves_clone` | yes | - | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> --json` |
+| `saves.backup` | `saves.backup` | `saves_backup` | yes | - | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> [--to <path>] --json` |
+| `saves.clone` | `saves.clone` | `saves_clone` | yes | - | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> [--source-kind <kind>] [--as <new-save.zip>] --json`<br>`facman saves restore <backup-name.zip> --instance <instance-id> --as <new-save.zip> --json` |
 | `saves.diff` | `saves.diff` | `saves_diff` | no | - | available | workspace_read | `facman saves diff <left-save> <right-save> --instance <instance-id> --json` |
 | `saves.index` | `saves.index` | `saves_index` | no | - | available | workspace_read | `facman saves index --instance <instance-id> --json` |
 | `saves.inspect` | `saves.inspect` | `saves_inspect` | no | - | available | workspace_read | `facman saves inspect <save> --instance <instance-id> --json` |
@@ -117,7 +118,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `snapshots.diff` | `snapshots.diff` | `snapshots_diff` | no | - | available | workspace_read | `facman snapshots diff <instance-id> <left-id> <right-id> --json` |
 | `snapshots.inspect` | `snapshots.inspect` | `snapshots_inspect` | no | - | available | workspace_read | `facman snapshots inspect <instance-id> <snapshot-id> --json` |
 | `snapshots.list` | `snapshots.list` | `snapshots_list` | no | - | available | workspace_read | `facman snapshots list <instance-id> --json` |
-| `snapshots.restore` | `snapshots.restore` | `snapshots_restore` | yes | - | available | workspace_read, workspace_write | `facman snapshots restore <snapshot-path> <target-instance-id> --json` |
+| `snapshots.restore` | `snapshots.restore` | `snapshots_restore` | yes | - | available | workspace_read, workspace_write | `facman snapshots restore <snapshot-path> <target-instance-id> [--install <registered-id>] --json` |
 | `snapshots.retention.apply` | `snapshots.retention.apply` | `snapshots_retention_apply` | yes | - | available | workspace_read, workspace_write | `facman snapshots retention apply <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json` |
 | `snapshots.retention.plan` | `snapshots.retention.plan` | `snapshots_retention_plan` | no | - | available | workspace_read | `facman snapshots retention plan <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json` |
 | `snapshots.verify` | `snapshots.verify` | `snapshots_verify` | no | - | available | workspace_read | `facman snapshots verify <instance-id> <snapshot-id> --json` |

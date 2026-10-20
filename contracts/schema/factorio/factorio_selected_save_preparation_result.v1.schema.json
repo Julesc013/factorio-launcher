@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_selected_save_preparation_result.v1.schema.json",
+  "title": "Completed selected save declared context component",
+  "type": "object",
+  "required": ["schema", "command", "status", "instance_id", "transaction_id", "target", "composition", "mutation_executed", "save_content_modified", "execution_started", "permit_issued", "factorio_support_claim"],
+  "properties": {
+    "schema": {"const": "factorio.selected_save_preparation_result.v1"},
+    "command": {"const": "readiness.prepare_selected_save"},
+    "status": {"const": "selected_context_recorded"},
+    "instance_id": {"type": "string", "minLength": 1},
+    "transaction_id": {"type": "string", "minLength": 1},
+    "target": {"type": "string", "minLength": 1},
+    "composition": {"const": "partial"},
+    "mutation_executed": {"const": true},
+    "save_content_modified": {"const": false},
+    "execution_started": {"const": false},
+    "permit_issued": {"const": false},
+    "factorio_support_claim": {"const": "unclaimed"}
+  },
+  "additionalProperties": false
+}

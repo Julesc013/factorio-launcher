@@ -1,0 +1,96 @@
+{
+  "schema": "facman.windows-input-custody-validation.v1",
+  "base": "7a3569ceea299e2425b4e82b99df2e1e758e6b01",
+  "branch": "task/facman-windows-input-custody-01",
+  "work_item": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+  "recorded_at_utc": "2026-10-15T14:43:28.023133+00:00",
+  "source_files": [
+    {
+      "path": "release/index/lab_input_registry.v1.json",
+      "sha256": "09f1a6fcbc1cab891b4a3881eea00b2e1ab301730a3f760bb51a7c2523b1975b",
+      "bytes": 5643
+    },
+    {
+      "path": "docs/development/lab-input-registry.md",
+      "sha256": "c3994256e03fcdf4500c2c03a74661e01af71ba8357cecde50667e63853f6d43",
+      "bytes": 6716
+    },
+    {
+      "path": "tests/test_lab_input_registry.py",
+      "sha256": "aba4b8a6c80cdbc8b35449ec3ec35c9bdc3a7e580283a700e18eabd442a2bbf6",
+      "bytes": 14275
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/ExecPlan.md",
+      "sha256": "942eed00c4dba3cc8ff5e62de00d26731b8b6f6bacf496ed25acbf227d7a5d41",
+      "bytes": 7756
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-custody-2026-10-16.json",
+      "sha256": "83c0d0b1436b34c8615c16ee8f5ab0ee275da4f801ec68d52d6f4ea94eee93ad",
+      "bytes": 5153
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-custody-approval-2026-10-16.json",
+      "sha256": "6240f3ea6fc6b45152c9823c50384103ebfd97933e3ed3bcc26aa6b3fb44895e",
+      "bytes": 256
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-factorio-2-0-77-input-independent-review-2026-10-16.json",
+      "sha256": "e3e06c1e39bc04593b982953921a7d108878abe24a9f395c80fd6134d0a51d98",
+      "bytes": 1753
+    }
+  ],
+  "approved_input": {
+    "platform": "windows_x64",
+    "version": "2.0.77",
+    "input_sha256": "18a6400065167235f085e82902daa5a5828ac65006cfafb1f3cb2dd2fe8f9656",
+    "digest_kind": "sha256_of_exact_retained_manifest_file_bytes",
+    "approval_semantic_sha256": "e46cc2ff5b8aafe0aea09e229b049f40cfe0d45c1690898d12e2c0bb3e3576fe",
+    "issuer": "Codex /root; independent input-custody review",
+    "attributed_to_user": false,
+    "scope": "input_custody_only",
+    "private_raw_manifests_published": false
+  },
+  "validation": {
+    "mapped_tests": 36,
+    "skips": 0,
+    "final_mapped_log": "windows-input-custody-mapped-tests-02.log",
+    "registry": "PASS",
+    "strict": "PASS",
+    "aide_portable": "PASS",
+    "generated_plan_views": "PASS",
+    "generated_project_state": "PASS",
+    "source_format": "PASS",
+    "diff": "PASS",
+    "matrix_delta": "PASS: only six Windows input blockers removed",
+    "matrix_cells": 123,
+    "fixture_preparation_available": 52,
+    "blocked_external": 71,
+    "historical_queue_receipts_preserved": 22,
+    "logs_archive": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-input-custody-validation-2026-10-16.zip",
+      "sha256": "00d84b6b33aee84eb51aecaaa04fddc2f2f4803b3fc3e3595d7843c3c09537cd",
+      "bytes": 11818
+    }
+  },
+  "regression": "Registered Windows input still leaves all real-game cells host-blocked with no execution/qualification, and the run-custody inspector refuses them without effects. Missing-input human scenario coverage uses Linux, whose input remains unavailable.",
+  "authority": {
+    "execution_authorized": false,
+    "qualification_granted": false,
+    "source_authenticated": false,
+    "scenario_host_qualified": false,
+    "permit_issued": false,
+    "human_verdict_recorded": false,
+    "workunit_closed": false,
+    "release_authority_granted": false
+  },
+  "external_gates": [
+    "fresh exact input revalidation before effects",
+    "authenticated route source and reviewed route integration",
+    "real-game scenario host, exact candidate/package and owned effects/reset/export/outcomes",
+    "fresh scenario permit and genuine candidate-bound human experience",
+    "Linux/macOS approved input and retained macOS host"
+  ],
+  "independent_source_review_and_checked_integration": "Required after this frozen source validation; input-custody review is already issued separately. No commit, push or source integration is claimed by this receipt."
+}

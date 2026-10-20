@@ -1,0 +1,40 @@
+{
+  "schema": "facman.profile_compile_repair.v1",
+  "status": "EXACT_SOURCE_REPAIR_REQUIRED_CI_PENDING",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "parent_source": "7f290d6236c40cbb147f52f7c7dafcf73115ab71",
+  "integration_base": "e01a0d2bbf372dc030c8c2fe9565342cdb6f4891",
+  "PR": 379,
+  "source_path": "runtime/factorio/profiles/flb_factorio_profiles.cpp",
+  "source_sha256": "b1e933d3ddd4f5cf185ab34b9f9a471beb085d58795aa643d9d5afbf6fe70a7b",
+  "before_sha256": "046c497feaca9e0a3593ad163d018bec892f314c1ccc7290087fa17b2a3d7dd4",
+  "exact_old_initializer": "Profile profile {request.profile_id, request.template_id, settings.take_value(), false, {}};",
+  "exact_new_initializer": "Profile profile {request.profile_id, request.template_id, settings.take_value(), false, {}, {}};",
+  "diagnostic": "Linux GCC -Werror=missing-field-initializers rejects omitted Profile::source_sha256 initializer",
+  "failed_run": 37233716654,
+  "failed_job": 111528571800,
+  "failed_log_sha256": "ffaa9233b23c2f047999d8517ed72f0df0f9474eee7998cee74c4171db433e1c",
+  "correction": "Explicitly value-initialize the added string field; owner digest, validation, transaction and recovery algorithms unchanged",
+  "preserved_prior_qualification": {
+    "source": "7f290d6236c40cbb147f52f7c7dafcf73115ab71",
+    "native_windows_tests": 1,
+    "public_windows_tests": 15,
+    "state_tests": 89,
+    "exact_current_source_windows_build": false
+  },
+  "qualification": {
+    "required_current_head_CI_pending": true,
+    "produced_package": false,
+    "actual_Factorio": false,
+    "human_experience": false,
+    "whole_workunit": false,
+    "full_programme": false
+  },
+  "native_builds_for_repair": 0,
+  "CI_reruns": 0,
+  "candidate_dispatches": 0,
+  "new_roots": 0,
+  "new_worktrees": 0,
+  "prior_failure_observer_consumed": true,
+  "no_original_observer_rearm": true
+}

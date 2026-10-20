@@ -70,10 +70,32 @@ consume backend presentation scopes rather than redirecting ordinary reads to
 Advanced. Existing CLI JSON, direct/process transport, cancellation, and
 generated-form tests remain unchanged.
 
+Ordinary observation controls are `m` for Menu (the default) and `s` for
+Selected Save; the linear shell also accepts `menu` and `selected-save`.
+The Launch Deck displays the backend-selected observation. Changing it clears
+pending confirmation and action inputs, discards the old revision, and queries
+fresh backend state. Ordinary Make Ready uses that exact observation and
+revision, with two activations for explicit confirmation. Each successful
+component requires a fresh review before the next component. Selected Save
+observes the current profile's selected save; it grants no Play or game authority.
+Native and produced-terminal qualification for these controls remains pending.
+
 Contextual actions are backend-advertised data rather than a page-specific TUI
 command table. Tab and Shift+Tab move action focus, Space dispatches the
 selected descriptor through `presentation.action`, and Enter retains item
-selection/open semantics. Action availability, refusal, scope-bound revision,
+selection/open semantics. With an action form open, `:` starts a bounded
+fullscreen `field=value` editor for the ASCII selectors used by Content Plan
+and history rollback. Unsupported text rejects the whole edit instead of
+silently truncating it into a different selector. Enter reviews the field through the existing form
+validator; Space then reviews or confirms the selected action. Backspace edits
+the input, while Esc or Ctrl+C cancels the form without effects. Ordinary
+shortcuts are text while this editor is active. Bracketed paste is explicitly
+ignored, including control bytes and its trailing payload, so pasted shortcuts
+cannot dispatch actions after cancellation. Opening the editor clears pending
+confirmation, including when the submitted value is unchanged; changed values
+retain the reducer's confirmation invalidation. Ctrl+R or suspension discards
+the unfinished edit before authoritative refresh. Linear forms continue to
+accept `field=value` directly. Action availability, refusal, scope-bound revision,
 idempotency, and payloads remain backend-owned. Read-only Doctor is the first
 ordinary action qualified through both direct and process transports; its
 status, first problem, and suggested next step are rendered from the returned

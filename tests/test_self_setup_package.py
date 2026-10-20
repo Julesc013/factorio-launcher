@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import sys
@@ -80,18 +81,21 @@ class SelfSetupPackageTests(unittest.TestCase):
 
     def portable(self, path: Path, extra: str | None = None) -> None:
         with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
-            archive.writestr("bin/facman.exe", b"cli")
-            archive.writestr("bin/FacMan.WinForms.exe", b"gui")
-            archive.writestr("contracts/example.json", b"{}\n")
+            entries = [("bin/facman.exe", b"cli"),
+                       ("FacMan.exe", b"gui"),
+                       ("contracts/example.json", b"{}\n")]
             if extra is not None:
-                archive.writestr(extra, b"bad")
+                entries.append((extra, b"bad"))
+            # Rebuilding the same fixture must preserve the source archive's
+            # bytes, including ZIP timestamps, because its hash binds payload.
+            for name, content in entries:
+                info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+                archive.writestr(info, content)
 
     def build(self, root: Path, output_name: str) -> tuple[dict[str, object], Path]:
         portable = root / "FacMan-0.1.0-alpha.2-windows-x64-portable.zip"
         setup = root / "FacManSetup.exe"
         output = root / output_name
-        self.portable(portable)
-        setup.write_bytes(b"MZ synthetic setup")
         record = MODULE.build(
             portable,
             setup,
@@ -103,9 +107,48 @@ class SelfSetupPackageTests(unittest.TestCase):
         )
         return record, output
 
+    def test_single_file_setup_binds_the_same_payload_and_native_overlay_identity(self) -> None:
+        from tools import self_contained_setup, self_maintenance_candidate
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            portable = root / "FacMan-0.1.0-alpha.2-windows-x64-portable.zip"
+            self.portable(portable)
+            bootstrap = root / "FacManSetup.exe"
+            original_bootstrap = b"MZ synthetic Setup overlay consumer fixture"
+            bootstrap.write_bytes(original_bootstrap)
+            split, split_root = self.build(root, "split")
+            single = self_contained_setup.build(
+                portable, bootstrap, root / "single", version="0.1.0-alpha.2",
+                facman_revision="a" * 40, usk_revision="b" * 40, dirty=False,
+            )
+            executable = root / "single" / single["setup"]["filename"]
+            self.assertEqual(
+                self_maintenance_candidate.setup_overlay_sha256(executable),
+                split["payload"]["sha256"],
+            )
+            identity = self_maintenance_candidate.identity_from_overlay(executable, portable)
+            self.assertEqual(identity["version"], split["version"])
+            self.assertEqual(identity["source_revision"], split["facman_source_revision"])
+            self.assertEqual(identity["provider_revision"], split["universal_setup_revision"])
+            self.assertEqual(single["embedded_payload"]["tree_digest"], split["payload"]["tree_digest"])
+            self.assertEqual(single["embedded_payload"]["file_count"], split["payload"]["file_count"])
+            self.assertEqual(single["setup"]["sha256"], MODULE.sha256_file(executable))
+            self.assertEqual(single["setup"]["size_bytes"], executable.stat().st_size)
+            with zipfile.ZipFile(executable) as archive:
+                self.assertEqual(archive.read("facman/maintenance/FacManSetup.exe"), original_bootstrap)
+                self.assertIn("facman/generations/0.1.0-alpha.2/FacMan.exe", archive.namelist())
+            self.assertEqual(bootstrap.read_bytes(), original_bootstrap)
+            self.assertEqual(
+                MODULE.sha256_file(split_root / split["payload"]["filename"]),
+                split["payload"]["sha256"],
+            )
+
     def test_build_is_deterministic_and_versioned(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+            self.portable(root / "FacMan-0.1.0-alpha.2-windows-x64-portable.zip")
+            (root / "FacManSetup.exe").write_bytes(b"MZ synthetic setup")
             first, first_root = self.build(root, "first")
             second, second_root = self.build(root, "second")
             first_payload = first_root / first["payload"]["filename"]
@@ -290,6 +333,102 @@ class SelfSetupPackageTests(unittest.TestCase):
             with zipfile.ZipFile(root / "out" / record["payload"]["filename"]) as archive:
                 names = set(archive.namelist())
             self.assertIn("facman/generations/0.1.0-alpha.3/FacMan.exe", names)
+
+    def test_legacy_gui_layout_is_refused_before_writing_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            portable = root / "legacy.zip"
+            setup = root / "FacManSetup.exe"
+            setup.write_bytes(b"MZ synthetic setup")
+            for label, legacy, canonical in (
+                ("legacy", True, False),
+                ("mixed", True, True),
+                ("missing", False, False),
+            ):
+                with self.subTest(layout=label):
+                    with zipfile.ZipFile(portable, "w") as archive:
+                        archive.writestr("bin/facman.exe", b"cli")
+                        if legacy:
+                            archive.writestr("bin/FacMan.WinForms.exe", b"gui")
+                        if canonical:
+                            archive.writestr("FacMan.exe", b"other gui")
+                    output = root / (label + "-output")
+                    with self.assertRaisesRegex(ValueError, "must not be relocated"):
+                        MODULE.build(
+                            portable, setup, output, version="0.1.0-alpha.3",
+                            facman_revision="a" * 40, usk_revision="b" * 40,
+                            dirty=False,
+                        )
+                    self.assertFalse(output.exists())
+
+    def test_generation_preserves_portable_bytes_and_manifest_closure(self) -> None:
+        from tools.package_hash_manifest import verify_manifest
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            portable = root / "product.zip"
+            setup = root / "FacManSetup.exe"
+            setup.write_bytes(b"MZ synthetic setup")
+            original = {
+                "FacMan.exe": b"managed GUI fixture",
+                "bin/facman.exe": b"native CLI fixture",
+                "facman.resources": b"synthetic resource closure fixture",
+                "manifest/package.v1.toml": (
+                    'schema = "facman.built_package.v1"\n'
+                    'profile_id = "windows_product_x64"\n'
+                    'entrypoint = "FacMan.exe"\n'
+                ).encode(),
+                "manifest/build_info.v1.json": b'{"source_commit":"unchanged"}\n',
+            }
+            components = []
+            for name, target, destination in (
+                ("winforms_gui", "apps/gui/windows/winforms", "FacMan.exe"),
+                ("terminal_host", "facman_cli", "bin/facman.exe"),
+                ("runtime_resources", "facman.resources", "facman.resources"),
+            ):
+                components.append({
+                    "name": name, "source_target": target,
+                    "destination": destination, "kind": "frontend",
+                    "runtime_role": "runtime_required",
+                    "sha256": hashlib.sha256(original[destination]).hexdigest(),
+                    "size": len(original[destination]),
+                })
+            original["manifest/components.v1.json"] = json.dumps({
+                "schema": "facman.package_components.v1", "components": components,
+            }, sort_keys=True).encode()
+            original["manifest/hashes.sha256"] = "".join(
+                f"{hashlib.sha256(data).hexdigest()}  {name}\n"
+                for name, data in sorted(original.items())
+            ).encode()
+            with zipfile.ZipFile(portable, "w") as archive:
+                for name, data in original.items():
+                    archive.writestr(name, data)
+            portable_bytes = portable.read_bytes()
+            record = MODULE.build(
+                portable, setup, root / "output", version="0.1.0-alpha.3",
+                facman_revision="a" * 40, usk_revision="b" * 40, dirty=False,
+            )
+            prefix = "facman/generations/0.1.0-alpha.3/"
+            generation = root / "generation"
+            with zipfile.ZipFile(root / "output" / record["payload"]["filename"]) as archive:
+                members = {name[len(prefix):]: archive.read(name)
+                           for name in archive.namelist() if name.startswith(prefix)}
+            self.assertEqual(members, original)
+            self.assertEqual(portable.read_bytes(), portable_bytes)
+            self.assertEqual(record["portable_input"]["sha256"],
+                             hashlib.sha256(portable_bytes).hexdigest())
+            for name, data in members.items():
+                destination = generation / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(data)
+            self.assertEqual(verify_manifest(generation), [])
+            # Independent refusal oracle: this is the historical conversion
+            # defect, while the canonical portable manifests remain unchanged.
+            (generation / "bin/FacMan.WinForms.exe").write_bytes(
+                (generation / "FacMan.exe").read_bytes()
+            )
+            (generation / "FacMan.exe").unlink()
+            self.assertTrue(verify_manifest(generation))
 
     def test_traversal_and_case_collision_are_refused(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

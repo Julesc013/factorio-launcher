@@ -9,8 +9,10 @@ The package must contain matching canonical maintenance and current-generation
 metadata plus the exact GUI, CLI, and maintenance entrypoints. FacMan inspects
 and hashes one held archive object. It admits and validates the exact read-only
 provider plan before any coordinator or repair-cache write. Apply then extracts
-the target package's maintenance launcher and retains that launcher with the
-exact package under the FacMan setup-state root before provider entry.
+the target package's maintenance launcher for target-generation repair. A
+lifecycle-epoch handoff separately retains the currently executing Setup binary
+as its protocol-capable continuation helper, together with the exact target
+package, under the FacMan setup-state root before provider entry.
 
 The first operation over an existing `facman.self` installation verifies its
 pinned Universal Setup installed state and creates a deterministic migration
@@ -43,9 +45,18 @@ whole-root `update.*` authority. Activation occurs only after the candidate and
 its installed files verify, followed by coordinated Start Menu and uninstall
 registration cutover.
 
-This checkpoint keeps completed generations for rollback. Repair is allowed
-only for a verified active migrated `facman.self` and refuses an active
-side-by-side generation. Uninstall of an activation chain writes an immutable
+Historical installed-state reads support the exact Universal Setup ABI 1.0
+shape and preserve the original provider revision. Inspection and verification
+bind that revision and the recipe to the recorded package generation. New
+installation plans and apply bindings require the executing provider's exact pin.
+
+This checkpoint keeps completed generations for rollback. Repair accepts only
+the exact active generation after its chain roots and provider-installed
+identity bind. It routes the ordinary repair coordinator to that generation's
+install ID, physical root, product version, state root, and retained source.
+An already-clean verification result is not a prerequisite for repair; the
+provider's read-only repair plan must instead bind and classify the damaged
+installed state before apply. Uninstall of an activation chain writes an immutable
 retirement intent under `setup-coordinator.v1/retirements`, bound to the exact
 head name/digest, complete activation sequence, and ordered unique generation
 identities. It removes retained generations without shell integration and the
@@ -56,9 +67,23 @@ identity is recovery-required. Once the retirement intent exists, ordinary
 update, downgrade, rollback, verify, and repair discovery is blocked until the
 same retirement is resumed. Nested setup skips its own lock only when given the
 coordinator's call-scoped proof for that exact lock root; isolated fixtures with
-a different setup coordinator acquire both locks. Completed retirement hides
-the active chain but preserves activation and generation history. Retention policy, garbage
-collection, and multi-generation repair remain outside this slice.
+a different setup coordinator acquire both locks. A historical verify/uninstall
+request additionally carries the exact generation witness under a private token
+bound to that validated retirement step. A separate user-wide Setup coordinator
+still requires its own lock; lifecycle authority never substitutes for it.
+Installed state and uninstall plan input bind the generation's original pin,
+archive, recipe and installed/ownership digests; the executing SDK and journal
+revision retain the current provider pin. The witness binds the durable uninstall
+intent, so omission or substitution refuses before recovery or native continuation.
+Ordinary Setup intent bytes and current-pin admission remain unchanged.
+Completed retirement hides
+the active chain but preserves activation and generation history. After a
+retained generation is removed, its exact digest-bound package, maintenance
+launcher, and custody receipt are removed from the pinned repair cache before
+the step is committed. The executing active generation's repair triplet remains
+available after its final uninstall step. Broader retention policy, garbage
+collection, and repair of inactive retained generations remain outside this
+slice.
 
 Normal maintenance requires the Windows shell integration. `--no-shell-integration`
 is admitted only for a disposable qualification root that contains the exact
@@ -72,9 +97,9 @@ The manually dispatched Windows product-candidate workflow can receive an exact
 40-character lowercase `self_maintenance_baseline_ref`. The workflow transfers
 that value through the process environment rather than interpolating it into a
 shell program. It builds that clean ancestor outside the
-checkout and accepts it only when its provider lock is byte-identical to the
-candidate's, its produced package records its own exact source revision, and
-its SemVer is strictly lower than the candidate package. The gated lifecycle
+checkout and accepts it only when its produced package records its own exact
+source revision and its SemVer is strictly lower than the candidate package.
+The gated lifecycle
 then uses package A for install, package B for update, A for downgrade, and
 rollback for the final B cutover. It records the two package identities,
 exact generation and activation record contents, and actual current-user Start
@@ -85,6 +110,22 @@ baseline artifact is staged immediately, before the later payload-equivalence
 gate, and the staging receipt labels it `produced_unqualified` until that gate
 passes. A bounded attempt receipt remains available when build or transition
 qualification fails.
+
+When provider locks differ, the existing locked-provider workspace materializer
+uses the predecessor checkout's own lock and owns its detached provider inputs
+under that predecessor's output marker. Production and checkout observations
+use those exact roots; the baseline package must record its own locked Setup
+revision, while the candidate package must record the candidate's revision.
+The provider workspace manifest is retained with baseline evidence. Matching
+locks continue to reuse the supplied provider roots. This admits production of
+source-distinct inputs across a provider change; a successful real transition,
+recovery and rollback remains required before claiming cross-provider lifecycle
+qualification.
+
+This candidate qualifies an epoch external continuation only if package A's
+ordinary Setup created a real active epoch before B is applied. An older flat
+baseline followed by an inline flat update does not establish that result;
+the evidence must name the actual active epoch and parent-exit handoff phase.
 
 The host verifier independently recomputes each domain-separated generation
 identity, the full side-by-side install ID, and the physical generation root
@@ -112,22 +153,117 @@ matching request continues the immutable operation; a different request is
 refused with recovery guidance. Preview remains read-only and never continues
 or creates an operation.
 
+Ordinary shell-integrated Setup now enters a real epoch after installing a
+strict self-maintenance package. It keeps the flat activation history as an
+immutable compatibility predecessor, records a distinct non-destructive
+authority handoff, verifies a clone of that same package at the epoch provider
+identity, activates genesis, and cuts over native integration. Portable Setup
+without shell integration keeps its exact flat route. After a completed real
+epoch retirement, ordinary Setup derives a successor from the supplied package
+and the retired head, reserves its immutable manifest, uses the durable Setup
+transaction at that epoch's physical provider identity, then verifies provider
+and native effects before activating genesis. An exact empty or fully staged
+successor manifest can be recovered; foreign or partial bytes remain refused.
+These production routes still require source-exact produced-package and
+source-distinct external-continuation qualification before the maintenance
+work item can close.
+
 Pre-handoff continuation retains the package and helper through the normal
-FacMan storage edge before provider entry. After a durable provider-entry
-record exists, continuation rehydrates the exact provider transaction instead
-of preparing it again. Each subsequent phase binds the installed generation,
-read-only verification result, shell cutover, publication, and completion to
-the same epoch, operation, source generation, target generation, package, and
-provider identities. Terminal verification replays the deterministic
-read-only provider verification at the operation's recorded time; it does not
-depend on a mutable cached verification field.
+FacMan storage edge before provider entry. The helper is the exact current Setup
+binary, stored as `FacManContinuation.exe`; it is distinct from the maintenance
+launcher embedded in the target package. This distinction lets a newer B Setup
+continue a B-to-A installation when provider work is required while the A
+launcher is used only for A's retained repair source and installed maintenance
+entrypoint. When A is the exact immediate retained predecessor, no provider
+mutation or executable replacement occurs: B may verify and reactivate A in the
+initiating process, and the immutable generation/package checks remain required.
+Reactivation records its own immutable intent, shortcut cutover, and
+registration cutover under the epoch maintenance operation. The intent binds
+the existing generation and stable provider installed identity; restart reads the
+retained repair package and resumes the same native cutover before publishing
+a new activation. The installed maintenance launcher may be the package's
+embedded executable while the retained repair helper is the self-extracting
+overlay; both identities are checked against the exact package. Reactivation
+does not write provider-apply or uninstall receipts.
+Real-epoch rollback selects the current activation's immediate retained
+predecessor and inspects its exact repair package. It uses the same verified
+reactivation path, without accepting a caller-supplied package. Each new
+activation binds its source activation digest into a distinct operation ID, so
+later rollback and reapply cycles retain the entire immutable history. Empty
+pre-handoff operations written with the earlier ID form remain recoverable.
+
+The public process launches the retained helper with an inherited handle to the
+exact initiating process and reports `handoff_launched`. The helper validates
+that handle's PID and creation time, waits for the initiator to exit, then
+revalidates the canonical v3 handoff journal, its own path and digest, the bound
+shell-integration choice, and the retained package. It extracts the target
+launcher only after those checks. Parent wait, provider continuation,
+publication, and shell cutover share one absolute deadline. A public apply retry
+at an unfinished phase relaunches the same retained helper; a read-only request
+can observe the durable phase without continuing it.
+
+The private helper inherits only the parent-process synchronization handle and
+explicit `NUL` standard handles. It has no console and cannot keep a caller's
+redirected output pipes open after the public Setup process returns. This keeps
+`handoff_launched` asynchronous for terminal, automation, and test callers.
+
+After a durable provider-entry record exists, continuation rehydrates the exact
+provider transaction instead of preparing it again. Each subsequent phase binds
+the installed generation, read-only verification result, shell cutover,
+publication, and completion to the same epoch, operation, source generation,
+target generation, package, helper, shell choice, and provider identities.
+Terminal verification replays the deterministic read-only provider verification
+at the operation's recorded time; it does not depend on a mutable cached
+verification field.
+
+If the SDK completed an entered apply before FacMan recorded its outcome,
+USK's no-replace install planner refuses the existing target. Only that exact
+`target_not_empty` refusal can use completed transaction inspection instead.
+FacMan supplies the immutable original plan request, plan ID/digest and
+transaction to `recovery.inspect`; the SDK validates its original archive,
+source context and publication identity. Admission requires an exact installed
+identity and a canonical, digest-checked completed report with intact journal,
+snapshot and audit evidence, no selected action and no available effects.
+This recovery clears cached apply authority and grants only observation and
+completion. Missing context, noncompleted state, operator actions and other
+refusals remain recovery-required. Absent-target reconstruction retains the
+original fresh-plan semantic checks.
+
+Epoch generation v2 and handoff v3 also admit an exact additive
+`creating_provider_revision` shape for cross-provider creation. The field is a
+lowercase 40-hex revision distinct from the package's original
+`universal_setup_revision`; absence means the original provider created the
+installation. Existing serializers retain their exact bytes when it is absent.
+Generation records have two exact shapes; handoff records have four, because
+the existing optional deadline is independent of creator provenance. Unknown,
+empty, malformed and redundant creator fields are refused. Older controllers
+reject the extended shapes and cannot service such epochs.
+
+Fresh epoch planning freezes the actual executing SDK before provider review.
+Recovery reads the frozen creator from the immutable handoff, and provider
+creation or replay requires that SDK. The original package pin, source, archive
+checksum and generation ID remain unchanged. Recipes, installed-state checks,
+provider bindings and retirement witnesses bind the creator separately;
+internal generation binding bytes include it without widening flat v1 records.
+An immediate predecessor reactivation copies its complete retained generation,
+including creator, rather than assigning today's SDK to historical state.
+Conflicting records for the same generation ID are refused. The retained
+capable controller remains the epoch maintenance and recovery entry point after
+a downgrade; the older launcher embedded in the archive remains distinct.
 
 Pending discovery holds and revalidates the epoch namespace, operation names,
 records, retained inputs, and lifecycle tail. Inserted, replaced, linked, or
 ambiguous records cause recovery-required refusal. Completed immutable
 operations remain history; only the unfinished tail can be resumed.
 
-This checkpoint qualifies the isolated no-shell CLI transition and native
-state machine on current source. It does not replace the still-required
-source-distinct packaged Windows run, real Start Menu and HKCU observations,
-retained-helper parent-exit handoff, or chain-aware repair and removal.
+The bounded Windows canary mode used for the source-distinct lifecycle waits for
+the owned Job to become empty after the initiating Setup exits. This permits the
+inherited helper to finish while preserving the same outer deadline and
+kill-on-close containment. Ordinary canary commands retain their existing rule
+that a completed primary cannot leave descendants behind.
+
+This source checkpoint covers the isolated no-shell CLI transition, native
+state machine, retained-helper parent-exit protocol, and active-generation
+repair route. It does not replace the still-required source-distinct packaged
+Windows run with real Start Menu, HKCU, interrupted repair, and removal
+observations for the exact source under test.

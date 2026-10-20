@@ -10,7 +10,9 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -45,7 +47,50 @@ struct InstallPlan {
     bool inputs_confirmed = false;
     std::string plan_id;
     std::string plan_digest;
+    std::string source_archive_sha256;
+    std::string recipe_digest;
+    std::string component_selection;
+    std::string plan_request;
     std::string provider_response;
+};
+
+struct InstallApplyRequest {
+    InstallPlanRequest plan_request;
+    InstallPlan reviewed_plan;
+    std::string transaction_id;
+    std::string applied_at;
+    std::string confirmation;
+    bool is_stream_replay = false;
+};
+
+struct InstallReport {
+    std::filesystem::path target;
+    std::filesystem::path executable;
+    std::string source_archive_sha256;
+    std::string setup_state_ref;
+    std::string last_verification_identity;
+    std::string state_revision;
+    std::string verification_status;
+    std::string installed_state_digest;
+};
+
+struct InstallRecoveryInspection {
+    std::string classification;
+    std::string provider_observed_state;
+    std::string provider_journal_digest;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_audit_chain_digest;
+    std::string replay_origin_transaction_id;
+    std::string replay_origin_snapshot_sha256;
+    bool replay_genesis_missing = false;
+    bool provider_journal_present = false;
+    bool target_exists = false;
+    bool rollback_available = false;
+    InstallReport terminal;
+};
+
+struct InstallRecoveryRequest {
+    InstallApplyRequest apply;
 };
 
 struct UninstallPlanRequest {
@@ -65,6 +110,84 @@ struct UninstallPlan {
     std::string plan_digest;
     std::string provider_response;
 };
+
+// Move planning retains the complete current closure, including foreign files.
+// The provider's copy_owned_file label does not grant ownership of those files.
+struct MovePlanRequest {
+    UninstallPlanRequest installed;
+    std::filesystem::path destination;
+    std::string install_record_sha256;
+};
+
+struct MovePlan {
+    std::string plan_id;
+    std::string plan_digest;
+    std::string provider_response;
+    std::string public_response;
+    // Exact pinned private digest payload retained in the durable coordinator.
+    std::string private_plan;
+};
+
+struct MoveApplyRequest {
+    MovePlanRequest plan_request;
+    std::string acceptance_root;
+    std::string reviewed_plan_digest;
+    std::string transaction_id;
+    std::string applied_at;
+    std::string confirmation;
+    std::string private_plan;
+};
+
+struct MoveInspection {
+    std::string classification;
+    std::string provider_observed_state;
+    std::string provider_journal_digest;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_audit_chain_digest;
+    std::string installed_state_digest;
+    std::string ownership_manifest_digest;
+    std::string setup_state_ref;
+    std::string last_verification_identity;
+    std::string state_revision;
+    std::string verification_status;
+    std::string provider_report;
+    bool provider_journal_present = false;
+};
+
+struct ManagedMoveCoordinator {
+    MoveApplyRequest apply;
+    std::string pre_record;
+    std::string phase;
+    std::string projected_record_sha256;
+    std::string recovery_plan_id;
+    std::string recovery_plan_digest;
+    std::string provider_journal_snapshot_sha256;
+    std::string provider_installed_state_sha256;
+    std::string provider_audit_chain_digest;
+};
+
+std::string encode_managed_move_context(const ManagedMoveCoordinator& value);
+bool decode_managed_move_context(const std::string& text,
+    ManagedMoveCoordinator& output, std::string& detail);
+std::string project_moved_install_record(const std::string& pre_record,
+    const MoveApplyRequest& request, const MoveInspection& terminal);
+std::string managed_move_result(const MoveApplyRequest& request,
+    const MoveInspection& terminal);
+
+facman::core::Result<MovePlan> decode_move_provider_plan(
+    const std::string& response, const MovePlanRequest& request,
+    const std::string& installed_response, const SetupConfiguration& configuration);
+
+namespace testing {
+// Shared admission policy consumes typed observations; missing observations refuse.
+bool move_resource_observations_admit(std::uint64_t complete_bytes,
+    std::optional<std::uint64_t> available_memory,
+    std::optional<std::uint64_t> destination_free_bytes) noexcept;
+// Internal proof checkpoint; no environment/command surface and no observer by default.
+using MovePlanRevalidationObserver = std::function<void()>;
+MovePlanRevalidationObserver exchange_move_plan_revalidation_observer(
+    MovePlanRevalidationObserver observer) noexcept;
+}
 
 struct RepairFile {
     std::string relative_path;
@@ -298,6 +421,25 @@ struct ManagedUninstallCoordinator {
     std::string projected_record_sha256;
 };
 
+struct ManagedInstallCoordinator {
+    InstallApplyRequest apply;
+    std::string logical_transaction_id;
+    unsigned replay_attempt = 0;
+    std::string replay_origin_transaction_id;
+    std::string replay_origin_snapshot_sha256;
+    std::string replay_origin_audit_digest;
+    std::string phase;
+    std::string projected_record_sha256;
+};
+
+bool decode_managed_install_coordinator(const std::string& text,
+    ManagedInstallCoordinator& output, std::string& detail);
+std::string prepare_managed_install_context(
+    const std::string& text, const std::string& projected_record_sha256);
+std::string prepare_managed_install_replay_context(const std::string& text,
+    const std::string& transaction_id, const std::string& origin_transaction_id,
+    const InstallRecoveryInspection& reviewed);
+
 bool decode_managed_uninstall_coordinator(
     const std::string& text,
     ManagedUninstallCoordinator& output,
@@ -307,6 +449,17 @@ bool validate_managed_install_recovery_lock(
     const std::string& transaction_id,
     const std::string& identity,
     std::string& detail);
+struct ManagedInstallOperationLock {
+    std::string install_id;
+    std::string state_root;
+    std::string workspace;
+    std::string command_id;
+    std::string transaction_id;
+    std::string identity;
+};
+std::string encode_managed_install_operation_lock(const ManagedInstallOperationLock& metadata);
+bool decode_managed_install_operation_lock(const std::string& text,
+    ManagedInstallOperationLock& metadata, std::string& detail);
 facman::core::Result<std::string> canonicalize_managed_uninstall_recovery_plan(
     const std::string& text);
 
@@ -322,6 +475,16 @@ struct SetupRefusal {
     std::string reason;
 };
 
+struct InstallVerifyRequest {
+    UninstallPlanRequest installed;
+    std::string report_id;
+    std::string verified_at;
+};
+
+facman::core::Result<std::string> decode_install_verification_report(
+    const std::string& response, const InstallVerifyRequest& request,
+    const std::string& installed_state_digest, const std::string& ownership_manifest_digest);
+
 class SetupGateway {
 public:
     virtual ~SetupGateway() = default;
@@ -329,8 +492,19 @@ public:
     virtual facman::core::Result<facman::factorio::setup::ArchiveAssessment> inspect_install_archive(
         const FactorioArchiveInspectRequest& request) = 0;
     virtual facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest& request) = 0;
+    virtual facman::core::Result<InstallReport> apply_install(const InstallApplyRequest& request) = 0;
+    virtual facman::core::Result<InstallRecoveryInspection> inspect_install_recovery(
+        const InstallRecoveryRequest& request) = 0;
+    virtual facman::core::Result<InstallRecoveryInspection> rollback_install_recovery(
+        const InstallRecoveryRequest& request, const InstallRecoveryInspection& reviewed) = 0;
+    virtual facman::core::Result<InstallRecoveryInspection> replay_install_recovery(
+        const InstallRecoveryRequest& request, const InstallRecoveryInspection& reviewed,
+        const std::string& transaction_id) = 0;
     virtual facman::core::Result<UninstallPlan> plan_uninstall(
         const UninstallPlanRequest& request) = 0;
+    virtual facman::core::Result<MovePlan> plan_move(const MovePlanRequest& request) = 0;
+    virtual facman::core::Result<MoveInspection> apply_move(const MoveApplyRequest& request) = 0;
+    virtual facman::core::Result<MoveInspection> inspect_move_recovery(const MoveApplyRequest& request) = 0;
     virtual facman::core::Result<RepairPlan> plan_repair(
         const RepairPlanRequest& request) = 0;
     virtual facman::core::Result<RepairReport> apply_repair(
@@ -341,7 +515,7 @@ public:
         const UninstallApplyRequest& request) = 0;
     virtual facman::core::Result<UninstallRecoveryInspection> inspect_uninstall_recovery(
         const UninstallRecoveryRequest& request) = 0;
-    virtual facman::core::Result<SetupRefusal> verify_install(const std::string& install_id) = 0;
+    virtual facman::core::Result<std::string> verify_install(const InstallVerifyRequest& request) = 0;
     virtual facman::core::Result<SetupRefusal> repair_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> uninstall_install(const std::string& install_id) = 0;
 };

@@ -8,7 +8,11 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <string>
+
+namespace facman::transaction { struct Record; }
+namespace facman::platform { class RetainedStreamRewriteFile; }
 
 namespace facman::factorio::saves::index {
 
@@ -25,8 +29,64 @@ struct Request {
     std::uint32_t minimum_age_days = 0;
 };
 
+struct OwnedBackup {
+    std::filesystem::path path;
+    std::string original_save;
+    std::string sha256;
+    std::uint64_t size = 0;
+};
+
+// Internal selected-world owner seam; legacy public association selection is unchanged.
+struct SelectedAssociation {
+    std::filesystem::path instance_root;
+    std::filesystem::path save_path;
+    std::filesystem::path target;
+    std::string save_sha256;
+    std::string sidecar_text;
+};
+
+struct AssociationGuard {
+    std::string inputs_sha256;
+    std::string parent_before_identity;
+    std::string operation_id;
+    std::string attempt_id;
+    std::function<facman::core::Result<std::string>(const facman::transaction::Record*)> observe_inputs;
+    // Present only for the separately confirmed refresh of one proven old effect.
+    std::string refresh_context;
+    std::function<facman::core::Result<std::string>(const facman::transaction::Record*,
+        const facman::platform::RetainedStreamRewriteFile*)> observe_refresh_inputs;
+    std::function<facman::core::Result<std::string>(const facman::transaction::Record&)> validate_owner;
+};
+
+facman::core::Result<SelectedAssociation> prepare_exact_association(
+    const std::filesystem::path& workspace, const Request& request);
+// Builds canonical bytes only; authority comes from the selected-context owner journal.
+facman::core::Result<SelectedAssociation> prepare_refreshed_association(
+    const std::filesystem::path& workspace, const Request& request,
+    const std::string& original, const std::string& verified_utc);
+facman::core::Result<std::string> selected_context_refresh_evidence(
+    const std::filesystem::path& workspace, const Request& request,
+    const facman::transaction::Record* own = nullptr,
+    const facman::platform::RetainedStreamRewriteFile* held = nullptr);
+bool selected_association_publication_available() noexcept;
+facman::core::Result<std::string> selected_association_parent_identity(
+    const std::filesystem::path& instance_root);
+facman::core::Result<std::string> associate_selected_context(
+    const std::filesystem::path& workspace, const Request& request, const AssociationGuard& guard);
+facman::core::Result<std::string> recover_selected_context(
+    const std::filesystem::path& workspace, const std::string& transaction_id,
+    const AssociationGuard& guard);
+
+facman::core::Result<OwnedBackup> resolve_owned_backup(
+    const std::filesystem::path& workspace,
+    const std::string& instance_id,
+    const std::string& backup_name);
+
 facman::core::Result<std::string> list(const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> inspect(const std::filesystem::path& workspace, const Request& request);
+// Internal readiness observation only; public save commands retain legacy selection.
+facman::core::Result<std::string> inspect_exact_filename(
+    const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> verify(const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> associate(const std::filesystem::path& workspace, const Request& request);
 facman::core::Result<std::string> diff(const std::filesystem::path& workspace, const Request& request);

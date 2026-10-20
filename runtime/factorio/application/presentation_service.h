@@ -8,15 +8,23 @@
 #include "application_types.h"
 
 #include <filesystem>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace facman::factorio::application {
+namespace testing {
+// Internal deterministic proof seam; confined to the calling native worker.
+std::function<void()> exchange_before_launch_dispatch_observer(std::function<void()> observer);
+}
 
 class PresentationActionLedger {
 public:
+    facman::core::Result<std::string> repair_review(
+        const std::filesystem::path& workspace, const std::string& key,
+        const std::string& instance_id) const;
     enum class Lookup { missing, match, conflict, invalid };
     Lookup lookup(
         const std::filesystem::path& workspace,
@@ -38,8 +46,15 @@ public:
         const std::string& result,
         bool durable,
         std::string& detail);
+    bool checkpoint(
+        const std::filesystem::path& workspace, const SemanticActionRequest& request,
+        const std::string& fingerprint, const std::string& pending_result,
+        std::string& detail);
 
 private:
+    bool replace_accepted(const std::filesystem::path& workspace,
+        const SemanticActionRequest& request, const std::string& fingerprint,
+        const std::string& result, bool terminal, std::string& detail);
     struct Entry { std::string fingerprint; std::string result; };
     mutable std::mutex mutex_;
     std::unordered_map<std::string, Entry> entries_;

@@ -2,14 +2,14 @@
 
 # Command/API conformance census
 
-Commands: 131. Product mapping is many-to-many and never creates a completion claim.
+Commands: 132. Product mapping is many-to-many and never creates a completion claim.
 
 | Observed classification | Commands |
 | --- | --- |
-| backend_only | 6 |
+| backend_only | 5 |
 | diagnostic_internal | 6 |
-| implemented_unqualified | 14 |
+| implemented_unqualified | 15 |
 | outside_preview | 25 |
-| unknown_unverified | 80 |
+| unknown_unverified | 81 |
 
 The normative detailed ledger is `release/generated/technical_preview_command_api_conformance.v1.json`.

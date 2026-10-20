@@ -156,6 +156,7 @@ ulk_install_ownership_v1 reference_ownership(const std::string& ownership)
 bool recognized_lifecycle(const std::string& lifecycle)
 {
     return lifecycle == "active" ||
+        lifecycle == "move_pending_acceptance" ||
         lifecycle == "verification_failed" ||
         lifecycle == "recovery_required" ||
         lifecycle == "retired" ||
@@ -568,9 +569,10 @@ std::string effective_config_ini(
     return out.str();
 }
 
-EffectiveFactorioConfig parse_effective_config(
+EffectiveFactorioConfig parse_effective_config_bytes(
     const fs::path& config_file,
-    const fs::path& mod_root
+    const fs::path& mod_root,
+    const std::string& text
 )
 {
     EffectiveFactorioConfig result;
@@ -581,12 +583,10 @@ EffectiveFactorioConfig parse_effective_config(
         result.problems.push_back("config path is unsafe: " + link_detail);
         return result;
     }
-    StableTextRead read = read_small_file_stable(result.config_file, 65536);
-    if (!read.ok) {
-        result.problems.push_back(std::move(read.problem));
+    if (text.size() > 65536U) {
+        result.problems.push_back("config bytes exceed the existing bound");
         return result;
     }
-    const std::string& text = read.text;
 
     std::istringstream input(text);
     std::string line;
@@ -660,6 +660,20 @@ EffectiveFactorioConfig parse_effective_config(
     }
     result.ok = result.problems.empty();
     return result;
+}
+
+EffectiveFactorioConfig parse_effective_config(const fs::path& config_file, const fs::path& mod_root)
+{
+    EffectiveFactorioConfig result;
+    result.config_file = normalized_absolute(config_file);
+    result.mod_root = normalized_absolute(mod_root);
+    std::string link_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(result.config_file, link_detail)) {
+        result.problems.push_back("config path is unsafe: " + link_detail); return result;
+    }
+    StableTextRead read = read_small_file_stable(result.config_file, 65536);
+    if (!read.ok) { result.problems.push_back(std::move(read.problem)); return result; }
+    return parse_effective_config_bytes(config_file, mod_root, read.text);
 }
 
 std::vector<std::string> build_launch_args(const InstanceLaunchRef& instance)
@@ -830,6 +844,10 @@ LaunchPreflightResult preflight_launch(
 
     add_problem_if_missing_directory(result, install.root, "install root does not exist");
     add_problem_if_missing_file(result, install.executable, "install executable does not exist");
+    add_problem_if_missing_file(
+        result,
+        install.root / "data" / "base" / "info.json",
+        "install base identity file is missing");
     add_problem_if_missing_directory(result, instance.local_data_root, "instance data root does not exist");
     add_problem_if_missing_directory(
         result,
@@ -911,7 +929,7 @@ std::string launch_preflight_json(const LaunchPreflightResult& preflight)
 InstanceRunLockResult acquire_instance_run_lock(
     const fs::path& instance_root,
     std::uint64_t stale_after_seconds,
-    InstanceRunLock& lock
+    InstanceRunLock& lock, bool recover_stale
 )
 {
     InstanceRunLockResult result;
@@ -936,6 +954,11 @@ InstanceRunLockResult acquire_instance_run_lock(
     auto held = std::make_shared<facman::base::StableLocalLock>();
     facman::base::StableLockResult create_result = held->create(lock_path);
     if (create_result.code == facman::base::StableLockCode::exists) {
+        if (!recover_stale) {
+            result.code = "run_lock_contended";
+            result.detail = "existing run ownership requires explicit inspection before installation repair";
+            return result;
+        }
         std::string existing;
         facman::base::StableLockResult open_result =
             held->open_existing(lock_path, 4096, existing);
@@ -1017,7 +1040,7 @@ InstanceRunLockResult acquire_instance_run_lock(
     return result;
 }
 
-bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail)
+bool verify_instance_run_lock(const InstanceRunLock& lock, std::string& detail)
 {
     if (!lock.owns_lock || lock.path.empty() || lock.token.empty() ||
         lock.identity.empty() || !lock.stable_handle) {
@@ -1037,9 +1060,12 @@ bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail)
         detail = "run lock recorded identity changed";
         return false;
     }
-    if (!lock.stable_handle->remove_exact(detail)) {
-        return false;
-    }
+    return lock.stable_handle->identity_text() == lock.identity && lock.stable_handle->identity_matches_path(detail);
+}
+
+bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail)
+{
+    if (!verify_instance_run_lock(lock, detail) || !lock.stable_handle->remove_exact(detail)) return false;
     lock = InstanceRunLock {};
     detail.clear();
     return true;

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -47,6 +48,22 @@ def commit_fixture(root: Path, filename: str, content: str, message: str) -> Non
 
 
 class Q34ChangelogReleaseTests(unittest.TestCase):
+    def test_preview_source_head_follows_selected_revision(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            init_fixture_repo(root)
+            message = aide_lite.COMMIT_GOOD_EXAMPLE
+            commit_fixture(root, "first.txt", "first\n", message)
+            selected = aide_lite.git_head_commit(root)
+            commit_fixture(root, "second.txt", "second\n", message)
+            self.assertNotEqual(selected, aide_lite.git_head_commit(root))
+            self.assertEqual(aide_lite.make_changelog_preview(root, to_ref=selected, limit=10)["source_head"], selected)
+            self.assertEqual(aide_lite.make_changelog_preview(root, revision_range=selected, limit=10)["source_head"], selected)
+            self.assertEqual(aide_lite.make_changelog_preview(root, revision_range=selected, to_ref="HEAD", limit=10)["source_head"], selected)
+            current = aide_lite.git_head_commit(root)
+            self.assertEqual(aide_lite.make_changelog_preview(root, revision_range=f"{selected}..", to_ref=selected, limit=10)["source_head"], current)
+            self.assertEqual(aide_lite.make_changelog_preview(root, revision_range=f"{selected}..HEAD", to_ref=selected, limit=10)["source_head"], current)
+
     def test_parse_valid_conventional_subject(self) -> None:
         parsed = aide_lite.parse_conventional_subject("feat(changelog): add release draft previews")
         self.assertTrue(parsed["valid"])
@@ -187,9 +204,13 @@ Work-Item: FACMAN-TRANSPORT-HARDENING-01
             self.assertTrue(release["preview_only"])
 
     def test_changelog_validate_passes_for_current_repo_outputs(self) -> None:
-        aide_lite.write_changelog_preview(REPO_ROOT, revision_range="HEAD~1..HEAD", limit=1)
-        checks = aide_lite.validate_changelog_outputs(REPO_ROOT)
-        self.assertNotEqual(aide_lite.result_from_checks(checks), "FAIL")
+        # Managed jobs provide an explicit D scratch parent; raw discovery
+        # retains its pre-existing standard temporary-directory behavior.
+        with tempfile.TemporaryDirectory(prefix="q34-preview-", dir=os.environ.get("AIDE_JOB_TMP")) as temp:
+            aide_lite.write_changelog_preview(REPO_ROOT, revision_range="HEAD~1..HEAD",
+                                              limit=1, output_dir=temp)
+            checks = aide_lite.validate_changelog_outputs(REPO_ROOT, output_dir=temp)
+            self.assertNotEqual(aide_lite.result_from_checks(checks), "FAIL")
 
     def test_malformed_report_contains_malformed_fixture(self) -> None:
         malformed = {

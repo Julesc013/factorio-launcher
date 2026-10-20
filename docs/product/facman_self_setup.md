@@ -125,17 +125,27 @@ identity ambiguity requires recovery and is not replayed. An incomplete
 retirement blocks every ordinary activation-chain transition; only the exact
 retirement coordinator can pass its call-scoped lock proof into the nested
 uninstall. Completion leaves the immutable activation history available while discovery reports no active chain.
-Repair is limited to a verified active migrated `facman.self`; active
-side-by-side generations are refused. Generic `verify` also refuses an
-activation-chain installation instead of accidentally routing to the legacy
-install ID.
+Repair resolves the exact active activation-chain generation and routes the
+ordinary provider/native repair transaction through its generation-specific
+install ID, physical root, product version, state root, and digest-bound
+retained package. The installed identity must match the immutable generation
+record before repair planning. A clean verification result is deliberately not
+required because modified or missing owned files are the repair input. Repair
+of an inactive retained generation remains unsupported. Generic `verify` also
+refuses an activation-chain installation instead of accidentally routing to
+the legacy install ID.
 
 Windows shortcut cutover accepts only the exact old or exact new entrypoint.
 It keeps an operation-bound same-directory backup so an interruption between
 rename and publication can be reconciled. HKCU registration cutover uses one
 registry transaction and points maintenance commands at the retained external
 helper. Foreign, unreadable, or different owned generations are preserved for
-recovery.
+recovery. Bootstrap retires its exact source-shortcut backup after durable
+native cutover and before reporting completion. For an older completed bootstrap,
+repeating shell-integrated uninstall also reconciles that operation-bound backup
+from retained bootstrap, epoch and retirement history. This recovery works after
+the installed payloads and current shortcut are gone; a foreign or unreadable
+backup or changed history still requires recovery and is preserved.
 
 The locked-executable handoff duplicates the initiating process handle with
 only synchronization and limited-query rights, passes it through an explicit
@@ -151,6 +161,22 @@ portion of the original absolute monotonic deadline, closes the handle, and
 only then may reacquire the global coordinator lock. It never reopens a process
 by PID and is not attached to the product process supervisor's kill-on-close
 job.
+
+Windows package qualification can interrupt a real-epoch `rollback` at
+`activation_published`, immediately before shortcut-backup retirement. This
+requires the existing one-use interruption permit, exact explicit fixture roots,
+current controller version, shell integration, and noninteractive apply. The
+permit is consumed before entry; an unpermitted request is refused. The process
+is terminated without unwinding so the package scenario can inspect the durable
+activation, native ownership, retained shortcut, and same-operation restart.
+This is qualification instrumentation, not an ordinary maintenance option.
+
+If a rollback stops after activation publication while its operation-bound
+shortcut backup remains, ordinary Setup resumes that same operation. Read-only
+rollback reports `reactivation_pending` and preserves the backup. Apply verifies
+the current native ownership and retires the exact source shortcut before
+reporting completion; unreadable or foreign backup objects remain recoverable
+refusals. A published activation alone does not authorize another rollback.
 
 A fresh repair request whose package is absent returns
 `self_setup_package_missing` before a setup journal, provider apply, or native
@@ -184,17 +210,41 @@ FacMan-<version>-linux-x64-setup.run
 ```
 
 The self-contained RUN package defaults to current-user paths and requires no
-administrator rights:
+administrator rights. It embeds a gzip runtime payload, so installation does
+not require the zstd build tool used for the portable archive:
 
 ```text
 ~/.local/opt/facman/
 ~/.local/bin/FacMan
 ~/.local/bin/facman
-~/.local/share/applications/io.github.julesc013.facman.desktop
+~/.local/share/applications/facman.desktop
 ```
 
-It supports `install`, `verify`, `repair`, and `uninstall`, stores
+It supports `install`, `verify`, `repair`, `recover`, `rollback`, and `uninstall`, stores
 installed-state and receipts, and preserves workspaces and Factorio data.
+Verification requires the exact active generation and its installed-state
+receipt; a missing generation is a failure. Maintenance refuses a changed
+`current` pointer, linked effect roots, or foreign terminal/desktop entries
+before removal. First install also refuses preexisting native entries without
+installed ownership state. It replaces its maintenance copy, desktop entry, and state
+receipt through sibling temporary files so hardlinked external content is not
+rewritten in place.
+Two exact Alpha.5 Setup package identities are admitted as predecessors for
+source-distinct Alpha.6 update, rollback, and reapply. A first-install journal
+lets the installed Setup copy recover an interrupted activation back to prior
+absence. Same-version repair stages a verified replacement, journals the
+generation swap before moving the damaged generation, and can finish through
+the installed Setup copy after interruption. It accepts missing or modified
+owned files when the ownership manifest remains intact; foreign paths, links,
+and special entries are refused. Recovery also handles an interrupted old
+generation backup removal while preserving workspaces and retained history.
+On the ordinary same-filesystem layout, completed Linux Setup journals enter
+retained history with one no-copy rename, so process loss cannot leave a
+partially deleted live journal. A separately mounted history directory still
+uses the checked copy-and-removal path and retains its interruption limit.
+Partial staging before journal publication remains a fail-closed orphan that
+needs a later disposition. The supported-predecessor extension path and
+physical Linux qualification remain open.
 
 ## Current limits
 
@@ -209,9 +259,10 @@ installed-state and receipts, and preserves workspaces and Factorio data.
   pinned production-provider bridge, public setup routing, deterministic legacy
   adoption, exact Windows cutover adapter, and inherited-handle primitive form
   a focused, locally tested source slice.
-  Multi-generation repair, retention garbage collection, a full
-  parent-exit/helper-resume run, and two source-distinct produced-package
-  lifecycle qualification remain pending. The
+  Repair of inactive retained generations and retention garbage collection
+  remain pending. Every promotable source still requires its own
+  source-distinct produced-package lifecycle qualification; durable candidate
+  evidence records that result without changing the qualified source. The
   active WorkUnits therefore remain open.
 - Windows is the 0.1 support direction. macOS Intel and Ubuntu 24.04 x64
   GTK/X11 are experimental previews.

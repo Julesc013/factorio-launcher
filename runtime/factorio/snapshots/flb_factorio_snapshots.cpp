@@ -13,17 +13,22 @@
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 #include "flb_factorio_launch_plan.h"
+#include "flb_factorio_content_records.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cctype>
+#include <cstdlib>
 #include <ctime>
 #include <exception>
 #include <iomanip>
 #include <map>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <system_error>
+#include <thread>
 
 namespace facman::factorio::snapshots {
 namespace fs = std::filesystem;
@@ -110,6 +115,19 @@ facman::core::Result<workspace_store::InstanceRecord> load_instance(
     return record;
 }
 
+std::optional<fs::path> save_lock_path(const workspace_store::InstanceRecord& instance)
+{
+    for (const char* name : {"run.lock", "save.write.lock"}) {
+        const fs::path path = instance.root / "locks" / name;
+        std::error_code error;
+        const fs::file_status status = fs::symlink_status(path, error);
+        if (error == std::errc::no_such_file_or_directory ||
+            (!error && status.type() == fs::file_type::not_found)) continue;
+        return path;
+    }
+    return std::nullopt;
+}
+
 facman::core::Result<workspace_store::InstallRecord> load_install(
     const fs::path& workspace,
     const std::string& value)
@@ -187,12 +205,39 @@ facman::core::Result<PayloadFile> stable_copy(
              facman::platform::path_to_utf8(source)});
     }
     const std::uint64_t size = input.size();
-    input = facman::platform::StableInputFile {};
-    std::string digest_text;
-    try { digest_text = facman::base::sha256_hex_file(source); }
-    catch (const std::exception& exception) {
-        return facman::core::Result<PayloadFile>::failure(
-            {"snapshot_source_changed", exception.what(), facman::platform::path_to_utf8(source)});
+    const facman::platform::FileIdentity source_identity = input.identity();
+    facman::base::Sha256Hasher hash;
+    std::array<unsigned char, 64U * 1024U> buffer {};
+    for (std::uint64_t offset = 0; offset < size;) {
+        const std::size_t wanted = static_cast<std::size_t>((std::min)(
+            static_cast<std::uint64_t>(buffer.size()), size - offset));
+        if (input.read_at(offset, buffer.data(), wanted) != wanted) {
+            return facman::core::Result<PayloadFile>::failure(
+                {"snapshot_source_changed", "Snapshot source was short-read", facman::platform::path_to_utf8(source)});
+        }
+        hash.update(buffer.data(), wanted);
+        offset += wanted;
+    }
+    if (!input.revalidate_path().ok()) return facman::core::Result<PayloadFile>::failure(
+        {"snapshot_source_changed", "Snapshot source path changed during hashing", facman::platform::path_to_utf8(source)});
+    const std::string digest_text = hash.finish();
+    const char* pause = std::getenv("FACMAN_TEST_SNAPSHOT_SOURCE_HASH_PAUSE");
+    if (pause != nullptr && std::string(pause) == "1") {
+        const fs::path instance = source.parent_path().parent_path();
+        const fs::path marker = instance / ".facman-test-snapshot-source-hashed";
+        const fs::path release = instance / ".facman-test-snapshot-source-release";
+        std::string pause_detail;
+        if (!facman::base::write_text_new_atomic(marker, "ready\n", pause_detail))
+            return facman::core::Result<PayloadFile>::failure(
+                {"snapshot_source_changed", pause_detail, facman::platform::path_to_utf8(source)});
+        bool released = false;
+        for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+            std::error_code pause_error;
+            if (fs::exists(release, pause_error) && !pause_error) { released = true; break; }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        if (!released) return facman::core::Result<PayloadFile>::failure(
+            {"snapshot_source_changed", "Snapshot source test pause timed out", facman::platform::path_to_utf8(source)});
     }
     auto digest = facman::core::Sha256Digest::parse(digest_text);
     if (!digest) return facman::core::Result<PayloadFile>::failure(digest.error());
@@ -200,7 +245,8 @@ facman::core::Result<PayloadFile> stable_copy(
     std::error_code error;
     fs::create_directories(target.parent_path(), error);
     std::string detail;
-    if (error || !tx::CrossVolumeCopyVerifyCommit::commit(source, target, digest.value(), size, detail)) {
+    if (error || !tx::CrossVolumeCopyVerifyCommit::commit(
+            source, target, digest.value(), size, detail, &source_identity)) {
         return facman::core::Result<PayloadFile>::failure(
             {"snapshot_source_changed", error ? error.message() : detail, facman::platform::path_to_utf8(source)});
     }
@@ -538,7 +584,9 @@ std::string snapshot_result(
     const std::string& command,
     const SnapshotData& snapshot,
     const std::string& status,
-    bool mutation)
+    bool mutation,
+    const json::Value* world_bundle = nullptr,
+    const std::string& world_bundle_reason = {})
 {
     json::ArrayBuilder saves;
     for (const std::string& save : snapshot.saves) saves.add_string(save);
@@ -555,6 +603,11 @@ std::string snapshot_result(
     output.add_bool("deterministic", true);
     output.add_bool("secret_content_included", false);
     output.add_array("selected_saves", saves);
+    if (command == "snapshots.inspect") {
+        output.add_string("world_bundle_state", world_bundle == nullptr ? "unavailable" : "available");
+        if (world_bundle != nullptr) output.add_value("world_bundle", *world_bundle);
+        else output.add_string("world_bundle_reason_code", world_bundle_reason);
+    }
     output.add_bool("mutation_executed", mutation);
     return output.serialize();
 }
@@ -562,7 +615,8 @@ std::string snapshot_result(
 std::string local_manifest(
     const SnapshotData& snapshot,
     const facman::core::InstanceId& target,
-    const fs::path& root)
+    const fs::path& root,
+    const std::string& install_id)
 {
     json::ObjectBuilder concurrency;
     concurrency.add_bool("single_writer", true);
@@ -570,12 +624,13 @@ std::string local_manifest(
     output.add_string("schema", "factorio.instance.v1");
     output.add_string("instance_id", target.str());
     output.add_string("display_name", snapshot.display_name);
-    output.add_string("install_ref", snapshot.install_ref);
+    output.add_string("install_ref", install_id);
     output.add_string("factorio_version", snapshot.factorio_version);
     output.add_string("local_data_root", facman::platform::path_to_utf8(root));
     output.add_string("profile", snapshot.profile);
     output.add_string("template", snapshot.template_id);
     output.add_string("restored_from_snapshot", snapshot.snapshot_id);
+    if (install_id != snapshot.install_ref) output.add_string("restored_from_install_ref", snapshot.install_ref);
     output.add_object("concurrency", concurrency);
     return output.serialize();
 }
@@ -741,6 +796,8 @@ facman::core::Result<std::string> create(const fs::path& workspace, const Create
         facman::core::OutcomeKind::recovery_required, false);
     auto instance = load_instance(workspace, request.instance_id);
     if (!instance) return fail(instance.error().code, instance.error().message, instance.error().path);
+    if (const auto lock = save_lock_path(instance.value())) return fail(
+        "save_locked", "Snapshot creation conflicts with an active instance", *lock);
     std::string detail;
     if (!safe_snapshot_id(request.snapshot_id, detail)) return fail("snapshot_id_invalid", detail);
     auto destination = managed_snapshot(workspace, instance.value().id.str(), request.snapshot_id);
@@ -798,17 +855,27 @@ facman::core::Result<std::string> create(const fs::path& workspace, const Create
     }
     std::set<std::string> selected;
     for (const std::string& save : request.saves) {
+        if (const auto lock = save_lock_path(instance.value())) {
+            session.failed("instance run or save-write lock appeared during snapshot creation");
+            return fail("snapshot_transaction_recovery_required",
+                "Snapshot creation stopped when an instance lock appeared", *lock,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
         if (!selected.insert(save).second || save.empty() || save.size() > 255U ||
             save.find('/') != std::string::npos || save.find('\\') != std::string::npos || fs::path(save).extension() != ".zip") {
             session.failed("invalid selected save");
             return fail("snapshot_save_invalid", "Selected save name is invalid", fs::u8path(save));
         }
         const fs::path source = instance.value().root / "saves" / fs::u8path(save);
-        facman::archive::Plan save_plan;
-        status = facman::archive::inspect_archive(source, facman::archive::SaveArchivePolicy::limits(), save_plan);
-        if (!status.ok()) { session.failed(status.detail); return fail("snapshot_save_invalid", status.code + ": " + status.detail, source); }
         auto copied = stable_copy(source, payload, "saves/" + save);
         if (!copied) { session.failed(copied.error().message); return fail(copied.error().code, copied.error().message, copied.error().path); }
+        facman::archive::Plan save_plan;
+        status = facman::archive::inspect_archive(
+            copied.value().source, facman::archive::SaveArchivePolicy::limits(), save_plan);
+        if (!status.ok()) {
+            session.failed(status.detail);
+            return fail("snapshot_save_invalid", status.code + ": " + status.detail, source);
+        }
         files.push_back(copied.take_value());
     }
     std::sort(files.begin(), files.end(), [](const PayloadFile& left, const PayloadFile& right) { return left.path < right.path; });
@@ -832,6 +899,34 @@ facman::core::Result<std::string> create(const fs::path& workspace, const Create
     if (!status.ok()) { session.failed(status.detail); return fail("snapshot_archive_write_failed", status.code + ": " + status.detail, archive_staging); }
     if (!session.verified("deterministic_archive_self_verified") || !session.committing("snapshot_no_clobber_commit_started")) {
         return fail("snapshot_transaction_failed", session.detail(), workspace);
+    }
+    const char* pause = std::getenv("FACMAN_TEST_SNAPSHOT_BEFORE_PUBLICATION_PAUSE");
+    if (pause != nullptr && std::string(pause) == "1") {
+        const fs::path marker = workspace / ".facman-test-snapshot-before-publication";
+        const fs::path release = workspace / ".facman-test-snapshot-publication-release";
+        std::string pause_detail;
+        if (!facman::base::write_text_new_atomic(marker, "ready\n", pause_detail)) {
+            session.failed(pause_detail);
+            return fail("snapshot_transaction_recovery_required", pause_detail, marker,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
+        bool released = false;
+        for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+            std::error_code pause_error;
+            if (fs::exists(release, pause_error) && !pause_error) { released = true; break; }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        if (!released) {
+            session.failed("snapshot publication test pause timed out");
+            return fail("snapshot_transaction_recovery_required", session.detail(), release,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
+    }
+    if (const auto lock = save_lock_path(instance.value())) {
+        session.failed("instance run or save-write lock appeared before snapshot publication");
+        return fail("snapshot_transaction_recovery_required",
+            "Snapshot publication stopped when an instance lock appeared", *lock,
+            facman::core::OutcomeKind::recovery_required, false);
     }
     std::string commit_detail;
     if (!tx::StagedFileCommit::commit(archive_staging, written.archive_path, destination.value(), commit_detail)) {
@@ -885,7 +980,25 @@ facman::core::Result<std::string> inspect(const fs::path& workspace, const Snaps
     if (!path) return fail(path.error().code, path.error().message, path.error().path);
     auto snapshot = load_snapshot(path.value());
     if (!snapshot) return fail(snapshot.error().code, snapshot.error().message, snapshot.error().path);
-    return facman::core::Result<std::string>::success(snapshot_result("snapshots.inspect", snapshot.value(), "ok", false));
+    std::string manifest;
+    if (!read_entry(snapshot.value().plan, "manifest/snapshot.v1.json", manifest, kMaximumManifestBytes)) {
+        return facman::core::Result<std::string>::success(snapshot_result(
+            "snapshots.inspect", snapshot.value(), "ok", false, nullptr,
+            "world_bundle_manifest_unavailable"));
+    }
+    auto projection = facman::factorio::content::world_bundle_from_snapshot_manifest_json(manifest);
+    if (!projection) return facman::core::Result<std::string>::success(snapshot_result(
+        "snapshots.inspect", snapshot.value(), "ok", false, nullptr, projection.error().code));
+    json::Limits limits;
+    limits.maximum_bytes = 32U * 1024U * 1024U;
+    limits.maximum_depth = 16U;
+    limits.maximum_nodes = 100000U;
+    auto bundle = json::parse(facman::factorio::content::to_json(projection.value()), limits);
+    if (!bundle) return facman::core::Result<std::string>::success(snapshot_result(
+        "snapshots.inspect", snapshot.value(), "ok", false, nullptr,
+        "world_bundle_projection_invalid"));
+    return facman::core::Result<std::string>::success(snapshot_result(
+        "snapshots.inspect", snapshot.value(), "ok", false, &bundle.value()));
 }
 
 facman::core::Result<std::string> verify(const fs::path& workspace, const SnapshotRequest& request)
@@ -950,7 +1063,10 @@ facman::core::Result<std::string> restore(const fs::path& workspace, const Resto
     if (!facman::base::validate_identifier(snapshot.value().profile, detail) ||
         !facman::base::validate_identifier(snapshot.value().template_id, detail)) return fail(
         "snapshot_profile_template_invalid", detail, source, facman::core::OutcomeKind::refused, false);
-    auto install = load_install(workspace, snapshot.value().install_ref);
+    const std::string selected_install = request.install_id.empty() ? snapshot.value().install_ref : request.install_id;
+    auto selected_id = facman::core::InstallId::parse_legacy(selected_install);
+    if (!selected_id) return fail(selected_id.error().code, selected_id.error().message);
+    auto install = load_install(workspace, selected_install);
     if (!install || install.value().version != snapshot.value().factorio_version) return fail(
         "snapshot_install_incompatible", "Destination install reference is missing or version-incompatible", workspace);
     auto target = facman::base::managed_directory(workspace, "instances", target_id.value().str());
@@ -969,45 +1085,134 @@ facman::core::Result<std::string> restore(const fs::path& workspace, const Resto
         if (!path || !digest) return fail("snapshot_manifest_invalid", "Snapshot expectation is invalid", source, facman::core::OutcomeKind::refused, false);
         transaction.expected_files.push_back({path.take_value(), digest.take_value(), value.second.first});
     }
-    transaction.commit_strategy = "verified_snapshot_extract_regenerate_atomic_no_replace";
+    transaction.operation_context = snapshot.value().install_ref;
+    std::string inspected_archive_sha256;
+    const auto inspected_source = facman::archive::archive_sha256(snapshot.value().plan,
+        facman::archive::InstanceSnapshotPolicy::limits(), inspected_archive_sha256);
+    if (!inspected_source.ok()) return fail("snapshot_restore_binding_refused", inspected_source.detail, source);
+    if (!tx::bind_snapshot_restore(workspace, transaction, selected_install, snapshot.value().factorio_version,
+            inspected_archive_sha256, install.value(), detail))
+        return fail("snapshot_restore_binding_refused", detail, install.value().source_path);
+    if (!tx::verify_snapshot_restore_inputs(workspace, transaction, detail))
+        return fail("snapshot_restore_binding_changed", detail, workspace);
+    transaction.transaction_id = random.next("tx");
+    transaction.marker_nonce = random.next("nonce");
+    struct RecoveryLease {
+        facman::base::StableLocalLock lock;
+        facman::platform::StableDirectoryObject parent;
+        tx::Record identity;
+        bool matches(std::string& detail) const { return tx::snapshot_restore_lock_matches(identity, lock, parent, detail); }
+        bool release(std::string& detail) { return tx::release_snapshot_restore_lock(identity, lock, parent, detail); }
+        ~RecoveryLease() { if (lock.open()) { std::string ignored; (void)release(ignored); } }
+    } lease;
+    lease.identity.transaction_id = transaction.transaction_id;
+    lease.identity.marker_nonce = transaction.marker_nonce;
+    if (!lease.parent.open_no_follow(workspace / "transactions").ok())
+        return fail("snapshot_restore_lock_refused", "Restore transaction parent is unavailable", workspace);
+    const auto acquired = lease.lock.create(tx::recovery_lock_path(workspace, transaction.transaction_id));
+    if (!acquired.acquired() || !tx::initialize_snapshot_restore_lock(transaction, lease.lock, lease.parent, true, detail))
+        return fail("snapshot_restore_lock_refused", acquired.acquired() ? detail : acquired.detail, workspace);
     auto started = tx::TransactionSession::begin(workspace, std::move(transaction));
     if (!started) return fail("snapshot_transaction_failed", started.error().message, workspace);
     tx::TransactionSession session = started.take_value();
+    const auto lost_lease = [&]() {
+        session.leave_durable_state_unchanged();
+        lease.lock.close();
+        return fail("snapshot_restore_lock_changed", "Restore lease ownership changed; durable state and all data are retained", staging,
+            facman::core::OutcomeKind::recovery_required, false);
+    };
+    const auto abort_staging = [&](const std::string& reason) {
+        if (!lease.matches(detail)) return lost_lease();
+        std::error_code probe_error;
+        const auto staging_status = fs::symlink_status(staging, probe_error);
+        if (staging_status.type() == fs::file_type::not_found &&
+            (!probe_error || probe_error == std::errc::no_such_file_or_directory)) {
+            session.failed(reason);
+            return fail("snapshot_restore_staging_failed", reason, staging);
+        }
+        const auto cleanup = facman::archive::cleanup_owned_staging_root(staging);
+        if (!cleanup.ok()) {
+            const std::string cleanup_detail = reason + "; staging cleanup: " + cleanup.detail;
+            session.require_recovery(cleanup_detail);
+            return fail("snapshot_transaction_recovery_required", cleanup_detail, staging,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
+        session.failed(reason);
+        return fail("snapshot_restore_staging_failed", reason, staging);
+    };
+    if (!lease.matches(detail)) return lost_lease();
     if (!session.validated("snapshot_schema_hashes_install_profile_template_validated") ||
         !session.planned("restore_target_and_archive_plan_validated") ||
         !session.staging("owned_restore_staging_selected")) return fail("snapshot_transaction_failed", session.detail(), workspace);
     auto status = facman::archive::extract_to_new_owned_staging(
         snapshot.value().plan, staging, facman::archive::InstanceSnapshotPolicy::limits());
+    if (!lease.matches(detail)) return lost_lease();
     if (!status.ok() || !session.staged("snapshot_archive_extracted")) {
-        session.failed(status.ok() ? session.detail() : status.detail);
-        return fail("snapshot_restore_staging_failed", status.ok() ? session.detail() : status.code + ": " + status.detail, staging);
+        return abort_staging(status.ok() ? session.detail() : status.code + ": " + status.detail);
     }
     std::error_code error;
     fs::remove_all(staging / "manifest", error);
-    fs::remove(staging / "instance.v1.json", error);
-    fs::remove(staging / "config" / "config.ini", error);
-    fs::create_directories(staging / "config", error);
+    if (!error) fs::remove(staging / "instance.v1.json", error);
+    if (!error) fs::remove(staging / "config" / "config.ini", error);
+    if (!error) fs::create_directories(staging / "config", error);
+    if (error) return abort_staging(error.message());
     std::string write_detail;
-    if (error || !facman::base::write_text_new_atomic(
-            staging / "instance.v1.json", local_manifest(snapshot.value(), target_id.value(), target.path), write_detail) ||
+    if (!facman::base::write_text_new_atomic(
+            staging / "instance.v1.json", local_manifest(snapshot.value(), target_id.value(), target.path, selected_install), write_detail) ||
         !facman::base::write_text_new_atomic(
             staging / "config" / "config.ini", effective_config(snapshot.value(), install.value(), target_id.value(), target.path), write_detail) ||
-        !session.verified("snapshot_hashes_verified_and_local_metadata_regenerated") ||
-        !session.committing("snapshot_restore_commit_started")) {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
-        session.failed(error ? error.message() : write_detail.empty() ? session.detail() : write_detail);
-        return fail("snapshot_restore_staging_failed", error ? error.message() : write_detail, staging);
+        !tx::bind_snapshot_restore_target(session.record(), staging, write_detail) ||
+        !session.verified("snapshot_hashes_verified_and_local_metadata_regenerated")) {
+        const std::string failure_detail = write_detail.empty() ? session.detail() : write_detail;
+        return abort_staging(failure_detail);
     }
+    if (std::getenv("FACMAN_TEST_SNAPSHOT_RESTORE_EXIT_AFTER_VERIFIED") != nullptr) std::_Exit(86);
+    if (std::getenv("FACMAN_TEST_SNAPSHOT_RESTORE_BEFORE_PUBLICATION_PAUSE") != nullptr) {
+        const auto marker = workspace / ".facman-test-snapshot-restore-before-publication";
+        const auto release = workspace / ".facman-test-snapshot-restore-publication-release";
+        bool released = false;
+        if (facman::base::write_text_new_atomic(marker, "ready\n", write_detail)) {
+            for (unsigned attempt = 0; attempt < 500U; ++attempt) {
+                std::error_code probe;
+                if (fs::exists(release, probe) && !probe) { released = true; break; }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        }
+        if (!released) {
+            if (!lease.matches(write_detail)) return lost_lease();
+            session.require_recovery("Snapshot restore publication pause did not complete");
+            return fail("snapshot_transaction_recovery_required", "Restore staging is retained", staging,
+                facman::core::OutcomeKind::recovery_required, false);
+        }
+    }
+    if (!lease.matches(write_detail)) return lost_lease();
+    const bool restoration_current = tx::verify_snapshot_restore_inputs(workspace, session.record(), write_detail) &&
+        tx::verify_snapshot_restore_target(session.record(), staging, write_detail);
+    if (!lease.matches(detail)) return lost_lease();
+    if (!restoration_current) {
+        session.require_recovery(write_detail);
+        return fail("snapshot_restore_binding_changed", write_detail, staging,
+            facman::core::OutcomeKind::recovery_required, false);
+    }
+    if (!session.committing("snapshot_restore_commit_started")) return fail(
+        "snapshot_transaction_recovery_required", session.detail(), staging,
+        facman::core::OutcomeKind::recovery_required, false);
     if (!tx::StagedDirectoryCommit::commit(staging, target.path, write_detail)) {
-        (void)facman::archive::cleanup_owned_staging_root(staging);
-        session.failed(write_detail);
-        return fail("snapshot_restore_commit_failed", write_detail, target.path);
+        session.require_recovery(write_detail);
+        return fail("snapshot_restore_commit_failed", write_detail, target.path,
+            facman::core::OutcomeKind::recovery_required, false);
     }
+    if (std::getenv("FACMAN_TEST_SNAPSHOT_RESTORE_EXIT_AFTER_PUBLICATION") != nullptr) std::_Exit(87);
+    if (!lease.matches(write_detail)) return lost_lease();
     if (!session.committed("snapshot_restored_instance_committed")) return fail(
         "snapshot_transaction_recovery_required", session.detail(), target.path, facman::core::OutcomeKind::recovery_required, false);
+    if (!lease.matches(write_detail)) return lost_lease();
     fs::remove(target.path / facman::archive::owned_staging_marker_name(), error);
+    if (!lease.matches(write_detail)) return lost_lease();
     if (error || !session.complete()) return fail(
         "snapshot_transaction_recovery_required", error ? error.message() : session.detail(), target.path,
+        facman::core::OutcomeKind::recovery_required, false);
+    if (!lease.release(write_detail)) return fail("snapshot_restore_lock_changed", write_detail, target.path,
         facman::core::OutcomeKind::recovery_required, false);
     SnapshotData restored = snapshot.value();
     restored.instance_id = target_id.value().str();

@@ -308,6 +308,64 @@ void shortcut_cutover_cases() {
   require(integration::inspect_windows_shortcut_cutover_fixture(
               shortcut, context) == integration::CutoverOwnership::new_exact,
           "resumed cutover publishes the exact target");
+  require(fs::is_regular_file(backup),
+          "resumed cutover retains its source backup until durable activation");
+  require(integration::retire_windows_shortcut_cutover_fixture(
+              shortcut, context).ok && !fs::exists(backup),
+          "durably activated cutover retires the exact source backup");
+  require(integration::retire_windows_shortcut_cutover_fixture(
+              shortcut, context).ok,
+          "shortcut backup retirement is idempotent when already absent");
+  require(integration::inspect_windows_shortcut_cutover_fixture(
+              shortcut, context) == integration::CutoverOwnership::new_exact,
+          "backup retirement preserves the active target shortcut");
+  require(integration::apply_windows_shortcut_fixture(
+              backup, new_root, "2.0.0", false).ok,
+          "non-source operation-bound backup fixture created");
+  const auto foreign_backup =
+      integration::retire_windows_shortcut_cutover_fixture(shortcut, context);
+  require(!foreign_backup.ok && foreign_backup.recovery_required &&
+              fs::is_regular_file(backup),
+          "non-source operation-bound backup is refused and preserved");
+  // A completed/retired legacy bootstrap may have no current shortcut and no
+  // source or target payload. Its exact original backup remains independently
+  // attributable through the operation id and loaded shortcut fields.
+  fs::remove(backup, error);
+  require(!error, "isolated foreign-backup fixture removed after refusal assertion");
+  context.operation_id = "bootstrap." + std::string(32, 'a');
+  const fs::path retired_backup = shortcut.parent_path() /
+      (shortcut.filename().wstring() + L".facman-backup." +
+       std::wstring(context.operation_id.begin(), context.operation_id.end()));
+  require(integration::apply_windows_shortcut_fixture(
+              retired_backup, old_root, "1.0.0", false).ok,
+          "legacy bootstrap exact source backup fixture created");
+  auto foreign_retired_context = context;
+  foreign_retired_context.operation_id = "bootstrap." + std::string(32, 'b');
+  const fs::path foreign_retired_backup = shortcut.parent_path() /
+      (shortcut.filename().wstring() + L".facman-backup." +
+       std::wstring(foreign_retired_context.operation_id.begin(),
+                    foreign_retired_context.operation_id.end()));
+  require(integration::apply_windows_shortcut_fixture(
+              foreign_retired_backup, new_root, "2.0.0", false).ok,
+          "retired non-source backup fixture created");
+  fs::remove(shortcut, error);
+  require(!error, "retired bootstrap current shortcut removed");
+  fs::remove_all(old_root, error);
+  require(!error, "retired bootstrap source payload removed");
+  fs::remove_all(new_root, error);
+  require(!error, "retired bootstrap target payload removed");
+  const auto refused_retired_backup =
+      integration::retire_windows_shortcut_cutover_fixture(shortcut, foreign_retired_context);
+  require(!refused_retired_backup.ok && refused_retired_backup.recovery_required &&
+              fs::is_regular_file(foreign_retired_backup),
+          "retired non-source backup is refused without a current shortcut or payload");
+  require(integration::retire_windows_shortcut_cutover_fixture(
+              shortcut, context).ok && !fs::exists(retired_backup) &&
+              !fs::exists(shortcut) && !fs::exists(old_root) && !fs::exists(new_root),
+          "retired bootstrap backup closes without current shortcut or payload");
+  require(integration::retire_windows_shortcut_cutover_fixture(
+              shortcut, context).ok,
+          "retired bootstrap absent-backup retry is idempotent");
   fs::remove_all(fixture, error);
   require(!error, "shortcut cutover fixture retired");
 }

@@ -81,3 +81,7 @@ tree `6fdbda15fd22db01c4de0794efed790a22b837ff` integrated to dev as
 `c65c66ade1d4ca2c0c03b6b9aa78bfea2b977ae6`. The durable partial integration
 receipt is `evidence/integration-checkpoint.json`; prior evidence remains
 preserved and the WorkUnit remains active for update recovery.
+
+Linux rollback slice: `tools/linux_self_setup.py`,
+`tests/test_linux_self_setup_ownership.py`, the exact queue generator scope,
+partial checkpoint/custody, canonical evidence and regenerated views.

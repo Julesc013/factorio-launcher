@@ -1,0 +1,244 @@
+{
+  "schema": "facman.exact_checked_integration.v1",
+  "status": "world_backup_source_runtime_acceptance_transcribed_for_review",
+  "work_item": "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
+  "PR": 372,
+  "PR_url": "https://github.com/Julesc013/factorio-launcher/pull/372",
+  "expected_head": "bfa587f88884dcaed4c748a9c4f69c02f238ac19",
+  "expected_base": "6668ef2c55f0e59ed40782121b832878c71e40c9",
+  "source_tree": "1910fb74fa2187a5b35beb1b640bbd69989a4202",
+  "merge": "a108464b98b60fe4d39679dfd6a781db32ee4e3b",
+  "merge_tree": "1910fb74fa2187a5b35beb1b640bbd69989a4202",
+  "parents": [
+    "6668ef2c55f0e59ed40782121b832878c71e40c9",
+    "bfa587f88884dcaed4c748a9c4f69c02f238ac19"
+  ],
+  "merge_method": "normal protected merge commit",
+  "merged_at": "2026-10-04T04:31:44Z",
+  "required_contexts": {
+    "task-to-dev-promotion-check": 15368,
+    "linux-native": 15368,
+    "windows-native-package": 15368,
+    "linux-coverage": 15368,
+    "macos-archive-core": 15368,
+    "macos-native-cli": 15368,
+    "appkit-compile": 15368,
+    "policy-check": 15368,
+    "development-only-cross-provider-fixture": 15368,
+    "c-cpp": 15368,
+    "python": 15368,
+    "csharp": 15368
+  },
+  "required_checks": [
+    {
+      "name": "task-to-dev-promotion-check",
+      "id": 111356518649,
+      "url": "https://github.com/Julesc013/factorio-launcher/runs/111356518649",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "development-only-cross-provider-fixture",
+      "id": 111356493426,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273580/job/111356493426",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "python",
+      "id": 111356493431,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273621/job/111356493431",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "csharp",
+      "id": 111356493558,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273621/job/111356493558",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "policy-check",
+      "id": 111356493579,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273689/job/111356493579",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "c-cpp",
+      "id": 111356493584,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273621/job/111356493584",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "macos-archive-core",
+      "id": 111356493855,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273654/job/111356493855",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "linux-native",
+      "id": 111356494001,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273654/job/111356494001",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "macos-native-cli",
+      "id": 111356494036,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273654/job/111356494036",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "linux-coverage",
+      "id": 111356494052,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273654/job/111356494052",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "appkit-compile",
+      "id": 111356494072,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273654/job/111356494072",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    },
+    {
+      "name": "windows-native-package",
+      "id": 111356494096,
+      "url": "https://github.com/Julesc013/factorio-launcher/actions/runs/37175273654/job/111356494096",
+      "conclusion": "success",
+      "publisher_app_id": 15368
+    }
+  ],
+  "automatic_merge_CI": {
+    "status": "integration_and_automatic_merge_CI_pass",
+    "qualified": true,
+    "dispatches": 0
+  },
+  "acceptance": [
+    {
+      "criterion": "Back up selected worlds consistently with exact source identity, stable metadata and owned destination roots.",
+      "status": "PASS",
+      "evidence": "Original and final independent acceptance reviews in custody; exact produced803 package receipt and explicit unchanged producer-input binding to actual follow-up head"
+    },
+    {
+      "criterion": "Detect concurrent writes, partial copies, insufficient space and interrupted bundle creation without replacing valid backups.",
+      "status": "PASS",
+      "evidence": "Original and final independent acceptance reviews in custody; exact produced803 package receipt and explicit unchanged producer-input binding to actual follow-up head"
+    }
+  ],
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/integration-validation-custody.zip",
+    "sha256": "7b83b75fe6beb353033b36f1ff5cd603e9e70746b66999bd968b47d0ca9dd3c4",
+    "members": {
+      "world-backup-original-acceptance.review.json": "522a2fef98628824bed7146e2bc3dd9f96d95494a85907e4fe336d46f2906001",
+      "world-backup-final-produced-package-runtime.review.json": "4103033e05162cb30d00614ba1620e3e28748b43d60c56f281c323c695f6c4db",
+      "world-backup-acceptance-final.review.json": "70679e7aab9da256f25cb9adef77bed4e80c23f4c33a6b8c1bcca4615ffe401a",
+      "world-backup-integration.py": "2208ac90af7bb8655c2b2a3ce17b527e17eb22ed2364714f45bb7817107020f8",
+      "world-backup-integration-plan.json": "1c514104bcc975e0af94aa07d2f0c8a5aacfea46e7107f737c21100c6fc76a60",
+      "world-backup-integration.review.json": "86250da81229609fa5e89ce5d4e1859ed504fc34365b17e89d6451bf452f14ac",
+      "world-backup-integration-initial.review.json": "d113b86ece016e928c596edf6e3587f366e75895da445438d3a2718d796d62f6",
+      "world-backup-integration-admission-trusted-publisher.json": "c293856577c51a59882503f9452b07f49dc87aef99b748f36e7017f2e58a7f77",
+      "world-backup-integration-admission-trusted-publisher.log": "f57ec022ff03fc1758e5d9aa2e529551536a0b737ab5f5e577a5728f29325635",
+      "world-backup-integration-admission-producer-jobs.json": "c602e59ca4ddf4dd782531955b7b74fe3e95c6204e95df8fa9f669de12a26419",
+      "world-backup-integration-admission-trusted-status.zip": "d4fae9e2787884d1bdc24657926731c9a0e10888405732139195ecf28081062d",
+      "world-backup-integration-history.json": "0ce7a0f4b7d6b171c493386fe240f7b5f267b7743809efad914826e23802444a",
+      "world-backup-closeout-plan.json": "d3e57b331498c5d00cd4200414dc8b5645ee8b15ccfd13832560bd18c5eaae5a",
+      "world-backup-closeout-prepare.review.json": "907af0005163e5912131d6b19053abaa4d75c6a9b59aa4d1105000ea8bb7848a",
+      "world-backup-source-integration-observation.json": "cdd636bf0ad56e4f572e67c351b89c1d1d407d4d5feed56b9202636f8def5648"
+    }
+  },
+  "produced_package_provenance": {
+    "workflow_run": 37172494677,
+    "attempt": 1,
+    "artifact_id": 11292276358,
+    "artifact_zip_sha256": "94bc68070b61c19e20c0c66d0bdb264d822d031c7df288e992e18fa25f8d18ff",
+    "source_revision": "803bd98af05c7343977934a7c1b21c67ed897720",
+    "source_tree": "0a038464f24deb5ff946b091dd7b48a78a0ed995",
+    "assets": [
+      {
+        "bytes": 7458975,
+        "filename": "FacMan-0.1.0-alpha.6-windows-x64-portable.zip",
+        "sha256": "4763b01e068c2891de36ed85394fddf75327ddaaa99c9d1831d1456ef4ac0297"
+      },
+      {
+        "bytes": 21162351,
+        "filename": "FacMan-0.1.0-alpha.6-windows-x64-setup.exe",
+        "sha256": "7258c94ce585f70b461b22a5c4613403c87c8cfdb2607b4cd46fff490cddf627"
+      },
+      {
+        "bytes": 7623893,
+        "filename": "FacMan-0.1.0-alpha.6-macos-x64-portable.zip",
+        "sha256": "86d431b10e0d3d1807d36b1ba2428ee95c04098ea96e153595484414ebcbf759"
+      },
+      {
+        "bytes": 7623362,
+        "filename": "FacMan-0.1.0-alpha.6-macos-x64-setup.pkg",
+        "sha256": "8fb61a4ee299f89f177a0d18c964fd9ef2ffde8c00ec91cf25590127e7b4a29d"
+      },
+      {
+        "bytes": 5775363,
+        "filename": "FacMan-0.1.0-alpha.6-linux-x64-portable.tar.zst",
+        "sha256": "0c4330e8ccf5ee8523e2c0a2b64c0ea8981d1a101d44da8980c8cb90c92a9f94"
+      },
+      {
+        "bytes": 6743758,
+        "filename": "FacMan-0.1.0-alpha.6-linux-x64-setup.run",
+        "sha256": "5845856128f0ed65f63b6731bdf060023c9111fbf10de4cfe782b18eb1182a47"
+      }
+    ]
+  },
+  "impact_binding": {
+    "changed_paths": [
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/produced-package-acceptance.v1.json",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/produced-package-validation-custody.zip",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/remaining-risks.md",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORLD-BACKUP-01/evidence/validation.md",
+      "tests/test_save_transfer.py"
+    ],
+    "unchanged_producer_git_objects": {
+      "runtime": "a4c4e2286c70d9c7f44841c57d5b004545270c1c",
+      "contracts": "38c109f2d39220cdb8fdae53825d992aefe2d0f4",
+      "apps": "d388676c6b965a93a7eb1018106a586a04b5428d",
+      "content": "4e7932e63fd6bdcbe5dc24ff41bfef70f4523e81",
+      "cmake": "ae398064a3301606f0a123797c3e1063d1c5ced0",
+      "tools": "9dd6e3723024c7371e243c78cd8e82a209b92692",
+      ".github/workflows": "6812ed041cd50a2b598bd78da670a25e223bf2a2"
+    },
+    "review_sha256": "4103033e05162cb30d00614ba1620e3e28748b43d60c56f281c323c695f6c4db",
+    "final803_observations_reused": true,
+    "newer_head_package_provenance": false,
+    "reproducible_byte_equivalence": false,
+    "final_head_required_checks_and_integration_required": true
+  },
+  "residual_limits": [
+    "Optimistic repeated-hash/time/object consistency does not exclude a hostile writer restoring bytes/timestamps inside a narrow final interval.",
+    "Actual mid-copy/sidecar-flush ENOSPC, system power loss and deliberate namespace-swap timing after final revalidation remain unobserved limits; no demonstrated additional engine blocker from these limits.",
+    "Linux execution is WSL2 with fixture save structure, not physical supported-host or actual Factorio load/save qualification. Windows new evidence is one focused test; remaining candidate/platform observations must remain separately bound.",
+    "Final required-head checks, final review and normal integration remain required; no game, human, retention/restore-successor, release/support/signing/publication or broader programme gates are closed."
+  ],
+  "protected_bypass": false,
+  "protected_ref_push": false,
+  "qualification": {
+    "source_runtime": true,
+    "actual_Factorio": false,
+    "human": false,
+    "physical_host": false,
+    "platform_support": false,
+    "release": false
+  },
+  "canonical_closeout_commit_review_and_normal_integration_pending": true,
+  "full_programme_complete": false,
+  "separate_open_gates": [
+    "PR343 owner-only exact-head control authorization",
+    "WorldRestore and retention successor",
+    "Real packaged Play/approved inputs and hosts",
+    "Human and release qualification"
+  ],
+  "recorded_at_utc": "2026-10-04T05:24:17.325790+00:00"
+}

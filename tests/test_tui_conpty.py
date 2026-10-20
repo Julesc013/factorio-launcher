@@ -268,6 +268,71 @@ class ConPtyProcess:
 @unittest.skipUnless(os.name == "nt", "not_applicable: ConPTY is Windows-only")
 @unittest.skipUnless(tui_executable(), "optional: functional same-binary TUI build is not available")
 class TuiConPtyTests(unittest.TestCase):
+    def test_content_version_form_edits_ascii_and_rejects_unsupported_text(self) -> None:
+        import test_presentation_content_maintenance as maintenance
+        from test_local_modset_solver import snapshot
+
+        executable = tui_executable()
+        assert executable is not None
+        owner = maintenance.ContentMaintenanceTests()
+        with tempfile.TemporaryDirectory(prefix="facman-content-conpty-") as value:
+            workspace = Path(value)
+            owner.prepare(workspace)
+            before = snapshot(workspace)
+            identities = {p.relative_to(workspace).as_posix(): maintenance.joined.file_identity(p)
+                          for p in [workspace, *workspace.rglob("*")]}
+            observed = owner.query(workspace, "content", "load_save")
+            index = next(i for i, action in enumerate(observed["available_semantic_actions"])
+                         if action["action_id"] == "modsets.plan")
+            overrides = {name: os.environ.pop(name) for name in
+                         ("TERM", "NO_COLOR", "FACMAN_UI", "FACMAN_SAFE_MODE") if name in os.environ}
+            try:
+                process = ConPtyProcess(
+                    [str(executable), "tui", "--ordinary", "--transport", "process",
+                     "--cli-path", str(executable), "--workspace", str(workspace)], ROOT)
+            finally:
+                os.environ.update(overrides)
+            output = bytearray()
+            deadline = time.monotonic() + 60
+
+            def expect(marker: bytes) -> None:
+                start = len(output)
+                step = min(deadline, time.monotonic() + 15)
+                while marker not in output[start:] and time.monotonic() < step:
+                    chunk = process.read_available()
+                    self.assertLessEqual(len(output) + len(chunk), 8 * 1024 * 1024)
+                    output.extend(chunk)
+                    time.sleep(0.02)
+                self.assertIn(marker, output[start:], bytes(output[-4096:]))
+
+            try:
+                process.resize(160, 60)
+                expect(b"q Quit")
+                self.assertNotIn(b"Command (1-8", output)
+                process.write(b"s")
+                expect(b"Selected Save")
+                process.write(b"4" + b"\t" * index)
+                expect(b"Focus: Action:")
+                process.write(b" ")
+                expect(b"Action input:")
+                process.write(b":mod_identity=simple@2.0.0\xc3\xa9\r")
+                expect(b"Action input rejected: only printable ASCII selectors are supported")
+                process.write(b":mod_identity=simple@2.0.9\x7f0\r")
+                expect(b"Action input updated; activate the action to continue")
+                process.write(b" ")
+                expect(b"simple: 1.0.0 -> 2.0.0")
+                process.write(b"\x03")
+                expect(b"Cancellation requested")
+                process.write(b"q")
+                self.assertEqual(0, process.wait(timeout=10))
+                self.assertEqual(before, snapshot(workspace))
+                self.assertEqual(identities, {
+                    p.relative_to(workspace).as_posix(): maintenance.joined.file_identity(p)
+                    for p in [workspace, *workspace.rglob("*")]})
+                self.assertNotIn(b"Command (1-8", output)
+            finally:
+                process.close()
+
     def test_navigation_cancel_resize_fallback_and_restoration(self) -> None:
         self.exercise_navigation()
 
@@ -303,6 +368,14 @@ class TuiConPtyTests(unittest.TestCase):
                 # linear prompt remains absent.
                 self.assertRegex(bytes(output), rb"\x1b\[(?:H|[0-9]+;1H)")
                 self.assertNotIn(b"Command (1-8", output)
+                process.write(b"s")
+                selected = process.read_until(b"Observation: Selected Save")
+                self.assertIn(b"Observation: Selected Save", selected)
+                output.extend(selected)
+                process.write(b"m")
+                menu = process.read_until(b"Observation: Menu")
+                self.assertIn(b"Observation: Menu", menu)
+                output.extend(menu)
                 process.write(b"2")
                 output.extend(process.read_until(b"Focus: Page: Instances"))
                 process.write(b"\x03")

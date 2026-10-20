@@ -1,0 +1,100 @@
+{
+  "schema": "facman.managed_move_plan.v1",
+  "provider_plan": {
+    "schema": "usk.operation_plan.v1",
+    "plan_id": "move-plan.factorio-2-0-77",
+    "plan_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "operation": "move",
+    "status": "planned",
+    "created_at": "2026-09-15T00:00:00Z",
+    "install_id": "managed-factorio-2-0-77",
+    "input_identity": {
+      "installed_state_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+      "ownership_manifest_digest": "3333333333333333333333333333333333333333333333333333333333333333",
+      "recipe_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+      "source_digest": "5555555555555555555555555555555555555555555555555555555555555555",
+      "policy_digest": "6666666666666666666666666666666666666666666666666666666666666666",
+      "provider_revision": "universal-setup-m1-wu7"
+    },
+    "roots": [
+      {
+        "role": "current",
+        "classification": "managed_install",
+        "root": "D:/FacMan/managed-factorio-2-0-77"
+      },
+      {
+        "role": "staging",
+        "classification": "setup_owned",
+        "root": "D:/FacMan"
+      },
+      {
+        "role": "setup_state",
+        "classification": "setup_owned",
+        "root": "D:/FacMan/setup/state"
+      },
+      {
+        "role": "audit",
+        "classification": "audit_owned",
+        "root": "D:/FacMan/setup/audit"
+      },
+      {
+        "role": "destination",
+        "classification": "operator_selected_owned_target",
+        "must_not_exist": true,
+        "root": "D:/FacMan/moved-factorio-2-0-77"
+      }
+    ],
+    "effects": [
+      {
+        "effect_id": "effect.0",
+        "kind": "copy_owned_file",
+        "root_role": "destination",
+        "relative_path": "bin/x64/factorio.exe",
+        "ownership_required": true,
+        "expected_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      {
+        "effect_id": "effect.1",
+        "kind": "write_journal",
+        "root_role": "setup_state",
+        "relative_path": "transactions",
+        "ownership_required": true
+      },
+      {
+        "effect_id": "effect.2",
+        "kind": "write_state",
+        "root_role": "setup_state",
+        "relative_path": "installed",
+        "ownership_required": true
+      },
+      {
+        "effect_id": "effect.3",
+        "kind": "write_audit",
+        "root_role": "audit",
+        "relative_path": "chains",
+        "ownership_required": true
+      }
+    ],
+    "target_snapshots": {
+      "pre_target_digest": "a9c179ad7572a49d44393cce5f653f174a9a369e464c1d15c2e4c8f80270ed36"
+    },
+    "unknown_file_policy": "retain_and_report",
+    "revalidation": {
+      "immediately_before_apply": true,
+      "invalidate_on": [
+        "target",
+        "installed_state",
+        "ownership_manifest",
+        "policy",
+        "provider_revision"
+      ]
+    }
+  },
+  "copy_scope": "complete_source_files_including_foreign",
+  "grants_ownership": false,
+  "empty_directory_preservation": "not_promised",
+  "apply_available": true,
+  "observation_atomic": false,
+  "apply_scope": "verified_new_root_old_retained_pending_acceptance",
+  "install_record_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

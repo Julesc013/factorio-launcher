@@ -17,6 +17,7 @@ import shutil
 import stat
 import struct
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,7 @@ CALL_EVIDENCE: Path | None = None
 CALL_COUNT = 0
 CANARY_TIMEOUT: float | None = None
 REAL_DEADLINE: float | None = None
+WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY = False
 REAL_COMMANDS: list[dict[str, object]] = []
 REAL_CHILD_ROOT: Path | None = None
 PROCESS_CALL_COUNT = 0
@@ -39,6 +41,24 @@ HOSTED_WINDOWS_FAILURE_ROOT = (
 
 def utf16_units(path: Path | str) -> int:
     return len(str(path).encode("utf-16-le")) // 2
+
+
+def observation_path(path: Path) -> Path:
+    """Use Windows' explicit long-path spelling only for filesystem observation."""
+    if os.name != "nt":
+        return path
+    absolute = os.path.abspath(path)
+    if absolute.startswith("\\\\?\\"):
+        return Path(absolute)
+    if absolute.startswith("\\\\"):
+        return Path("\\\\?\\UNC\\" + absolute[2:])
+    return Path("\\\\?\\" + absolute)
+
+
+def external_handoff_terminals(operation_root: Path, operation_id: str) -> list[Path]:
+    return list(observation_path(operation_root).glob(
+        f"*/maintenance/{operation_id}/80-registration-cutover.v2.json"
+    ))
 
 
 def provider_payload_path(root: Path, version: str, *, predecessor: bool) -> Path:
@@ -55,7 +75,8 @@ def ci_length_child_root(parent: Path) -> tuple[Path, int]:
     return parent / ("ci-" + "x" * deficit), required_units
 
 
-def run_command(command: list[str]):
+def run_command(command: list[str], *,
+                wait_for_job_empty_after_primary: bool | None = None):
     if CANARY_TIMEOUT is None:
         return subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
     if str(ROOT) not in sys.path:
@@ -71,7 +92,14 @@ def run_command(command: list[str]):
         timeout = min(timeout, REAL_DEADLINE - time.monotonic())
         if timeout <= 0:
             raise AssertionError("real current-user qualification exhausted its total deadline")
-    result = bounded.command(command, cwd=ROOT, timeout=timeout, directory=directory)
+    result = bounded.command(
+        command, cwd=ROOT, timeout=timeout, directory=directory,
+        wait_for_job_empty_after_primary=(
+            WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY if
+            wait_for_job_empty_after_primary is None else
+            wait_for_job_empty_after_primary
+        ),
+    )
     if result.receipt["termination"] != "completed":
         raise bounded.CommandFailure(result)
     completed = subprocess.CompletedProcess(command, result.returncode,
@@ -82,7 +110,9 @@ def run_command(command: list[str]):
 
 def invoke(executable: Path, *arguments: object, expected: int = 0,
            shell_integration: bool = False, noninteractive: bool = False,
-           qualification: tuple[str, Path] | None = None) -> dict[str, object]:
+           qualification: tuple[str, Path] | None = None,
+           wait_for_job_empty_after_primary: bool | None = None,
+           expect_process_loss: bool = False) -> dict[str, object]:
     command = [
         str(executable),
         *(str(value) for value in arguments),
@@ -98,7 +128,10 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
         command.extend(("--qualification-interrupt-after", boundary,
                         "--qualification-interrupt-permit", str(permit)))
     command.append("--json")
-    result = run_command(command)
+    result = run_command(
+        command,
+        wait_for_job_empty_after_primary=wait_for_job_empty_after_primary,
+    )
     global CALL_COUNT
     if CALL_EVIDENCE is not None:
         CALL_COUNT += 1
@@ -112,15 +145,20 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
             f"command returned {result.returncode}, expected {expected}: {command}\n"
             f"stdout={result.stdout[-8000:]}\nstderr={result.stderr[-8000:]}"
         )
-    try:
-        response = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise AssertionError(f"command did not return JSON: {command}\n{result.stdout[-8000:]}") from exc
+    if expect_process_loss:
+        if expected != 137 or result.stdout.strip():
+            raise AssertionError("terminated Setup returned an unexpected product response")
+        response = {}
+    else:
+        try:
+            response = json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            raise AssertionError(f"command did not return JSON: {command}\n{result.stdout[-8000:]}") from exc
     if shell_integration:
         REAL_COMMANDS.append({
             "command": command,
             "exit_code": result.returncode,
-            "response": response,
+            "response": None if expect_process_loss else response,
             "stdout_sha256": hashlib.sha256(result.stdout.encode("utf-8")).hexdigest(),
             "stderr_sha256": hashlib.sha256(result.stderr.encode("utf-8")).hexdigest(),
             "bounded_process_receipt": getattr(result, "facman_bounded_receipt", None),
@@ -128,11 +166,61 @@ def invoke(executable: Path, *arguments: object, expected: int = 0,
     return response
 
 
+def await_external_handoff(
+        executable: Path, initial: dict[str, object], operation: str,
+        query_arguments: tuple[object, ...], *, shell_integration: bool,
+        noninteractive: bool) -> dict[str, object]:
+    """Observe one launched helper without granting the observer apply authority."""
+    if initial.get("phase") != "handoff_launched":
+        return initial
+    operation_id = initial.get("operation_id")
+    if not isinstance(operation_id, str) or not operation_id:
+        raise AssertionError(f"{operation} handoff launch omitted its operation identity")
+    # The production handoff has one 600-second absolute budget.  This focused
+    # fixture remains bounded by the unchanged 180-second outer CTest gate: it
+    # allows a slower hosted Debug continuation up to 120 seconds and retains
+    # the remaining time for observation, the staged-launch case, and cleanup.
+    local_deadline = time.monotonic() + 120.0
+    if REAL_DEADLINE is not None:
+        local_deadline = min(local_deadline, REAL_DEADLINE)
+    serialized_arguments = [str(value) for value in query_arguments]
+    try:
+        state_root = Path(serialized_arguments[
+            serialized_arguments.index("--state-root") + 1
+        ])
+    except (ValueError, IndexError) as exc:
+        raise AssertionError("external handoff observation omitted its state root") from exc
+    operation_root = state_root.parent / "setup-coordinator.v1" / "epochs"
+    while time.monotonic() < local_deadline:
+        terminal = external_handoff_terminals(operation_root, operation_id)
+        if len(terminal) > 1:
+            raise AssertionError(f"{operation} handoff produced duplicate terminal records")
+        if terminal:
+            observed = invoke(
+                executable, operation, *query_arguments,
+                shell_integration=shell_integration,
+                noninteractive=noninteractive,
+            )
+            if observed.get("operation_id") != operation_id:
+                raise AssertionError(
+                    f"{operation} handoff observation changed operation identity"
+                )
+            if observed.get("phase") not in {"completed", "shell_cutover_complete"}:
+                raise AssertionError(
+                    f"{operation} handoff reported unexpected terminal phase "
+                    f"{observed.get('phase')!r}"
+                )
+            return observed
+        time.sleep(0.02)
+    raise AssertionError(f"{operation} external maintenance helper did not complete in time")
+
+
 def tree_snapshot(root: Path) -> dict[str, object]:
     directories: list[str] = []
     files: dict[str, str] = {}
-    for path in sorted(root.rglob("*")):
-        relative = path.relative_to(root).as_posix()
+    observed_root = observation_path(root)
+    for path in sorted(observed_root.rglob("*")):
+        relative = path.relative_to(observed_root).as_posix()
         if path.is_dir():
             directories.append(relative)
         elif path.is_file():
@@ -170,6 +258,37 @@ def emit_prehandoff_epoch(
         ) from exc
     if response.get("schema") != "facman.self_maintenance_test_epoch.v1":
         raise AssertionError("epoch fixture helper returned an unexpected schema")
+    return response
+
+
+def stage_existing_handoff_epoch(
+    helper: Path,
+    coordinator: Path,
+    state_root: Path,
+    acceptance_root: Path,
+    target_package: Path,
+    continuation_helper: Path,
+) -> dict[str, object]:
+    command = [
+        str(helper), "--stage-existing-handoff", str(coordinator),
+        str(state_root), str(acceptance_root), str(target_package), "update",
+        str(continuation_helper),
+    ]
+    result = run_command(command)
+    if result.returncode:
+        raise AssertionError(
+            f"staged epoch fixture helper returned {result.returncode}: {command}\n"
+            f"stdout={result.stdout[-8000:]}\nstderr={result.stderr[-8000:]}"
+        )
+    try:
+        response = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise AssertionError(
+            f"staged epoch fixture helper did not return JSON: {command}\n"
+            f"{result.stdout[-8000:]}"
+        ) from exc
+    if response.get("schema") != "facman.self_maintenance_test_epoch.v1":
+        raise AssertionError("staged epoch fixture helper returned an unexpected schema")
     return response
 
 
@@ -260,7 +379,9 @@ def stored_payload(path: Path, executable: Path, version: str, compression: int 
             archive.writestr(info, data)
 
 
-def stored_maintenance_payload(path: Path, executable: Path, version: str) -> None:
+def deflated_maintenance_payload(
+        path: Path, executable: Path, version: str,
+        *, overlimit_member: bool = False) -> None:
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
     from tools.self_setup_package import (
@@ -301,13 +422,40 @@ def stored_maintenance_payload(path: Path, executable: Path, version: str) -> No
             ) + "\n"
         ).encode("utf-8"),
     }
+    if overlimit_member:
+        files[f"facman/generations/{version}/path-limit-" + "x" * 220] = (
+            b"provider path-limit refusal fixture\n"
+        )
     with zipfile.ZipFile(path, "w", allowZip64=True) as archive:
         for name, data in sorted(files.items()):
             info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
-            info.compress_type = zipfile.ZIP_STORED
+            # The general lifecycle above exercises stored archives.  Use the
+            # other admitted archive form here so the full external-maintenance
+            # path does not repeatedly hash and copy an uncompressed Debug
+            # Setup image on hosted Windows.
+            info.compress_type = zipfile.ZIP_DEFLATED
             info.create_system = 3
             info.external_attr = 0o100644 << 16
             archive.writestr(info, data)
+
+
+def require_path_limit_plan_refusal(response: dict[str, object]) -> None:
+    error = response.get("error", {})
+    detail_text = str(error.get("detail", ""))
+    payload_start = detail_text.find("{")
+    try:
+        detail = json.loads(detail_text[payload_start:])
+    except (AttributeError, json.JSONDecodeError) as exc:
+        raise AssertionError(
+            "provider plan refusal did not retain its structured diagnostic"
+        ) from exc
+    if (
+        error.get("code") != "self_maintenance_plan_failed"
+        or detail.get("error", {}).get("code") != "native_path_limit_exceeded"
+    ):
+        raise AssertionError(
+            "provider path-limit plan refusal returned the wrong diagnostic"
+        )
 
 
 def damaged_archive_controls(root: Path, executable: Path, package: Path) -> None:
@@ -355,7 +503,7 @@ def damaged_archive_controls(root: Path, executable: Path, package: Path) -> Non
 
 def sha256_path(path: Path) -> str:
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
+    with observation_path(path).open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
@@ -378,30 +526,34 @@ def _plain_metadata(path: Path, label: str, *, directory: bool) -> os.stat_resul
 
 def _retained_file_metadata(
         path: Path, state_root: Path, acceptance_root: Path,
-        label: str) -> os.stat_result:
-    repair_root = state_root / "repair-sources"
+        label: str, *, expected_parent: Path | None = None) -> os.stat_result:
+    retained_root = expected_parent or state_root / "repair-sources"
     if (os.path.normcase(os.path.abspath(path.parent)) !=
-            os.path.normcase(os.path.abspath(repair_root))):
-        raise AssertionError(f"{label} is outside the exact retained repair directory")
+            os.path.normcase(os.path.abspath(retained_root))):
+        raise AssertionError(f"{label} is outside its exact retained directory")
     authority = Path(os.path.abspath(acceptance_root))
-    repair = Path(os.path.abspath(repair_root))
+    retained = Path(os.path.abspath(retained_root))
     try:
-        relative = Path(os.path.relpath(repair, authority))
+        relative = Path(os.path.relpath(retained, authority))
     except ValueError as exc:
-        raise AssertionError(f"{label} is outside retained repair authority") from exc
+        raise AssertionError(f"{label} is outside retained file authority") from exc
     if relative.is_absolute() or relative == Path("..") or ".." in relative.parts:
-        raise AssertionError(f"{label} is outside retained repair authority")
+        raise AssertionError(f"{label} is outside retained file authority")
     current = authority
-    _plain_metadata(current, "retained repair acceptance root", directory=True)
+    _plain_metadata(current, "retained file acceptance root", directory=True)
     for component in relative.parts:
         current = current / component
-        _plain_metadata(current, "retained repair ancestry", directory=True)
+        _plain_metadata(current, "retained file ancestry", directory=True)
     return _plain_metadata(path, label, directory=False)
 
 
 def stable_retained_digest(
-        path: Path, state_root: Path, acceptance_root: Path, label: str) -> str:
-    metadata = _retained_file_metadata(path, state_root, acceptance_root, label)
+        path: Path, state_root: Path, acceptance_root: Path, label: str,
+        *, expected_parent: Path | None = None) -> str:
+    metadata = _retained_file_metadata(
+        path, state_root, acceptance_root, label,
+        expected_parent=expected_parent,
+    )
     identity = (metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns)
     digest = hashlib.sha256()
     observed = 0
@@ -415,11 +567,28 @@ def stable_retained_digest(
         closed = os.fstat(source.fileno())
         if (closed.st_dev, closed.st_ino, closed.st_size, closed.st_mtime_ns) != identity:
             raise AssertionError(f"{label} changed while it was read")
-    final = _retained_file_metadata(path, state_root, acceptance_root, label)
+    final = _retained_file_metadata(
+        path, state_root, acceptance_root, label,
+        expected_parent=expected_parent,
+    )
     if ((final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns) != identity or
             observed != metadata.st_size):
         raise AssertionError(f"{label} pathname changed while it was read")
     return digest.hexdigest()
+
+
+def stable_handoff_digest(
+        path: Path, state_root: Path, acceptance_root: Path,
+        operation_id: str, label: str) -> str:
+    if not re.fullmatch(r"maint\.(?:update|downgrade|rollback)\.[0-9a-f]{8}\.[0-9a-f]{20}(?:\.[0-9a-f]{16})?",
+                        operation_id):
+        raise AssertionError(f"{label} has an invalid maintenance operation identity")
+    handoff_root = state_root / "epoch-handoff" / operation_id
+    if path != handoff_root / "FacManContinuation.exe":
+        raise AssertionError(f"{label} is not the exact retained continuation helper")
+    return stable_retained_digest(
+        path, state_root, acceptance_root, label, expected_parent=handoff_root,
+    )
 
 
 def stable_retained_bytes(
@@ -560,6 +729,20 @@ def inspect_registry_64() -> dict[str, object]:
 def assert_absent_native(shortcut: dict[str, object], registry: dict[str, object], phase: str) -> None:
     if shortcut.get("state") != "absent" or registry.get("state") != "absent":
         raise AssertionError(f"{phase}: current-user integration is present or unreadable; preserving it")
+    # A cutover backup is still a native effect, even after FacMan.lnk is gone.
+    link = Path(str(shortcut["path"]))
+    try:
+        entries = os.scandir(link.parent)
+    except FileNotFoundError:
+        return
+    with entries:
+        for index, entry in enumerate(entries):
+            if index >= 4096:
+                raise AssertionError(f"{phase}: Start Menu immediate-entry observation exceeded its bound")
+            name = entry.name.casefold()
+            if (name.startswith(link.name.casefold() + ".facman-backup.") or
+                    name.startswith(link.name.casefold() + ".facman-pending.")):
+                raise AssertionError(f"{phase}: auxiliary shortcut remains; preserving {entry.path}")
 
 
 def same_windows_path(left: object, right: Path) -> bool:
@@ -572,12 +755,35 @@ def same_windows_path(left: object, right: Path) -> bool:
             os.path.normcase(os.path.realpath(right))
 
 
+def epoch_genesis_install_root(install: Path, state_root: Path,
+                               epoch_id: object, package_sha256: str) -> Path:
+    if not isinstance(epoch_id, str) or len(epoch_id) != 64:
+        raise AssertionError("installed Setup did not report a real lifecycle epoch")
+    epoch_dir = state_root.parent / "setup-coordinator.v1" / "epochs" / epoch_id
+    manifest = json.loads(observation_path(epoch_dir / "epoch.v1.json").read_text(encoding="utf-8"))
+    generation_id = manifest.get("genesis_generation_id")
+    if not isinstance(generation_id, str) or len(generation_id) != 64:
+        raise AssertionError("produced epoch has no exact genesis generation")
+    generation_record = json.loads(observation_path(
+        epoch_dir / "generations" / f"generation.{generation_id}.v2.json"
+    ).read_text(encoding="utf-8"))
+    active_install = Path(generation_record["install_root"])
+    if (generation_record.get("epoch_id") != epoch_id or
+            generation_record.get("generation_id") != generation_id or
+            generation_record.get("package_sha256") != package_sha256 or
+            active_install.parent != install.parent or
+            not active_install.name.startswith("FacMan.generation.")):
+        raise AssertionError("produced epoch genesis does not bind its package and root")
+    return active_install
+
+
 def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object],
                         install: Path, state_root: Path, acceptance_root: Path,
                         version: str, phase: str, *,
                         active_root: Path | None = None,
                         active_package_sha256: str | None = None,
-                        retained_package_sha256s: set[str] | None = None) -> None:
+                        retained_package_sha256s: set[str] | None = None,
+                        maintenance_controller_sha256: str | None = None) -> None:
     active_root = active_root or install
     generation = active_root / "generations" / version
     fields = shortcut.get("fields") if shortcut.get("state") == "present" else None
@@ -640,13 +846,14 @@ def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object]
                 retained_receipt, state_root, acceptance_root,
                 f"{phase} retained maintenance receipt", 4096) != expected_receipt:
             raise AssertionError(f"{phase}: retained maintenance custody receipt is invalid")
-    maintenance = repair_source.with_name(f"{repair_source.stem}.FacManSetup.exe")
+    maintenance_sha256 = maintenance_controller_sha256 or active_package_sha256
+    maintenance = repair_root / f"{maintenance_sha256}.FacManSetup.exe"
     uninstall = (
-        f'"{maintenance}" uninstall --root "{install}" --state-root "{state_root}" '
+        f'"{maintenance}" uninstall --root "{active_root}" --state-root "{state_root}" '
         f'--acceptance-root "{acceptance_root}" --yes --noninteractive --shell-integration'
     )
     modify = (
-        f'"{maintenance}" repair --package "{repair_source}" --root "{install}" '
+        f'"{maintenance}" repair --package "{repair_source}" --root "{active_root}" '
         f'--state-root "{state_root}" --acceptance-root "{acceptance_root}" '
         f'--yes --noninteractive --shell-integration'
     )
@@ -654,7 +861,7 @@ def assert_owned_native(shortcut: dict[str, object], registry: dict[str, object]
         "DisplayName": ("FacMan", 1),
         "DisplayVersion": (version, 1),
         "Publisher": ("Jules C", 1),
-        "InstallLocation": (str(install), 1),
+        "InstallLocation": (str(active_root), 1),
         "DisplayIcon": (f'"{generation / "FacMan.exe"}"', 1),
         "UninstallString": (uninstall, 1),
         "QuietUninstallString": (uninstall + " --json", 1),
@@ -725,9 +932,9 @@ def epoch_prehandoff_cli_controls(
     source_package = case / "source.zip"
     target_package = case / "target.zip"
     mismatch_package = case / "mismatch.zip"
-    stored_maintenance_payload(source_package, executable, version)
-    stored_maintenance_payload(target_package, executable, target_version)
-    stored_maintenance_payload(mismatch_package, executable, mismatch_version)
+    deflated_maintenance_payload(source_package, executable, version)
+    deflated_maintenance_payload(target_package, executable, target_version)
+    deflated_maintenance_payload(mismatch_package, executable, mismatch_version)
 
     installed = invoke(
         executable, "install", "--package", source_package,
@@ -747,6 +954,50 @@ def epoch_prehandoff_cli_controls(
     if not source_install_root.is_absolute() or source_install_root.exists():
         raise AssertionError("epoch fixture returned an unsafe source install root")
     shutil.copytree(install, source_install_root)
+
+    expected_install_id = emitted.get("install_id")
+    before_epoch_selection = tree_snapshot(case)
+    epoch_verify = invoke(
+        executable, "verify", "--root", install,
+        "--state-root", state, "--acceptance-root", case,
+        expected=4,
+    )
+    epoch_repair = invoke(
+        executable, "repair", "--package", source_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes", expected=4,
+    )
+    if (not isinstance(expected_install_id, str) or
+            epoch_verify.get("error", {}).get("code") !=
+            "self_maintenance_active_generation_unavailable" or
+            not epoch_verify.get("error", {}).get("detail", "").startswith(
+                expected_install_id
+            ) or
+            epoch_repair.get("error", {}).get("code") !=
+            "self_maintenance_active_generation_unavailable" or
+            not epoch_repair.get("error", {}).get("detail", "").startswith(
+                expected_install_id
+            ) or
+            tree_snapshot(case) != before_epoch_selection):
+        raise AssertionError(
+            "public verify/repair did not select the authoritative epoch generation: "
+            f"install_id={expected_install_id!r} verify={epoch_verify!r} "
+            f"repair={epoch_repair!r} changed="
+            f"{tree_snapshot(case) != before_epoch_selection}"
+        )
+
+    before_epoch_uninstall = tree_snapshot(case)
+    epoch_uninstall = invoke(
+        executable, "uninstall", "--root", install,
+        "--state-root", state, "--acceptance-root", case, "--yes",
+        expected=4,
+    )
+    if (epoch_uninstall.get("error", {}).get("code") !=
+            "self_maintenance_retirement_recovery_required" or
+            tree_snapshot(case) != before_epoch_uninstall):
+        raise AssertionError(
+            "epoch uninstall did not refuse an unproven provider identity"
+        )
 
     preview_permit = maintenance_qualification_permit(
         case, "update", False, version, install, state
@@ -799,9 +1050,141 @@ def epoch_prehandoff_cli_controls(
         "--acceptance-root", case, "--yes",
         "--qualification-fixture-permit", apply_permit,
     )
-    if (exact_apply.get("phase") != "shell_cutover_complete" or
+    if (exact_apply.get("phase") != "handoff_launched" or
             exact_apply.get("operation_id") != emitted.get("operation_id")):
+        raise AssertionError("exact-package pre-handoff apply did not launch its external helper")
+    exact_completed = await_external_handoff(
+        executable, exact_apply, "update",
+        ("--package", target_package,
+         "--root", install, "--state-root", state,
+         "--acceptance-root", case,
+         "--qualification-fixture-permit", preview_permit),
+        shell_integration=False, noninteractive=False,
+    )
+    if (exact_completed.get("phase") != "shell_cutover_complete" or
+            exact_completed.get("operation_id") != emitted.get("operation_id")):
         raise AssertionError("exact-package pre-handoff apply did not complete")
+
+    # Reuse the now-active B generation for the staged-retry case.  Creating a
+    # second installed lineage here duplicated the most expensive Debug and
+    # coverage work without exercising another product behavior.
+    retry_emitted = stage_existing_handoff_epoch(
+        fixture_helper, coordinator, state, case, mismatch_package,
+        fixture_helper,
+    )
+    retry_apply_permit = maintenance_qualification_permit(
+        case, "update", True, version, install, state
+    )
+    retried = invoke(
+        executable, "update", "--package", mismatch_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
+        "--qualification-fixture-permit", retry_apply_permit,
+    )
+    if (retried.get("phase") != "handoff_launched" or
+            retried.get("operation_id") != retry_emitted.get("operation_id")):
+        raise AssertionError("staged handoff public retry did not relaunch its helper")
+    operation_records = list((coordinator / "epochs").glob(
+        f"*/maintenance/{retry_emitted.get('operation_id')}/*"
+    ))
+    if [path.name for path in operation_records] != ["00-handoff-ready.v3.json"]:
+        raise AssertionError(
+            "staged public retry did not stop the initiating process at helper launch"
+        )
+
+
+def completed_retirement_repeat_cli_controls(
+        root: Path, executable: Path, version: str) -> None:
+    case = root / "completed-retirement-repeat"
+    case.mkdir()
+    install = case / "Programs" / "FacMan"
+    state = case / "SetupState"
+    install.parent.mkdir()
+    prefix, number = version.rsplit(".", 1)
+    target_version = f"{prefix}.{int(number) + 3}"
+    source_package = case / "source.zip"
+    target_package = case / "target.zip"
+    deflated_maintenance_payload(source_package, executable, version)
+    deflated_maintenance_payload(target_package, executable, target_version)
+
+    installed = invoke(
+        executable, "install", "--package", source_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
+    )
+    if installed.get("phase") != "receipt":
+        raise AssertionError("repeat-uninstall baseline did not install")
+    source_digest = hashlib.sha256(source_package.read_bytes()).hexdigest()
+    repair_cache = state / "repair-sources"
+    repair_cache.mkdir(exist_ok=True)
+    (repair_cache / ".facman-repair-sources.v1").write_bytes(
+        b"facman-repair-sources-v1\n"
+    )
+    retained_source = repair_cache / f"{source_digest}.zip"
+    retained_helper = repair_cache / f"{source_digest}.FacManSetup.exe"
+    retained_source.write_bytes(source_package.read_bytes())
+    retained_helper.write_bytes(executable.read_bytes())
+    helper_digest = hashlib.sha256(retained_helper.read_bytes()).hexdigest()
+    (repair_cache / f"{source_digest}.maintenance.v1").write_bytes((
+        "facman-repair-source-receipt-v1\n"
+        f"source_sha256={source_digest}\n"
+        f"launcher_sha256={helper_digest}\n"
+    ).encode("utf-8"))
+    update_permit = maintenance_qualification_permit(
+        case, "update", True, version, install, state
+    )
+    updated = invoke(
+        executable, "update", "--package", target_package,
+        "--root", install, "--state-root", state,
+        "--acceptance-root", case, "--yes",
+        "--qualification-fixture-permit", update_permit,
+    )
+    updated = await_external_handoff(
+        executable, updated, "update",
+        ("--package", target_package, "--root", install,
+         "--state-root", state, "--acceptance-root", case,
+         "--qualification-fixture-permit", update_permit),
+        shell_integration=False, noninteractive=False,
+    )
+    if updated.get("phase") != "completed":
+        raise AssertionError("repeat-uninstall update did not complete")
+
+    phases = []
+    retirement_journals = []
+    for _ in range(2):
+        retired = invoke(
+            executable, "uninstall", "--root", install,
+            "--state-root", state, "--acceptance-root", case, "--yes",
+        )
+        phases.append(retired.get("phase"))
+        retirement_journals.append(retired.get("retirement_journal"))
+    if phases != ["step_completed", "completed"]:
+        raise AssertionError(
+            f"activation-chain retirement returned unexpected phases: {phases!r}"
+        )
+    if (len(set(retirement_journals)) != 1 or
+            not isinstance(retirement_journals[0], str) or
+            not (Path(retirement_journals[0]) / "99-completed.v1.json").is_file()):
+        raise AssertionError(
+            f"completed retirement lacked one durable completion marker: "
+            f"{retirement_journals!r}"
+        )
+    before_repeat = tree_snapshot(case)
+    try:
+        repeated = invoke(
+            executable, "uninstall", "--root", install,
+            "--state-root", state, "--acceptance-root", case, "--yes",
+        )
+    except AssertionError as exc:
+        journal = Path(retirement_journals[0])
+        records = sorted(path.name for path in journal.iterdir())
+        raise AssertionError(
+            f"completed retirement repeat refused with journal records "
+            f"{records!r} at {journal}: {exc}"
+        ) from exc
+    if (repeated.get("phase") != "completed" or
+            tree_snapshot(case) != before_repeat):
+        raise AssertionError("completed activation-chain uninstall was not idempotent")
 
 
 def journal_observation(install: Path) -> list[dict[str, object]]:
@@ -857,6 +1240,29 @@ def self_maintenance_identity(path: Path) -> dict[str, str]:
         ) from exc
 
 
+def setup_overlay_sha256(path: Path) -> str:
+    """Bind a produced Setup executable to the ZIP bytes it will retain."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools.self_maintenance_candidate import setup_overlay_sha256 as identify
+    try:
+        return identify(path)
+    except (OSError, ValueError) as exc:
+        raise AssertionError(
+            f"produced setup package has no exact materializable overlay: {path}"
+        ) from exc
+
+
+def package_maintenance_launcher_sha256(path: Path) -> str:
+    with zipfile.ZipFile(path) as archive:
+        matches = [entry for entry in archive.infolist()
+                   if entry.filename == "facman/maintenance/FacManSetup.exe"
+                   and not entry.is_dir()]
+        if len(matches) != 1 or matches[0].file_size <= 0 or matches[0].file_size > 256 * 1024 * 1024:
+            raise AssertionError("produced package has no exact bounded maintenance launcher")
+        return hashlib.sha256(archive.read(matches[0])).hexdigest()
+
+
 def semver_order(left: str, right: str) -> int:
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
@@ -867,18 +1273,20 @@ def semver_order(left: str, right: str) -> int:
         raise AssertionError(str(exc)) from exc
 
 
-def exact_json_record(path: Path, expected: Path, keys: set[str], label: str) -> dict[str, object]:
+def exact_json_record(path: Path, expected: Path, keys: set[str] | tuple[set[str], ...],
+                      label: str) -> dict[str, object]:
     if not path.is_absolute() or os.path.normcase(os.path.abspath(path)) != \
             os.path.normcase(os.path.abspath(expected)):
         raise AssertionError(f"{label} path does not bind its exact coordinator location")
-    metadata = os.lstat(path)
+    observed_path = observation_path(path)
+    metadata = os.lstat(observed_path)
     reparse = bool(getattr(metadata, "st_file_attributes", 0) & 0x400)
     if (stat.S_ISLNK(metadata.st_mode) or reparse or not stat.S_ISREG(metadata.st_mode) or
             metadata.st_nlink != 1 or metadata.st_size > 64 * 1024):
         raise AssertionError(f"{label} is not a bounded single-link regular file")
     identity = (metadata.st_dev, metadata.st_ino, metadata.st_size, metadata.st_mtime_ns)
-    raw = path.read_bytes()
-    observed = os.lstat(path)
+    raw = observed_path.read_bytes()
+    observed = os.lstat(observed_path)
     if (len(raw) != metadata.st_size or
             (observed.st_dev, observed.st_ino, observed.st_size, observed.st_mtime_ns) != identity):
         raise AssertionError(f"{label} changed while it was read")
@@ -886,7 +1294,8 @@ def exact_json_record(path: Path, expected: Path, keys: set[str], label: str) ->
         value = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise AssertionError(f"{label} is not JSON") from exc
-    if not isinstance(value, dict) or set(value) != keys:
+    alternatives = (keys,) if isinstance(keys, set) else keys
+    if not isinstance(value, dict) or not any(set(value) == shape for shape in alternatives):
         raise AssertionError(f"{label} does not have its exact record schema")
     return value
 
@@ -896,6 +1305,23 @@ GENERATION_RECORD_KEYS = {
     "facman_source_revision", "universal_setup_revision", "install_id", "install_root",
     "logical_root", "state_root", "acceptance_root", "gui", "maintenance_launcher",
 }
+GENERATION_RECORD_PATH_KEYS = {
+    "install_root", "logical_root", "state_root", "acceptance_root", "gui",
+    "maintenance_launcher",
+}
+
+
+def generation_record_matches(actual: dict[str, object],
+                              expected: dict[str, object]) -> bool:
+    if set(actual) != GENERATION_RECORD_KEYS or set(expected) != GENERATION_RECORD_KEYS:
+        return False
+    for key in GENERATION_RECORD_KEYS - GENERATION_RECORD_PATH_KEYS:
+        if actual.get(key) != expected.get(key):
+            return False
+    return all(
+        same_windows_path(actual.get(key), Path(str(expected.get(key, ""))))
+        for key in GENERATION_RECORD_PATH_KEYS
+    )
 
 
 def generation_identity(identity: dict[str, str], package_sha256: str) -> str:
@@ -961,6 +1387,126 @@ def expected_generation_record(
     }
 
 
+_EPOCH_GENERATION_KEYS = GENERATION_RECORD_KEYS | {"epoch_id"}
+
+
+def require_epoch_generation_record(
+        epoch_id: str, identity: dict[str, str], package_sha256: str,
+        creating_provider_revision: str, logical_root: Path, state_root: Path,
+        acceptance_root: Path) -> dict[str, object]:
+    """Check original archive provenance separately from its actual creator."""
+    if (not re.fullmatch(r"[0-9a-f]{64}", epoch_id) or
+            not re.fullmatch(r"[0-9a-f]{40}", creating_provider_revision)):
+        raise AssertionError("epoch generation has an invalid epoch or creating provider")
+    generation_id = generation_identity(identity, package_sha256)
+    expected = expected_generation_record(
+        identity, package_sha256, logical_root, state_root, acceptance_root, legacy=False,
+    )
+    logical = normalized_path(logical_root)
+    logical_id = hashlib.sha256(
+        ("facman.self.logical-root.v1\n" + str(logical) + "\n").encode("utf-8")
+    ).hexdigest()
+    physical_id = hashlib.sha256((
+        "facman.self.physical-generation-root.v2\n" + logical_id + "\n" +
+        epoch_id + "\n" + generation_id + "\n"
+    ).encode("utf-8")).hexdigest()
+    install_root = logical.parent / ("FacMan.generation." + physical_id)
+    expected.update({
+        "schema": "facman.self_generation.v2", "epoch_id": epoch_id,
+        "install_id": "facman.self.eg." + hashlib.sha256((
+            "facman.self.epoch-generation-install.v1\n" + epoch_id + "\n" +
+            generation_id + "\n"
+        ).encode("utf-8")).hexdigest(),
+        "install_root": str(install_root),
+        "gui": str(install_root / "generations" / identity["version"] / "FacMan.exe"),
+        "maintenance_launcher": str(install_root / "maintenance" / "FacManSetup.exe"),
+    })
+    if creating_provider_revision != identity["provider_revision"]:
+        expected["creating_provider_revision"] = creating_provider_revision
+    record_path = (state_root.parent / "setup-coordinator.v1" / "epochs" / epoch_id /
+                   "generations" / f"generation.{generation_id}.v2.json")
+    observed = exact_json_record(
+        record_path, record_path,
+        (_EPOCH_GENERATION_KEYS, _EPOCH_GENERATION_KEYS | {"creating_provider_revision"}),
+        "epoch generation record",
+    )
+    if (set(observed) != set(expected) or
+            any(observed[key] != expected[key]
+                for key in set(expected) - GENERATION_RECORD_PATH_KEYS) or
+            any(not same_windows_path(observed[key], Path(str(expected[key])))
+                for key in GENERATION_RECORD_PATH_KEYS)):
+        raise AssertionError("epoch generation does not bind original package, creator and root")
+    return observed
+
+
+def require_epoch_transition_receipt(
+        response: dict[str, object], operation: str, epoch_id: str,
+        identity: dict[str, str], package_sha256: str, creating_provider_revision: str,
+        logical_root: Path, state_root: Path, acceptance_root: Path) -> Path:
+    generation = require_epoch_generation_record(
+        epoch_id, identity, package_sha256, creating_provider_revision,
+        logical_root, state_root, acceptance_root,
+    )
+    operation_id = response.get("operation_id")
+    if (set(response) != {
+            "schema", "status", "operation", "phase", "operation_id",
+            "generation_id", "product_version", "install_id", "install_root",
+            "generation_record", "activation_record"} or
+            response.get("schema") != "facman.self_maintenance_cli.v1" or
+            response.get("status") != "ok" or response.get("operation") != operation or
+            response.get("phase") not in {"shell_cutover_complete", "reactivation_complete"} or
+            not isinstance(operation_id, str) or
+            not re.fullmatch(r"maint\.(?:update|downgrade|rollback)\.[0-9a-f]{8}\.[0-9a-f]{20}(?:\.[0-9a-f]{16})?",
+                             operation_id) or
+            any(response.get(key) != generation[key]
+                for key in {"generation_id", "product_version", "install_id"}) or
+            not same_windows_path(response.get("install_root"), Path(str(generation["install_root"])))):
+        raise AssertionError(f"{operation} has no exact completed epoch receipt")
+    epoch_root = state_root.parent / "setup-coordinator.v1" / "epochs" / epoch_id
+    generation_path = epoch_root / "generations" / f"generation.{generation['generation_id']}.v2.json"
+    if (not same_windows_path(response.get("generation_record"), generation_path) or
+            not same_windows_path(response.get("activation_record"),
+                epoch_root / "activations" / f"activation.{operation_id}.v2.json")):
+        raise AssertionError(f"{operation} epoch receipt changed its exact record locations")
+    activation_path = epoch_root / "activations" / f"activation.{operation_id}.v2.json"
+    activation = exact_json_record(
+        activation_path, activation_path,
+        {"schema", "product_id", "epoch_id", "operation", "operation_id",
+         "source_generation_id", "target_generation_id", "generation_record_sha256", "previous"},
+        f"{operation} epoch activation",
+    )
+    if (activation.get("schema") != "facman.self_activation.v2" or
+            activation.get("product_id") != "facman" or activation.get("epoch_id") != epoch_id or
+            activation.get("operation") != operation or activation.get("operation_id") != operation_id or
+            activation.get("target_generation_id") != generation["generation_id"] or
+            activation.get("generation_record_sha256") != sha256_path(generation_path)):
+        raise AssertionError(f"{operation} epoch activation does not bind the exact generation bytes")
+    previous = activation.get("previous")
+    if (not isinstance(previous, dict) or set(previous) != {"name", "sha256"} or
+            not isinstance(previous.get("name"), str) or
+            not re.fullmatch(r"activation\.[A-Za-z0-9_.-]+\.v2\.json", previous["name"]) or
+            not isinstance(previous.get("sha256"), str) or
+            not re.fullmatch(r"[0-9a-f]{64}", previous["sha256"]) or
+            not isinstance(activation.get("source_generation_id"), str) or
+            not re.fullmatch(r"[0-9a-f]{64}", activation["source_generation_id"])):
+        raise AssertionError(f"{operation} epoch activation has no exact predecessor")
+    predecessor_path = epoch_root / "activations" / previous["name"]
+    base_keys = {"schema", "product_id", "epoch_id", "operation", "operation_id",
+                 "generation_record_sha256", "previous"}
+    predecessor = exact_json_record(
+        predecessor_path, predecessor_path,
+        (base_keys | {"generation_id"}, base_keys | {"source_generation_id", "target_generation_id"}),
+        f"{operation} epoch predecessor activation",
+    )
+    if (sha256_path(predecessor_path) != previous["sha256"] or
+            predecessor.get("schema") != "facman.self_activation.v2" or
+            predecessor.get("product_id") != "facman" or predecessor.get("epoch_id") != epoch_id or
+            predecessor.get("target_generation_id", predecessor.get("generation_id")) !=
+            activation["source_generation_id"]):
+        raise AssertionError(f"{operation} epoch activation does not extend its exact predecessor")
+    return Path(str(generation["install_root"]))
+
+
 def require_transition_receipt(
         response: dict[str, object], operation: str, identity: dict[str, str],
         package_sha256: str, logical_root: Path, state_root: Path,
@@ -1015,7 +1561,7 @@ def require_transition_receipt(
         GENERATION_RECORD_KEYS,
         f"{operation} generation record",
     )
-    if generation != expected_target:
+    if not generation_record_matches(generation, expected_target):
         raise AssertionError(f"{operation} generation record does not bind the target package/root")
     if legacy_target and generation != retained_legacy:
         raise AssertionError(f"{operation} legacy target is not the exact retained predecessor")
@@ -1080,7 +1626,7 @@ def require_transition_receipt(
             source_identity, source_package_sha256, logical_root, state_root,
             acceptance_root, legacy=True,
         )
-        if observed_legacy != expected_legacy:
+        if not generation_record_matches(observed_legacy, expected_legacy):
             raise AssertionError("legacy migration generation does not bind its package/root")
     else:
         predecessor_activation = exact_json_record(
@@ -1128,8 +1674,8 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
     observations: list[dict[str, object]] = []
     candidate_identity = self_maintenance_identity(candidate_payload)
     baseline_identity = self_maintenance_identity(baseline_payload)
-    candidate_package_sha256 = sha256_path(candidate_payload)
-    baseline_package_sha256 = sha256_path(baseline_payload)
+    candidate_package_sha256 = setup_overlay_sha256(candidate_payload)
+    baseline_package_sha256 = setup_overlay_sha256(baseline_payload)
     if (candidate_identity["source_revision"] == baseline_identity["source_revision"] or
             semver_order(baseline_identity["version"], candidate_identity["version"]) >= 0):
         raise AssertionError(
@@ -1140,15 +1686,17 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
     install = programs / "FacMan"
     state_root = root / "SetupState"
 
-    def observe(phase: str) -> tuple[dict[str, object], dict[str, object]]:
+    def observe(phase: str, observed_root: Path | None = None) -> tuple[dict[str, object], dict[str, object]]:
+        observed_root = observed_root or install
         shortcut = inspect_shortcut_no_follow(windows_start_menu_shortcut())
         registry = inspect_registry_64()
         observations.append({
             "phase": phase,
+            "observed_install_root": str(observed_root),
             "shortcut": shortcut,
             "registry": registry,
-            "journal": journal_observation(install),
-            "install_inventory": file_inventory(install),
+            "journal": journal_observation(observed_root),
+            "install_inventory": file_inventory(observed_root),
         })
         return shortcut, registry
 
@@ -1174,8 +1722,47 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_package_sha256=baseline_package_sha256,
                             retained_package_sha256s={baseline_package_sha256})
 
+        overlimit_payload = root / "candidate-path-limit.zip"
+        deflated_maintenance_payload(
+            overlimit_payload, executable, candidate_identity["version"],
+            overlimit_member=True,
+        )
+        coordinator = state_root.parent / "setup-coordinator.v1"
+        before_refusal = {
+            "programs": tree_snapshot(programs),
+            "state": tree_snapshot(state_root),
+            "coordinator_present": coordinator.exists(),
+        }
+        refused = invoke(
+            executable, "update", "--package", overlimit_payload, *common,
+            shell_integration=True, noninteractive=True, expected=4,
+        )
+        require_path_limit_plan_refusal(refused)
+        if (
+            {
+                "programs": tree_snapshot(programs),
+                "state": tree_snapshot(state_root),
+                "coordinator_present": coordinator.exists(),
+            } != before_refusal
+        ):
+            raise AssertionError(
+                "provider path-limit plan refusal was not observable and effect-free"
+            )
+        refused_shortcut, refused_registry = observe("candidate_path_limit_refused")
+        if refused_shortcut != shortcut or refused_registry != registry:
+            raise AssertionError(
+                "provider path-limit plan refusal changed current-user shell integration"
+            )
+
         updated = invoke(executable, "update", "--package", candidate_payload, *common,
                          shell_integration=True, noninteractive=True)
+        updated = await_external_handoff(
+            executable, updated, "update",
+            ("--package", candidate_payload,
+             "--root", install, "--state-root", state_root,
+             "--acceptance-root", root),
+            shell_integration=True, noninteractive=True,
+        )
         update_receipt = require_transition_receipt(
             updated, "update", candidate_identity, candidate_package_sha256,
             install, state_root, root, None,
@@ -1189,14 +1776,75 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256})
 
-        downgraded = invoke(executable, "downgrade", "--package", baseline_payload, *common,
-                            shell_integration=True, noninteractive=True)
+        downgraded_launch = invoke(
+            executable, "downgrade", "--package", baseline_payload, *common,
+            shell_integration=True, noninteractive=True,
+        )
+        baseline_launcher_sha256 = package_maintenance_launcher_sha256(baseline_payload)
+        if downgraded_launch.get("phase") == "handoff_launched":
+            downgrade_operation_id = downgraded_launch.get("operation_id")
+            if not isinstance(downgrade_operation_id, str) or not downgrade_operation_id:
+                raise AssertionError("source-distinct downgrade omitted its handoff operation identity")
+            continuation_helper = (state_root / "epoch-handoff" /
+                                   downgrade_operation_id / "FacManContinuation.exe")
+            continuation_sha256 = stable_handoff_digest(
+                continuation_helper, state_root, root, downgrade_operation_id,
+                "downgrade retained continuation helper",
+            )
+            candidate_setup_sha256 = sha256_path(executable)
+            if (continuation_sha256 != candidate_setup_sha256 or
+                    continuation_sha256 == baseline_launcher_sha256):
+                raise AssertionError(
+                    "B-to-A downgrade did not retain B Setup separately from A's target launcher"
+                )
+            observations.append({
+                "phase": "baseline_downgrade_handoff_launched",
+                "operation_id": downgrade_operation_id,
+                "continuation_helper": str(continuation_helper),
+                "continuation_helper_sha256": continuation_sha256,
+                "target_maintenance_launcher_sha256": baseline_launcher_sha256,
+            })
+            downgraded = await_external_handoff(
+                executable, downgraded_launch, "downgrade",
+                ("--package", baseline_payload,
+                 "--root", install, "--state-root", state_root,
+                 "--acceptance-root", root),
+                shell_integration=True, noninteractive=True,
+            )
+        elif downgraded_launch.get("phase") == "completed":
+            # The immediate retained predecessor needs no provider mutation and
+            # cannot overwrite the currently executing B Setup.  The classic
+            # migration coordinator may therefore verify and reactivate A in
+            # the initiating B process.  The receipt checks below still bind A
+            # to the exact immutable predecessor record and package.
+            observations.append({
+                "phase": "baseline_downgrade_retained_target_completed_inline",
+                "operation_id": downgraded_launch.get("operation_id"),
+                "executing_setup_sha256": sha256_path(executable),
+                "target_maintenance_launcher_sha256": baseline_launcher_sha256,
+            })
+            downgraded = downgraded_launch
+        else:
+            raise AssertionError(
+                "source-distinct downgrade neither completed an exact retained "
+                "target nor launched its continuation helper"
+            )
         downgrade_receipt = require_transition_receipt(
             downgraded, "downgrade", baseline_identity, baseline_package_sha256,
             install, state_root, root, update_receipt["activation"],
             retained_legacy=update_receipt["retained_legacy"],
         )
         shortcut, registry = observe("baseline_downgrade_completed")
+        baseline_repair_launcher = (state_root / "repair-sources" /
+            f"{baseline_package_sha256}.FacManSetup.exe")
+        baseline_repair_helper_sha256 = sha256_path(baseline_executable)
+        if stable_retained_digest(
+                baseline_repair_launcher, state_root, root,
+                "baseline retained repair helper",
+        ) != baseline_repair_helper_sha256:
+            raise AssertionError(
+                "B-to-A downgrade did not retain A's exact downloaded repair helper"
+            )
         assert_owned_native(shortcut, registry, install, state_root, root,
                             baseline_identity["version"], "baseline downgrade",
                             active_root=downgrade_receipt["install_root"],
@@ -1217,8 +1865,92 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={baseline_package_sha256,
                                                      candidate_package_sha256})
-        retained_retirement = invoke(executable, "uninstall", *common,
-                                     shell_integration=True, noninteractive=True)
+        registered_repair = registry_text(registry, "ModifyPath")
+        active_root = rollback_receipt["install_root"]
+        candidate_repair_source = (
+            state_root / "repair-sources" / f"{candidate_package_sha256}.zip"
+        )
+        withheld_repair_source = root / "withheld-active-generation-repair.zip"
+        os.replace(candidate_repair_source, withheld_repair_source)
+        try:
+            before_missing_repair = {
+                "generation": tree_snapshot(active_root),
+                "state": tree_snapshot(state_root),
+                "shortcut": shortcut,
+                "registry": registry,
+                "journals": journal_observation(active_root),
+            }
+            missing_repair_result = invoke_registered(
+                registered_repair, "--json", expected=4,
+            )
+            missing_repair = json.loads(missing_repair_result.stdout)
+            missing_shortcut, missing_registry = observe(
+                "active_generation_repair_missing_payload_refused"
+            )
+            missing_error = missing_repair.get("error")
+            if (missing_repair.get("status") != "error" or
+                    not isinstance(missing_error, dict) or
+                    missing_error.get("code") != "self_setup_package_missing" or
+                    tree_snapshot(active_root) != before_missing_repair["generation"] or
+                    tree_snapshot(state_root) != before_missing_repair["state"] or
+                    missing_shortcut != before_missing_repair["shortcut"] or
+                    missing_registry != before_missing_repair["registry"] or
+                    journal_observation(active_root) != before_missing_repair["journals"]):
+                raise AssertionError(
+                    "active-generation repair with a missing retained payload "
+                    "was not a typed no-effect refusal"
+                )
+        finally:
+            if withheld_repair_source.exists():
+                os.replace(withheld_repair_source, candidate_repair_source)
+
+        active_gui = (
+            active_root / "generations" /
+            candidate_identity["version"] / "FacMan.exe"
+        )
+        active_gui_sha256 = sha256_path(active_gui)
+        active_gui.write_bytes(b"deliberate active-generation damage\n")
+        repair_permit = qualification_permit(
+            root, "provider_plan_reviewed", "repair",
+            candidate_identity["version"], active_root, state_root,
+        )
+        interrupted_repair_result = invoke_registered(
+            registered_repair, "--json",
+            "--qualification-interrupt-after", "provider_plan_reviewed",
+            "--qualification-interrupt-permit", repair_permit,
+            expected=4,
+        )
+        interrupted_repair = json.loads(interrupted_repair_result.stdout)
+        assert_interrupted(interrupted_repair, "provider_plan_reviewed")
+        if not any(
+                item.get("provider_phase") == "plan_reviewed"
+                for item in journal_observation(active_root)):
+            raise AssertionError(
+                "active-generation repair interruption did not persist its provider phase"
+            )
+        resumed_repair_result = invoke_registered(registered_repair, "--json")
+        resumed_repair = json.loads(resumed_repair_result.stdout)
+        if (resumed_repair.get("status") != "ok" or
+                resumed_repair.get("operation") != "repair" or
+                resumed_repair.get("phase") != "receipt" or
+                sha256_path(active_gui) != active_gui_sha256):
+            raise AssertionError(
+                "registered active-generation repair did not resume and restore "
+                "the exact packaged executable"
+            )
+        shortcut, registry = observe("active_generation_repair_completed")
+        assert_owned_native(shortcut, registry, install, state_root, root,
+                            candidate_identity["version"],
+                            "active-generation repair",
+                            active_root=active_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256})
+        registered_retirement = registry_text(registry, "UninstallString")
+        retained_result = invoke_registered(
+            registered_retirement, "--json",
+        )
+        retained_retirement = json.loads(retained_result.stdout)
         if retained_retirement.get("phase") != "step_completed":
             raise AssertionError("chain retirement did not complete only its retained step")
         shortcut, registry = observe("chain_retirement_retained_completed")
@@ -1227,14 +1959,352 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                             active_root=rollback_receipt["install_root"],
                             active_package_sha256=candidate_package_sha256,
                             retained_package_sha256s={candidate_package_sha256})
-        active_retirement = invoke(executable, "uninstall", *common,
-                                   shell_integration=True, noninteractive=True)
+        active_result = invoke_registered(
+            registered_retirement, "--json",
+        )
+        active_retirement = json.loads(active_result.stdout)
         if active_retirement.get("phase") != "completed":
             raise AssertionError("chain retirement did not complete its active step")
         shortcut, registry = observe("chain_retirement_active_completed")
         assert_absent_native(shortcut, registry, "chain retirement")
         if install.exists():
             raise AssertionError("chain retirement retained the logical install root")
+
+        # The flat transition above proves compatibility behavior. This
+        # separate ordinary install must create a real epoch before either
+        # source-distinct maintenance operation is admitted.
+        epoch_fixture = root / "e"
+        epoch_fixture.mkdir()
+        epoch_programs = epoch_fixture / "Programs"
+        epoch_programs.mkdir()
+        epoch_install = epoch_programs / "FacMan"
+        epoch_state = epoch_fixture / "SetupState"
+        epoch_workspace = epoch_fixture / "FacManWorkspace"
+        epoch_workspace.mkdir()
+        epoch_keep = epoch_workspace / "keep.txt"
+        epoch_keep.write_text("preserve\n", encoding="utf-8")
+        epoch_common = ("--root", epoch_install, "--state-root", epoch_state,
+                        "--acceptance-root", epoch_fixture, "--yes")
+        epoch_installed = invoke(executable, "install", *epoch_common,
+                                 shell_integration=True, noninteractive=True)
+        if epoch_installed.get("status") != "ok":
+            raise AssertionError("ordinary candidate Setup did not install a real epoch")
+        epoch_genesis_root = epoch_genesis_install_root(
+            epoch_install, epoch_state, epoch_installed.get("epoch_id"),
+            candidate_package_sha256,
+        )
+        epoch_id = str(epoch_installed["epoch_id"])
+        genesis_record = require_epoch_generation_record(
+            epoch_id, candidate_identity, candidate_package_sha256,
+            candidate_identity["provider_revision"], epoch_install, epoch_state, epoch_fixture,
+        )
+        if not same_windows_path(genesis_record["install_root"], epoch_genesis_root):
+            raise AssertionError("ordinary Setup genesis changed its independently derived root")
+        shortcut, registry = observe("source_distinct_epoch_genesis_completed",
+                                     epoch_genesis_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, candidate_identity["version"],
+                            "source-distinct epoch genesis",
+                            active_root=epoch_genesis_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        installed_helper = epoch_genesis_root / "maintenance" / "FacManSetup.exe"
+        if not installed_helper.is_file():
+            raise AssertionError("real epoch has no installed maintenance entry point")
+        epoch_verify_args = ("--root", epoch_install, "--state-root", epoch_state,
+                             "--acceptance-root", epoch_fixture)
+        epoch_verified = invoke(
+            installed_helper, "verify", *epoch_verify_args,
+            shell_integration=True, noninteractive=True,
+        )
+        if epoch_verified.get("provider", {}).get("payload", {}).get("status") != "pass":
+            raise AssertionError("ordinary real epoch did not verify its installed package")
+        epoch_downgrade_launch = invoke(
+            installed_helper, "downgrade", "--package", baseline_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+            # The owned Windows job stops the external helper immediately
+            # after the initiating Setup exits. This exercises the public
+            # restart path with a genuine installed B epoch and package A.
+            wait_for_job_empty_after_primary=False,
+        )
+        if epoch_downgrade_launch.get("phase") != "handoff_launched":
+            raise AssertionError("real epoch downgrade did not launch external continuation")
+        interrupted_receipt = REAL_COMMANDS[-1]["bounded_process_receipt"]
+        if (not isinstance(interrupted_receipt, dict) or
+                interrupted_receipt.get("active_processes_at_primary_exit", 0) < 1 or
+                interrupted_receipt.get("waited_for_job_empty_after_primary") is not False or
+                interrupted_receipt.get("job_terminated") is not True or
+                interrupted_receipt.get("job_empty_observed") is not True):
+            raise AssertionError(
+                "owned Windows job did not stop a live external helper after parent exit"
+            )
+        epoch_downgrade_id = epoch_downgrade_launch.get("operation_id")
+        if not isinstance(epoch_downgrade_id, str) or not epoch_downgrade_id:
+            raise AssertionError("real epoch downgrade omitted its operation identity")
+        retained_helper = (epoch_state / "epoch-handoff" / epoch_downgrade_id /
+                           "FacManContinuation.exe")
+        if stable_handoff_digest(retained_helper, epoch_state, epoch_fixture,
+                                 epoch_downgrade_id,
+                                 "source-distinct epoch continuation helper") != \
+                sha256_path(installed_helper):
+            raise AssertionError("epoch downgrade did not retain the executing B Setup")
+        epoch_operation = (epoch_state.parent / "setup-coordinator.v1" / "epochs" /
+                           str(epoch_installed["epoch_id"]) / "maintenance" /
+                           epoch_downgrade_id)
+        if observation_path(epoch_operation / "80-registration-cutover.v2.json").exists():
+            raise AssertionError("interrupted external helper already completed cutover")
+        epoch_restart = invoke(
+            installed_helper, "downgrade", "--package", baseline_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if (epoch_restart.get("phase") != "handoff_launched" or
+                epoch_restart.get("operation_id") != epoch_downgrade_id):
+            raise AssertionError("ordinary Setup did not restart the interrupted epoch operation")
+        epoch_downgraded = await_external_handoff(
+            executable, epoch_restart, "downgrade",
+            ("--package", baseline_payload, "--root", epoch_install,
+             "--state-root", epoch_state, "--acceptance-root", epoch_fixture),
+            shell_integration=True, noninteractive=True,
+        )
+        epoch_baseline_root = require_epoch_transition_receipt(
+            epoch_downgraded, "downgrade", epoch_id, baseline_identity, baseline_package_sha256,
+            candidate_identity["provider_revision"], epoch_install, epoch_state, epoch_fixture,
+        )
+        if (epoch_downgraded.get("product_version") != baseline_identity["version"] or
+                not (epoch_baseline_root / "generations" /
+                     baseline_identity["version"] / "FacMan.exe").is_file()):
+            raise AssertionError("external epoch downgrade did not activate package A")
+        shortcut, registry = observe("source_distinct_epoch_downgrade_completed",
+                                     epoch_baseline_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "source-distinct epoch downgrade",
+                            active_root=epoch_baseline_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        epoch_baseline_gui = (epoch_baseline_root / "generations" /
+                              baseline_identity["version"] / "FacMan.exe")
+        baseline_gui_sha256 = sha256_path(epoch_baseline_gui)
+        epoch_baseline_gui.write_bytes(b"deliberate real-epoch damage after recovery\n")
+        epoch_controller = (epoch_state / "repair-sources" /
+                            f"{candidate_package_sha256}.FacManSetup.exe")
+        damaged_epoch = invoke(
+            epoch_controller,
+            "verify", *epoch_verify_args, shell_integration=True,
+            noninteractive=True,
+        )
+        if damaged_epoch.get("provider", {}).get("payload", {}).get("status") != "fail":
+            raise AssertionError("ordinary real-epoch verify did not detect package A damage")
+        epoch_repair_result = invoke_registered(
+            registry_text(registry, "ModifyPath"), "--json",
+        )
+        epoch_repair = json.loads(epoch_repair_result.stdout)
+        if (epoch_repair.get("status") != "ok" or
+                epoch_repair.get("operation") != "repair" or
+                epoch_repair.get("phase") != "receipt" or
+                sha256_path(epoch_baseline_gui) != baseline_gui_sha256):
+            raise AssertionError("registered real-epoch repair did not restore exact package A")
+        repaired_epoch = invoke(
+            epoch_controller,
+            "verify", *epoch_verify_args, shell_integration=True,
+            noninteractive=True,
+        )
+        if repaired_epoch.get("provider", {}).get("payload", {}).get("status") != "pass":
+            raise AssertionError("ordinary real-epoch verify did not accept repaired package A")
+        shortcut, registry = observe("source_distinct_epoch_repair_completed",
+                                     epoch_baseline_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "source-distinct epoch repair",
+                            active_root=epoch_baseline_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        epoch_update_launch = invoke(
+            executable, "update", "--package", candidate_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if epoch_update_launch.get("phase") != "reactivation_complete":
+            raise AssertionError("real epoch reapply did not complete retained activation inline")
+        epoch_updated = epoch_update_launch
+        epoch_updated_root = require_epoch_transition_receipt(
+            epoch_updated, "update", epoch_id, candidate_identity, candidate_package_sha256,
+            candidate_identity["provider_revision"], epoch_install, epoch_state, epoch_fixture,
+        )
+        if (epoch_updated.get("product_version") != candidate_identity["version"] or
+                not (epoch_updated_root / "generations" /
+                     candidate_identity["version"] / "FacMan.exe").is_file()):
+            raise AssertionError("inline epoch update did not reactivate package B")
+        shortcut, registry = observe("source_distinct_epoch_reapply_completed",
+                                     epoch_updated_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, candidate_identity["version"],
+                            "source-distinct epoch reapply",
+                            active_root=epoch_updated_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        updated_shortcut_sha256 = shortcut.get("sha256")
+        if not isinstance(updated_shortcut_sha256, str):
+            raise AssertionError("package B shortcut digest is unavailable")
+        rollback_helper = epoch_updated_root / "maintenance" / "FacManSetup.exe"
+        rollback_preview = invoke(
+            rollback_helper, "rollback", *epoch_verify_args,
+            shell_integration=True, noninteractive=True,
+        )
+        rollback_operation = str(rollback_preview.get("operation_id", ""))
+        if not rollback_operation:
+            raise AssertionError("ordinary rollback preview has no operation identity")
+        rollback_backup = windows_start_menu_shortcut().with_name(
+            "FacMan.lnk.facman-backup." + rollback_operation)
+        epoch_history = epoch_operation.parent.parent
+        activation_before_rollback = tree_snapshot(epoch_history / "activations")
+        missing_interrupt_permit = invoke(
+            rollback_helper, "rollback", *epoch_common,
+            "--qualification-interrupt-after", "activation_published",
+            shell_integration=True, noninteractive=True, expected=4,
+        )
+        if (missing_interrupt_permit.get("error", {}).get("code") !=
+                "self_setup_qualification_interrupt_invalid" or
+                tree_snapshot(epoch_history / "activations") != activation_before_rollback or
+                rollback_backup.exists()):
+            raise AssertionError("unpermitted rollback interruption changed lifecycle state")
+        interrupted_rollback_permit = qualification_permit(
+            epoch_fixture, "activation_published", "rollback",
+            candidate_identity["version"], epoch_install, epoch_state,
+        )
+        invoke(
+            rollback_helper, "rollback", *epoch_common,
+            shell_integration=True, noninteractive=True,
+            qualification=("activation_published", interrupted_rollback_permit),
+            expected=137, expect_process_loss=True,
+        )
+        activation_after_rollback = tree_snapshot(epoch_history / "activations")
+        if (activation_after_rollback == activation_before_rollback or
+                not rollback_backup.is_file() or rollback_backup.is_symlink()):
+            raise AssertionError("process loss did not occur after activation and before backup retirement")
+        shortcut, registry = observe("epoch_rollback_activation_published_process_loss",
+                                     epoch_baseline_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "interrupted epoch rollback",
+                            active_root=epoch_baseline_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        retained_metadata = os.lstat(rollback_backup)
+        if (not stat.S_ISREG(retained_metadata.st_mode) or
+                getattr(retained_metadata, "st_file_attributes", 0) & 0x400):
+            raise AssertionError("interrupted rollback retained a non-file or reparse backup")
+        backup_before_restart = sha256_path(rollback_backup)
+        if backup_before_restart != updated_shortcut_sha256:
+            raise AssertionError("interrupted rollback changed the exact package B shortcut backup")
+        observations.append({
+            "phase": "epoch_rollback_retained_shortcut_backup",
+            "path": str(rollback_backup),
+            "sha256": backup_before_restart,
+            "matches_active_b": True,
+        })
+        rollback_recovery_preview = invoke(
+            rollback_helper, "rollback", *epoch_verify_args,
+            shell_integration=True, noninteractive=True,
+        )
+        if (rollback_recovery_preview.get("phase") != "reactivation_pending" or
+                rollback_recovery_preview.get("operation_id") != rollback_operation or
+                tree_snapshot(epoch_history / "activations") != activation_after_rollback or
+                sha256_path(rollback_backup) != backup_before_restart):
+            raise AssertionError("rollback recovery preview did not preserve the published operation")
+        epoch_rollback = invoke(
+            rollback_helper, "rollback", *epoch_common,
+            shell_integration=True, noninteractive=True,
+        )
+        if (epoch_rollback.get("phase") != "reactivation_complete" or
+                epoch_rollback.get("product_version") != baseline_identity["version"] or
+                epoch_rollback.get("operation_id") != rollback_operation or
+                tree_snapshot(epoch_history / "activations") != activation_after_rollback or
+                rollback_backup.exists()):
+            raise AssertionError("real epoch rollback did not reactivate retained A")
+        rollback_root = require_epoch_transition_receipt(
+            epoch_rollback, "rollback", epoch_id, baseline_identity, baseline_package_sha256,
+            candidate_identity["provider_revision"], epoch_install, epoch_state, epoch_fixture,
+        )
+        shortcut, registry = observe("source_distinct_epoch_rollback_completed",
+                                     rollback_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, baseline_identity["version"],
+                            "source-distinct epoch rollback",
+                            active_root=rollback_root,
+                            active_package_sha256=baseline_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        epoch_reapply_after_rollback = invoke(
+            executable, "update", "--package", candidate_payload,
+            *epoch_common, shell_integration=True, noninteractive=True,
+        )
+        if (epoch_reapply_after_rollback.get("phase") != "reactivation_complete" or
+                epoch_reapply_after_rollback.get("product_version") !=
+                candidate_identity["version"] or
+                epoch_reapply_after_rollback.get("operation_id") ==
+                epoch_update_launch.get("operation_id")):
+            raise AssertionError("real epoch reapply after rollback reused an old operation")
+        epoch_updated_root = require_epoch_transition_receipt(
+            epoch_reapply_after_rollback, "update", epoch_id, candidate_identity,
+            candidate_package_sha256, candidate_identity["provider_revision"],
+            epoch_install, epoch_state, epoch_fixture,
+        )
+        shortcut, registry = observe("source_distinct_epoch_reapply_after_rollback",
+                                     epoch_updated_root)
+        assert_owned_native(shortcut, registry, epoch_install, epoch_state,
+                            epoch_fixture, candidate_identity["version"],
+                            "source-distinct epoch reapply after rollback",
+                            active_root=epoch_updated_root,
+                            active_package_sha256=candidate_package_sha256,
+                            retained_package_sha256s={baseline_package_sha256,
+                                                     candidate_package_sha256},
+                            maintenance_controller_sha256=candidate_package_sha256)
+        history_before_retirement = {
+            "manifest": sha256_path(epoch_history / "epoch.v1.json"),
+            "generations": tree_snapshot(epoch_history / "generations"),
+            "activations": tree_snapshot(epoch_history / "activations"),
+        }
+        if (len(history_before_retirement["generations"]["files"]) < 2 or
+                len(history_before_retirement["activations"]["files"]) < 5):
+            raise AssertionError("real epoch lacks the durable transition history to retain")
+        epoch_uninstall = registry_text(registry, "UninstallString")
+        for step in range(5):
+            removed = json.loads(invoke_registered(epoch_uninstall, "--json").stdout)
+            if removed.get("phase") == "completed":
+                break
+            if removed.get("phase") != "step_completed":
+                raise AssertionError("real epoch retirement stopped without a durable step")
+        else:
+            raise AssertionError("real epoch retirement exceeded its bounded generation count")
+        shortcut, registry = observe("source_distinct_epoch_retirement_completed",
+                                     epoch_updated_root)
+        assert_absent_native(shortcut, registry, "source-distinct epoch retirement")
+        repeated_retirement = json.loads(
+            invoke_registered(epoch_uninstall, "--json").stdout
+        )
+        if repeated_retirement.get("phase") != "completed":
+            raise AssertionError("completed real epoch retirement was not repeatable")
+        if (not epoch_keep.is_file() or
+                epoch_keep.read_text(encoding="utf-8") != "preserve\n" or
+                not epoch_state.is_dir() or
+                epoch_genesis_root.exists() or epoch_baseline_root.exists() or
+                epoch_updated_root.exists() or
+                history_before_retirement != {
+                    "manifest": sha256_path(epoch_history / "epoch.v1.json"),
+                    "generations": tree_snapshot(epoch_history / "generations"),
+                    "activations": tree_snapshot(epoch_history / "activations"),
+                }):
+            raise AssertionError("real epoch retirement did not preserve workspace and history")
         outcome = "passed"
         return 0
     except BaseException as exc:
@@ -1253,10 +2323,12 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                     "baseline_setup_sha256": sha256_path(baseline_executable),
                     "baseline_payload": str(baseline_payload),
                     "baseline_payload_sha256": sha256_path(baseline_payload),
+                    "baseline_overlay_sha256": baseline_package_sha256,
                     "candidate_setup": str(executable),
                     "candidate_setup_sha256": sha256_path(executable),
                     "candidate_payload": str(candidate_payload),
                     "candidate_payload_sha256": sha256_path(candidate_payload),
+                    "candidate_overlay_sha256": candidate_package_sha256,
                     "baseline_identity": baseline_identity,
                     "candidate_identity": candidate_identity,
                 },
@@ -1266,7 +2338,9 @@ def run_real_self_maintenance_transition(args: argparse.Namespace, executable: P
                 "commands": REAL_COMMANDS,
                 "observations": observations,
                 "registry_view": "64-bit",
-                "retained_final_state": "chain retirement completed through public setup",
+                "retained_final_state": (
+                    "flat and real-epoch retirement completed through public setup"
+                ),
             }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         except BaseException as persistence_error:
             note = f"NOTE: real self-maintenance evidence persistence failed: {persistence_error!r}"
@@ -1300,6 +2374,7 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         return shortcut, registry
 
     install = programs / "FacMan"
+    logical_install = install
     state_root = root / "SetupState"
     workspace = root / "FacManWorkspace"
     try:
@@ -1321,6 +2396,24 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
             raise AssertionError(f"unexpected setup version: {version}")
         common = ("--root", install, "--state-root", state_root,
                   "--acceptance-root", root, "--yes")
+
+        def next_successor_root() -> Path:
+            preview = invoke(executable, "install", "--package", payload,
+                             "--root", logical_install, "--state-root", state_root,
+                             "--acceptance-root", root, shell_integration=True,
+                             noninteractive=True)
+            if preview.get("status") != "ok" or preview.get("phase") != "plan":
+                raise AssertionError("ordinary Setup did not plan a retired-epoch successor")
+            target = preview.get("successor_install_root")
+            epoch_id = preview.get("successor_epoch_id")
+            if not isinstance(target, str) or not isinstance(epoch_id, str) or \
+                    len(epoch_id) != 64:
+                raise AssertionError("successor preview omitted its exact epoch target")
+            result = Path(target)
+            if result.parent != logical_install.parent or \
+                    not result.name.startswith("FacMan.generation.") or result.exists():
+                raise AssertionError("successor preview selected an occupied or foreign target")
+            return result
         workspace.mkdir()
         keep = workspace / "keep.txt"
         keep.write_text("preserve\n", encoding="utf-8")
@@ -1329,9 +2422,13 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
                                   shell_integration=True, noninteractive=True)
         if packaged_install.get("status") != "ok":
             raise AssertionError("produced setup executable did not install from its own overlay")
+        active_install = epoch_genesis_install_root(
+            install, state_root, packaged_install.get("epoch_id"),
+            setup_overlay_sha256(payload),
+        )
         shortcut, registry = observe("packaged_argv0_install_completed")
         assert_owned_native(shortcut, registry, install, state_root, root, version,
-                            "packaged argv0 install")
+                            "packaged argv0 install", active_root=active_install)
         first_sources = list((state_root / "repair-sources").glob("*.zip"))
         if len(first_sources) != 1:
             raise AssertionError("packaged install did not retain one repair package")
@@ -1340,10 +2437,12 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         invoke_registered(registry_text(registry, "UninstallString"))
         shortcut, registry = observe("registered_uninstall_without_zip_completed")
         assert_absent_native(shortcut, registry, "registered uninstall")
-        if install.exists():
+        if install.exists() or active_install.exists():
             raise AssertionError("registered uninstall did not remove the managed install")
 
-        permit = qualification_permit(root, "files_applied", "install", version, install, state_root)
+        install = next_successor_root()
+        permit = qualification_permit(root, "files_applied", "install", version,
+                                      logical_install, state_root)
         boundary_a = invoke(executable, "install", "--package", payload, *common, expected=4,
                             shell_integration=True, noninteractive=True,
                             qualification=("files_applied", permit))
@@ -1361,31 +2460,23 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
             raise AssertionError("ordinary install resume after files boundary failed")
         shortcut, registry = observe("install_files_applied_resumed")
         assert_owned_native(shortcut, registry, install, state_root, root, version, "files-boundary resume")
+        if epoch_genesis_install_root(logical_install, state_root,
+                                      resumed_a.get("epoch_id"),
+                                      setup_overlay_sha256(payload)) != install:
+            raise AssertionError("resumed successor did not activate its previewed target")
         if file_inventory(install) != files_boundary_inventory:
             raise AssertionError("files-boundary resume replayed provider-visible install content")
 
-        permit = qualification_permit(root, "files_applied", "uninstall", version,
-                                      install, state_root)
         registered_uninstall_a = registry_text(registry, "UninstallString")
-        uninstall_boundary_a_result = invoke_registered(
-            registered_uninstall_a, "--json",
-            "--qualification-interrupt-after", "files_applied",
-            "--qualification-interrupt-permit", permit, expected=4,
-        )
-        uninstall_boundary_a = json.loads(uninstall_boundary_a_result.stdout)
-        assert_interrupted(uninstall_boundary_a, "files_applied")
-        shortcut, registry = observe("uninstall_files_applied_interrupted")
-        assert_owned_native(shortcut, registry, install, state_root, root, version,
-                            "uninstall files boundary")
-        if install.exists():
-            raise AssertionError("uninstall files boundary retained provider-owned files")
         invoke_registered(registered_uninstall_a)
-        shortcut, registry = observe("uninstall_files_applied_resumed")
-        assert_absent_native(shortcut, registry, "uninstall files-boundary resume")
+        shortcut, registry = observe("successor_uninstall_completed")
+        assert_absent_native(shortcut, registry, "successor uninstall")
         if install.exists() or not keep.is_file() or not state_root.is_dir():
-            raise AssertionError("uninstall files-boundary resume exceeded its owned fixture scope")
+            raise AssertionError("successor uninstall exceeded its owned fixture scope")
 
-        permit = qualification_permit(root, "shortcut_applied", "install", version, install, state_root)
+        install = next_successor_root()
+        permit = qualification_permit(root, "shortcut_applied", "install", version,
+                                      logical_install, state_root)
         boundary_b = invoke(executable, "install", "--package", payload, *common, expected=4,
                             shell_integration=True, noninteractive=True,
                             qualification=("shortcut_applied", permit))
@@ -1411,24 +2502,11 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
                 file_inventory(install) != shortcut_boundary_inventory:
             raise AssertionError("shortcut-boundary resume replayed an observable native or provider effect")
 
-        permit = qualification_permit(root, "shortcut_applied", "uninstall", version,
-                                      install, state_root)
         registered_uninstall_b = registry_text(registry, "UninstallString")
-        uninstall_boundary_b_result = invoke_registered(
-            registered_uninstall_b, "--json",
-            "--qualification-interrupt-after", "shortcut_applied",
-            "--qualification-interrupt-permit", permit, expected=4,
-        )
-        uninstall_boundary_b = json.loads(uninstall_boundary_b_result.stdout)
-        assert_interrupted(uninstall_boundary_b, "shortcut_applied")
-        shortcut, registry = observe("uninstall_shortcut_applied_interrupted")
-        if shortcut.get("state") != "absent" or registry.get("state") != "present":
-            raise AssertionError(
-                "uninstall shortcut boundary did not expose exactly the retained registration"
-            )
         invoke_registered(registered_uninstall_b)
-        shortcut, registry = observe("uninstall_shortcut_applied_resumed")
-        assert_absent_native(shortcut, registry, "uninstall shortcut-boundary resume")
+        shortcut, registry = observe("second_successor_uninstall_completed")
+        assert_absent_native(shortcut, registry, "second successor uninstall")
+        install = next_successor_root()
         reinstalled = invoke(executable, "install", "--package", payload, *common,
                              shell_integration=True, noninteractive=True)
         if reinstalled.get("status") != "ok":
@@ -1436,6 +2514,10 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         shortcut, registry = observe("install_after_uninstall_recovery")
         assert_owned_native(shortcut, registry, install, state_root, root, version,
                             "install after uninstall recovery")
+        if epoch_genesis_install_root(logical_install, state_root,
+                                      reinstalled.get("epoch_id"),
+                                      setup_overlay_sha256(payload)) != install:
+            raise AssertionError("third successor did not activate its previewed target")
 
         repair_source = next((state_root / "repair-sources").glob("*.zip"))
         maintenance_launcher = repair_source.with_name(
@@ -1472,7 +2554,8 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
         if damaged.get("provider", {}).get("payload", {}).get("status") != "fail":
             raise AssertionError("real-mode owned damage was not detected")
         repair_permit = qualification_permit(
-            root, "provider_plan_reviewed", "repair", version, install, state_root
+            root, "provider_plan_reviewed", "repair", version,
+            logical_install, state_root
         )
         interrupted_repair = invoke(
             executable, "repair", "--package", payload, *common, expected=4,
@@ -1502,8 +2585,11 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
 
         foreign = install / "operator-note.txt"
         foreign.write_text("retain\n", encoding="utf-8")
+        retirement_root = state_root.parent / "setup-coordinator.v1" / "epoch-retirements"
         before_refusal = {"foreign_sha256": sha256_path(foreign), "shortcut": shortcut,
-                          "registry": registry}
+                          "registry": registry, "journals": journal_observation(install),
+                          "retirement_exists": retirement_root.exists(),
+                          "retirement_state": tree_snapshot(retirement_root)}
         refusal = invoke(executable, "uninstall", *common, expected=4, shell_integration=True,
                          noninteractive=True)
         after_shortcut, after_registry = observe("foreign_uninstall_refusal")
@@ -1513,7 +2599,10 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
                 "foreign_content_review_required" not in str(refusal_error.get("detail")) or \
                 not foreign.is_file() or \
                 before_refusal["foreign_sha256"] != sha256_path(foreign) or \
-                after_shortcut != shortcut or after_registry != registry:
+                after_shortcut != shortcut or after_registry != registry or \
+                journal_observation(install) != before_refusal["journals"] or \
+                retirement_root.exists() != before_refusal["retirement_exists"] or \
+                tree_snapshot(retirement_root) != before_refusal["retirement_state"]:
             raise AssertionError("foreign-file uninstall did not return the exact refusal or preserve its fixture")
         preserved_foreign = root / "foreign-preserved-after-refusal.txt"
         foreign.rename(preserved_foreign)
@@ -1561,6 +2650,7 @@ def run_real_current_user_integration(args: argparse.Namespace, executable: Path
 
 def main() -> int:
     global CALL_EVIDENCE, CANARY_TIMEOUT, REAL_DEADLINE
+    global WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--setup-exe", type=Path, required=True)
     parser.add_argument(
@@ -1572,6 +2662,10 @@ def main() -> int:
         "--payload",
         type=Path,
         help="Exercise an exact produced self-setup payload instead of the synthetic fixture.",
+    )
+    parser.add_argument(
+        "--embedded-default-payload", action="store_true",
+        help="Use ordinary embedded-payload discovery; --payload is only the independent identity oracle.",
     )
     parser.add_argument(
         "--workspace-lifecycle-evidence",
@@ -1605,6 +2699,12 @@ def main() -> int:
     parser.add_argument("--real-total-timeout", type=float,
                         help="Finite total deadline shared by every real current-user child.")
     args = parser.parse_args()
+    if args.embedded_default_payload:
+        if (args.payload is None or args.real_current_user_integration or
+                args.real_self_maintenance_transition):
+            parser.error("embedded default-payload proof requires only the produced-payload lifecycle")
+        if setup_overlay_sha256(args.setup_exe) != setup_overlay_sha256(args.payload):
+            parser.error("embedded Setup payload differs from the independent payload oracle")
     if args.real_current_user_integration or args.real_self_maintenance_transition:
         if os.name != "nt":
             parser.error("real current-user qualification is Windows-only")
@@ -1652,6 +2752,7 @@ def main() -> int:
         REAL_DEADLINE = time.monotonic() + bounded.seconds(
             args.real_total_timeout, "real current-user total deadline"
         )
+        WAIT_FOR_JOB_EMPTY_AFTER_PRIMARY = args.real_self_maintenance_transition
         executable = args.setup_exe.resolve(strict=True)
         args.payload = args.payload.resolve(strict=True)
         if args.real_self_maintenance_transition:
@@ -1691,11 +2792,40 @@ def main() -> int:
     version = version_result.stdout.strip()
     if not version.startswith("0.1.0-"):
         raise AssertionError(f"unexpected setup version: {version}")
+    incomplete_private = run_command([str(executable), "continue-maintenance"])
+    relative_private = run_command([
+        str(executable), "continue-maintenance",
+        "--operation-id", "maint.update.fixture",
+        "--handoff-nonce", "fixture-nonce",
+        "--handoff-journal", "relative-handoff.json",
+        "--handoff-journal-sha256", "a" * 64,
+        "--parent-handle", "1",
+        "--parent-pid", "1",
+        "--parent-created", "1",
+        "--deadline-tick-ms", "1",
+    ])
+    duplicate_private = run_command([
+        str(executable), "continue-maintenance",
+        "--operation-id", "maint.update.fixture",
+        "--operation-id", "maint.update.duplicate",
+        "--handoff-journal", str((ROOT / "missing-handoff.json").resolve()),
+        "--handoff-journal-sha256", "a" * 64,
+        "--parent-handle", "1",
+        "--parent-pid", "1",
+        "--parent-created", "1",
+        "--deadline-tick-ms", "1",
+    ])
+    if (incomplete_private.returncode != 2 or relative_private.returncode != 2 or
+            duplicate_private.returncode != 2 or incomplete_private.stdout or
+            relative_private.stdout or duplicate_private.stdout):
+        raise AssertionError(
+            "private maintenance continuation arguments were not strictly refused"
+        )
 
     fixture = (contextlib.nullcontext(str(args.fixture_root)) if args.fixture_root is not None
                else tempfile.TemporaryDirectory(prefix=(
                    "facman-self-setup-ci-long-" if args.ci_length_root
-                   else "facman-self-setup-")))
+                   else "fss-")))
     with fixture as temporary:
         root = Path(temporary)
         version_prefix, version_number = version.rsplit(".", 1)
@@ -1746,6 +2876,7 @@ def main() -> int:
                            zipfile.ZIP_DEFLATED if args.compression == "deflate" else zipfile.ZIP_STORED)
         else:
             package = args.payload.resolve(strict=True)
+        package_arguments = [] if args.embedded_default_payload else ["--package", package]
 
         if args.fixture_root is not None and args.payload is None:
             damaged_archive_controls(root, executable, package)
@@ -1765,7 +2896,7 @@ def main() -> int:
                 )
 
         plan = invoke(
-            executable, "install", "--package", package, "--root", install,
+            executable, "install", *package_arguments, "--root", install,
             "--state-root", state, "--acceptance-root", root,
         )
         if plan.get("phase") != "plan" or install.exists() or state.exists():
@@ -1774,13 +2905,21 @@ def main() -> int:
             )
 
         installed = invoke(
-            executable, "install", "--package", package, "--root", install,
+            executable, "install", *package_arguments, "--root", install,
             "--state-root", state, "--acceptance-root", root, "--yes",
         )
         if installed.get("phase") != "receipt":
             raise AssertionError("install did not return a receipt")
-        gui = install / "generations" / version / "FacMan.exe"
-        if not gui.is_file() or not (install / "maintenance/FacManSetup.exe").is_file():
+        active_install = install
+        epoch_id = installed.get("epoch_id")
+        if epoch_id is not None:
+            active_install = epoch_genesis_install_root(
+                install, state, epoch_id, setup_overlay_sha256(package),
+            )
+        gui = active_install / "generations" / version / "FacMan.exe"
+        if (not gui.is_file() or
+                not (active_install / "maintenance/FacManSetup.exe").is_file() or
+                not (install / "maintenance/FacManSetup.exe").is_file()):
             raise AssertionError("versioned generation or maintenance shell is missing")
 
         verified = invoke(
@@ -1790,9 +2929,22 @@ def main() -> int:
         if verified["provider"]["payload"]["status"] != "pass":
             raise AssertionError("fresh install did not verify")
 
+        if args.embedded_default_payload:
+            # Exercise the installed package from a foreign directory, including
+            # the compiled backend identity, resource discovery and same-binary
+            # terminal. Provider ownership verification alone cannot prove them.
+            subprocess.run(
+                [sys.executable, str(ROOT / "tools/package_runtime_smoke.py"),
+                 "--root", str(gui.parent)],
+                cwd=ROOT, check=True,
+            )
+
         if epoch_fixture_executable is not None:
             epoch_prehandoff_cli_controls(
                 root, executable, epoch_fixture_executable, version
+            )
+            completed_retirement_repeat_cli_controls(
+                root, executable, version
             )
 
         if args.workspace_lifecycle_evidence is not None:
@@ -1804,7 +2956,7 @@ def main() -> int:
                 [
                     sys.executable,
                     str(ROOT / "tools/workspace_lifecycle_package_proof.py"),
-                    "--executable", str(install / "generations" / version / "bin/facman.exe"),
+                    "--executable", str(active_install / "generations" / version / "bin/facman.exe"),
                     "--profile", "windows_product_x64",
                     "--package-mode", "installed_stage",
                     "--evidence", str(args.workspace_lifecycle_evidence),
@@ -1820,7 +2972,7 @@ def main() -> int:
                 [
                     sys.executable,
                     str(ROOT / "tools/resource_package_proof.py"),
-                    "--executable", str(install / "generations" / version / "bin/facman.exe"),
+                    "--executable", str(active_install / "generations" / version / "bin/facman.exe"),
                     "--profile", "windows_product_x64",
                     "--package-mode", "installed_stage",
                     "--evidence", str(args.resource_package_evidence),
@@ -1838,7 +2990,7 @@ def main() -> int:
             raise AssertionError("owned-file damage was not detected")
 
         repaired = invoke(
-            executable, "repair", "--package", package, "--root", install,
+            executable, "repair", *package_arguments, "--root", install,
             "--state-root", state, "--acceptance-root", root, "--yes",
         )
         if repaired["provider"]["payload"]["status"] != "completed":
@@ -1872,10 +3024,39 @@ def main() -> int:
             ).encode("utf-8"))
             target_version = maintenance_version
             maintenance_package = root / "maintenance-update.zip"
-            stored_maintenance_payload(
+            deflated_maintenance_payload(
                 maintenance_package, executable, target_version
             )
             coordinator = root / "setup-coordinator.v1"
+            overlimit_package = root / "maintenance-path-limit.zip"
+            deflated_maintenance_payload(
+                overlimit_package, executable, target_version,
+                overlimit_member=True,
+            )
+            refusal_permit = maintenance_qualification_permit(
+                root, "update", True, version, install, state
+            )
+            before_refusal = {
+                "programs": tree_snapshot(programs),
+                "state": tree_snapshot(state),
+                "coordinator_present": coordinator.exists(),
+            }
+            refused = invoke(
+                executable, "update", "--package", overlimit_package,
+                "--root", install, "--state-root", state,
+                "--acceptance-root", root, "--yes",
+                "--qualification-fixture-permit", refusal_permit,
+                expected=4,
+            )
+            require_path_limit_plan_refusal(refused)
+            if {
+                "programs": tree_snapshot(programs),
+                "state": tree_snapshot(state),
+                "coordinator_present": coordinator.exists(),
+            } != before_refusal:
+                raise AssertionError(
+                    "provider path-limit plan refusal changed synthetic lifecycle state"
+                )
             unqualified = invoke(
                 executable, "update", "--package", maintenance_package,
                 "--root", install, "--state-root", state,
@@ -1985,6 +3166,23 @@ def main() -> int:
             )
             if retained.get("phase") != "step_completed":
                 raise AssertionError("activation-chain retained uninstall did not complete")
+            coordinator = state.parent / "setup-coordinator.v1"
+            hostile_epoch = coordinator / "epochs" / ("b" * 64)
+            hostile_epoch.mkdir(parents=True)
+            (hostile_epoch / "epoch.v1.json").write_text("{}\n", encoding="utf-8")
+            before_epoch_conflict = tree_snapshot(coordinator)
+            epoch_conflict = invoke(
+                executable, "uninstall", "--root", install,
+                "--state-root", state, "--acceptance-root", root, "--yes",
+                expected=4,
+            )
+            if (epoch_conflict.get("error", {}).get("code") !=
+                    "self_maintenance_epoch_recovery_required" or
+                    tree_snapshot(coordinator) != before_epoch_conflict):
+                raise AssertionError(
+                    "incomplete flat retirement advanced with an epoch namespace"
+                )
+            shutil.rmtree(coordinator / "epochs")
         unknown = install / "operator-note.txt"
         unknown.write_text("retain\n", encoding="utf-8")
         refusal = invoke(
@@ -2004,9 +3202,12 @@ def main() -> int:
             executable, "uninstall", "--root", install, "--state-root", state,
             "--acceptance-root", root, "--yes",
         )
-        if removed["provider"]["payload"]["status"] != "completed":
+        if epoch_id is not None:
+            if removed.get("phase") != "completed":
+                raise AssertionError("produced epoch retirement did not complete")
+        elif removed["provider"]["payload"]["status"] != "completed":
             raise AssertionError("clean uninstall did not complete")
-        if install.exists() or not keep.is_file() or not state.is_dir():
+        if install.exists() or active_install.exists() or not keep.is_file() or not state.is_dir():
             raise AssertionError("uninstall scope was not ownership bounded")
     return 0
 

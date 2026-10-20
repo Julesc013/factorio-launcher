@@ -22,7 +22,7 @@ struct CreateRequest {
 struct ListRequest { std::string instance_id; };
 struct SnapshotRequest { std::string instance_id; std::string snapshot_id; };
 struct DiffRequest { std::string instance_id; std::string left_snapshot_id; std::string right_snapshot_id; };
-struct RestoreRequest { std::string snapshot_ref; std::string target_instance_id; };
+struct RestoreRequest { std::string snapshot_ref; std::string target_instance_id; std::string install_id; };
 struct RetentionRequest {
     std::string instance_id;
     std::uint32_t keep_last = 10;

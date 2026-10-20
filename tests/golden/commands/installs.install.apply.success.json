@@ -1,0 +1,64 @@
+{
+  "app_dir": "C:\\FacManAcceptance\\managed-factorio",
+  "app_dir_kind": "install_root",
+  "candidate_id": "managed-test",
+  "capabilities": [
+    "gui"
+  ],
+  "data_routing": "unknown",
+  "diagnostic_code": "",
+  "discovery": {
+    "read_only": true,
+    "source_family": "universal-setup"
+  },
+  "display_name": "Factorio managed-test",
+  "distribution_origin": "local_archive",
+  "evidence": [
+    "direct_inspection"
+  ],
+  "executable": "C:\\FacManAcceptance\\managed-factorio\\bin\\x64\\factorio.exe",
+  "executable_path_kind": "candidate",
+  "external_state_domains": [
+    "default_factorio_data"
+  ],
+  "install_id": "managed-test",
+  "installation_layout": "portable_archive",
+  "last_verification_identity": "1bf654d373788f1f742e9b84f7defab23485b0ac87e21743093411782d08d4dd",
+  "lifecycle_status": "active",
+  "local_data_domains": [],
+  "ownership": "managed",
+  "platform": "windows",
+  "platform_integration": "none_detected",
+  "product_id": "factorio",
+  "program_data_separation": "separated",
+  "provider_id": "universal-setup",
+  "root": "C:\\FacManAcceptance\\managed-factorio",
+  "safe_actions": {
+    "repair": true,
+    "uninstall": true
+  },
+  "schema": "factorio.install_ref.v1",
+  "setup_mutation_allowed": true,
+  "setup_state_ref": "C:\\FacManAcceptance\\setup-state\\state\\installed\\managed-test.tx-managed-prototype.json",
+  "side_by_side_safety": "independent_program_tree",
+  "source": "universal-setup",
+  "source_ref": "archive-sha256:8b2dd9848f4ea241e39400cdcb2a0ebdf44538d1f71c57298e2729748aa19b19",
+  "state_revision": "tx-managed-prototype:22f22ab95221fe2237138c72fa464f98c6d176e491ab5fe725364ab400379f39",
+  "strict_isolation_eligibility": "unproven",
+  "uninstall_integration": "not_detected",
+  "verification": {
+    "problems": [],
+    "status": "pass"
+  },
+  "version": "2.0.77",
+  "version_family": {
+    "exact_patch": true,
+    "id": "F200",
+    "normalized_version": "2.0.77",
+    "product_target": "0.1.0-alpha.1",
+    "schema": "factorio.version_family_classification.v1",
+    "status": "eligible",
+    "support_claim": "unclaimed",
+    "version_line": "2.0.x"
+  }
+}

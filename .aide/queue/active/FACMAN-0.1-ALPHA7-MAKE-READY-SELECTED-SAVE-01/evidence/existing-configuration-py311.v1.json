@@ -1,0 +1,55 @@
+{
+  "schema": "facman.existing_configuration_python_compatibility.v1",
+  "work_item": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "source_parent": "d87d5343f53aa76ec79d53e7d6f2c032e521c477",
+  "verdict": "PASS_WINDOWS_PYTHON_311_AND_314_FOCUSED_FIXTURES",
+  "failed_job": "https://github.com/Julesc013/factorio-launcher/actions/runs/37807914298/job/113416950478",
+  "failed_job_log_sha256": "662bc489852635ae9374072c8e5c083a8ca66938a699ac0522723421b944771f",
+  "baseline_errors": 4,
+  "baseline_log_sha256": "851044e1fbde078d92569f5e8fc80aded3094cb359a6ca82f91574e33f0b13a6",
+  "behavior": "Preserve exact Windows creation-time comparison on Python 3.11 and newer Python using the documented integer-nanosecond field.",
+  "fixed_test_sha256": "250278ccfcd4ac72d5072e8f60dd09e4ee5ae6023f6f9fd79cf96ab01ddbc1e7",
+  "native_product_changed": false,
+  "qualification_sha256": "47e782f9c2636783c92e9fa2fe5edddde88b530e6da8b7d4dfffd86079463ac4",
+  "acceptance_review_sha256": "e172753998db29be1cde58dd50c958bc795ffe647567cbe2733f6d5051555c20",
+  "focused_tests": 20,
+  "skipped": 0,
+  "python_versions": [
+    "3.11",
+    "3.14"
+  ],
+  "retained_native_qualification_sha256": "7010a7f26fe57305dbbc5c30bb816781aaf2f8e09aa1026d855be11b2a9cbf23",
+  "creation_identity_bytes_security_ADS_assertions_preserved": true,
+  "custody": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01/evidence/existing-configuration-py311-custody.zip",
+    "sha256": "076867b213d73dd13480d39931ec256e6cfc2a88a8911906f88e309000c28c54",
+    "bytes": 159406,
+    "members": {
+      "existing-configuration-py311-baseline-01.log": "851044e1fbde078d92569f5e8fc80aded3094cb359a6ca82f91574e33f0b13a6",
+      "existing-configuration-py311-controller-01.json": "576eca5debe3370fd43538b50dff0509562beab6f46814130fe39978d4860ed1",
+      "existing-configuration-py311-hygiene-doctor-01.log": "a056d7c449f9c815caa4828a2d78cfc2f331e9edeac878f0e491383362b62c1c",
+      "existing-configuration-py311-qualification-01.json": "47e782f9c2636783c92e9fa2fe5edddde88b530e6da8b7d4dfffd86079463ac4",
+      "existing-configuration-py311-qualification-acceptance-review-01.json": "e172753998db29be1cde58dd50c958bc795ffe647567cbe2733f6d5051555c20",
+      "existing-configuration-py311-source-review-01.json": "b4cfe9a4aee5e55aecb5197a4dea583016fd4fe1099f60b225e70790d53fd59f",
+      "existing-configuration-py311-test-proposal-01.json": "8ab33ef68453d337dd11608266514455916bcd9e72af6cc68a4fe0c535c685ba",
+      "existing-configuration-py311-test-proposal-01.patch": "a7bfd8268544fc3551d7964476399facac8b7438f1520408105d9f3cfb888267",
+      "existing-configuration-python-3.11-qualified-01.log": "9841800a7072dd73edf77cf6e8c7163ad1b7936a7c4ad42efe78a8d84040547b",
+      "existing-configuration-python-3.14-qualified-01.log": "bea7c3f83a220c5baa6f5dbeb69000a981251eccfb62ad25ba58c2c5a766939d",
+      "pr401-windows-native-job-113416950478-failure.log": "662bc489852635ae9374072c8e5c083a8ca66938a699ac0522723421b944771f",
+      "qualify-existing-configuration-py311-01.py": "ea65497c7b37bd6660629ae04833aa109062abdf85e845e5ea5d6d0a8ef8ab61"
+    }
+  },
+  "boundaries": {
+    "new_roots": 0,
+    "new_clones": 0,
+    "new_worktrees": 0,
+    "new_builds": 0,
+    "new_candidates": 0,
+    "job_reruns": 0,
+    "automatic_same_source_retry": false,
+    "required_source_and_merge_CI_pending": true,
+    "produced_package_acceptance_pending": true,
+    "full_workunit_closed": false,
+    "beta_qualified": false
+  }
+}

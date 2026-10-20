@@ -4,19 +4,86 @@
 #include "tui_product_model.hpp"
 #include "tui_product_renderer.hpp"
 #include "tui_product_shell.hpp"
+#include "fl_json.h"
 
 #include <chrono>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <iterator>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
 
-int main()
+int main(int argc, char** argv)
 {
     using namespace facman::tui;
+    if (argc == 2) {
+        // The focused Python owner supplies actual semantic receipts and bounded
+        // mutations to the same feedback function used by both product modes.
+        std::error_code error;
+        const auto size = std::filesystem::file_size(argv[1], error);
+        if (error || size > 8U * 1024U * 1024U) return 60;
+        std::ifstream file(argv[1], std::ios::binary);
+        std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        auto corpus = facman::core::json::parse(bytes);
+        const auto* cases = corpus ? corpus.value().find("cases") : nullptr;
+        if (!cases || !cases->is_array() || cases->size() > 128U) return 61;
+        const auto string = [](const facman::core::json::Value& value, const char* key) {
+            const auto* item = value.find(key);
+            auto text = item ? item->string_value() : facman::core::Result<std::string>::success("");
+            return text ? text.value() : std::string();
+        };
+        for (std::size_t index = 0; index < cases->size(); ++index) {
+            const auto& test = *cases->at(index);
+            auto envelope = facman::core::json::parse(string(test, "envelope"));
+            const auto* semantic = envelope ? envelope.value().find("payload") : nullptr;
+            const auto* expected_field = test.find("expected_clear");
+            auto expected = expected_field ? expected_field->bool_value() : facman::core::Result<bool>::success(false);
+            if (!semantic || !expected) return 62;
+            facman::client::CommandResponse response;
+            const auto* exit_field = test.find("exit_code");
+            auto exit_code = exit_field ? exit_field->signed_integer_value() : facman::core::Result<std::int64_t>::success(3);
+            if (!exit_code || (exit_code.value() != 0 && exit_code.value() != 3)) return 64;
+            response.status = static_cast<int>(exit_code.value());
+            response.command = "presentation.action";
+            const auto* identity = test.find("identity");
+            if (!identity) identity = &corpus.value();
+            response.request_id = string(*identity, "request_id");
+            response.parsed_payload = std::make_shared<facman::core::json::Value>(*semantic);
+            response.operation.operation_id = string(*identity, "operation_id");
+            response.operation.attempt_id = string(*identity, "attempt_id");
+            TuiAction action;
+            action.id = "readiness.prepare_joined";
+            const auto feedback = action_response_status(action, response);
+            const auto* installation_summary = test.find("expected_installation_summary");
+            if (installation_summary) {
+                auto expected_installation = installation_summary->bool_value();
+                if (!expected_installation || verified_installation_preparation_completion(response) != expected_installation.value() ||
+                    (feedback.find("Registered installation executable and current settings were prepared") != std::string::npos) != expected_installation.value()) {
+                    std::cerr << "Invalid v3 installation completion: " << string(test, "name") << ": " << feedback << '\n';
+                    return 66;
+                }
+                continue;
+            }
+            const auto* summary_field = test.find("expected_summary");
+            if (summary_field) expected = summary_field->bool_value();
+            if (!expected) return 65;
+            const bool fresh = summary_field ? feedback.find("Current settings were prepared") != std::string::npos :
+                feedback.find("correct changed inputs, refresh and confirm a new request") != std::string::npos;
+            if (fresh != expected.value()) {
+                std::cerr << "Invalid v2 continuation feedback: " << string(test, "name") << ": " << feedback << '\n';
+                return 63;
+            }
+        }
+        std::cout << "PASS " << cases->size() << " actual v2 continuation feedback cases\n";
+        return 0;
+    }
     const std::string source = R"({
       "schema":"facman.presentation_snapshot.v1",
       "revision":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-      "selected_context":{"instance_id":"main"},
+      "selected_context":{"instance_id":"main","launch_intent":"menu"},
       "page":{"scope":"launch_deck","summary":"Launch Deck for main","items":[
         {"instance_id":"main","display_name":"Main world","factorio_version":"2.0.77","profile":"default","selected":true},
         {"instance_id":"test","display_name":"Test world","factorio_version":"2.0.77","profile":"safe","selected":false}
@@ -56,6 +123,43 @@ int main()
         snapshot.workspace_path != "C:/FacMan" ||
         snapshot.workspace_id != "workspace-main" ||
         snapshot.active_operation != "running") return 2;
+    if (snapshot.selected_instance_name != "Main world" ||
+        snapshot.factorio_version != "2.0.77" || snapshot.profile != "default") {
+        std::cerr << "Matching selected instance row must enrich legacy context metadata\n";
+        return 60;
+    }
+
+    for (const std::string context : {
+             R"({"instance_id":null,"display_name":null,"factorio_version":null,"profile":null})",
+             R"({"instance_id":"main","display_name":"Chosen world","factorio_version":"2.0.77","profile":"gui"})"}) {
+        const TuiSnapshot content_selection = parse_presentation_snapshot(
+            std::string(R"({"selected_context":)") + context + R"(,
+              "page":{"scope":"content","items":[
+                {"id":"mod:base@2.0.77","kind":"builtin_mod","name":"Base",
+                 "selected":true,"factorio_version":"2.0","profile":"foreign"}
+              ]}})");
+        const bool none = context.find("null") != std::string::npos;
+        if (content_selection.selected_instance_id != (none ? "" : "main") ||
+            content_selection.selected_instance_name != (none ? "" : "Chosen world") ||
+            content_selection.factorio_version != (none ? "" : "2.0.77") ||
+            content_selection.profile != (none ? "" : "gui") ||
+            content_selection.items.size() != 1U || !content_selection.items[0U].selected) {
+            std::cerr << "Content selection must preserve authoritative instance context: " << context << '\n';
+            return 61;
+        }
+    }
+
+    const TuiSnapshot conflicting_instance = parse_presentation_snapshot(R"({
+      "selected_context":{"instance_id":"main","display_name":"Chosen world"},
+      "page":{"scope":"instances","items":[
+        {"instance_id":"other","display_name":"Other world","selected":true}
+      ]}
+    })");
+    if (conflicting_instance.selected_instance_id != "main" ||
+        conflicting_instance.selected_instance_name != "Chosen world") {
+        std::cerr << "A conflicting instance row must not replace selected_context\n";
+        return 62;
+    }
 
     const TuiSnapshot installation_snapshot = parse_presentation_snapshot(R"({
       "schema":"facman.presentation_snapshot.v1",
@@ -103,6 +207,43 @@ int main()
         content_snapshot.actions.size() != 1U ||
         content_snapshot.actions[0U].input_fields.size() != 1U ||
         content_snapshot.actions[0U].input_fields[0U].id != "mod_identity") return 30;
+
+    const TuiSnapshot saves_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "selected_context":{"instance_id":"main"},
+      "page":{"scope":"saves","summary":"Save inventory","items":[
+        {"save_id":"world.zip","name":"world.zip","association_status":"current",
+         "association_context":{"status":"drifted","factorio_version":{"status":"drifted"},
+           "modset_lock":{"status":"match"}}},
+        {"save_id":"legacy.zip","name":"legacy.zip","association_status":"drifted"}
+      ]}
+    })");
+    TuiState saves_state;
+    saves_state.page = TuiPage::saves;
+    saves_state.snapshot = saves_snapshot;
+    saves_state.focus_region = TuiFocusRegion::items;
+    const TuiRenderModel saves_model = make_tui_render_model(saves_state, false);
+    TerminalCapabilities saves_capabilities;
+    saves_capabilities.observed.columns = 80U;
+    saves_capabilities.observed.rows = 24U;
+    std::ostringstream saves_linear, saves_full;
+    ProductRenderer::render_linear(saves_linear, saves_model);
+    ProductRenderer::render_full_screen(saves_full, saves_model, saves_capabilities);
+    for (const char* text : {"Save bytes: current", "Declared context: drifted", "Version: drifted", "Content: match"}) {
+        if (saves_linear.str().find(text) == std::string::npos ||
+            saves_full.str().find(text) == std::string::npos) return 40;
+    }
+    if (saves_state.snapshot.selected_instance_id != "main") return 41;
+    saves_state.selected_item = 1U;
+    std::ostringstream legacy_linear, legacy_full;
+    const TuiRenderModel legacy_model = make_tui_render_model(saves_state, false);
+    ProductRenderer::render_linear(legacy_linear, legacy_model);
+    ProductRenderer::render_full_screen(legacy_full, legacy_model, saves_capabilities);
+    for (const char* text : {"Save bytes: drifted", "Declared context: Not observed", "Version: not observed", "Content: not observed"}) {
+        if (legacy_linear.str().find(text) == std::string::npos ||
+            legacy_full.str().find(text) == std::string::npos) return 42;
+    }
 
     const TuiSnapshot support_snapshot = parse_presentation_snapshot(R"({
       "schema":"facman.presentation_snapshot.v1",
@@ -161,6 +302,28 @@ int main()
     })";
     if (parse_presentation_snapshot(completed_source).last_run != "completed") return 16;
 
+    if (snapshot.launch_intent != "menu") return 40;
+    auto invalid_intent_snapshot = parse_presentation_snapshot(
+        "{\"revision\":\"abc\",\"selected_context\":{\"launch_intent\":\"benchmark\"}}");
+    if (invalid_intent_snapshot.launch_intent != "benchmark") return 41;
+    TuiState observing;
+    observing.snapshot = snapshot;
+    observing.pending_action = "readiness.prepare";
+    observing.form.id = "readiness.prepare";
+    TuiEvent observation;
+    observation.kind = TuiEventKind::observe_launch_intent;
+    observation.value = "load_save";
+    observing = reduce_tui_state(observing, observation);
+    if (observing.launch_intent != "load_save" || !observing.pending_action.empty() ||
+        !observing.form.id.empty() || !observing.snapshot.revision.empty() ||
+        !observing.refresh_requested) return 42;
+    observation.value = "benchmark";
+    observing = reduce_tui_state(observing, observation);
+    if (observing.launch_intent != "load_save") return 43;
+    observation.value = "menu";
+    observing = reduce_tui_state(observing, observation);
+    if (observing.launch_intent != "menu") return 44;
+
     TuiState state;
     TuiEvent received;
     received.kind = TuiEventKind::snapshot_received;
@@ -215,6 +378,63 @@ int main()
         first_identity.attempt_id != "attempt-" + first_identity.request_id ||
         first_identity.request_id.find("0123456789ab") == std::string::npos) return 17;
 
+    struct ReviewedEdit {
+        const char* field;
+        const char* before;
+        const char* after;
+        bool present;
+        bool invalidates;
+        bool valid;
+    };
+    const ReviewedEdit reviewed_edits[] = {
+        {"snapshot_id", "first", "second", true, true, true},
+        {"snapshot_id", "first", "", true, true, false},
+        {"snapshot_id", "first", "first", true, false, true},
+        {"save", "starter.zip", "", true, true, true},
+        {"save", "", "starter.zip", true, true, true},
+        {"save", "", "", true, false, true},
+        {"save", "", "", false, false, true},
+    };
+    TuiState reviewed;
+    reviewed.form.id = "snapshots.create";
+    reviewed.form.fields = {
+        {"snapshot_id", "Snapshot", FormFieldType::string, true, false, {}, {}, {}, {}},
+        {"save", "Optional save", FormFieldType::string, false, false, {}, {}, {}, {}},
+        {"count", "Count", FormFieldType::integer, false, false, {}, {}, {}, {}},
+    };
+    reviewed.form.values["snapshot_id"] = "first";
+    reviewed.pending_action = "snapshots.create";
+    for (const auto& example : reviewed_edits) {
+        TuiState prior = reviewed;
+        if (example.present) prior.form.values[example.field] = example.before;
+        const auto values_before = prior.form.values;
+        TuiEvent edited;
+        edited.kind = TuiEventKind::edit_field;
+        edited.name = example.field;
+        edited.value = example.after;
+        const TuiState changed = reduce_tui_state(prior, edited);
+        if (changed.pending_action.empty() != example.invalidates ||
+            changed.form.values.at(example.field) != example.after ||
+            changed.form.problems.empty() != example.valid ||
+            prior.pending_action != "snapshots.create" ||
+            prior.form.values != values_before) return 54;
+    }
+    TuiEvent corrected;
+    corrected.kind = TuiEventKind::edit_field;
+    corrected.name = "count";
+    corrected.value = "many";
+    reviewed = reduce_tui_state(reviewed, corrected);
+    if (!reviewed.pending_action.empty() || reviewed.form.problems.empty()) return 55;
+    corrected.value = "2";
+    reviewed = reduce_tui_state(reviewed, corrected);
+    if (!reviewed.pending_action.empty() || !reviewed.form.problems.empty()) return 56;
+    TuiEvent reviewed_again;
+    reviewed_again.kind = TuiEventKind::activate_action;
+    reviewed_again.name = "snapshots.create";
+    reviewed = reduce_tui_state(reviewed, reviewed_again);
+    reviewed = reduce_tui_state(reviewed, corrected);
+    if (reviewed.pending_action != "snapshots.create") return 57;
+
     state.form.fields = {
         {"name", "Name", FormFieldType::string, true, false, {}, {}, {}, {}},
         {"count", "Count", FormFieldType::integer, true, false, {}, {}, {}, {}},
@@ -231,7 +451,7 @@ int main()
 
     TuiRenderModel model = make_tui_render_model(state, false);
     if (model.navigation.size() != 8U || model.active_navigation != 1U ||
-        model.launch_deck.size() != 6U || model.actions.size() != 4U ||
+        model.launch_deck.size() != 7U || model.actions.size() != 4U ||
         model.active_action != 0U || model.primary_action != "Refresh" ||
         model.focus != "Search: test") return 6;
     std::ostringstream linear;
@@ -278,7 +498,8 @@ int main()
     std::ostringstream lifecycle;
     ProductRenderer::enter_full_screen(lifecycle);
     ProductRenderer::leave_full_screen(lifecycle);
-    if (lifecycle.str() != "\x1b[?1049h\x1b[?25l\x1b[?25h\x1b[?1049l") return 20;
+    if (lifecycle.str() != "\x1b[?2004h\x1b[?1049h\x1b[?25l"
+        "\x1b[?2004l\x1b[?25h\x1b[?1049l") return 20;
 
     TuiEvent disconnected;
     disconnected.kind = TuiEventKind::transport_disconnected;
@@ -308,6 +529,34 @@ int main()
     completed.operation.outcome = facman::client::OperationOutcome::completed;
     if (action_response_status(launch_action, completed) != "Start fake session completed") return 26;
 
+    const auto snapshot_reply = [](const char* outcome, const char* schema = "factorio.snapshot_report.v1",
+        const char* status = "ok", const char* path = "/synthetic/world.zip") {
+        facman::client::CommandResponse reply;
+        reply.status = 0;
+        auto payload = facman::core::json::parse(std::string(
+            "{\"schema\":\"facman.semantic_action_result.v1\",\"action_id\":\"snapshots.create\",\"outcome\":") +
+            facman::core::json::quote_string(outcome) + ",\"action_payload\":{\"command\":\"snapshots.create\",\"schema\":" +
+            facman::core::json::quote_string(schema) + ",\"status\":" + facman::core::json::quote_string(status) +
+            ",\"path\":" + facman::core::json::quote_string(path) + "}}");
+        if (payload) reply.parsed_payload = std::make_shared<facman::core::json::Value>(payload.take_value());
+        return reply;
+    };
+    TuiAction snapshot_action;
+    snapshot_action.id = "snapshots.create";
+    snapshot_action.label = "Create instance snapshot";
+    if (action_response_status(snapshot_action, snapshot_reply("completed")) !=
+        "Snapshot created: /synthetic/world.zip") return 50;
+    if (action_response_status(snapshot_action, snapshot_reply("completed", "common.refusal.v1")).find("Snapshot created:") != std::string::npos ||
+        action_response_status(snapshot_action, snapshot_reply("completed", "factorio.snapshot_report.v1", "failed")).find("Snapshot created:") != std::string::npos ||
+        action_response_status(snapshot_action, snapshot_reply("completed", "factorio.snapshot_report.v1", "ok", "")).find("Snapshot created:") != std::string::npos) return 51;
+    if (action_response_status(snapshot_action, snapshot_reply("outcome_unknown")).find("Outcome unknown") == std::string::npos ||
+        action_response_status(snapshot_action, snapshot_reply("recovery_required")).find("Recovery required") == std::string::npos ||
+        action_response_status(snapshot_action, snapshot_reply("refused_before_effects")) != "Refused before effects") return 52;
+    auto transport_failure = snapshot_reply("completed");
+    transport_failure.status = 1;
+    transport_failure.error_code = "transport_error";
+    if (action_response_status(snapshot_action, transport_failure).find("Snapshot created:") != std::string::npos) return 53;
+
     TuiState long_state;
     long_state.page = TuiPage::instances;
     long_state.focus_region = TuiFocusRegion::items;
@@ -332,5 +581,20 @@ int main()
         long_output.str().size() > 16U * 1024U ||
         long_output.str().find("Instance 9999") == std::string::npos ||
         long_output.str().find("... earlier content ...") == std::string::npos) return 27;
+    const TuiSnapshot preview_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "selected_context":{"instance_id":"main"},
+      "page":{"scope":"launch_deck","summary":"Launch","items":[]},
+      "readiness":{"configuration_state":"ready","execution_available":false,
+        "preparation_preview":{"composition_state":"partial","preparation_available":false,
+          "installation":{"disposition":"plan","report":{"plan_digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"refusal":null},
+          "profile":{"disposition":"refusal","report":null,"refusal":"profile_overrides_invalid"}}},
+      "available_semantic_actions":[], "active_operations":[]
+    })");
+    if (preview_snapshot.readiness.find("Preparation preview: partial; apply unavailable") == std::string::npos ||
+        preview_snapshot.readiness.find("profile_overrides_invalid") == std::string::npos ||
+        preview_snapshot.readiness.find(std::string(64U, 'a')) != std::string::npos ||
+        !preview_snapshot.actions.empty()) return 43;
     return 0;
 }

@@ -12,6 +12,7 @@
 
 namespace facman::self_maintenance {
 class CoordinatorLockToken;
+struct Generation;
 }
 
 namespace facman::self_setup {
@@ -148,10 +149,16 @@ struct Request {
   std::filesystem::path acceptance_root;
   std::string product_version;
   bool apply = false;
+  // Ordinary successor install reserves an immutable epoch before provider
+  // effects. Recheck that reservation under Setup's singleton effect lock.
+  std::string reserved_successor_epoch_id;
   // Supplied only by retire_active while it owns the exact global coordinator
   // lock. It prevents recursive acquisition around a per-generation uninstall.
   const facman::self_maintenance::CoordinatorLockToken *coordinator_lock =
       nullptr;
+  // Retirement may inspect/remove a supported historical generation only
+  // while holding its coordinator lock. This exact witness also binds replay.
+  const facman::self_maintenance::Generation *retirement_generation = nullptr;
   // A null adapter is the portable/no-shell-integration mode. It still
   // records native effects as not_applicable in the composite journal.
   NativeEffects *native_effects = nullptr;

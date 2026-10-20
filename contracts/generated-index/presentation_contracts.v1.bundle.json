@@ -48,6 +48,13 @@
           "installation_path": {
             "type": "string"
           },
+          "launch_intent": {
+            "enum": [
+              "menu",
+              "load_save"
+            ],
+            "type": "string"
+          },
           "mod_identity": {
             "type": "string"
           },
@@ -60,6 +67,11 @@
           },
           "profile_id": {
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "repair_review_id": {
+            "maxLength": 256,
+            "minLength": 1,
             "type": "string"
           },
           "request_id": {
@@ -94,7 +106,14 @@
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
             "type": "string"
           },
+          "snapshot_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
           "source_data_root": {
+            "type": "string"
+          },
+          "source_path": {
             "type": "string"
           },
           "template_id": {
@@ -117,7 +136,7 @@
       },
       "schema_id": "https://facman.invalid/schema/command/presentation.action.request.v1.schema.json",
       "source_path": "contracts/schema/command/presentation.action.request.v1.schema.json",
-      "source_sha256": "15a16c135db0de97c6b9a6a1d28276e6ceda192da31b3bef2a9766644059d37e"
+      "source_sha256": "a40226a9151b794e097f920e8a749e8b88d04737351439b8170742ed41f189a1"
     },
     {
       "behavior": "effect_input",
@@ -131,6 +150,18 @@
             "maxLength": 64,
             "minLength": 64,
             "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "launch_intent": {
+            "enum": [
+              "menu",
+              "load_save"
+            ],
+            "type": "string"
+          },
+          "repair_review_id": {
+            "maxLength": 256,
+            "minLength": 1,
             "type": "string"
           },
           "scope": {
@@ -162,7 +193,7 @@
       },
       "schema_id": "https://facman.invalid/schema/command/presentation.query.request.v1.schema.json",
       "source_path": "contracts/schema/command/presentation.query.request.v1.schema.json",
-      "source_sha256": "bae1061cc0581ab534f62474a4fc3d5a023b669c0315bd19e18feb1627dc875f"
+      "source_sha256": "da29867a7d6e436e2c4a4a97fa0b2e6a8d1756044ca078d9d0990e92621805ca"
     },
     {
       "behavior": "effect_input",
@@ -821,6 +852,225 @@
             "const": "presentation.query"
           },
           "dependency_identities": {
+            "properties": {
+              "configuration_preparation": {
+                "additionalProperties": false,
+                "oneOf": [
+                  {
+                    "properties": {
+                      "plan": {
+                        "type": "object"
+                      },
+                      "refusal": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "plan": {
+                        "type": "null"
+                      },
+                      "refusal": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                ],
+                "properties": {
+                  "instance_id": {
+                    "type": "string"
+                  },
+                  "launch_intent": {
+                    "enum": [
+                      "menu",
+                      "load_save"
+                    ]
+                  },
+                  "plan": {
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "$ref": "../factorio/factorio_configuration_preparation_plan.v1.schema.json"
+                      }
+                    ]
+                  },
+                  "refusal": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "code": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "detail": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "detail"
+                    ],
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "instance_id",
+                  "launch_intent",
+                  "plan",
+                  "refusal"
+                ],
+                "type": "object"
+              },
+              "profile_preparation": {
+                "items": {
+                  "additionalProperties": false,
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "plan_sha256": {
+                          "type": "string"
+                        },
+                        "refusal": {
+                          "type": "null"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "plan_sha256": {
+                          "type": "null"
+                        },
+                        "refusal": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  ],
+                  "properties": {
+                    "instance_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "plan_sha256": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "profile_id": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "refusal": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "detail": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "detail"
+                      ],
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "instance_id",
+                    "profile_id",
+                    "plan_sha256",
+                    "refusal"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "selected_save_preparation": {
+                "additionalProperties": false,
+                "oneOf": [
+                  {
+                    "properties": {
+                      "plan": {
+                        "type": "object"
+                      },
+                      "refusal": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "plan": {
+                        "type": "null"
+                      },
+                      "refusal": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                ],
+                "properties": {
+                  "instance_id": {
+                    "type": "string"
+                  },
+                  "launch_intent": {
+                    "enum": [
+                      "menu",
+                      "load_save"
+                    ]
+                  },
+                  "plan": {
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  },
+                  "refusal": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "code": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "detail": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "detail"
+                    ],
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "instance_id",
+                  "launch_intent",
+                  "plan",
+                  "refusal"
+                ],
+                "type": "object"
+              }
+            },
             "type": "object"
           },
           "freshness": {
@@ -852,6 +1102,20 @@
             "const": "facman.presentation_snapshot.v1"
           },
           "selected_context": {
+            "properties": {
+              "launch_intent": {
+                "enum": [
+                  "menu",
+                  "load_save"
+                ],
+                "type": "string"
+              },
+              "repair_review_id": {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
             "type": "object"
           },
           "snapshot_id": {
@@ -896,7 +1160,7 @@
       },
       "schema_id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
       "source_path": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
-      "source_sha256": "62af1ffe2e6e0fc4a7477dee63e9ec44c5b883811656feacaa5750ee4deeb889"
+      "source_sha256": "37c97c18b9d5a79fc27e23bc631e9653bbf6aae4d03e13e404dfcd20e561b06d"
     },
     {
       "behavior": "read_projection",
@@ -997,5 +1261,5 @@
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200"
+  "source_digest": "9ace5359b2560e818d758f1e94c75de494df7a03e5ce68f1125c0765edf8f3ca"
 }

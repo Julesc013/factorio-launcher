@@ -1,0 +1,188 @@
+{
+  "schema": "facman.historical_terminal_acceptance_copy.v1",
+  "scope": "Historical original c624 artifact acceptance only; not new fullscreen form-editing acceptance",
+  "original_receipt_file": "linux-maint-accepted-handoff-01.json",
+  "original_receipt_sha256": "7e1411e8a96cc8b8e7dab4a33f6ecda342cc6cf59f103e35e9c633aef7e1a06d",
+  "original_receipt_bytes": 9469,
+  "representation": "Canonical LF repository JSON with parsed original payload; immutable original receipt bytes remain in marker-owned evidence. Do not substitute this representation hash for original raw receipt hash.",
+  "original_payload": {
+    "schema": "facman.linux_content_maintenance_accepted_handoff.v1",
+    "status": "ACCEPTED_NARROW_ORIGINAL_DELIVERED_LINUX_MAINTENANCE",
+    "whole_work_unit_status": "ACTIVE; no fullF09/F19/Beta/RC or provider-adoption claim",
+    "candidate_head": "c624c256f86b90e8c8edccd7759144120e05145a",
+    "candidate_tree": "cdf4bed169c69d974ebbcec069938ec7731d85d8",
+    "compiled_source": "ae105dc7e0a11798873a4997e9900bb7a6b164f2",
+    "compiled_parents": [
+      "67b1b8e8017115b2923aff496bcc8e66c87a8b84",
+      "c624c256f86b90e8c8edccd7759144120e05145a"
+    ],
+    "compiled_identity_note": "Actual synthetic merge from normal successful CI; never relabelled as candidateHEAD or mergeddev",
+    "run_url": "https://github.com/Julesc013/factorio-launcher/actions/runs/39232987008",
+    "job_url": "https://github.com/Julesc013/factorio-launcher/actions/runs/39232987008/job/117995203918",
+    "artifact_id": 12180205210,
+    "artifact_sha256": "a2a39b6dc1e504c14bdffd20b59c539363a3ee47e7e768dbdeb05417259e7ea3",
+    "download_count": 1,
+    "package_profiles": [
+      "linux_portable_cli_x64",
+      "linux_portable_tui_x64"
+    ],
+    "backend_sha256": "89b4fb15b53dfbaa3f4282b34fd8a359fe454f309a05dc9dc2647b4081f7f263",
+    "contract_count_each": 457,
+    "contract_set_sha256": "0c295c38ec09b767c93379058703db595014dac5b5761a869aab468a9fa1f45f",
+    "providers": {
+      "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "universal_setup": "2749a15b835a6c1c9968598a2b434d85809691ad"
+    },
+    "outcome": "Lockedv1+otherenabled localcontent -> readable exactv2linearTUIpreview/diff -> cancellationswithouteffects -> explicitupdate -> verify -> historyselectedrollback -> exactoriginalactivation/locks/settings/protectedbytesandnativefileidentities; stale/artifact/dependency/otherinstance/foreignappliedstate refusals retained",
+    "methods": {
+      "attempt01_completed": [
+        "test_exact_version_preview_apply_replay_history_rollback_preserves_original",
+        "test_exact_version_refuses_stale_conflicting_and_other_instance_material",
+        "test_foreign_applied_state_refuses_rollback_and_retains_both_versions"
+      ],
+      "attempt02_completed": [
+        "test_other_instance_archives_never_replace_selected_physical_identity"
+      ],
+      "attempt03_completed": [
+        "test_ordinary_tui_selects_previews_cancels_updates_and_rolls_back_exact_history"
+      ]
+    },
+    "qualified_product_calls": 177,
+    "qualified_call_split": [
+      80,
+      56,
+      41
+    ],
+    "total_attempt_product_calls": 220,
+    "ordinary_linear_tui_sessions": 5,
+    "actual_pty_sessions": 2,
+    "actual_fullscreen": {
+      "transaction": "e606a30c5cb2726eaf65e89d969f62c0d76812741a3ce5643758aa8e8d99ba2c",
+      "history_default": "e606a30c5cb2726eaf65e89d969f62c0d76812741a3ce5643758aa8e8d99ba2c",
+      "cancel_unchanged": true,
+      "rollback_original": true,
+      "protected_preserved": true,
+      "fullscreen_rollback": true,
+      "fullscreen_read_only_verify": false,
+      "rollback_transport": "fullscreen_process_tui",
+      "typed_scenarios": [
+        "cancel",
+        "rollback"
+      ]
+    },
+    "terminal_state": "Exact termios restoration andzero queued input for both actualPTYsessions",
+    "human_cli": "Public exactsemanticpreview/apply andverify executed; existing genericcompletiontext retained, readable diff proven byordinarylinearTUI",
+    "failure_retention": "Attempts01 and02 remain FAIL_RETAINED; observer races and600sdriverbound recorded, only explicitly completed normal scoped cores reused; no product failure established or runtimewaiver",
+    "custody": {
+      "current_observed_backend_pidfds": 25,
+      "owned_jobs_empty": true,
+      "private_namespace_empty": true,
+      "private_mounts_absent": true,
+      "raw_cas_export_verified": true
+    },
+    "direct_dynamic_dependencies": {
+      "cli": [
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "tui": [
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ]
+    },
+    "resource_admission": {
+      "peak_reserved_bytes": 1073741824,
+      "private_tmpfs_cap": 536870912,
+      "private_tmpfs_used": 194273280,
+      "new_task_roots": 0,
+      "new_worktrees": 0,
+      "new_clones": 0,
+      "new_caches": 0,
+      "native_builds": 0
+    },
+    "source_hold_respected": {
+      "source_changes": 0,
+      "branch_ref_changes": 0,
+      "commits": 0,
+      "pushes": 0,
+      "github_writes": 0,
+      "ci_dispatches": 0,
+      "clean_candidate_head_unchanged": true,
+      "pr404_owner_authorization_not_bypassed": true
+    },
+    "foreign_work": "Foreign Universal builds observed only in aftercensus; left untouched; each qualification admitted on idlecensus",
+    "limits": [
+      "not human or physical ext4",
+      "fullscreen field editing unavailable; no exact-v2 fullscreen entry claim",
+      "unsigned authenticity not established",
+      "only observed descendants have individual pidfd custody; final namespace census covers emptiness",
+      "Existing validator cache pyc reads disabled by absent private PYTHONPYCACHEPREFIX and -B; verified source files used without cache mutation",
+      "Human semantic CLI presentation.action uses existing generic completion text; no human CLI diff display claim",
+      "Fullscreen has no field editing and defaults to lexicographically greatest history plan ID, which can be older; no ability to select a nondefault fullscreen history item is claimed",
+      "ELF DT_NEEDED inspection covers direct dependencies only; runtime dependency paths were not traced"
+    ],
+    "evidence": {
+      "linux-maint-custody-03.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-custody-03.json",
+        "sha256": "5e40a837831002256ee3cbe7c229ffea1101d263c15ee77921a32a3c1ed20b6f",
+        "bytes": 56555
+      },
+      "linux-maint-independent-actual-review-03.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-independent-actual-review-03.json",
+        "sha256": "4f970860862211f66aea0b1039562ba880e9733116e7ada7ea7b6cf4f191b4c8",
+        "bytes": 1854
+      },
+      "linux-maint-worker-result-03.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-worker-result-03.json",
+        "sha256": "e4791f2c228fc57629e3cacbc23442a904fd02a4852ceaa85918a4afa4306b2b",
+        "bytes": 185776
+      },
+      "linux-maint-namespace-result-03.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-namespace-result-03.json",
+        "sha256": "5b32cae78569c79be7056e539226c7b72966ee32375fdd5111d7b882a4502c52",
+        "bytes": 167717
+      },
+      "linux-maint-launch-result-03.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-launch-result-03.json",
+        "sha256": "2cd59aa66c0e24299fdb3ef31422af37f5b9647ea7bc8cf978f57a2ae0226ff8",
+        "bytes": 3115
+      },
+      "linux-maint-retained-failure-01.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-retained-failure-01.json",
+        "sha256": "b16e88b4fdd8d56dabb034fc631dbead42b43a5a438bff8ce4c91ad6589ac785",
+        "bytes": 3059
+      },
+      "linux-maint-retained-failure-02.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-retained-failure-02.json",
+        "sha256": "ff3d00a6e3bff81ce5b0cc4a678617effd42088f5440d6fb7c3dde39e2c0c990",
+        "bytes": 1988
+      },
+      "linux-maint-package-admission-01.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-package-admission-01.json",
+        "sha256": "0f2c5b5baa49dc9f4a40c5d62950bba06129de9805b0f9f22b050942a94ba4cb",
+        "bytes": 469675
+      },
+      "linux-maint-preexecution-review-03.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-preexecution-review-03.json",
+        "sha256": "da5e94c39bc329da1887003a8bbb7d991c62d8f1939dd600db2b4d6f06016154",
+        "bytes": 2704
+      },
+      "linux-maint-finalizer-preexecution-review-03.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-finalizer-preexecution-review-03.json",
+        "sha256": "66136a8341c12725762553fb4af27e20d9130e186d5052e40d8a9cbafef1bbce",
+        "bytes": 603
+      },
+      "linux-maint-owned-custody-finalizer-03/receipt.json": {
+        "path": "D:\\Projects\\Factorio\\.task-builds\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-w-bc5cd0812e\\evidence\\linux-maint-owned-custody-finalizer-03\\receipt.json",
+        "sha256": "94b442357ff2f99417e695c022ba6ba0bb3869d49f596ec1127dc4d1aada43b3",
+        "bytes": 1283
+      }
+    }
+  }
+}

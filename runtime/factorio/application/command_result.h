@@ -50,6 +50,8 @@ ApplicationResult from_save_outcome(const saves::CloneOutcome& outcome);
 ApplicationResult from_save_outcome(const saves::ExportOutcome& outcome);
 ApplicationResult from_save_outcome(const saves::ImportOutcome& outcome);
 ApplicationResult from_recovery_outcome(const transactions::Outcome& outcome);
+ApplicationResult from_completed_recovery_projection(
+    const transactions::Outcome& outcome, const std::string& transaction_id);
 ApplicationResult from_diagnostic_outcome(const diagnostics::ExportOutcome& outcome);
 std::string response_envelope(const ApplicationResult& result, const std::string& command);
 

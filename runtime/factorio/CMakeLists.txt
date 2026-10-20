@@ -91,12 +91,19 @@ target_link_libraries(flb_factorio_mods_static PUBLIC
 
 add_library(flb_factorio_modsets_static
   modsets/flb_factorio_modsets.cpp modsets/flb_factorio_modset_operations.cpp
-  modsets/flb_factorio_modset_solver.cpp)
+  modsets/flb_factorio_modset_solver.cpp modsets/flb_factorio_content_records.cpp
+  modsets/flb_factorio_modpack_export_closure.cpp
+  modsets/flb_factorio_modpack_import.cpp
+  modsets/flb_factorio_modpack_import_validation.cpp
+  instance/flb_factorio_instance_staging.cpp)
 target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
-target_include_directories(flb_factorio_modsets_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/modsets ${CMAKE_CURRENT_SOURCE_DIR}/mods)
-target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static facman_workspace_static)
+target_include_directories(flb_factorio_modsets_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/modsets ${CMAKE_CURRENT_SOURCE_DIR}/mods
+  ${CMAKE_CURRENT_SOURCE_DIR}/instance)
+target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static facman_workspace_static
+  flb_factorio_launch_planning_static flb_factorio_discovery_static)
 
-add_library(flb_factorio_saves_static saves/flb_factorio_save_operations.cpp saves/flb_factorio_save_index.cpp)
+add_library(flb_factorio_saves_static saves/flb_factorio_save_operations.cpp saves/flb_factorio_save_index.cpp
+  saves/flb_factorio_selected_context.cpp)
 target_compile_features(flb_factorio_saves_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_saves_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/saves ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
 target_link_libraries(flb_factorio_saves_static PUBLIC
@@ -105,6 +112,8 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
 
 add_library(flb_factorio_instance_static
   instance/flb_factorio_instance_model.cpp
+  instance/flb_factorio_selected_save_preparation.cpp
+  instance/flb_factorio_configuration_preparation.cpp
   instance/flb_factorio_permit_projection.cpp
   instance/flb_factorio_instance_lifecycle.cpp
   instance/flb_factorio_local_data_import.cpp)
@@ -114,6 +123,7 @@ target_include_directories(flb_factorio_instance_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/launch ${CMAKE_CURRENT_SOURCE_DIR}/modsets
   ${CMAKE_CURRENT_SOURCE_DIR}/profiles ${CMAKE_CURRENT_SOURCE_DIR}/snapshots)
 target_link_libraries(flb_factorio_instance_static PUBLIC
+  flb_factorio_saves_static
   facman_archive_static facman_base_static facman_platform_static facman_transaction_static facman_workspace_static
   flb_factorio_install_model_static flb_factorio_launch_planning_static flb_factorio_modsets_static
   flb_factorio_profiles_static flb_factorio_snapshots_static)
@@ -140,7 +150,6 @@ target_link_libraries(flb_factorio_snapshots_static PUBLIC
   flb_factorio_launch_planning_static)
 
 add_library(flb_factorio_content_cache_static STATIC
-  modsets/flb_factorio_content_records.cpp
   modsets/flb_factorio_content_cache.cpp)
 target_compile_features(flb_factorio_content_cache_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_content_cache_static PUBLIC
@@ -149,6 +158,10 @@ target_link_libraries(flb_factorio_content_cache_static PUBLIC
   facman_base_static facman_core_static facman_platform_static facman_transaction_static
   flb_factorio_modsets_static)
 add_library(facman::content_cache ALIAS flb_factorio_content_cache_static)
+target_include_directories(flb_factorio_snapshots_static PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
+target_link_libraries(flb_factorio_snapshots_static PRIVATE
+  flb_factorio_content_cache_static)
 
 add_library(flb_factorio_profiles_static profiles/flb_factorio_profiles.cpp)
 target_compile_features(flb_factorio_profiles_static PUBLIC cxx_std_17)
@@ -178,8 +191,10 @@ add_library(facman::factorio_model ALIAS facman_factorio_model)
 add_library(flb_factorio_application_static STATIC
   application/application_configuration.cpp application/application_context.cpp
   application/last_run_provider.cpp application/presentation_service.cpp
+  application/presentation_action_support.cpp application/presentation_joined_preparation.cpp
   application/command_admission.cpp application/command_dispatch.cpp application/command_result.cpp
-  application/flb_factorio_application.cpp application/setup_gateway.cpp application/handlers/diagnostics.cpp
+  application/flb_factorio_application.cpp application/setup_gateway.cpp
+  application/managed_install_coordinator.cpp application/handlers/diagnostics.cpp
   application/handlers/doctor.cpp application/handlers/installs.cpp application/handlers/instances.cpp
   application/handlers/intelligence.cpp
   application/handlers/launch.cpp application/handlers/mods.cpp application/handlers/modsets.cpp

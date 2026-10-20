@@ -29,6 +29,15 @@ This operating model governs how the detailed corpus is converted into work. It
 does not grant mutation authority, approve a release, supersede repository
 invariants, or bypass the active AIDE task gate.
 
+An explicitly admitted execution programme may select one dependency-ready
+engineering task from a later milestone while the current release remains
+active. The task must name that programme, be its primary work unit, share its
+completed admission work unit, and enter the `next` horizon. The programme must
+be active for implementation with engineering and normal integration authorized.
+Ordinary cross-release readiness remains rejected. WIP, dependencies, scope,
+ownership, evidence and qualification still apply; this admission does not
+advance release status or supply package, human or publication evidence.
+
 ## 1. Outcomes the planning system must produce
 
 The planning system is successful only when it makes the following questions

@@ -15,6 +15,16 @@ development store to another disk. `--build-root`, `--out`, and `--dist`
 remain available, but an in-checkout path is refused unless the reviewed
 legacy-only `--allow-in-tree-output` switch is present.
 
+Output overrides must remain below a task root whose ownership marker matches
+the current repository and task. Use `--task-root` to select another location;
+an arbitrary external `--build-root`, `--out`, or `--dist` is refused.
+The developer entry point checks for 8 GiB of free space before configuring,
+building or packaging. `FACMAN_MIN_FREE_GIB` sets an explicit alternate reserve.
+Native builds default to two workers; `CMAKE_BUILD_PARALLEL_LEVEL` selects a
+positive alternate count. Visual Studio workers exit after the build instead
+of retaining reusable MSBuild processes. Tracking-disabled Visual Studio builds
+still require a clean rebuild to avoid stale header dependencies.
+
 On Windows, long task or branch identities are shortened to a deterministic
 24-character slug with a digest suffix. This keeps deep CMake/MSBuild
 FileTracker descendants within legacy path limits without collapsing distinct
