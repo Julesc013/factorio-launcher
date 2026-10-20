@@ -7616,9 +7616,46 @@ bootstrap_compatibility_authority(
     auto selected = resolve_authoritative_active_state(request.coordinator_root);
     if (selected && selected.value().has_value() &&
         selected.value()->epoch.has_value() &&
-        selected.value()->epoch->epoch_id == epoch.epoch_id)
+        selected.value()->epoch->epoch_id == epoch.epoch_id) {
+      // Legacy completion records predate bootstrap-backup retirement. Recheck
+      // authority under the coordinator lock before retiring that exact backup;
+      // do not replay native cutover over a later active generation.
+      auto admission = admit_coordinator(request.coordinator_root,
+                                         source.acceptance_root, false);
+      if (!admission) return fail(admission.error());
+      auto lock = acquire(admission.take_value(), "compatibility.bootstrap.retire");
+      if (!lock) return fail(lock.error());
+      auto current = resolve_authoritative_active_state(request.coordinator_root);
+      if (!current || !current.value().has_value() ||
+          !current.value()->epoch.has_value() ||
+          current.value()->epoch->epoch_id != epoch.epoch_id ||
+          current.value()->active.activation_name != selected.value()->active.activation_name ||
+          current.value()->active.activation_sha256 != selected.value()->active.activation_sha256)
+        return fail(!current ? current.error() : epoch_recovery(
+            "bootstrap authority changed before backup retirement"));
+      facman::platform::StableDirectoryObject journal;
+      if (!lock.value().admission.coordinator.open_child_directory_no_follow_for_relative_writes(
+              "authority-bootstrap.v1", journal).ok())
+        return fail(epoch_recovery("bootstrap journal changed before backup retirement"));
+      auto entered = read_epoch_relative_bounded(
+          journal, "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
+      if (!entered || entered.value() != entered_bytes)
+        return fail(!entered ? entered.error() : epoch_recovery(
+            "bootstrap backup retirement has a different entered identity"));
+      std::string detail;
+      if (!lock.value().admission.revalidate(detail) || !journal.revalidate().ok())
+        return fail(epoch_recovery("bootstrap authority changed before backup retirement", detail));
+      if (request.shell_integration) {
+        const auto retired = effects.retire_epoch_shortcut_backup(source, target.value());
+        if (!retired.ok || retired.outcome_unknown)
+          return fail(epoch_recovery("completed bootstrap shortcut backup retirement is unresolved",
+                                     retired.detail));
+      }
+      if (!lock.value().admission.revalidate(detail) || !journal.revalidate().ok())
+        return fail(epoch_recovery("bootstrap authority changed during backup retirement", detail));
       return Result::success({"complete", epoch,
-          selected.value()->active, journal_path});
+          current.value()->active, journal_path});
+    }
   }
 
   {
@@ -7817,6 +7854,20 @@ bootstrap_compatibility_authority(
       "50-registration-cutover.staging.v1.json", "50-registration-cutover.v1.json",
       registration_bytes, 6U);
   if (!recorded) return fail(recorded.error());
+  // The operation-bound old shortcut is needed only until the genesis and
+  // native cutover records are durable. Completion must not strand it.
+  if (!journal.flush_metadata().ok() ||
+      !lock.value().admission.coordinator.flush_metadata().ok())
+    return fail(epoch_recovery("bootstrap cutover was not flushed before backup retirement"));
+  if (!lock.value().admission.revalidate(cutover_detail) || !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed before backup retirement", cutover_detail));
+  if (request.shell_integration) {
+    const auto retired = effects.retire_epoch_shortcut_backup(source, target.value());
+    if (!retired.ok || retired.outcome_unknown)
+      return fail(epoch_recovery("bootstrap shortcut backup retirement is unresolved", retired.detail));
+  }
+  if (!lock.value().admission.revalidate(cutover_detail) || !journal.revalidate().ok())
+    return fail(epoch_recovery("bootstrap authority changed during backup retirement", cutover_detail));
   const std::string complete_bytes = compatibility_bootstrap_phase_bytes(
       "complete", entered_sha256, hash(registration_bytes));
   recorded = publish_epoch_record(journal,
@@ -8207,6 +8258,100 @@ facman::core::Result<RetirementResponse> retire_active(
                                                  &completed);
   if (!validated)
     return facman::core::Result<RetirementResponse>::failure(validated.error());
+  // Old completed bootstraps can retain their operation-bound shortcut backup
+  // even after every provider generation is retired. The public repeated
+  // uninstall must close that edge using retained authority, without reinstall.
+  if (request.epoch_mode && validated_epochs.epochs.size() >= 2U &&
+      validated_epochs.epochs.front().compatibility_handoff) {
+    const LifecycleEpoch &bootstrap_epoch = validated_epochs.epochs[1];
+    auto flat = discover_activation_chain(request.coordinator_root);
+    auto target = discover_lifecycle_epoch_genesis_generation(
+        request.coordinator_root, bootstrap_epoch.epoch_id);
+    facman::platform::StableDirectoryObject bootstrap;
+    if (bootstrap_epoch.compatibility_epoch ||
+        bootstrap_epoch.predecessor_epoch_id != kCompatibilityEpochId ||
+        !flat || !flat.value().has_value() || flat.value()->generations.empty() ||
+        !target || target.value().generation_id != bootstrap_epoch.genesis_generation_id ||
+        !held.value().admission.coordinator.open_child_directory_no_follow(
+            "authority-bootstrap.v1", bootstrap).ok())
+      return facman::core::Result<RetirementResponse>::failure(epoch_recovery(
+          "retirement cannot bind its original compatibility bootstrap"));
+    const Generation &source = flat.value()->generations.back();
+    auto entered = read_epoch_relative_bounded(bootstrap,
+        "10-clone-entered.v1.json", kMaximumEpochGenesisRecordBytes);
+    const std::string enabled = compatibility_bootstrap_entered_bytes(
+        *flat.value(), bootstrap_epoch, target.value(), true);
+    const std::string disabled = compatibility_bootstrap_entered_bytes(
+        *flat.value(), bootstrap_epoch, target.value(), false);
+    if (!entered || (entered.value() != enabled && entered.value() != disabled))
+      return facman::core::Result<RetirementResponse>::failure(epoch_recovery(
+          "retirement bootstrap entry has a different authority"));
+    const bool shell = entered.value() == enabled;
+    const std::string entered_sha256 = hash(entered.value());
+    auto verified = read_epoch_relative_bounded(bootstrap,
+        "20-clone-verified.v1.json", kMaximumEpochGenesisRecordBytes);
+    auto verified_document = verified ? json::parse(verified.value())
+        : facman::core::Result<json::Value>::failure(verified.error());
+    const std::string clone_receipt = verified_document
+        ? string_field(verified_document.value(), "receipt_sha256") : std::string();
+    if (!digest(clone_receipt))
+      return facman::core::Result<RetirementResponse>::failure(epoch_recovery(
+          "retirement bootstrap clone verification is incomplete"));
+    const std::string registration_bytes = compatibility_bootstrap_phase_bytes(
+        "registration_cutover", entered_sha256,
+        hash("facman.bootstrap.registration.v1\n" + target.value().install_id + "\n" +
+             (shell ? "cutover\n" : "disabled\n")));
+    const std::vector<std::pair<std::string, std::string>> required = {
+        {"10-clone-entered.v1.json", entered.value()},
+        {"20-clone-verified.v1.json", compatibility_bootstrap_phase_bytes(
+            "clone_verified", entered_sha256, clone_receipt)},
+        {"30-genesis-activated.v1.json", compatibility_bootstrap_phase_bytes(
+            "genesis_activated", entered_sha256,
+            hash(epoch_activation_bytes(bootstrap_epoch, target.value(),
+                 hash(epoch_generation_bytes(bootstrap_epoch, target.value())))))},
+        {"40-shortcut-cutover.v1.json", compatibility_bootstrap_phase_bytes(
+            "shortcut_cutover", entered_sha256,
+            hash("facman.bootstrap.shortcut.v1\n" + target.value().install_id + "\n" +
+                 (shell ? "cutover\n" : "disabled\n")))},
+        {"50-registration-cutover.v1.json", registration_bytes},
+        {"60-complete.v1.json", compatibility_bootstrap_phase_bytes(
+            "complete", entered_sha256, hash(registration_bytes))}};
+    const auto require_bootstrap = [&]() -> facman::core::Result<void> {
+      auto ready = require_authority();
+      if (!ready) return ready;
+      std::vector<fs::path> names, expected_names;
+      for (const auto &record : required) expected_names.emplace_back(record.first);
+      if (!bootstrap.list_child_names_bounded(6U, names).ok() || names != expected_names)
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "retirement bootstrap has foreign or incomplete phase entries"));
+      for (const auto &record : required) {
+        auto bytes = read_epoch_relative_bounded(
+            bootstrap, record.first, kMaximumEpochGenesisRecordBytes);
+        if (!bytes || bytes.value() != record.second)
+          return facman::core::Result<void>::failure(epoch_recovery(
+              "retirement bootstrap phase changed or is incomplete", record.first));
+      }
+      if (!bootstrap.revalidate().ok())
+        return facman::core::Result<void>::failure(epoch_recovery(
+            "retirement bootstrap directory identity changed"));
+      return facman::core::Result<void>::success();
+    };
+    auto ready = require_bootstrap();
+    if (!ready)
+      return facman::core::Result<RetirementResponse>::failure(ready.error());
+    if (shell) {
+      const CoordinatorLockToken coordinator_lock(
+          request.coordinator_root.lexically_normal(), lock_operation,
+          hash(generation_record_bytes(target.value())));
+      auto retired = effects.retire_bootstrap_shortcut_backup(
+          source, target.value(), coordinator_lock);
+      if (!retired)
+        return facman::core::Result<RetirementResponse>::failure(retired.error());
+    }
+    ready = require_bootstrap();
+    if (!ready)
+      return facman::core::Result<RetirementResponse>::failure(ready.error());
+  }
   if (completed)
     return facman::core::Result<RetirementResponse>::success(
         {"completed", directory, steps});

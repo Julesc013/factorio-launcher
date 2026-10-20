@@ -171,6 +171,8 @@ public:
                                               const Generation &target) = 0;
   virtual EffectResult cutover_epoch_registration(const Generation &source,
                                                   const Generation &target) = 0;
+  virtual EffectResult retire_epoch_shortcut_backup(const Generation &source,
+                                                    const Generation &target) = 0;
 };
 
 struct RetirementStep {
@@ -231,6 +233,16 @@ private:
 class RetirementEffects {
 public:
   virtual ~RetirementEffects() = default;
+  // The coordinator validates retained bootstrap and retirement authority and
+  // binds the original genesis target. Neither installed payloads nor a current
+  // shortcut are required: the exact operation-bound old backup may outlive both.
+  virtual facman::core::Result<void> retire_bootstrap_shortcut_backup(
+      const Generation &, const Generation &,
+      const CoordinatorLockToken &) {
+    return facman::core::Result<void>::failure(
+        {"self_maintenance_retirement_recovery_required",
+         "this retirement adapter cannot retire a bootstrap shortcut backup", {}});
+  }
   virtual facman::core::Result<void> inspect_retirement_generation(
       const Generation &generation, bool active,
       const CoordinatorLockToken &coordinator_lock) = 0;

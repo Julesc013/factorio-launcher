@@ -140,7 +140,12 @@ It keeps an operation-bound same-directory backup so an interruption between
 rename and publication can be reconciled. HKCU registration cutover uses one
 registry transaction and points maintenance commands at the retained external
 helper. Foreign, unreadable, or different owned generations are preserved for
-recovery.
+recovery. Bootstrap retires its exact source-shortcut backup after durable
+native cutover and before reporting completion. For an older completed bootstrap,
+repeating shell-integrated uninstall also reconciles that operation-bound backup
+from retained bootstrap, epoch and retirement history. This recovery works after
+the installed payloads and current shortcut are gone; a foreign or unreadable
+backup or changed history still requires recovery and is preserved.
 
 The locked-executable handoff duplicates the initiating process handle with
 only synchronization and limited-query rights, passes it through an explicit

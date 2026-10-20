@@ -2206,6 +2206,11 @@ public:
       const facman::self_maintenance::Generation &target) override {
     return native_.cutover_registration(transition(source, target));
   }
+  facman::self_maintenance::EffectResult retire_epoch_shortcut_backup(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target) override {
+    return native_.retire_shortcut_backup(transition(source, target));
+  }
 
 private:
   facman::self_maintenance::Plan transition(
@@ -3461,6 +3466,43 @@ public:
       : options_(options), coordinator_root_(std::move(coordinator_root)),
         native_effects_(native_effects),
         preserve_repair_sources_(preserve_repair_sources) {}
+
+  facman::core::Result<void> retire_bootstrap_shortcut_backup(
+      const facman::self_maintenance::Generation &source,
+      const facman::self_maintenance::Generation &target,
+      const facman::self_maintenance::CoordinatorLockToken &coordinator_lock) override {
+    const auto refused = [](const std::string &detail) {
+      return facman::core::Result<void>::failure(
+          {"self_maintenance_retirement_recovery_required",
+           "bootstrap shortcut backup retirement is unresolved", detail});
+    };
+    if (!options_.shell_integration ||
+        !same_path(coordinator_lock.coordinator_root(), coordinator_root_) ||
+        !coordinator_lock.binds_generation(target) ||
+        !same_path(source.logical_root, target.logical_root) ||
+        !same_path(source.state_root, target.state_root) ||
+        !same_path(source.acceptance_root, target.acceptance_root) ||
+        !same_path(options_.state_root, target.state_root) ||
+        !same_path(options_.acceptance_root, target.acceptance_root))
+      return refused("native scope or coordinator token does not bind this bootstrap");
+    // Pin retained authority, not legitimately removed installation payloads.
+    facman::platform::StableDirectoryObject acceptance, state, coordinator;
+    if (!acceptance.open_no_follow(target.acceptance_root).ok() ||
+        !state.open_no_follow(target.state_root).ok() ||
+        !coordinator.open_no_follow(coordinator_root_).ok())
+      return refused("retained bootstrap authority cannot be pinned");
+    const facman::setup::integration::CutoverContext context{
+        {source.install_root, source.state_root, source.acceptance_root, {}, {}},
+        {target.install_root, target.state_root, target.acceptance_root, {}, {}},
+        source.product_version, target.product_version,
+        "bootstrap." + digest_text(target.install_id + "\n").substr(0, 32)};
+    const auto retired =
+        facman::setup::integration::retire_windows_shortcut_cutover_backup(context);
+    if (!retired.ok || !acceptance.revalidate().ok() ||
+        !state.revalidate().ok() || !coordinator.revalidate().ok())
+      return refused(retired.detail);
+    return facman::core::Result<void>::success();
+  }
 
   facman::core::Result<void> inspect_retirement_generation(
       const facman::self_maintenance::Generation &generation,
