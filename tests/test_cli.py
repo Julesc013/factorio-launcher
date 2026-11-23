@@ -264,6 +264,16 @@ class CliTests(unittest.TestCase):
                     self.assertEqual(0, code, stderr or stdout)
                     self.assertEqual("already_reconciled", json.loads(stdout)["summary"]["status"])
                     self.assertEqual(before, inventory())
+                    code, stdout, stderr = invoke([
+                        "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                        "--version", "2.1.24", "--target", target, "--json",
+                    ])
+                    self.assertEqual(0, code, stderr or stdout)
+                    update = json.loads(stdout)
+                    self.assertIn("external_root_requires_distinct_managed_target", update["blockers"])
+                    self.assertFalse(update["mutation_executed"])
+                    self.assertFalse(update["apply_available"])
+                    self.assertEqual(before, inventory())
             for target in (separate, root / "absent-target"):
                 code, stdout, stderr = invoke([
                     "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
