@@ -828,8 +828,8 @@ facman::core::Result<std::string> reconciliation_plan_json(
         typed.source_trust_status != SourceTrustStatus::verified) {
         blockers.push_back("source_inspection_required_for_materialisation");
     }
-    if (management_change && typed.management_mode == ManagementMode::managed &&
-        model.management_class == "external" && target != TargetRelation::distinct) {
+    if (application_change && model.management_class == "external" &&
+        target != TargetRelation::distinct) {
         blockers.push_back("external_root_requires_distinct_managed_target");
     }
     if (integration_change && typed.integration_mode == IntegrationMode::facman_owned &&
